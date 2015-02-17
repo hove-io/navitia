@@ -1552,8 +1552,49 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["A"], d.stop_areas_map["D"], 7900, 0, DateTimeUtils::inf, false, false);
-    BOOST_CHECK_EQUAL(res1.size(), 1);
+    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
+    const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
+
+    raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
+                             DateTimeUtils::set(0, 7900), false, true,
+                             DateTimeUtils::inf, std::numeric_limits<size_t>::max(), {}, {}, true);
+
+    //and raptor has to stop on count 2
+    BOOST_CHECK_EQUAL(raptor.count, 2);
+}
+
+/*
+ *    A --------------- B --------------- C --------------- D
+ *
+ * l1   ----------------x-----------------x----------------->
+ *
+ * l2                    --------E========
+ *
+ * We want to test that raptor stops at the second iteration
+ *
+ * C can connect with itself, so C has been 'best_labeled' with a better transfers than E->C
+ * */
+BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
+    ed::builder b("20120614");
+    b.vj("l1", "1", "", true)("A", 8000, 8000)("B", 8100, 8100)("C", 8300, 8300)("D", 8500, 8500);
+    b.vj("l2", "1", "toto", true)("B", 8130, 8130)("E", 8200, 8200);
+
+    b.connection("B", "B", 10);
+    b.connection("C", "C", 0); // -> C can connect with itself
+    b.connection("E", "C", 150);
+
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data& d = *b.data->pt_data;
+
+    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
+    const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
+
+    raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
+                             DateTimeUtils::set(0, 7900), false, true,
+                             DateTimeUtils::inf, std::numeric_limits<size_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);

@@ -114,7 +114,6 @@ struct RAPTOR
         return data.pt_data->stop_points[idx.val];
     }
 
-
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path>
     compute(const type::StopArea* departure, const type::StopArea* destination,
@@ -206,6 +205,19 @@ struct RAPTOR
     /// Return the round that has found the best solution for this stop point
     /// Return -1 if no solution found
     int best_round(SpIdx sp_idx);
+
+    /// First raptor loop
+    /// externalized for testing purposes
+    void first_raptor_loop(const vec_stop_point_duration& dep,
+                           const vec_stop_point_duration& arr,
+                           const DateTime& departure_datetime,
+                           bool disruption_active,
+                           bool allow_odt,
+                           const DateTime& bound,
+                           const uint32_t max_transfers,
+                           const type::AccessibiliteParams& accessibilite_params,
+                           const std::vector<std::string>& forbidden_uri,
+                           bool clockwise);
 
     ~RAPTOR() {}
 };

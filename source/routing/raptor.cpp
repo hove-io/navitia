@@ -196,6 +196,32 @@ void RAPTOR::init(Solutions departs,
     }
 }
 
+void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
+                               const vec_stop_point_duration& arr,
+                               const DateTime& departure_datetime,
+                               bool disruption_active,
+                               bool allow_odt,
+                               const DateTime& bound,
+                               const uint32_t max_transfers,
+                               const type::AccessibiliteParams& accessibilite_params,
+                               const std::vector<std::string>& forbidden_uri,
+                               bool clockwise) {
+
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+                         accessibilite_params,
+                         forbidden_uri,
+                         disruption_active,
+                         allow_odt,
+                         dep,
+                         arr);
+
+    auto departures = init_departures(dep, departure_datetime, clockwise, disruption_active);
+    clear(clockwise, bound);
+    init(departures, arr, bound, clockwise);
+
+    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+}
+
 std::vector<Path>
 RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     const vec_stop_point_duration& destinations,
@@ -209,22 +235,13 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     bool clockwise) {
 
     std::vector<Path> result;
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden_uri,
-                         disruption_active,
-                         allow_odt,
-                         departures_,
-                         destinations);
 
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
 
-    auto departures = init_departures(calc_dep, departure_datetime, clockwise, disruption_active);
-    clear(clockwise, bound);
-    init(departures, calc_dest, bound, clockwise);
+    first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active, allow_odt,
+                      bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
     /// @todo put that commented lines in a ifdef only compiled when we want
     //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
     //result.insert(result.end(), tmp.begin(), tmp.end());
@@ -236,7 +253,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     // Second phase
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
     // and vice and versa
-    departures = get_solutions(calc_dep, calc_dest, !clockwise,
+    auto departures = get_solutions(calc_dep, calc_dest, !clockwise,
                                accessibilite_params, disruption_active, *this);
     for(auto departure : departures) {
         clear(!clockwise, departure_datetime);
