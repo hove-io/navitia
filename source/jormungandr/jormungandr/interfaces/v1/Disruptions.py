@@ -76,13 +76,6 @@ class Disruptions(ResourceUri):
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("period", type=int,
-                                description="Period in days from datetime. DEPRECATED use duration parameter")
-        parser_get.add_argument("duration", type=duration, default=timedelta(days=365),
-                                description="Duration from the period we want to display the disruption on")
-        parser_get.add_argument("datetime", type=date_time_format, default=datetime.now(), #TODO!! we have to take the local instance time
-                                description="The datetime from which you want the disruption "
-                                            "(filter on the disruption application periods)")
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.now(), #TODO!! we have to take the local instance time
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug."
@@ -114,12 +107,6 @@ class Disruptions(ResourceUri):
         else:
             args["filter"] = ""
 
-        #we compute the period end with the duration (or the deprecated 'period' argument)
-        period_end = args['datetime'] + args['duration']
-        if args.get('period'):
-            period_end = args['datetime'] + timedelta(days=args.get('period'))
-
-        args['period_end'] = period_end
         self._register_interpreted_parameters(args)
 
         response = i_manager.dispatch(args, "disruptions",
@@ -153,13 +140,6 @@ class TrafficReport(ResourceUri):
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("period", type=int,
-                                description="Period in days from datetime. DEPRECATED use duration parameter")
-        parser_get.add_argument("duration", type=duration, default=timedelta(days=365),
-                                description="Duration from the period we want to display the disruption on")
-        parser_get.add_argument("datetime", type=date_time_format, default=datetime.now(), #TODO!! we have to take the local instance time
-                                description="The datetime from which you want the disruption "
-                                            "(filter on the disruption application periods)")
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.now(), #TODO!! we have to take the local instance time
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug."
@@ -191,13 +171,6 @@ class TrafficReport(ResourceUri):
             args["filter"] = self.get_filter(uris)
         else:
             args["filter"] = ""
-
-        #we compute the period end with the duration (or the deprecated 'period' argument)
-        period_end = args['datetime'] + args['duration']
-        if args.get('period'):
-            period_end = args['datetime'] + timedelta(days=args.get('period'))
-
-        args['period_end'] = period_end
 
         response = i_manager.dispatch(args, "disruptions", instance_name=self.region)
 

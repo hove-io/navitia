@@ -55,17 +55,14 @@ private:
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
 
     void add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
     void add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
     void sort_disruptions(const type::Data &d);
 public:
@@ -74,7 +71,6 @@ public:
     void disruptions_list(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
                     const type::Data &d,
-                    const boost::posix_time::time_period action_period,
                     const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
 
     const std::vector<disrupt>& get_disrupts() const;

@@ -77,8 +77,6 @@ class Scenario(object):
         req.disruptions.filter = request['filter']
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
-        req.disruptions.application_period_begin = date_to_timestamp(request['datetime'])
-        req.disruptions.application_period_end = date_to_timestamp(request['period_end'])
         req.disruptions._current_datetime = date_to_timestamp(request['_current_datetime'])
 
         if request["forbidden_uris[]"]:

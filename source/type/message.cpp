@@ -47,7 +47,7 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     }
 
     // we check if we want to publish the impact
-    if (! disruption->publication_period.contains(publication_date)) {
+    if (! disruption->is_publishable(publication_date)) {
         return false;
     }
 
@@ -60,6 +60,17 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
         if (! period.intersection(active_period).is_null()) {
             return true;
         }
+    }
+    return false;
+}
+
+bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const{
+    if(current_time.is_not_a_date_time()){
+        return false;
+    }
+
+    if (this->publication_period.contains(current_time)) {
+        return true;
     }
     return false;
 }
