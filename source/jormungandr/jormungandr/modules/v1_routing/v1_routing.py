@@ -157,6 +157,7 @@ class V1Routing(AModule):
         self.add_resource(Places.Places,
                           region + 'places',
                           coord + 'places',
+                           '/places',
                           endpoint='places')
         self.add_resource(Ptobjects.Ptobjects,
                           region + 'pt_objects',
