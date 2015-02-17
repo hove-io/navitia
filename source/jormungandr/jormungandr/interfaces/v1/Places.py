@@ -171,19 +171,21 @@ class Places(ResourceUri):
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
 
-        if not any([region, lon, lat]):
-            return self.get_ww(args)
+        # If a region or coords are asked, we do the search according
+        # to the region, else, we do a word wide search
+        if any([region, lon, lat]):
+            return self._search_region(args, region, lon, lat)
         else:
-            return self.get_region(args, region, lon, lat)
+            return self._search_world_wide(args)
 
     @marshal_with(places)
-    def get_region(self, args, region=None, lon=None, lat=None):
+    def _search_region(self, args, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         response = i_manager.dispatch(args, "places", instance_name=self.region)
         return response, 200
 
     @marshal_with(ww_places)
-    def get_ww(self, args):
+    def _search_world_wide(self, args):
         q = args['q']
         query = {
             "query": {
