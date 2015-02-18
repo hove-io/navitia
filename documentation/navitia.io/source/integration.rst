@@ -22,11 +22,14 @@ Some easy examples
 * Which services are available on this coverage? take a look at the links under this URL
 	* https://api.navitia.io/v1/coverage/fr-idf
 * Networks available?
-	* https://api.navitia.io/v1/coverage/paris/networks
+	* https://api.navitia.io/v1/coverage/fr-idf/networks
 * RATP network lines?
-	* https://api.navitia.io/v1/coverage/paris/networks/network:RTP/lines 
-* Too much lines, let's use mode filtering
-	* https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+	* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
+* Too much lines, let's use physical mode filtering
+	* physical modes managed by RATP 
+		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+	* metro lines 
+		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
 * By the way, what is close to me?
 	* https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
 	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
