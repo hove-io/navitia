@@ -37,6 +37,7 @@ import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
+import re
 
 import time
 import sys
@@ -214,6 +215,28 @@ class StatManager(object):
                     stat_parameter = stat_request.interpreted_parameters.add()
                     stat_parameter.key = item[0]
                     stat_parameter.value = unicode(item[1])
+                    if item[0] in ('filter', 'departure_filter', 'arrival_filter'):
+                        #we parse ptref filter here
+                        self.fill_filters(item[1], stat_parameter)
+
+
+    def fill_filters(self, value, stat_parameter):
+        """
+        basic parsing of a ptref filter
+        """
+        if not value:
+            return
+        for elem in re.split('\s+and\s+', r, flags=re.IGNORECASE):
+            match = re.match('^\s*(\w+).(\w+)\s*([=!><]{1,2}|DWITHIN)\s*(.*)$', elem, re.IGNORECASE)
+            if match:
+                filter = stat_parameter.filters.add()
+                filter.object = match.group(1)
+                filter.attribute = match.group(2)
+                filter.operator = match.group(3)
+                filter.value = match.group(4)
+            else:
+                logging.getLogger(__name__).warn('impossible to parse: %s', elem)
+
 
     def fill_coverages(self, stat_request):
         if 'region' in request.view_args:

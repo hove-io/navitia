@@ -6,6 +6,19 @@ message StatParameter {
     optional string value = 2;
 }
 
+message Filter{
+    optional string object = 1;
+    optional string attribute = 2;
+    optional string operator = 3;
+    optional string value = 4;
+};
+
+message InterpretedParameter {
+    optional string key = 1;
+    optional string value = 2;
+    repeated Filter filters = 3;
+}
+
 message StatError {
     optional string id = 1;
     optional string message = 2;
@@ -24,7 +37,7 @@ message StatRequest {
     optional string application_name = 5;
     optional int32  request_duration = 6;
     optional string api = 7;
-    optional string   path = 8;
+    optional string path = 8;
     optional string host = 10;
     optional int32  response_size = 11;
     optional string client = 12;
@@ -32,7 +45,7 @@ message StatRequest {
     repeated StatParameter parameters = 14;
     optional StatError error = 15;
     repeated StatJourneyResponse journeys = 16;
-    repeated StatParameter interpreted_parameters = 17;
+    repeated InterpretedParameter interpreted_parameters = 17;
     optional JourneyRequest journey_request = 18;
 }
 
