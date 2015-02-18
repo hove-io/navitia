@@ -213,8 +213,8 @@ message Line {
     optional string comment = 15;
     repeated Code codes = 16;
     optional MultiLineString geojson = 17;
-    optional string opening_time = 18;
-    optional string closing_time = 19;
+    optional uint32 opening_time = 18;
+    optional uint32 closing_time = 19;
 }
 
 message Route {

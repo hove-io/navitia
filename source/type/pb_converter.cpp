@@ -363,10 +363,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     line->set_name(l->name);
     line->set_uri(l->uri);
     if (l->opening_time) {
-        line->set_opening_time(boost::posix_time::to_simple_string(*l->opening_time));
+        line->set_opening_time((*l->opening_time).total_seconds());
     }
     if (l->closing_time) {
-        line->set_closing_time(boost::posix_time::to_simple_string(*l->closing_time));
+        line->set_closing_time((*l->closing_time).total_seconds());
     }
 
 
