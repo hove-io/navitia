@@ -52,6 +52,9 @@ struct Solution {
                        ratio(std::numeric_limits<float>::min()) {}
 
     bool operator<(const Solution& s) const {
+        if (this->total_arrival != s.total_arrival) {
+            return this->total_arrival < s.total_arrival;
+        }
         if (this->arrival != s.arrival) {
             return this->arrival < s.arrival;
         }

@@ -48,7 +48,7 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 
       if(!pareto_front.empty()) {
           auto walking_solutions = get_walking_solutions(clockwise, departs, destinations,
-                  *pareto_front.rbegin(), disruption_active, accessibilite_params, raptor);
+                  *pareto_front.begin(), disruption_active, accessibilite_params, raptor);
           if(!walking_solutions.empty()) {
             result.insert(walking_solutions.begin(), walking_solutions.end());
           }
@@ -83,19 +83,10 @@ combine_dt_walking_time(bool clockwise, const DateTime& current, int walking_dur
 // Does the current date improves compared to best_so_far – we must not forget to take the walking duration
 static bool improves(const DateTime& best_so_far,
                      bool clockwise,
-                     const DateTime& current,
-                     int walking_duration) {
-    const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
-    return clockwise ? dt > best_so_far : dt < best_so_far;
+                     const DateTime& current) {
+    return clockwise ? current > best_so_far : current < best_so_far;
 }
 
-static bool is_equal(const DateTime& best_so_far,
-                     bool clockwise,
-                     const DateTime& current,
-                     int walking_duration) {
-    const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
-    return dt == best_so_far;
-}
 
 static size_t nb_jpp_of_path(int count,
                              SpIdx sp_idx,
@@ -149,8 +140,10 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             size_t nb_jpp = nb_jpp_of_path(round, sp_idx, clockwise, disruption_active,
                                            accessibilite_params, raptor);
             const auto& dt_pt = ls.dt_pt(sp_idx);
-            if(!improves(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds())) {
-                if (!is_equal(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds()) ||
+            const auto total_arrival = combine_dt_walking_time(clockwise, dt_pt,
+                                                               spid_dist.second.total_seconds());
+            if (!improves(best_dt, clockwise, total_arrival)) {
+                if (best_dt != total_arrival ||
                         best_nb_jpp_of_path <= nb_jpp) {
                     continue;
                 }
@@ -183,10 +176,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
                                 st->f_departure_time(DateTimeUtils::hour(dt));
                     DateTimeUtils::update(best_dt_jpp, departure_time, true);
                 }
-                if(clockwise)
-                    best_dt = dt_pt - spid_dist.second.total_seconds();
-                else
-                    best_dt = dt_pt + spid_dist.second.total_seconds();
+                best_dt = total_arrival;
             }
         }
         if (best_sp.is_valid()) {
@@ -204,11 +194,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             //TODO l'heure de depart (upper bound) n'est pas bon pour le moment, voir is il ya moyen de mieux le calculer
             for(auto spid_dep : departs) {
                 if (final_sp_idx == spid_dep.first) {
-                    if(clockwise) {
-                        s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
-                    }else {
-                        s.upper_bound = s.upper_bound - spid_dep.second.total_seconds();
-                    }
+                    s.upper_bound = combine_dt_walking_time(!clockwise, s.upper_bound, spid_dep.second.total_seconds());
                 }
             }
             result.insert(s);
@@ -248,49 +234,47 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
             if(best.walking_time < walking_time) {
                 continue;
             }
-            float lost_time;
-            if(clockwise)
-                lost_time = best.total_arrival -
-                    (raptor.labels[i].dt_pt(sp_idx) - best.walking_time.total_seconds());
-            else
-                lost_time = (raptor.labels[i].dt_pt(sp_idx) + spid_dist.second.total_seconds()) -
-                    best.total_arrival;
-
             // We accept to have a 10mn worst solution if we can reduce the walking time by 5mn
             int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
-            if (walking_time_diff_in_s > 0) {
-                float ratio = lost_time / walking_time_diff_in_s;
-                if( ratio >= best_departure.ratio) {
-                    continue;
-                }
-                Solution s;
-                s.sp_idx = sp_idx;
-                s.count = i;
-                s.ratio = ratio;
-                s.walking_time = walking_time;
-                s.arrival = raptor.labels[i].dt_pt(sp_idx);
-                SpIdx final_sp_idx;
-                DateTime last_time;
-                std::tie(final_sp_idx, last_time) = get_final_spidx_and_date(i, sp_idx, clockwise,
-                                    disruption_active, accessibilite_params, raptor);
-
-                if(clockwise) {
-                    s.upper_bound = last_time;
-                    for(auto spid_dep : departs) {
-                        if(final_sp_idx == spid_dep.first) {
-                            s.upper_bound = s.upper_bound + (spid_dep.second.total_seconds());
-                        }
-                    }
-                } else {
-                    s.upper_bound = last_time;
-                    for(auto spid_dep : departs) {
-                        if(final_sp_idx == spid_dep.first) {
-                            s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
-                        }
-                    }
-                }
-                best_departure = s;
+            if (walking_time_diff_in_s >= 0) {
+                continue;
             }
+            float lost_time;
+            const auto total_arrival = combine_dt_walking_time(clockwise, raptor.labels[i].dt_pt(sp_idx),
+                                                               spid_dist.second.total_seconds());
+            if(clockwise) {
+                assert (best.total_arrival >= total_arrival);
+                lost_time = best.total_arrival - total_arrival;
+            }
+            else {
+                assert (total_arrival >= best.total_arrival);
+                lost_time = total_arrival - best.total_arrival;
+            }
+
+
+            float ratio = lost_time / walking_time_diff_in_s;
+            if( ratio >= best_departure.ratio) {
+                continue;
+            }
+            Solution s;
+            s.sp_idx = sp_idx;
+            s.count = i;
+            s.ratio = ratio;
+            s.walking_time = walking_time;
+            s.arrival = raptor.labels[i].dt_pt(sp_idx);
+            SpIdx final_sp_idx;
+            DateTime last_time;
+            std::tie(final_sp_idx, last_time) = get_final_spidx_and_date(i, sp_idx, clockwise,
+                                disruption_active, accessibilite_params, raptor);
+
+            s.upper_bound = last_time;
+            for(auto spid_dep : departs) {
+                if(final_sp_idx == spid_dep.first) {
+                    s.upper_bound = combine_dt_walking_time(!clockwise, s.upper_bound, spid_dep.second.total_seconds());
+                }
+            }
+            best_departure = s;
+
             if (best_departure.sp_idx.is_valid()) {
                 if (tmp.find(best_departure.sp_idx) == tmp.end()) {
                     tmp.insert(std::make_pair(best_departure.sp_idx, best_departure));
