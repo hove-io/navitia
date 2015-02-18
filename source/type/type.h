@@ -342,7 +342,9 @@ enum class VehicleJourneyType {
     odt_point_to_point = 5            // TAD point à point (Commune à Commune)
 };
 
-struct StopPoint;
+struct StopArea;
+struct Network;
+struct StopPointConnection;
 struct Line;
 struct JourneyPattern;
 struct ValidityPattern;
@@ -350,6 +352,36 @@ struct Route;
 struct JourneyPatternPoint;
 struct VehicleJourney;
 struct StopTime;
+
+struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
+    const static Type_e type = Type_e::StopPoint;
+    GeographicalCoord coord;
+    int fare_zone;
+    std::string platform_code;
+    std::string label;
+
+    StopArea* stop_area;
+    std::vector<navitia::georef::Admin*> admin_list;
+    Network* network;
+    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+    std::vector<StopPointConnection*> stop_point_connection_list;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        // The *_list are not serialized here to avoid stack abuse
+        // during serialization and deserialization.
+        //
+        // stop_point_connection_list is managed by StopPointConnection
+        // journey_pattern_point_list is managed by JourneyPatternPoint
+        ar & uri & label & name & stop_area & coord & fare_zone & idx & platform_code
+            & admin_list & _properties & impacts & comment & codes;
+    }
+
+    StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
+
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    bool operator<(const StopPoint & other) const { return this < &other; }
+
+};
 
 struct StopPointConnection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
@@ -363,11 +395,19 @@ struct StopPointConnection: public Header, hasProperties{
     StopPointConnection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0){}
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    template<class Archive> void save(Archive & ar, const unsigned int ) const {
         ar & idx & uri & departure & destination & display_duration & duration &
             max_duration & connection_type & _properties;
     }
+    template<class Archive> void load(Archive & ar, const unsigned int ) {
+        ar & idx & uri & departure & destination & display_duration & duration &
+            max_duration & connection_type & _properties;
 
+        // loading manage StopPoint::stop_point_connection_list
+        departure->stop_point_connection_list.push_back(this);
+        destination->stop_point_connection_list.push_back(this);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const StopPointConnection &other) const;
@@ -912,34 +952,6 @@ public:
     bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    int fare_zone;
-    std::string platform_code;
-    std::string label;
-
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        journey_pattern_point_list.resize(0);
-        ar & uri & label & name & stop_area & coord & fare_zone & idx & platform_code
-            & journey_pattern_point_list & admin_list & _properties & impacts
-            & stop_point_connection_list & comment & codes;
-    }
-
-    StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
-
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const StopPoint & other) const { return this < &other; }
-
-};
-
-
 struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
     JourneyPattern* journey_pattern;
@@ -949,13 +961,13 @@ struct JourneyPatternPoint : public Header{
 
     JourneyPatternPoint() : journey_pattern(nullptr), stop_point(nullptr), order(0){}
 
-    // Attention la sérialisation est répartrie dans deux methode: save et load
     template<class Archive> void save(Archive & ar, const unsigned int) const{
         ar & idx & uri & order & journey_pattern & stop_point & order & shape_from_prev;
     }
     template<class Archive> void load(Archive & ar, const unsigned int) {
         ar & idx & uri & order & journey_pattern & stop_point & order & shape_from_prev;
-        //on remplit le tableau des stoppoints, bizarrement ca segfault au chargement si on le fait à la bina...
+
+        // loading manage StopPoint::journey_pattern_point_list
         this->stop_point->journey_pattern_point_list.push_back(this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
