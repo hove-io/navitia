@@ -47,32 +47,34 @@ class Coord(ResourceUri):
             lon, lat = splitted
 
         if region is None:
-            self.region = i_manager.get_region("", lon, lat)
+            regions = i_manager.get_regions("", lon, lat)
         else:
-            self.region = region
-        result.update(regions=[self.region])
-        if lon is not None and lat is not None:
-            # check if lon and lat can be converted to float
-            float(lon)
-            float(lat)
-            args = {
-                "uri": "coord:{}:{}".format(lon, lat),
-                "count": 1,
-                "distance": 200,
-                "type[]": ["address"],
-                "depth": 1,
-                "start_page": 0,
-                "filter": ""
-            }
-            self._register_interpreted_parameters(args)
-            pb_result = i_manager.dispatch(args, "places_nearby",
-                                           instance_name=self.region)
+            regions = [region]
+
+        if lon is None or lat is None:
+            return abort(404, message="No address for these coords")
+
+        args = {
+            "uri": "coord:{}:{}".format(lon, lat),
+            "count": 1,
+            "distance": 200,
+            "type[]": ["address"],
+            "depth": 1,
+            "start_page": 0,
+            "filter": ""
+        }
+        self._register_interpreted_parameters(args)
+
+        for r in regions:
+            self.region = r
+            result.update(regions=[r])
+            pb_result = i_manager.dispatch(args, "places_nearby", instance_name=r)
             if len(pb_result.places_nearby) > 0:
                 e_type = pb_result.places_nearby[0].embedded_type
                 if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
                     new_address = marshal(pb_result.places_nearby[0].address,
                                           address)
                     result.update(address=new_address)
-            else:
-                abort(404, message="No address for these coords")
-        return result, 200
+                    return result, 200
+
+        return abort(404, message="No address for these coords")

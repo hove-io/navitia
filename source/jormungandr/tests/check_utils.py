@@ -611,8 +611,12 @@ def is_valid_place(place, depth_check=1):
         assert(False, "invalid type")
 
 
+
 def is_valid_address(address, depth_check=1):
-    get_not_null(address, "id")
+    id = get_not_null(address, "id")
+    lon, lat = id.split(';')
+    is_valid_lon(lon)
+    is_valid_lat(lat)
     get_not_null(address, "house_number")
     get_not_null(address, "name")
     get_not_null(address, "administrative_regions") # TODO test

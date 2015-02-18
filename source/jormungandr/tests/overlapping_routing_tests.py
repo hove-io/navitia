@@ -136,3 +136,8 @@ class TestOverlappingCoverage(AbstractTestFixture):
         response = self.query("/v1/{q}".format(q=journey_basic_query), display=False)
 
         assert not 'debug' in response
+
+    def test_coord(self):
+        response = self.query("/v1/coord/0.000001;0.000898311281954", display=True)
+        is_valid_address(response['address'])
+        assert(response['address']['label'] == "42 rue kb (Condom)")
