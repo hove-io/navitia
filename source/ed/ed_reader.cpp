@@ -426,7 +426,8 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, code, color, "
-        "network_id, commercial_mode_id, sort, external_code, ST_AsText(shape) AS shape "
+        "network_id, commercial_mode_id, sort, external_code, ST_AsText(shape) AS shape, "
+        "opening_time, closing_time "
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
@@ -439,6 +440,12 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         const_it["color"].to(line->color);
         const_it["sort"].to(line->sort);
         const_it["external_code"].to(line->codes["external_code"]);
+        if (!const_it["opening_time"].is_null()) {
+            line->opening_time = boost::posix_time::duration_from_string(const_it["opening_time"].as<std::string>());
+        }
+        if (!const_it["closing_time"].is_null()) {
+            line->closing_time = boost::posix_time::duration_from_string(const_it["closing_time"].as<std::string>());
+        }
 
         line->network = network_map[const_it["network_id"].as<idx_t>()];
         line->network->line_list.push_back(line);
