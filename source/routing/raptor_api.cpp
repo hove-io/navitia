@@ -498,8 +498,6 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    pbnavitia::Response& response,
                                    const std::vector<type::StopPoint*> stop_points,
                                    bool clockwise,
-                                   const type::AccessibiliteParams& accessibilite_params,
-                                   bool disruption_active,
                                    DateTime init_dt,
                                    DateTime bound,
                                    int max_duration,
@@ -908,7 +906,6 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                 const type::EntryPoint& m_point = paths_for_m_point.first;
 
                 add_isochrone_response(raptor, pb_response, stop_points, clockwise,
-                                       accessibilite_params, disruption_active,
                                        init_dt, bound, max_duration, show_codes,
                                        (m_point.type == nt::Type_e::StopArea));
             }
@@ -959,7 +956,6 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                            accessibilite_params, forbidden, clockwise, disruption_active, allow_odt);
 
     add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
-                           accessibilite_params, disruption_active,
                            init_dt, bound, max_duration, show_codes, false);
 
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
