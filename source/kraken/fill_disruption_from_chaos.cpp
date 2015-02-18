@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
 
 namespace navitia {
 
@@ -341,7 +342,7 @@ struct functor_add_vj {
             ++ order;
         }
         // We need to link the newly created vj with this impact
-        vj->add_impact(impact);
+        vj->impacted_by.push_back(impact);
     }
 
     bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
@@ -388,7 +389,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
         }
         vj.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
-        vj.add_impact(impact);
+        vj.impacted_by.push_back(impact);
         return true;
     }
 
@@ -464,7 +465,7 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
 
 struct delete_impacts_visitor : public apply_impacts_visitor {
     delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
+            nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "delete") {}
     size_t nb_vj_reassigned = 0;
     using apply_impacts_visitor::operator();
@@ -474,8 +475,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
         ++ nb_vj_reassigned;
-        vj.remove_impact(impact);
-        for (auto i: vj.get_impacts()) {
+        const auto& impact = this->impact;
+        boost::range::remove_erase_if(vj.impacted_by,
+            [&impact](const boost::weak_ptr<nt::new_disruption::Impact>& i) {
+                return i.lock() == impact;
+        });
+        for (auto i: vj.impacted_by) {
             apply_impact(i.lock(), pt_data, meta);
         }
         return true;
