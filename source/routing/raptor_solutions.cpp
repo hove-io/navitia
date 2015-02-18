@@ -75,16 +75,10 @@ init_departures(const std::vector<std::pair<SpIdx, navitia::time_duration> > &de
     return result;
 }
 
+
 static DateTime
 combine_dt_walking_time(bool clockwise, const DateTime& current, int walking_duration) {
     return clockwise ? current - walking_duration : current + walking_duration;
-}
-
-// Does the current date improves compared to best_so_far – we must not forget to take the walking duration
-static bool improves(const DateTime& best_so_far,
-                     bool clockwise,
-                     const DateTime& current) {
-    return clockwise ? current > best_so_far : current < best_so_far;
 }
 
 
@@ -142,7 +136,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             const auto& dt_pt = ls.dt_pt(sp_idx);
             const auto total_arrival = combine_dt_walking_time(clockwise, dt_pt,
                                                                spid_dist.second.total_seconds());
-            if (!improves(best_dt, clockwise, total_arrival)) {
+            if (!improves(best_dt, total_arrival, clockwise)) {
                 if (best_dt != total_arrival ||
                         best_nb_jpp_of_path <= nb_jpp) {
                     continue;
@@ -188,6 +182,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             s.arrival = best_dt_jpp;
             s.ratio = 0;
             s.total_arrival = best_dt;
+            s.clockwise = clockwise;
             SpIdx final_sp_idx;
             std::tie(final_sp_idx, s.upper_bound) = get_final_spidx_and_date(round, best_sp, clockwise,
                                                                              disruption_active, accessibilite_params, raptor);
@@ -220,6 +215,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
     for(uint32_t i=1; i <= raptor.count; ++i) {
         for(auto spid_dist : destinations) {
             Solution best_departure;
+            best_departure.clockwise = clockwise;
             best_departure.ratio = 2;
             best_departure.sp_idx = SpIdx();
 
@@ -257,6 +253,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
                 continue;
             }
             Solution s;
+            s.clockwise = clockwise;
             s.sp_idx = sp_idx;
             s.count = i;
             s.ratio = ratio;
