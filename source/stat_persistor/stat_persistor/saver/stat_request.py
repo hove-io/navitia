@@ -132,8 +132,10 @@ def build_journey_request_dict(journey_request, request_id):
         'clockwise': journey_request.clockwise,
         'departure_insee': journey_request.departure_insee,
         'departure_admin': journey_request.departure_admin,
+        'departure_admin_name': journey_request.departure_admin_name,
         'arrival_insee': journey_request.arrival_insee,
         'arrival_admin': journey_request.arrival_admin,
+        'arrival_admin_name': journey_request.arrival_admin_name,
         'request_id': request_id
     }
 
@@ -195,6 +197,8 @@ def build_stat_journey_dict(journey, request_id):
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.journeys
     Utilisé pour l'insertion dans la table stat.journeys
     """
+    first_pt_coord = "POINT({0:.20f} {1:.20f})".format(journey.first_pt_coord.lon, journey.first_pt_coord.lat)
+    last_pt_coord = "POINT({0:.20f} {1:.20f})".format(journey.last_pt_coord.lon, journey.last_pt_coord.lat)
     return{
         'request_id': request_id,
         'requested_date_time': get_datetime_from_timestamp(journey.requested_date_time),
@@ -202,7 +206,19 @@ def build_stat_journey_dict(journey, request_id):
         'arrival_date_time': get_datetime_from_timestamp(journey.arrival_date_time),
         'duration': journey.duration,
         'nb_transfers': journey.nb_transfers,
-        'type': journey.type
+        'type': journey.type,
+        'first_pt_id': journey.first_pt_id,
+        'first_pt_name': journey.first_pt_name,
+        'first_pt_coord': func.ST_GeomFromtext(first_pt_coord, 4326),
+        'first_pt_admin_id': journey.first_pt_admin_id,
+        'first_pt_admin_name': journey.first_pt_admin_name,
+        'first_pt_admin_insee': journey.first_pt_admin_insee,
+        'last_pt_id': journey.last_pt_id,
+        'last_pt_name': journey.last_pt_name,
+        'last_pt_coord': func.ST_GeomFromtext(last_pt_coord, 4326),
+        'last_pt_admin_id': journey.last_pt_admin_id,
+        'last_pt_admin_name': journey.last_pt_admin_name,
+        'last_pt_admin_insee': journey.last_pt_admin_insee,
     }
 
 def build_stat_section_dict(section, request_id, journey_id):
@@ -242,5 +258,7 @@ def build_stat_section_dict(section, request_id, journey_id):
         'commercial_mode_id': section.commercial_mode_id,
         'commercial_mode_name': section.commercial_mode_name,
         'physical_mode_id': section.physical_mode_id,
-        'physical_mode_name': section.physical_mode_name
+        'physical_mode_name': section.physical_mode_name,
+        'from_admin_insee': section.from_admin_insee,
+        'to_admin_insee': section.to_admin_insee,
     }
