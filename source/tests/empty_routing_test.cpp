@@ -42,11 +42,11 @@ int main(int argc, const char* const argv[]) {
 
     //we give a very large bounding box (it must overlap with the shape of main_routing_test)
     std::stringstream ss;
-    ss << "POLYGON((" << routing_data.S.lon() - 1e-3 << " " << routing_data.S.lat() - 1e-3
-              << ", " << routing_data.S.lon() - 1e-3 << " " << routing_data.R.lat() + 1e-3
+    ss << "POLYGON((" << routing_data.S.lon() - 1 << " " << routing_data.S.lat() - 1
+              << ", " << routing_data.S.lon() - 1 << " " << routing_data.R.lat() + 1e-3
               << ", " << routing_data.R.lon() + 1e-3 << " " << routing_data.R.lat() + 1e-3
-              << ", " << routing_data.R.lon() + 1e-3 << " " << routing_data.S.lat() - 1e-3
-              << ", " << routing_data.S.lon() - 1e-3 << " " << routing_data.S.lat() - 1e-3 << "))";
+              << ", " << routing_data.R.lon() + 1e-3 << " " << routing_data.S.lat() - 1
+              << ", " << routing_data.S.lon() - 1 << " " << routing_data.S.lat() - 1 << "))";
     b.data->meta->shape = ss.str();
 
     mock_kraken kraken(b, "empty_routing_test", argc, argv);

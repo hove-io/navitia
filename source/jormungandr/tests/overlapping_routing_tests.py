@@ -138,6 +138,11 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert not 'debug' in response
 
     def test_coord(self):
-        response = self.query("/v1/coord/0.000001;0.000898311281954", display=True)
+        response = self.query("/v1/coord/0.000001;0.000898311281954")
         is_valid_address(response['address'])
         assert(response['address']['label'] == "42 rue kb (Condom)")
+
+    def test_not_found_coord(self):
+        response, error_code = self.query_no_assert("/v1/coord/-0.9;-0.9", display=True)
+        assert error_code == 404
+        assert response['regions'] == ["empty_routing_test", "main_routing_test"]

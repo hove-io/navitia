@@ -39,20 +39,21 @@ from collections import OrderedDict
 class Coord(ResourceUri):
 
     def get(self, region=None, lon=None, lat=None, id=None, *args, **kwargs):
-        result = OrderedDict()
-        if id:
+        if id is not None:
             splitted = id.split(";")
             if len(splitted) != 2:
-                abort(404, message="No region found for these coordinates")
+                abort(404, message='invalid coords [{}], should be <lon:lon>;<lat:lat>'.format(id))
             lon, lat = splitted
+            try:
+                float(lon)
+                float(lat)
+            except ValueError:
+                abort(404, message='invalid coords [{}], should be <lon:lon>;<lat:lat>'.format(id))
 
         if region is None:
             regions = i_manager.get_regions("", lon, lat)
         else:
             regions = [region]
-
-        if lon is None or lat is None:
-            return abort(404, message="No address for these coords")
 
         args = {
             "uri": "coord:{}:{}".format(lon, lat),
@@ -64,6 +65,7 @@ class Coord(ResourceUri):
             "filter": ""
         }
         self._register_interpreted_parameters(args)
+        result = OrderedDict()
 
         for r in regions:
             self.region = r
@@ -77,4 +79,6 @@ class Coord(ResourceUri):
                     result.update(address=new_address)
                     return result, 200
 
-        return abort(404, message="No address for these coords")
+        result.update(regions=regions)
+        result.update(message="No address for these coords")
+        return result, 404

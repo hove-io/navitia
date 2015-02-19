@@ -446,11 +446,11 @@ struct routing_api_data {
 
         //we give a rough shape (a square)
         std::stringstream ss;
-        ss << "POLYGON((" << S.lon() - 1e-3 << " " << S.lat() - 1e-3
-                  << ", " << S.lon() - 1e-3 << " " << R.lat() + 1e-3
+        ss << "POLYGON((" << S.lon() - 1 << " " << S.lat() - 1
+                  << ", " << S.lon() - 1 << " " << R.lat() + 1e-3
                   << ", " << R.lon() + 1e-3 << " " << R.lat() + 1e-3
-                  << ", " << R.lon() + 1e-3 << " " << S.lat() - 1e-3
-                  << ", " << S.lon() - 1e-3 << " " << S.lat() - 1e-3 << "))";
+                  << ", " << R.lon() + 1e-3 << " " << S.lat() - 1
+                  << ", " << S.lon() - 1 << " " << S.lat() - 1 << "))";
         b.data->meta->shape = ss.str();
 
         add_disruptions();
