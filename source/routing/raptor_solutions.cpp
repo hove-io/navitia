@@ -136,7 +136,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             const auto& dt_pt = ls.dt_pt(sp_idx);
             const auto total_arrival = combine_dt_walking_time(clockwise, dt_pt,
                                                                spid_dist.second.total_seconds());
-            if (!improves(best_dt, total_arrival, clockwise)) {
+            if (!improves(total_arrival, best_dt, clockwise)) {
                 if (best_dt != total_arrival ||
                         best_nb_jpp_of_path <= nb_jpp) {
                     continue;
@@ -227,14 +227,11 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
 
             navitia::time_duration walking_time = getWalkingTime(i, sp_idx, departs, destinations, clockwise,
                                                                  disruption_active, accessibilite_params, raptor);
-            if(best.walking_time < walking_time) {
+            if(best.walking_time <= walking_time) {
                 continue;
             }
             // We accept to have a 10mn worst solution if we can reduce the walking time by 5mn
             int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
-            if (walking_time_diff_in_s >= 0) {
-                continue;
-            }
             float lost_time;
             const auto total_arrival = combine_dt_walking_time(clockwise, raptor.labels[i].dt_pt(sp_idx),
                                                                spid_dist.second.total_seconds());

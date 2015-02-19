@@ -41,10 +41,10 @@ namespace navitia { namespace routing {
 struct RAPTOR;
 
 // Does the current date improves compared to best_so_far – we must not forget to take the walking duration
-static bool improves(const DateTime& best_so_far,
-                     const DateTime& current,
+static bool improves(const DateTime a,
+                     const DateTime b,
                      bool clockwise) {
-    return clockwise ? current > best_so_far : current < best_so_far;
+    return clockwise ? a > b : a < b;
 }
 
 struct Solution {
