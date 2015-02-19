@@ -143,6 +143,11 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert(response['address']['label'] == "42 rue kb (Condom)")
 
     def test_not_found_coord(self):
+        """
+        -0.9;-0.9 is in the two regions, but there is no addresses at
+        200m, thus it should return no solution after trying the two
+        region. empty_routing_test is tested first as it is non free.
+        """
         response, error_code = self.query_no_assert("/v1/coord/-0.9;-0.9", display=True)
         assert error_code == 404
         assert response['regions'] == ["empty_routing_test", "main_routing_test"]
