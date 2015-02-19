@@ -47,9 +47,14 @@ struct Solution {
     float ratio;
     navitia::time_duration walking_time = {};
 
-    Solution() : sp_idx(), count(0),
-                       arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
-                       ratio(std::numeric_limits<float>::min()) {}
+    Solution():
+        sp_idx(),
+        count(0),
+        arrival(DateTimeUtils::inf),
+        upper_bound(DateTimeUtils::inf),
+        total_arrival(DateTimeUtils::inf),
+        ratio(std::numeric_limits<float>::min())
+    {}
 
     bool operator<(const Solution& s) const {
         if (this->arrival != s.arrival) {

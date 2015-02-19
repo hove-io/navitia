@@ -1557,7 +1557,7 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
 
     raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
                              DateTimeUtils::set(0, 7900), false, true,
-                             DateTimeUtils::inf, std::numeric_limits<size_t>::max(), {}, {}, true);
+                             DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
 
     raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
                              DateTimeUtils::set(0, 7900), false, true,
-                             DateTimeUtils::inf, std::numeric_limits<size_t>::max(), {}, {}, true);
+                             DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
