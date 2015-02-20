@@ -724,6 +724,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
 
+    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
+    // because it's not really on the vj
+    std::vector<boost::weak_ptr<new_disruption::Impact>> impacted_by;
+
     // all times are stored in UTC
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
     // For example for departure board over a period (calendar)
@@ -757,7 +761,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
             & codes & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset;
+            & meta_vj & utc_to_local_offset
+            & impacted_by;
     }
 
     type::OdtLevel_e get_odt_level() const;
