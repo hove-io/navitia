@@ -42,6 +42,8 @@ from importlib import import_module
 from jormungandr import cache, app
 from shapely import wkt
 from shapely.geos import ReadingError
+from shapely import geometry
+
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -68,6 +70,7 @@ class Instance(object):
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
+        self.is_up = True
 
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
@@ -231,7 +234,13 @@ class Instance(object):
         """
         Does this instance has this id
         """
-        return len(self.get_id(id_).places) > 0
+        return self.is_up and len(self.get_id(id_).places) > 0
+
+    def has_coord(self, lon, lat):
+        return self.has_point(geometry.Point(lon, lat))
+
+    def has_point(self, p):
+        return self.is_up and self.geom and self.geom.contains(p)
 
 
     def get_external_codes(self, type_, id_):
@@ -269,6 +278,7 @@ class Instance(object):
                         self.geom = wkt.loads(response.metadatas.shape)
                     except ReadingError:
                         self.geom = None
+                    self.is_up = True
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
