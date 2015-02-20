@@ -202,6 +202,13 @@ def purge_instance(instance_id, nb_to_keep):
                  for dataset in instance.last_datasets(nb_to_keep))
     logger.info('loaded  data are: %s', loaded)
     to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
+
+    missing = [l for l in loaded if l not in backups]
+    if missing:
+        logger.error("MISSING backup files! impossible to find %s in the backup dir, "
+                     "we skip the purge, repair ASAP to fix the purge", missing)
+        return
+
     logger.info('we remove: %s', to_remove)
     for path in to_remove:
         shutil.rmtree(path)
