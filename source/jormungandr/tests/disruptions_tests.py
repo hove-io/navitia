@@ -166,7 +166,7 @@ class TestDisruptions(AbstractTestFixture):
         and the impacts on the network
         """
 
-        response = self.query_region('stop_areas/stopB/traffic_reports?' + default_date_filter, display=True)
+        response = self.query_region('stop_areas/stopB/traffic_reports?' + default_date_filter)
 
         traffic_report = get_not_null(response, 'traffic_reports')
         eq_(len(traffic_report), 1)
@@ -256,3 +256,4 @@ class TestDisruptions(AbstractTestFixture):
 
         #UTC - 1, so in UTC it's 00h59 => disruptions
         assert len(response['disruptions']) > 0
+
