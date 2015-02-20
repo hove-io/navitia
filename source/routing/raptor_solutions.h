@@ -40,12 +40,20 @@ namespace navitia { namespace routing {
 
 struct RAPTOR;
 
+// Does the current date improves compared to best_so_far – we must not forget to take the walking duration
+static bool improves(const DateTime a,
+                     const DateTime b,
+                     bool clockwise) {
+    return clockwise ? a > b : a < b;
+}
+
 struct Solution {
     SpIdx sp_idx;  //arrival stop point of the solution
     uint32_t count;
     DateTime arrival, upper_bound, total_arrival;
     float ratio;
     navitia::time_duration walking_time = {};
+    bool clockwise;
 
     Solution():
         sp_idx(),
@@ -57,8 +65,11 @@ struct Solution {
     {}
 
     bool operator<(const Solution& s) const {
+        if (this->total_arrival != s.total_arrival) {
+            return improves(total_arrival, s.total_arrival, clockwise);
+        }
         if (this->arrival != s.arrival) {
-            return this->arrival < s.arrival;
+            return improves(arrival, s.arrival, clockwise);
         }
         if(this->count != s.count) {
             return this->count < s.count;

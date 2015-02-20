@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
  *
  * We want to have two answers
  * J1: I->C->J: arriving at 8h01 at C so at 8h05 at J with a walking time of 321 seconds
- * J2: I->B->J: arriving at 8h01 at C so at 8h07 at J with a walking time of 0 seconds
+ * J2: I->B->J: arriving at 8h07 at B so at 8h07 at J with a walking time of 0 seconds
  */
 BOOST_AUTO_TEST_CASE(less_fallback) {
     ed::builder b("20120614");
