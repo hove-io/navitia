@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "raptor_solution_reader.h"
 #include "raptor.h"
 #include "raptor_visitors.h"
 #include <boost/foreach.hpp>
@@ -249,6 +250,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     if(! b_dest.best_now_sp_idx.is_valid() || b_dest.count == 0) {
         return result;
     }
+
+    read_solutions(*this, clockwise, calc_dep, calc_dest, disruption_active, accessibilite_params);
 
     // Second phase
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
@@ -629,7 +632,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 // first_stoptime is quite cache
                                 // unfriendly, so avoid using it if
                                 // not really needed.
-                                it_st = visitor.first_stoptime(*tmp_st_dt.first);
+                                it_st = visitor.first_stoptime(*tmp_st_dt.first).begin();
                             }
                             boarding_idx = jpp.idx;
                             workingDt = tmp_st_dt.second;

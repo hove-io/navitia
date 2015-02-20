@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/range/iterator_range_core.hpp>
+
 namespace navitia { namespace routing {
 struct raptor_visitor {
     inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
@@ -13,14 +15,20 @@ struct raptor_visitor {
     }
 
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
-    inline stop_time_iterator first_stoptime(const type::StopTime& st) const {
+    boost::iterator_range<stop_time_iterator>
+    first_stoptime(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
-        return vj->stop_time_list.begin() + jpp->order;
+        return boost::make_iterator_range(vj->stop_time_list.begin() + jpp->order,
+                                          vj->stop_time_list.end());
     }
 
     template<typename T1, typename T2> inline bool comp(const T1& a, const T2& b) const {
         return a < b;
+    }
+    // better or equal
+    template<typename T1, typename T2> inline bool be(const T1& a, const T2& b) const {
+        return ! comp(b, a);
     }
 
     template<typename T1, typename T2> inline auto combine(const T1& a, const T2& b) const -> decltype(a+b) {
@@ -65,14 +73,21 @@ struct raptor_reverse_visitor {
     }
 
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
-    inline stop_time_iterator first_stoptime(const type::StopTime& st) const {
+    inline boost::iterator_range<stop_time_iterator>
+    first_stoptime(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
-        return vj->stop_time_list.rbegin() + vj->stop_time_list.size() - jpp->order - 1;
+        return boost::make_iterator_range(
+            vj->stop_time_list.rbegin() + vj->stop_time_list.size() - jpp->order - 1,
+            vj->stop_time_list.rend());
     }
 
     template<typename T1, typename T2> inline bool comp(const T1& a, const T2& b) const {
         return a > b;
+    }
+    // better or equal
+    template<typename T1, typename T2> inline bool be(const T1& a, const T2& b) const {
+        return ! comp(b, a);
     }
 
     template<typename T1, typename T2> inline auto combine(const T1& a, const T2& b) const -> decltype(a-b) {
