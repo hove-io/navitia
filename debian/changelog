@@ -1,3 +1,33 @@
+navitia2 (1.12.0) unstable; urgency=low
+
+  * Disruption: take utc time as now  <https://github.com/CanalTP/navitia/pull/897>
+  * destineo: remove non_pt journeys from admin to admin journey  <https://github.com/CanalTP/navitia/pull/896>
+  * jormungandr: fix /v1/coord/lon;lat when region shapes overlap  <https://github.com/CanalTP/navitia/pull/895>
+  * Kraken: remove duplicate impact on vehicle journey  <https://github.com/CanalTP/navitia/pull/894>
+  * documentation: link correction  <https://github.com/CanalTP/navitia/pull/893>
+  * Kraken: Fix retrieval of walking solutions  <https://github.com/CanalTP/navitia/pull/892>
+  * data: fix stack overflow during serialization  <https://github.com/CanalTP/navitia/pull/891>
+  * Debian: remove nav2rt  <https://github.com/CanalTP/navitia/pull/890>
+  * kraken: recast of disruption api   <https://github.com/CanalTP/navitia/pull/889>
+  * Kraken: fix segfault in route_schedule if a route has no vehiclejourney  <https://github.com/CanalTP/navitia/pull/888>
+  * Raptor: remove old files  <https://github.com/CanalTP/navitia/pull/887>
+  * Fix deletion impact stop area  <https://github.com/CanalTP/navitia/pull/886>
+  * ww autocompletion: first draft  <https://github.com/CanalTP/navitia/pull/885>
+  * Raptor: split label on Stop point and not on jpp  <https://github.com/CanalTP/navitia/pull/883>
+  * Improvement of statistics  <https://github.com/CanalTP/navitia/pull/881>
+  * Ed: read and store line opening/closing times  <https://github.com/CanalTP/navitia/pull/879>
+  * Kraken: add vehicle_journey link in stop_schedules  <https://github.com/CanalTP/navitia/pull/878>
+  * save parsed ptref filter in stat  <https://github.com/CanalTP/navitia/pull/877>
+  * Ed: don't import empty connection  <https://github.com/CanalTP/navitia/pull/876>
+  * Kraken: handle new enum in chaos effect  <https://github.com/CanalTP/navitia/pull/875>
+  * Ed: add check on connection duration  <https://github.com/CanalTP/navitia/pull/873>
+  * Kraken: all severity were blocking  <https://github.com/CanalTP/navitia/pull/871>
+  * Kraken: fix reading of disruption from database without message  <https://github.com/CanalTP/navitia/pull/870>
+  * Remove sindri  <https://github.com/CanalTP/navitia/pull/869>
+  * Jormgandr: add internal to tickets' links  <https://github.com/CanalTP/navitia/pull/868>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 20 Feb 2015 15:02:02 +0100
+
 navitia2 (1.11.1) unstable; urgency=low
 
   * Kraken: fix segfault in route_schedule if a route has no vehiclejourney  <https://github.com/CanalTP/navitia/pull/888>
