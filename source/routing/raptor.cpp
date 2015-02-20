@@ -81,9 +81,9 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             const auto sp_idx = SpIdx(*sp);
             const DateTime bound = (v.comp(best_labels_pts[sp_idx], b_dest.best_now) || !global_pruning) ?
                                         best_labels_pts[sp_idx] : b_dest.best_now;
-            if(!v.comp(workingDt, bound)) {
-                continue;
-            }
+            if (v.comp(bound, workingDt)) { continue; }
+            if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
+
             working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
             working_labels.mut_used_jpp(sp_idx) = JppIdx(*st.journey_pattern_point);
             working_labels.mut_dt_pt(sp_idx) = workingDt;
@@ -124,12 +124,12 @@ bool RAPTOR::foot_path(const Visitor& v) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime next = v.combine(previous, conn.duration);
 
-            if (! v.comp(next, best_labels_transfers[destination_sp_idx])) { continue; }
+            if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
+            if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
 
             //if we can improve the best label, we mark it
             working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
-
             best_labels_transfers[destination_sp_idx] = next;
             result = true;
         }
@@ -602,7 +602,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             // We want to update the labels, if it's better than the one computed before
                             // Or if it's an destination point if it's equal and not unitialized before
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp.sp_idx, workingDt, this->count);
-                            if (visitor.comp(workingDt, bound) || best_add_result) {
+                            if ((!visitor.comp(bound, workingDt)
+                                 && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))
+                                || best_add_result) {
                                 working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                                 working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
                                 working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
