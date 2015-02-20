@@ -668,6 +668,7 @@ class Journeys(ResourceUri, ResourceUtc):
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
+        logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}" .format(possible_regions))
         #we want to store the different errors
         responses = {}
         for r in possible_regions:

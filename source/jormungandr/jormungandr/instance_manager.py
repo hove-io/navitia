@@ -156,28 +156,18 @@ class InstanceManager(object):
             self._clear_cache()
             instance.publication_date = resp.publication_date
         return resp
+
+
     def init_kraken_instances(self):
         """
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
-        for key, instance in self.instances.iteritems():
-            try:
-                resp = instance.send_and_receive(req, timeout=1000, quiet=True)
-                #the instance is automatically updated on a call
-                if resp.HasField('publication_date') and\
-                  instance.publication_date != resp.publication_date:
-                    self._clear_cache()
-                    instance.publication_date = resp.publication_date
-            except DeadSocketException:
-                #but if there is a error, we reset the geom manually
-                instance.geom = None
-                instance.is_up = False
-                if instance.publication_date != -1:
-                    self._clear_cache()
-                    instance.publication_date = -1
-                continue
+        for instance in self.instances.itervalues():
+            if instance.init():
+                self._clear_cache()
+
 
     def thread_ping(self, timer=10):
         """
@@ -222,6 +212,7 @@ class InstanceManager(object):
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = [i.name for i in self.instances.itervalues() if i.has_point(p)]
+        logging.info("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)
         return instances
