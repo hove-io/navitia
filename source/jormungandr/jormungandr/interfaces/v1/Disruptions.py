@@ -78,10 +78,7 @@ class Disruptions(ResourceUri):
                                 description="The current page")
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date and it is mainly used for debug."
-                                            " Note: it is not the same as 'datetime' which, combined with"
-                                            " duration form a period used to filter the disruption"
-                                            " application periods")
+                                            " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",

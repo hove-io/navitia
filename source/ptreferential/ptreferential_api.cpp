@@ -41,75 +41,74 @@ namespace navitia{ namespace ptref{
 static pbnavitia::Response extract_data(const type::Data & data,
                                         type::Type_e requested_type,
                                         std::vector<type::idx_t> & rows,
-                                        const int depth, const bool show_codes) {
+                                        const int depth, const bool show_codes,
+                                        boost::posix_time::ptime current_time) {
     pbnavitia::Response result;
-    //on utilise la date courante pour choisir si on doit afficher les  messages de perturbation
-    pt::ptime today = pt::second_clock::local_time();
     for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:
             fill_pb_object(data.pt_data->validity_patterns[idx], data,
-                           result.add_validity_patterns(), depth, today);
+                           result.add_validity_patterns(), depth, current_time);
             break;
         case Type_e::Line:
             fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
-                           depth, today, null_time_period, show_codes);
+                           depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::JourneyPattern:
             fill_pb_object(data.pt_data->journey_patterns[idx], data,
-                           result.add_journey_patterns(), depth, today);
+                           result.add_journey_patterns(), depth, current_time);
             break;
         case Type_e::StopPoint:
             fill_pb_object(data.pt_data->stop_points[idx], data,
-                           result.add_stop_points(), depth, today, null_time_period, show_codes);
+                           result.add_stop_points(), depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::StopArea:
             fill_pb_object(data.pt_data->stop_areas[idx], data,
-                           result.add_stop_areas(), depth, today, null_time_period, show_codes);
+                           result.add_stop_areas(), depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::Network:
             fill_pb_object(data.pt_data->networks[idx], data,
-                           result.add_networks(), depth, today, null_time_period, show_codes);
+                           result.add_networks(), depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::PhysicalMode:
             fill_pb_object(data.pt_data->physical_modes[idx], data,
-                           result.add_physical_modes(), depth, today);
+                           result.add_physical_modes(), depth, current_time);
             break;
         case Type_e::CommercialMode:
             fill_pb_object(data.pt_data->commercial_modes[idx], data,
-                           result.add_commercial_modes(), depth, today);
+                           result.add_commercial_modes(), depth, current_time);
             break;
         case Type_e::JourneyPatternPoint:
             fill_pb_object(data.pt_data->journey_pattern_points[idx], data,
-                           result.add_journey_pattern_points(), depth, today);
+                           result.add_journey_pattern_points(), depth, current_time);
             break;
         case Type_e::Company:
             fill_pb_object(data.pt_data->companies[idx], data,
-                           result.add_companies(), depth, today);
+                           result.add_companies(), depth, current_time);
             break;
         case Type_e::Route:
             fill_pb_object(data.pt_data->routes[idx], data,
-                    result.add_routes(), depth, today, null_time_period, show_codes);
+                    result.add_routes(), depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::POI:
             fill_pb_object(data.geo_ref->pois[idx], data,
-                           result.add_pois(), depth, today);
+                           result.add_pois(), depth, current_time);
             break;
         case Type_e::POIType:
             fill_pb_object(data.geo_ref->poitypes[idx], data,
-                           result.add_poi_types(), depth, today);
+                           result.add_poi_types(), depth, current_time);
             break;
         case Type_e::Connection:
             fill_pb_object(data.pt_data->stop_point_connections[idx], data,
-                           result.add_connections(), depth, today);
+                           result.add_connections(), depth, current_time);
             break;
         case Type_e::VehicleJourney:
             fill_pb_object(data.pt_data->vehicle_journeys[idx], data,
-                           result.add_vehicle_journeys(), depth, today, null_time_period, show_codes);
+                           result.add_vehicle_journeys(), depth, current_time, null_time_period, show_codes);
             break;
         case Type_e::Calendar:
             fill_pb_object(data.pt_data->calendars[idx], data,
-                           result.add_calendars(), depth, today, null_time_period, show_codes);
+                           result.add_calendars(), depth, current_time, null_time_period, show_codes);
             break;
         default: break;
         }
@@ -126,7 +125,8 @@ pbnavitia::Response query_pb(type::Type_e requested_type,
                              const bool show_codes,
                              const int startPage,
                              const int count,
-                             const type::Data& data){
+                             const type::Data& data,
+                             boost::posix_time::ptime current_time){
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
     int total_result;
@@ -142,7 +142,7 @@ pbnavitia::Response query_pb(type::Type_e requested_type,
     total_result = final_indexes.size();
     final_indexes = paginate(final_indexes, count, startPage);
 
-    pb_response = extract_data(data, requested_type, final_indexes, depth, show_codes);
+    pb_response = extract_data(data, requested_type, final_indexes, depth, show_codes, current_time);
     auto pagination = pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
     pagination->set_startpage(startPage);

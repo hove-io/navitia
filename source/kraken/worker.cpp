@@ -578,7 +578,10 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
                                     get_odt_level(request.odt_level()),
                                     request.depth(), request.show_codes(),
                                     request.start_page(),
-                                    request.count(), *data);
+                                    request.count(), *data,
+                                    //no check on this datetime, it's not important
+                                    //for it to be in the production period, it's used to filter the disruptions
+                                    bt::from_time_t(request.datetime()));
 }
 
 

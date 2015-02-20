@@ -35,6 +35,7 @@ import navitiacommon.response_pb2 as response_pb2
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import pb_type, pt_object_type
 from jormungandr.scenarios.utils import build_pagination
+from datetime import datetime
 
 
 class Scenario(object):
@@ -232,6 +233,7 @@ class Scenario(object):
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
         req.ptref.show_codes = request["show_codes"]
+        req.ptref.datetime = date_to_timestamp(request["_current_datetime"])
         if request["odt_level"]:
             req.ptref.odt_level = pb_odt_level[request["odt_level"]]
         if request["forbidden_uris[]"]:
