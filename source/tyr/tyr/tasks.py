@@ -29,7 +29,8 @@
 
 from celery import chain, group
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, shape2ed, \
+    load_bounding_shape
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from flask import current_app
 import glob
@@ -43,9 +44,6 @@ import shutil
 from tyr.launch_exec import launch_exec
 import kombu
 from shapely.geometry import MultiPolygon, Polygon
-from shapely import wkt
-import sqlalchemy
-
 
 def type_of_data(filename):
     """
@@ -74,6 +72,8 @@ def type_of_data(filename):
         return 'poi'
     if filename.endswith("synonyms.txt"):
         return 'synonym'
+    if filename.endswith(".poly") or filename.endswith(".wkt"):
+        return 'shape'
     return None
 
 def family_of_data(type):
@@ -86,7 +86,8 @@ def family_of_data(type):
         'synonym': 'synonym',
         'poi': 'poi',
         'fusio': 'pt', 'gtfs': 'pt',
-        'fare': 'fare'
+        'fare': 'fare',
+        'shape': 'shape'
     }
     if type in mapping:
         return mapping[type]
@@ -134,6 +135,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         'fare': fare2ed,
         'poi': poi2ed,
         'synonym': synonym2ed,
+        'shape': shape2ed,
     }
 
     for _file in files:
@@ -280,83 +282,13 @@ def cities(osm_path):
     return res
 
 
-# from http://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Python_Parsing
-def parse_poly(lines):
-    """ Parse an Osmosis polygon filter file.
-
-        Accept a sequence of lines from a polygon file, return a shapely.geometry.MultiPolygon object.
-
-        http://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Format
-    """
-    in_ring = False
-    coords = []
-
-    for (index, line) in enumerate(lines):
-        if index == 0:
-            # first line is junk.
-            continue
-
-        elif index == 1:
-            # second line is the first polygon ring.
-            coords.append([[], []])
-            ring = coords[-1][0]
-            in_ring = True
-
-        elif in_ring and line.strip() == 'END':
-            # we are at the end of a ring, perhaps with more to come.
-            in_ring = False
-
-        elif in_ring:
-            # we are in a ring and picking up new coordinates.
-            ring.append(map(float, line.split()))
-
-        elif not in_ring and line.strip() == 'END':
-            # we are at the end of the whole polygon.
-            break
-
-        elif not in_ring and line.startswith('!'):
-            # we are at the start of a polygon part hole.
-            coords[-1][1].append([])
-            ring = coords[-1][1][-1]
-            in_ring = True
-
-        elif not in_ring:
-            # we are at the start of a polygon part.
-            coords.append([[], []])
-            ring = coords[-1][0]
-            in_ring = True
-
-    return MultiPolygon(coords)
-
-
 @celery.task()
 def bounding_shape(instance_name, shape_path):
     """ Set the bounding shape to a custom value """
-    shape = None
-    if shape_path.endswith(".poly"):
-        with open (shape_path, "r") as myfile:
-            shape = parse_poly(myfile.readlines())
-    elif shape_path.endswith(".wkt"):
-        with open (shape_path, "r") as myfile:
-            shape = wkt.loads(myfile.read())
-    else:
-        logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
-        return
 
-    conf = load_instance_config(instance_name)
-    connection_string = "postgres://{u}:{pw}@{h}/{db}"\
-        .format(u=conf.pg_username, pw=conf.pg_password, h=conf.pg_host, db=conf.pg_dbname)
-    engine = sqlalchemy.create_engine(connection_string)
-    # create the line if it does not exists
-    engine.execute("""
-    INSERT INTO navitia.parameters (shape)
-    SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
-    """).close()
-    # update the line, simplified to approx 100m
-    engine.execute("""
-    UPDATE navitia.parameters
-    SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
-    """.format(shape=wkt.dumps(shape))).close()
+    instance_conf = load_instance_config(instance_name)
+
+    load_bounding_shape(instance_name, instance_conf, shape_path)
 
 
 @task_postrun.connect
