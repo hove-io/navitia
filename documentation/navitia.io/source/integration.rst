@@ -1,45 +1,41 @@
-Interface V1's documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Navitia documentation: v1 interface 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Overview
 ========
 
-This document describes how to call the interface v1, and the returned resources.
+This document describes how to call navitia via the v1 interface, and the returned resources.
 
 Endpoint
 ********
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
-Examples
-********
+Some easy examples
+******************
 
-Coverage of the service
-https://api.navitia.io/v1/coverage 
-
-Where am I? (WGS coordinates)
-https://api.navitia.io/v1/coord/2.377310;48.847002
-
-I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-
-Which service available in this coverage?
-https://api.navitia.io/v1/coverage/fr-idf
-
-Networks available?
-https://api.navitia.io/v1/coverage/paris/networks 
-
-RATP lines?
-https://api.navitia.io/v1/coverage/paris/networks/network:RTP/lines 
-
-Too much lines, let's use mode filtering
-https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
-
-By the way, what is close to me?
-https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
-or ...
+* Geographical coverage of the service
+	* https://api.navitia.io/v1/coverage 
+* Where am I? (WGS 84 coordinates)
+	* https://api.navitia.io/v1/coord/2.377310;48.847002
+	* I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+* Which services are available on this coverage? take a look at the links under this URL
+	* https://api.navitia.io/v1/coverage/fr-idf
+* Networks available?
+	* https://api.navitia.io/v1/coverage/fr-idf/networks
+* RATP network lines?
+	* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
+* Too much lines, let's use physical mode filtering
+	* physical modes managed by RATP 
+		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+	* metro lines 
+		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+* By the way, what is close to me?
+	* https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
+	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+	* or ...
 
 Resources
 *********
@@ -156,16 +152,53 @@ start_page      int  The page number
 count           int  Number of items per page
 =============== ==== =======================================
 
-HATEOAS
-=======
-Each response contains a link object. It allows you to know all the accessible urls for a given point
+.. _interface:
 
-templated url
+Interface
+=========
+We aim to implement `HATEOAS <http://en.wikipedia.org/wiki/HATEOAS>`_ concept with Navitia.
+
+Each response contains a linkable object and lots of links. 
+Links allow you to know all accessible uris and services for a given point.
+
+Templated url
 *************
+
+Under some link sections, you will find a "templated" property. If "templated" is true, 
+then you will have to format the link with one id. 
+
+For example, in response of https://api.navitia.io/v1/coverage/fr-idf/lines 
+you will find a *links* section:
+
+.. code-block:: json
+
+	{
+		"href": "https://api.navitia.io/v1/coverage/fr-idf/lines/{lines.id}/stop_schedules",
+		"rel": "route_schedules",
+		"templated": true
+	}
+
+You have to put one line id instead of "{lines.id}". For example:
+https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
 
 Inner references
 ****************
 
+Some link sections look like
+	
+.. code-block:: json
+
+	{
+		"internal": true,
+		"type": "disruption",
+		"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2",
+		"rel": "disruptions",
+		"templated": false
+	}
+
+That means you will find inside the same stream ( *"internal": true* ) a "disruptions" section 
+( *"rel": "disruptions"* ) containing some disruptions objects ( *"type": "disruption"* ) 
+where you can find the details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"* ).
 
 Errors
 ======
@@ -189,7 +222,7 @@ Code 40x
 
 This errors appears when there is an error in the request
 
-The are two possible http codes :
+The are two possible 40x http codes :
 
 * Code 404:
 
@@ -215,13 +248,12 @@ unable_to_parse When you use a mal-formed custom filter
 Code 50x
 ********
 
+Ouch. Technical issue :/
+
 Code 204
 ********
 
 When your request is good but we are not able to find a journey
-
-Redirections
-============
 
 Apis
 ====
@@ -234,7 +266,9 @@ The only arguments are the ones of `paging`_.
 Public transportation objects
 ******************************
 
-Once you have selected a region, you can explore the public transportation objects easily with these apis. You just need to add at the end of your url a collection name to see all the objects of a particular collection.
+Once you have selected a region, you can explore the public transportation objects 
+easily with these apis. You just need to add at the end of your url 
+a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
 The only arguments are the ones of `paging`_.
 
@@ -250,8 +284,27 @@ Collections
 * physical_modes
 * companies
 
-Example
-#######
+Specific parameters
+###################
+
+There are som specific parameters.
+A least, there is one: *odt_level* which can be applied only on /lines collection...
+
+It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
+
+* none : to get standard public transport lines. Trips are predefined.
+* mixt : to get lines with some non-predefined trips 
+* zonal : to get lines with only non-predefined trips 
+* all (default value) : to get all public transport lines
+
+For example
+
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
+
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=none
+
+Examples
+########
 
 Response example for this request https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 
@@ -276,6 +329,18 @@ Response example for this request https://api.navitia.io/v1/coverage/fr-idf/phys
             ...
         ]
     }
+
+Other examples
+
+* Network list
+	* https://api.navitia.io/v1/coverage/fr-idf/networks
+* Physical mode list
+	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes
+* Line list
+	* https://api.navitia.io/v1/coverage/fr-idf/lines
+* Line list for one mode
+	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
+
 
 Places
 ******
@@ -364,7 +429,8 @@ Parameters
 Example
 ########
 
-Response example for: https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
+Response example for this request 
+https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
 
 .. code-block:: json
 
@@ -395,11 +461,13 @@ Journeys
 
 This api compute journeys.
 
-If used within the coverage api, it will retrieve the next journeys from the selected public transport object or coordinates.
+If used within the coverage api, it will retrieve the next journeys from 
+the selected public transport object or coordinates.
 
 There are two ways to access this api.
 
-The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ it will retrieve all the journeys from the resource.
+The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ it will retrieve 
+all the journeys from the resource (*isochrones*).
 
 The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
 
@@ -537,6 +605,11 @@ Parameters
 
 Objects
 #######
+
+Here is a typical journey, all sections are detailed below
+
+.. image:: typical_itinerary.png
+
 
 * main response
 
@@ -906,7 +979,6 @@ Field  Type          Description
 ====== ============= ==========================
 id     string        Identifier of the network
 name   string        Name of the network
-coord  `coord`_      Center of the network
 ====== ============= ==========================
 
 .. _line:
@@ -951,7 +1023,7 @@ id                      string                Identifier of the line
 name                    string                Name of the line
 coord                   `coord`_              Coordinates of the stop point
 administrative_regions  array of `admin`_     Administrative regions of the stop point in which is the stop point
-equipments              array of string       Equipments of the stop point
+equipments              array of string       list of `equipment`_ of the stop point
 stop_area               `stop_area`_          Stop Area containing this stop point
 ======================= ===================== =====================================================================
 
@@ -967,7 +1039,6 @@ id                     string                      Identifier of the line
 name                   string                      Name of the line
 coord                  `coord`_                    Coordinates of the stop area
 administrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
-equipments             array of string             Equipments of the stop area
 stop_points            array of `stop_point`_      Stop points contained in this stop area
 ====================== =========================== ==================================================================
 
@@ -1057,15 +1128,15 @@ administrative_region *optional* `admin`_           Embedded administrative regi
 Embedded type
 _____________
 
-===================== =================
+===================== ============================================================
 Value                 Description
-===================== =================
-stop_point
-stop_area
-address
-poi
-administrative_region
-===================== =================
+===================== ============================================================
+stop_point            a location where vehicles can pick up or drop off passengers
+stop_area             a nameable zone, where there are some stop points  
+address               a point located in a street
+poi                   a point of interest
+administrative_region a city, a district, a neighborhood
+===================== ============================================================
 
 Street network objects
 **********************
@@ -1074,6 +1145,8 @@ Street network objects
 
 Poi
 ###
+
+Poi = Point Of Interest
 
 ================ ================================== =======================================
 Field            Type                               Description
@@ -1126,6 +1199,7 @@ level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
 
+In France, cities are on the 8 level.
 
 Other objects
 *************
@@ -1169,6 +1243,27 @@ date_time  `date_time <date_time_object>`_       A date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============
 
+.. _equipment:
+
+equipment
+#########
+
+Enum from
+* has_wheelchair_accessibility
+* has_bike_accepted
+* has_air_conditioned
+* has_visual_announcement
+* has_audible_announcement
+* has_appropriate_escort
+* has_appropriate_signage
+* has_school_vehicle
+* has_wheelchair_boarding
+* has_sheltered
+* has_elevator
+* has_escalator
+* has_bike_depot
+
+
 .. _display_informations:
 
 display_informations
@@ -1193,7 +1288,7 @@ equipments      Array of String
 link
 ####
 
-
+See `interface`_ section.
 
 Special Parameters
 ******************

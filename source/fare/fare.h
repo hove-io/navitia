@@ -118,7 +118,7 @@ struct Ticket {
 };
 
 inline Ticket make_default_ticket() {
-    Ticket default_t("unkown_ticket", "unkown ticket", 0, "unknown ticket");
+    Ticket default_t("unknown_ticket", "unknown ticket", 0, "unknown ticket");
     default_t.value = Cost();//undefined cost
     return default_t;
 }

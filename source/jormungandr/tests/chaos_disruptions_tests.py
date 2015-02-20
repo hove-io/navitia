@@ -249,37 +249,40 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         return nb_disruptions_map
 
     def run_check(self, object_id, type_):
-        disruption_uri = "blocking_{}_disruption".format(type_)
-        nb_disruptions_map = self.get_nb_disruptions()
-        nb_disruptions = nb_disruptions_map[object_id]
-        # We send a blocking disruption on line A
-        start_period = "20120615T080000"
-        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True,
-                                             start_period=start_period)
-        nb_disruptions_map = self.get_nb_disruptions()
-        assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-
-        journey_query_2_to_format = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&disruption_active=true"
-        journey_query_2 = journey_query_2_to_format.format(from_coord=s_coord, to_coord=r_coord, datetime="20120616T080000")
-        response = self.query_region(journey_query_2)
-
         links = []
+        journey_query_2_to_format = "journeys?from={from_coord}&to={to_coord}&disruption_active=true".format(from_coord=s_coord, to_coord=r_coord)
+        journey_query_2_to_format += "&datetime={datetime}"
+        start_period = "20120615T080000"
+        disruption_uri = "blocking_{}_disruption".format(type_)
+
         def get_type_id(k, v):
             if (k != "links" or "type" not in v or "id" not in v or v["type"] != type_) and\
                (k != type_ or "id" not in v):
                 return
             links.append(v["id"])
 
-        utils.walk_dict(response, get_type_id)
-        assert all(map(lambda id_: id_ != object_id, links))
+        def check_links_(date, check_existence):
+            links[:] = []
+            journey_query = journey_query_2_to_format.format(datetime=date)
+            response_json = self.query_region(journey_query)
 
+            utils.walk_dict(response_json, get_type_id)
+            if check_existence:
+                assert any(map(lambda id_: id_ == object_id, links))
+            else:
+                assert all(map(lambda id_: id_ != object_id, links))
+
+
+        nb_disruptions_map = self.get_nb_disruptions()
+        nb_disruptions = nb_disruptions_map[object_id]
+        # We send a blocking disruption on the object
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True,
+                                             start_period=start_period)
+        nb_disruptions_map = self.get_nb_disruptions()
+        assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
+        check_links_("20120616T080000", False)
         #We test out of the period
-        journey_query_2 = journey_query_2_to_format.format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
-        response = self.query_region(journey_query_2)
-        links = []
-        utils.walk_dict(response, get_type_id)
-        assert any(map(lambda id_: id_ == object_id, links))
-
+        check_links_("20120614T080000", True)
 
         #We delete the disruption
         nb_disruptions_map = self.get_nb_disruptions()
@@ -288,11 +291,23 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                 blocking=True, is_deleted=True, start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions - nb_disruptions_map[object_id]) == 1
-        journey_query_2 = journey_query_2_to_format.format(from_coord=s_coord, to_coord=r_coord, datetime="20120616T080000")
-        response = self.query_region(journey_query_2)
-        links = []
-        utils.walk_dict(response, get_type_id)
-        assert any(map(lambda id_: id_ == object_id, links))
+        check_links_("20120616T080000", True)
+
+        #We try to send first the disruption, and then the impacts
+        nb_disruptions = nb_disruptions_map[object_id]
+        self.send_chaos_disruption_and_sleep(disruption_uri, None, None, blocking=True,
+                                             start_period=start_period)
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True,
+                                             start_period=start_period)
+        nb_disruptions_map = self.get_nb_disruptions()
+        assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
+        check_links_("20120616T080000", False)
+        #We test out of the period
+        check_links_("20120614T080000", True)
+
+        #We clean
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_,
+                blocking=True, is_deleted=True, start_period=start_period)
 
     def test_disruption_on_journey(self):
         """
@@ -412,12 +427,12 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         test /disruptions and check that an update of a disruption is correctly done
         """
         self.wait_for_rabbitmq_cnx()
-        query = 'traffic_reports?datetime=20140101T000000&_current_datetime=20140101T000000'
+        query = 'traffic_reports?_current_datetime=20140101T000000'
         response = self.query_region(query)
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 1)
+        eq_(len(disrupt), 2)
 
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
@@ -432,7 +447,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 2)
+        eq_(len(disrupt), 3)
 
         for disruption in disrupt:
             if disruption['id'] == 'test_disruption':
@@ -449,7 +464,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 2)
+        eq_(len(disrupt), 3)
         for disruption in disrupt:
             if disruption['id'] == 'test_disruption':
                 eq_(disruption['messages'][0]['text'], 'update')
@@ -465,7 +480,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 1)
+        eq_(len(disrupt), 2)
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
@@ -498,6 +513,9 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     tag = disruption.tags.add()
     tag.name = "metro"
     tag.id = "rer"
+
+    if not impacted_obj or not impacted_obj_type:
+        return feed_message.SerializeToString()
 
     # Impacts
     impact = disruption.impacts.add()

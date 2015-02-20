@@ -204,6 +204,9 @@ class DestineoJourneySorter(JourneySorter):
 
         return 0
 
+def is_admin(entrypoint):
+    return entrypoint.startswith('admin:')
+
 
 class Scenario(default.Scenario):
 
@@ -223,12 +226,15 @@ class Scenario(default.Scenario):
             #we find the max_duration with the pure tc call, so we use it for the alternatives
             request_alternative['max_duration'] =  int(max_duration)
 
-        logger.debug('journeys with alternative mode')
-        response_alternative = self._get_alternatives(request_alternative, instance)
+        if not all([is_admin(request['origin']), is_admin(request['destination'])]):
+            logger.debug('journeys with alternative mode')
+            response_alternative = self._get_alternatives(request_alternative, instance)
+            logger.debug('merge and sort reponses')
+            self.merge_response(response_tc, response_alternative)
+        else:
+            logger.debug('don\'t search alternative for admin to admin journeys')
+            self._remove_non_pt_walk(response_tc.journeys)
 
-        logger.debug('merge and sort reponses')
-
-        self.merge_response(response_tc, response_alternative)
         for journey in response_tc.journeys:
             if journey.type == 'best':
                 journey.type = 'rapid'
@@ -254,6 +260,18 @@ class Scenario(default.Scenario):
             self._choose_best_alternatives(response_alternative.journeys)
         return response_alternative
 
+
+    def _remove_non_pt_walk(self, journeys):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type == 'non_pt_walk':
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s non_pt_walk journey', len(to_delete))
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
 
     def _choose_best_alternatives(self, journeys):
         to_keep = []

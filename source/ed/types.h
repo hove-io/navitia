@@ -204,14 +204,15 @@ struct Line : public Header, Nameable {
     std::string color;
     int sort = std::numeric_limits<int>::max();
 
-    CommercialMode* commercial_mode;
-    Network* network;
-    Company* company;
+    CommercialMode* commercial_mode = nullptr;
+    Network* network = nullptr;
+    Company* company = nullptr;
     nt::MultiLineString shape;
-
-    Line(): color(""), commercial_mode(NULL), network(NULL), company(NULL){}
+    boost::optional<boost::posix_time::time_duration> opening_time,
+                                                      closing_time;
 
     bool operator<(const Line & other) const;
+
 };
 
 struct Route : public Header, Nameable{

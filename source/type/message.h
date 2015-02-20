@@ -238,6 +238,8 @@ struct Disruption {
         return impacts;
     }
 
+    bool is_publishable(const boost::posix_time::ptime& current_time) const;
+
 private:
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr

@@ -110,12 +110,6 @@ Calendars are objects used in timetables.
 ### cmake_modules
 Directory with cmake modules
 
-### connectors
-Alerte Traffic (AT) connector
-
-Alerte Traffic are databases filled with public transport disruptions. This connector import the disruption in Navitia.
-
-:snake: **python module**
 
 ### monitor
 Module to monitor kraken.
@@ -150,11 +144,6 @@ Various bash scripts
 
 :zap: **cpp module**
 
-### sindri
-Alerte traffic (AT) connector, used to write in the Alerte traffic database
-
-:snake: **python module**
-
 ### sql
 Contains alembic migrations for the Ed databases
 
@@ -166,7 +155,7 @@ Persists Jormungandr calls in a database
 :snake: **python module**
 
 ### tests
-Contains kraken mock excecutable used in Jormungandr integration tests
+Contains kraken mock executable used in Jormungandr integration tests
 
 ### third_party
 Various third party libraries

@@ -260,7 +260,7 @@ To delete a token:
 
 This API handle access policy for a given user and a given kraken instance.
 
-This is usefull only is the instance is not "free"
+This is useful only is the instance is not "free"
 
     POST /v0/users/$USERID/authorizations/?api_id=$APIID&instance_id=$INSTANCEID  
 

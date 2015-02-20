@@ -28,7 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "next_passages.h"
+#include "previous_passages.h"
 #include "get_stop_times.h"
 #include "request_handle.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
@@ -43,14 +43,14 @@ namespace navitia { namespace timetables {
 
 template<typename Visitor>
 pbnavitia::Response
-next_passages(const std::string &request,
+previous_passages(const std::string &request,
               const std::vector<std::string>& forbidden_uris,
               const pt::ptime datetime,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               const type::AccessibiliteParams & accessibilite_params,
               const type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes) {
-    RequestHandle handler(request, forbidden_uris, datetime, duration, data, {});
+    RequestHandle handler(request, forbidden_uris, datetime, duration, data, {}, false);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -61,7 +61,8 @@ next_passages(const std::string &request,
 
     auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
                             handler.date_time, handler.max_datetime,
-                            nb_stoptimes, data, disruption_active, accessibilite_params);
+                            nb_stoptimes, data, disruption_active, accessibilite_params,
+                            false);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
     auto now = pt::second_clock::local_time();
@@ -70,7 +71,7 @@ next_passages(const std::string &request,
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(vis.api_pb == pbnavitia::NEXT_ARRIVALS) {
+        if(vis.api_pb == pbnavitia::PREVIOUS_ARRIVALS) {
             passage = handler.pb_response.add_next_arrivals();
         } else {
             passage = handler.pb_response.add_next_departures();
@@ -104,14 +105,14 @@ next_passages(const std::string &request,
 }
 
 
-pbnavitia::Response next_departures(const std::string &request,
+pbnavitia::Response previous_departures(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
         const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
         const bool show_codes) {
 
-    struct vis_next_departures {
+    struct vis_previous_departures {
         struct predicate_t {
             const type::Data &data;
             predicate_t(const type::Data& data) : data(data){}
@@ -123,23 +124,23 @@ pbnavitia::Response next_departures(const std::string &request,
         };
         pbnavitia::API api_pb;
         predicate_t predicate;
-        vis_next_departures(const type::Data& data) :
-            api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
+        vis_previous_departures(const type::Data& data) :
+            api_pb(pbnavitia::PREVIOUS_DEPARTURES), predicate(data) {}
     };
-    vis_next_departures vis(data);
-    return next_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
+    vis_previous_departures vis(data);
+    return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
                          accessibilite_params, data, disruption_active, vis, count, start_page, show_codes);
 }
 
 
-pbnavitia::Response next_arrivals(const std::string &request,
+pbnavitia::Response previous_arrivals(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
         const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
         const bool show_codes) {
 
-    struct vis_next_arrivals {
+    struct vis_previous_arrivals {
         struct predicate_t {
             const type::Data &data;
             predicate_t(const type::Data& data) : data(data){}
@@ -149,11 +150,11 @@ pbnavitia::Response next_arrivals(const std::string &request,
         };
         pbnavitia::API api_pb;
         predicate_t predicate;
-        vis_next_arrivals(const type::Data& data) :
-            api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
+        vis_previous_arrivals(const type::Data& data) :
+            api_pb(pbnavitia::PREVIOUS_ARRIVALS), predicate(data) {}
     };
-    vis_next_arrivals vis(data);
-    return next_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
+    vis_previous_arrivals vis(data);
+    return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
             accessibilite_params, data, disruption_active, vis,count , start_page, show_codes);
 }
 

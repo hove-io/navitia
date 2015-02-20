@@ -38,17 +38,6 @@ target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare p
 
 add_subdirectory(connectors)
 
-SET(RT_SOURCE_LIB
-        adapted.cpp
-        at_perturbation.cpp
-)
-
-add_library(adapted ${RT_SOURCE_LIB})
-
-add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed adapted types connectors pq pqxx data fare georef routing pb_lib
-    utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
-
 add_executable(geopal2ed geopal2ed.cpp)
 
 target_link_libraries(geopal2ed transportation_data_import connectors)
@@ -59,4 +48,4 @@ target_link_libraries(poi2ed transportation_data_import connectors)
 add_executable(synonym2ed synonym2ed.cpp)
 target_link_libraries(synonym2ed transportation_data_import connectors)
 
-INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed poi2ed synonym2ed)
+INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav fusio2ed fare2ed geopal2ed poi2ed synonym2ed)

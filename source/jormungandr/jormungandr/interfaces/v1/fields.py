@@ -259,12 +259,17 @@ class stop_time_properties_links(fields.Raw):
         properties = obj.properties
         r = []
         for note_ in properties.notes:
-            r.append({"id": note_.uri, "type": "notes", "value": note_.note})
+            r.append({"id": note_.uri, "type": "notes", "value": note_.note,
+                      "internal": True})
         for exception in properties.exceptions:
             r.append({"type": "exceptions", "id": exception.uri, "date": exception.date,
                       "except_type": exception.type})
         if properties.destination and properties.destination.uri:
-            r.append({"type": "notes", "id": properties.destination.uri, "value": properties.destination.destination})
+            r.append({"type": "notes", "id": properties.destination.uri,
+                      "value": properties.destination.destination})
+        if properties.vehicle_journey_id:
+            r.append({"type": "vehicle_journey", "rel": "vehicle_journey",
+                      "value": properties.vehicle_journey_id})
         return r
 
 
@@ -518,6 +523,8 @@ line["color"] = fields.String()
 line["comment"] = fields.String()
 line["codes"] = NonNullList(NonNullNested(code))
 line["geojson"] = MultiLineString(attribute="geojson")
+line["opening_time"] = SplitDateTime(date=None, time="opening_time")
+line["closing_time"] = SplitDateTime(date=None, time="closing_time")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))

@@ -157,6 +157,7 @@ class V1Routing(AModule):
         self.add_resource(Places.Places,
                           region + 'places',
                           coord + 'places',
+                           '/places',
                           endpoint='places')
         self.add_resource(Ptobjects.Ptobjects,
                           region + 'pt_objects',
@@ -192,13 +193,15 @@ class V1Routing(AModule):
         self.add_resource(Schedules.NextArrivals,
                           region + '<uri:uri>/arrivals',
                           coord + '<uri:uri>/arrivals',
-                          '/arrivals',
+                          region + 'arrivals',
+                          coord + 'arrivals',
                           endpoint='arrivals')
 
         self.add_resource(Schedules.NextDepartures,
                           region + '<uri:uri>/departures',
                           coord + '<uri:uri>/departures',
-                          '/departures',
+                          region + 'departures',
+                          coord + 'departures',
                           endpoint='departures')
 
         self.add_resource(Schedules.StopSchedules,

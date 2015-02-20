@@ -64,7 +64,7 @@ struct EnhancedResponse {
     pbnavitia::Response response;
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
-    pbnavitia::Ticket* unkown_ticket = nullptr; //we want only one unknown ticket
+    pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
     const std::string& register_section(pbnavitia::Journey* j, const routing::PathItem& /*routing_item*/, size_t section_idx) {
         routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
@@ -90,7 +90,8 @@ struct EnhancedResponse {
 #define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
     void fill_pb_object(const navitia::type::type_name* item, const navitia::type::Data& data, pbnavitia::type_name *, int max_depth = 0,\
             const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
-            const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false);
+            const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false,\
+            const bool display_all_publiable_disruption=false);
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
 
@@ -207,7 +208,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
-                    const bool show_codes);
+                    const bool show_codes,
+                    const bool display_all_publiable_disruption);
 
 void fill_pb_object(const type::VehicleJourney* vj,
                     const type::Data& data,

@@ -42,6 +42,8 @@ enum API {
     NMPLANNER = 19;
     pt_objects = 20;
     place_code = 21;
+    PREVIOUS_DEPARTURES = 23;
+    PREVIOUS_ARRIVALS = 24;
 }
 
 enum VehicleJourneyType{
@@ -213,6 +215,8 @@ message Line {
     optional string comment = 15;
     repeated Code codes = 16;
     optional MultiLineString geojson = 17;
+    optional uint32 opening_time = 18;
+    optional uint32 closing_time = 19;
 }
 
 message Route {
@@ -263,6 +267,7 @@ message Properties{
     repeated Note notes = 5;
     repeated CalendarException exceptions = 6;
     optional Destination destination = 7;
+    optional string vehicle_journey_id = 8;
 }
 
 message hasEquipments{

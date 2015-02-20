@@ -40,26 +40,42 @@ namespace navitia { namespace routing {
 
 struct RAPTOR;
 
+// Does the current date improves compared to best_so_far – we must not forget to take the walking duration
+static bool improves(const DateTime a,
+                     const DateTime b,
+                     bool clockwise) {
+    return clockwise ? a > b : a < b;
+}
+
 struct Solution {
-    JppIdx jpp_idx;
+    SpIdx sp_idx;  //arrival stop point of the solution
     uint32_t count;
     DateTime arrival, upper_bound, total_arrival;
     float ratio;
     navitia::time_duration walking_time = {};
+    bool clockwise;
 
-    Solution() : jpp_idx(), count(0),
-                       arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
-                       ratio(std::numeric_limits<float>::min()) {}
+    Solution():
+        sp_idx(),
+        count(0),
+        arrival(DateTimeUtils::inf),
+        upper_bound(DateTimeUtils::inf),
+        total_arrival(DateTimeUtils::inf),
+        ratio(std::numeric_limits<float>::min())
+    {}
 
     bool operator<(const Solution& s) const {
+        if (this->total_arrival != s.total_arrival) {
+            return improves(total_arrival, s.total_arrival, clockwise);
+        }
         if (this->arrival != s.arrival) {
-            return this->arrival < s.arrival;
+            return improves(arrival, s.arrival, clockwise);
         }
         if(this->count != s.count) {
             return this->count < s.count;
         }
-        if (this->jpp_idx != s.jpp_idx) {
-            return this->jpp_idx < s.jpp_idx;
+        if (this->sp_idx != s.sp_idx) {
+            return this->sp_idx < s.sp_idx;
         }
         if(this->upper_bound != s.upper_bound) {
             return this->upper_bound < s.upper_bound;
@@ -81,8 +97,8 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 
 //This one is hacky, it's used to retrieve the departures.
 Solutions
-get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
-             const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool disruption_active);
+init_departures(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+             const DateTime &dep, bool clockwise, bool disruption_active);
 
 Solutions
 get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
@@ -95,11 +111,11 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
                const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
                const type::AccessibiliteParams & accessibilite_params, bool disruption_active, const RAPTOR& raptor);
 
-std::pair<JppIdx, DateTime>
-get_final_jppidx_and_date(int count, JppIdx jpp_idx, bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params, const navitia::routing::RAPTOR &raptor);
+std::pair<SpIdx, DateTime>
+get_final_spidx_and_date(int count, SpIdx sp_idx, bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params, const navitia::routing::RAPTOR &raptor);
 
 navitia::time_duration
-getWalkingTime(int count, JppIdx jpp_idx, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+getWalkingTime(int count, SpIdx sp_idx, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
                const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
                bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
                const navitia::routing::RAPTOR &raptor);

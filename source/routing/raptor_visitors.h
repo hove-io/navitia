@@ -2,7 +2,7 @@
 
 namespace navitia { namespace routing {
 struct raptor_visitor {
-    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
+    inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
         return a <= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
     }
 

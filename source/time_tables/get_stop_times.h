@@ -54,7 +54,8 @@ get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
                const size_t max_departures,
                const type::Data& data,
                bool disruption_active,
-               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams());
+               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
+               const bool clockwise = true);
 
 
 std::vector<datetime_stop_time>

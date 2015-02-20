@@ -77,8 +77,6 @@ class Scenario(object):
         req.disruptions.filter = request['filter']
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
-        req.disruptions.application_period_begin = date_to_timestamp(request['datetime'])
-        req.disruptions.application_period_end = date_to_timestamp(request['period_end'])
         req.disruptions._current_datetime = date_to_timestamp(request['_current_datetime'])
 
         if request["forbidden_uris[]"]:
@@ -152,7 +150,10 @@ class Scenario(object):
         st = req.next_stop_times
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
-        st.from_datetime = request["from_datetime"]
+        if request["from_datetime"]:
+            st.from_datetime = request["from_datetime"]
+        if request["until_datetime"]:
+            st.until_datetime = request["until_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
         st.show_codes = request["show_codes"]
@@ -187,6 +188,12 @@ class Scenario(object):
 
     def next_departures(self, request, instance):
         return self.__stop_times(request, instance, request["filter"], "", type_pb2.NEXT_DEPARTURES)
+
+    def previous_arrivals(self, request, instance):
+        return self.__stop_times(request, instance, "", request["filter"], type_pb2.PREVIOUS_ARRIVALS)
+
+    def previous_departures(self, request, instance):
+        return self.__stop_times(request, instance, request["filter"], "", type_pb2.PREVIOUS_DEPARTURES)
 
     def stops_schedules(self, request, instance):
         return self.__stop_times(request, instance, request["departure_filter"], request["arrival_filter"],

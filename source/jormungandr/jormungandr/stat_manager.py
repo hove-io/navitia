@@ -37,6 +37,7 @@ import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
+import re
 
 import time
 import sys
@@ -75,20 +76,26 @@ class FindAdminVisitor(object):
             return None
         return self.admins[0]['insee']
 
+    def get_admin_name(self):
+        if not self.admins:
+            return None
+        return self.admins[0]['name']
+
+def find_admin(point):
+    visitor = FindAdminVisitor()
+    utils.walk_dict(point, visitor)
+    return (visitor.get_admin_id(), visitor.get_admin_insee(), visitor.get_admin_name())
+
 def find_origin_admin(journey):
     if 'sections' not in journey:
-        return (None, None)
-    visitor = FindAdminVisitor()
-    utils.walk_dict(journey['sections'][0]['from'], visitor)
-    return (visitor.get_admin_id(), visitor.get_admin_insee())
+        return (None, None, None)
+    return find_admin(journey['sections'][0]['from'])
 
 
 def find_destination_admin(journey):
     if 'sections' not in journey:
-        return (None, None)
-    visitor = FindAdminVisitor()
-    utils.walk_dict(journey['sections'][-1]['to'], visitor)
-    return (visitor.get_admin_id(), visitor.get_admin_insee())
+        return (None, None, None)
+    return find_admin(journey['sections'][-1]['to'])
 
 
 class StatManager(object):
@@ -214,6 +221,28 @@ class StatManager(object):
                     stat_parameter = stat_request.interpreted_parameters.add()
                     stat_parameter.key = item[0]
                     stat_parameter.value = unicode(item[1])
+                    if item[0] in ('filter', 'departure_filter', 'arrival_filter'):
+                        #we parse ptref filter here
+                        self.fill_filters(item[1], stat_parameter)
+
+
+    def fill_filters(self, value, stat_parameter):
+        """
+        basic parsing of a ptref filter
+        """
+        if not value:
+            return
+        for elem in re.split('\s+and\s+', r, flags=re.IGNORECASE):
+            match = re.match('^\s*(\w+).(\w+)\s*([=!><]{1,2}|DWITHIN)\s*(.*)$', elem, re.IGNORECASE)
+            if match:
+                filter = stat_parameter.filters.add()
+                filter.object = match.group(1)
+                filter.attribute = match.group(2)
+                filter.operator = match.group(3)
+                filter.value = match.group(4)
+            else:
+                logging.getLogger(__name__).warn('impossible to parse: %s', elem)
+
 
     def fill_coverages(self, stat_request):
         if 'region' in request.view_args:
@@ -259,6 +288,38 @@ class StatManager(object):
         if 'type' in resp_journey:
             stat_journey.type = resp_journey['type']
 
+        first_pt_section = None
+        last_pt_section = None
+        for section in resp_journey['sections']:
+            if 'type' in section and section['type'] == 'public_transport':
+                if not first_pt_section:
+                    first_pt_section = section
+                last_pt_section = section
+
+        if first_pt_section and last_pt_section:
+            stat_journey.first_pt_id = first_pt_section['from']['id']
+            stat_journey.first_pt_name = first_pt_section['from']['name']
+            self.fill_coord(stat_journey.first_pt_coord, first_pt_section['from'][first_pt_section['from']['embedded_type']]['coord'])
+            admin = find_admin(first_pt_section['from'])
+            if admin[0]:
+                stat_journey.first_pt_admin_id = admin[0]
+            if admin[1]:
+                stat_journey.first_pt_admin_insee = admin[1]
+            if admin[2]:
+                stat_journey.first_pt_admin_name = admin[2]
+
+            stat_journey.last_pt_id = last_pt_section['to']['id']
+            stat_journey.last_pt_name = last_pt_section['to']['name']
+            self.fill_coord(stat_journey.last_pt_coord, last_pt_section['to'][last_pt_section['to']['embedded_type']]['coord'])
+            admin = find_admin(last_pt_section['to'])
+            if admin[0]:
+                stat_journey.last_pt_admin_id = admin[0]
+            if admin[1]:
+                stat_journey.last_pt_admin_insee = admin[1]
+            if admin[2]:
+                stat_journey.last_pt_admin_name = admin[2]
+
+
     def fill_journeys(self, stat_request, call_result):
         """
         Fill journeys and sections for each journey
@@ -274,11 +335,15 @@ class StatManager(object):
                 journey_request.departure_admin = origin[0]
             if origin[1]:
                 journey_request.departure_insee = origin[1]
+            if origin[2]:
+                journey_request.departure_admin_name = origin[2]
             destination = find_destination_admin(first_journey)
             if destination[0]:
                 journey_request.arrival_admin = destination[0]
             if destination[1]:
                 journey_request.arrival_insee = destination[1]
+            if destination[2]:
+                journey_request.arrival_admin_name = destination[2]
             for resp_journey in call_result[0]['journeys']:
                 stat_journey = stat_request.journeys.add()
                 self.fill_journey(stat_journey, resp_journey)
@@ -333,8 +398,7 @@ class StatManager(object):
         instead of stop_point
         """
         stat_section.from_embedded_type = section_point['embedded_type']
-        if 'administrative_regions' in section_point[stat_section.from_embedded_type]:
-            self.fill_admin_from(stat_section, section_point[stat_section.from_embedded_type]['administrative_regions'])
+        self.fill_admin_from(stat_section, find_admin(section_point))
 
         if stat_section.from_embedded_type == 'stop_point'\
             and 'stop_area' in section_point['stop_point']:
@@ -356,8 +420,7 @@ class StatManager(object):
         """
         stat_section.to_embedded_type = section_point['embedded_type']
 
-        if 'administrative_regions' in section_point[stat_section.to_embedded_type]:
-            self.fill_admin_to(stat_section, section_point[stat_section.to_embedded_type]['administrative_regions'])
+        self.fill_admin_to(stat_section, find_admin(section_point))
 
         if stat_section.to_embedded_type == 'stop_point' \
             and 'stop_area' in section_point['stop_point']:
@@ -404,20 +467,22 @@ class StatManager(object):
             if self.save_stat:
                 self.producer.publish(stat_request.SerializeToString())
 
-    def fill_admin_from(self, stat_section, admins):
-        for admin in admins:
-            if admin['level'] == 8:
-                stat_section.from_admin_id = admin['id']
-                stat_section.from_admin_name = admin['name']
-                break
+    def fill_admin_from(self, stat_section, admin):
+        if admin[0]:
+            stat_section.from_admin_id = admin[0]
+        if admin[2]:
+            stat_section.from_admin_name = admin[2]
+        if admin[1]:
+            stat_section.from_admin_insee = admin[1]
 
 
-    def fill_admin_to(self,stat_section, admins):
-        for admin in admins:
-            if admin['level'] == 8:
-                stat_section.to_admin_id = admin['id']
-                stat_section.to_admin_name = admin['name']
-                break
+    def fill_admin_to(self, stat_section, admin):
+        if admin[0]:
+            stat_section.to_admin_id = admin[0]
+        if admin[2]:
+            stat_section.to_admin_name = admin[2]
+        if admin[1]:
+            stat_section.to_admin_insee = admin[1]
 
     def fill_section_display_informations(self, stat_section, resp_section):
         if 'display_informations' in resp_section:

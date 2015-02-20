@@ -287,6 +287,30 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert 'error' in response and response['error']['id'] == "no_origin_nor_destination"
             assert status == 404
 
+    def test_places_for_bobitto(self):
+        with user_set(app, "bobitto"):
+            response = self.query('v1/coverage/main_routing_test/places?q=toto')
+            assert 'error' not in response
+            response = self.query('v1/coverage/departure_board_test/places?q=toto')
+            assert 'error' not in response
+            response = self.query('v1/coverage/empty_routing_test/places?q=toto')
+            assert 'error' not in response
+            # this test suppose no elasticsearch is lanched at localhost
+            _, status = self.query_no_assert('v1/places?q=toto')
+            assert status == 500
+
+    def test_places_for_bobette(self):
+        with user_set(app, "bobette"):
+            _, status = self.query_no_assert('v1/coverage/main_routing_test/places?q=toto')
+            assert status == 403
+            _, status = self.query_no_assert('v1/coverage/departure_board_test/places?q=toto')
+            assert status == 403
+            response = self.query('v1/coverage/empty_routing_test/places?q=toto')
+            assert 'error' not in response
+            # this test suppose no elasticsearch is lanched at localhost
+            _, status = self.query_no_assert('v1/places?q=toto')
+            assert status == 500
+
     #TODO add more tests on:
     # * coords
     # * disruptions

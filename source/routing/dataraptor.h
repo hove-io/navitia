@@ -48,15 +48,8 @@ struct dataRAPTOR {
             DateTime duration;
             SpIdx sp_idx;
         };
-        inline const std::vector<Connection>& get_forward(const SpIdx& sp) const {
-            return forward_connections[sp];
-        }
-        inline const std::vector<Connection>& get_backward(const SpIdx& sp) const {
-            return backward_connections[sp];
-        }
         void load(const navitia::type::PT_Data &data);
 
-    private:
         // for a stop point, get the corresponding forward connections
         IdxMap<type::StopPoint, std::vector<Connection>> forward_connections;
         // for a stop point, get the corresponding backward connections
@@ -78,6 +71,10 @@ struct dataRAPTOR {
         void load(const navitia::type::PT_Data &data);
         void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
 
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
+        begin() const { return jpps_from_sp.begin(); }
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
+        end() const { return jpps_from_sp.end(); }
     private:
         IdxMap<type::StopPoint, std::vector<Jpp>> jpps_from_sp;
     };

@@ -29,32 +29,21 @@ www.navitia.io
 */
 
 #pragma once
-#include <string>
-#include <map>
-#include "type/message.h"
-#include "ed/at_perturbation.h"
+#include "type/pb_converter.h"
+namespace navitia { namespace timetables {
 
-namespace navitia{namespace type{
-    class Data;
-    struct PT_Data;
+
+pbnavitia::Response previous_departures(const std::string &request,
+        const std::vector<std::string>& forbidden_uris,
+        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
+        const int depth, const type::AccessibiliteParams & accessibilite_params,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const bool show_codes);
+pbnavitia::Response previous_arrivals(const std::string &request,
+        const std::vector<std::string>& forbidden_uris,
+        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
+        const int depth, const type::AccessibiliteParams & accessibilite_params,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const bool show_codes);
+
 }}
-
-namespace ed{ namespace connectors{
-
-struct RealtimeLoaderConfig{
-    std::string connection_string;
-    uint32_t shift_days;
-
-    RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
-};
-
-void load_disruptions(
-        navitia::type::PT_Data& pt_data,
-        const RealtimeLoaderConfig& conf,
-        const boost::posix_time::ptime& current_time);
-
-std::vector<ed::AtPerturbation> load_at_perturbations(
-        const RealtimeLoaderConfig& conf,
-        const boost::posix_time::ptime& current_time);
-
-}}//connectors
