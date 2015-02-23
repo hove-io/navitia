@@ -122,8 +122,7 @@ class StatManager(object):
             self.producer = self.connection.Producer(exchange=exchange)
             self.save_stat = True
         except:
-            self.save_stat = False
-            logging.getLogger(__name__).warn('Unable to activate the producer of stat')
+            logging.getLogger(__name__).exception('Unable to activate the producer of stat')
 
     def manage_stat(self, start_time, call_result):
         """
