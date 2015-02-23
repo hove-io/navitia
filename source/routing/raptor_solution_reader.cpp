@@ -57,17 +57,32 @@ struct PathElt {
     const PathElt* prev;
 };
 
-struct Section {
-    Section(const type::StopTime& in,
-            const DateTime in_dt,
-            const type::StopTime& out,
-            const DateTime out_dt):
-        get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
-    {}
-    const type::StopTime* get_in_st;
-    DateTime get_in_dt;
-    const type::StopTime* get_out_st;
-    DateTime get_out_dt;
+struct Journey {
+    Journey(const PathElt& path, const bool c): clockwise(c) {
+        for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
+            if (clockwise) {
+                sections.emplace_back(elt->begin_st, elt->begin_dt, elt->end_st, elt->end_dt);
+            } else {
+                sections.emplace_back(elt->end_st, elt->end_dt, elt->begin_st, elt->begin_dt);
+            }
+        }
+        if (clockwise) { boost::reverse(sections); }
+    }
+
+    struct Section {
+        Section(const type::StopTime& in,
+                const DateTime in_dt,
+                const type::StopTime& out,
+                const DateTime out_dt):
+            get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
+            {}
+        const type::StopTime* get_in_st;
+        DateTime get_in_dt;
+        const type::StopTime* get_out_st;
+        DateTime get_out_dt;
+    };
+    std::vector<Section> sections;
+    bool clockwise;
 };
 
 template<typename Visitor>
@@ -88,17 +103,9 @@ struct RaptorSolutionReader {
 
     void handle_solution(const PathElt& path) {
         ++nb_solutions;
-        std::vector<Section> sections;
-        for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
-            if (v.clockwise()) {
-                sections.emplace_back(elt->begin_st, elt->begin_dt, elt->end_st, elt->end_dt);
-            } else {
-                sections.emplace_back(elt->end_st, elt->end_dt, elt->begin_st, elt->begin_dt);
-            }
-        }
-        if (v.clockwise()) { boost::reverse(sections); }
+        Journey journey(path, v.clockwise());
 
-        for (const auto& s: sections) {
+        for (const auto& s: journey.sections) {
             std::cout << "("
                       << s.get_in_st->journey_pattern_point->journey_pattern->route->line->uri << ": "
                       << s.get_in_st->journey_pattern_point->stop_point->uri << "@"
