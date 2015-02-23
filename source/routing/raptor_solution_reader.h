@@ -69,72 +69,102 @@ struct RaptorSolutionReader {
     const RAPTOR::vec_stop_point_duration& dep;
     const bool disruption_active;
     const type::AccessibiliteParams& accessibilite_params;
+    size_t nb_solutions = 0;
 
-    void found_solution(const PathElt& path) const {
+    void handle_solution(const PathElt& path) {
+        ++nb_solutions;
         for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
-            std::cout << "(" << elt->begin_st.journey_pattern_point->stop_point->uri << ": "
-                      << elt->begin_dt << ", "
-                      << elt->end_st.journey_pattern_point->stop_point->uri << ": "
-                      << elt->end_dt << ")";
+            std::cout << "(" << elt->begin_st.journey_pattern_point->journey_pattern->route->line->uri << ": ";
+            if (v.clockwise()) {
+                std::cout << elt->begin_st.journey_pattern_point->stop_point->uri << "@"
+                          << elt->begin_dt << ", "
+                          << elt->end_st.journey_pattern_point->stop_point->uri << "@"
+                          << elt->end_dt << ")";
+            } else {
+                std::cout << elt->end_st.journey_pattern_point->stop_point->uri << "@"
+                          << elt->end_dt << ", "
+                          << elt->begin_st.journey_pattern_point->stop_point->uri << "@"
+                          << elt->begin_dt << ")";
+            }
         }
         std::cout << std::endl;
     }
 
     void transfer(const unsigned count,
                    const SpIdx sp_idx,
-                   const DateTime begin,
-                   const PathElt* prev) const {
+                   const DateTime lb_dt,
+                   const PathElt* prev) {
         const auto& cnx_list = v.clockwise() ?
             raptor.data.dataRaptor->connections.forward_connections :
             raptor.data.dataRaptor->connections.backward_connections;
-        const DateTime transfer_limit = raptor.labels[count].dt_pt(sp_idx);
         for (const auto& conn: cnx_list[sp_idx]) {
-            const SpIdx destination_sp_idx = conn.sp_idx;
-            const DateTime next = v.combine(begin, conn.duration);
-            if (v.comp(transfer_limit, next)) { continue; }
-            pt(count, destination_sp_idx, next, prev);
+            const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
+            const DateTime transfer_arrival = v.combine(lb_dt, conn.duration);
+            if (v.comp(transfer_limit, transfer_arrival)) { continue; }
+
+            // transfer is OK
+            pt_in(count, conn.sp_idx, transfer_arrival, prev);
         }
     }
 
-    void pt(const unsigned count,
-            const SpIdx sp_idx,
-            const DateTime begin,
-            const PathElt* prev = nullptr) const {
-        const DateTime get_in_limit = raptor.labels[count].dt_pt(sp_idx);
-        for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[sp_idx]) {
+    template<typename Range>
+    void pt_out(const unsigned count,
+                const PathElt* prev,
+                const std::pair<const type::StopTime*, DateTime>& get_in_st_dt,
+                const uint16_t l_zone,
+                DateTime& cur_dt,
+                const Range& st_range) {
+        static const auto no_zone = std::numeric_limits<uint16_t>::max();
+
+        for (const auto& get_out_st: st_range) {
+            const auto current_time = get_out_st.section_end_time(
+                v.clockwise(), DateTimeUtils::hour(cur_dt));
+            DateTimeUtils::update(cur_dt, current_time, v.clockwise());
+
+            // trying to get out
+            if (! get_out_st.valid_end(v.clockwise())) { continue; }
+            if (l_zone != no_zone && l_zone == get_out_st.local_traffic_zone) { continue; }
+            const SpIdx get_out_sp_idx = SpIdx(*get_out_st.journey_pattern_point->stop_point);
+            if (! raptor.labels[count - 1].transfer_is_initialized(get_out_sp_idx)) { continue; }
+            const DateTime get_out_limit = raptor.labels[count - 1].dt_transfer(get_out_sp_idx);
+            if (v.comp(get_out_limit, cur_dt)) { continue; }
+
+            // great, we are out
+            const PathElt path(*get_in_st_dt.first, get_in_st_dt.second, get_out_st, cur_dt, prev);
+            if (count == 1) {
+                // we've finished, and it's a destination point as it is initialized
+                handle_solution(path);
+            } else {
+                transfer(count - 1, get_out_sp_idx, cur_dt, &path);
+            }
+        }
+    }
+
+    void pt_in(const unsigned count,
+               const SpIdx get_in_sp_idx,
+               const DateTime lb_dt,
+               const PathElt* prev = nullptr) {
+        const DateTime get_in_limit = raptor.labels[count].dt_pt(get_in_sp_idx);
+        for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[get_in_sp_idx]) {
             // trying to get in
-            const auto tmp_st_dt = raptor.next_st.next_stop_time(
-                jpp.idx, begin, v.clockwise(), disruption_active,
+            const auto get_in_st_dt = raptor.next_st.next_stop_time(
+                jpp.idx, lb_dt, v.clockwise(), disruption_active,
                 accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
-            if (tmp_st_dt.first == nullptr) { continue; }
-            const auto get_in_st = *tmp_st_dt.first;
-            if (v.comp(get_in_limit, tmp_st_dt.second)) { continue; }
+            if (get_in_st_dt.first == nullptr) { continue; }
+            if (v.comp(get_in_limit, get_in_st_dt.second)) { continue; }
 
             // great, we are in
-            auto workingDt = tmp_st_dt.second;
-            const auto l_zone = get_in_st.local_traffic_zone;
-            static const auto no_zone = std::numeric_limits<uint16_t>::max();
-            for (const auto& st: v.first_stoptime(get_in_st)) {
-                const auto current_time = st.section_end_time(
-                    v.clockwise(), DateTimeUtils::hour(workingDt));
-                DateTimeUtils::update(workingDt, current_time, v.clockwise());
+            auto cur_dt = get_in_st_dt.second;
+            const auto l_zone = get_in_st_dt.first->local_traffic_zone;
+            pt_out(count, prev, get_in_st_dt, l_zone, cur_dt,
+                   v.st_range(*get_in_st_dt.first).advance_begin(1));
 
-                // trying to get out
-                if (! st.valid_end(v.clockwise())) { continue; }
-                if (l_zone != no_zone && l_zone == st.local_traffic_zone) { continue; }
-                const SpIdx sp_idx = SpIdx(*st.journey_pattern_point->stop_point);
-                if (! raptor.labels[count - 1].transfer_is_initialized(sp_idx)) { continue; }
-                const DateTime get_out_limit = raptor.labels[count - 1].dt_transfer(sp_idx);
-                if (v.comp(get_out_limit, workingDt)) { continue; }
-
-                // great, we are out
-                const PathElt path(get_in_st, tmp_st_dt.second, st, workingDt, prev);
-                if (count == 1) {
-                    // we've finished, and it's a destination point as it is initialized
-                    found_solution(path);
-                } else {
-                    transfer(count - 1, sp_idx, workingDt, &path);
-                }
+            // continuing in the stay in
+            for (const auto* stay_in_vj = v.get_extension_vj(get_in_st_dt.first->vehicle_journey);
+                 stay_in_vj != nullptr;
+                 stay_in_vj = v.get_extension_vj(stay_in_vj)) {
+                pt_out(count, prev, get_in_st_dt, l_zone, cur_dt,
+                       v.stop_time_list(stay_in_vj));
             }
         }
     }
@@ -149,39 +179,41 @@ make_raptor_solution_reader(const RAPTOR& r,
 }
 
 template<typename Visitor>
-void read_solutions(const RAPTOR& raptor,
+size_t read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& dep,
                     const RAPTOR::vec_stop_point_duration& arr,
                     const bool disruption_active,
                     const type::AccessibiliteParams& accessibilite_params)
 {
-    const auto reader = make_raptor_solution_reader(raptor, v, dep, disruption_active, accessibilite_params);
+    auto reader = make_raptor_solution_reader(raptor, v, dep, disruption_active, accessibilite_params);
     std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: arr) {
             if (working_labels.pt_is_initialized(a.first)) {
-                reader.pt(count, a.first, working_labels.dt_pt(a.first));
+                std::cout << "from " << raptor.get_sp(a.first)->uri << std::endl;
+                reader.pt_in(count, a.first, working_labels.dt_pt(a.first));
             }
         }
     }
     std::cout << "end reader" << std::endl;
+    return reader.nb_solutions;
 }
 
-inline void read_solutions(const RAPTOR& raptor,
-                           const bool clockwise,
-                           const RAPTOR::vec_stop_point_duration& dep,
-                           const RAPTOR::vec_stop_point_duration& arr,
-                           const bool disruption_active,
-                           const type::AccessibiliteParams& accessibilite_params)
+inline size_t read_solutions(const RAPTOR& raptor,
+                             const bool clockwise,
+                             const RAPTOR::vec_stop_point_duration& dep,
+                             const RAPTOR::vec_stop_point_duration& arr,
+                             const bool disruption_active,
+                             const type::AccessibiliteParams& accessibilite_params)
 {
     if (clockwise) {
-        read_solutions(raptor, raptor_reverse_visitor(), dep, arr,
-                       disruption_active, accessibilite_params);
+        return read_solutions(raptor, raptor_reverse_visitor(), dep, arr,
+                              disruption_active, accessibilite_params);
     } else {
-        read_solutions(raptor, raptor_visitor(), dep, arr,
-                       disruption_active, accessibilite_params);
+        return read_solutions(raptor, raptor_visitor(), dep, arr,
+                              disruption_active, accessibilite_params);
     }
 }
 

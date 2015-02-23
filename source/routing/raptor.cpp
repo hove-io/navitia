@@ -31,7 +31,6 @@ www.navitia.io
 #include "raptor_solution_reader.h"
 #include "raptor.h"
 #include "raptor_visitors.h"
-#include <boost/foreach.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
@@ -59,7 +58,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
-        const auto& st_begin = *stop_time_list.first;
+        const auto& st_begin = stop_time_list.front();
         const auto current_time = st_begin.section_end_time(v.clockwise(),
                                 DateTimeUtils::hour(workingDt));
         DateTimeUtils::update(workingDt, current_time, v.clockwise());
@@ -67,7 +66,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
         if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
             return result;
         }
-        BOOST_FOREACH(const type::StopTime& st, stop_time_list) {
+        for (const type::StopTime& st: stop_time_list) {
             const auto current_time = st.section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
             DateTimeUtils::update(workingDt, current_time, v.clockwise());
@@ -251,7 +250,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         return result;
     }
 
-    read_solutions(*this, clockwise, calc_dep, calc_dest, disruption_active, accessibilite_params);
+    const size_t nb_sol_reader = read_solutions(*this, clockwise, calc_dep, calc_dest, disruption_active, accessibilite_params);
 
     // Second phase
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
@@ -289,6 +288,9 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
 
+    if (nb_sol_reader < result.size()) {
+        std::cout << "***** error reader fail" << nb_sol_reader << " " << result.size() << std::endl;
+    }
     return filter_journeys(result);
 }
 
@@ -629,10 +631,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
 
                         if (tmp_st_dt.first != nullptr) {
                             if (! boarding_idx.is_valid() || &*it_st != tmp_st_dt.first) {
-                                // first_stoptime is quite cache
+                                // st_range is quite cache
                                 // unfriendly, so avoid using it if
                                 // not really needed.
-                                it_st = visitor.first_stoptime(*tmp_st_dt.first).begin();
+                                it_st = visitor.st_range(*tmp_st_dt.first).begin();
                             }
                             boarding_idx = jpp.idx;
                             workingDt = tmp_st_dt.second;

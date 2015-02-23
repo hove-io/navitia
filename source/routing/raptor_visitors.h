@@ -16,7 +16,7 @@ struct raptor_visitor {
 
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
     boost::iterator_range<stop_time_iterator>
-    first_stoptime(const type::StopTime& st) const {
+    st_range(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
         return boost::make_iterator_range(vj->stop_time_list.begin() + jpp->order,
@@ -50,9 +50,9 @@ struct raptor_visitor {
     }
 
     inline
-    std::pair<std::vector<type::StopTime>::const_iterator, std::vector<type::StopTime>::const_iterator>
+    boost::iterator_range<std::vector<type::StopTime>::const_iterator>
     stop_time_list(const type::VehicleJourney* vj) const {
-        return std::make_pair(vj->stop_time_list.begin(), vj->stop_time_list.end());
+        return boost::make_iterator_range(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
 
     constexpr bool clockwise() const{return true;}
@@ -74,7 +74,7 @@ struct raptor_reverse_visitor {
 
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
     inline boost::iterator_range<stop_time_iterator>
-    first_stoptime(const type::StopTime& st) const {
+    st_range(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
         return boost::make_iterator_range(
@@ -109,9 +109,9 @@ struct raptor_reverse_visitor {
     }
 
     inline
-    std::pair<std::vector<type::StopTime>::const_reverse_iterator, std::vector<type::StopTime>::const_reverse_iterator>
+    boost::iterator_range<std::vector<type::StopTime>::const_reverse_iterator>
     stop_time_list(const type::VehicleJourney* vj) const {
-        return std::make_pair(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
+        return boost::make_iterator_range(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
     }
 
     constexpr bool clockwise() const{return false;}
