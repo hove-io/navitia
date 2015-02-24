@@ -58,7 +58,9 @@ struct PathElt {
 };
 
 struct Journey {
-    Journey(const PathElt& path, const bool c): clockwise(c) {
+    template<typename Visitor>
+    Journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader):
+        clockwise(reader.v.clockwise()) {
         for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
             if (clockwise) {
                 sections.emplace_back(elt->begin_st, elt->begin_dt, elt->end_st, elt->end_dt);
@@ -75,14 +77,19 @@ struct Journey {
                 const type::StopTime& out,
                 const DateTime out_dt):
             get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
-            {}
+        {}
         const type::StopTime* get_in_st;
         DateTime get_in_dt;
         const type::StopTime* get_out_st;
         DateTime get_out_dt;
     };
     std::vector<Section> sections;
-    bool clockwise;
+    navitia::time_duration sn_dur;// street network duration
+    navitia::time_duration transfer_dur;// walking duration during transfer
+    navitia::time_duration min_waiting_dur;// minimal waiting duration on every transfers
+    DateTime end_dt;// the end of the journey, the main objective
+    DateTime begin_dt;// the begin of the journey,
+    uint8_t nb_vj_extentions;
 };
 
 template<typename Visitor>
