@@ -394,6 +394,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->display_duration = length;
 
     data->pt_data->stop_point_connections.push_back(connexion);
+    connexion->departure->stop_point_connection_list.push_back(connexion);
+    connexion->destination->stop_point_connection_list.push_back(connexion);
 }
 
  void builder::generate_dummy_basis() {
