@@ -1,3 +1,11 @@
+navitia2 (1.12.1) unstable; urgency=low
+
+  * Jormungandr: wrong variable user in stat_manager
+  * Jormungandr: Answer when krakens are dead to /v1/journeys with ids
+  * Jormungandr: add log on error and retry
+
+ -- l-vincent-l <lara.vincent@gmail.com>  Tue, 24 Feb 2015 11:02:50 +0100
+
 navitia2 (1.12.0) unstable; urgency=low
 
   * Disruption: take utc time as now  <https://github.com/CanalTP/navitia/pull/897>
