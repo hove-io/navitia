@@ -42,7 +42,6 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
     DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
-import traceback
 
 
 def instances_comparator(instance1, instance2):
@@ -54,12 +53,14 @@ def instances_comparator(instance1, instance2):
     jormun_bdd_instance1 = models.Instance.get_by_name(instance1)
     jormun_bdd_instance2 = models.Instance.get_by_name(instance2)
     #TODO the is_free should be in the instances, no need to fetch the bdd for this
+    if not jormun_bdd_instance1 and not jormun_bdd_instance2:
+        raise RegionNotFound(custom_msg="technical problem, impossible "
+                                        "to find region {i} and region{j} in jormungandr database".format(
+            i=jormun_bdd_instance1, j=jormun_bdd_instance2))
     if not jormun_bdd_instance1:
-        raise RegionNotFound(custom_msg="technical problem, impossible "
-                                        "to find region {i} in jormungandr database".format(i=jormun_bdd_instance1))
+        return -1
     if not jormun_bdd_instance2:
-        raise RegionNotFound(custom_msg="technical problem, impossible "
-                                        "to find region {i} in jormungandr database".format(i=jormun_bdd_instance2))
+        return 1
 
     if jormun_bdd_instance1.is_free != jormun_bdd_instance2.is_free:
         return jormun_bdd_instance1.is_free - jormun_bdd_instance2.is_free
@@ -141,20 +142,21 @@ class InstanceManager(object):
                  request=None):
         if instance_obj:
             instance_name = instance_obj.name
-        if instance_name in self.instances:
-            instance = self.instances[instance_name]
-            if hasattr(instance.scenario, api) and callable(getattr(instance.scenario, api)):
-                api_func = getattr(instance.scenario, api)
-                resp = api_func(arguments, instance)
-                if resp.HasField("publication_date") and\
-                  instance.publication_date != resp.publication_date:
-                    self._clear_cache()
-                    instance.publication_date = resp.publication_date
-                return resp
-            else:
-                raise ApiNotFound(api)
-        else:
+        if instance_name not in self.instances:
             raise RegionNotFound(instance_name)
+
+        instance = self.instances[instance_name]
+        if not hasattr(instance.scenario, api) or not callable(getattr(instance.scenario, api)):
+            raise ApiNotFound(api)
+
+        api_func = getattr(instance.scenario, api)
+        resp = api_func(arguments, instance)
+        if resp.HasField("publication_date") and\
+          instance.publication_date != resp.publication_date:
+            self._clear_cache()
+            instance.publication_date = resp.publication_date
+        return resp
+
 
     def init_kraken_instances(self):
         """
@@ -162,21 +164,10 @@ class InstanceManager(object):
         """
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
-        for key, instance in self.instances.iteritems():
-            try:
-                resp = instance.send_and_receive(req, timeout=1000, quiet=True)
-                #the instance is automatically updated on a call
-                if resp.HasField('publication_date') and\
-                  instance.publication_date != resp.publication_date:
-                    self._clear_cache()
-                    instance.publication_date = resp.publication_date
-            except DeadSocketException:
-                #but if there is a error, we reset the geom manually
-                instance.geom = None
-                if instance.publication_date != -1:
-                    self._clear_cache()
-                    instance.publication_date = -1
-                continue
+        for instance in self.instances.itervalues():
+            if instance.init():
+                self._clear_cache()
+
 
     def thread_ping(self, timer=10):
         """
@@ -220,11 +211,10 @@ class InstanceManager(object):
 
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
-        instances = []
-        # a valid instance is an instance containing the coord and accessible by the user
-        for key, instance in self.instances.iteritems():
-            if instance.geom and instance.geom.contains(p):
-                instances.append(instance.name)
+        instances = [i.name for i in self.instances.itervalues() if i.has_point(p)]
+        logging.debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
+        if not instances:
+            raise RegionNotFound(lon=lon, lat=lat)
         return instances
 
     def region_exists(self, region_str):

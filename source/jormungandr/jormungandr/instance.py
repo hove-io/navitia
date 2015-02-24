@@ -42,6 +42,8 @@ from importlib import import_module
 from jormungandr import cache, app
 from shapely import wkt
 from shapely.geos import ReadingError
+from shapely import geometry
+import json
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -68,6 +70,7 @@ class Instance(object):
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
+        self.is_up = True
 
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
@@ -231,7 +234,20 @@ class Instance(object):
         """
         Does this instance has this id
         """
-        return len(self.get_id(id_).places) > 0
+        try:
+            return self.is_up and len(self.get_id(id_).places) > 0
+        except DeadSocketException:
+            return False
+
+
+    def has_coord(self, lon, lat):
+        return self.has_point(geometry.Point(lon, lat))
+
+    def has_point(self, p):
+        try:
+            return self.is_up and self.geom and self.geom.contains(p)
+        except DeadSocketException:
+            return False
 
 
     def get_external_codes(self, type_, id_):
@@ -253,7 +269,10 @@ class Instance(object):
         Does this instance has the given id
         Returns None if it doesnt, the kraken uri otherwise
         """
-        res = self.get_external_codes(type_, id_)
+        try:
+            res = self.get_external_codes(type_, id_)
+        except DeadSocketException:
+            return False
         if len(res.places) > 0:
             return res.places[0].uri
         return None
@@ -269,6 +288,32 @@ class Instance(object):
                         self.geom = wkt.loads(response.metadatas.shape)
                     except ReadingError:
                         self.geom = None
+                    self.is_up = True
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
+
+
+    def init(self):
+        """
+        Get and store variables of the instance.
+        Returns True if we need to clear the cache, False otherwise.
+        """
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.METADATAS
+        try:
+            resp = self.send_and_receive(req, timeout=1000, quiet=True)
+            self.update_property(resp)
+            #the instance is automatically updated on a call
+            if resp.HasField('publication_date') and\
+                  self.publication_date != resp.publication_date:
+                    self.publication_date = resp.publication_date
+                    return True
+        except DeadSocketException:
+            #but if there is a error, we reset the geom manually
+            self.geom = None
+            self.is_up = False
+            if self.publication_date != -1:
+                self.publication_date = -1
+                return True
+        return False
