@@ -28,9 +28,9 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "raptor_solution_reader.h"
 #include "raptor.h"
 #include "raptor_visitors.h"
-#include <boost/foreach.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
@@ -58,7 +58,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
-        const auto& st_begin = *stop_time_list.first;
+        const auto& st_begin = stop_time_list.front();
         const auto current_time = st_begin.section_end_time(v.clockwise(),
                                 DateTimeUtils::hour(workingDt));
         DateTimeUtils::update(workingDt, current_time, v.clockwise());
@@ -66,7 +66,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
         if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
             return result;
         }
-        BOOST_FOREACH(const type::StopTime& st, stop_time_list) {
+        for (const type::StopTime& st: stop_time_list) {
             const auto current_time = st.section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
             DateTimeUtils::update(workingDt, current_time, v.clockwise());
@@ -81,9 +81,9 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             const auto sp_idx = SpIdx(*sp);
             const DateTime bound = (v.comp(best_labels_pts[sp_idx], b_dest.best_now) || !global_pruning) ?
                                         best_labels_pts[sp_idx] : b_dest.best_now;
-            if(!v.comp(workingDt, bound)) {
-                continue;
-            }
+            if (v.comp(bound, workingDt)) { continue; }
+            if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
+
             working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
             working_labels.mut_used_jpp(sp_idx) = JppIdx(*st.journey_pattern_point);
             working_labels.mut_dt_pt(sp_idx) = workingDt;
@@ -124,12 +124,12 @@ bool RAPTOR::foot_path(const Visitor& v) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime next = v.combine(previous, conn.duration);
 
-            if (! v.comp(next, best_labels_transfers[destination_sp_idx])) { continue; }
+            if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
+            if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
 
             //if we can improve the best label, we mark it
             working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
-
             best_labels_transfers[destination_sp_idx] = next;
             result = true;
         }
@@ -250,6 +250,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         return result;
     }
 
+    const size_t nb_sol_reader = read_solutions(*this, clockwise, calc_dep, calc_dest, disruption_active, accessibilite_params);
+
     // Second phase
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
     // and vice and versa
@@ -286,6 +288,9 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
 
+    if (nb_sol_reader < result.size()) {
+        std::cout << "***** error reader fail" << nb_sol_reader << " " << result.size() << std::endl;
+    }
     return filter_journeys(result);
 }
 
@@ -602,7 +607,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             // We want to update the labels, if it's better than the one computed before
                             // Or if it's an destination point if it's equal and not unitialized before
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp.sp_idx, workingDt, this->count);
-                            if (visitor.comp(workingDt, bound) || best_add_result) {
+                            if ((!visitor.comp(bound, workingDt)
+                                 && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))
+                                || best_add_result) {
                                 working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                                 working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
                                 working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
@@ -624,10 +631,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
 
                         if (tmp_st_dt.first != nullptr) {
                             if (! boarding_idx.is_valid() || &*it_st != tmp_st_dt.first) {
-                                // first_stoptime is quite cache
+                                // st_range is quite cache
                                 // unfriendly, so avoid using it if
                                 // not really needed.
-                                it_st = visitor.first_stoptime(*tmp_st_dt.first);
+                                it_st = visitor.st_range(*tmp_st_dt.first).begin();
                             }
                             boarding_idx = jpp.idx;
                             workingDt = tmp_st_dt.second;

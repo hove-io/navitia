@@ -124,7 +124,7 @@ struct NextStopTime {
                    const bool clockwise,
                    const bool adapted,
                    const type::VehicleProperties& vehicle_props,
-                   const bool check_freq = true) {
+                   const bool check_freq = true) const {
         if (clockwise) {
             return earliest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq);
         } else {
@@ -141,7 +141,7 @@ struct NextStopTime {
                        const DateTime dt,
                        const bool adapted,
                        const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true);
+                       const bool check_freq = true) const;
 
     /// Next backward stop time for a given datetime (dt).  Look for
     /// the first stop_time arriving before dt on the journey pattern
@@ -152,7 +152,7 @@ struct NextStopTime {
                        const DateTime dt,
                        const bool adapted,
                        const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true);
+                       const bool check_freq = true) const;
 
 private:
     const type::Data& data;

@@ -2,7 +2,7 @@ SET(BOOST_LIBS ${Boost_THREAD_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SERIALIZATION_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 
-SET(ROUTING_SRC routing.cpp raptor_solutions.cpp raptor_path.cpp raptor.cpp raptor_api.cpp next_stop_time.cpp dataraptor.cpp raptor_utils.cpp raptor_solution_filter.cpp)
+SET(ROUTING_SRC routing.cpp raptor_solutions.cpp raptor_solution_reader.cpp raptor_path.cpp raptor.cpp raptor_api.cpp next_stop_time.cpp dataraptor.cpp raptor_utils.cpp raptor_solution_filter.cpp)
 
 add_library(routing ${ROUTING_SRC})
 
