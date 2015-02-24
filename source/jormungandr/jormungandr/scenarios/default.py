@@ -200,7 +200,7 @@ class Scenario(simple.Scenario):
         self.__fill_uris(resp)
         return resp
 
-    def change_request(self, pb_req, resp):
+    def change_request(self, pb_req, resp, forbidden_uris=[]):
         result = copy.deepcopy(pb_req)
         def get_uri_odt_with_zones(journey):
             result = []
@@ -216,11 +216,15 @@ class Scenario(simple.Scenario):
             return result
 
         map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
-        for forbidden_uris in map_forbidden_uris:
-            for line_uri in forbidden_uris:
+        for uris in map_forbidden_uris:
+            for line_uri in uris:
                 if line_uri not in result.journeys.forbidden_uris:
-                    result.journeys.forbidden_uris.append(line_uri)
-        return result
+                    forbidden_uris.append(line_uri)
+        for forbidden_uri in forbidden_uris:
+            result.journeys.forbidden_uris.append(forbidden_uri)
+
+
+        return result, forbidden_uris
 
     def fill_journeys(self, pb_req, request, instance):
         """
@@ -234,6 +238,7 @@ class Scenario(simple.Scenario):
         cpt_attempt = 0
         max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
         at_least_one_journey_found = False
+        forbidden_uris = []
         while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.call_kraken(next_request, instance)
@@ -263,7 +268,7 @@ class Scenario(simple.Scenario):
                         break
                 new_datetime = last_best.arrival_date_time - one_minute
 
-            next_request = self.change_request(pb_req, tmp_resp)
+            next_request, forbidden_uris = self.change_request(pb_req, tmp_resp, forbidden_uris)
             next_request.journeys.datetimes[0] = new_datetime
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey
