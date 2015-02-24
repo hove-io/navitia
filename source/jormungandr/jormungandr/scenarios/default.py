@@ -319,7 +319,8 @@ class Scenario(simple.Scenario):
         section_is_walking_or_pt = lambda section: section.type not in \
                 (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
                            or section.street_network.mode == response_pb2.Walking
-        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections)
+        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections) \
+                and journey.duration > 0
 
         list_journeys = filter(filter_journey, journeys)
         if not list_journeys:
