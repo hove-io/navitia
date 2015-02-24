@@ -57,18 +57,19 @@ struct PathElt {
     const PathElt* prev;
 };
 
+template<typename Visitor> struct RaptorSolutionReader;
+
 struct Journey {
     template<typename Visitor>
-    Journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader):
-        clockwise(reader.v.clockwise()) {
+    Journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader) {
         for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
-            if (clockwise) {
+            if (reader.v.clockwise()) {
                 sections.emplace_back(elt->begin_st, elt->begin_dt, elt->end_st, elt->end_dt);
             } else {
                 sections.emplace_back(elt->end_st, elt->end_dt, elt->begin_st, elt->begin_dt);
             }
         }
-        if (clockwise) { boost::reverse(sections); }
+        if (reader.v.clockwise()) { boost::reverse(sections); }
     }
 
     struct Section {
@@ -110,7 +111,7 @@ struct RaptorSolutionReader {
 
     void handle_solution(const PathElt& path) {
         ++nb_solutions;
-        Journey journey(path, v.clockwise());
+        Journey journey(path, *this);
 
         for (const auto& s: journey.sections) {
             std::cout << "("
