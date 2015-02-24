@@ -343,3 +343,23 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
         eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
+
+@dataset(["main_routing_test", "basic_routing_test"])
+class TestOneDeadRegion(AbstractTestFixture):
+    """
+    Test if we still responds when one kraken is dead
+    """
+
+    def test_one_dead_region(self):
+        self.krakens_pool["basic_routing_test"].kill()
+
+        response = self.query("v1/journeys?from=stop_point:stopA&"
+            "to=stop_point:stopB&datetime=20120614T080000&debug=true",
+                              display=False)
+        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys'][0]['sections']), 1)
+        eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
+        eq_(len(response['debug']['regions_called']), 1)
+        eq_(response['debug']['regions_called'][0], "main_routing_test")
+
+
