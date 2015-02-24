@@ -288,7 +288,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
 
-    if (nb_sol_reader < result.size()) {
+    if (nb_sol_reader != result.size()) {
         std::cout << "***** error reader fail" << nb_sol_reader << " " << result.size() << std::endl;
     }
     return filter_journeys(result);
