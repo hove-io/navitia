@@ -212,7 +212,7 @@ class InstanceManager(object):
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = [i.name for i in self.instances.itervalues() if i.has_point(p)]
-        logging.info("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
+        logging.debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)
         return instances
