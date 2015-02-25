@@ -231,6 +231,7 @@ message Route {
     repeated StopPoint stop_points = 1;
     optional PtObject direction = 12;
     optional MultiLineString geojson = 13;
+    repeated PhysicalMode physical_modes = 14;
 }
 
 message JourneyPattern {

@@ -549,6 +549,7 @@ physical_mode = deepcopy(generic_type)
 commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
 physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 line["commercial_mode"] = PbField(commercial_mode)
+route["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type_admin)

@@ -504,6 +504,14 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                 fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
                         now, action_period, show_codes, display_all_publishable_disruption);
         }
+        std::set<nt::PhysicalMode*> physical_modes;
+        for (auto journey_pattern : r->journey_pattern_list) {
+            physical_modes.insert(journey_pattern->physical_mode);
+        }
+        for (auto physical_mode : physical_modes) {
+            fill_pb_object(physical_mode, data, route->add_physical_modes(), 0, now, action_period,
+                           show_codes, display_all_publishable_disruption);
+        }
     }
 }
 
@@ -1354,7 +1362,6 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
             uris->set_commercial_mode(r->line->commercial_mode->uri);
         }
     }
-
 }
 
 void fill_pb_object(const nt::VehicleJourney* vj,
