@@ -401,7 +401,8 @@ disruption_severity = {
 
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
-    "impact_id": fields.String(attribute="impact_uri"),
+    "disruption_id": fields.String(attribute="disruption_uri"),
+    "impact_id": fields.String(attribute="uri"),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
     "status": disruption_status,
@@ -415,7 +416,7 @@ disruption_marshaller = {
 #OLD disruption, DEPRECATED
 disruption = deepcopy(disruption_marshaller)
 disruption_marshaller["uri"] = fields.String()
-disruption_marshaller["impact_uri"] = fields.String()
+disruption_marshaller["disruption_uri"] = fields.String()
 
 
 class DisruptionsField(fields.Raw):
