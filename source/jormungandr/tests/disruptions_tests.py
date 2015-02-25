@@ -31,7 +31,7 @@ from check_utils import *
 
 
 def get_impacts(response):
-    return {d['impact_id']: d for d in response['disruptions']}
+    return {d['id']: d for d in response['disruptions']}
 
 # for the tests we need custom datetime to display the disruptions
 default_date_filter = '_current_datetime=20140101T000000'
@@ -69,12 +69,12 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(lines_disrupt), 2)
         for d in lines_disrupt:
             is_valid_disruption(d)
-        eq_(lines_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
         eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
-        eq_(lines_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
-        eq_(lines_disrupt[1]['impact_id'], 'later_impact')
+        eq_(lines_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+        eq_(lines_disrupt[1]['uri'], 'later_impact')
         eq_(lines_disrupt[1]['severity']['name'], 'information severity')
 
         impacted_network = get_not_null(traffic_report[0], 'network')
@@ -84,11 +84,11 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(network_disrupt), 2)
         for d in network_disrupt:
             is_valid_disruption(d)
-        eq_(network_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(network_disrupt[0]['uri'], 'too_bad_again')
 
-        eq_(network_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['impact_id'], 'later_impact')
+        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+        eq_(network_disrupt[1]['uri'], 'later_impact')
 
         impacted_stop_areas = get_not_null(traffic_report[0], 'stop_areas')
         eq_(len(impacted_stop_areas), 1)
@@ -98,8 +98,8 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(stop_disrupt), 1)
         for d in stop_disrupt:
             is_valid_disruption(d)
-        eq_(stop_disrupt[0]['uri'], 'disruption_on_stop_A')
-        eq_(stop_disrupt[0]['impact_id'], 'too_bad')
+        eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
+        eq_(stop_disrupt[0]['uri'], 'too_bad')
 
         """
         by querying directly the impacted object, we find the same results

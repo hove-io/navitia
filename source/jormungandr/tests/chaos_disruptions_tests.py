@@ -138,7 +138,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first we got only one disruption on B
         assert len(disruptions) == 1
 
-        assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
+        assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -175,7 +175,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
 
         #at first we got only one disruption
         assert len(disruptions) == 1
-        assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
+        assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -219,7 +219,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             #at first we got only one disruption on A
             assert len(disruptions) == 1
 
-            assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
+            assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -409,7 +409,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
             real_disruptions = [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
 
             for d in real_disruptions:
-                disruption_by_obj[d['id']].append((d, obj))
+                disruption_by_obj[d['disruption_id']].append((d, obj))
 
         utils.walk_dict(response, disruptions_filler)
 
