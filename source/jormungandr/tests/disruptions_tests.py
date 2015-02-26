@@ -53,7 +53,7 @@ class TestDisruptions(AbstractTestFixture):
         one impacted stop_area
         """
 
-        response = self.query_region('traffic_reports?' + default_date_filter, display=False)
+        response = self.query_region('traffic_reports?' + default_date_filter)
 
         traffic_report = get_not_null(response, 'traffic_reports')
 
@@ -104,38 +104,57 @@ class TestDisruptions(AbstractTestFixture):
         """
         by querying directly the impacted object, we find the same results
         """
-        # TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
-        # networks = self.query_region('networks/base_network?' + default_date_filter)
-        # network = get_not_null(networks, 'networks')[0]
-        # is_valid_network(network)
-        # eq_(get_not_null(network, 'disruptions'), network_disrupt)
-        # eq_(get_not_null(network, 'messages'), get_not_null(impacted_network, 'messages'))
-        #
-        # lines = self.query_region('lines/A?' + default_date_filter)
-        # line = get_not_null(lines, 'lines')[0]
-        # is_valid_line(line)
-        # eq_(get_not_null(line, 'disruptions'), lines_disrupt)
-        # eq_(get_not_null(line, 'messages'), get_not_null(impacted_lines[0], 'messages'))
-        #
-        # stops = self.query_region('stop_areas/stopA?' + default_date_filter)
-        # stop = get_not_null(stops, 'stop_areas')[0]
-        # is_valid_stop_area(stop)
-        # eq_(get_not_null(stop, 'disruptions'), stop_disrupt)
-        # eq_(get_not_null(stop, 'messages'), get_not_null(impacted_stop_areas[0], 'messages'))
+        networks = self.query_region('networks/base_network?' + default_date_filter)
+        network = get_not_null(networks, 'networks')[0]
+        is_valid_network(network)
+        network_disrupt = get_disruptions(network, response)
+        eq_(len(network_disrupt), 2)
+        for d in network_disrupt:
+            is_valid_disruption(d)
+        eq_(network_disrupt[0]['uri'], 'disruption_on_line_A')
+        eq_(network_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(network_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
+        eq_(network_disrupt[1]['impact_id'], 'later_impact')
+
+        lines = self.query_region('lines/A?' + default_date_filter)
+        line = get_not_null(lines, 'lines')[0]
+        is_valid_line(line)
+        lines_disrupt = get_disruptions(impacted_lines[0], response)
+        eq_(len(lines_disrupt), 2)
+        for d in lines_disrupt:
+            is_valid_disruption(d)
+        eq_(lines_disrupt[0]['uri'], 'disruption_on_line_A')
+        eq_(lines_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
+
+        eq_(lines_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
+        eq_(lines_disrupt[1]['impact_id'], 'later_impact')
+        eq_(lines_disrupt[1]['severity']['name'], 'information severity')
+
+        stops = self.query_region('stop_areas/stopA?' + default_date_filter)
+        stop = get_not_null(stops, 'stop_areas')[0]
+        is_valid_stop_area(stop)
+        stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
+        eq_(len(stop_disrupt), 1)
+        for d in stop_disrupt:
+            is_valid_disruption(d)
+        eq_(stop_disrupt[0]['uri'], 'disruption_on_stop_A')
+        eq_(stop_disrupt[0]['impact_id'], 'too_bad')
 
     def test_disruption_with_stop_areas(self):
         """
         when calling the pt object stopA, we should get its disruptions
         """
 
-        response = self.query_region('stop_areas/stopA')
+        response = self.query_region('stop_areas/stopA?' + default_date_filter)
 
         stops = get_not_null(response, 'stop_areas')
         eq_(len(stops), 1)
         stop = stops[0]
 
-        #TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
-        #get_not_null(stop, 'disruptions')
+        disruptions = get_disruptions(stop, response)
+        eq_(len(disruptions), 1)
+        is_valid_disruption(disruptions[0])
 
     def test_direct_disruption_call(self):
         """
@@ -143,46 +162,43 @@ class TestDisruptions(AbstractTestFixture):
         we should get the disruption summary filtered on the stopB
 
         so
-        we get the impact on the line A (it goes through stopB),
-        and the impact on the network
+        we get the impacts on the line A (it goes through stopB),
+        and the impacts on the network
         """
 
-        """
-        TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
-        response = self.query_region('stop_areas/stopB/disruptions?' + default_date_filter, display=True)
+        response = self.query_region('stop_areas/stopB/traffic_reports?' + default_date_filter)
 
-        disruptions = get_not_null(response, 'disruptions')
-        eq_(len(disruptions), 1)
+        traffic_report = get_not_null(response, 'traffic_reports')
+        eq_(len(traffic_report), 1)
 
-        impacted_lines = get_not_null(disruptions[0], 'lines')
+        impacted_lines = get_not_null(traffic_report[0], 'lines')
         eq_(len(impacted_lines), 1)
         is_valid_line(impacted_lines[0], depth_check=0)
         eq_(impacted_lines[0]['id'], 'A')
 
-        lines_disrupt = get_not_null(impacted_lines[0], 'disruptions')
-        eq_(len(lines_disrupt), 1)
+        lines_disrupt = get_disruptions(impacted_lines[0], response)
+        eq_(len(lines_disrupt), 2)
         eq_(lines_disrupt[0]['uri'], 'disruption_on_line_A')
         eq_(lines_disrupt[0]['impact_id'], 'too_bad_again')
 
-        impacted_network = get_not_null(disruptions[0], 'network')
+        impacted_network = get_not_null(traffic_report[0], 'network')
 
         is_valid_network(impacted_network, depth_check=0)
         eq_(impacted_network['id'], 'base_network')
-        network_disrupt = get_not_null(impacted_network, 'disruptions')
-        eq_(len(network_disrupt), 1)
+        network_disrupt = get_disruptions(impacted_network, response)
+        eq_(len(network_disrupt), 2)
         eq_(network_disrupt[0]['uri'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['impact_id'], 'too_bad_again')
 
         # but we should not have disruption on stop area, B is not disrupted
-        assert 'stop_areas' not in disruptions[0]
-        """
+        assert 'stop_areas' not in traffic_report[0]
 
     def test_no_disruption(self):
         """
         when calling the pt object stopB, we should get no disruptions
         """
 
-        response = self.query_region('stop_areas/stopB', display=False)
+        response = self.query_region('stop_areas/stopB')
 
         stops = get_not_null(response, 'stop_areas')
         eq_(len(stops), 1)
@@ -198,14 +214,46 @@ class TestDisruptions(AbstractTestFixture):
 
         so at 9 it is not in the list, at 11, we get it
         """
-        response = self.query_region('traffic_reports?_current_datetime=20140128T090000', display=False)
+        response = self.query_region('traffic_reports?_current_datetime=20140128T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 3)
         assert 'impact_published_later' not in impacts
 
-        response = self.query_region('traffic_reports?_current_datetime=20140128T130000', display=False)
+        response = self.query_region('traffic_reports?_current_datetime=20140128T130000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 4)
         assert 'impact_published_later' in impacts
+
+    def test_disruption_datefilter_limits(self):
+        """
+        the _current_datetime is by default in UTC, we test that this is correctly taken into account
+        disruption_on_line_A is applied from 20140101T000000 to 20140201T115959
+        """
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T000000Z')
+
+        #we should have disruptions at this date
+        assert len(response['disruptions']) > 0
+
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20131231T235959Z')
+
+        #before the start of the period => no disruptions
+        assert len(response['disruptions']) == 0
+
+        #%2B is the code for '+'
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T005959%2B0100')
+
+        #UTC + 1, so in UTC it's 23h59 the day before => no disruption
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T000000-0100')
+
+        #UTC - 1, so in UTC it's 01h => disruptions
+        assert len(response['disruptions']) > 0
+
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20131231T235959-0100')
+
+        #UTC - 1, so in UTC it's 00h59 => disruptions
+        assert len(response['disruptions']) > 0
+

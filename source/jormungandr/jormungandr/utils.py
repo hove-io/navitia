@@ -54,7 +54,7 @@ def date_to_timestamp(date):
     """
     convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
     """
-    return int(calendar.timegm(date.timetuple()))
+    return int(calendar.timegm(date.utctimetuple()))
 
 
 class ResourceUtc:

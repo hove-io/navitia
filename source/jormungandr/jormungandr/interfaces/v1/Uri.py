@@ -42,7 +42,7 @@ from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.interfaces.parsers import depth_argument, date_time_format
 from errors import ManageError
 from Coord import Coord
 from jormungandr.interfaces.v1.fields import DisruptionsField, use_old_disruptions_if_needed
@@ -51,6 +51,7 @@ from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 import navitiacommon.type_pb2 as type_pb2
+from datetime import datetime
 
 class Uri(ResourceUri):
     parsers = {}
@@ -83,6 +84,12 @@ class Uri(ResourceUri):
                                 description="temporary boolean to use the old disruption interface. "
                                             "Will be deleted soon, just needed for synchronization with the front end",
                                 default=False)
+        parser.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
+                                description="The datetime used to consider the state of the pt object"
+                                            " Default is the current date and it is used for debug."
+                                            " Note: it will mainly change the disruptions that concern the object"
+                                            " The timezone should be specified in the format,"
+                                            " else we consider it as UTC")
 
         if is_collection:
             parser.add_argument("filter", type=str, default="",
