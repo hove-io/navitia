@@ -100,6 +100,9 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="temporary boolean to use the old disruption interface. "
                                             "Will be deleted soon, just needed for synchronization with the front end",
                                 default=False)
+        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                description="The datetime we want to publish the disruptions from."
+                                            " Default is the current date and it is mainly used for debug.")
 
         self.method_decorators.append(complete_links(self))
 

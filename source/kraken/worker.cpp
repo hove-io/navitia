@@ -230,32 +230,33 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
+    bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, false, request.count(),
-                    request.start_page(), request.show_codes());
+                    type::AccessibiliteParams(), *data, true, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
-                    *data, false, request.count(), request.start_page(), request.show_codes());
+                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_DEPARTURES:
             return timetables::previous_departures(request.departure_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, false, request.count(),
-                    request.start_page(), request.show_codes());
+                    type::AccessibiliteParams(), *data, true, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_ARRIVALS:
             return timetables::previous_arrivals(request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
-                    *data, false, request.count(), request.start_page(), request.show_codes());
+                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
                                               request.arrival_filter(),
