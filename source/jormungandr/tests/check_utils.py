@@ -716,7 +716,7 @@ def get_disruptions(obj, response):
 
 def is_valid_disruption(disruption):
     get_not_null(disruption, 'id')
-    get_not_null(disruption, 'impact_id')
+    get_not_null(disruption, 'disruption_id')
     s = get_not_null(disruption, 'severity')
     get_not_null(s, 'name')
     get_not_null(s, 'color')

@@ -126,8 +126,7 @@ message Severity {
 
 message Disruption {
     optional string uri                             = 1;
-    optional string impact_uri                      = 2;
-    optional string title                           = 3;
+    optional string disruption_uri                  = 2;
     repeated Period application_periods             = 10;
     optional ActiveStatus status                    = 11;
     optional uint64 updated_at                      = 12;
