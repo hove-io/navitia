@@ -45,6 +45,7 @@ static std::vector<std::vector<datetime_stop_time> >
 get_all_stop_times(const vector_idx& journey_patterns,
                    const DateTime& dateTime,
                    const DateTime& max_datetime,
+                   const size_t max_stop_date_times,
                    const type::Data& d,
                    bool disruption_active) {
     std::vector<std::vector<datetime_stop_time> > result;
@@ -61,7 +62,7 @@ get_all_stop_times(const vector_idx& journey_patterns,
     //On fait un best_stop_time sur ces journey_pattern points
     auto first_dt_st = get_stop_times(first_journey_pattern_points,
                                       dateTime, max_datetime,
-                                      std::numeric_limits<int>::max(), d, disruption_active);
+                                      max_stop_date_times, d, disruption_active);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -178,7 +179,7 @@ pbnavitia::Response
 route_schedule(const std::string& filter,
                const std::vector<std::string>& forbidden_uris,
                const pt::ptime datetime,
-               uint32_t duration, uint32_t interface_version,
+               uint32_t duration, size_t max_stop_date_times, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
                const type::Data &d, bool disruption_active, const bool show_codes) {
     RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
@@ -199,7 +200,8 @@ route_schedule(const std::string& filter,
         auto jps =  ptref::make_query(type::Type_e::JourneyPattern, filter+" and route.uri="+route->uri, forbidden_uris, d);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
-                                             handler.max_datetime, d, disruption_active);
+                                             handler.max_datetime, max_stop_date_times,
+                                             d, disruption_active);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
             auto jp = d.pt_data->journey_patterns[jp_idx];

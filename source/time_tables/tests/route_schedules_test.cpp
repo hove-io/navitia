@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(test1) {
 
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
 
-    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 1, 3,
-    10, 0, *(b.data), false, false);
+    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 100,
+                                                                   1, 3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     auto get_vj = [](pbnavitia::RouteSchedule r, int i) {
