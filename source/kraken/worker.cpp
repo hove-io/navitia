@@ -241,7 +241,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
-                    forbidden_uri, until_datetime,
+                    forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
                     *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
@@ -253,7 +253,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_ARRIVALS:
             return timetables::previous_arrivals(request.arrival_filter(),
-                    forbidden_uri, from_datetime,
+                    forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
                     *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
