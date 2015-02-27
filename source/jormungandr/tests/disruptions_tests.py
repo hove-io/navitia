@@ -137,6 +137,45 @@ class TestDisruptions(AbstractTestFixture):
         #TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
         #get_not_null(stop, 'disruptions')
 
+    def test_disruption_with_departures(self):
+        """
+        on a departure call on stopB, we should get its disruptions
+        """
+
+        response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120614T080000&_current_datetime=20120614T080000')
+
+        departures = get_not_null(response, 'departures')
+        eq_(len(departures), 2)
+
+        departure = departures[0]
+        disruptions = get_all_disruptions(departure, response)
+        assert disruptions
+        eq_(len(disruptions), 1)
+        assert 'too_bad_all_lines' in disruptions
+        is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
+
+        departure = departures[1]
+        disruptions = get_all_disruptions(departure, response)
+        assert not disruptions
+
+    def test_disruption_with_arrival(self):
+        """
+        on a arrivals call on stopA, we should get its disruptions
+        """
+
+        response = self.query_region('networks/base_network/arrivals?from_datetime=20120614T070000&_current_datetime=20120614T080000')
+
+        arrivals = get_not_null(response, 'arrivals')
+        eq_(len(arrivals), 1)
+
+        arrival = arrivals[0]
+        disruptions = get_all_disruptions(arrival, response)
+        assert disruptions
+        eq_(len(disruptions), 1)
+        assert 'too_bad_all_lines' in disruptions
+        is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
+
+
     def test_direct_disruption_call(self):
         """
         when calling the disruptions on the pt object stopB,

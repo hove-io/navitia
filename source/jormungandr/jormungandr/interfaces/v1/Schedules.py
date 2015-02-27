@@ -272,7 +272,7 @@ class add_passages_links:
                 return response, status, other
             passages = response[api]
 
-            max_dt = "10000101T000000"
+            max_dt = "19000101T000000"
             min_dt = "29991231T235959"
             time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
             for passage_ in passages:
