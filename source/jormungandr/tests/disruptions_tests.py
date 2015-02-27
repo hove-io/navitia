@@ -111,10 +111,10 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(network_disrupt), 2)
         for d in network_disrupt:
             is_valid_disruption(d)
-        eq_(network_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['impact_id'], 'too_bad_again')
-        eq_(network_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['impact_id'], 'later_impact')
+        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(network_disrupt[0]['uri'], 'too_bad_again')
+        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+        eq_(network_disrupt[1]['uri'], 'later_impact')
 
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
@@ -123,12 +123,12 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(lines_disrupt), 2)
         for d in lines_disrupt:
             is_valid_disruption(d)
-        eq_(lines_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
         eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
-        eq_(lines_disrupt[1]['uri'], 'disruption_on_line_A_but_later')
-        eq_(lines_disrupt[1]['impact_id'], 'later_impact')
+        eq_(lines_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+        eq_(lines_disrupt[1]['uri'], 'later_impact')
         eq_(lines_disrupt[1]['severity']['name'], 'information severity')
 
         stops = self.query_region('stop_areas/stopA?' + default_date_filter)
@@ -138,8 +138,8 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(stop_disrupt), 1)
         for d in stop_disrupt:
             is_valid_disruption(d)
-        eq_(stop_disrupt[0]['uri'], 'disruption_on_stop_A')
-        eq_(stop_disrupt[0]['impact_id'], 'too_bad')
+        eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
+        eq_(stop_disrupt[0]['uri'], 'too_bad')
 
     def test_disruption_with_stop_areas(self):
         """
@@ -178,8 +178,8 @@ class TestDisruptions(AbstractTestFixture):
 
         lines_disrupt = get_disruptions(impacted_lines[0], response)
         eq_(len(lines_disrupt), 2)
-        eq_(lines_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
 
         impacted_network = get_not_null(traffic_report[0], 'network')
 
@@ -187,8 +187,8 @@ class TestDisruptions(AbstractTestFixture):
         eq_(impacted_network['id'], 'base_network')
         network_disrupt = get_disruptions(impacted_network, response)
         eq_(len(network_disrupt), 2)
-        eq_(network_disrupt[0]['uri'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['impact_id'], 'too_bad_again')
+        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(network_disrupt[0]['uri'], 'too_bad_again')
 
         # but we should not have disruption on stop area, B is not disrupted
         assert 'stop_areas' not in traffic_report[0]
