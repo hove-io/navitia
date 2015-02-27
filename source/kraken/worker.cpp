@@ -274,7 +274,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     forbidden_uri, from_datetime,
-                    request.duration(), request.interface_version(), request.depth(),
+                    request.duration(), max_date_times, request.interface_version(), request.depth(),
                     request.count(), request.start_page(), *data, false, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
