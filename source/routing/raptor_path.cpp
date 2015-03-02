@@ -222,13 +222,18 @@ void patch_datetimes(Path &path){
     for(auto &item : path.items) {
         //if the vehicle journeys of a public transport section isn't of type regular
         //We keep only the first and the last stop time
-        if(item.type == public_transport && item.stop_times.size() > 2
-                && item.stop_times.front()->vehicle_journey->is_odt()) {
-            item.stop_times.erase(item.stop_times.begin()+1, item.stop_times.end()-1);
-            item.stop_points.erase(item.stop_points.begin()+1, item.stop_points.end()-1);
-            item.arrivals.erase(item.arrivals.begin()+1, item.arrivals.end()-1);
-            item.departures.erase(item.departures.begin()+1, item.departures.end()-1);
+        if(item.type != public_transport || item.stop_times.size() < 2) {
+            continue;
         }
+        const auto& vj = item.stop_times.front()->vehicle_journey;
+        if (!vj->is_odt() || vj->vehicle_journey_type == type::VehicleJourneyType::virtual_with_stop_time) {
+            continue;
+        }
+
+        item.stop_times.erase(item.stop_times.begin()+1, item.stop_times.end()-1);
+        item.stop_points.erase(item.stop_points.begin()+1, item.stop_points.end()-1);
+        item.arrivals.erase(item.arrivals.begin()+1, item.arrivals.end()-1);
+        item.departures.erase(item.departures.begin()+1, item.departures.end()-1);
     }
 
     PathItem previous_item = *path.items.begin();
