@@ -72,7 +72,8 @@ static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
     if (stop_times.empty()) return;
-    if (stop_times.front()->vehicle_journey->is_odt()) {
+    const auto& vj = stop_times.front()->vehicle_journey;
+    if (vj->is_odt() && vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time) {
         for (const auto& st : stop_times) {
             add_coord(st->journey_pattern_point->stop_point->coord, pb_section);
         }
