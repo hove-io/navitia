@@ -77,6 +77,8 @@ struct Journey {
         if (reader.v.clockwise()) {
             boost::reverse(sections);
         } else {
+            // the request is clockwise, thus we need to left align
+            // the sections (also known as third pass)
             align_left(reader);
         }
 
