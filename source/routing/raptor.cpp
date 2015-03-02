@@ -250,7 +250,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         return result;
     }
 
-    const size_t nb_sol_reader = read_solutions(*this, clockwise, calc_dep, calc_dest, disruption_active, accessibilite_params);
+    const size_t nb_sol_reader = read_solutions(*this, clockwise, departures_, destinations, disruption_active, accessibilite_params);
 
     // Second phase
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
@@ -288,7 +288,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
 
-    if (nb_sol_reader < result.size()) {
+    if (nb_sol_reader != result.size()) {
         std::cout << "***** error reader fail" << nb_sol_reader << " " << result.size() << std::endl;
     }
     return filter_journeys(result);

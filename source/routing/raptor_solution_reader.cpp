@@ -30,8 +30,10 @@ www.navitia.io
 
 #include "raptor.h"
 #include "raptor_visitors.h"
+#include "utils/multi_obj_pool.h"
 
 #include <boost/range/algorithm/reverse.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace navitia { namespace routing {
 
@@ -60,8 +62,11 @@ struct PathElt {
 template<typename Visitor> struct RaptorSolutionReader;
 
 struct Journey {
+    struct Section;
+
     template<typename Visitor>
     Journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader) {
+        // constructing sections
         for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
             if (reader.v.clockwise()) {
                 sections.emplace_back(elt->begin_st, elt->begin_dt, elt->end_st, elt->end_dt);
@@ -70,6 +75,107 @@ struct Journey {
             }
         }
         if (reader.v.clockwise()) { boost::reverse(sections); }
+
+        // getting departure/arrival values
+        const Section& dep_section = sections.front();
+        const Section& arr_section = sections.back();
+        const auto dep_sp_idx = SpIdx(*dep_section.get_in_st->journey_pattern_point->stop_point);
+        const auto arr_sp_idx = SpIdx(*arr_section.get_out_st->journey_pattern_point->stop_point);
+
+        // is_sp_idx(sp_idx)(sp_dur) returns true if sp_idx == sp_dur.first
+        const auto is_sp_idx = [](const SpIdx idx) {
+            return [idx](RAPTOR::vec_stop_point_duration::const_reference sp_dur) {
+                return sp_dur.first == idx;
+            };
+        };
+        const auto dep_sp_dur_it = boost::find_if(reader.sp_dur_deps, is_sp_idx(dep_sp_idx));
+        assert(dep_sp_dur_it != reader.sp_dur_deps.end());
+        const auto arr_sp_dur_it = boost::find_if(reader.sp_dur_arrs, is_sp_idx(arr_sp_idx));
+        assert(arr_sp_dur_it != reader.sp_dur_arrs.end());
+        const auto dep_sn_dur = dep_sp_dur_it->second;
+        const auto arr_sn_dur = arr_sp_dur_it->second;
+
+        // setting objectives
+        departure_dt = dep_section.get_in_dt - dep_sn_dur.total_seconds();
+        arrival_dt = arr_section.get_out_dt + arr_sn_dur.total_seconds();
+        sn_dur = dep_sn_dur + arr_sn_dur;
+        nb_vj_extentions = count_vj_extentions();
+
+        // transfer objectives
+        if (sections.size() > 1) {
+            const auto& data = *reader.raptor.data.pt_data;
+            const auto first_transfer_waiting = get_transfer_waiting(data, sections[0], sections[1]);
+            transfer_dur = first_transfer_waiting.first;
+            min_waiting_dur = first_transfer_waiting.second;
+            const auto* prev = &sections[1];
+            for (auto it = sections.begin() + 2; it != sections.end(); prev = &*it, ++it) {
+                const auto cur_transfer_waiting = get_transfer_waiting(data, *prev, *it);
+                transfer_dur += cur_transfer_waiting.first;
+                min_waiting_dur = std::min(min_waiting_dur, cur_transfer_waiting.second);
+            }
+        }
+    }
+    uint8_t count_vj_extentions() const {
+        uint8_t nb_ext = 0;
+        for (const auto& s: sections) {
+            for (auto* vj = s.get_in_st->vehicle_journey; true; vj = vj->next_vj) {
+                if (vj == nullptr) { /* we should not stop here */ assert(false); break; }
+                const auto search = boost::find_if(vj->stop_time_list, [&](const type::StopTime& st) {
+                        return &st == s.get_out_st;
+                    });
+                if (search != vj->stop_time_list.end()) { break; }
+                ++nb_ext;
+            }
+        }
+        return nb_ext;
+    }
+    std::pair<navitia::time_duration, navitia::time_duration>
+    get_transfer_waiting(const type::PT_Data& data, const Section& from, const Section& to) const {
+        const auto* conn = data.get_stop_point_connection(
+            *from.get_out_st->journey_pattern_point->stop_point,
+            *to.get_in_st->journey_pattern_point->stop_point);
+        assert(conn);
+        if (! conn) { return std::make_pair(0_s, 0_s); }// it should be dead code
+        const auto dur_conn = conn->display_duration;
+        const auto dur_transfer = to.get_in_dt - from.get_out_dt;
+        return std::make_pair(navitia::seconds(dur_conn), navitia::seconds(dur_transfer - dur_conn));
+    }
+    bool better_on_dt(const Journey& that, bool request_clockwise) const {
+        if (request_clockwise) {
+            if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
+            if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
+        } else {
+            if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
+            if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
+        }
+        if (min_waiting_dur != that.min_waiting_dur) {
+            return min_waiting_dur >= that.min_waiting_dur;
+        }
+        return transfer_dur <= that.transfer_dur;
+    }
+    bool better_on_transfer(const Journey& that, bool) const {
+        if (sections.size() != that.sections.size()) {
+            return sections.size() <= that.sections.size();
+        }
+        return nb_vj_extentions <= that.nb_vj_extentions;
+    }
+    bool better_on_sn(const Journey& that, bool) const {
+        return sn_dur <= that.sn_dur;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Journey& j) {
+        os << "([" << j.departure_dt << ", " << j.arrival_dt << ", "
+           << j.min_waiting_dur << ", " << j.transfer_dur << "], ["
+           << j.sections.size() << ", " << unsigned(j.nb_vj_extentions) << "], "
+           << j.sn_dur << ") ";
+        for (const auto& s: j.sections) {
+            os << "("
+               << s.get_in_st->journey_pattern_point->journey_pattern->route->line->uri << ": "
+               << s.get_in_st->journey_pattern_point->stop_point->uri << "@"
+               << s.get_in_dt << ", "
+               << s.get_out_st->journey_pattern_point->stop_point->uri << "@"
+               << s.get_out_dt << ")";
+        }
+        return os;
     }
 
     struct Section {
@@ -85,43 +191,56 @@ struct Journey {
         DateTime get_out_dt;
     };
     std::vector<Section> sections;
-    navitia::time_duration sn_dur;// street network duration
-    navitia::time_duration transfer_dur;// walking duration during transfer
-    navitia::time_duration min_waiting_dur;// minimal waiting duration on every transfers
-    DateTime end_dt;// the end of the journey, the main objective
-    DateTime begin_dt;// the begin of the journey,
-    uint8_t nb_vj_extentions;
+    navitia::time_duration sn_dur = 0_s;// street network duration
+    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
+    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
+    DateTime departure_dt = 0;// the departure dt of the journey, including sn
+    DateTime arrival_dt = 0;// the arrival dt of the journey, including sn
+    uint8_t nb_vj_extentions = 0;
+};
+
+// this structure compare 2 solutions.  It chooses which solutions
+// will be kept at the end (only non dominated solutions will be kept
+// by the pool).
+struct Dominates {
+    bool request_clockwise;
+    Dominates(bool rc): request_clockwise(rc) {}
+    bool operator()(const Journey& lhs, const Journey& rhs) const {
+        return lhs.better_on_dt(rhs, request_clockwise)
+            && lhs.better_on_transfer(rhs, request_clockwise)
+            && lhs.better_on_sn(rhs, request_clockwise);
+    }
 };
 
 template<typename Visitor>
 struct RaptorSolutionReader {
     RaptorSolutionReader(const RAPTOR& r,
-                         const Visitor& vis,
-                         const RAPTOR::vec_stop_point_duration& d,
+                         const Visitor& vis,// 2nd pass visitor
+                         const RAPTOR::vec_stop_point_duration& deps,
+                         const RAPTOR::vec_stop_point_duration& arrs,
                          const bool disruption,
                          const type::AccessibiliteParams& access):
-        raptor(r), v(vis), dep(d), disruption_active(disruption), accessibilite_params(access)
+        raptor(r),
+        v(vis),
+        sp_dur_deps(deps),
+        sp_dur_arrs(arrs),
+        disruption_active(disruption),
+        accessibilite_params(access),
+        // Dominates need request_clockwise (the negation of 2nd pass clockwise)
+        solutions(Dominates(! v.clockwise()))
     {}
     const RAPTOR& raptor;
     const Visitor& v;
-    const RAPTOR::vec_stop_point_duration& dep;
+    const RAPTOR::vec_stop_point_duration& sp_dur_deps;// departures (not clockwise dependent)
+    const RAPTOR::vec_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
     const bool disruption_active;
     const type::AccessibiliteParams& accessibilite_params;
-    size_t nb_solutions = 0;
+    ParetoFront<Journey, Dominates> solutions;
 
     void handle_solution(const PathElt& path) {
-        ++nb_solutions;
-        Journey journey(path, *this);
-
-        for (const auto& s: journey.sections) {
-            std::cout << "("
-                      << s.get_in_st->journey_pattern_point->journey_pattern->route->line->uri << ": "
-                      << s.get_in_st->journey_pattern_point->stop_point->uri << "@"
-                      << s.get_in_dt << ", "
-                      << s.get_out_st->journey_pattern_point->stop_point->uri << "@"
-                      << s.get_out_dt << ")";
-        }
-        std::cout << std::endl;
+        Journey j(path, *this);
+        std::cout << "  " << j << std::endl;
+        solutions.add(std::move(j));
     }
 
     void transfer(const unsigned count,
@@ -206,49 +325,54 @@ struct RaptorSolutionReader {
 template<typename Visitor> RaptorSolutionReader<Visitor>
 make_raptor_solution_reader(const RAPTOR& r,
                             const Visitor& v,
-                            const RAPTOR::vec_stop_point_duration& d,
+                            const RAPTOR::vec_stop_point_duration& deps,
+                            const RAPTOR::vec_stop_point_duration& arrs,
                             const bool disruption_active,
                             const type::AccessibiliteParams& accessibilite_params) {
-    return RaptorSolutionReader<Visitor>(r, v, d, disruption_active, accessibilite_params);
+    return RaptorSolutionReader<Visitor>(r, v, deps, arrs, disruption_active, accessibilite_params);
 }
 
 template<typename Visitor>
 size_t read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
-                    const RAPTOR::vec_stop_point_duration& dep,
-                    const RAPTOR::vec_stop_point_duration& arr,
+                    const RAPTOR::vec_stop_point_duration& deps,
+                    const RAPTOR::vec_stop_point_duration& arrs,
                     const bool disruption_active,
                     const type::AccessibiliteParams& accessibilite_params)
 {
-    auto reader = make_raptor_solution_reader(raptor, v, dep, disruption_active, accessibilite_params);
+    auto reader = make_raptor_solution_reader(
+        raptor, v, deps, arrs, disruption_active, accessibilite_params);
     std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
-        for (const auto& a: arr) {
+        for (const auto& a: v.clockwise() ? deps : arrs) {
             if (working_labels.pt_is_initialized(a.first)) {
-                std::cout << "from " << raptor.get_sp(a.first)->uri << std::endl;
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             }
         }
     }
+    std::cout << "solutions:" << std::endl;
+    for (const auto& s: reader.solutions) {
+        std::cout << "  " << s << std::endl;
+    }
     std::cout << "end reader" << std::endl;
-    return reader.nb_solutions;
+    return reader.solutions.size();
 }
 
 } // anonymous namespace
 
 size_t read_solutions(const RAPTOR& raptor,
                       const bool clockwise,
-                      const RAPTOR::vec_stop_point_duration& dep,
-                      const RAPTOR::vec_stop_point_duration& arr,
+                      const RAPTOR::vec_stop_point_duration& deps,
+                      const RAPTOR::vec_stop_point_duration& arrs,
                       const bool disruption_active,
                       const type::AccessibiliteParams& accessibilite_params)
 {
     if (clockwise) {
-        return read_solutions(raptor, raptor_reverse_visitor(), dep, arr,
+        return read_solutions(raptor, raptor_reverse_visitor(), deps, arrs,
                               disruption_active, accessibilite_params);
     } else {
-        return read_solutions(raptor, raptor_visitor(), dep, arr,
+        return read_solutions(raptor, raptor_visitor(), deps, arrs,
                               disruption_active, accessibilite_params);
     }
 }
