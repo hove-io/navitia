@@ -215,7 +215,7 @@ struct Dominates {
 template<typename Visitor>
 struct RaptorSolutionReader {
     RaptorSolutionReader(const RAPTOR& r,
-                         const Visitor& vis,
+                         const Visitor& vis,// 2nd pass visitor
                          const RAPTOR::vec_stop_point_duration& deps,
                          const RAPTOR::vec_stop_point_duration& arrs,
                          const bool disruption,
@@ -226,6 +226,7 @@ struct RaptorSolutionReader {
         sp_dur_arrs(arrs),
         disruption_active(disruption),
         accessibilite_params(access),
+        // Dominates need request_clockwise (the negation of 2nd pass clockwise)
         solutions(Dominates(! v.clockwise()))
     {}
     const RAPTOR& raptor;
