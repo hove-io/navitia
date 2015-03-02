@@ -1087,7 +1087,6 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*3600, 0, DateTimeUtils::inf, false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);

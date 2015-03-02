@@ -886,8 +886,6 @@ struct StopTime {
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
 
-
-
     /// can we start with this stop time (according to clockwise)
     bool valid_begin(bool clockwise) const {return clockwise ? pick_up_allowed() : drop_off_allowed();}
 
@@ -904,12 +902,16 @@ struct StopTime {
     }
 
     uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
-
     uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 
-    uint32_t end_time(const bool is_departure) const;
-
-    uint32_t start_time(const bool is_departure) const;
+    DateTime departure(DateTime dt) const {
+        DateTimeUtils::update(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt)): departure_time);
+        return dt;
+    }
+    DateTime arrival(DateTime dt, bool clockwise = true) const {
+        DateTimeUtils::update(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt)): arrival_time, clockwise);
+        return dt;
+    }
 
     DateTime section_end_date(int date, bool clockwise) const {
         return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
