@@ -152,17 +152,17 @@ class Instance(db.Model):
 
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
-    destineo_min_tc_with_car = db.Column(db.Integer, default=default_values.destineo_min_tc_with_car, nullable=False)
+    min_tc_with_car = db.Column(db.Integer, default=default_values.min_tc_with_car, nullable=False)
 
-    destineo_min_tc_with_bike = db.Column(db.Integer, default=default_values.destineo_min_tc_with_bike, nullable=False)
+    min_tc_with_bike = db.Column(db.Integer, default=default_values.min_tc_with_bike, nullable=False)
 
-    destineo_min_tc_with_bss = db.Column(db.Integer, default=default_values.destineo_min_tc_with_bss, nullable=False)
+    min_tc_with_bss = db.Column(db.Integer, default=default_values.min_tc_with_bss, nullable=False)
 
-    destineo_min_bike = db.Column(db.Integer, default=default_values.destineo_min_bike, nullable=False)
+    min_bike = db.Column(db.Integer, default=default_values.min_bike, nullable=False)
 
-    destineo_min_bss = db.Column(db.Integer, default=default_values.destineo_min_bss, nullable=False)
+    min_bss = db.Column(db.Integer, default=default_values.min_bss, nullable=False)
 
-    destineo_min_car = db.Column(db.Integer, default=default_values.destineo_min_car, nullable=False)
+    min_car = db.Column(db.Integer, default=default_values.min_car, nullable=False)
 
     factor_too_long_journey = db.Column(db.Float, default=default_values.factor_too_long_journey, nullable=False)
 
