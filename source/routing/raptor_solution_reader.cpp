@@ -283,6 +283,97 @@ struct Dominates {
     }
 };
 
+std::ostream& operator<<(std::ostream& os, const Journey::Section& section) {
+    os << "section boarding in " << section.get_in_st->journey_pattern_point->uri
+       << " leaving  in " << section.get_out_st->journey_pattern_point->uri;
+    return os;
+}
+
+struct VehicleSection {
+    VehicleSection(const Journey::Section& s, const type::VehicleJourney* v):
+        section(s), vj(v) {}
+    const Journey::Section& section;
+    const type::VehicleJourney* vj;
+    std::vector<std::pair<const type::StopTime*, DateTime>> stop_times_and_arrival;
+};
+
+std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
+    std::vector<VehicleSection> res;
+    auto current_st = section.get_in_st;
+    auto end_st = section.get_out_st;
+    auto cur_time = section.get_in_dt;
+
+    res.emplace_back(section, current_st->vehicle_journey);
+
+    while(end_st != current_st) {
+//        auto prev_time = prev_st->section_end_time(clockwise, workingDate);
+        auto current_time = 0;//current_st->section_end_time(!clockwise, workingDate);
+
+        res.back().stop_times_and_arrival.push_back({current_st, current_time});
+        size_t order = current_st->journey_pattern_point->order;
+        if(order < current_st->vehicle_journey->stop_time_list.size() - 1) {
+            current_st = &current_st->vehicle_journey->stop_time_list[++order];
+            continue;
+        }
+
+        // Here we have to change of vehicle journey, this happen with connection_stay_in
+        res.emplace_back(section, current_st->vehicle_journey);
+
+        if (! current_st->vehicle_journey->next_vj) {
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "no service extension for section "
+                            << section << " impossible to rebuild the path");
+            throw navitia::recoverable_exception("impossible to rebuild the public transport path");
+        }
+
+        current_st = &current_st->vehicle_journey->next_vj->stop_time_list.front();
+    }
+
+    return res;
+}
+
+template<typename Visitor>
+Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& reader) {
+    Path path;
+
+    path.nb_changes = journey.sections.size() - 1;
+    //    path.duration TODO
+    //    path.origin TODO
+    //    path.request_time TODO
+
+    for (const auto& section: journey.sections) {
+        if (! path.items.empty()) {
+            //we add a connexion
+            //eg one transfer section + one waiting section
+            path.items.emplace_back(ItemType::walking);
+            path.items.emplace_back(ItemType::waiting);
+        }
+
+        //we then need to create one section by service extension
+        bool section_added = false;
+        for (const auto& vj_section: get_vjs(section)) {
+            if (section_added) {
+                //add a stay in
+                path.items.emplace_back(ItemType::stay_in,
+                                        to_posix_time(section.get_in_dt, reader.raptor.data),
+                                        to_posix_time(section.get_out_dt, reader.raptor.data));
+                path.items.back().stop_points.push_back(section.get_in_st->journey_pattern_point->stop_point);
+                path.items.back().stop_points.push_back(section.get_out_st->journey_pattern_point->stop_point);
+            }
+            //add the pt section
+            path.items.emplace_back(ItemType::public_transport);
+            auto& item = path.items.back();
+            for (const auto& st: vj_section.stop_times_and_arrival) {
+                //TODO filter for odt
+                item.stop_times.push_back(st.first);
+                item.stop_points.push_back(st.first->journey_pattern_point->stop_point);
+//                item.arrivals.push_back(arrival);
+//                item.departures.push_back(departure);
+            }
+        }
+    }
+    return path;
+}
+
 template<typename Visitor>
 struct RaptorSolutionReader {
     RaptorSolutionReader(const RAPTOR& r,
@@ -424,8 +515,7 @@ private:
     std::map<SpIdx, DateTime> m;
 };
 
-template<typename Visitor>
-size_t read_solutions(const RAPTOR& raptor,
+std::vector<Path> read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& deps,
                     const RAPTOR::vec_stop_point_duration& arrs,
@@ -446,16 +536,19 @@ size_t read_solutions(const RAPTOR& raptor,
         }
     }
     std::cout << "solutions:" << std::endl;
+    std::vector<Path> sol;
     for (const auto& s: reader.solutions) {
         std::cout << "  " << s << std::endl;
+        sol.push_back(make_path(s, *this));
     }
     std::cout << "end reader" << std::endl;
-    return reader.solutions.size();
+
+    return sol;
 }
 
 } // anonymous namespace
 
-size_t read_solutions(const RAPTOR& raptor,
+std::vector<Path> read_solutions(const RAPTOR& raptor,
                       const bool clockwise,
                       const RAPTOR::vec_stop_point_duration& deps,
                       const RAPTOR::vec_stop_point_duration& arrs,

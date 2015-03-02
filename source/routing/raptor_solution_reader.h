@@ -36,7 +36,7 @@ namespace navitia { namespace routing {
 
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).
-size_t read_solutions(const RAPTOR& raptor,
+std::vector<Path> read_solutions(const RAPTOR& raptor,
                       const bool clockwise,
                       const RAPTOR::vec_stop_point_duration& deps,
                       const RAPTOR::vec_stop_point_duration& arrs,

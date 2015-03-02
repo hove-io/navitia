@@ -141,7 +141,9 @@ makePath(SpIdx destination_idx, size_t countb, bool clockwise, bool disruption_a
         void connection(const type::StopPoint* departure, const type::StopPoint* destination,
                     boost::posix_time::ptime dep_time, boost::posix_time::ptime arr_time,
                     const type::StopPointConnection* stop_point_connection) {
-            PathItem item(dep_time, arr_time);
+            PathItem item;
+            item.departure = dep_time;
+            item.arrival = arr_time;
             item.stop_points.push_back(departure);
             item.stop_points.push_back(destination);
             item.connection = stop_point_connection;
