@@ -72,7 +72,7 @@ struct normal_speed_provider {
 template <typename speed_provider_trait>
 struct routing_api_data {
 
-    routing_api_data(float distance_a_b = 200) : distance_ab(distance_a_b) {
+    routing_api_data(float distance_a_b = 200, bool activate_pt = true) : distance_ab(distance_a_b) {
         /*
 
            K  ------------------------------ J
@@ -392,30 +392,34 @@ struct routing_api_data {
         b.data->geo_ref->pois.push_back(poi_3);
         b.data->geo_ref->pois.push_back(poi_4);
 
+
         b.generate_dummy_basis();
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
-        //we add a very fast bus (2 seconds) to be faster than walking and biking
-        b.vj("A")
-            ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
-            ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
-            .st_shape({B, I, A});
+        if (activate_pt) {
+            //we add a very fast bus (2 seconds) to be faster than walking and biking
+            b.vj("A")
+                ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
+                ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+                .st_shape({B, I, A});
 
-        //add another bus, much later. we'll use that one for disruptions
-        b.vj("B")
-            ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
-            ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
-            .st_shape({B, I, A});
+            //add another bus, much later. we'll use that one for disruptions
+            b.vj("B")
+                ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
+                ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
+                .st_shape({B, I, A});
 
-        b.vj("C")
-            ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
-            ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
-            .st_shape({A, I, B});
+            b.vj("C")
+                ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
+                ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+                .st_shape({A, I, B});
+        }
 
         b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
+
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_days);
         b.data->compute_labels();
@@ -452,8 +456,9 @@ struct routing_api_data {
                   << ", " << R.lon() + 1e-3 << " " << S.lat() - 1
                   << ", " << S.lon() - 1 << " " << S.lat() - 1 << "))";
         b.data->meta->shape = ss.str();
-
-        add_disruptions();
+        if (activate_pt) {
+            add_disruptions();
+        }
     }
 
     navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
