@@ -214,16 +214,19 @@ class Scenario(default.Scenario):
         request_tc = copy.deepcopy(request)
         request_tc['origin_mode'] = ['walking']
         request_tc['destination_mode'] = ['walking']
+        max_nb_journeys = request_tc['max_nb_journeys']
+        request_tc['max_nb_journeys'] = None
 
         request_alternative = copy.deepcopy(request)
         request_alternative['min_nb_journeys'] = None
         request_alternative['max_nb_journeys'] = None
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
+        self._remove_extra_journeys(response_tc.journeys, max_nb_journeys)
         max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
         if max_duration:
             #we find the max_duration with the pure tc call, so we use it for the alternatives
-            request_alternative['max_duration'] =  int(max_duration)
+            request_alternative['max_duration'] = int(max_duration)
 
         if not all([is_admin(request['origin']), is_admin(request['destination'])]):
             logger.debug('journeys with alternative mode')
@@ -255,6 +258,26 @@ class Scenario(default.Scenario):
             # in debug we don't filter
             self._choose_best_alternatives(response_alternative.journeys)
         return response_alternative
+
+
+    def _remove_extra_journeys(self, journeys, max_nb_journeys):
+        if not max_nb_journeys or len(journeys) <= max_nb_journeys:
+            return
+        to_keep = set()
+        count = 0
+        for idx, journey in enumerate(journeys):
+            if journey.type == 'non_pt_walk':
+                to_keep.add(idx)
+            elif count < max_nb_journeys:
+                to_keep.add(idx)
+                count += 1
+
+        to_delete = list(set(range(len(journeys))) - to_keep)
+        to_delete.sort(reverse=True)
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s extra journeys: %s', len(to_delete), [journeys[i].type for i in to_delete])
+        for idx in to_delete:
+            del journeys[idx]
 
 
     def _remove_non_pt_walk(self, journeys):
