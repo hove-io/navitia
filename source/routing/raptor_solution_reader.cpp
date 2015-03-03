@@ -74,7 +74,14 @@ struct Journey {
                 sections.emplace_back(elt->end_st, elt->end_dt, elt->begin_st, elt->begin_dt);
             }
         }
-        if (reader.v.clockwise()) { boost::reverse(sections); }
+        if (reader.v.clockwise()) {
+            boost::reverse(sections);
+        } else {
+            // the request is clockwise (opposite of the reader
+            // direction), thus we need to left align the sections
+            // (also known as third pass)
+            align_left(reader);
+        }
 
         // getting departure/arrival values
         const Section& dep_section = sections.front();
@@ -115,6 +122,66 @@ struct Journey {
             }
         }
     }
+    std::pair<const type::StopTime*, DateTime>
+    get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
+                  const type::JourneyPatternPoint*const target_jpp) const
+    {
+        DateTime cur_dt = in_st_dt.second;
+        for (const auto& st: raptor_visitor().st_range(*in_st_dt.first).advance_begin(1)) {
+            const auto current_time = st.section_end_time(true, DateTimeUtils::hour(cur_dt));
+            DateTimeUtils::update(cur_dt, current_time, true);
+            if (st.journey_pattern_point == target_jpp) {
+                // check if the get_out is valid?
+                return {&st, cur_dt};
+            }
+        }
+        for (const auto* stay_in_vj = in_st_dt.first->vehicle_journey->next_vj;
+             stay_in_vj != nullptr;
+             stay_in_vj = stay_in_vj->next_vj) {
+            for (const auto& st: stay_in_vj->stop_time_list) {
+                const auto current_time = st.section_end_time(true, DateTimeUtils::hour(cur_dt));
+                DateTimeUtils::update(cur_dt, current_time, true);
+                if (st.journey_pattern_point == target_jpp) {
+                    // check if the get_out is valid?
+                    return {&st, cur_dt};
+                }
+            }
+        }
+        assert(false);
+        return {nullptr, 0};
+    }
+    // align every section to left, ie take the first vj of a jp, as
+    // opposed to wait to another one.
+    template<typename Visitor>
+    void align_left(const RaptorSolutionReader<Visitor>& reader) {
+        if (sections.size() < 3) {
+            // as the begin and the end is optimal by construction,
+            // there is nothing to do if we have less than 3 sections.
+            return;
+        }
+        const auto* prev_s = &sections.at(0);
+        for (auto& cur_s: boost::make_iterator_range(sections.begin() + 1, sections.end() - 1)) {
+            const auto* cur_jpp = cur_s.get_in_st->journey_pattern_point;
+            const auto* conn = reader.raptor.data.pt_data->get_stop_point_connection(
+                *prev_s->get_out_st->journey_pattern_point->stop_point,
+                *cur_jpp->stop_point);
+            assert(conn != nullptr);
+            const auto new_st_dt = reader.raptor.next_st.earliest_stop_time(
+                JppIdx(*cur_jpp),
+                prev_s->get_out_dt + conn->duration,
+                reader.disruption_active,
+                reader.accessibilite_params.vehicle_properties);
+            if (new_st_dt.second < cur_s.get_in_dt) {
+                std::cout << "align left: " << new_st_dt.second << " < " << cur_s.get_in_dt << std::endl;
+                cur_s.get_in_st = new_st_dt.first;
+                cur_s.get_in_dt = new_st_dt.second;
+                const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
+                cur_s.get_out_st = out_st_dt.first;
+                cur_s.get_out_dt = out_st_dt.second;
+            }
+            prev_s = &cur_s;
+        }
+    }
     uint8_t count_vj_extentions() const {
         uint8_t nb_ext = 0;
         for (const auto& s: sections) {
@@ -148,6 +215,10 @@ struct Journey {
             if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
             if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
         }
+        // FIXME: I don't like this objective, for me, this is a
+        // transfer objective, but then you can return some solutions
+        // that we didn't return before.
+        if (sections.size() != that.sections.size()) { return true; }
         if (min_waiting_dur != that.min_waiting_dur) {
             return min_waiting_dur >= that.min_waiting_dur;
         }
@@ -333,6 +404,27 @@ make_raptor_solution_reader(const RAPTOR& r,
 }
 
 template<typename Visitor>
+struct BestEnd {
+    BestEnd(const Visitor& visitor): v(visitor) {}
+    bool is_better(const SpIdx idx, const DateTime dt) {
+        const auto search = m.find(idx);
+        if (search == m.end()) {
+            m[idx] = dt;
+            return true;
+        } else if (v.be(dt, search->second)) {
+            // the visitor is inversed in comparison of the end comparison
+            return false;
+        } else {
+            search->second = dt;
+            return true;
+        }
+    }
+private:
+    const Visitor& v;
+    std::map<SpIdx, DateTime> m;
+};
+
+template<typename Visitor>
 size_t read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& deps,
@@ -342,13 +434,15 @@ size_t read_solutions(const RAPTOR& raptor,
 {
     auto reader = make_raptor_solution_reader(
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
+    BestEnd<Visitor> best_end(v);
     std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
-            if (working_labels.pt_is_initialized(a.first)) {
-                reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
-            }
+            if (! working_labels.pt_is_initialized(a.first)) { continue; }
+            const DateTime end_dt = working_labels.dt_pt(a.first);
+            if (! best_end.is_better(a.first, end_dt)) { continue; }
+            reader.begin_pt(count, a.first, end_dt);
         }
     }
     std::cout << "solutions:" << std::endl;

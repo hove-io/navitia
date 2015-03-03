@@ -1599,3 +1599,142 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
 }
+
+// instance:
+// A---1---B=======B
+//         A---1---B=======B
+//                         B---2---C=======C
+//                                 B---2---C=======C
+//                                                 C---3---D
+//                                                         C---3---D
+//
+// We want:
+//         A---1---B=======B
+//                         B---2---C=======CzzzzzzzC
+//                                                 C---3---D
+// ie: earlier arrival, latest departure and left aligned
+static void test_2nd_and_3rd_pass_checks(const std::vector<navitia::routing::Path>& res) {
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 5);
+
+    // A---1---B
+    BOOST_CHECK_EQUAL(res[0].items[0].departure.time_of_day().total_seconds(), 9000);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival.time_of_day().total_seconds(), 10000);
+
+    //         B=======B
+    BOOST_CHECK_EQUAL(res[0].items[1].departure.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival.time_of_day().total_seconds(), 11000);
+
+    //                 B---2---C
+    BOOST_CHECK_EQUAL(res[0].items[2].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival.time_of_day().total_seconds(), 12000);
+
+    //                         C=======CzzzzzzzC
+    BOOST_CHECK_EQUAL(res[0].items[3].departure.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(res[0].items[3].arrival.time_of_day().total_seconds(), 14000);
+
+    //                                         C---3---D
+    BOOST_CHECK_EQUAL(res[0].items[4].departure.time_of_day().total_seconds(), 14000);
+    BOOST_CHECK_EQUAL(res[0].items[4].arrival.time_of_day().total_seconds(), 15000);
+}
+BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass) {
+    ed::builder b("20120614");
+    b.vj("1")("A", 8000, 8000)("B", 9000, 9000);
+    b.vj("1")("A", 9000, 9000)("B", 10000, 10000);
+    b.vj("2")("B", 11000, 11000)("C", 12000, 12000);
+    b.vj("2")("B", 12000, 12000)("C", 13000, 13000);
+    b.vj("3")("C", 14000, 14000)("D", 15000, 15000);
+    b.vj("3")("C", 15000, 15000)("D", 16000, 16000);
+
+    b.connection("B", "B", 1000);
+    b.connection("C", "C", 1000);
+
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
+                               7900, 0, DateTimeUtils::inf, false, false);
+    test_2nd_and_3rd_pass_checks(res1);
+
+    // non clockwise test
+    auto res2 = raptor.compute(d.stop_areas[0], d.stop_areas[3], 16100, 0, 0, false, false, false);
+    test_2nd_and_3rd_pass_checks(res2);
+}
+
+// same as test_2nd_and_3rd_pass with vj extentions
+static void test_2nd_and_3rd_pass_ext_checks(const std::vector<navitia::routing::Path>& res) {
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 9);
+
+    // A---1---B
+    BOOST_CHECK_EQUAL(res[0].items[0].departure.time_of_day().total_seconds(), 9000);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival.time_of_day().total_seconds(), 10000);
+
+    //         B=======B
+    BOOST_CHECK_EQUAL(res[0].items[1].departure.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival.time_of_day().total_seconds(), 11000);
+
+    //                 B-2E4F5-C
+    BOOST_CHECK_EQUAL(res[0].items[2].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival.time_of_day().total_seconds(), 11100);
+
+    BOOST_CHECK_EQUAL(res[0].items[3].departure.time_of_day().total_seconds(), 11100);
+    BOOST_CHECK_EQUAL(res[0].items[3].arrival.time_of_day().total_seconds(), 11100);
+    BOOST_CHECK_EQUAL(res[0].items[3].type, stay_in);
+
+    BOOST_CHECK_EQUAL(res[0].items[4].departure.time_of_day().total_seconds(), 11100);
+    BOOST_CHECK_EQUAL(res[0].items[4].arrival.time_of_day().total_seconds(), 11200);
+
+    BOOST_CHECK_EQUAL(res[0].items[5].departure.time_of_day().total_seconds(), 11200);
+    BOOST_CHECK_EQUAL(res[0].items[5].arrival.time_of_day().total_seconds(), 11200);
+    BOOST_CHECK_EQUAL(res[0].items[5].type, stay_in);
+
+    BOOST_CHECK_EQUAL(res[0].items[6].departure.time_of_day().total_seconds(), 11200);
+    BOOST_CHECK_EQUAL(res[0].items[6].arrival.time_of_day().total_seconds(), 12000);
+
+    //                         C=======CzzzzzzzC
+    BOOST_CHECK_EQUAL(res[0].items[7].departure.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(res[0].items[7].arrival.time_of_day().total_seconds(), 14000);
+
+    //                                         C---3---D
+    BOOST_CHECK_EQUAL(res[0].items[8].departure.time_of_day().total_seconds(), 14000);
+    BOOST_CHECK_EQUAL(res[0].items[8].arrival.time_of_day().total_seconds(), 15000);
+}
+BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
+    ed::builder b("20120614");
+    b.vj("1", "1", "", true)("A", 8000, 8000)("B", 9000, 9000);
+    b.vj("1", "1", "", true)("A", 9000, 9000)("B", 10000, 10000);
+
+    b.vj("2", "111", "block1", true)("B", 11000, 11000)("E", 11100, 11100);
+    b.vj("4", "1", "block1", true)("E", 11100, 11100)("F", 11200, 11200);
+    b.vj("5", "111", "block1", true)("F", 11200, 11200)("C", 12000, 12000);
+
+    b.vj("2", "111", "block2", true)("B", 12000, 12000)("E", 12100, 12100);
+    b.vj("4", "1", "block2", true)("E", 12100, 12100)("F", 12200, 12200);
+    b.vj("5", "111", "block2", true)("F", 12200, 12200)("C", 13000, 13000);
+
+    b.vj("3", "1", "", true)("C", 14000, 14000)("D", 15000, 15000);
+    b.vj("3", "1", "", true)("C", 15000, 15000)("D", 16000, 16000);
+
+    b.connection("B", "B", 100);
+    b.connection("C", "C", 100);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
+                               7900, 0, DateTimeUtils::inf, false, false, true);
+    test_2nd_and_3rd_pass_ext_checks(res1);
+
+    // non clockwise test
+    auto res2 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
+                               16100, 0, 0, false, false, false);
+    test_2nd_and_3rd_pass_ext_checks(res2);
+}
