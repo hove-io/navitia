@@ -397,6 +397,27 @@ make_raptor_solution_reader(const RAPTOR& r,
 }
 
 template<typename Visitor>
+struct BestEnd {
+    BestEnd(const Visitor& visitor): v(visitor) {}
+    bool is_better(const SpIdx idx, const DateTime dt) {
+        const auto search = m.find(idx);
+        if (search == m.end()) {
+            m[idx] = dt;
+            return true;
+        } else if (v.be(dt, search->second)) {
+            // the visitor is inversed in comparison of the end comparison
+            return false;
+        } else {
+            search->second = dt;
+            return true;
+        }
+    }
+private:
+    const Visitor& v;
+    std::map<SpIdx, DateTime> m;
+};
+
+template<typename Visitor>
 size_t read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& deps,
@@ -406,13 +427,15 @@ size_t read_solutions(const RAPTOR& raptor,
 {
     auto reader = make_raptor_solution_reader(
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
+    BestEnd<Visitor> best_end(v);
     std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
-            if (working_labels.pt_is_initialized(a.first)) {
-                reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
-            }
+            if (! working_labels.pt_is_initialized(a.first)) { continue; }
+            const DateTime end_dt = working_labels.dt_pt(a.first);
+            if (! best_end.is_better(a.first, end_dt)) { continue; }
+            reader.begin_pt(count, a.first, end_dt);
         }
     }
     std::cout << "solutions:" << std::endl;
