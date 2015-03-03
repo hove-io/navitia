@@ -968,8 +968,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
                [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
                 auto duration1 = journey1.duration(), duration2 = journey2.duration();
-                if (duration1 != duration2)
+                if (duration1 != duration2) {
                     return duration1 < duration2;
+                }
                 return journey1.destination().uri() < journey2.destination().uri();
                 });
 

@@ -1541,10 +1541,9 @@ BOOST_AUTO_TEST_CASE(isochrone) {
     ep.type = navitia::type::Type_e::StopPoint;
     ep.uri = "A1";
 
-    auto result = nr::make_isochrone(raptor, ep, navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {}, sn_worker,
-                                     false, true);
-
-    std::cout << result.DebugString() << std::endl;
+    auto result = nr::make_isochrone(raptor, ep,
+            navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {},
+            sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 }

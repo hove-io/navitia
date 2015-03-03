@@ -364,6 +364,12 @@ class TestOneDeadRegion(AbstractTestFixture):
         eq_(len(response['debug']['regions_called']), 1)
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
+@dataset(["basic_routing_test"])
+class TestIsochrone(AbstractTestFixture):
+    def test_isochrone(self):
+        response = self.query_region("journeys?from=I1&datetime=20120615T070000")
+        assert(len(response['journeys']) == 2)
+
 @dataset(["main_routing_without_pt_test", "main_routing_test"])
 class TestWithoutPt(AbstractTestFixture):
     """

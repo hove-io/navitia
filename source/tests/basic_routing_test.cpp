@@ -43,6 +43,12 @@ www.navitia.io
  *            2 minutes connection
  *    E      F----------------------->G         H
  *    8h    9h                        17h       18h
+ *
+ *  Isochrone equal duration test
+ *
+ *   I1     I2        I3
+ *   8h     9h
+ *   8h               9h
  */
 
 int main(int argc, const char* const argv[]) {
@@ -57,6 +63,8 @@ int main(int argc, const char* const argv[]) {
     b.vj("l5","10", "", true)("A", 15*3600)("D", 15*3600+10*60);
     b.vj("l6")("E", 8*3600)("F", 9*3600);
     b.vj("l7")("G", 17*3600)("H", 18*3600);
+    b.vj("l8")("I1", 8*3600)("I2", 9*3600);
+    b.vj("l9")("I1", 8*3600)("I3", 9*3600);
     b.connection("B", "C", 2*60);
     b.connection("F", "G", 2*60);
     b.data->pt_data->index();
