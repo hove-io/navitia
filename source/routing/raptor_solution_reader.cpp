@@ -347,6 +347,7 @@ template<typename Visitor>
 Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& reader) {
     Path path;
     const auto& data = reader.raptor.data;
+    const auto posix = [&reader](DateTime dt) { return to_posix_time(dt, reader.raptor.data); };
 
     path.nb_changes = journey.sections.size() - 1;
 
@@ -355,20 +356,20 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
         const auto dep_stop_point = section.get_in_st->journey_pattern_point->stop_point;
         if (! path.items.empty()) {
             //we add a connexion
-            auto waiting_section_start = to_posix_time(last_section->get_out_dt, data);
+            auto waiting_section_start = posix(last_section->get_out_dt);
             const auto previous_stop = last_section->get_out_st->journey_pattern_point->stop_point;
 
             const auto* conn = data.pt_data->get_stop_point_connection(
                         *previous_stop, *dep_stop_point);
             assert(conn);
 
-            const auto end_of_transfer = to_posix_time(last_section->get_out_dt + conn->display_duration, data);
+            const auto end_of_transfer = posix(last_section->get_out_dt + conn->display_duration);
 
             // we add a transfer section only if we transfer on different stop point, else there is only a waiting section
             const bool walking_transfer = dep_stop_point != previous_stop;
             if (walking_transfer) {
                 path.items.emplace_back(ItemType::walking,
-                                        to_posix_time(last_section->get_out_dt, data),
+                                        posix(last_section->get_out_dt),
                                         end_of_transfer);
                 auto& s = path.items.back();
                 s.stop_points.push_back(previous_stop);
@@ -383,7 +384,7 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
             if (conn->display_duration < transfer_time || ! walking_transfer) {
                 path.items.emplace_back(ItemType::waiting,
                                         waiting_section_start,
-                                        to_posix_time(section.get_in_dt, data));
+                                        posix(section.get_in_dt));
                 path.items.back().stop_points.push_back(dep_stop_point);
             }
         }
@@ -394,13 +395,14 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
             if (last_vj_section) {
                 //add a stay in
                 path.items.emplace_back(ItemType::stay_in,
-                                        to_posix_time(section.get_in_dt, data),
-                                        to_posix_time(section.get_out_dt, data));
+                                        posix(section.get_in_dt),
+                                        posix(section.get_out_dt));
                 auto& stay_in_section = path.items.back();
-                stay_in_section.stop_points.push_back(last_vj_section->stop_times_and_dt.back().st->journey_pattern_point->stop_point);
+                const auto& last_st = last_vj_section->stop_times_and_dt.back();
+                stay_in_section.stop_points.push_back(last_st.st->journey_pattern_point->stop_point);
                 stay_in_section.stop_points.push_back(vj_section.stop_times_and_dt.front().st->journey_pattern_point->stop_point);
-                stay_in_section.departure = navitia::to_posix_time(last_vj_section->stop_times_and_dt.back().departure, data);
-                stay_in_section.arrival = navitia::to_posix_time(vj_section.stop_times_and_dt.front().arrival, data);
+                stay_in_section.departure = posix(last_st.departure);
+                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
             }
             //add the pt section
             path.items.emplace_back(ItemType::public_transport);
@@ -415,11 +417,11 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
 
                 item.stop_times.push_back(st_dt.st);
                 item.stop_points.push_back(st_dt.st->journey_pattern_point->stop_point);
-                item.arrivals.push_back(navitia::to_posix_time(st_dt.arrival, data));
-                item.departures.push_back(navitia::to_posix_time(st_dt.departure, data));
+                item.arrivals.push_back(posix(st_dt.arrival));
+                item.departures.push_back(posix(st_dt.departure));
             }
-            item.departure = navitia::to_posix_time(vj_section.stop_times_and_dt.front().departure, data);
-            item.arrival = navitia::to_posix_time(vj_section.stop_times_and_dt.back().arrival, data);
+            item.departure = posix(vj_section.stop_times_and_dt.front().departure);
+            item.arrival = posix(vj_section.stop_times_and_dt.back().arrival);
             last_vj_section = &vj_section;
         }
 
