@@ -347,7 +347,7 @@ template<typename Visitor>
 Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& reader) {
     Path path;
     const auto& data = reader.raptor.data;
-    const auto posix = [&reader](DateTime dt) { return to_posix_time(dt, reader.raptor.data); };
+    const auto posix = [&data](DateTime dt) { return to_posix_time(dt, data); };
 
     path.nb_changes = journey.sections.size() - 1;
 
@@ -576,6 +576,7 @@ private:
     std::map<SpIdx, DateTime> m;
 };
 
+template <typename Visitor>
 std::vector<Path> read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& deps,
@@ -587,7 +588,6 @@ std::vector<Path> read_solutions(const RAPTOR& raptor,
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
 
     BestEnd<Visitor> best_end(v);
-    std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
