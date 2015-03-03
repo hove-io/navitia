@@ -375,14 +375,15 @@ struct PoiHouseNumberVisitor {
     ed::EdPersistor& persistor;
     /*const*/ OSMCache& cache;
     ed::Georef& data;
+    bool parse_pois;
     std::vector<OSMHouseNumber> house_numbers;
     std::set<std::string> properties_to_ignore;
     size_t n_inserted_pois = 0;
     size_t n_inserted_house_numbers = 0;
 
     PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
-            Georef& data) :
-        persistor(persistor), cache(cache), data(data)  {
+            Georef& data, const bool parse_pois) :
+        persistor(persistor), cache(cache), data(data), parse_pois(parse_pois)  {
         data.poi_types =
          {
             {"amenity:college" , new ed::types::PoiType(0,  "école")},

@@ -47,27 +47,7 @@ struct EdPersistor{
 
 
     EdPersistor(const std::string& connection_string,
-            const bool is_osm_reader = true) : lotus(connection_string),
-                        logger(log4cplus::Logger::getInstance("log")),
-                        is_osm_reader(is_osm_reader) {
-        if (!is_osm_reader) {
-            parse_pois = true;
-            return;
-        }
-        const auto request = "SELECT parse_pois_from_osm FROM navitia.parameters";
-        std::unique_ptr<pqxx::connection> conn;
-        try{
-            conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
-        }catch(const pqxx::pqxx_exception& e){
-            throw navitia::exception(e.base().what());
-
-        }
-        pqxx::work work(*conn, "loading params");
-        pqxx::result result = work.exec(request);
-        for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-            const_it["parse_pois_from_osm"].to(parse_pois);
-        }
-    }
+            const bool is_osm_reader = true);
 
     std::set<std::string> ignored_uris;
 
