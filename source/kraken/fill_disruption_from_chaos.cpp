@@ -478,10 +478,13 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,
             [&impact](const boost::weak_ptr<nt::new_disruption::Impact>& i) {
-                return i.lock() == impact;
+                auto spt = i.lock();
+                return (spt) ? spt == impact : true;
         });
         for (auto i: vj.impacted_by) {
-            apply_impact(i.lock(), pt_data, meta);
+            if (auto spt = i.lock()) {
+                apply_impact(spt, pt_data, meta);
+            }
         }
         return true;
     }
