@@ -28,10 +28,12 @@
 # www.navitia.io
 import logging
 
+from navitiacommon import models
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 from nose.tools import eq_
-
+from overlapping_routing_tests import  MockKraken
+from jormungandr import instance_manager
 
 @dataset(["main_routing_test"])
 class TestJourneys(AbstractTestFixture):
@@ -361,5 +363,40 @@ class TestOneDeadRegion(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
         eq_(len(response['debug']['regions_called']), 1)
         eq_(response['debug']['regions_called'][0], "main_routing_test")
+
+@dataset(["main_routing_without_pt_test", "main_routing_test"])
+class TestWithoutPt(AbstractTestFixture):
+    """
+    Test if we still responds when one kraken is dead
+    """
+
+    def setup(self):
+        from jormungandr import i_manager
+        self.instance_map = {
+            'main_routing_without_pt_test': MockKraken(i_manager.instances['main_routing_without_pt_test'], True),
+            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True),
+        }
+        self.real_method = models.Instance.get_by_name
+        self.real_comparator = instance_manager.instances_comparator
+
+        models.Instance.get_by_name = self.mock_get_by_name
+        instance_manager.instances_comparator = lambda a, b: a.name == "main_routing_without_pt_test"
+
+    def mock_get_by_name(self, name):
+        return self.instance_map[name]
+
+    def teardown(self):
+        models.Instance.get_by_name = self.real_method
+        instance_manager.instances_comparator = self.real_comparator
+
+    def test_one_region_wihout_pt(self):
+        response = self.query("v1/"+journey_basic_query+"&debug=true",
+                              display=False)
+        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys'][0]['sections']), 3)
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(len(response['debug']['regions_called']), 2)
+        eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
+        eq_(response['debug']['regions_called'][1], "main_routing_test")
 
 
