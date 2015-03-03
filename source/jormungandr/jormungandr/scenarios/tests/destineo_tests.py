@@ -525,12 +525,12 @@ def sort_destineo_date_timezone_test():
 
 class Instance(object):
     def __init__(self):
-        self.destineo_min_bike = 30
-        self.destineo_min_bss = 25
-        self.destineo_min_car = 20
-        self.destineo_min_tc_with_bike = 40
-        self.destineo_min_tc_with_bss = 35
-        self.destineo_min_tc_with_car = 50
+        self.min_bike = 30
+        self.min_bss = 25
+        self.min_car = 20
+        self.min_tc_with_bike = 40
+        self.min_tc_with_bss = 35
+        self.min_tc_with_car = 50
 
 def remove_not_long_enough_no_removal_test():
     response = response_pb2.Response()
