@@ -1107,3 +1107,63 @@ def choose_best_alternatives_non_pt_test():
     eq_(journeys[0], get_bss_walking_journey())
     eq_(journeys[1], j1)
     eq_(journeys[2], j2)
+
+def remove_extra_journeys_less_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, 3)
+    eq_(len(journeys), 2)
+
+def remove_extra_journeys_enougth_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, 2)
+    eq_(len(journeys), 2)
+
+def remove_extra_journeys_more_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 3)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 2)
+    eq_(journeys[0], get_bss_bss_journey())
+    eq_(journeys[1], get_bike_car_journey())
+
+def remove_extra_journeys_more_with_walking_last_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+    journeys.append(j1)
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 4)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 3)
+    eq_(journeys[0], get_bss_bss_journey())
+    eq_(journeys[1], get_bike_car_journey())
+    eq_(journeys[2], j1)
+
+def remove_extra_journeys_more_with_walking_first_test():
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+    journeys = [j1, get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 4)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 3)
+    eq_(journeys[0], j1)
+    eq_(journeys[1], get_bss_bss_journey())
+    eq_(journeys[2], get_bike_car_journey())
