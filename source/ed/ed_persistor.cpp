@@ -371,21 +371,15 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
     auto beg = bg::to_iso_extended_string(meta.production_date.begin());
     auto last = bg::to_iso_extended_string(meta.production_date.last());
     //metadata consist of only one line, we either have to update it or create it
-    std::string update_query = "update navitia.parameters set "
-          "beginning_date = '" + beg +
-          "', end_date = '" + last +
-          "', timezone = '" + meta.timezone + "'";
-    std::string insert_query = "insert into navitia.parameters (beginning_date, end_date, timezone) "
-            " select '" + beg +
-            "', '" + last +
-            "', '" + meta.timezone + "'";
+    this->lotus.exec(Lotus::make_upsert_string("navitia.parameters",
+                {{"beginning_date", beg}, {"end_date", last},
+                {"timezone", meta.timezone}}));
+}
 
-    std::string request = "WITH upsert AS "
-    "(" + update_query + " RETURNING *) "
-    + insert_query + " WHERE NOT EXISTS (SELECT * FROM upsert);";
-
-    std::cout << request << std::endl;
-    this->lotus.exec(request);
+void EdPersistor::insert_metadata_georef() {
+    // If we do one poi2ed, we don't want to read pois from OSM anymore
+    this->lotus.exec(Lotus::make_upsert_string("navitia.parameters",
+                {{"parse_pois_from_osm", is_osm_reader ? "t" : "f"}}));
 }
 
 void EdPersistor::clean_georef(){
