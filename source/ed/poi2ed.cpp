@@ -100,7 +100,7 @@ int main(int argc, char * argv[])
         return -1;
     }
 
-    ed::EdPersistor p(connection_string);
+    ed::EdPersistor p(connection_string, false);
     p.persist_pois(poi_parser.data);
     LOG4CPLUS_INFO(logger, "time to load the pois: " << to_simple_string(pt::microsec_clock::local_time() - start));
 

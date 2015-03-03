@@ -792,6 +792,8 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
 
 void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags,
         const double lon, const double lat, OsmObjectType osm_relation_type) {
+    if (!parse_pois)
+        return;
 
     std::string ref_tag = "";
     if (tags.find("amenity") != tags.end()) {
@@ -911,7 +913,7 @@ int main(int argc, char** argv) {
     cache.insert_rel_way_admins();
 
     ed::Georef data;
-    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data);
+    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois);
     CanalTP::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");
