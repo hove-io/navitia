@@ -51,6 +51,7 @@ parameters = Table('parameters', metadata,*[
     Column('timezone', TEXT(), primary_key=False),
     Column('shape', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
     Column('shape_computed', BOOLEAN(), primary_key=False, default=text(u'true')),
+    Column('parse_pois_from_osm', BOOLEAN(), primary_key=False, default=text(u'true')),
     ],
     schema='navitia')
 
