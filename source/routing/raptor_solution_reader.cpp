@@ -77,8 +77,9 @@ struct Journey {
         if (reader.v.clockwise()) {
             boost::reverse(sections);
         } else {
-            // the request is clockwise, thus we need to left align
-            // the sections (also known as third pass)
+            // the request is clockwise (opposite of the reader
+            // direction), thus we need to left align the sections
+            // (also known as third pass)
             align_left(reader);
         }
 
@@ -149,9 +150,15 @@ struct Journey {
         assert(false);
         return {nullptr, 0};
     }
+    // align every section to left, ie take the first vj of a jp, as
+    // opposed to wait to another one.
     template<typename Visitor>
     void align_left(const RaptorSolutionReader<Visitor>& reader) {
-        if (sections.size() < 3) { return; }
+        if (sections.size() < 3) {
+            // as the begin and the end is optimal by construction,
+            // there is nothing to do if we have less than 3 sections.
+            return;
+        }
         const auto* prev_s = &sections.at(0);
         for (auto& cur_s: boost::make_iterator_range(sections.begin() + 1, sections.end() - 1)) {
             const auto* cur_jpp = cur_s.get_in_st->journey_pattern_point;
