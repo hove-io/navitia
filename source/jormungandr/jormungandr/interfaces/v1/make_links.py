@@ -277,10 +277,10 @@ class add_id_links(generate_links):
                     endpoint += "id" if "region" in kwargs.keys() or\
                         "lon" in kwargs.keys()\
                                         else "redirect"
-
-                    data["links"].append(create_external_link(url=endpoint, rel=kwargs["collection"],
-                                                              _type=obj, templated=True, **kwargs))
-                    del kwargs["collection"]
+                    collection = kwargs["collection"]
+                    data["links"].append(create_external_link(url=endpoint, rel=collection,
+                                                              _type=obj, templated=True,
+                                                              id=kwargs["id"], region=kwargs["region"]))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
