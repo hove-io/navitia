@@ -172,7 +172,6 @@ struct Journey {
                 reader.disruption_active,
                 reader.accessibilite_params.vehicle_properties);
             if (new_st_dt.second < cur_s.get_in_dt) {
-                std::cout << "align left: " << new_st_dt.second << " < " << cur_s.get_in_dt << std::endl;
                 cur_s.get_in_st = new_st_dt.first;
                 cur_s.get_in_dt = new_st_dt.second;
                 const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
@@ -350,20 +349,14 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
     const auto& data = reader.raptor.data;
 
     path.nb_changes = journey.sections.size() - 1;
-    //    path.duration TODO
-    //    path.origin TODO
-    //    path.request_time TODO
 
     const Journey::Section* last_section = nullptr;
     for (const auto& section: journey.sections) {
         const auto dep_stop_point = section.get_in_st->journey_pattern_point->stop_point;
-        const auto arr_stop_point = section.get_out_st->journey_pattern_point->stop_point;
         if (! path.items.empty()) {
             //we add a connexion
             auto waiting_section_start = to_posix_time(last_section->get_out_dt, data);
             const auto previous_stop = last_section->get_out_st->journey_pattern_point->stop_point;
-
-            const auto transfer_time = section.get_in_dt - last_section->get_out_dt;
 
             const auto* conn = data.pt_data->get_stop_point_connection(
                         *previous_stop, *dep_stop_point);
@@ -385,6 +378,7 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
                 waiting_section_start = end_of_transfer; //we update the start of the waiting section
             }
 
+            const auto transfer_time = section.get_in_dt - last_section->get_out_dt;
             //if the transfer is bigger than the actual connection, we add a waiting section
             if (conn->display_duration < transfer_time || ! walking_transfer) {
                 path.items.emplace_back(ItemType::waiting,
@@ -403,8 +397,8 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
                                         to_posix_time(section.get_in_dt, data),
                                         to_posix_time(section.get_out_dt, data));
                 auto& stay_in_section = path.items.back();
-                stay_in_section.stop_points.push_back(dep_stop_point);
-                stay_in_section.stop_points.push_back(arr_stop_point);
+                stay_in_section.stop_points.push_back(last_vj_section->stop_times_and_dt.back().st->journey_pattern_point->stop_point);
+                stay_in_section.stop_points.push_back(vj_section.stop_times_and_dt.front().st->journey_pattern_point->stop_point);
                 stay_in_section.departure = navitia::to_posix_time(last_vj_section->stop_times_and_dt.back().departure, data);
                 stay_in_section.arrival = navitia::to_posix_time(vj_section.stop_times_and_dt.front().arrival, data);
             }
@@ -425,6 +419,9 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
 
         last_section = &section;
     }
+
+    path.duration = navitia::time_duration::from_boost_duration(path.items.back().arrival - path.items.front().departure);
+
     return path;
 }
 
@@ -453,9 +450,11 @@ struct RaptorSolutionReader {
     const type::AccessibiliteParams& accessibilite_params;
     ParetoFront<Journey, Dominates> solutions;
 
+    size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j(path, *this);
-        std::cout << "  " << j << std::endl;
+        nb_sol_added ++;
+
         solutions.add(std::move(j));
     }
 
@@ -578,6 +577,7 @@ std::vector<Path> read_solutions(const RAPTOR& raptor,
 {
     auto reader = make_raptor_solution_reader(
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
+
     BestEnd<Visitor> best_end(v);
     std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
@@ -589,14 +589,10 @@ std::vector<Path> read_solutions(const RAPTOR& raptor,
             reader.begin_pt(count, a.first, end_dt);
         }
     }
-    std::cout << "solutions:" << std::endl;
     std::vector<Path> sol;
     for (const auto& s: reader.solutions) {
-        std::cout << "  " << s << std::endl;
         sol.push_back(make_path(s, reader));
     }
-    std::cout << "end reader" << std::endl;
-
     return sol;
 }
 
