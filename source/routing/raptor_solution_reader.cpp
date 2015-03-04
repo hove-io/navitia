@@ -172,12 +172,15 @@ struct Journey {
                 reader.disruption_active,
                 reader.accessibilite_params.vehicle_properties);
             if (new_st_dt.second < cur_s.get_in_dt) {
-                std::cout << "align left: " << new_st_dt.second << " < " << cur_s.get_in_dt << std::endl;
-                cur_s.get_in_st = new_st_dt.first;
-                cur_s.get_in_dt = new_st_dt.second;
                 const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
-                cur_s.get_out_st = out_st_dt.first;
-                cur_s.get_out_dt = out_st_dt.second;
+                if (out_st_dt.first) {
+                    cur_s.get_in_st = new_st_dt.first;
+                    cur_s.get_in_dt = new_st_dt.second;
+                    cur_s.get_out_st = out_st_dt.first;
+                    cur_s.get_out_dt = out_st_dt.second;
+                } else {
+                    // there is a problem with the journey pattern, we cannot shift the date time, we do not change anything
+                }
             }
             prev_s = &cur_s;
         }
@@ -283,6 +286,140 @@ struct Dominates {
     }
 };
 
+struct VehicleSection {
+    VehicleSection(const Journey::Section& s, const type::VehicleJourney* v):
+        section(s), vj(v) {}
+    const Journey::Section& section;
+    const type::VehicleJourney* vj;
+
+    struct StopTimeDatetime {
+        StopTimeDatetime(const type::StopTime& s, const DateTime dep, const DateTime arr):
+            st(s), departure(s.departure(dep)), arrival(s.arrival(arr)) {}
+        const type::StopTime& st;
+        DateTime departure, arrival;
+    };
+
+    // all stop times of the section + their departure and arrival time
+    std::vector<StopTimeDatetime> stop_times_and_dt;
+};
+
+std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
+    std::vector<VehicleSection> res;
+    auto current_st = section.get_in_st;
+    auto end_st = section.get_out_st;
+    auto current_dep = section.get_in_dt;
+    // for the first arrival, we want to go back into the past, hence the clockwise
+    auto current_arr = section.get_in_st->arrival(current_dep, false);
+
+    size_t order = current_st->journey_pattern_point->order;
+    for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
+        res.emplace_back(section, current_st->vehicle_journey);
+
+        for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
+            res.back().stop_times_and_dt.emplace_back(st, current_dep, current_arr);
+            current_dep = res.back().stop_times_and_dt.back().departure;
+            current_arr = res.back().stop_times_and_dt.back().arrival;
+
+            if (&st == end_st) {
+                return res;
+            }
+        }
+        order = 0; //for the stay in vj's, we start from the first stop time
+    }
+    throw navitia::recoverable_exception("impossible to rebuild path");
+}
+
+template<typename Visitor>
+Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& reader) {
+    Path path;
+    const auto& data = reader.raptor.data;
+    const auto posix = [&data](DateTime dt) { return to_posix_time(dt, data); };
+
+    path.nb_changes = journey.sections.size() - 1;
+
+    const Journey::Section* last_section = nullptr;
+    for (const auto& section: journey.sections) {
+        const auto dep_stop_point = section.get_in_st->journey_pattern_point->stop_point;
+        if (! path.items.empty()) {
+            //we add a connexion
+            auto waiting_section_start = posix(last_section->get_out_dt);
+            const auto previous_stop = last_section->get_out_st->journey_pattern_point->stop_point;
+
+            const auto* conn = data.pt_data->get_stop_point_connection(
+                        *previous_stop, *dep_stop_point);
+            assert(conn);
+
+            const auto end_of_transfer = posix(last_section->get_out_dt + conn->display_duration);
+
+            // we add a transfer section only if we transfer on different stop point, else there is only a waiting section
+            const bool walking_transfer = dep_stop_point != previous_stop;
+            if (walking_transfer) {
+                path.items.emplace_back(ItemType::walking,
+                                        posix(last_section->get_out_dt),
+                                        end_of_transfer);
+                auto& s = path.items.back();
+                s.stop_points.push_back(previous_stop);
+                s.stop_points.push_back(dep_stop_point);
+
+                s.connection = conn;
+                waiting_section_start = end_of_transfer; //we update the start of the waiting section
+            }
+
+            const auto transfer_time = section.get_in_dt - last_section->get_out_dt;
+            //if the transfer is bigger than the actual connection, we add a waiting section
+            if (conn->display_duration < transfer_time || ! walking_transfer) {
+                path.items.emplace_back(ItemType::waiting,
+                                        waiting_section_start,
+                                        posix(section.get_in_dt));
+                path.items.back().stop_points.push_back(dep_stop_point);
+            }
+        }
+
+        //we then need to create one section by service extension
+        const VehicleSection* last_vj_section = nullptr;
+        for (const auto& vj_section: get_vjs(section)) {
+            if (last_vj_section) {
+                //add a stay in
+                path.items.emplace_back(ItemType::stay_in,
+                                        posix(section.get_in_dt),
+                                        posix(section.get_out_dt));
+                auto& stay_in_section = path.items.back();
+                const auto& last_st = last_vj_section->stop_times_and_dt.back();
+                stay_in_section.stop_points.push_back(last_st.st.journey_pattern_point->stop_point);
+                const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.journey_pattern_point->stop_point;
+                stay_in_section.stop_points.push_back(first_stop_point);
+                stay_in_section.departure = posix(last_st.departure);
+                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
+            }
+            //add the pt section
+            path.items.emplace_back(ItemType::public_transport);
+            auto& item = path.items.back();
+            for (const auto& st_dt: vj_section.stop_times_and_dt) {
+                // for odt we want to hide the intermediate stops since they are not relevant
+                if (vj_section.vj->is_odt()
+                        && &st_dt.st != &vj_section.stop_times_and_dt.front().st
+                        && &st_dt.st != &vj_section.stop_times_and_dt.back().st) {
+                        continue;
+                }
+
+                item.stop_times.push_back(&st_dt.st);
+                item.stop_points.push_back(st_dt.st.journey_pattern_point->stop_point);
+                item.arrivals.push_back(posix(st_dt.arrival));
+                item.departures.push_back(posix(st_dt.departure));
+            }
+            item.departure = posix(vj_section.stop_times_and_dt.front().departure);
+            item.arrival = posix(vj_section.stop_times_and_dt.back().arrival);
+            last_vj_section = &vj_section;
+        }
+
+        last_section = &section;
+    }
+
+    path.duration = navitia::time_duration::from_boost_duration(path.items.back().arrival - path.items.front().departure);
+
+    return path;
+}
+
 template<typename Visitor>
 struct RaptorSolutionReader {
     RaptorSolutionReader(const RAPTOR& r,
@@ -308,9 +445,11 @@ struct RaptorSolutionReader {
     const type::AccessibiliteParams& accessibilite_params;
     ParetoFront<Journey, Dominates> solutions;
 
+    size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j(path, *this);
-        std::cout << "  " << j << std::endl;
+        nb_sol_added ++;
+
         solutions.add(std::move(j));
     }
 
@@ -424,8 +563,8 @@ private:
     std::map<SpIdx, DateTime> m;
 };
 
-template<typename Visitor>
-size_t read_solutions(const RAPTOR& raptor,
+template <typename Visitor>
+std::vector<Path> read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
                     const RAPTOR::vec_stop_point_duration& deps,
                     const RAPTOR::vec_stop_point_duration& arrs,
@@ -434,8 +573,8 @@ size_t read_solutions(const RAPTOR& raptor,
 {
     auto reader = make_raptor_solution_reader(
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
+
     BestEnd<Visitor> best_end(v);
-    std::cout << "begin reader" << std::endl;
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
@@ -445,17 +584,16 @@ size_t read_solutions(const RAPTOR& raptor,
             reader.begin_pt(count, a.first, end_dt);
         }
     }
-    std::cout << "solutions:" << std::endl;
+    std::vector<Path> sol;
     for (const auto& s: reader.solutions) {
-        std::cout << "  " << s << std::endl;
+        sol.push_back(make_path(s, reader));
     }
-    std::cout << "end reader" << std::endl;
-    return reader.solutions.size();
+    return sol;
 }
 
 } // anonymous namespace
 
-size_t read_solutions(const RAPTOR& raptor,
+std::vector<Path> read_solutions(const RAPTOR& raptor,
                       const bool clockwise,
                       const RAPTOR::vec_stop_point_duration& deps,
                       const RAPTOR::vec_stop_point_duration& arrs,

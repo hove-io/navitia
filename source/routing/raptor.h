@@ -136,7 +136,7 @@ struct RAPTOR
                 const vec_stop_point_duration &destinations,
                 const DateTime &departure_datetime, bool disruption_active, bool allow_odt,
                 const DateTime &bound=DateTimeUtils::inf,
-                const uint32_t max_transfers=std::numeric_limits<int>::max(),
+                const uint32_t max_transfers = 10,
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
 
@@ -166,7 +166,7 @@ struct RAPTOR
     void
     isochrone(const vec_stop_point_duration &departures_,
               const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min,
-              uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+              uint32_t max_transfers = 10,
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true, bool disruption_active = false, bool allow_odt = true);

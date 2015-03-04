@@ -199,7 +199,9 @@ int main(int argc, char** argv){
                       << ", " << demand.hour
                       << "\n";
         }
-        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),false, true);
+        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target],
+                demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),
+                false, true, true, {}, 10);
 
         Path path;
         if(res.size() > 0) {

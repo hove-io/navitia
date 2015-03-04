@@ -246,52 +246,13 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
     //result.insert(result.end(), tmp.begin(), tmp.end());
     // No solution found, or the solution has initialize with init
-    if(! b_dest.best_now_sp_idx.is_valid() || b_dest.count == 0) {
+    if (! b_dest.best_now_sp_idx.is_valid() || b_dest.count == 0) {
         return result;
     }
 
-    const size_t nb_sol_reader = read_solutions(*this, clockwise, departures_, destinations, disruption_active, accessibilite_params);
+    const auto reader_results = read_solutions(*this, clockwise, departures_, destinations, disruption_active, accessibilite_params);
 
-    // Second phase
-    // If we asked for a earliest arrival time, we now try to find the tardiest departure time
-    // and vice and versa
-    auto departures = get_solutions(calc_dep, calc_dest, !clockwise,
-                               accessibilite_params, disruption_active, *this);
-    for(auto departure : departures) {
-        clear(!clockwise, departure_datetime);
-        init({departure}, calc_dep, departure_datetime, !clockwise);
-
-        boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
-
-        if(! b_dest.best_now_sp_idx.is_valid()) {
-            continue;
-        }
-        std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
-
-        using boost::adaptors::filtered;
-        boost::push_back(result, temp | filtered([&](const Path& p) {
-            // We filter invalid solutions (that will begin before the departure date)
-            const auto& end_item = clockwise ? p.items.front() : p.items.back();
-            const auto* stop_time = clockwise ? end_item.stop_times.front() : end_item.stop_times.back();
-            SpIdx end_idx = SpIdx(*stop_time->journey_pattern_point->stop_point);
-            const auto walking_time_search = boost::find_if(calc_dep, [&](const stop_point_duration& elt) {
-                return elt.first == end_idx;
-            });
-            BOOST_ASSERT(walking_time_search != calc_dep.end());
-            const auto& cur_end = clockwise ? end_item.departure : end_item.arrival;
-            return clockwise
-                ? to_posix_time(departure_datetime + walking_time_search->second.total_seconds(), data)
-                  <= cur_end
-                : to_posix_time(departure_datetime - walking_time_search->second.total_seconds(), data)
-                  >= cur_end;
-        }));
-    }
-    BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
-
-    if (nb_sol_reader != result.size()) {
-        std::cout << "***** error reader fail" << nb_sol_reader << " " << result.size() << std::endl;
-    }
-    return filter_journeys(result);
+    return filter_journeys(reader_results);
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>

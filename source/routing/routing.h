@@ -59,18 +59,18 @@ struct ValidityPatternTime {
 };
 
 
-enum ItemType {
+enum ItemType { //TODO add class
     public_transport,
-    walking,
+    walking, //transfer
     stay_in,
-    guarantee,
+    guarantee, //REMOVE
     waiting
 };
 
 /** Étape d'un itinéraire*/
 struct PathItem {
-    boost::posix_time::ptime arrival;
-    boost::posix_time::ptime departure;
+    boost::posix_time::ptime arrival = boost::posix_time::pos_infin;
+    boost::posix_time::ptime departure = boost::posix_time::pos_infin;
     std::vector<boost::posix_time::ptime> arrivals;
     std::vector<boost::posix_time::ptime> departures;
     std::vector<const nt::StopTime*> stop_times; //empty if not public transport
@@ -85,9 +85,10 @@ struct PathItem {
 
     ItemType type;
 
-    PathItem(boost::posix_time::ptime departure = boost::posix_time::pos_infin,
+    PathItem(ItemType t = ItemType::public_transport,
+             boost::posix_time::ptime departure = boost::posix_time::pos_infin,
              boost::posix_time::ptime arrival = boost::posix_time::pos_infin) :
-        arrival(arrival), departure(departure), type(public_transport) {
+        arrival(arrival), departure(departure), type(t) {
     }
 
     std::string print() const;
@@ -101,13 +102,11 @@ struct PathItem {
 
 /** Un itinéraire complet */
 struct Path {
-    navitia::time_duration duration;
-    uint32_t nb_changes;
-    boost::posix_time::ptime request_time;
+    navitia::time_duration duration = boost::posix_time::pos_infin;
+    uint32_t nb_changes = std::numeric_limits<uint32_t>::max();
+    boost::posix_time::ptime request_time = boost::posix_time::pos_infin;
     std::vector<PathItem> items;
     type::EntryPoint origin;
-
-    Path() : duration(boost::posix_time::pos_infin), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 
     void print() const {
         for(auto item : items)
