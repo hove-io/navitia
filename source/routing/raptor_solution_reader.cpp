@@ -312,7 +312,6 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     auto current_arr = section.get_in_st->arrival(current_dep, false);
 
     size_t order = current_st->journey_pattern_point->order;
-    bool found = false;
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
         res.emplace_back(section, current_st->vehicle_journey);
 
@@ -322,15 +321,12 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
             current_arr = res.back().stop_times_and_dt.back().arrival;
 
             if (&st == end_st) {
-                found = true;
-                break;
+                return res;
             }
         }
-        if (found) { break; }
         order = 0; //for the stay in vj's, we start from the first stop time
     }
-    assert (found);
-    return res;
+    throw navitia::recoverable_exception("impossible to rebuild path");
 }
 
 template<typename Visitor>
