@@ -110,7 +110,7 @@ class add_address_poi_id(object):
                 elif hasattr(objects, 'keys'):
                     for v in objects.keys():
                         add_id(objects[v], region, v)
-                    if 'address' == type_:
+                    if 'address' == type_ and 'coord' in objects:
                         lon = objects['coord']['lon']
                         lat = objects['coord']['lat']
                         objects['id'] = lon + ';' + lat
