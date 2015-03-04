@@ -172,11 +172,15 @@ struct Journey {
                 reader.disruption_active,
                 reader.accessibilite_params.vehicle_properties);
             if (new_st_dt.second < cur_s.get_in_dt) {
-                cur_s.get_in_st = new_st_dt.first;
-                cur_s.get_in_dt = new_st_dt.second;
                 const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
-                cur_s.get_out_st = out_st_dt.first;
-                cur_s.get_out_dt = out_st_dt.second;
+                if (out_st_dt.first) {
+                    cur_s.get_in_st = new_st_dt.first;
+                    cur_s.get_in_dt = new_st_dt.second;
+                    cur_s.get_out_st = out_st_dt.first;
+                    cur_s.get_out_dt = out_st_dt.second;
+                } else {
+                    // there is a problem with the journey pattern, we cannot shift the date time, we do not change anything
+                }
             }
             prev_s = &cur_s;
         }
@@ -282,12 +286,6 @@ struct Dominates {
     }
 };
 
-std::ostream& operator<<(std::ostream& os, const Journey::Section& section) {
-    os << "section boarding in " << section.get_in_st->journey_pattern_point->uri
-       << " leaving  in " << section.get_out_st->journey_pattern_point->uri;
-    return os;
-}
-
 struct VehicleSection {
     VehicleSection(const Journey::Section& s, const type::VehicleJourney* v):
         section(s), vj(v) {}
@@ -295,9 +293,9 @@ struct VehicleSection {
     const type::VehicleJourney* vj;
 
     struct StopTimeDatetime {
-        StopTimeDatetime(const type::StopTime* s, const DateTime dep, const DateTime arr):
-            st(s), departure(s->departure(dep)), arrival(s->arrival(arr)) {}
-        const type::StopTime* st;
+        StopTimeDatetime(const type::StopTime& s, const DateTime dep, const DateTime arr):
+            st(s), departure(s.departure(dep)), arrival(s.arrival(arr)) {}
+        const type::StopTime& st;
         DateTime departure, arrival;
     };
 
@@ -313,33 +311,25 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     // for the first arrival, we want to go back into the past, hence the clockwise
     auto current_arr = section.get_in_st->arrival(current_dep, false);
 
-    res.emplace_back(section, current_st->vehicle_journey);
-
-    while (end_st != current_st) {
-        res.back().stop_times_and_dt.emplace_back(current_st, current_dep, current_arr);
-        current_dep = res.back().stop_times_and_dt.back().departure;
-        current_arr = res.back().stop_times_and_dt.back().arrival;
-
-        size_t order = current_st->journey_pattern_point->order;
-        if (order < current_st->vehicle_journey->stop_time_list.size() - 1) {
-            current_st = &current_st->vehicle_journey->stop_time_list[++order];
-            continue;
-        }
-
-        // Here we have to change of vehicle journey, this happen with connection_stay_in
+    size_t order = current_st->journey_pattern_point->order;
+    bool found = false;
+    for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
         res.emplace_back(section, current_st->vehicle_journey);
 
-        if (! current_st->vehicle_journey->next_vj) {
-            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "no service extension for section "
-                            << section << " impossible to rebuild the path");
-            throw navitia::recoverable_exception("impossible to rebuild the public transport path");
+        for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
+            res.back().stop_times_and_dt.emplace_back(st, current_dep, current_arr);
+            current_dep = res.back().stop_times_and_dt.back().departure;
+            current_arr = res.back().stop_times_and_dt.back().arrival;
+
+            if (&st == end_st) {
+                found = true;
+                break;
+            }
         }
-
-        current_st = &current_st->vehicle_journey->next_vj->stop_time_list.front();
+        if (found) { break; }
+        order = 0; //for the stay in vj's, we start from the first stop time
     }
-    // we also add the arrival stop
-    res.back().stop_times_and_dt.emplace_back(end_st, current_dep, current_arr);
-
+    assert (found);
     return res;
 }
 
@@ -399,8 +389,9 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
                                         posix(section.get_out_dt));
                 auto& stay_in_section = path.items.back();
                 const auto& last_st = last_vj_section->stop_times_and_dt.back();
-                stay_in_section.stop_points.push_back(last_st.st->journey_pattern_point->stop_point);
-                stay_in_section.stop_points.push_back(vj_section.stop_times_and_dt.front().st->journey_pattern_point->stop_point);
+                stay_in_section.stop_points.push_back(last_st.st.journey_pattern_point->stop_point);
+                const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.journey_pattern_point->stop_point;
+                stay_in_section.stop_points.push_back(first_stop_point);
                 stay_in_section.departure = posix(last_st.departure);
                 stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
             }
@@ -410,13 +401,13 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
             for (const auto& st_dt: vj_section.stop_times_and_dt) {
                 // for odt we want to hide the intermediate stops since they are not relevant
                 if (vj_section.vj->is_odt()
-                        && st_dt.st != vj_section.stop_times_and_dt.front().st
-                        && st_dt.st != vj_section.stop_times_and_dt.back().st) {
+                        && &st_dt.st != &vj_section.stop_times_and_dt.front().st
+                        && &st_dt.st != &vj_section.stop_times_and_dt.back().st) {
                         continue;
                 }
 
-                item.stop_times.push_back(st_dt.st);
-                item.stop_points.push_back(st_dt.st->journey_pattern_point->stop_point);
+                item.stop_times.push_back(&st_dt.st);
+                item.stop_points.push_back(st_dt.st.journey_pattern_point->stop_point);
                 item.arrivals.push_back(posix(st_dt.arrival));
                 item.departures.push_back(posix(st_dt.departure));
             }
