@@ -600,6 +600,35 @@ struct routing_api_data {
 
             holder.disruptions.push_back(std::move(disruption));
         }
+
+        {
+            auto period = boost::posix_time::time_period("20120614T060000"_dt, "20120614T120000"_dt);
+            //we create one disruption on line A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_all_lines_at_proper_time";
+            disruption->publication_period = period;
+            auto tag = boost::make_shared<Tag>();
+            tag->uri = "tag";
+            tag->name = "tag name";
+            disruption->tags.push_back(tag);
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_all_lines";
+            impact->application_periods = {period};
+
+            impact->severity = info_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
     }
 
     int AA = 0;

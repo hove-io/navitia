@@ -178,6 +178,7 @@ class Scenario(object):
                 st.forbidden_uri.append(forbidden_uri)
         if "calendar" in request and request["calendar"]:
             st.calendar = request["calendar"]
+        st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = instance.send_and_receive(req)
         return resp
 

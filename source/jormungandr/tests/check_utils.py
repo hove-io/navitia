@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from collections import deque
+from collections import deque, defaultdict
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -35,6 +35,7 @@ from datetime import datetime
 import logging
 import re
 from shapely.geometry import shape
+
 
 """
 Some small functions to check the service responses
@@ -736,3 +737,30 @@ r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
 #default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
     .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
+
+def get_all_disruptions(elem, response):
+    """
+    return a map with the disruption id as key and the list of disruption + impacted object as value for a item of the response
+    """
+    disruption_by_obj = defaultdict(list)
+
+    all_disruptions = {d['id']: d for d in response['disruptions']}
+
+    def disruptions_filler(_, obj):
+        try:
+            if 'links' not in obj:
+                return
+        except TypeError:
+            return
+
+        real_disruptions = [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+
+        for d in real_disruptions:
+            disruption_by_obj[d['id']].append((d, obj))
+
+    #we import utils here else it will import jormungandr too early in the test
+    from jormungandr import utils
+    utils.walk_dict(elem, disruptions_filler)
+
+    return disruption_by_obj
+
