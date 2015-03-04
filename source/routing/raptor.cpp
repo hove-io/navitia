@@ -533,6 +533,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                                 continue_algorithm = true;
                             }
                         }
+
                     }
 
                     // We try to get on a vehicle, if we were already on a vehicle, but we arrived
@@ -557,6 +558,13 @@ void RAPTOR::raptor_loop(Visitor visitor,
                             l_zone = it_st->local_traffic_zone;
                             continue_algorithm = true;
                             BOOST_ASSERT(! visitor.comp(workingDt, previous_dt));
+
+                            if (jpp.has_freq) {
+                                // we need to update again the working dt for it to always
+                                // be the arrival (resp departure) in the stoptimes
+                                DateTime section_start = tmp_st_dt.first->get_other_end(workingDt, visitor.clockwise());
+                                DateTimeUtils::update(workingDt, section_start, ! visitor.clockwise());
+                            }
                         }
                     }
                 }

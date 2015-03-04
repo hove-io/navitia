@@ -60,6 +60,16 @@ BOOST_AUTO_TEST_CASE(direct){
     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].departure, *(b.data))), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].arrival, *(b.data))), 0);
 
+    //check the departure/arrival in each stop
+    // remember that those are the arrival/departure of the vehicle in each stops
+    // so arrival < departure
+    BOOST_REQUIRE_EQUAL(res.items[0].departures.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.items[0].arrivals.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].arrivals[0], "20120614T021320"_dt);
+    BOOST_CHECK_EQUAL(res.items[0].departures[0], "20120614T021410"_dt);
+    BOOST_CHECK_EQUAL(res.items[0].arrivals[1], "20120614T021500"_dt);
+    BOOST_CHECK_EQUAL(res.items[0].departures[1], "20120614T021550"_dt);
+
     res1 = raptor.compute(b.data->pt_data->stop_areas[0], b.data->pt_data->stop_areas[1], 7900, 0, DateTimeUtils::set(0, 8200), false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -1013,7 +1023,6 @@ BOOST_AUTO_TEST_CASE(itl) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.time_of_day().total_seconds(), 10*3600);
 
-
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.time_of_day().total_seconds(), 8*3600+20*60);
@@ -1060,14 +1069,12 @@ BOOST_AUTO_TEST_CASE(multiples_vj) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
 
-
     b.data->pt_data->index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
-
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 5*60, 0, DateTimeUtils::inf, false, true);
 
@@ -1079,7 +1086,6 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
     ed::builder b("20120614");
     b.frequency_vj("A1", 8*3600,18*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
 
-
     b.data->pt_data->index();
     b.finish();
     b.data->build_raptor();
@@ -1090,6 +1096,7 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*3600, 0, DateTimeUtils::inf, false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 8*3600 + 10*60);
 
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 9*3600, 0, DateTimeUtils::inf, false, true);
@@ -1102,7 +1109,6 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     ed::builder b("20120614");
     b.frequency_vj("A1", 8*3600,26*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
 
-
     b.data->pt_data->index();
     b.finish();
     b.data->build_raptor();
@@ -1111,8 +1117,6 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     type::PT_Data & d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 23*3600, 0, DateTimeUtils::inf, false, true);
-
-
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 23*3600 + 10*60);
@@ -1128,6 +1132,91 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res1[0].items[0].arrival, *(b.data))), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), (25*3600 + 10*60)% DateTimeUtils::SECONDS_PER_DAY);
+}
+
+BOOST_AUTO_TEST_CASE(freq_vj_stop_times) {
+    ed::builder b("20120614");
+    b.frequency_vj("A1", 8*3600, 18*3600, 60*60)
+            ("stop1", 8*3600, 8*3600 + 10*60)
+            ("stop2", 8*3600 + 15*60, 8*3600 + 25*60)
+            ("stop3", 8*3600 + 30*60, 8*3600 + 40*60);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    const auto check_journey = [](const Path& p) {
+        const auto& section = p.items[0];
+        BOOST_CHECK_EQUAL(section.departure.time_of_day().total_seconds(), 9*3600 + 10*60);
+        BOOST_CHECK_EQUAL(section.arrival.time_of_day().total_seconds(), 9*3600 + 30*60);
+        BOOST_REQUIRE_EQUAL(section.stop_times.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.departures.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.arrivals.size(), 3);
+        BOOST_CHECK_EQUAL(section.arrivals[0], "20120614T090000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[0], "20120614T091000"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[1], "20120614T091500"_dt);
+        BOOST_CHECK_EQUAL(section.departures[1], "20120614T092500"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[2], "20120614T093000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[2], "20120614T094000"_dt);
+
+    };
+
+    auto res_earliest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 9*3600, 0, DateTimeUtils::inf, false, true);
+
+    BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
+    check_journey(res_earliest[0]);
+
+    //same but tardiest departure
+    auto res_tardiest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 9*3600 + 30*60, 0, DateTimeUtils::min, false, true, false);
+
+    BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
+    check_journey(res_tardiest[0]);
+}
+
+BOOST_AUTO_TEST_CASE(freq_vj_different_departure_arrival_duration) {
+    // we want to test that everything is fine for a frequency vj
+    // with different duration in each stops
+    ed::builder b("20120614");
+    b.frequency_vj("A1", 8*3600, 18*3600, 60*60)
+            ("stop1", 8*3600, 8*3600 + 10*60) //10min
+            ("stop2", 8*3600 + 15*60, 8*3600 + 40*60) // 25mn
+            ("stop3", 9*3600, 9*3600 + 5*60); //5mn
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    const auto check_journey = [](const Path& p) {
+        const auto& section = p.items[0];
+        BOOST_CHECK_EQUAL(section.departure.time_of_day().total_seconds(), 9*3600 + 10*60);
+        BOOST_CHECK_EQUAL(section.arrival.time_of_day().total_seconds(), 10*3600);
+        BOOST_REQUIRE_EQUAL(section.stop_times.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.departures.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.arrivals.size(), 3);
+        BOOST_CHECK_EQUAL(section.arrivals[0], "20120614T090000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[0], "20120614T091000"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[1], "20120614T091500"_dt);
+        BOOST_CHECK_EQUAL(section.departures[1], "20120614T094000"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[2], "20120614T100000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[2], "20120614T100500"_dt);
+    };
+
+    auto res_earliest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 9*3600 + 5*60, 0, DateTimeUtils::inf, false, true);
+
+    BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
+    check_journey(res_earliest[0]);
+
+    //same but tardiest departure
+    auto res_tardiest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 10*3600, 0, DateTimeUtils::min, false, true, false);
+
+    BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
+    check_journey(res_tardiest[0]);
 }
 
 

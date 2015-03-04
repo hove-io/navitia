@@ -901,15 +901,22 @@ struct StopTime {
             return clockwise ? arrival_time : departure_time;
     }
 
+    u_int32_t get_other_end(const u_int32_t hour, bool clockwise) const {
+        // get the departure from the arrival if clockwise and vise versa
+        assert (is_frequency());
+        if (clockwise) { return hour - (departure_time - arrival_time); }
+        return hour + (departure_time - arrival_time);
+    }
+
     uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
     uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 
     DateTime departure(DateTime dt) const {
-        DateTimeUtils::update(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt)): departure_time);
+        DateTimeUtils::update(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt), true): departure_time);
         return dt;
     }
-    DateTime arrival(DateTime dt, bool clockwise = true) const {
-        DateTimeUtils::update(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt)): arrival_time, clockwise);
+    DateTime arrival(DateTime dt) const {
+        DateTimeUtils::update(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
         return dt;
     }
 

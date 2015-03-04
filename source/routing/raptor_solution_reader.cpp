@@ -308,7 +308,11 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     auto end_st = section.get_out_st;
     auto current_dep = section.get_in_dt;
     // for the first arrival, we want to go back into the past, hence the clockwise
-    auto current_arr = section.get_in_st->arrival(current_dep, false);
+
+    const auto* in_st = section.get_in_st;
+    auto previous_arr = in_st->is_frequency() ? in_st->get_other_end(current_dep, true): section.get_in_st->arrival_time;
+    DateTime current_arr = current_dep;
+    DateTimeUtils::update(current_arr, previous_arr, false);
 
     size_t order = current_st->journey_pattern_point->order;
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
@@ -517,6 +521,9 @@ struct RaptorSolutionReader {
 
             // great, we can begin
             auto cur_dt = begin_st_dt.second;
+            if (begin_st_dt.first->is_frequency()) {
+                DateTimeUtils::update(cur_dt, begin_st_dt.first->get_other_end(cur_dt, v.clockwise()), ! v.clockwise());
+            }
             const auto begin_zone = begin_st_dt.first->local_traffic_zone;
             end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
                    v.st_range(*begin_st_dt.first).advance_begin(1));

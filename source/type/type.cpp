@@ -133,20 +133,6 @@ bool HasMessages::has_publishable_message(const boost::posix_time::ptime& curren
     return false;
 }
 
-uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
-    if(clockwise) {
-        if (this == &this->vehicle_journey->stop_time_list.front())
-            return hour;
-        const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-        return hour + this->arrival_time - prec_st.arrival_time;
-    } else {
-        if (this == &this->vehicle_journey->stop_time_list.back())
-            return hour;
-        const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-        return hour - (next_st.arrival_time - this->arrival_time);
-    }
-}
-
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
@@ -169,7 +155,25 @@ bool StopTime::operator<(const StopTime& other) const {
     }
 }
 
+uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
+    // get the arrival time of a frequency stop time from the arrival time on the previous stop in the vj
+    assert (is_frequency());
+    if(clockwise) {
+        if (this == &this->vehicle_journey->stop_time_list.front())
+            return hour;
+        const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+        return hour + this->arrival_time - prec_st.arrival_time;
+    } else {
+        if (this == &this->vehicle_journey->stop_time_list.back())
+            return hour;
+        const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+        return hour - (next_st.arrival_time - this->arrival_time);
+    }
+}
+
 uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const {
+    // get the departure time of a frequency stop time from the departure time on the previous stop in the vj
+    assert (is_frequency());
     if(clockwise) {
         if (this == &this->vehicle_journey->stop_time_list.front())
             return hour;
