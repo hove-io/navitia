@@ -630,6 +630,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
+        LOG4CPLUS_TRACE(logger, "find " << tmp_sn.size() << " stop_points");
         for(auto idx_duration : tmp_sn) {
             auto sp_idx = SpIdx(idx_duration.first);
             if(stop_points.find(sp_idx) == stop_points.end()) {
