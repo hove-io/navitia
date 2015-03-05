@@ -5,7 +5,7 @@
 namespace navitia { namespace routing {
 struct raptor_visitor {
     inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
-        return a <= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
+        return a <= st.section_end(current_dt, clockwise());
     }
 
     inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_iterator>
@@ -63,7 +63,7 @@ struct raptor_visitor {
 
 struct raptor_reverse_visitor {
     inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
-        return a >= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
+        return a >= st.section_end(current_dt, clockwise());
     }
 
     inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_reverse_iterator>

@@ -128,8 +128,7 @@ struct Journey {
     {
         DateTime cur_dt = in_st_dt.second;
         for (const auto& st: raptor_visitor().st_range(*in_st_dt.first).advance_begin(1)) {
-            const auto current_time = st.section_end_time(true, DateTimeUtils::hour(cur_dt));
-            DateTimeUtils::update(cur_dt, current_time, true);
+            cur_dt = st.section_end(cur_dt, true);
             if (st.journey_pattern_point == target_jpp) {
                 // check if the get_out is valid?
                 return {&st, cur_dt};
@@ -139,8 +138,7 @@ struct Journey {
              stay_in_vj != nullptr;
              stay_in_vj = stay_in_vj->next_vj) {
             for (const auto& st: stay_in_vj->stop_time_list) {
-                const auto current_time = st.section_end_time(true, DateTimeUtils::hour(cur_dt));
-                DateTimeUtils::update(cur_dt, current_time, true);
+                cur_dt = st.section_end(cur_dt, true);
                 if (st.journey_pattern_point == target_jpp) {
                     // check if the get_out is valid?
                     return {&st, cur_dt};
@@ -310,9 +308,12 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     // for the first arrival, we want to go back into the past, hence the clockwise
 
     const auto* in_st = section.get_in_st;
-    auto previous_arr = in_st->is_frequency() ? in_st->get_other_end(current_dep, true): section.get_in_st->arrival_time;
-    DateTime current_arr = current_dep;
-    DateTimeUtils::update(current_arr, previous_arr, false);
+    DateTime current_arr;
+    if (! in_st->is_frequency()) {
+        current_arr = DateTimeUtils::shift(current_dep, section.get_in_st->arrival_time, false);
+    } else {
+        current_arr = in_st->get_other_end(current_dep, true);
+    }
 
     size_t order = current_st->journey_pattern_point->order;
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
@@ -483,9 +484,7 @@ struct RaptorSolutionReader {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
 
         for (const auto& end_st: st_range) {
-            const auto current_time = end_st.section_end_time(
-                v.clockwise(), DateTimeUtils::hour(cur_dt));
-            DateTimeUtils::update(cur_dt, current_time, v.clockwise());
+            cur_dt = end_st.section_end(cur_dt, v.clockwise());
 
             // trying to end
             if (! end_st.valid_end(v.clockwise())) { continue; }
@@ -522,7 +521,8 @@ struct RaptorSolutionReader {
             // great, we can begin
             auto cur_dt = begin_st_dt.second;
             if (begin_st_dt.first->is_frequency()) {
-                DateTimeUtils::update(cur_dt, begin_st_dt.first->get_other_end(cur_dt, v.clockwise()), ! v.clockwise());
+                //for frequency, we need cur_dt to be the arrival (resp departure) in the stoptime
+                cur_dt = begin_st_dt.first->get_other_end(cur_dt, v.clockwise());
             }
             const auto begin_zone = begin_st_dt.first->local_traffic_zone;
             end_pt(count, path, begin_st_dt, begin_zone, cur_dt,

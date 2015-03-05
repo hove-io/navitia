@@ -869,8 +869,12 @@ struct StopTime {
 
     std::bitset<8> properties;
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
-    uint32_t arrival_time = 0; ///< En secondes depuis minuit
-    uint32_t departure_time = 0; ///< En secondes depuis minuit //TODO, comment that, with explanation for frequency VJ and non frequency VJ
+
+    /// for non frequency vj departure/arrival are the real departure/arrival
+    /// for frequency vj they are relatives to the stoptime's vj's start_time
+    uint32_t arrival_time = 0; ///< seconds since midnight
+    uint32_t departure_time = 0; ///< seconds since midnight
+
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
 
@@ -893,35 +897,37 @@ struct StopTime {
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
-    /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
-        if(this->is_frequency())
-            return clockwise ? this->f_arrival_time(hour) : this->f_departure_time(hour);
-        else
-            return clockwise ? arrival_time : departure_time;
+
+    /// get the departure (resp arrival for anti clockwise) from the stoptime
+    /// dt is the departure from the previous stoptime (resp arrival on the next one for anti clockwise)
+    DateTime section_end(DateTime dt, bool clockwise) const {
+        u_int32_t hour;
+        if (is_frequency()) {
+            hour = clockwise ? this->f_arrival_time(DateTimeUtils::hour(dt)) : this->f_departure_time(DateTimeUtils::hour(dt));
+        } else {
+            hour = clockwise ? arrival_time : departure_time;
+        }
+        return DateTimeUtils::shift(dt, hour, clockwise);
     }
 
-    u_int32_t get_other_end(const u_int32_t hour, bool clockwise) const {
-        // get the departure from the arrival if clockwise and vise versa
+    /// get the departure from the arrival if clockwise and vise versa
+    DateTime get_other_end(const DateTime dt, bool clockwise) const {
         assert (is_frequency());
-        if (clockwise) { return hour - (departure_time - arrival_time); }
-        return hour + (departure_time - arrival_time);
+        const int32_t diff = departure_time - arrival_time;
+        if ((clockwise && int32_t(dt) < diff) || (!clockwise && diff < 0 && int32_t(dt) < -1 * diff)) {
+            // corner case for the 1 day if the arrival in the stoptime is before midnight
+            // and the arrival is after, but we consider that we don't care about it
+            return 0;
+        }
+        if (clockwise) { return dt - diff; }
+        return dt + diff;
     }
-
-    uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
-    uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 
     DateTime departure(DateTime dt) const {
-        DateTimeUtils::update(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt), true): departure_time);
-        return dt;
+        return DateTimeUtils::shift(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt), true): departure_time);
     }
     DateTime arrival(DateTime dt) const {
-        DateTimeUtils::update(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
-        return dt;
-    }
-
-    DateTime section_end_date(int date, bool clockwise) const {
-        return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
+        return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
     }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
@@ -933,6 +939,9 @@ struct StopTime {
 
     bool operator<(const StopTime& other) const;
 
+private:
+    uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
+    uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 };
 
 

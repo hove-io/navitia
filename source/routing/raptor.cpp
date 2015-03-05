@@ -60,17 +60,13 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = stop_time_list.front();
-        const auto current_time = st_begin.section_end_time(v.clockwise(),
-                                DateTimeUtils::hour(workingDt));
-        DateTimeUtils::update(workingDt, current_time, v.clockwise());
+        workingDt = st_begin.section_end(workingDt, v.clockwise());
         // If the vj is not valid for the first stop it won't be valid at all
         if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
             return result;
         }
         for (const type::StopTime& st: stop_time_list) {
-            const auto current_time = st.section_end_time(v.clockwise(),
-                                    DateTimeUtils::hour(workingDt));
-            DateTimeUtils::update(workingDt, current_time, v.clockwise());
+            workingDt = st.section_end(workingDt, v.clockwise());
             if (!st.valid_end(v.clockwise())) {
                 continue;
             }
@@ -514,9 +510,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         // We need at each journey pattern point when we have a st
                         // If we don't it might cause problem with overmidnight vj
                         const type::StopTime& st = *it_st;
-                        const auto current_time = st.section_end_time(visitor.clockwise(),
-                                                DateTimeUtils::hour(workingDt));
-                        DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
+                        workingDt = st.section_end(workingDt, visitor.clockwise());
                         // We check if there are no drop_off_only and if the local_zone is okay
                         if(st.valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
@@ -562,8 +556,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                             if (jpp.has_freq) {
                                 // we need to update again the working dt for it to always
                                 // be the arrival (resp departure) in the stoptimes
-                                DateTime section_start = tmp_st_dt.first->get_other_end(workingDt, visitor.clockwise());
-                                DateTimeUtils::update(workingDt, section_start, ! visitor.clockwise());
+                                workingDt = tmp_st_dt.first->get_other_end(workingDt, visitor.clockwise());
                             }
                         }
                     }

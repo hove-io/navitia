@@ -162,12 +162,12 @@ uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
         if (this == &this->vehicle_journey->stop_time_list.front())
             return hour;
         const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-        return hour + this->arrival_time - prec_st.arrival_time;
+        return DateTimeUtils::hour_in_day(hour + this->arrival_time - prec_st.arrival_time);
     } else {
         if (this == &this->vehicle_journey->stop_time_list.back())
             return hour;
         const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-        return hour - (next_st.arrival_time - this->arrival_time);
+        return DateTimeUtils::hour_in_day(hour - (next_st.arrival_time - this->arrival_time));
     }
 }
 
@@ -178,12 +178,12 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
         if (this == &this->vehicle_journey->stop_time_list.front())
             return hour;
         const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-        return hour + this->departure_time - prec_st.departure_time;
+        return DateTimeUtils::hour_in_day(hour + this->departure_time - prec_st.departure_time);
     } else {
         if (this == &this->vehicle_journey->stop_time_list.back())
             return hour;
         const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-        return hour - (next_st.departure_time - this->departure_time);
+        return DateTimeUtils::hour_in_day(hour - (next_st.departure_time - this->departure_time));
     }
 }
 
