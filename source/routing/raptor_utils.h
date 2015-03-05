@@ -62,32 +62,12 @@ struct Labels {
     inline void clear(const Labels& clean) {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
-        boarding_jpp_pts.resize(clean.boarding_jpp_pts);
-        boarding_sp_transfers.resize(clean.boarding_sp_transfers);
-        used_jpps.resize(clean.used_jpps);
-    }
-    inline const SpIdx&
-    boarding_sp_transfer(SpIdx sp_idx) const {
-        return boarding_sp_transfers[sp_idx];
-    }
-    inline const JppIdx&
-    boarding_jpp_pt(SpIdx sp_idx) const {
-        return boarding_jpp_pts[sp_idx];
     }
     inline const DateTime& dt_transfer(SpIdx sp_idx) const {
         return dt_transfers[sp_idx];
     }
     inline const DateTime& dt_pt(SpIdx sp_idx) const {
         return dt_pts[sp_idx];
-    }
-
-    inline SpIdx&
-    mut_boarding_sp_transfer(SpIdx sp_idx) {
-        return boarding_sp_transfers[sp_idx];
-    }
-    inline JppIdx&
-    mut_boarding_jpp_pt(SpIdx sp_idx) {
-        return boarding_jpp_pts[sp_idx];
     }
     inline DateTime& mut_dt_transfer(SpIdx sp_idx) {
         return dt_transfers[sp_idx];
@@ -102,20 +82,10 @@ struct Labels {
     inline bool transfer_is_initialized(SpIdx sp_idx) const {
         return dt_transfer(sp_idx) != DateTimeUtils::inf && dt_transfer(sp_idx) != DateTimeUtils::min;
     }
-
-    inline JppIdx& mut_used_jpp(SpIdx sp_idx) {
-        return used_jpps[sp_idx];
-    }
-    inline const JppIdx& used_jpp(SpIdx sp_idx) const {
-        return used_jpps[sp_idx];
-    }
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
         dt_pts.assign(stops, val);
         dt_transfers.assign(stops, val);
-        boarding_jpp_pts.resize(stops);
-        boarding_sp_transfers.resize(stops);
-        used_jpps.resize(stops);
     }
 
     // All these vectors are indexed by sp_idx
@@ -124,15 +94,6 @@ private:
     IdxMap<type::StopPoint, DateTime> dt_pts;
     // At what time wan we reach this label with a transfer
     IdxMap<type::StopPoint, DateTime> dt_transfers;
-    // jpp used to reach this label with public transport
-    IdxMap<type::StopPoint, JppIdx> boarding_jpp_pts;
-    // sp used to reach this label with a transfer.
-    // Note: the sp is enough here (no need for jpp), it is used only for path reconstruction
-    IdxMap<type::StopPoint, SpIdx> boarding_sp_transfers;
-
-    // jpp used to mark the stop point. Used for path reconstruction, only because of the the vj extention.
-    // The service extention makes it impossible to find the used jpp withe the boarding jpp
-    IdxMap<type::StopPoint, JppIdx> used_jpps;
 };
 
 } // namespace routing

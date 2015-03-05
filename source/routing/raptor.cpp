@@ -87,8 +87,6 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             //if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
             if (! v.comp(workingDt, best_labels_pts[sp_idx])) { continue; }
 
-            working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
-            working_labels.mut_used_jpp(sp_idx) = JppIdx(*st.journey_pattern_point);
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             best_labels_pts[sp_idx] = workingDt;
             add_vj = true;
@@ -133,7 +131,6 @@ bool RAPTOR::foot_path(const Visitor& v) {
             if (! v.comp(next, best_labels_transfers[destination_sp_idx])) { continue; }
 
             //if we can improve the best label, we mark it
-            working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
             best_labels_transfers[destination_sp_idx] = next;
             result = true;
@@ -528,8 +525,6 @@ void RAPTOR::raptor_loop(Visitor visitor,
                             if (visitor.comp(workingDt, best_labels_pts[jpp.sp_idx]))
                             {
                                 working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
-                                working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
-                                working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
                                 best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
                                 continue_algorithm = true;
                             }
