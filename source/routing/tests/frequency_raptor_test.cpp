@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "routing/routing.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 
 struct logger_initialized {
@@ -48,7 +49,7 @@ namespace bt = boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(freq_vj) {
     ed::builder b("20120614");
-    b.frequency_vj("A1", 8*3600,18*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.frequency_vj("A1", "8:00"_t, "18:00"_t,5*60)("stop1", "8:00"_t)("stop2", "8:10"_t);
 
     b.data->pt_data->index();
     b.finish();
@@ -226,18 +227,17 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam_different_dep_arr) {
     check_journey(res_earliest[0]);
 }
 
-
 BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
     ed::builder b("20120614");
 
-    b.frequency_vj("A", 8*3600, 26*3600, 60*60)
-            ("stop1", 8*3600, 8*3600 + 10*60)
-            ("stop2", 8*3600 + 30*60, 8*3600 + 35*60)
-            ("stop3", 9*3600 + 20*60, 9*3600 + 40*60);
+    b.frequency_vj("A", "8:00"_t, "26:00"_t, "1:00"_t)
+            ("stop1", "8:00"_t, "8:10"_t)
+            ("stop2", "8:30"_t, "8:35"_t)
+            ("stop3", "9:20"_t, "9:40"_t);
 
-    b.vj("B")("stop4", 12*3600 , 12*3600 + 5*60)
-            ("stop2", 12*3600 + 10*60, 12*3600 + 11*60)
-            ("stop5", 12*3600 + 30*60, 12*3600 + 35*60);
+    b.vj("B")("stop4", "12:00"_t, "12:05"_t)
+            ("stop2", "12:10"_t, "12:11"_t)
+            ("stop5", "12:30"_t, "12:35"_t);
 
     b.connection("stop2", "stop2", 120);
 
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
         BOOST_REQUIRE_EQUAL(p.items.size(), 3);
 
         const auto& section = p.items[0];
-        //we arrive at 00:20
+        //we arrive at 11:30
         BOOST_CHECK_EQUAL(section.departure, "20120616T111000"_dt);
         BOOST_CHECK_EQUAL(section.arrival, "20120616T113000"_dt);
         BOOST_REQUIRE_EQUAL(section.stop_times.size(), 2);
@@ -285,8 +285,13 @@ BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
 
     // leaving after 10:20, we have to wait for the next bus at 11:15
     // then we can catch the bus B at 12:10 and finish at 12:30
-    auto res_earliest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop5"], 10*3600 + 20*60, 2, DateTimeUtils::inf, false, true);
+    auto res_earliest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop5"], "10:20"_t, 2, DateTimeUtils::inf, false, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
+
+    auto res_tardiest = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop5"], "12:40"_t, 2, DateTimeUtils::min, false, true, false);
+
+    BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
+    check_journey(res_tardiest[0]);
 }
