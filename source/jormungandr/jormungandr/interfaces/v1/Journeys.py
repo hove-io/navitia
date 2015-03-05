@@ -668,6 +668,7 @@ class Journeys(ResourceUri, ResourceUtc):
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
+        logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}" .format(possible_regions))
         #we want to store the different errors
         responses = {}
         for r in possible_regions:
@@ -702,7 +703,16 @@ class Journeys(ResourceUri, ResourceUtc):
                 responses[r] = response
                 continue
 
+            if all(map(lambda j: j.type in ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car"), response.journeys)):
+                responses[r] = response
+                continue
+
             return response
+
+        for response in responses.itervalues():
+            if not response.HasField("error"):
+                return response
+
 
         # if no response have been found for all the possible regions, we have a problem
         # if all response had the same error we give it, else we give a generic 'no solution' error

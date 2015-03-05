@@ -68,12 +68,12 @@ instance_fields = {'id': fields.Raw,
                    'bike_speed': fields.Raw,
                    'bss_speed': fields.Raw,
                    'car_speed': fields.Raw,
-                   'destineo_min_bike': fields.Raw,
-                   'destineo_min_bss': fields.Raw,
-                   'destineo_min_car': fields.Raw,
-                   'destineo_min_tc_with_bike': fields.Raw,
-                   'destineo_min_tc_with_bss': fields.Raw,
-                   'destineo_min_tc_with_car': fields.Raw,
+                   'min_bike': fields.Raw,
+                   'min_bss': fields.Raw,
+                   'min_car': fields.Raw,
+                   'min_tc_with_bike': fields.Raw,
+                   'min_tc_with_bss': fields.Raw,
+                   'min_tc_with_car': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -173,24 +173,24 @@ class Instance(flask_restful.Resource):
                 help='the speed of bss', location=('json', 'values'), default=instance.bss_speed)
         parser.add_argument('car_speed', type=float,
                 help='the speed of car', location=('json', 'values'), default=instance.car_speed)
-        parser.add_argument('destineo_min_tc_with_car', type=int,
+        parser.add_argument('min_tc_with_car', type=int,
                 help='minimum duration of tc when a car fallback is used', location=('json', 'values'),
-                default=instance.destineo_min_tc_with_car)
-        parser.add_argument('destineo_min_tc_with_bike', type=int,
+                default=instance.min_tc_with_car)
+        parser.add_argument('min_tc_with_bike', type=int,
                 help='minimum duration of tc when a bike fallback is used', location=('json', 'values'),
-                default=instance.destineo_min_tc_with_bike)
-        parser.add_argument('destineo_min_tc_with_bss', type=int,
+                default=instance.min_tc_with_bike)
+        parser.add_argument('min_tc_with_bss', type=int,
                 help='minimum duration of tc when a bss fallback is used', location=('json', 'values'),
-                default=instance.destineo_min_tc_with_bss)
-        parser.add_argument('destineo_min_bike', type=int,
+                default=instance.min_tc_with_bss)
+        parser.add_argument('min_bike', type=int,
                 help='minimum duration of bike fallback', location=('json', 'values'),
-                default=instance.destineo_min_bike)
-        parser.add_argument('destineo_min_bss', type=int,
+                default=instance.min_bike)
+        parser.add_argument('min_bss', type=int,
                 help='minimum duration of bss fallback', location=('json', 'values'),
-                default=instance.destineo_min_bss)
-        parser.add_argument('destineo_min_car', type=int,
+                default=instance.min_bss)
+        parser.add_argument('min_car', type=int,
                 help='minimum duration of car fallback', location=('json', 'values'),
-                default=instance.destineo_min_car)
+                default=instance.min_car)
         parser.add_argument('factor_too_long_journey', type=float,
                 help='if a journey is X time longer than the earliest one we remove it', location=('json', 'values'),
                 default=instance.factor_too_long_journey)
@@ -213,12 +213,12 @@ class Instance(flask_restful.Resource):
             instance.bike_speed = args['bike_speed']
             instance.bss_speed = args['bss_speed']
             instance.car_speed = args['car_speed']
-            instance.destineo_min_tc_with_car = args['destineo_min_tc_with_car']
-            instance.destineo_min_tc_with_bike = args['destineo_min_tc_with_bike']
-            instance.destineo_min_tc_with_bss = args['destineo_min_tc_with_bss']
-            instance.destineo_min_bike = args['destineo_min_bike']
-            instance.destineo_min_bss = args['destineo_min_bss']
-            instance.destineo_min_car = args['destineo_min_car']
+            instance.min_tc_with_car = args['min_tc_with_car']
+            instance.min_tc_with_bike = args['min_tc_with_bike']
+            instance.min_tc_with_bss = args['min_tc_with_bss']
+            instance.min_bike = args['min_bike']
+            instance.min_bss = args['min_bss']
+            instance.min_car = args['min_car']
             instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
             instance.factor_too_long_journey = args['factor_too_long_journey']
             db.session.commit()

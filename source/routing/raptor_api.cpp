@@ -72,6 +72,13 @@ static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
     if (stop_times.empty()) return;
+    const auto& vj = stop_times.front()->vehicle_journey;
+    if (vj->is_odt() && vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time) {
+        for (const auto& st : stop_times) {
+            add_coord(st->journey_pattern_point->stop_point->coord, pb_section);
+        }
+        return;
+    }
 
     type::GeographicalCoord last_coord;
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
@@ -927,7 +934,11 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
                [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
-               return journey1.duration() < journey2.duration();
+                auto duration1 = journey1.duration(), duration2 = journey2.duration();
+                if (duration1 != duration2) {
+                    return duration1 < duration2;
+                }
+                return journey1.destination().uri() < journey2.destination().uri();
                 });
 
 

@@ -79,6 +79,7 @@ def compare_journey_generator(journey):
     """
     yield journey.departure_date_time
     yield journey.arrival_date_time
+    yield journey.destination.uri if journey.destination else 'no_destination'
     for s in journey.sections:
         yield s.type
         yield s.begin_date_time

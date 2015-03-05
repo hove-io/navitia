@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia
+twitter @navitia 
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -32,46 +32,13 @@ www.navitia.io
 #include "routing/tests/routing_api_test_data.h"
 #include "mock_kraken.h"
 
-/*
- *               2 minutes connection
- *    A       B----------------------->C        D
- *    8h     8h05                     14h07     15h
- *    15    15h05                     15h10     15h20
- *    15h                                       15h10   (only day 2)
- *
- * Two long waiting time
- *            2 minutes connection
- *    E      F----------------------->G         H
- *    8h    9h                        17h       18h
- *
- *  Isochrone equal duration test
- *
- *   I1     I2        I3
- *   8h     9h
- *   8h               9h
- */
-
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
-    ed::builder b = {"20120614"};
-    b.generate_dummy_basis();
-    b.vj("l1")("A", 8*3600)("B", 8*3600+5*60);
-    b.vj("l2")("A", 15*3600)("B", 15*3600+5*60);
-    b.vj("l3")("C", 14*3600+7*60)("D", 15*3600);
-    b.vj("l4")("C", 15*3600+10*60)("D", 16*3600);
-    b.vj("l5","10", "", true)("A", 15*3600)("D", 15*3600+10*60);
-    b.vj("l6")("E", 8*3600)("F", 9*3600);
-    b.vj("l7")("G", 17*3600)("H", 18*3600);
-    b.vj("l8")("I1", 8*3600)("I2", 9*3600);
-    b.vj("l9")("I1", 8*3600)("I3", 9*3600);
-    b.connection("B", "C", 2*60);
-    b.connection("F", "G", 2*60);
-    b.data->pt_data->index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    routing_api_data<normal_speed_provider> routing_data(200, false);
 
-    mock_kraken kraken(b, "basic_routing_test", argc, argv);
+    mock_kraken kraken(routing_data.b, "main_routing_without_pt_test", argc, argv);
+
     return 0;
 }
 

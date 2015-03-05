@@ -100,6 +100,9 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="temporary boolean to use the old disruption interface. "
                                             "Will be deleted soon, just needed for synchronization with the front end",
                                 default=False)
+        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                description="The datetime we want to publish the disruptions from."
+                                            " Default is the current date and it is mainly used for debug.")
 
         self.method_decorators.append(complete_links(self))
 
@@ -144,7 +147,7 @@ class Schedules(ResourceUri, ResourceUtc):
         if not args["from_datetime"] and args["until_datetime"]\
                 and self.endpoint[:4] == "next":
             self.endpoint = "previous" + self.endpoint[4:]
-        
+
         self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
@@ -269,7 +272,7 @@ class add_passages_links:
                 return response, status, other
             passages = response[api]
 
-            max_dt = "10000101T000000"
+            max_dt = "19000101T000000"
             min_dt = "29991231T235959"
             time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
             for passage_ in passages:
