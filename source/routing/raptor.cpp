@@ -171,22 +171,21 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     boost::fill(best_labels_transfers.values(), bound);
 }
 
+void RAPTOR::init(const vec_stop_point_duration& dep,
+                  const DateTime bound,
+                  const bool clockwise,
+                  const type::Properties &properties) {
+    for (const auto& sp_dt: dep) {
+        if (! get_sp(sp_dt.first)->accessible(properties)) { continue; }
 
-void RAPTOR::init(Solutions departs,
-                  DateTime bound,  const bool clockwise,
-                  const type::Properties &required_properties) {
-    for(Solution item : departs) {
-        const type::StopPoint* stop_point = get_sp(item.sp_idx);
-        if(stop_point->accessible(required_properties) &&
-                ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
-
-            for (const auto jpp: jpps_from_sp[item.sp_idx]) {
-                labels[0].mut_dt_transfer(item.sp_idx) = item.arrival;
-
-                if(clockwise && Q[jpp.jp_idx] > jpp.order)
-                    Q[jpp.jp_idx] = jpp.order;
-                else if(!clockwise && Q[jpp.jp_idx] < jpp.order)
-                    Q[jpp.jp_idx] = jpp.order;
+        const DateTime sn_dur = sp_dt.second.total_seconds();
+        const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
+        labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
+        for (const auto jpp: jpps_from_sp[sp_dt.first]) {
+            if (clockwise && Q[jpp.jp_idx] > jpp.order) {
+                Q[jpp.jp_idx] = jpp.order;
+            } else if (! clockwise && Q[jpp.jp_idx] < jpp.order) {
+                Q[jpp.jp_idx] = jpp.order;
             }
         }
     }
@@ -211,9 +210,8 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
                          dep,
                          arr);
 
-    auto departures = init_departures(dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
-    init(departures, bound, clockwise);
+    init(dep, departure_datetime, clockwise, accessibilite_params.properties);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
@@ -253,8 +251,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
                        const uint32_t max_transfers,
                        const type::AccessibiliteParams& accessibilite_params,
                        const std::vector<std::string>& forbidden_uri,
-                       bool clockwise,
-                       bool details) {
+                       bool clockwise) {
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
@@ -269,9 +266,8 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
         for (const auto& n_stop_point : n_point.second)
             calc_dep.push_back(n_stop_point);
 
-    auto calc_dep_solutions = init_departures(calc_dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
-    init(calc_dep_solutions, bound, clockwise); // no exit condition (should be improved)
+    init(calc_dep, departure_datetime, clockwise, accessibilite_params.properties);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 
@@ -282,46 +278,18 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 
         std::vector<Path> paths;
 
-        if (!details) {
-          // just returns destination stop points
-          for (auto& m_stop_point : m_point.second) {
-              Path path;
-              path.nb_changes = 0;
-              PathItem path_item;
-              const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
-              path_item.stop_points.push_back(sp);
-              path_item.type = public_transport;
-              path.items.push_back(path_item);
-              paths.push_back(path);
-          }
+        // just returns destination stop points
+        for (auto& m_stop_point : m_point.second) {
+            Path path;
+            path.nb_changes = 0;
+            PathItem path_item;
+            const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
+            path_item.stop_points.push_back(sp);
+            path_item.type = public_transport;
+            path.items.push_back(path_item);
+            paths.push_back(path);
         }
-        else {
-            const auto& calc_arr = m_point.second;
-            paths = makePathes(calc_dep, calc_arr, accessibilite_params, *this, clockwise, disruption_active);
 
-            for(Path& path : paths){
-                path.origin.type = nt::Type_e::Unknown;
-
-                if (path.items.empty())
-                    continue;
-
-                const PathItem& path_item = clockwise ? path.items.front() : path.items.back();
-                if (path_item.stop_points.empty())
-                    continue;
-
-                // must find which item of calc_dep has been computed
-                const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
-                for(const auto& n_point : n_points) {
-                    for(const auto& n_stop_point : n_point.second)
-                        if (SpIdx(*stop_point) == n_stop_point.first) {
-                            path.origin = n_point.first;
-                            break;
-                        }
-                    if (path.origin.type != nt::Type_e::Unknown)
-                        break;
-                }
-            }
-        }
         result.push_back(std::make_pair(m_entry_point, paths));
     }
 
@@ -329,7 +297,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 }
 
 void
-RAPTOR::isochrone(const vec_stop_point_duration &departures_,
+RAPTOR::isochrone(const vec_stop_point_duration &departures,
           const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
           const type::AccessibiliteParams & accessibilite_params,
           const std::vector<std::string> & forbidden,
@@ -339,9 +307,8 @@ RAPTOR::isochrone(const vec_stop_point_duration &departures_,
                          forbidden,
                          disruption_active,
                          allow_odt);
-    auto departures = init_departures(departures_, departure_datetime, true, disruption_active);
     clear(clockwise, bound);
-    init(departures, bound, true);
+    init(departures, departure_datetime, true, accessibilite_params.properties);
 
     boucleRAPTOR(accessibilite_params, clockwise, max_transfers);
 }

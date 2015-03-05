@@ -39,8 +39,6 @@ www.navitia.io
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
-#include "raptor_path.h"
-#include "raptor_solutions.h"
 #include "raptor_utils.h"
 #include "type/time_duration.h"
 
@@ -62,6 +60,9 @@ struct RoutingState {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
+    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
+    typedef std::vector<stop_point_duration> vec_stop_point_duration;
+
     const navitia::type::Data& data;
 
     NextStopTime next_st;
@@ -94,10 +95,11 @@ struct RAPTOR
 
     void clear(bool clockwise, DateTime bound);
 
-    ///Initialise les structure retour
-    void init(Solutions departures,
-              navitia::DateTime bound, const bool clockwise,
-              const type::Properties &properties = 0);
+    ///Initialize starting points
+    void init(const vec_stop_point_duration& dep,
+              const DateTime bound,
+              const bool clockwise,
+              const type::Properties &properties);
 
     // pt_data object getters by typed idx
     const type::JourneyPattern* get_jp(JpIdx idx) const {
@@ -122,8 +124,6 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {});
 
 
-    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
-    typedef std::vector<stop_point_duration> vec_stop_point_duration;
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
     * à une heure donnée.
@@ -152,8 +152,7 @@ struct RAPTOR
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
                    const std::vector<std::string> & forbidden_uri,
-                   bool clockwise, 
-                   bool details);
+                   bool clockwise);
 
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
