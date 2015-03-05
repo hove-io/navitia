@@ -39,8 +39,6 @@ www.navitia.io
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
-#include "raptor_path.h"
-#include "raptor_solutions.h"
 #include "raptor_utils.h"
 #include "type/time_duration.h"
 
@@ -62,6 +60,9 @@ struct RoutingState {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
+    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
+    typedef std::vector<stop_point_duration> vec_stop_point_duration;
+
     const navitia::type::Data& data;
 
     NextStopTime next_st;
@@ -73,8 +74,6 @@ struct RAPTOR
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
-    /// Contains the best way to reach a destination point
-    best_dest b_dest;
     /// Number of transfers done for the moment
     unsigned int count;
     /// Are the journey pattern valid
@@ -96,11 +95,11 @@ struct RAPTOR
 
     void clear(bool clockwise, DateTime bound);
 
-    ///Initialise les structure retour et b_dest
-    void init(Solutions departures,
-              const std::vector<std::pair<SpIdx, navitia::time_duration> >& destinations,
-              navitia::DateTime bound, const bool clockwise,
-              const type::Properties &properties = 0);
+    ///Initialize starting points
+    void init(const vec_stop_point_duration& dep,
+              const DateTime bound,
+              const bool clockwise,
+              const type::Properties &properties);
 
     // pt_data object getters by typed idx
     const type::JourneyPattern* get_jp(JpIdx idx) const {
@@ -125,8 +124,6 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {});
 
 
-    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
-    typedef std::vector<stop_point_duration> vec_stop_point_duration;
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
     * à une heure donnée.
@@ -155,8 +152,7 @@ struct RAPTOR
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
                    const std::vector<std::string> & forbidden_uri,
-                   bool clockwise, 
-                   bool details);
+                   bool clockwise);
 
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
@@ -183,8 +179,9 @@ struct RAPTOR
                               const vec_stop_point_duration &destinations = {});
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool disruption_active,
-                      bool global_pruning = true,
+    void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
+                      bool clockwise,
+                      bool disruption_active,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
     /// Apply foot pathes to labels
@@ -193,14 +190,16 @@ struct RAPTOR
 
     /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
-    bool apply_vj_extension(const Visitor& v, const bool global_pruning,
+    bool apply_vj_extension(const Visitor& v,
                             const bool disruption_active,
                             const RoutingState& state);
 
     ///Main loop
     template<typename Visitor>
-    void raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
-
+    void raptor_loop(Visitor visitor,
+                     const type::AccessibiliteParams& accessibilite_params,
+                     bool disruption_active,
+                     uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
     /// Return the round that has found the best solution for this stop point
     /// Return -1 if no solution found

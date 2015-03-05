@@ -49,8 +49,9 @@ namespace navitia { namespace routing {
  * If the given vj also has an extension we apply it.
  */
 template<typename Visitor>
-bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
-                                const bool disruption_active, const RoutingState& state) {
+bool RAPTOR::apply_vj_extension(const Visitor& v,
+                                const bool disruption_active,
+                                const RoutingState& state) {
     auto& working_labels = labels[count];
     auto workingDt = state.workingDate;
     auto vj = state.vj;
@@ -79,16 +80,15 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             }
             auto sp = st.journey_pattern_point->stop_point;
             const auto sp_idx = SpIdx(*sp);
-            const DateTime bound = (v.comp(best_labels_pts[sp_idx], b_dest.best_now) || !global_pruning) ?
-                                        best_labels_pts[sp_idx] : b_dest.best_now;
-            if (v.comp(bound, workingDt)) { continue; }
-            if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
 
-            working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
-            working_labels.mut_used_jpp(sp_idx) = JppIdx(*st.journey_pattern_point);
+            // for performance reason, we desactivate weakly
+            // dominated solutions for the moment.
+            //if (v.comp(best_labels_pts[sp_idx], workingDt)) { continue; }
+            //if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
+            if (! v.comp(workingDt, best_labels_pts[sp_idx])) { continue; }
+
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             best_labels_pts[sp_idx] = workingDt;
-            this->b_dest.add_best(v, sp_idx, workingDt, this->count);
             add_vj = true;
             result = true;
         }
@@ -124,11 +124,13 @@ bool RAPTOR::foot_path(const Visitor& v) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime next = v.combine(previous, conn.duration);
 
-            if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
-            if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
+            // for performance reason, we desactivate weakly
+            // dominated solutions for the moment.
+            //if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
+            //if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
+            if (! v.comp(next, best_labels_transfers[destination_sp_idx])) { continue; }
 
             //if we can improve the best label, we mark it
-            working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
             best_labels_transfers[destination_sp_idx] = next;
             result = true;
@@ -162,37 +164,27 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         lbl_list.clear(clean_labels);
     }
 
-    b_dest.reinit(data.pt_data->stop_points, bound);
     boost::fill(best_labels_pts.values(), bound);
     boost::fill(best_labels_transfers.values(), bound);
 }
 
+void RAPTOR::init(const vec_stop_point_duration& dep,
+                  const DateTime bound,
+                  const bool clockwise,
+                  const type::Properties &properties) {
+    for (const auto& sp_dt: dep) {
+        if (! get_sp(sp_dt.first)->accessible(properties)) { continue; }
 
-void RAPTOR::init(Solutions departs,
-                  const vec_stop_point_duration& destinations,
-                  DateTime bound,  const bool clockwise,
-                  const type::Properties &required_properties) {
-    for(Solution item : departs) {
-        const type::StopPoint* stop_point = get_sp(item.sp_idx);
-        if(stop_point->accessible(required_properties) &&
-                ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
-
-            for (const auto jpp: jpps_from_sp[item.sp_idx]) {
-                labels[0].mut_dt_transfer(item.sp_idx) = item.arrival;
-
-                if(clockwise && Q[jpp.jp_idx] > jpp.order)
-                    Q[jpp.jp_idx] = jpp.order;
-                else if(!clockwise && Q[jpp.jp_idx] < jpp.order)
-                    Q[jpp.jp_idx] = jpp.order;
+        const DateTime sn_dur = sp_dt.second.total_seconds();
+        const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
+        labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
+        for (const auto jpp: jpps_from_sp[sp_dt.first]) {
+            if (clockwise && Q[jpp.jp_idx] > jpp.order) {
+                Q[jpp.jp_idx] = jpp.order;
+            } else if (! clockwise && Q[jpp.jp_idx] < jpp.order) {
+                Q[jpp.jp_idx] = jpp.order;
             }
         }
-    }
-
-    for(auto item : destinations) {
-        // we add the destination stop point only if there is at least one jpp valid for this stop point
-        if (jpps_from_sp[item.first].empty()) { continue; }
-
-        b_dest.add_destination(item.first, item.second);
     }
 }
 
@@ -215,11 +207,10 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
                          dep,
                          arr);
 
-    auto departures = init_departures(dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
-    init(departures, arr, bound, clockwise);
+    init(dep, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
 
 std::vector<Path>
@@ -242,14 +233,6 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active, allow_odt,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
-    /// @todo put that commented lines in a ifdef only compiled when we want
-    //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
-    //result.insert(result.end(), tmp.begin(), tmp.end());
-    // No solution found, or the solution has initialize with init
-    if (! b_dest.best_now_sp_idx.is_valid() || b_dest.count == 0) {
-        return result;
-    }
-
     const auto reader_results = read_solutions(*this, clockwise, departures_, destinations, disruption_active, accessibilite_params);
 
     return filter_journeys(reader_results);
@@ -265,8 +248,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
                        const uint32_t max_transfers,
                        const type::AccessibiliteParams& accessibilite_params,
                        const std::vector<std::string>& forbidden_uri,
-                       bool clockwise,
-                       bool details) {
+                       bool clockwise) {
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
@@ -281,11 +263,10 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
         for (const auto& n_stop_point : n_point.second)
             calc_dep.push_back(n_stop_point);
 
-    auto calc_dep_solutions = init_departures(calc_dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
-    init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
+    init(calc_dep, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 
     const auto& m_points = clockwise ? arrivals : departures;
 
@@ -294,46 +275,18 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 
         std::vector<Path> paths;
 
-        if (!details) {
-          // just returns destination stop points
-          for (auto& m_stop_point : m_point.second) {
-              Path path;
-              path.nb_changes = 0;
-              PathItem path_item;
-              const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
-              path_item.stop_points.push_back(sp);
-              path_item.type = public_transport;
-              path.items.push_back(path_item);
-              paths.push_back(path);
-          }
+        // just returns destination stop points
+        for (auto& m_stop_point : m_point.second) {
+            Path path;
+            path.nb_changes = 0;
+            PathItem path_item;
+            const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
+            path_item.stop_points.push_back(sp);
+            path_item.type = public_transport;
+            path.items.push_back(path_item);
+            paths.push_back(path);
         }
-        else {
-            const auto& calc_arr = m_point.second;
-            paths = makePathes(calc_dep, calc_arr, accessibilite_params, *this, clockwise, disruption_active);
 
-            for(Path& path : paths){
-                path.origin.type = nt::Type_e::Unknown;
-
-                if (path.items.empty())
-                    continue;
-
-                const PathItem& path_item = clockwise ? path.items.front() : path.items.back();
-                if (path_item.stop_points.empty())
-                    continue;
-
-                // must find which item of calc_dep has been computed
-                const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
-                for(const auto& n_point : n_points) {
-                    for(const auto& n_stop_point : n_point.second)
-                        if (SpIdx(*stop_point) == n_stop_point.first) {
-                            path.origin = n_point.first;
-                            break;
-                        }
-                    if (path.origin.type != nt::Type_e::Unknown)
-                        break;
-                }
-            }
-        }
         result.push_back(std::make_pair(m_entry_point, paths));
     }
 
@@ -341,21 +294,24 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 }
 
 void
-RAPTOR::isochrone(const vec_stop_point_duration &departures_,
-          const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
-          const type::AccessibiliteParams & accessibilite_params,
-          const std::vector<std::string> & forbidden,
-          bool clockwise, bool disruption_active, bool allow_odt) {
+RAPTOR::isochrone(const vec_stop_point_duration& departures,
+                  const DateTime& departure_datetime,
+                  const DateTime& bound,
+                  uint32_t max_transfers,
+                  const type::AccessibiliteParams& accessibilite_params,
+                  const std::vector<std::string>& forbidden,
+                  bool clockwise,
+                  bool disruption_active,
+                  bool allow_odt) {
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden,
                          disruption_active,
                          allow_odt);
-    auto departures = init_departures(departures_, departure_datetime, true, disruption_active);
     clear(clockwise, bound);
-    init(departures, {}, bound, true);
+    init(departures, departure_datetime, true, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, true, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, max_transfers);
 }
 
 
@@ -516,8 +472,10 @@ void RAPTOR::set_valid_jp_and_jpp(
 }
 
 template<typename Visitor>
-void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active,
-        bool global_pruning, uint32_t max_transfers) {
+void RAPTOR::raptor_loop(Visitor visitor,
+                         const type::AccessibiliteParams& accessibilite_params,
+                         bool disruption_active,
+                         uint32_t max_transfers) {
     bool continue_algorithm = true;
     count = 0; //< Count iteration of raptor algorithm
 
@@ -563,17 +521,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         if(st.valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st.local_traffic_zone)) {
-                            const DateTime bound = (visitor.comp(best_labels_pts[jpp.sp_idx], b_dest.best_now) || !global_pruning) ?
-                                                        best_labels_pts[jpp.sp_idx] : b_dest.best_now;
-                            // We want to update the labels, if it's better than the one computed before
-                            // Or if it's an destination point if it's equal and not unitialized before
-                            const bool best_add_result = this->b_dest.add_best(visitor, jpp.sp_idx, workingDt, this->count);
-                            if ((!visitor.comp(bound, workingDt)
-                                 && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))
-                                || best_add_result) {
+
+                            // for performance reason, we desactivate weakly
+                            // dominated solutions for the moment.
+                            //if (! visitor.comp(best_labels_pts[jpp.sp_idx], workingDt)
+                            //    && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))
+                            if (visitor.comp(workingDt, best_labels_pts[jpp.sp_idx]))
+                            {
                                 working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
-                                working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
-                                working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
                                 best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
                                 continue_algorithm = true;
                             }
@@ -615,7 +570,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             q_elt.second = visitor.init_queue_item();
         }
         for (auto state : states_stay_in) {
-            bool applied = apply_vj_extension(visitor, global_pruning, disruption_active, state);
+            bool applied = apply_vj_extension(visitor, disruption_active, state);
             continue_algorithm = continue_algorithm || applied;
         }
         continue_algorithm = continue_algorithm && this->foot_path(visitor);
@@ -623,12 +578,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
 }
 
 
-void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool disruption_active,
-                          bool global_pruning, uint32_t max_transfers){
+void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
+                          bool clockwise,
+                          bool disruption_active,
+                          uint32_t max_transfers){
     if(clockwise) {
-        raptor_loop(raptor_visitor(), accessibilite_params, disruption_active, global_pruning, max_transfers);
+        raptor_loop(raptor_visitor(), accessibilite_params, disruption_active, max_transfers);
     } else {
-        raptor_loop(raptor_reverse_visitor(), accessibilite_params, disruption_active, global_pruning, max_transfers);
+        raptor_loop(raptor_reverse_visitor(), accessibilite_params, disruption_active, max_transfers);
     }
 }
 
