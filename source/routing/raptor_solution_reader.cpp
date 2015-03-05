@@ -399,8 +399,10 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
             path.items.emplace_back(ItemType::public_transport);
             auto& item = path.items.back();
             for (const auto& st_dt: vj_section.stop_times_and_dt) {
-                // for odt we want to hide the intermediate stops since they are not relevant
+                // for odt (all but virtual_with_stop_time) we want to
+                // hide the intermediate stops since they are not relevant
                 if (vj_section.vj->is_odt()
+                        && vj_section.vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time
                         && &st_dt.st != &vj_section.stop_times_and_dt.front().st
                         && &st_dt.st != &vj_section.stop_times_and_dt.back().st) {
                         continue;
