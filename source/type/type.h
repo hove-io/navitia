@@ -911,7 +911,7 @@ struct StopTime {
     }
 
     /// get the departure from the arrival if clockwise and vise versa
-    DateTime get_other_end(const DateTime dt, bool clockwise) const {
+    DateTime begin_from_end(const DateTime dt, bool clockwise) const {
         assert (is_frequency());
         const int32_t diff = departure_time - arrival_time;
         if ((clockwise && int32_t(dt) < diff) || (!clockwise && diff < 0 && int32_t(dt) < -1 * diff)) {

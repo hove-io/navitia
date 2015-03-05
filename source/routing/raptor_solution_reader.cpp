@@ -312,7 +312,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     if (! in_st->is_frequency()) {
         current_arr = DateTimeUtils::shift(current_dep, section.get_in_st->arrival_time, false);
     } else {
-        current_arr = in_st->get_other_end(current_dep, true);
+        current_arr = in_st->begin_from_end(current_dep, true);
     }
 
     size_t order = current_st->journey_pattern_point->order;
@@ -521,8 +521,8 @@ struct RaptorSolutionReader {
             // great, we can begin
             auto cur_dt = begin_st_dt.second;
             if (begin_st_dt.first->is_frequency()) {
-                //for frequency, we need cur_dt to be the arrival (resp departure) in the stoptime
-                cur_dt = begin_st_dt.first->get_other_end(cur_dt, v.clockwise());
+                //for frequency, we need cur_dt to be the begin in the stoptime
+                cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
             }
             const auto begin_zone = begin_st_dt.first->local_traffic_zone;
             end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
