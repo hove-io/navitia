@@ -301,7 +301,7 @@ struct functor_add_vj {
     void init_vj(nt::VehicleJourney* vj, const nt::VehicleJourney& vj_ref) const {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
-        vj->uri = make_adapted_uri(vj_ref.uri);
+        vj->uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
         vj->is_adapted = true;
         pt_data.vehicle_journeys.push_back(vj);
         pt_data.vehicle_journeys_map[vj->uri] = vj;
@@ -406,7 +406,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         for (const auto jpp_ref : stop_point->journey_pattern_point_list) {
             const auto jp_ref = jpp_ref->journey_pattern;
             auto new_jp = new nt::JourneyPattern(*jp_ref);
-            new_jp->uri = make_adapted_uri(new_jp->uri);
+            new_jp->uri = make_adapted_uri_fast(new_jp->uri, pt_data.journey_patterns.size());
             new_jp->idx = pt_data.journey_patterns.size();
             pt_data.journey_patterns.push_back(new_jp);
             pt_data.journey_patterns_map[new_jp->uri] = new_jp;
@@ -422,7 +422,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
                 auto new_jpp = new nt::JourneyPatternPoint(*jpp_to_copy);
                 new_jpp->idx = pt_data.journey_pattern_points.size();
-                new_jpp->uri = make_adapted_uri(new_jpp->uri);
+                new_jpp->uri = make_adapted_uri_fast(new_jpp->uri, pt_data.journey_pattern_points.size());
                 new_jp->journey_pattern_point_list.push_back(new_jpp);
                 pt_data.journey_pattern_points.push_back(new_jpp);
                 pt_data.journey_pattern_points_map[new_jpp->uri] = new_jpp;
@@ -459,7 +459,7 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
     add_impacts_visitor v(impact, pt_data, meta);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " added");
+                    impact.get()->uri << " impact added");
 }
 
 
