@@ -10,6 +10,11 @@ target_link_libraries(reverse_raptor_test ed data fare routing georef autocomple
     utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(reverse_raptor_test)
 
+add_executable(frequency_raptor_test frequency_raptor_test.cpp)
+target_link_libraries(frequency_raptor_test ed data fare routing georef autocomplete
+    utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(frequency_raptor_test)
+
 add_executable(routing_api_test routing_api_test.cpp)
 target_link_libraries(routing_api_test ed data types routing fare pb_lib thermometer georef
     autocomplete utils  ${BOOST_LIBS} log4cplus pthread protobuf)
