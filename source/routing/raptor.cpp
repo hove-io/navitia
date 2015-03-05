@@ -81,7 +81,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             auto sp = st.journey_pattern_point->stop_point;
             const auto sp_idx = SpIdx(*sp);
 
-            // because of performance reason, we desactivate weakly
+            // for performance reason, we desactivate weakly
             // dominated solutions for the moment.
             //if (v.comp(best_labels_pts[sp_idx], workingDt)) { continue; }
             //if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
@@ -124,7 +124,7 @@ bool RAPTOR::foot_path(const Visitor& v) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime next = v.combine(previous, conn.duration);
 
-            // because of performance reason, we desactivate weakly
+            // for performance reason, we desactivate weakly
             // dominated solutions for the moment.
             //if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
             //if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
@@ -294,11 +294,15 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 }
 
 void
-RAPTOR::isochrone(const vec_stop_point_duration &departures,
-          const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
-          const type::AccessibiliteParams & accessibilite_params,
-          const std::vector<std::string> & forbidden,
-          bool clockwise, bool disruption_active, bool allow_odt) {
+RAPTOR::isochrone(const vec_stop_point_duration& departures,
+                  const DateTime& departure_datetime,
+                  const DateTime& bound,
+                  uint32_t max_transfers,
+                  const type::AccessibiliteParams& accessibilite_params,
+                  const std::vector<std::string>& forbidden,
+                  bool clockwise,
+                  bool disruption_active,
+                  bool allow_odt) {
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden,
@@ -518,7 +522,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st.local_traffic_zone)) {
 
-                            // because of performance reason, we desactivate weakly
+                            // for performance reason, we desactivate weakly
                             // dominated solutions for the moment.
                             //if (! visitor.comp(best_labels_pts[jpp.sp_idx], workingDt)
                             //    && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))

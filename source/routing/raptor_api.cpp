@@ -859,13 +859,13 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                                accessibilite_params, forbidden, clockwise);
 
         // compute isochron style result at "m point"
-        for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
-            std::vector<Path>& paths = paths_for_m_point.second;
+        for (const auto& paths_for_m_point : paths_by_entrypoint) {
+            const std::vector<Path>& paths = paths_for_m_point.second;
             if(paths.empty())
                 continue;
 
             std::vector<type::StopPoint*> stop_points;
-            for(auto& path : paths) {
+            for (const auto& path : paths) {
                 const type::StopPoint* sp = clockwise ? path.items.front().stop_points.front() :
                     path.items.back().stop_points.back();
                 stop_points.push_back(const_cast<type::StopPoint*>(sp));
