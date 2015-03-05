@@ -167,7 +167,7 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact, c
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void add_path_item(pbnavitia::Section *section, const navitia::georef::PathItem& item, const type::EntryPoint &ori_dest,
+void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item, const type::EntryPoint &ori_dest,
                    const navitia::type::Data& data);
 
 void fill_pb_object(const georef::POI*, const type::Data &data, pbnavitia::Poi* poi, int max_depth = 0,
