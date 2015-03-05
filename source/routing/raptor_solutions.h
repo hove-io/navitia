@@ -53,7 +53,7 @@ struct Solution {
     DateTime arrival, upper_bound, total_arrival;
     float ratio;
     navitia::time_duration walking_time = {};
-    bool clockwise;
+    bool clockwise = true;
 
     Solution():
         sp_idx(),

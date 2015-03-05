@@ -147,7 +147,6 @@ struct Journey {
                 }
             }
         }
-        assert(false);
         return {nullptr, 0};
     }
     // align every section to left, ie take the first vj of a jp, as
@@ -367,7 +366,7 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
 
             const auto transfer_time = section.get_in_dt - last_section->get_out_dt;
             //if the transfer is bigger than the actual connection, we add a waiting section
-            if (conn->display_duration < transfer_time || ! walking_transfer) {
+            if (conn->display_duration < int(transfer_time) || ! walking_transfer) {
                 path.items.emplace_back(ItemType::waiting,
                                         waiting_section_start,
                                         posix(section.get_in_dt));
@@ -542,27 +541,6 @@ make_raptor_solution_reader(const RAPTOR& r,
     return RaptorSolutionReader<Visitor>(r, v, deps, arrs, disruption_active, accessibilite_params);
 }
 
-template<typename Visitor>
-struct BestEnd {
-    BestEnd(const Visitor& visitor): v(visitor) {}
-    bool is_better(const SpIdx idx, const DateTime dt) {
-        const auto search = m.find(idx);
-        if (search == m.end()) {
-            m[idx] = dt;
-            return true;
-        } else if (v.be(dt, search->second)) {
-            // the visitor is inversed in comparison of the end comparison
-            return false;
-        } else {
-            search->second = dt;
-            return true;
-        }
-    }
-private:
-    const Visitor& v;
-    std::map<SpIdx, DateTime> m;
-};
-
 template <typename Visitor>
 std::vector<Path> read_solutions(const RAPTOR& raptor,
                     const Visitor& v,
@@ -574,14 +552,11 @@ std::vector<Path> read_solutions(const RAPTOR& raptor,
     auto reader = make_raptor_solution_reader(
         raptor, v, deps, arrs, disruption_active, accessibilite_params);
 
-    BestEnd<Visitor> best_end(v);
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
-            const DateTime end_dt = working_labels.dt_pt(a.first);
-            if (! best_end.is_better(a.first, end_dt)) { continue; }
-            reader.begin_pt(count, a.first, end_dt);
+            reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
         }
     }
     std::vector<Path> sol;

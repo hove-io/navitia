@@ -66,6 +66,7 @@ init_departures(const std::vector<std::pair<SpIdx, navitia::time_duration> > &de
         d.count = 0;
         d.sp_idx = dep_dist.first;
         d.walking_time = dep_dist.second;
+        d.clockwise = clockwise;
         if(clockwise)
             d.arrival = dep + d.walking_time.total_seconds();
         else

@@ -73,8 +73,6 @@ struct RAPTOR
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
-    /// Contains the best way to reach a destination point
-    best_dest b_dest;
     /// Number of transfers done for the moment
     unsigned int count;
     /// Are the journey pattern valid
@@ -96,9 +94,8 @@ struct RAPTOR
 
     void clear(bool clockwise, DateTime bound);
 
-    ///Initialise les structure retour et b_dest
+    ///Initialise les structure retour
     void init(Solutions departures,
-              const std::vector<std::pair<SpIdx, navitia::time_duration> >& destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);
 
@@ -183,8 +180,9 @@ struct RAPTOR
                               const vec_stop_point_duration &destinations = {});
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool disruption_active,
-                      bool global_pruning = true,
+    void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
+                      bool clockwise,
+                      bool disruption_active,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
     /// Apply foot pathes to labels
@@ -193,14 +191,16 @@ struct RAPTOR
 
     /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
-    bool apply_vj_extension(const Visitor& v, const bool global_pruning,
+    bool apply_vj_extension(const Visitor& v,
                             const bool disruption_active,
                             const RoutingState& state);
 
     ///Main loop
     template<typename Visitor>
-    void raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
-
+    void raptor_loop(Visitor visitor,
+                     const type::AccessibiliteParams& accessibilite_params,
+                     bool disruption_active,
+                     uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
     /// Return the round that has found the best solution for this stop point
     /// Return -1 if no solution found
