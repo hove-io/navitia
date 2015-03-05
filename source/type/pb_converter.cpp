@@ -1116,6 +1116,16 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     }
 }
 
+pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object) {
+    switch(pt_object.embedded_type()) {
+    case pbnavitia::NavitiaType::STOP_AREA: return pt_object.stop_area().coord();
+    case pbnavitia::NavitiaType::STOP_POINT: return pt_object.stop_point().coord();
+    case pbnavitia::NavitiaType::POI: return pt_object.poi().coord();
+    case pbnavitia::NavitiaType::ADDRESS: return pt_object.address().coord();
+    default: return pbnavitia::GeographicalCoord();
+    }
+}
+
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
                             const georef::Path& path, const type::Data& data,
                             pbnavitia::Journey* pb_journey, const boost::posix_time::ptime departure,
@@ -1144,18 +1154,37 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
             section = create_section(response, pb_journey, item, data, depth, now, action_period);
         }
 
-        add_path_item(section->mutable_street_network(), item, ori_dest, data);
+        add_path_item(section, item, ori_dest, data);
 
         last_transportation_carac = transport_carac;
         last_item = item;
     }
 
     finalize_section(section, path.path_items.back(), {}, data, session_departure, depth, now, action_period);
+    //We add consistency between origin/destination places and geojson
+
+    auto sections = pb_journey->mutable_sections();
+    for (auto section = sections->begin(); section != sections->end(); ++section) {
+        auto destination_coord = get_coord(section->destination());
+        auto sn = section->mutable_street_network();
+        if (destination_coord.IsInitialized() ||
+                sn->coordinates().size() == 0) {
+            continue;
+        }
+        auto last_coord = sn->coordinates(sn->coordinates_size()-1);
+        if (last_coord.IsInitialized() &&
+                last_coord.lon() != destination_coord.lon() &&
+                last_coord.lat() != destination_coord.lat()) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(destination_coord.lon());
+            pb_coord->set_lat(destination_coord.lat());
+        }
+    }
 }
 
-
-void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item,
+void add_path_item(pbnavitia::Section* section, const navitia::georef::PathItem& item,
                     const type::EntryPoint &ori_dest, const navitia::type::Data& data) {
+    auto sn = section->mutable_street_network();
     if(item.way_idx >= data.geo_ref->ways.size())
         throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
 
@@ -1165,13 +1194,24 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
     path_item->set_duration(item.duration.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
     path_item->set_direction(item.angle);
 
+    auto origin_coord = get_coord(section->origin());
+    if (origin_coord.IsInitialized() && !item.coordinates.empty() &&
+            item.coordinates.front().is_initialized() &&
+            item.coordinates.front().lon() != origin_coord.lon() &&
+            item.coordinates.front().lat() != origin_coord.lat()) {
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+        pb_coord->set_lon(origin_coord.lon());
+        pb_coord->set_lat(origin_coord.lat());
+    }
+
     //we add each path item coordinate to the global coordinate list
     for(auto coord : item.coordinates) {
-        if(coord.is_initialized()) {
-            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-            pb_coord->set_lon(coord.lon());
-            pb_coord->set_lat(coord.lat());
+        if(!coord.is_initialized()) {
+            continue;
         }
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+        pb_coord->set_lon(coord.lon());
+        pb_coord->set_lat(coord.lat());
     }
 }
 
