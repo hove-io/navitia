@@ -300,3 +300,83 @@ BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
 }
+
+BOOST_AUTO_TEST_CASE(transfer_between_freq) {
+    ed::builder b("20120614");
+
+    b.frequency_vj("A", "8:00"_t, "26:00"_t, "1:00"_t)
+            ("stop1", "8:00"_t, "8:10"_t)
+            ("stop2", "8:30"_t, "8:30"_t)
+            ("stop3", "9:20"_t, "9:40"_t);
+
+    b.frequency_vj("B", "14:00"_t, "20:00"_t, "00:10"_t)
+            ("stop4", "8:00"_t, "8:14"_t)
+            ("stop5", "8:35"_t, "8:44"_t)
+            ("stop6", "9:25"_t, "9:34"_t);
+
+    b.connection("stop3", "stop4", "00:20"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    const auto check_journey = [](const Path& p) {
+        BOOST_REQUIRE_EQUAL(p.items.size(), 4);
+
+        const auto& section = p.items[0];
+        BOOST_CHECK_EQUAL(section.departure, "20120616T121000"_dt);
+        BOOST_CHECK_EQUAL(section.arrival, "20120616T132000"_dt);
+        BOOST_REQUIRE_EQUAL(section.stop_times.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.departures.size(), 3);
+        BOOST_REQUIRE_EQUAL(section.arrivals.size(), 3);
+        BOOST_CHECK_EQUAL(section.arrivals[0], "20120616T120000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[0], "20120616T121000"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[1], "20120616T123000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[1], "20120616T123000"_dt);
+        BOOST_CHECK_EQUAL(section.arrivals[2], "20120616T132000"_dt);
+        BOOST_CHECK_EQUAL(section.departures[2], "20120616T134000"_dt);
+
+        //transfer section
+        const auto& transfer_section = p.items[1];
+        BOOST_CHECK_EQUAL(transfer_section.departure, "20120616T132000"_dt);
+        BOOST_CHECK_EQUAL(transfer_section.arrival, "20120616T134000"_dt);
+        BOOST_REQUIRE_EQUAL(transfer_section.stop_times.size(), 0);
+        BOOST_REQUIRE_EQUAL(transfer_section.departures.size(), 0);
+        BOOST_REQUIRE_EQUAL(transfer_section.arrivals.size(), 0);
+
+        //waiting section
+        const auto& waiting_section = p.items[2];
+        BOOST_CHECK_EQUAL(waiting_section.departure, "20120616T134000"_dt);
+        BOOST_CHECK_EQUAL(waiting_section.arrival, "20120616T141400"_dt);
+        BOOST_REQUIRE_EQUAL(waiting_section.stop_times.size(), 0);
+        BOOST_REQUIRE_EQUAL(waiting_section.departures.size(), 0);
+        BOOST_REQUIRE_EQUAL(waiting_section.arrivals.size(), 0);
+
+        const auto& second_section = p.items[3];
+        BOOST_CHECK_EQUAL(second_section.departure, "20120616T141400"_dt);
+        BOOST_CHECK_EQUAL(second_section.arrival, "20120616T143500"_dt);
+        BOOST_REQUIRE_EQUAL(second_section.stop_times.size(), 2);
+        BOOST_REQUIRE_EQUAL(second_section.departures.size(), 2);
+        BOOST_REQUIRE_EQUAL(second_section.arrivals.size(), 2);
+        BOOST_CHECK_EQUAL(second_section.arrivals[0], "20120616T140000"_dt);
+        BOOST_CHECK_EQUAL(second_section.departures[0], "20120616T141400"_dt);
+        BOOST_CHECK_EQUAL(second_section.arrivals[1], "20120616T143500"_dt);
+        BOOST_CHECK_EQUAL(second_section.departures[1], "20120616T144400"_dt);
+    };
+
+    // leaving after 11:10, we would have to wait for the bus B after so the 2nd pass makes us wait
+    // so we leave at 12:10 to arrive at 13:20
+    // then we have to wait for the begin of the bust B at 14:04 and finish at 14:35
+    auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "11:10"_t, 2, DateTimeUtils::inf, false, true);
+
+    BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
+    check_journey(res_earliest[0]);
+
+    auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "14:35"_t, 2, DateTimeUtils::min, false, true, false);
+
+    BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
+    check_journey(res_tardiest[0]);
+}
