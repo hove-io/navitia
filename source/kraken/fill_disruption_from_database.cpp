@@ -43,7 +43,7 @@ namespace navitia {
 
 
 void fill_disruption_from_database(const std::string& connection_string,
-        navitia::type::PT_Data& pt_data, type::MetaData &meta, const std::vector<std::string>& contributors) {
+        type::PT_Data& pt_data, type::MetaData &meta, const std::vector<std::string>& contributors) {
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
@@ -132,13 +132,14 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LEFT JOIN pt_object AS ls_end ON line_section.end_object_id = ls_end.id"
                "     LEFT JOIN message AS m ON m.impact_id = i.id"
                "     LEFT JOIN channel AS ch ON m.channel_id = ch.id"
-               "     WHERE co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty
+               "     WHERE d.start_publication_date >= '%s' AND "
+               "     (d.end_publication_date = NULL OR d.end_publication_date <= '%s')"
+               "     AND co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty"
                "     AND d.status = 'published'"
                "     AND i.status = 'published'"
                "     ORDER BY d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id"
                "     LIMIT %i OFFSET %i"
-               " ;") % contributors_array % items_per_request % offset).str();
-
+               " ;") % meta.production_date.begin() %meta.production_date.end()  % contributors_array % items_per_request % offset).str();
         result = work.exec(request);
         for (auto res : result) {
             reader(res);
