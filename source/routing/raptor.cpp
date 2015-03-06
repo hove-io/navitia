@@ -278,7 +278,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
             PathItem path_item;
             const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
             path_item.stop_points.push_back(sp);
-            path_item.type = public_transport;
+            path_item.type = ItemType::public_transport;
             path.items.push_back(path_item);
             paths.push_back(path);
         }

@@ -227,7 +227,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             pbnavitia::Section* pb_section = pb_journey->add_sections();
             pb_section->set_id(enhanced_response.register_section(pb_journey, item, item_idx++));
 
-            if(item.type == public_transport) {
+            if(item.type == ItemType::public_transport) {
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
@@ -314,7 +314,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
                 switch(item.type) {
-                    case stay_in :{
+                    case ItemType::stay_in :{
                         pb_section->set_transfer_type(pbnavitia::stay_in);
                         //We "stay in" the precedent section, this one is only a transfer
                         int section_idx = pb_journey->sections_size() - 2;
@@ -324,8 +324,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         }
                         break;
                     }
-                    case guarantee : pb_section->set_transfer_type(pbnavitia::guaranteed); break;
-                    case waiting : pb_section->set_type(pbnavitia::WAITING); break;
+                    case ItemType::waiting : pb_section->set_type(pbnavitia::WAITING); break;
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
                 // For a waiting section, if the previous public transport section,
@@ -351,7 +350,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
             }
             uint64_t dep_time, arr_time;
-            if(item.stop_points.size() == 1 && item.type == public_transport){
+            if(item.stop_points.size() == 1 && item.type == ItemType::public_transport){
                 //after a stay it's possible to have only one point,
                 //so we take the arrival hour as arrival and departure
                 dep_time = navitia::to_posix_timestamp(item.arrival);

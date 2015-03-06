@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(stay_in_short) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl) {
 
     auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 60780, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
 }
 
@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl_counterclock) {
 
     auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 63200, 0, DateTimeUtils::inf, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,  ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
 }
 
@@ -859,7 +859,7 @@ BOOST_AUTO_TEST_CASE(stay_in_teleport) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,  ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -1661,14 +1661,14 @@ static void test_2nd_and_3rd_pass_ext_checks(const std::vector<navitia::routing:
 
     BOOST_CHECK_EQUAL(res[0].items[3].departure.time_of_day().total_seconds(), 11100);
     BOOST_CHECK_EQUAL(res[0].items[3].arrival.time_of_day().total_seconds(), 11100);
-    BOOST_CHECK_EQUAL(res[0].items[3].type, stay_in);
+    BOOST_CHECK_EQUAL(res[0].items[3].type, ItemType::stay_in);
 
     BOOST_CHECK_EQUAL(res[0].items[4].departure.time_of_day().total_seconds(), 11100);
     BOOST_CHECK_EQUAL(res[0].items[4].arrival.time_of_day().total_seconds(), 11200);
 
     BOOST_CHECK_EQUAL(res[0].items[5].departure.time_of_day().total_seconds(), 11200);
     BOOST_CHECK_EQUAL(res[0].items[5].arrival.time_of_day().total_seconds(), 11200);
-    BOOST_CHECK_EQUAL(res[0].items[5].type, stay_in);
+    BOOST_CHECK_EQUAL(res[0].items[5].type, ItemType::stay_in);
 
     BOOST_CHECK_EQUAL(res[0].items[6].departure.time_of_day().total_seconds(), 11200);
     BOOST_CHECK_EQUAL(res[0].items[6].arrival.time_of_day().total_seconds(), 12000);
