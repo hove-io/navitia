@@ -231,7 +231,8 @@ struct Journey {
         return nb_vj_extentions <= that.nb_vj_extentions;
     }
     bool better_on_sn(const Journey& that, bool) const {
-        return sn_dur <= that.sn_dur;
+        //we consider the transfer sections also as walking sections
+        return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
     }
     friend std::ostream& operator<<(std::ostream& os, const Journey& j) {
         os << "([" << j.departure_dt << ", " << j.arrival_dt << ", "
