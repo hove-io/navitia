@@ -1474,6 +1474,32 @@ BOOST_AUTO_TEST_CASE(simple_odt){
     BOOST_CHECK_EQUAL(section.stop_times[1]->journey_pattern_point->stop_point->uri, "stop4");
 }
 
+// Same as previous test, but with a virtual_with_stop_time
+// we should find a journey and there should be all the stop times (they are relevant)
+BOOST_AUTO_TEST_CASE(simple_odt_virtual_with_stop_time){
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250)("stop4", 8500, 8650);
+    for (auto vj : b.data->pt_data->vehicle_journeys) {
+        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
+    }
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->aggregate_odt();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas[0], d.stop_areas[3], 7900, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    const auto& journey = res1.front();
+    BOOST_REQUIRE_EQUAL(journey.items.size(), 1);
+    const auto& section = journey.items.front();
+    BOOST_REQUIRE_EQUAL(section.stop_times.size(), 4);
+    BOOST_CHECK_EQUAL(section.stop_times[0]->journey_pattern_point->stop_point->uri, "stop1");
+    BOOST_CHECK_EQUAL(section.stop_times[1]->journey_pattern_point->stop_point->uri, "stop2");
+    BOOST_CHECK_EQUAL(section.stop_times[2]->journey_pattern_point->stop_point->uri, "stop3");
+    BOOST_CHECK_EQUAL(section.stop_times[3]->journey_pattern_point->stop_point->uri, "stop4");
+}
+
 // 1
 //  \  A
 //   2 --> 3
