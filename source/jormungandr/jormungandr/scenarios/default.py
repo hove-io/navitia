@@ -354,7 +354,7 @@ class Scenario(simple.Scenario):
             for type, func in type_func.iteritems():
                 if not reference_journeys[type] or reference_journeys[type] == journey:
                     continue
-                if func(journey) > func(reference_journeys[type]):
+                if func(journey) >= func(reference_journeys[type]):
                     to_delete.append(idx)
                     logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
                     break
