@@ -222,13 +222,10 @@ struct Journey {
         if (min_waiting_dur != that.min_waiting_dur) {
             return min_waiting_dur >= that.min_waiting_dur;
         }
-        return transfer_dur <= that.transfer_dur;
+        return nb_vj_extentions <= that.nb_vj_extentions;
     }
     bool better_on_transfer(const Journey& that, bool) const {
-        if (sections.size() != that.sections.size()) {
-            return sections.size() <= that.sections.size();
-        }
-        return nb_vj_extentions <= that.nb_vj_extentions;
+        return sections.size() <= that.sections.size();
     }
     bool better_on_sn(const Journey& that, bool) const {
         //we consider the transfer sections also as walking sections
