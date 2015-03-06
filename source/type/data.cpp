@@ -100,6 +100,7 @@ bool Data::load(const std::string& filename,
         if (chaos_database) {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         }
+        build_raptor();
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
