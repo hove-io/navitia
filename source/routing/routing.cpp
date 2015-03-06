@@ -50,8 +50,6 @@ std::string PathItem::print() const {
         ss << "marche";
     else if(type == ItemType::stay_in)
         ss << "prolongement de service";
-    else if(type ==guarantee)
-        ss << "corresopondance garantie";
     ss << "\n";
 
 

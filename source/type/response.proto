@@ -56,9 +56,7 @@ enum SectionType {
 
 enum TransferType {
     walking = 1;
-    guaranteed = 2;
     stay_in = 3;
-
 }
 
 

@@ -63,7 +63,6 @@ enum class ItemType {
     public_transport,
     walking,
     stay_in,
-    guarantee, //REMOVE
     waiting
 };
 
