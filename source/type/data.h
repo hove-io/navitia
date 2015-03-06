@@ -147,8 +147,6 @@ public:
             throw wrong_version(msg.str());
         }
         ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
-        //@TODO: remove this, this done twice when we load data from rabbitmq
-        build_raptor();
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
