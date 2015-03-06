@@ -47,7 +47,7 @@ class ResourceUri(StatedResource):
     def __init__(self, authentication=True, links=True, *args, **kwargs):
         StatedResource.__init__(self, *args, **kwargs)
         self.region = None
-        if (links):
+        if links:
             self.method_decorators.append(add_id_links())
             self.method_decorators.append(add_computed_resources(self))
             self.method_decorators.append(add_pagination_links())
