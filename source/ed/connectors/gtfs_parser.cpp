@@ -582,8 +582,13 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         ++data.count_empty_connections;
         return;
     }
-    if(boost::lexical_cast<int>(row[time_c]) > 24*3600) {
-        ++data.count_too_long_connections;
+    try {
+        if (boost::lexical_cast<int>(row[time_c]) > 24*3600) {
+            ++data.count_too_long_connections;
+            return;
+        }
+    } catch (boost::bad_lexical_cast& e) {
+        LOG4CPLUS_WARN(logger, "Invalid connection time: " + row[time_c]);
         return;
     }
     auto it = gtfs_data.stop_map.find(row[from_c]);
