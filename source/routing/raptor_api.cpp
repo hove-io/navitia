@@ -72,6 +72,13 @@ static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
     if (stop_times.empty()) return;
+    const auto& vj = stop_times.front()->vehicle_journey;
+    if (vj->is_odt() && vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time) {
+        for (const auto& st : stop_times) {
+            add_coord(st->journey_pattern_point->stop_point->coord, pb_section);
+        }
+        return;
+    }
 
     type::GeographicalCoord last_coord;
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
@@ -790,7 +797,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                  bool disruption_active,
                  bool allow_odt,
                  uint32_t max_duration, uint32_t max_transfers,
-                 bool show_codes, bool details) {
+                 bool show_codes) {
 
     EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
     pbnavitia::Response& pb_response = enhanced_response.response;
@@ -856,59 +863,26 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         // compute m trip in one call
         auto paths_by_entrypoint = raptor.
                 compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers,
-                               accessibilite_params, forbidden, clockwise, details);
+                               accessibilite_params, forbidden, clockwise);
 
-        // compute complete path from "n point" to "m point"
-        if (details) {
-            for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
-                std::vector<Path>& paths = paths_for_m_point.second;
-                if(paths.empty())
-                    continue;
-
-                // try to resolve the "n point" (kraken algorithm departure)
-                type::EntryPoint n_entry_point;
-                n_entry_point.type = nt::Type_e::Unknown;
-                for(auto& path : paths) {
-                    path.request_time = datetime;
-                    if (path.origin.type != nt::Type_e::Unknown)
-                        n_entry_point = path.origin;
-                }
-                if (n_entry_point.type == nt::Type_e::Unknown)
-                    continue;
-
-                const type::EntryPoint& m_entry_point = paths_for_m_point.first;
-
-                if (clockwise){
-                    std::reverse(paths.begin(), paths.end());
-                    worker.init(n_entry_point, {m_entry_point});
-                    add_pathes(enhanced_response, paths, raptor.data, worker, n_entry_point, m_entry_point, datetimes, clockwise, show_codes);
-                }
-                else {
-                    worker.init(m_entry_point, {n_entry_point});
-                    add_pathes(enhanced_response, paths, raptor.data, worker, m_entry_point, n_entry_point, datetimes, clockwise, show_codes);
-                }
-            }
-        }
         // compute isochron style result at "m point"
-        else {
-            for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
-                std::vector<Path>& paths = paths_for_m_point.second;
-                if(paths.empty())
-                    continue;
+        for (const auto& paths_for_m_point : paths_by_entrypoint) {
+            const std::vector<Path>& paths = paths_for_m_point.second;
+            if(paths.empty())
+                continue;
 
-                std::vector<type::StopPoint*> stop_points;
-                for(auto& path : paths) {
-                    const type::StopPoint* sp = clockwise ? path.items.front().stop_points.front() :
-                                                             path.items.back().stop_points.back();
-                    stop_points.push_back(const_cast<type::StopPoint*>(sp));
-                }
-
-                const type::EntryPoint& m_point = paths_for_m_point.first;
-
-                add_isochrone_response(raptor, pb_response, stop_points, clockwise,
-                                       init_dt, bound, max_duration, show_codes,
-                                       (m_point.type == nt::Type_e::StopArea));
+            std::vector<type::StopPoint*> stop_points;
+            for (const auto& path : paths) {
+                const type::StopPoint* sp = clockwise ? path.items.front().stop_points.front() :
+                    path.items.back().stop_points.back();
+                stop_points.push_back(const_cast<type::StopPoint*>(sp));
             }
+
+            const type::EntryPoint& m_point = paths_for_m_point.first;
+
+            add_isochrone_response(raptor, pb_response, stop_points, clockwise,
+                                   init_dt, bound, max_duration, show_codes,
+                                   (m_point.type == nt::Type_e::StopArea));
         }
     }
 
@@ -960,7 +934,11 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
                [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
-               return journey1.duration() < journey2.duration();
+                auto duration1 = journey1.duration(), duration2 = journey2.duration();
+                if (duration1 != duration2) {
+                    return duration1 < duration2;
+                }
+                return journey1.destination().uri() < journey2.destination().uri();
                 });
 
 

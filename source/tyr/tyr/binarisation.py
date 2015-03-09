@@ -43,6 +43,10 @@ from navitiacommon import models
 import shutil
 from tyr.helper import get_instance_logger
 from functools import wraps
+from shapely.geometry import MultiPolygon, Polygon
+from shapely import wkt
+import sqlalchemy
+
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -270,6 +274,95 @@ def synonym2ed(self, instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
+
+
+# from http://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Python_Parsing
+def parse_poly(lines):
+    """ Parse an Osmosis polygon filter file.
+
+        Accept a sequence of lines from a polygon file, return a shapely.geometry.MultiPolygon object.
+
+        http://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Format
+    """
+    in_ring = False
+    coords = []
+
+    for (index, line) in enumerate(lines):
+        if index == 0:
+            # first line is junk.
+            continue
+
+        elif index == 1:
+            # second line is the first polygon ring.
+            coords.append([[], []])
+            ring = coords[-1][0]
+            in_ring = True
+
+        elif in_ring and line.strip() == 'END':
+            # we are at the end of a ring, perhaps with more to come.
+            in_ring = False
+
+        elif in_ring:
+            # we are in a ring and picking up new coordinates.
+            ring.append(map(float, line.split()))
+
+        elif not in_ring and line.strip() == 'END':
+            # we are at the end of the whole polygon.
+            break
+
+        elif not in_ring and line.startswith('!'):
+            # we are at the start of a polygon part hole.
+            coords[-1][1].append([])
+            ring = coords[-1][1][-1]
+            in_ring = True
+
+        elif not in_ring:
+            # we are at the start of a polygon part.
+            coords.append([[], []])
+            ring = coords[-1][0]
+            in_ring = True
+
+    return MultiPolygon(coords)
+
+
+def load_bounding_shape(instance_name, instance_conf, shape_path):
+    logging.info("loading bounding shape for {} from = {}".format(instance_name, shape_path))
+
+    if shape_path.endswith(".poly"):
+        with open(shape_path, "r") as myfile:
+            shape = parse_poly(myfile.readlines())
+    elif shape_path.endswith(".wkt"):
+        with open(shape_path, "r") as myfile:
+            shape = wkt.loads(myfile.read())
+    else:
+        logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
+        return
+
+    connection_string = "postgres://{u}:{pw}@{h}/{db}"\
+        .format(u=instance_conf.pg_username, pw=instance_conf.pg_password,
+                h=instance_conf.pg_host, db=instance_conf.pg_dbname)
+    engine = sqlalchemy.create_engine(connection_string)
+    # create the line if it does not exists
+    engine.execute("""
+    INSERT INTO navitia.parameters (shape)
+    SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
+    """).close()
+    # update the line, simplified to approx 100m
+    engine.execute("""
+    UPDATE navitia.parameters
+    SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
+    """.format(shape=wkt.dumps(shape))).close()
+
+
+@celery.task(bind=True)
+@Lock(timeout=10*60)
+def shape2ed(self, instance_config, filename, job_id):
+    """load a street network shape into ed"""
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    logging.info("loading bounding shape for {} from = {}".format(instance.name, filename))
+    load_bounding_shape(instance.name, instance_config, filename)
+
 
 @celery.task(bind=True)
 def reload_data(self, instance_config, job_id):

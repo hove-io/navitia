@@ -35,6 +35,7 @@ www.navitia.io
 #include "data.h"
 #include "type/meta_data.h"
 #include "utils/functions.h"
+#include <pqxx/pqxx>
 
 
 namespace ed{
@@ -42,9 +43,11 @@ namespace ed{
 struct EdPersistor{
     Lotus lotus;
     log4cplus::Logger logger;
+    bool parse_pois = true, is_osm_reader;
 
-    EdPersistor(const std::string& connection_string) : lotus(connection_string),
-                        logger(log4cplus::Logger::getInstance("log")){}
+
+    EdPersistor(const std::string& connection_string,
+            const bool is_osm_reader = true);
 
     std::set<std::string> ignored_uris;
 
@@ -77,6 +80,7 @@ struct EdPersistor{
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
+    void insert_metadata_georef();
     void insert_sa_sp_properties(const ed::Data& data);
     void insert_stop_areas(const std::vector<types::StopArea*>& stop_areas);
 

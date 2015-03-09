@@ -99,8 +99,9 @@ static navitia::routing::Path string_to_path(const std::vector<std::string>& key
 
         //construction of a mock item
         //will leak from everywhere :)
-        navitia::routing::PathItem item(boost::posix_time::ptime(date, start_time),
-                boost::posix_time::ptime(date, dest_time));
+        navitia::routing::PathItem item(navitia::routing::ItemType::public_transport,
+                                        boost::posix_time::ptime(date, start_time),
+                                        boost::posix_time::ptime(date, dest_time));
         nt::StopPoint* first_sp = new nt::StopPoint();
         first_sp->stop_area = new nt::StopArea();
         first_sp->stop_area->uri = start_stop_area;

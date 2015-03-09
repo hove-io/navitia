@@ -100,6 +100,7 @@ bool Data::load(const std::string& filename,
         if (chaos_database) {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         }
+        build_raptor();
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
@@ -187,12 +188,15 @@ void Data::build_proximity_list(){
     this->geo_ref->project_stop_points(this->pt_data->stop_points);
 }
 
-void  Data::build_administrative_regions(){
+void  Data::build_administrative_regions() {
     auto log = log4cplus::Logger::getInstance("ed::Data");
 
     // set admins to stop points
     int cpt_no_projected = 0;
-    for(type::StopPoint* stop_point : pt_data->stop_points) {
+    for (type::StopPoint* stop_point : pt_data->stop_points) {
+        if (!stop_point->admin_list.empty()) {
+            continue;
+        }
         const auto &admins = find_admins(stop_point->coord);
         boost::push_back(stop_point->admin_list, admins);
         if (admins.empty()) ++cpt_no_projected;
@@ -205,12 +209,17 @@ void  Data::build_administrative_regions(){
     cpt_no_projected = 0;
     int cpt_no_initialized = 0;
     for (georef::POI* poi: geo_ref->pois) {
-        if (poi->coord.is_initialized()) {
-            const auto &admins = find_admins(poi->coord);
-            boost::push_back(poi->admin_list, admins);
-            if (admins.empty()) ++cpt_no_projected;
-        } else {
+        if (!poi->coord.is_initialized()) {
             cpt_no_initialized++;
+            continue;
+        }
+        if (!poi->admin_list.empty()) {
+            continue;
+        }
+        const auto &admins = find_admins(poi->coord);
+        boost::push_back(poi->admin_list, admins);
+        if (admins.empty()) {
+            ++cpt_no_projected;
         }
     }
     if (cpt_no_projected)

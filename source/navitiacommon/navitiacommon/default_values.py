@@ -56,17 +56,17 @@ max_nb_transfers = 10
 
 journey_order = 'arrival_time'
 
-destineo_min_tc_with_car = 5*60
+min_tc_with_car = 5*60
 
-destineo_min_tc_with_bike = 5*60
+min_tc_with_bike = 5*60
 
-destineo_min_tc_with_bss = 5*60
+min_tc_with_bss = 5*60
 
-destineo_min_bike = 4*60
+min_bike = 4*60
 
-destineo_min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss
+min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss
 
-destineo_min_car = 5*60
+min_car = 5*60
 
 #if a journey is X time longer than the earliest one we remove it
 factor_too_long_journey = 4
@@ -76,7 +76,7 @@ min_duration_too_long_journey = 15*60
 
 
 def get_value_or_default(attr, instance, instance_name):
-    if not instance or getattr(instance, attr) == None:
+    if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)
         value = getattr(sys.modules[__name__], attr)
         logger.warn('instance %s not found in db, we use the default value (%s) for the param %s', instance_name, value, attr)

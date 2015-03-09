@@ -525,12 +525,12 @@ def sort_destineo_date_timezone_test():
 
 class Instance(object):
     def __init__(self):
-        self.destineo_min_bike = 30
-        self.destineo_min_bss = 25
-        self.destineo_min_car = 20
-        self.destineo_min_tc_with_bike = 40
-        self.destineo_min_tc_with_bss = 35
-        self.destineo_min_tc_with_car = 50
+        self.min_bike = 30
+        self.min_bss = 25
+        self.min_car = 20
+        self.min_tc_with_bike = 40
+        self.min_tc_with_bss = 35
+        self.min_tc_with_car = 50
 
 def remove_not_long_enough_no_removal_test():
     response = response_pb2.Response()
@@ -1107,3 +1107,63 @@ def choose_best_alternatives_non_pt_test():
     eq_(journeys[0], get_bss_walking_journey())
     eq_(journeys[1], j1)
     eq_(journeys[2], j2)
+
+def remove_extra_journeys_less_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, 3)
+    eq_(len(journeys), 2)
+
+def remove_extra_journeys_enougth_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, 2)
+    eq_(len(journeys), 2)
+
+def remove_extra_journeys_more_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 3)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 2)
+    eq_(journeys[0], get_bss_bss_journey())
+    eq_(journeys[1], get_bike_car_journey())
+
+def remove_extra_journeys_more_with_walking_last_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+    journeys.append(j1)
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 4)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 3)
+    eq_(journeys[0], get_bss_bss_journey())
+    eq_(journeys[1], get_bike_car_journey())
+    eq_(journeys[2], j1)
+
+def remove_extra_journeys_more_with_walking_first_test():
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+    journeys = [j1, get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None)
+    eq_(len(journeys), 4)
+
+    scenario._remove_extra_journeys(journeys, 2)
+
+    eq_(len(journeys), 3)
+    eq_(journeys[0], j1)
+    eq_(journeys[1], get_bss_bss_journey())
+    eq_(journeys[2], get_bike_car_journey())

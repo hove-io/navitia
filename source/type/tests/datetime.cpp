@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(ctor){
 
 BOOST_AUTO_TEST_CASE(date_update){
     DateTime d = DateTimeUtils::set(10, 10);
-    DateTimeUtils::update(d, 100);
+    d = DateTimeUtils::shift(d, 100);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 10);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 100);
 
-    DateTimeUtils::update(d,50);
+    d = DateTimeUtils::shift(d,50);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 11);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 50);
 }
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_update){
 
 BOOST_AUTO_TEST_CASE(passe_minuit_update_reverse){
     DateTime d = DateTimeUtils::set(1, 300);
-    DateTimeUtils::update(d, 23*3600, false);
+    d = DateTimeUtils::shift(d, 23*3600, false);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 23*3600);
 }

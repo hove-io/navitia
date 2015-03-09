@@ -35,10 +35,10 @@ from operator import itemgetter, indexOf, attrgetter
 from datetime import datetime, timedelta
 import pytz
 from collections import defaultdict, OrderedDict
-from jormungandr.scenarios.helpers import bike_duration, pt_duration, car_duration
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
-        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk, bss_duration
+        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
+from jormungandr.scenarios.utils import are_equals
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -215,20 +215,23 @@ class Scenario(default.Scenario):
         request_tc = copy.deepcopy(request)
         request_tc['origin_mode'] = ['walking']
         request_tc['destination_mode'] = ['walking']
+        max_nb_journeys = request_tc['max_nb_journeys']
+        request_tc['max_nb_journeys'] = None
 
         request_alternative = copy.deepcopy(request)
         request_alternative['min_nb_journeys'] = None
         request_alternative['max_nb_journeys'] = None
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
+        self._remove_extra_journeys(response_tc.journeys, max_nb_journeys)
         max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
         if max_duration:
             #we find the max_duration with the pure tc call, so we use it for the alternatives
-            request_alternative['max_duration'] =  int(max_duration)
+            request_alternative['max_duration'] = int(max_duration)
 
         if not all([is_admin(request['origin']), is_admin(request['destination'])]):
             logger.debug('journeys with alternative mode')
-            response_alternative = self._get_alternatives(request_alternative, instance)
+            response_alternative = self._get_alternatives(request_alternative, instance, response_tc.journeys)
             logger.debug('merge and sort reponses')
             self.merge_response(response_tc, response_alternative)
         else:
@@ -249,16 +252,49 @@ class Scenario(default.Scenario):
 
         return response_tc
 
-    def _get_alternatives(self, args, instance):
+    def _get_alternatives(self, args, instance, tc_journeys):
+        logger = logging.getLogger(__name__)
         response_alternative = super(Scenario, self).journeys(args, instance)
+        #we don't want to choose an alternative already in the pure_pt solutions, it can happens since bss allow walking solutions
+        self._remove_already_present_journey(response_alternative.journeys, tc_journeys)
 
         if not args['debug']:
             # in debug we don't filter
-            self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
-            self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
-
             self._choose_best_alternatives(response_alternative.journeys)
         return response_alternative
+
+    def _remove_already_present_journey(self, alternative_journeys, tc_journeys):
+        logger = logging.getLogger(__name__)
+        to_delete = []
+        for idx, journey in enumerate(alternative_journeys):
+            for journey_tc in tc_journeys:
+                if are_equals(journey, journey_tc):
+                    to_delete.append(idx)
+        logger.debug('remove %s alternative journey already present in TC response: %s',
+                len(to_delete), [alternative_journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del alternative_journeys[idx]
+
+
+    def _remove_extra_journeys(self, journeys, max_nb_journeys):
+        if not max_nb_journeys or len(journeys) <= max_nb_journeys:
+            return
+        to_keep = set()
+        count = 0
+        for idx, journey in enumerate(journeys):
+            if journey.type == 'non_pt_walk':
+                to_keep.add(idx)
+            elif count < max_nb_journeys:
+                to_keep.add(idx)
+                count += 1
+
+        to_delete = list(set(range(len(journeys))) - to_keep)
+        to_delete.sort(reverse=True)
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s extra journeys: %s', len(to_delete), [journeys[i].type for i in to_delete])
+        for idx in to_delete:
+            del journeys[idx]
 
 
     def _remove_non_pt_walk(self, journeys):
@@ -304,51 +340,6 @@ class Scenario(default.Scenario):
         for idx in to_delete:
             del journeys[idx]
 
-    def _remove_not_long_enough_fallback(self, journeys, instance):
-        to_delete = []
-        for idx, journey in enumerate(journeys):
-            if journey.type in non_pt_types:
-                continue
-            bike_dur = bike_duration(journey)
-            car_dur = car_duration(journey)
-            bss_dur = bss_duration(journey)
-            if bike_dur and bike_dur < instance.destineo_min_bike:
-                to_delete.append(idx)
-            elif bss_dur and bss_dur < instance.destineo_min_bss:
-                to_delete.append(idx)
-            elif car_dur and car_dur < instance.destineo_min_car:
-                to_delete.append(idx)
-
-        logger = logging.getLogger(__name__)
-        logger.debug('remove %s journey with not enough fallback duration: %s',
-                len(to_delete), [journeys[i].type for i in to_delete])
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
-
-
-    def _remove_not_long_enough_tc_with_fallback(self, journeys, instance):
-        to_delete = []
-        for idx, journey in enumerate(journeys):
-            if journey.type in non_pt_types:
-                continue
-            bike_dur = bike_duration(journey)
-            car_dur = car_duration(journey)
-            tc_dur = pt_duration(journey)
-            bss_dur = bss_duration(journey)
-            if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
-                to_delete.append(idx)
-            elif bss_dur and tc_dur < instance.destineo_min_tc_with_bss:
-                to_delete.append(idx)
-            elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
-                to_delete.append(idx)
-
-        logger = logging.getLogger(__name__)
-        logger.debug('remove %s journey with not enough tc duration: %s',
-                len(to_delete), [journeys[i].type for i in to_delete])
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
 
 
     def _custom_sort_journeys(self, response, timezone, clockwise=True):

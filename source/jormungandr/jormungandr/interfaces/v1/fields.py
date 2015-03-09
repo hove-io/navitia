@@ -401,7 +401,8 @@ disruption_severity = {
 
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
-    "impact_id": fields.String(attribute="impact_uri"),
+    "disruption_id": fields.String(attribute="disruption_uri"),
+    "impact_id": fields.String(attribute="uri"),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
     "status": disruption_status,
@@ -415,7 +416,7 @@ disruption_marshaller = {
 #OLD disruption, DEPRECATED
 disruption = deepcopy(disruption_marshaller)
 disruption_marshaller["uri"] = fields.String()
-disruption_marshaller["impact_uri"] = fields.String()
+disruption_marshaller["disruption_uri"] = fields.String()
 
 
 class DisruptionsField(fields.Raw):
@@ -549,6 +550,7 @@ physical_mode = deepcopy(generic_type)
 commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
 physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 line["commercial_mode"] = PbField(commercial_mode)
+route["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type_admin)
@@ -685,12 +687,12 @@ instance_parameters = {
     'bike_speed': fields.Raw,
     'bss_speed': fields.Raw,
     'car_speed': fields.Raw,
-    'destineo_min_bike': fields.Raw,
-    'destineo_min_car': fields.Raw,
-    'destineo_min_bss': fields.Raw,
-    'destineo_min_tc_with_bike': fields.Raw,
-    'destineo_min_tc_with_car': fields.Raw,
-    'destineo_min_tc_with_bss': fields.Raw,
+    'min_bike': fields.Raw,
+    'min_car': fields.Raw,
+    'min_bss': fields.Raw,
+    'min_tc_with_bike': fields.Raw,
+    'min_tc_with_car': fields.Raw,
+    'min_tc_with_bss': fields.Raw,
     'factor_too_long_journey': fields.Raw,
     'min_duration_too_long_journey': fields.Raw,
 }

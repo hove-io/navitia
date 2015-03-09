@@ -62,32 +62,12 @@ struct Labels {
     inline void clear(const Labels& clean) {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
-        boarding_jpp_pts.resize(clean.boarding_jpp_pts);
-        boarding_sp_transfers.resize(clean.boarding_sp_transfers);
-        used_jpps.resize(clean.used_jpps);
-    }
-    inline const SpIdx&
-    boarding_sp_transfer(SpIdx sp_idx) const {
-        return boarding_sp_transfers[sp_idx];
-    }
-    inline const JppIdx&
-    boarding_jpp_pt(SpIdx sp_idx) const {
-        return boarding_jpp_pts[sp_idx];
     }
     inline const DateTime& dt_transfer(SpIdx sp_idx) const {
         return dt_transfers[sp_idx];
     }
     inline const DateTime& dt_pt(SpIdx sp_idx) const {
         return dt_pts[sp_idx];
-    }
-
-    inline SpIdx&
-    mut_boarding_sp_transfer(SpIdx sp_idx) {
-        return boarding_sp_transfers[sp_idx];
-    }
-    inline JppIdx&
-    mut_boarding_jpp_pt(SpIdx sp_idx) {
-        return boarding_jpp_pts[sp_idx];
     }
     inline DateTime& mut_dt_transfer(SpIdx sp_idx) {
         return dt_transfers[sp_idx];
@@ -102,20 +82,10 @@ struct Labels {
     inline bool transfer_is_initialized(SpIdx sp_idx) const {
         return dt_transfer(sp_idx) != DateTimeUtils::inf && dt_transfer(sp_idx) != DateTimeUtils::min;
     }
-
-    inline JppIdx& mut_used_jpp(SpIdx sp_idx) {
-        return used_jpps[sp_idx];
-    }
-    inline const JppIdx& used_jpp(SpIdx sp_idx) const {
-        return used_jpps[sp_idx];
-    }
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
         dt_pts.assign(stops, val);
         dt_transfers.assign(stops, val);
-        boarding_jpp_pts.resize(stops);
-        boarding_sp_transfers.resize(stops);
-        used_jpps.resize(stops);
     }
 
     // All these vectors are indexed by sp_idx
@@ -124,84 +94,6 @@ private:
     IdxMap<type::StopPoint, DateTime> dt_pts;
     // At what time wan we reach this label with a transfer
     IdxMap<type::StopPoint, DateTime> dt_transfers;
-    // jpp used to reach this label with public transport
-    IdxMap<type::StopPoint, JppIdx> boarding_jpp_pts;
-    // sp used to reach this label with a transfer.
-    // Note: the sp is enough here (no need for jpp), it is used only for path reconstruction
-    IdxMap<type::StopPoint, SpIdx> boarding_sp_transfers;
-
-    // jpp used to mark the stop point. Used for path reconstruction, only because of the the vj extention.
-    // The service extention makes it impossible to find the used jpp withe the boarding jpp
-    IdxMap<type::StopPoint, JppIdx> used_jpps;
-};
-
-
-struct best_dest {
-    // fallback time at the end of the journey. Only the stoppoint that can be reached by the fallback are marked
-    IdxMap<type::StopPoint, navitia::time_duration> sp_idx_duration;
-    DateTime best_now;
-    SpIdx best_now_sp_idx;
-    size_t count;
-
-    void add_destination(const SpIdx sp, const time_duration duration_to_dest) {
-        sp_idx_duration[sp] = duration_to_dest;
-    }
-
-    inline bool is_eligible_solution(const SpIdx sp_idx) const {
-        return sp_idx_duration[sp_idx] != boost::posix_time::pos_infin;
-    }
-
-    template<typename Visitor>
-    inline bool add_best(const Visitor & v, SpIdx sp_idx, const DateTime &t, size_t cnt) {
-        if (is_eligible_solution(sp_idx)) {
-            if(v.clockwise())
-                return add_best_clockwise(sp_idx, t, cnt);
-            else
-                return add_best_unclockwise(sp_idx, t, cnt);
-        }
-        return false;
-    }
-
-
-    inline bool add_best_clockwise(SpIdx sp_idx, const DateTime& t, size_t cnt) {
-        if (t != DateTimeUtils ::inf) {
-            const auto tmp_dt = t + sp_idx_duration[sp_idx];
-            if((tmp_dt < best_now) || ((tmp_dt == best_now) && (count > cnt))) {
-                best_now = tmp_dt;
-                best_now_sp_idx = sp_idx;
-                count = cnt;
-                return true;
-            }
-         }
-
-        return false;
-    }
-
-    inline bool add_best_unclockwise(SpIdx sp_idx, const DateTime& t, size_t cnt) {
-        if (t != DateTimeUtils::min) {
-            const auto tmp_dt = t - sp_idx_duration[sp_idx];
-            if((tmp_dt > best_now) || ((tmp_dt == best_now) && (count > cnt))) {
-                best_now = tmp_dt;
-                best_now_sp_idx = sp_idx;
-                count = cnt;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void reinit(const std::vector<type::StopPoint*>& stops) {
-        sp_idx_duration.assign(stops, boost::posix_time::pos_infin);
-        best_now = DateTimeUtils::inf;
-        best_now_sp_idx = SpIdx();
-        count = std::numeric_limits<size_t>::max();
-    }
-
-    void reinit(const std::vector<type::StopPoint*>& stops, const DateTime& bound) {
-        reinit(stops);
-        best_now = bound;
-    }
-
 };
 
 } // namespace routing

@@ -34,22 +34,27 @@ from jinja2 import TemplateNotFound
 from jormungandr.modules_loader import ABlueprint
 
 
-class TisseoRouting(ABlueprint):
+class ExampleRouting(ABlueprint):
     def __init__(self, api, name):
-        super(TisseoRouting, self).__init__(api,
+        super(ExampleRouting, self).__init__(api,
                                             name,
                                             __name__,
-                                            description='Test module',
-                                            status='testing',
-                                            index_endpoint='index_json',
-                                            static_folder='static',
-                                            template_folder='templates')
+                                            description='Test module', # Module description available on index page
+                                            status='testing', # Status of the module. Can be [testing, current, deprecated]
+                                            index_endpoint='index_json', # MANDATORY the endpoint of the module index page
+                                            static_folder='static', # if needed, the static folder
+                                            template_folder='templates') # if needed, the templates folder
+
+# The official documentation about Blueprints : http://flask.pocoo.org/docs/0.10/blueprints/#
 
     def setup(self):
-        self.add_url_rule('/', defaults={'page': 'index'},
+        self.add_url_rule('/',
+                          defaults={'page': 'index'},
                           view_func=self.page)
-        self.add_url_rule('/<page>', view_func=self.page)
-        self.add_url_rule('/index.json', view_func=self.index_json)
+        self.add_url_rule('/<page>',
+                          view_func=self.page)
+        self.add_url_rule('/index.json',
+                          view_func=self.index_json)
 
     def page(self, page):
         try:
@@ -58,5 +63,8 @@ class TisseoRouting(ABlueprint):
             abort(404)
 
     def index_json(self):
-        return make_response(json.dumps({'Raw': 'json', 'link': url_for(self.name + '.page')},
+        return make_response(json.dumps({
+                                            'Raw': 'json',
+                                            'link': url_for(self.name + '.page')
+                                        },
                                         sort_keys=True))

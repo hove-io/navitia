@@ -38,12 +38,12 @@ pbnavitia::Response next_departures(const std::string &request,
         const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
         const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
-        const bool show_codes);
+        const bool show_codes, const boost::posix_time::ptime current_datetime);
 pbnavitia::Response next_arrivals(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
         const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
-        const bool show_codes);
+        const bool show_codes, const boost::posix_time::ptime current_datetime);
 
 }}

@@ -63,27 +63,33 @@ The difficulty with VJ4 comes when we have to compare it to VJ1.
 When comparing VJ1 and VJ4, we compare VJ1(stopC) with VJ4(stopD)
 and when we compare VJ4 and VJ1, we compare VJ4(stopB) with VJ1(stopC).
 */
-BOOST_AUTO_TEST_CASE(test1) {
-    ed::builder b("20120614");
-    const std::string a_name = "stopA",
-                      b_name = "stopB",
-                      c_name = "stopC",
-                      d_name = "stopD";
-    b.vj("A", "1111111", "", true, "1", "1", "JP1")(c_name, 8*3600 + 5*60)(d_name, 9*3600 + 30*60);
-    b.vj("A", "1111111", "", true, "2", "2", "JP2")(a_name, 8*3600)(b_name, 8*3600 + 10*60);
-    b.vj("A", "1111111", "", true, "3", "3", "JP2")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
-    b.vj("A", "1111111", "", true, "4", "4", "JP3")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
-    b.finish();
-    b.data->pt_data->index();
-    b.data->build_raptor();
+struct route_schedule_fixture {
+    ed::builder b = {"20120614"};
 
-    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
-    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
+    route_schedule_fixture() {
+        const std::string a_name = "stopA",
+                          b_name = "stopB",
+                          c_name = "stopC",
+                          d_name = "stopD";
+        b.vj("A", "1111111", "", true, "1", "1", "JP1")(c_name, 8*3600 + 5*60)(d_name, 9*3600 + 30*60);
+        b.vj("A", "1111111", "", true, "2", "2", "JP2")(a_name, 8*3600)(b_name, 8*3600 + 10*60);
+        b.vj("A", "1111111", "", true, "3", "3", "JP2")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
+        b.vj("A", "1111111", "", true, "4", "4", "JP3")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
+        b.finish();
+        b.data->pt_data->index();
+        b.data->build_raptor();
 
-    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+        boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
+        boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
-    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 1, 3,
-    10, 0, *(b.data), false, false);
+        b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 100,
+                                                                   1, 3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     auto get_vj = [](pbnavitia::RouteSchedule r, int i) {
@@ -93,6 +99,15 @@ BOOST_AUTO_TEST_CASE(test1) {
     BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 1), "2");
     BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 2), "3");
     BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 3), "4");
+}
+
+
+BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
+    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 0,
+                                                                   1, 3, 10, 0, *(b.data), false, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    BOOST_REQUIRE_EQUAL(route_schedule.table().headers().size(), 0);
 }
 
 

@@ -30,6 +30,9 @@ www.navitia.io
 
 #include "pt_data.h"
 #include "utils/functions.h"
+
+#include <boost/range/algorithm/find_if.hpp>
+
 namespace navitia{namespace type {
 
 
@@ -203,6 +206,21 @@ void PT_Data::index(){
 #define INDEX(type_name, collection_name) std::for_each(collection_name.begin(), collection_name.end(), Indexer());
     ITERATE_NAVITIA_PT_TYPES(INDEX)
 }
+
+const StopPointConnection*
+PT_Data::get_stop_point_connection(const StopPoint& from, const StopPoint& to) const {
+    const auto& connections = from.stop_point_connection_list;
+    auto is_the_one = [&](const type::StopPointConnection* conn) {
+        return &from == conn->departure && &to == conn->destination;
+    };
+    const auto search = boost::find_if(connections, is_the_one);
+    if (search == connections.end()) {
+        return nullptr;
+    } else {
+        return *search;
+    }
+}
+
 
 PT_Data::~PT_Data() {
     //big uggly hack :(

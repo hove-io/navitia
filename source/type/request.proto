@@ -46,6 +46,7 @@ message NextStopTimeRequest {
     optional string calendar            = 13;
     optional bool show_codes            = 14;
     optional uint64 until_datetime      = 15;
+    optional uint64 _current_datetime   = 16;
 }
 
 message StreetNetworkParams{
@@ -120,6 +121,7 @@ message PTRefRequest {
     optional bool show_codes            = 7;
     optional OdtLevel odt_level         = 8;
     repeated string forbidden_uri       = 6;
+    optional uint64 datetime            = 9;
 }
 
 message Request {

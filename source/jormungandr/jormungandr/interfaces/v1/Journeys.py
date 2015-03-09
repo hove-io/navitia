@@ -703,7 +703,16 @@ class Journeys(ResourceUri, ResourceUtc):
                 responses[r] = response
                 continue
 
+            if all(map(lambda j: j.type in ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car"), response.journeys)):
+                responses[r] = response
+                continue
+
             return response
+
+        for response in responses.itervalues():
+            if not response.HasField("error"):
+                return response
+
 
         # if no response have been found for all the possible regions, we have a problem
         # if all response had the same error we give it, else we give a generic 'no solution' error

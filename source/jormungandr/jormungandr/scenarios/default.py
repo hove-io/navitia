@@ -41,9 +41,10 @@ import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter
 from jormungandr.scenarios import simple
 import logging
-from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration
+from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
 from operator import attrgetter
 
+non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
 class Scenario(simple.Scenario):
 
@@ -200,7 +201,7 @@ class Scenario(simple.Scenario):
         self.__fill_uris(resp)
         return resp
 
-    def change_request(self, pb_req, resp):
+    def change_request(self, pb_req, resp, forbidden_uris=[]):
         result = copy.deepcopy(pb_req)
         def get_uri_odt_with_zones(journey):
             result = []
@@ -216,11 +217,15 @@ class Scenario(simple.Scenario):
             return result
 
         map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
-        for forbidden_uris in map_forbidden_uris:
-            for line_uri in forbidden_uris:
+        for uris in map_forbidden_uris:
+            for line_uri in uris:
                 if line_uri not in result.journeys.forbidden_uris:
-                    result.journeys.forbidden_uris.append(line_uri)
-        return result
+                    forbidden_uris.append(line_uri)
+        for forbidden_uri in forbidden_uris:
+            result.journeys.forbidden_uris.append(forbidden_uri)
+
+
+        return result, forbidden_uris
 
     def fill_journeys(self, pb_req, request, instance):
         """
@@ -234,6 +239,7 @@ class Scenario(simple.Scenario):
         cpt_attempt = 0
         max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
         at_least_one_journey_found = False
+        forbidden_uris = []
         while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.call_kraken(next_request, instance)
@@ -263,7 +269,7 @@ class Scenario(simple.Scenario):
                         break
                 new_datetime = last_best.arrival_date_time - one_minute
 
-            next_request = self.change_request(pb_req, tmp_resp)
+            next_request, forbidden_uris = self.change_request(pb_req, tmp_resp, forbidden_uris)
             next_request.journeys.datetimes[0] = new_datetime
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey
@@ -282,6 +288,8 @@ class Scenario(simple.Scenario):
             cpt_attempt += 1
 
         if not request['debug']:
+            self._remove_not_long_enough_fallback(resp.journeys, instance)
+            self._remove_not_long_enough_tc_with_fallback(resp.journeys, instance)
             self._delete_too_long_journey(resp.journeys, instance, request['clockwise'])
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
@@ -319,7 +327,8 @@ class Scenario(simple.Scenario):
         section_is_walking_or_pt = lambda section: section.type not in \
                 (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
                            or section.street_network.mode == response_pb2.Walking
-        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections)
+        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections) \
+                and journey.duration > 0
 
         list_journeys = filter(filter_journey, journeys)
         if not list_journeys:
@@ -345,7 +354,7 @@ class Scenario(simple.Scenario):
             for type, func in type_func.iteritems():
                 if not reference_journeys[type] or reference_journeys[type] == journey:
                     continue
-                if func(journey) > func(reference_journeys[type]):
+                if func(journey) >= func(reference_journeys[type]):
                     to_delete.append(idx)
                     logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
                     break
@@ -487,3 +496,49 @@ class Scenario(simple.Scenario):
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
+
+    def _remove_not_long_enough_fallback(self, journeys, instance):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                continue
+            bike_dur = bike_duration(journey)
+            car_dur = car_duration(journey)
+            bss_dur = bss_duration(journey)
+            if bike_dur and bike_dur < instance.min_bike:
+                to_delete.append(idx)
+            elif bss_dur and bss_dur < instance.min_bss:
+                to_delete.append(idx)
+            elif car_dur and car_dur < instance.min_car:
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s journey with not enough fallback duration: %s',
+                len(to_delete), [journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
+
+
+    def _remove_not_long_enough_tc_with_fallback(self, journeys, instance):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                continue
+            bike_dur = bike_duration(journey)
+            car_dur = car_duration(journey)
+            tc_dur = pt_duration(journey)
+            bss_dur = bss_duration(journey)
+            if bike_dur and tc_dur < instance.min_tc_with_bike:
+                to_delete.append(idx)
+            elif bss_dur and tc_dur < instance.min_tc_with_bss:
+                to_delete.append(idx)
+            elif car_dur and tc_dur < instance.min_tc_with_car:
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s journey with not enough tc duration: %s',
+                len(to_delete), [journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]

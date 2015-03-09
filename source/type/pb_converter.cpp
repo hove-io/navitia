@@ -110,8 +110,8 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     }
     auto pb_disrution = pb_object->add_disruptions();
 
-    pb_disrution->set_impact_uri(impact->uri);
-    pb_disrution->set_uri(impact->disruption->uri);
+    pb_disrution->set_disruption_uri(impact->disruption->uri);
+    pb_disrution->set_uri(impact->uri);
     for (const auto& app_period: impact->application_periods) {
         auto p = pb_disrution->add_application_periods();
         p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
@@ -503,6 +503,14 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
             auto stop_point = data.pt_data->stop_points[idx];
                 fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
                         now, action_period, show_codes, display_all_publishable_disruption);
+        }
+        std::set<nt::PhysicalMode*> physical_modes;
+        for (auto journey_pattern : r->journey_pattern_list) {
+            physical_modes.insert(journey_pattern->physical_mode);
+        }
+        for (auto physical_mode : physical_modes) {
+            fill_pb_object(physical_mode, data, route->add_physical_modes(), 0, now, action_period,
+                           show_codes, display_all_publishable_disruption);
         }
     }
 }
@@ -1354,7 +1362,6 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
             uris->set_commercial_mode(r->line->commercial_mode->uri);
         }
     }
-
 }
 
 void fill_pb_object(const nt::VehicleJourney* vj,

@@ -169,9 +169,12 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
-    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
-    BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
-    BOOST_REQUIRE_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
+    BOOST_CHECK_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_CHECK_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "ht");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "ht");
+
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
@@ -225,6 +228,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
     BOOST_REQUIRE_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "ht:4");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4a");
 
 
     section = journey.sections(2);
@@ -1521,4 +1526,29 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
 
     admin->main_stop_areas.push_back(&sa2);
     BOOST_CHECK(nr::use_crow_fly(ep, &sp2, data));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(isochrone) {
+    ed::builder b("20120614");
+    b.vj("l1")("A1", 8*3600 + 25 * 60)("B", 8*3600 + 35 * 60);
+    b.vj("l2")("A1", 8*3600 + 25 * 60)("C", 8*3600 + 35 * 60);
+
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+    nr::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+
+    navitia::type::EntryPoint ep;
+    ep.type = navitia::type::Type_e::StopPoint;
+    ep.uri = "A1";
+
+    auto result = nr::make_isochrone(raptor, ep,
+            navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {},
+            sn_worker, false, true);
+
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 }
