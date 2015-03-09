@@ -38,6 +38,7 @@ from collections import defaultdict, OrderedDict
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
         is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
+from jormungandr.scenarios.utils import are_equals
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -230,7 +231,7 @@ class Scenario(default.Scenario):
 
         if not all([is_admin(request['origin']), is_admin(request['destination'])]):
             logger.debug('journeys with alternative mode')
-            response_alternative = self._get_alternatives(request_alternative, instance)
+            response_alternative = self._get_alternatives(request_alternative, instance, response_tc.journeys)
             logger.debug('merge and sort reponses')
             self.merge_response(response_tc, response_alternative)
         else:
@@ -251,13 +252,29 @@ class Scenario(default.Scenario):
 
         return response_tc
 
-    def _get_alternatives(self, args, instance):
+    def _get_alternatives(self, args, instance, tc_journeys):
+        logger = logging.getLogger(__name__)
         response_alternative = super(Scenario, self).journeys(args, instance)
+        #we don't want to choose an alternative already in the pure_pt solutions, it can happens since bss allow walking solutions
+        self._remove_already_present_journey(response_alternative.journeys, tc_journeys)
 
         if not args['debug']:
             # in debug we don't filter
             self._choose_best_alternatives(response_alternative.journeys)
         return response_alternative
+
+    def _remove_already_present_journey(self, alternative_journeys, tc_journeys):
+        logger = logging.getLogger(__name__)
+        to_delete = []
+        for idx, journey in enumerate(alternative_journeys):
+            for journey_tc in tc_journeys:
+                if are_equals(journey, journey_tc):
+                    to_delete.append(idx)
+        logger.debug('remove %s alternative journey already present in TC response: %s',
+                len(to_delete), [alternative_journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del alternative_journeys[idx]
 
 
     def _remove_extra_journeys(self, journeys, max_nb_journeys):
