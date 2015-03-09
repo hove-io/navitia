@@ -191,6 +191,9 @@ struct PT_Data : boost::noncopyable{
     /** Définis les idx des différents objets */
     void index();
 
+    const StopPointConnection*
+    get_stop_point_connection(const StopPoint& from, const StopPoint& to) const;
+
     ~PT_Data();
 
 };

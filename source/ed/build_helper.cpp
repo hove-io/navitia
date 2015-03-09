@@ -394,6 +394,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->display_duration = length;
 
     data->pt_data->stop_point_connections.push_back(connexion);
+    connexion->departure->stop_point_connection_list.push_back(connexion);
+    connexion->destination->stop_point_connection_list.push_back(connexion);
 }
 
  void builder::generate_dummy_basis() {
@@ -453,37 +455,36 @@ void builder::connection(const std::string & name1, const std::string & name2, f
  }
 
 
- void builder::build_blocks() {
-     std::string prev_block = "";
+void builder::build_blocks() {
+    using navitia::type::VehicleJourney;
 
-     std::vector<navitia::type::VehicleJourney*> vehicle_journeys;
-     for(auto block_vj : block_vjs) {
-         if(prev_block != "" && prev_block != block_vj.first) {
-             vehicle_journeys.resize(0);
-         } else {
-             vehicle_journeys.push_back(block_vj.second);
-         }
-         prev_block = block_vj.first;
-     }
+    std::map<std::string, std::vector<VehicleJourney*>> block_map;
+    for (const auto& block_vj: block_vjs) {
+        if (block_vj.first.empty()) { continue; }
+        block_map[block_vj.first].push_back(block_vj.second);
+    }
 
-     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
-             [](const navitia::type::VehicleJourney* vj1, const navitia::type::VehicleJourney* vj2) {
-             return vj1->stop_time_list.back().arrival_time <=
-                         vj2->stop_time_list.front().departure_time;
+    for (auto& item: block_map) {
+        auto& vehicle_journeys = item.second;
+        std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
+                  [](const VehicleJourney* vj1, const VehicleJourney* vj2) {
+                      return vj1->stop_time_list.back().departure_time <=
+                          vj2->stop_time_list.front().departure_time;
+                  }
+            );
 
-             }
-      );
-
-     navitia::type::VehicleJourney* prev_vj = nullptr;
-     for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
-         auto vj = *it;
-         if(prev_vj) {
-             prev_vj->next_vj = vj;
-             vj->prev_vj = prev_vj;
-         }
-         prev_vj = vj;
-     }
- }
+        VehicleJourney* prev_vj = nullptr;
+        for (auto* vj: vehicle_journeys) {
+            if (prev_vj) {
+                assert(prev_vj->stop_time_list.back().arrival_time
+                       <= vj->stop_time_list.front().departure_time);
+                prev_vj->next_vj = vj;
+                vj->prev_vj = prev_vj;
+            }
+            prev_vj = vj;
+        }
+    }
+}
 
  void builder::finish() {
 

@@ -68,23 +68,35 @@ namespace DateTimeUtils{
         return datetime/SECONDS_PER_DAY;
     }
 
-    inline void update(navitia::DateTime & datetime, uint32_t hh, bool clockwise = true) {
-        uint32_t this_hour = hour(datetime);
+    // return a DateTime shifted in the future (resp past for ! clockwise)
+    // from the datetime dt. the new hour is hh.
+    // handle overmidnight cases
+    inline DateTime shift(navitia::DateTime dt, uint32_t hh, bool clockwise = true) {
+        uint32_t this_hour = hour(dt);
         if(hh>=SECONDS_PER_DAY)
             hh -= SECONDS_PER_DAY;
         if(clockwise){
-            datetime += (hh>=this_hour ?0:SECONDS_PER_DAY) + hh - this_hour;
+            dt += (hh>=this_hour ?0:SECONDS_PER_DAY) + hh - this_hour;
         }
         else {
             if(hh<=this_hour)
-                datetime += hh - this_hour;
+                dt += hh - this_hour;
             else {
-                if(date(datetime) > 0)
-                    datetime += hh - this_hour - SECONDS_PER_DAY;
+                if(date(dt) > 0)
+                    dt += hh - this_hour - SECONDS_PER_DAY;
                 else
-                    datetime = 0;
+                    dt = 0;
             }
         }
+        return dt;
+    }
+
+    // from a number of seconds from midnight (can be negative), return the hour in [0; SECONDS_PER_DAY]
+    inline u_int32_t hour_in_day(int hour) {
+        while (hour < 0) {
+            hour += SECONDS_PER_DAY;
+        }
+        return hour % SECONDS_PER_DAY;
     }
 
 }

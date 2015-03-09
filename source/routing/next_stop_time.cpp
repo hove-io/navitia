@@ -268,7 +268,7 @@ NextStopTime::earliest_stop_time(const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
                                  const type::VehicleProperties& vehicle_props,
-                                 const bool check_freq)
+                                 const bool check_freq) const
 {
     const auto first_discrete_st_pair =
         next_valid_discrete_pick_up(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props);
@@ -290,7 +290,7 @@ NextStopTime::tardiest_stop_time(const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
                                  const type::VehicleProperties& vehicle_props,
-                                 const bool check_freq)
+                                 const bool check_freq) const
 {
     const auto first_discrete_st_pair =
         previous_valid_discrete_drop_off(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props);

@@ -70,7 +70,7 @@ get_all_stop_times(const vector_idx& journey_patterns,
         DateTime dt = ho.first;
         for(const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
             if(!stop_time.is_frequency()) {
-                DateTimeUtils::update(dt, stop_time.departure_time);
+                dt = DateTimeUtils::shift(dt, stop_time.departure_time);
             } else {
                 // for frequencies, we only need to add the stoptime offset to the first stoptime
                 dt = ho.first + stop_time.departure_time;

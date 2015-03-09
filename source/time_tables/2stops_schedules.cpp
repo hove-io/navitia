@@ -69,8 +69,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
         const type::VehicleJourney* vj = departure_st->vehicle_journey;
         const uint32_t arrival_order = departure_idx_arrival_order[departure_st->journey_pattern_point->idx];
         const type::StopTime& arrival_st = vj->stop_time_list[arrival_order];
-        DateTime arrival_dt = dep_dt_st.first;
-        DateTimeUtils::update(arrival_dt, arrival_st.arrival_time);
+        DateTime arrival_dt = DateTimeUtils::shift(dep_dt_st.first, arrival_st.arrival_time);
         result.push_back(std::make_pair(dep_dt_st, std::make_pair(arrival_dt, &arrival_st)));
     }
 

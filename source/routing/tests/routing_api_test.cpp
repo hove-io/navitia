@@ -169,9 +169,12 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
-    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
-    BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
-    BOOST_REQUIRE_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
+    BOOST_CHECK_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_CHECK_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "ht");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "ht");
+
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
@@ -225,6 +228,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
     BOOST_REQUIRE_EQUAL(section.duration(), 420);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "ht:4");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4a");
 
 
     section = journey.sections(2);
