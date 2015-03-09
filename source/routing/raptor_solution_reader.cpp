@@ -424,6 +424,8 @@ Path make_path(const Journey& journey, const RaptorSolutionReader<Visitor>& read
     return path;
 }
 
+struct stop_search {};
+
 template<typename Visitor>
 struct RaptorSolutionReader {
     RaptorSolutionReader(const RAPTOR& r,
@@ -452,9 +454,13 @@ struct RaptorSolutionReader {
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j(path, *this);
-        nb_sol_added ++;
-
+        ++nb_sol_added;
         solutions.add(std::move(j));
+        if (nb_sol_added > 100000) {
+            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+            LOG4CPLUS_WARN(logger, "raptor_solution_reader: too much solutions, stopping...");
+            throw stop_search();
+        }
     }
 
     void transfer(const unsigned count,
@@ -563,7 +569,10 @@ std::vector<Path> read_solutions(const RAPTOR& raptor,
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
-            reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
+            reader.nb_sol_added = 0;
+            try {
+                reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
+            } catch (stop_search&) {}
         }
     }
     std::vector<Path> sol;
