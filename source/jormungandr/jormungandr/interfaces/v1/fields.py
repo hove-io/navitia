@@ -344,6 +344,17 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
+class Co2Emission(fields.Raw):
+    def output(self, key, obj):
+        if not obj.HasField("co2_emission"):
+            logging.warn("trying to output wrongly formated object as geojson, we skip")
+            return
+        return {
+            'value': obj.co2_emission.value,
+            'unit': obj.co2_emission.unit
+        }
+
+
 class DisruptionLinks(fields.Raw):
     """
     Add link to disruptions on a pt object
