@@ -397,6 +397,24 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->departure->stop_point_connection_list.push_back(connexion);
     connexion->destination->stop_point_connection_list.push_back(connexion);
 }
+ double builder::get_co2_emission(const std::string& uri){
+     if (uri == "0x0"){
+         return 4.;
+     }
+     if (uri == "0x1"){
+         return 3.;
+     }
+     if (uri == "Bss"){
+         return 0.;
+     }
+     if (uri == "Bike"){
+         return 0.;
+     }
+     if (uri == "Bus"){
+         return 132.;
+     }
+    return -1.;
+ }
 
  void builder::generate_dummy_basis() {
     navitia::type::Company *company = new navitia::type::Company();
@@ -427,11 +445,30 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->uri = "0x1";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bss";
+    commercial_mode->uri = "Bss";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bike";
+    commercial_mode->uri = "Bike";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bus";
+    commercial_mode->uri = "Bus";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
         mode->idx = mt->idx;
         mode->name = mt->name;
         mode->uri = mt->uri;
+        mode->co2_emission = get_co2_emission(mt->uri);
         this->data->pt_data->physical_modes.push_back(mode);
     }
  }
