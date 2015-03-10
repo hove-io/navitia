@@ -26,10 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.scenarios import default
+from jormungandr.scenarios import default, helpers
 import copy
 import logging
-from jormungandr.scenarios.utils import JourneySorter
+from jormungandr.scenarios.utils import JourneySorter, are_equals, compare
 from navitiacommon import response_pb2
 from operator import itemgetter, indexOf, attrgetter
 from datetime import datetime, timedelta
@@ -38,7 +38,7 @@ from collections import defaultdict, OrderedDict
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
         is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
-from jormungandr.scenarios.utils import are_equals
+import itertools
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -223,7 +223,11 @@ class Scenario(default.Scenario):
         request_alternative['max_nb_journeys'] = None
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
-        self._remove_extra_journeys(response_tc.journeys, max_nb_journeys)
+
+        self._remove_extra_journeys(response_tc.journeys, max_nb_journeys,
+                                    request['clockwise'],
+                                    timezone=instance.timezone)
+
         max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
         if max_duration:
             #we find the max_duration with the pure tc call, so we use it for the alternatives
@@ -232,7 +236,7 @@ class Scenario(default.Scenario):
         if not all([is_admin(request['origin']), is_admin(request['destination'])]):
             logger.debug('journeys with alternative mode')
             response_alternative = self._get_alternatives(request_alternative, instance, response_tc.journeys)
-            logger.debug('merge and sort reponses')
+            logger.debug('merge and sort responses')
             self.merge_response(response_tc, response_alternative)
         else:
             logger.debug('don\'t search alternative for admin to admin journeys')
@@ -277,19 +281,63 @@ class Scenario(default.Scenario):
             del alternative_journeys[idx]
 
 
-    def _remove_extra_journeys(self, journeys, max_nb_journeys):
-        if not max_nb_journeys or len(journeys) <= max_nb_journeys:
-            return
-        to_keep = set()
-        count = 0
-        for idx, journey in enumerate(journeys):
-            if journey.type == 'non_pt_walk':
-                to_keep.add(idx)
-            elif count < max_nb_journeys:
-                to_keep.add(idx)
+    def _remove_extra_journeys(self, journeys, max_nb_journeys, clockwise, timezone):
+        """
+        for destineo we want to filter certain journeys
+
+        - we want at most 'max_nb_journeys', but we always want to keep the non_pt_walk
+
+        - we don't want 2 alternatives using the same buses but with different boarding stations
+
+        for similar journeys, we want to pick up:
+            - the earliest one (for clockwise, else tardiest)
+            - the one that leave the tardiest (for clockwise, else earliest)
+            - the one with the less fallback (we know it's walking)
+        """
+        to_delete = []
+
+        def same_vjs(j):
+            #same departure date and vjs
+            journey_dt = datetime.utcfromtimestamp(j.departure_date_time)
+            journey_date = pytz.utc.localize(journey_dt).astimezone(pytz.timezone(timezone)).date()
+            yield journey_date
+            for s in j.sections:
+                yield s.uris.vehicle_journey
+
+        def get_journey_to_remove(idx_j1, j1, idx_j2, j2):
+            if clockwise:
+                if j1.arrival_date_time != j2.arrival_date_time:
+                    return idx_j1 if j1.arrival_date_time > j2.arrival_date_time else idx_j2
+                if j1.departure_date_time != j2.departure_date_time:
+                    return idx_j1 if j1.departure_date_time < j2.departure_date_time else idx_j2
+            else:
+                if j1.departure_date_time != j2.departure_date_time:
+                    return idx_j1 if j1.departure_date_time < j2.departure_date_time else idx_j2
+                if j1.arrival_date_time != j2.arrival_date_time:
+                    return idx_j1 if j1.arrival_date_time > j2.arrival_date_time else idx_j2
+
+            return idx_j1 if helpers.walking_duration(j1) > helpers.walking_duration(j2) else idx_j2
+
+        for (idx1, j1), (idx2, j2) in itertools.combinations(enumerate(journeys), 2):
+            if idx1 in to_delete or idx2 in to_delete:
+                continue
+
+            if not compare(j1, j2, same_vjs):
+                continue
+
+            to_delete.append(get_journey_to_remove(idx1, j1, idx2, j2))
+
+        if max_nb_journeys:
+            count = 0
+            for idx, journey in enumerate(journeys):
+                if idx in to_delete:
+                    continue
+                if journey.type == 'non_pt_walk':
+                    continue
+                if count >= max_nb_journeys:
+                    to_delete.append(idx)
                 count += 1
 
-        to_delete = list(set(range(len(journeys))) - to_keep)
         to_delete.sort(reverse=True)
         logger = logging.getLogger(__name__)
         logger.debug('remove %s extra journeys: %s', len(to_delete), [journeys[i].type for i in to_delete])
@@ -340,8 +388,6 @@ class Scenario(default.Scenario):
         for idx in to_delete:
             del journeys[idx]
 
-
-
     def _custom_sort_journeys(self, response, timezone, clockwise=True):
         if len(response.journeys) > 1:
             response.journeys.sort(DestineoJourneySorter(clockwise, timezone))
@@ -366,10 +412,10 @@ class Scenario(default.Scenario):
         logger = logging.getLogger(__name__)
         logger.debug('calling extremes for destineo')
         if 'journeys' not in resp:
-            return (None, None)
+            return None, None
         list_journeys = self.filter_journeys(resp['journeys'])
         if not list_journeys:
-            return (None, None)
+            return None, None
         prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
         next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
         f_datetime = "%Y%m%dT%H%M%S"
@@ -378,5 +424,5 @@ class Scenario(default.Scenario):
         datetime_after = f_departure + timedelta(minutes=1)
         datetime_before = f_arrival - timedelta(minutes=1)
 
-        return (datetime_before, datetime_after)
+        return datetime_before, datetime_after
 

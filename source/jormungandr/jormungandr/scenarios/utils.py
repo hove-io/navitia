@@ -50,19 +50,28 @@ pt_object_type = {
     'stop_area': type_pb2.STOP_AREA
 }
 
-def are_equals(journey1, journey2):
+
+def compare(obj1, obj2, compare_generator):
     """
-    To decide that 2 journeys are equals, we loop through all values of the
-    compare_journey_generator and stop at the first non equals value
+    To decide that 2 objects are equals, we loop through all values of the
+    compare_generator and stop at the first non equals value
 
     Note: the fillvalue is the value used when a generator is consumed
     (if the 2 generators does not return the same number of elt).
     by setting it to object(), we ensure that it will be !=
     from any values returned by the other generator
     """
-    return all(a == b for a, b in itertools.izip_longest(compare_journey_generator(journey1),
-                                                         compare_journey_generator(journey2),
+    return all(a == b for a, b in itertools.izip_longest(compare_generator(obj1),
+                                                         compare_generator(obj2),
                                                          fillvalue=object()))
+
+
+def are_equals(journey1, journey2):
+    """
+    To decide that 2 journeys are equals, we loop through all values of the
+    compare_journey_generator and stop at the first non equals value
+    """
+    return compare(journey1, journey2, compare_journey_generator)
 
 
 def compare_journey_generator(journey):
@@ -84,7 +93,7 @@ def compare_journey_generator(journey):
         yield s.type
         yield s.begin_date_time
         yield s.end_date_time
-        yield s.vehicle_journey.uri if s.vehicle_journey else 'no_vj'
+        yield s.uris.vehicle_journey
         #NOTE: we want to ensure that we always yield the same number of elt
         yield s.origin.uri if s.origin else 'no_origin'
         yield s.destination.uri if s.destination else 'no_destination'
