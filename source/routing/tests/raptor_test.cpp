@@ -1743,8 +1743,6 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
     test_2nd_and_3rd_pass_ext_checks(res2);
 }
 
-// this test doesn't pass for the moment because of performances problems
-#if 0
 // 1: A-----------B---C
 // 2:     A---B
 // We want:
@@ -1767,19 +1765,73 @@ BOOST_AUTO_TEST_CASE(direct_and_1trans_at_same_dt) {
                               7900, 0, DateTimeUtils::inf, false, false, true);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
-    BOOST_REQUIRE_EQUAL(res[0].items.size(), 1);
-    BOOST_REQUIRE_EQUAL(res[1].items.size(), 3);
+    const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
+    const auto& fastest = res[0].items.size() == 1 ? res[1] : res[0];
+    BOOST_REQUIRE_EQUAL(direct.items.size(), 1);
+    BOOST_REQUIRE_EQUAL(fastest.items.size(), 3);
 
     //    A-------1-------C
-    BOOST_CHECK_EQUAL(res[0].items[0].departure.time_of_day().total_seconds(), 8000);
-    BOOST_CHECK_EQUAL(res[0].items[0].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(direct.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(direct.items[0].arrival.time_of_day().total_seconds(), 12000);
 
     //        A-2-BzzzB-1-C
-    BOOST_CHECK_EQUAL(res[1].items[0].departure.time_of_day().total_seconds(), 9000);
-    BOOST_CHECK_EQUAL(res[1].items[0].arrival.time_of_day().total_seconds(), 10000);
-    BOOST_CHECK_EQUAL(res[1].items[1].departure.time_of_day().total_seconds(), 10000);
-    BOOST_CHECK_EQUAL(res[1].items[1].arrival.time_of_day().total_seconds(), 11000);
-    BOOST_CHECK_EQUAL(res[1].items[2].departure.time_of_day().total_seconds(), 11000);
-    BOOST_CHECK_EQUAL(res[1].items[2].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[0].departure.time_of_day().total_seconds(), 9000);
+    BOOST_CHECK_EQUAL(fastest.items[0].arrival.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(fastest.items[1].departure.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(fastest.items[1].arrival.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[2].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[2].arrival.time_of_day().total_seconds(), 12000);
 }
-#endif
+
+// we have:
+//   ====A-----1-----B-----1-----C
+//===========D-2-B
+//                       B-3-C
+//
+// we want:
+//   ====A-----1-----B-----1-----C
+//   ====A-----1-----BzzzB-3-C
+//
+// and not:
+//===========D-2-BzzzB-----1-----C
+BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
+    ed::builder b("20120614");
+    b.vj("1")("A", 8000, 8000)("B", 11000, 11000)("C", 14000, 14000);
+    b.vj("2")("D", 9000, 9000)("B", 10000, 10000);
+    b.vj("3")("B", 12000, 12000)("C", 13000, 13000);
+    b.connection("B", "B", 0);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 1000_s},
+        {SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front()), 3000_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front()), 0_s}
+    };
+    auto res = raptor.compute_all(departures, arrivals, 1000, false, true);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
+    const auto& fastest = res[0].items.size() == 1 ? res[1] : res[0];
+
+    //   ====A-----1-----B-----1-----C
+    BOOST_REQUIRE_EQUAL(direct.items.size(), 1);
+    BOOST_CHECK_EQUAL(direct.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(direct.items[0].arrival.time_of_day().total_seconds(), 14000);
+
+    //   ====A-----1-----BzzzB-3-C
+    BOOST_REQUIRE_EQUAL(fastest.items.size(), 3);
+    BOOST_CHECK_EQUAL(fastest.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(fastest.items[0].arrival.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[1].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[1].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[2].departure.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[2].arrival.time_of_day().total_seconds(), 13000);
+}

@@ -31,16 +31,63 @@ www.navitia.io
 #pragma once
 
 #include "raptor.h"
+#include "utils/multi_obj_pool.h"
 
 namespace navitia { namespace routing {
 
+struct Journey {
+    struct Section {
+        Section(const type::StopTime& in,
+                const DateTime in_dt,
+                const type::StopTime& out,
+                const DateTime out_dt):
+            get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
+        {}
+        const type::StopTime* get_in_st;
+        DateTime get_in_dt;
+        const type::StopTime* get_out_st;
+        DateTime get_out_dt;
+    };
+
+    bool better_on_dt(const Journey& that, bool request_clockwise) const;
+    bool better_on_transfer(const Journey& that, bool) const;
+    bool better_on_sn(const Journey& that, bool) const;
+    friend std::ostream& operator<<(std::ostream& os, const Journey& j);
+
+    std::vector<Section> sections;
+    navitia::time_duration sn_dur = 0_s;// street network duration
+    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
+    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
+    DateTime departure_dt = 0;// the departure dt of the journey, including sn
+    DateTime arrival_dt = 0;// the arrival dt of the journey, including sn
+    uint8_t nb_vj_extentions = 0;
+};
+
+// this structure compare 2 solutions.  It chooses which solutions
+// will be kept at the end (only non dominated solutions will be kept
+// by the pool).
+struct Dominates {
+    bool request_clockwise;
+    Dominates(bool rc): request_clockwise(rc) {}
+    bool operator()(const Journey& lhs, const Journey& rhs) const {
+        return lhs.better_on_dt(rhs, request_clockwise)
+            && lhs.better_on_transfer(rhs, request_clockwise)
+            && lhs.better_on_sn(rhs, request_clockwise);
+    }
+};
+
+typedef ParetoFront<Journey, Dominates> Solutions;
+
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).
-std::vector<Path> read_solutions(const RAPTOR& raptor,
-                      const bool clockwise,
-                      const RAPTOR::vec_stop_point_duration& deps,
-                      const RAPTOR::vec_stop_point_duration& arrs,
-                      const bool disruption_active,
-                      const type::AccessibiliteParams& accessibilite_params);
+Solutions
+read_solutions(const RAPTOR& raptor,
+               const bool clockwise,
+               const RAPTOR::vec_stop_point_duration& deps,
+               const RAPTOR::vec_stop_point_duration& arrs,
+               const bool disruption_active,
+               const type::AccessibiliteParams& accessibilite_params);
+
+Path make_path(const Journey& journey, const type::Data& data);
 
 }} // namespace navitia::routing

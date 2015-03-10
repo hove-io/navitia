@@ -49,6 +49,10 @@ typedef Idx<type::JourneyPattern> JpIdx;
 typedef Idx<type::StopPoint> SpIdx;
 
 struct Labels {
+    inline friend void swap(Labels& lhs, Labels& rhs) {
+        swap(lhs.dt_pts, rhs.dt_pts);
+        swap(lhs.dt_transfers, rhs.dt_transfers);
+    }
     // initialize the structure according to the number of jpp
     inline void init_inf(const std::vector<type::StopPoint*>& stops) {
         init(stops, DateTimeUtils::inf);
