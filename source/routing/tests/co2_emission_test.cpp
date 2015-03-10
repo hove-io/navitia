@@ -121,5 +121,43 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
 
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
     pbnavitia::Section section = resp.journeys(0).sections(0);
+    pbnavitia::Co2Emission co2_emission = section.co2_emission();
+    BOOST_REQUIRE_EQUAL(co2_emission.unit(), "gEC");
+    BOOST_REQUIRE_EQUAL(co2_emission.value(), 0.);
+}
+
+// co2_emission defined and < 0.0
+BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.sa("stop_area:stop1", 4.2973, 46.945686);
+    b.sa("stop_area:stop2", 4.373721, 46.665326);
+    b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["0x0"];
+    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
+    mt->co2_emission=-1.;
+    jp->physical_mode = mt;
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
+    navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
+    navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
+
+    ng::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, false, true);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    pbnavitia::Section section = resp.journeys(0).sections(0);
     BOOST_REQUIRE_EQUAL(section.has_co2_emission(), false);
 }
