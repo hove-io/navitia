@@ -494,8 +494,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
             destination_pb->Clear();
             fill_pb_placemark(destination, d, destination_pb, 2);
+            co2_emission_aggregator(pb_journey);
         }
     }
+
 }
 
 static pbnavitia::Response

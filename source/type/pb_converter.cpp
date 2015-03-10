@@ -953,9 +953,11 @@ static void finalize_section(pbnavitia::Section* section,
         break;
     case georef::PathItem::TransportCaracteristic::Bike:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
+        fill_co2_emission_by_mode(section, data, "physical_mode:Bike");
         break;
     case georef::PathItem::TransportCaracteristic::Car:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
+        fill_co2_emission_by_mode(section, data, "physical_mode:Car");
         break;
     case georef::PathItem::TransportCaracteristic::BssTake:
         section->set_type(pbnavitia::BSS_RENT);
