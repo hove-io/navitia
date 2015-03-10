@@ -413,6 +413,9 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      if (uri == "Bus"){
          return 132.;
      }
+     if (uri == "Car"){
+         return 184.;
+     }
     return -1.;
  }
 
@@ -463,11 +466,17 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->uri = "Bus";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Car";
+    commercial_mode->uri = "Car";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
         mode->idx = mt->idx;
         mode->name = mt->name;
-        mode->uri = mt->uri;
+        mode->uri = "physical_mode:" + mt->uri;
         mode->co2_emission = get_co2_emission(mt->uri);
         this->data->pt_data->physical_modes.push_back(mode);
     }
