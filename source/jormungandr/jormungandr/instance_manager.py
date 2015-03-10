@@ -168,7 +168,6 @@ class InstanceManager(object):
             if instance.init():
                 self._clear_cache()
 
-
     def thread_ping(self, timer=10):
         """
         fetch krakens metadata

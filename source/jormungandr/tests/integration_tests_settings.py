@@ -5,7 +5,9 @@ SAVE_STAT = True
 
 DISABLE_DATABASE = True
 
-# désactivation de l'authentification
+INSTANCE_TIMEOUT = 500  # for tests we want only 1/2 seconds timeout instead of the normal 10s timeout
+
+# do not authenticate for tests
 PUBLIC = True
 
 LOGGER = {
