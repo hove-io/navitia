@@ -33,6 +33,9 @@ www.navitia.io
 #include "georef.h"
 #include <boost/math/constants/constants.hpp>
 #include <chrono>
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+#include <boost/foreach.hpp>
+#endif
 
 namespace navitia { namespace georef {
 
@@ -216,19 +219,29 @@ void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
+#ifndef _DEBUG_DIJKSTRA_QUANTUM_
         dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
+#else
+        dijkstra(starting_edge[source_e], printer_distance_visitor(radius, distances, "source"));
+#endif
     } catch(DestinationFound){}
 
     try {
+#ifndef _DEBUG_DIJKSTRA_QUANTUM_
         dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
+#else
+        dijkstra(starting_edge[target_e], printer_distance_visitor(radius, distances, "target"));
+#endif
     } catch(DestinationFound){}
 
 }
 
 std::vector<std::pair<type::idx_t, navitia::time_duration>>
 PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
-    if (! starting_edge.found)
+    if (! starting_edge.found){
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
         return {};
+    }
 
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
     float crow_flies_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
@@ -238,6 +251,9 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proxim
         return {};
 
     start_distance_dijkstra(radius);
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+    dump_dijkstra_for_quantum(starting_edge);
+#endif
 
     std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
     const auto max = bt::pos_infin;
@@ -445,7 +461,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
             dump_dijkstra_for_quantum(target);
 #endif
 
-			return {max, source_e};
+            return {max, source_e};
         }
         try {
             dijkstra(starting_edge[target_e], target_all_visitor({target[source_e], target[target_e]}));
@@ -682,25 +698,26 @@ void PathFinder::dump_dijkstra_for_quantum(const ProjectionData& target) {
      * the files are to be open in quantum with the csv layer
      * */
     std::ofstream start, destination, out_edge;
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "genrating debug trace for streetnetwork");
     start.open("start.csv");
     destination.open("destination.csv");
     start << "x;y;mode transport" << std::endl
-          << geo_ref.graph[starting_edge.source].coord << ";" << (int)(mode) << std::endl
-          << geo_ref.graph[starting_edge.target].coord << ";" << (int)(mode) << std::endl;
+          << geo_ref.graph[starting_edge[source_e]].coord << ";" << (int)(mode) << std::endl
+          << geo_ref.graph[starting_edge[target_e]].coord << ";" << (int)(mode) << std::endl;
     destination << "x;y;" << std::endl
-          << geo_ref.graph[target.source].coord << std::endl
-          << geo_ref.graph[target.target].coord << std::endl;
+          << geo_ref.graph[target[source_e]].coord << std::endl
+          << geo_ref.graph[target[target_e]].coord << std::endl;
 
     out_edge.open("out_edges.csv");
     out_edge << "target;x;y;" << std::endl;
-    BOOST_FOREACH(edge_t e, boost::out_edges(target.source, geo_ref.graph)) {
+    BOOST_FOREACH(edge_t e, boost::out_edges(target[source_e], geo_ref.graph)) {
         out_edge << "source;" << geo_ref.graph[boost::target(e, geo_ref.graph)].coord << std::endl;
     }
-    BOOST_FOREACH(edge_t e, boost::out_edges(target.target, geo_ref.graph)) {
+    BOOST_FOREACH(edge_t e, boost::out_edges(target[target_e], geo_ref.graph)) {
         out_edge << "target;" << geo_ref.graph[boost::target(e, geo_ref.graph)].coord << std::endl;
     }
     try {
-        dijkstra(starting_edge.source, printer_all_visitor({target.source, target.target}));
+        dijkstra(starting_edge[source_e], printer_all_visitor({target[source_e], target[target_e]}));
     } catch(DestinationFound) { }
 }
 #endif
