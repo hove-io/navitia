@@ -196,9 +196,7 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
 static IdxMap<type::StopPoint, DateTime>
 snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> best_labels) {
     for (auto& dt: best_labels.values()) {
-        if (dt != DateTimeUtils::inf && dt != DateTimeUtils::min) {
-            dt += clockwise ? -1 : 1;
-        }
+        if (is_dt_initialized(dt)) { dt += clockwise ? -1 : 1; }
     }
     return std::move(best_labels);
 }
