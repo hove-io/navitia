@@ -47,7 +47,7 @@ static Label next_label(Label label, Ticket ticket, const SectionKey & section) 
     label.network = section.network;
 
 
-    if(ticket.type == Ticket::ODFare){
+    if (ticket.type == Ticket::ODFare) {
         if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // It's a new OD ticket
             label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
@@ -56,15 +56,15 @@ static Label next_label(Label label, Ticket ticket, const SectionKey & section) 
 
             ticket.sections.push_back(section);
             label.tickets.push_back(ticket);
-        }else{ // We got an old ticket
+        } else { // We got an old ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
         }
 
-    }else{
+    } else {
         // empty ticket, it is juste a change
         // we have to update the number of changes and the duration with the same ticket
-        if(ticket.caption == "" && ticket.value == 0){
+        if (ticket.caption == "" && ticket.value == 0) {
             label.nb_changes++;
         } else {
             // we bought a new ticket
@@ -77,8 +77,9 @@ static Label next_label(Label label, Ticket ticket, const SectionKey & section) 
             label.start_time = section.start_time;
             label.stop_area = section.start_stop_area;
         }
-        if(label.tickets.size() == 0)
+        if (label.tickets.size() == 0) {
             throw navitia::exception("internal problem");
+        }
         label.tickets.back().sections.push_back(section);
     }
     label.current_type = ticket.type;
@@ -168,10 +169,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                             catch(no_ticket) { //the ticket_found bool is still false
                             }
                             if (! ticket_found) {
-                                ticket.type = Ticket::None;
-                                ticket.key = transition.ticket_key;
-                                ticket.value = -100; // no price
-                                ticket.comment = "no price found";
+                                ticket = make_default_ticket();
                             }
                         }
                         if (transition.global_condition == Transition::GlobalCondition::exclusive)
