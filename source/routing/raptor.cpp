@@ -243,11 +243,11 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     const unsigned first_pass_count = count;
     for (unsigned c = 1; c <= first_pass_count; ++c) {
         const auto& working_labels = first_pass_labels[c];
-        clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
         bool launch_snd_pass = false;
         for (const auto& a: calc_dest) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
 
+            if (! launch_snd_pass) { clear(!clockwise, departure_datetime + (clockwise ? -1 : 1)); }
             launch_snd_pass = true;
             init({{a.first, 0_s}}, working_labels.dt_pt(a.first), !clockwise, accessibilite_params.properties);
         }
