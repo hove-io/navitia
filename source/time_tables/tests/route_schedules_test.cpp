@@ -88,7 +88,7 @@ struct route_schedule_fixture {
 
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
-    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 100,
+    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", boost::optional<const std::string>(), {}, d("20120615T070000"), 86400, 100,
                                                                    1, 3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
@@ -103,7 +103,7 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
-    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, d("20120615T070000"), 86400, 0,
+    pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", boost::optional<const std::string>(), {}, d("20120615T070000"), 86400, 0,
                                                                    1, 3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
