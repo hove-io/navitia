@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
-    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["0x0"];
+    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
     navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
     navitia::type::StopPoint *dep = b.data->pt_data->stop_points_map["stop_area:stop1"];
     navitia::type::StopPoint *arr = b.data->pt_data->stop_points_map["stop_area:stop2"];
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
 
-    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["0x0"];
+    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
     navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
     mt->co2_emission=0.0;
     jp->physical_mode = mt;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
 
-    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["0x0"];
+    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
     navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
     mt->co2_emission=-1.;
     jp->physical_mode = mt;

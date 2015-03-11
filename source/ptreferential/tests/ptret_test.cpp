@@ -173,10 +173,10 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(navitia::type::Type_e::PhysicalMode, "", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(indexes.size(), 6);
 
     indexes = make_query(navitia::type::Type_e::CommercialMode, "", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(indexes.size(), 6);
 
     indexes = make_query(navitia::type::Type_e::Connection, "", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     indexes = make_query(navitia::type::Type_e::Network, "network.uri=base_network", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-    indexes = make_query(navitia::type::Type_e::PhysicalMode, "physical_mode.uri=0x1", *(b.data));
+    indexes = make_query(navitia::type::Type_e::PhysicalMode, "physical_mode.uri=physical_mode:0x1", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(navitia::type::Type_e::CommercialMode, "commercial_mode.uri=0x1", *(b.data));
