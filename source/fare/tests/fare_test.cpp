@@ -252,6 +252,13 @@ BOOST_FIXTURE_TEST_CASE(other_date, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,170);
 }
 
+BOOST_FIXTURE_TEST_CASE(out_date, fare_load_fixture) {
+    // Test of a date out of the validity period.
+    keys.clear();
+    keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2015|03|11;04|40;04|50;4;1;metro");
+    res = f.compute_fare(string_to_path(keys));
+    BOOST_CHECK_EQUAL(res.tickets.size(), 0);
+}
 BOOST_FIXTURE_TEST_CASE(noctilien, fare_load_fixture) {
     // On teste le noctilien
     keys.clear();
