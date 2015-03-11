@@ -409,7 +409,7 @@ Solutions read_solutions(const RAPTOR& raptor,
             } catch (stop_search&) {}
         }
     }
-    return reader.solutions;
+    return std::move(reader.solutions);
 }
 
 } // anonymous namespace
