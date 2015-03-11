@@ -31,10 +31,11 @@
 # www.navitia.io
 import importlib
 from flask_restful.representations import json
-from flask import request
+from flask import request, make_response
 from jormungandr import rest_api
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
+import simplejson
 
 
 @rest_api.representation("text/jsonp")
@@ -44,6 +45,14 @@ def output_jsonp(data, code, headers=None):
     callback = request.args.get('callback', False)
     if callback:
         resp.data = str(callback) + '(' + resp.data + ')'
+    return resp
+
+
+@rest_api.representation("text/json")
+@rest_api.representation("application/json")
+def output_json(data, code, headers=None):
+    resp = make_response(simplejson.dumps(data), code)
+    resp.headers.extend(headers or {})
     return resp
 
 # If modules are configured, then load and run them
