@@ -40,6 +40,7 @@ typedef std::vector<std::string> vector_string;
 typedef std::pair<DateTime, const type::StopTime*> vector_date_time;
 
 pbnavitia::Response route_schedule(const std::string & line_externalcode,
+        const boost::optional<const std::string> calendar_id,
         const std::vector<std::string>& forbidden_uris,
         const boost::posix_time::ptime datetime, uint32_t duration, size_t max_stop_date_times, uint32_t interface_version,
         const uint32_t max_depth, int count, int start_page, const type::Data &d, bool disruption_active,
