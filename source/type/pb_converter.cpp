@@ -243,6 +243,15 @@ void fill_pb_object(const nt::StopArea * sa,
                            depth-1, now, action_period);
         }
     }
+    if (depth > 1) {
+        std::vector<nt::idx_t> commercial_mode_idxes;
+        commercial_mode_idxes = sa->get(navitia::type::Type_e::CommercialMode, *(data.pt_data));
+        for (const nt::idx_t idx : commercial_mode_idxes) {
+            nt::CommercialMode* commercial_mode = data.pt_data->commercial_modes[idx];
+            fill_pb_object(commercial_mode, data, stop_area->add_commercial_modes(), 0, now, action_period,
+                           show_codes, display_all_publishable_disruption);
+        }
+    }
 
     if(display_all_publishable_disruption){
         for(const auto message : sa->get_publishable_messages(now)){
