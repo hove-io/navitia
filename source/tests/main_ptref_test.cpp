@@ -70,7 +70,7 @@ struct data_set {
         b.data->pt_data->calendars.push_back(monday_cal);
 
         //add lines
-        b.vj("network:R", "line:A", "", "", true, "vj1")
+        b.vj("line:A", "", "", true, "vj1")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);

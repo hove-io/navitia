@@ -110,7 +110,7 @@ struct builder{
           const std::string& meta_vj="",
           const std::string& jp_uri = "");
 
-    VJ vj(const std::string& network_name,
+    VJ vj_with_network(const std::string& network_name,
           const std::string& line_name,
           const std::string& validity_pattern = "11111111",
           const std::string& block_id="",

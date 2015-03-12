@@ -220,7 +220,7 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logging.error("request: " + request.SerializeToString() + " failed " + self.socket_path)
+                    logging.error("request: " + str(request) + " failed " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):

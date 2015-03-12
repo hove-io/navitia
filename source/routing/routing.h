@@ -73,6 +73,7 @@ inline std::ostream& operator<< (std::ostream& ss, ItemType t) {
     case ItemType::stay_in: return ss << "stay_in";
     case ItemType::waiting: return ss << "waiting";
     }
+    return ss;
 }
 
 /** Étape d'un itinéraire*/

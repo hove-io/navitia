@@ -18,18 +18,18 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* vj_wednesday;
     calendar_fixture() : b("20120614") {
         //2 vj during the week
-        b.vj("network:R", "line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
+        b.vj("line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
+        b.vj("line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
         //NOTE: we give a first random validity pattern because the builder try to factorize them
 
         //only one on the week end
-        b.vj("network:R", "line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
+        b.vj("line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
 
         // and one everytime
-        b.vj("network:R", "line:A", "1100101", "", true, "all")("stop1", 15 * 3600, 15 * 3600 + 10 * 60)("stop2", 16 * 3600, 16 * 3600 + 10 * 60);
+        b.vj("line:A", "1100101", "", true, "all")("stop1", 15 * 3600, 15 * 3600 + 10 * 60)("stop2", 16 * 3600, 16 * 3600 + 10 * 60);
 
         // and wednesday that will not be matched to any cal
-        b.vj("network:R", "line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
+        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
         b.finish();
         b.data->build_uri();

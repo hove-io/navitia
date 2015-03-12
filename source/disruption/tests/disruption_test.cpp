@@ -142,15 +142,15 @@ public:
 
     Params(): b("20120614"), end_date("20130614T000000"_dt_time_stamp) {
         std::vector<std::string> forbidden;
-        b.vj("network:R", "line:A", "11111111", "", true, "")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)
+        b.vj_with_network("network:R", "line:A", "11111111", "", true, "")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:R", "line:S", "11111111", "", true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)
+        b.vj_with_network("network:R", "line:S", "11111111", "", true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop6", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:K","line:B","11111111","",true, "")("stop_area:stop3", 8*3600 +10*60, 8*3600 + 11 * 60)
+        b.vj_with_network("network:K","line:B","11111111","",true, "")("stop_area:stop3", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop4", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
+        b.vj_with_network("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
+        b.vj_with_network("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
         b.finish();

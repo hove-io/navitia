@@ -60,12 +60,12 @@ public:
 
     Params():b("20140113") {
 
-        b.vj("network:R", "line:A", "1111111111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
-        b.vj("network:R", "line:C", "1111111111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 25 * 60, 11 * 3600 + 25 * 60);
-        b.vj("network:R", "line:D", "1111111111111", "", true, "vj3")("stop_area:stop2", 11 * 3600 + 30 * 60, 11 * 3600 + 30 * 60)("stop_area:stop3", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
-        b.vj("network:R", "line:E", "1111111111111", "", true, "vj4")("stop_area:stop4", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop1", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
-        b.vj("network:R", "line:F", "1111111111111", "", true, "vj5")("stop_area:stop5", 11 * 3600 + 30 * 60, 11 * 3600 + 30 * 60)("stop_area:stop6", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
-        b.vj("network:R", "line:G", "1111111111111", "", true, "vj6")("stop_area:stop7", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop8", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
+        b.vj("line:A", "1111111111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
+        b.vj("line:C", "1111111111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 25 * 60, 11 * 3600 + 25 * 60);
+        b.vj("line:D", "1111111111111", "", true, "vj3")("stop_area:stop2", 11 * 3600 + 30 * 60, 11 * 3600 + 30 * 60)("stop_area:stop3", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
+        b.vj("line:E", "1111111111111", "", true, "vj4")("stop_area:stop4", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop1", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
+        b.vj("line:F", "1111111111111", "", true, "vj5")("stop_area:stop5", 11 * 3600 + 30 * 60, 11 * 3600 + 30 * 60)("stop_area:stop6", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
+        b.vj("line:G", "1111111111111", "", true, "vj6")("stop_area:stop7", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop8", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
         b.connection("stop_area:stop2", "stop_area:stop2", 120);
         b.connection("stop_area:stop1", "stop_area:stop1", 120);
         b.connection("stop_area:stop2", "stop_area:stop5", 120);
