@@ -48,7 +48,15 @@ typedef Idx<type::JourneyPatternPoint> JppIdx;
 typedef Idx<type::JourneyPattern> JpIdx;
 typedef Idx<type::StopPoint> SpIdx;
 
+inline bool is_dt_initialized(const DateTime dt) {
+    return dt != DateTimeUtils::inf && dt != DateTimeUtils::min;
+ }
+
 struct Labels {
+    inline friend void swap(Labels& lhs, Labels& rhs) {
+        swap(lhs.dt_pts, rhs.dt_pts);
+        swap(lhs.dt_transfers, rhs.dt_transfers);
+    }
     // initialize the structure according to the number of jpp
     inline void init_inf(const std::vector<type::StopPoint*>& stops) {
         init(stops, DateTimeUtils::inf);
@@ -77,10 +85,10 @@ struct Labels {
     }
 
     inline bool pt_is_initialized(SpIdx sp_idx) const {
-        return dt_pt(sp_idx) != DateTimeUtils::inf && dt_pt(sp_idx) != DateTimeUtils::min;
+        return is_dt_initialized(dt_pt(sp_idx));
     }
     inline bool transfer_is_initialized(SpIdx sp_idx) const {
-        return dt_transfer(sp_idx) != DateTimeUtils::inf && dt_transfer(sp_idx) != DateTimeUtils::min;
+        return is_dt_initialized(dt_transfer(sp_idx));
     }
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {

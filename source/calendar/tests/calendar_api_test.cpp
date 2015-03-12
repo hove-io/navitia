@@ -63,8 +63,8 @@ struct calendar_fixture {
     ed::builder b;
     calendar_fixture() : b("20140301") {
 
-        b.vj("network:R", "line:A", "1", "", true, "VJA")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("network:R", "line:B", "1", "", true, "VJB")("stop11", 11 * 3600, 11 * 3600 + 10 * 60)("stop22", 14 * 3600, 14 * 3600 + 10 * 60);
+        b.vj("line:A", "1", "", true, "VJA")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
+        b.vj("line:B", "1", "", true, "VJB")("stop11", 11 * 3600, 11 * 3600 + 10 * 60)("stop22", 14 * 3600, 14 * 3600 + 10 * 60);
         b.data->build_uri();
 
         auto calA = new navitia::type::Calendar(b.data->meta->production_date.begin());

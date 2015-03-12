@@ -55,7 +55,6 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
     auto& working_labels = labels[count];
     auto workingDt = state.workingDate;
     auto vj = state.vj;
-    bool add_vj = false;
     bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
@@ -77,24 +76,13 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             auto sp = st.journey_pattern_point->stop_point;
             const auto sp_idx = SpIdx(*sp);
 
-            // for performance reason, we desactivate weakly
-            // dominated solutions for the moment.
-            //if (v.comp(best_labels_pts[sp_idx], workingDt)) { continue; }
-            //if (!v.comp(workingDt, working_labels.dt_pt(sp_idx))) { continue; }
             if (! v.comp(workingDt, best_labels_pts[sp_idx])) { continue; }
 
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             best_labels_pts[sp_idx] = workingDt;
-            add_vj = true;
             result = true;
         }
-        //If we never marked a vj, we don't want to continue
-        //This is usefull when there is a loop
-        if(add_vj) {
-            vj = v.get_extension_vj(vj);
-        } else {
-            vj = nullptr;
-        }
+        vj = v.get_extension_vj(vj);
     }
     return result;
 }
@@ -120,10 +108,6 @@ bool RAPTOR::foot_path(const Visitor& v) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime next = v.combine(previous, conn.duration);
 
-            // for performance reason, we desactivate weakly
-            // dominated solutions for the moment.
-            //if (v.comp(best_labels_transfers[destination_sp_idx], next)) { continue; }
-            //if (! v.comp(next, working_labels.mut_dt_transfer(destination_sp_idx))) { continue; }
             if (! v.comp(next, best_labels_transfers[destination_sp_idx])) { continue; }
 
             //if we can improve the best label, we mark it
@@ -209,6 +193,26 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
 
+static IdxMap<type::StopPoint, DateTime>
+snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> best_labels) {
+    for (auto& dt: best_labels.values()) {
+        if (is_dt_initialized(dt)) { dt += clockwise ? -1 : 1; }
+    }
+    return std::move(best_labels);
+}
+static void init_best_pts_snd_pass(const RAPTOR::vec_stop_point_duration& departures,
+                                   const DateTime& departure_datetime,
+                                   const bool clockwise,
+                                   IdxMap<type::StopPoint, DateTime>& best_labels) {
+    for (const auto& d: departures) {
+        if (clockwise) {
+            best_labels[d.first] = departure_datetime + d.second.total_seconds() - 1;
+        } else {
+            best_labels[d.first] = departure_datetime - d.second.total_seconds() + 1;
+        }
+    }
+}
+
 std::vector<Path>
 RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     const vec_stop_point_duration& destinations,
@@ -221,17 +225,44 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     const std::vector<std::string>& forbidden_uri,
                     bool clockwise) {
 
-    std::vector<Path> result;
+    auto solutions = Solutions(Dominates(clockwise));
 
-    auto calc_dep = clockwise ? departures_ : destinations;
-    auto calc_dest = clockwise ? destinations : departures_;
+    const auto& calc_dep = clockwise ? departures_ : destinations;
+    const auto& calc_dest = clockwise ? destinations : departures_;
 
     first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active, allow_odt,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
-    const auto reader_results = read_solutions(*this, clockwise, departures_, destinations, disruption_active, accessibilite_params);
+    swap(labels, first_pass_labels);
+    auto best_labels_pts_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_transfers);
+    init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
+    auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
 
-    return filter_journeys(reader_results);
+    const unsigned first_pass_count = count;
+    for (unsigned c = 1; c <= first_pass_count; ++c) {
+        const auto& working_labels = first_pass_labels[c];
+        bool launch_snd_pass = false;
+        for (const auto& a: calc_dest) {
+            if (! working_labels.pt_is_initialized(a.first)) { continue; }
+
+            if (! launch_snd_pass) { clear(!clockwise, departure_datetime + (clockwise ? -1 : 1)); }
+            launch_snd_pass = true;
+            init({{a.first, 0_s}}, working_labels.dt_pt(a.first), !clockwise, accessibilite_params.properties);
+        }
+        if (launch_snd_pass) {
+            best_labels_pts = best_labels_pts_for_snd_pass;
+            best_labels_transfers = best_labels_transfers_for_snd_pass;
+            boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
+            const auto reader_results =
+                read_solutions(*this, !clockwise, departures_, destinations,
+                               disruption_active, accessibilite_params);
+            for (const auto& s: reader_results) { solutions.add(s); }
+        }
+    }
+
+    std::vector<Path> result;
+    for (const auto& s: solutions) { result.push_back(make_path(s, data)); }
+    return filter_journeys(result);
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
@@ -511,21 +542,16 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         // If we don't it might cause problem with overmidnight vj
                         const type::StopTime& st = *it_st;
                         workingDt = st.section_end(workingDt, visitor.clockwise());
-                        // We check if there are no drop_off_only and if the local_zone is okay
-                        if(st.valid_end(visitor.clockwise())&&
-                                (l_zone == std::numeric_limits<uint16_t>::max() ||
-                                 l_zone != st.local_traffic_zone)) {
 
-                            // for performance reason, we desactivate weakly
-                            // dominated solutions for the moment.
-                            //if (! visitor.comp(best_labels_pts[jpp.sp_idx], workingDt)
-                            //    && visitor.comp(workingDt, working_labels.mut_dt_pt(jpp.sp_idx)))
-                            if (visitor.comp(workingDt, best_labels_pts[jpp.sp_idx]))
-                            {
-                                working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
-                                best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
-                                continue_algorithm = true;
-                            }
+                        // We check if there are no drop_off_only and if the local_zone is okay
+                        if (st.valid_end(visitor.clockwise())
+                            && (l_zone == std::numeric_limits<uint16_t>::max() ||
+                                l_zone != st.local_traffic_zone)
+                            && visitor.comp(workingDt, best_labels_pts[jpp.sp_idx]))
+                        {
+                            working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
+                            best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
+                            continue_algorithm = true;
                         }
                     }
 
