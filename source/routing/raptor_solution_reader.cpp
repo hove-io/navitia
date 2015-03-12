@@ -300,7 +300,7 @@ struct RaptorSolutionReader {
         Journey j = make_journey(path, *this);
         ++nb_sol_added;
         solutions.add(std::move(j));
-        if (nb_sol_added > 100000) {
+        if (nb_sol_added > 1000) {
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "raptor_solution_reader: too much solutions, stopping...");
             throw stop_search();
