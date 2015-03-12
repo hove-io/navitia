@@ -30,7 +30,7 @@ from dateutil import parser
 
 
 def depth_argument(value, name):
-    if value < 3:
+    if int(value) > 3:
         raise ValueError("The {} argument has to be <= 3, you gave : {}"
                          .format(name, value))
     return int(value)
