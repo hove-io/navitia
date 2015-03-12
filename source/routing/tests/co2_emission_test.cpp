@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
 
     navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
     navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
-    mt->co2_emission=-1.;
+    mt->co2_emission=navitia::type::invalid_idx;
     jp->physical_mode = mt;
     navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
