@@ -221,6 +221,12 @@ class Scenario(default.Scenario):
         request_alternative = copy.deepcopy(request)
         request_alternative['min_nb_journeys'] = None
         request_alternative['max_nb_journeys'] = None
+        if 'walking' in request_alternative['origin_mode'] \
+                and len(set(request_alternative['origin_mode'])) > 1:
+            request_alternative['origin_mode'].remove('walking')
+        if 'walking' in request_alternative['destination_mode'] \
+                and len(set(request_alternative['destination_mode'])) > 1:
+            request_alternative['destination_mode'].remove('walking')
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
 
