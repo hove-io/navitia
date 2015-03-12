@@ -322,16 +322,13 @@ public:
 
 };
 
-
 enum class ConnectionType {
     StopPoint = 0,
-    StopArea = 1,
-    Walking = 2,
-    VJ = 3,
-    Guaranteed = 4,
-    Default = 5,
+    StopArea,
+    Walking,
+    VJ,
+    Default,
     stay_in,
-    guarantee,
     undefined
 };
 

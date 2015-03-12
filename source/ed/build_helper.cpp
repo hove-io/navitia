@@ -311,10 +311,10 @@ VJ builder::vj(const std::string& line_name,
                const std::string& uri,
                const std::string& meta_vj,
                const std::string& jp_uri){
-    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
+    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
 }
 
-VJ builder::vj(const std::string& network_name,
+VJ builder::vj_with_network(const std::string& network_name,
                const std::string& line_name,
                const std::string& validity_pattern,
                const std::string& block_id,
@@ -362,7 +362,7 @@ VJ builder::frequency_vj(const std::string& line_name,
                 const std::string& uri,
                 const std::string& meta_vj,
                 const std::string &jp_uri){
-    auto res = vj(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, true);
+    auto res = vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, true);
     auto vj = static_cast<nt::FrequencyVehicleJourney*>(this->data->pt_data->vehicle_journeys.back());
 
     //we get the last frequency vj of the jp, it's the one we just created

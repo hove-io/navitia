@@ -204,7 +204,10 @@ class Instance(object):
             if not socket.closed:
                 self._sockets.put(socket)
 
-    def send_and_receive(self, request, timeout=10000, quiet=False):
+    def send_and_receive(self,
+                         request,
+                         timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
+                         quiet=False):
         with self.socket(self.context) as socket:
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
@@ -217,9 +220,8 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logging.error("request: " + request.SerializeToString() + " failed " + self.socket_path)
+                    logging.error("request: " + str(request) + " failed " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
-
 
     def get_id(self, id_):
         """
@@ -239,7 +241,6 @@ class Instance(object):
         except DeadSocketException:
             return False
 
-
     def has_coord(self, lon, lat):
         return self.has_point(geometry.Point(lon, lat))
 
@@ -248,7 +249,6 @@ class Instance(object):
             return self.is_up and self.geom and self.geom.contains(p)
         except DeadSocketException:
             return False
-
 
     def get_external_codes(self, type_, id_):
         """
@@ -262,7 +262,6 @@ class Instance(object):
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
         return self.send_and_receive(req)
-
 
     def has_external_code(self, type_, id_):
         """
@@ -293,7 +292,6 @@ class Instance(object):
                     self.geom = None
                 self.timezone = response.metadatas.timezone
 
-
     def init(self):
         """
         Get and store variables of the instance.
@@ -305,10 +303,9 @@ class Instance(object):
             resp = self.send_and_receive(req, timeout=1000, quiet=True)
             self.update_property(resp)
             #the instance is automatically updated on a call
-            if resp.HasField('publication_date') and\
-                  self.publication_date != resp.publication_date:
-                    self.publication_date = resp.publication_date
-                    return True
+            if resp.HasField('publication_date') and self.publication_date != resp.publication_date:
+                self.publication_date = resp.publication_date
+                return True
         except DeadSocketException:
             #but if there is a error, we reset the geom manually
             self.geom = None

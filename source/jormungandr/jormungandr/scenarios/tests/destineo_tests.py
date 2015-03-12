@@ -26,12 +26,20 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from copy import deepcopy
 
 from nose.tools import eq_
 
 from jormungandr.scenarios import destineo
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
+
+
+def get_next_vj_name():
+    get_next_vj_name.section_counter += 1
+    return 'vj_{}'.format(get_next_vj_name.section_counter)
+get_next_vj_name.section_counter = 0  # to generate different section names
+
 
 def is_pure_tc_simple_test():
     response = response_pb2.Response()
@@ -822,6 +830,26 @@ def get_walking_walking_journey():
 
     return journey
 
+
+def generate_journey(vj_names):
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    for name in vj_names:
+        section = journey.sections.add()
+        section.type = response_pb2.PUBLIC_TRANSPORT
+        section.uris.vehicle_journey = name
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+
 def get_walking_bike_journey():
     journey = response_pb2.Journey()
 
@@ -934,7 +962,7 @@ def get_bike_bss_journey():
 
     return journey
 
-def get_bike_car_journey():
+def get_bike_car_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
     section = journey.sections.add()
@@ -942,6 +970,8 @@ def get_bike_car_journey():
     section.street_network.mode = response_pb2.Bike
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
+    if random_vjs:
+        section.uris.vehicle_journey = get_next_vj_name()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
@@ -956,7 +986,7 @@ def get_bike_car_journey():
 
     return journey
 
-def get_bss_walking_journey():
+def get_bss_walking_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
     section = journey.sections.add()
@@ -974,13 +1004,15 @@ def get_bss_walking_journey():
     section.street_network.mode = response_pb2.Walking
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
+    if random_vjs:
+        section.uris.vehicle_journey = get_next_vj_name()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
     return journey
 
-def get_bss_bike_journey():
+def get_bss_bike_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
     section = journey.sections.add()
@@ -998,13 +1030,15 @@ def get_bss_bike_journey():
     section.street_network.mode = response_pb2.Walking
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
+    if random_vjs:
+        section.uris.vehicle_journey = get_next_vj_name()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Bike
 
     return journey
 
-def get_bss_bss_journey():
+def get_bss_bss_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
     section = journey.sections.add()
@@ -1022,6 +1056,8 @@ def get_bss_bss_journey():
     section.street_network.mode = response_pb2.Walking
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
+    if random_vjs:
+        section.uris.vehicle_journey = get_next_vj_name()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
@@ -1038,7 +1074,7 @@ def get_bss_bss_journey():
 
     return journey
 
-def get_bss_car_journey():
+def get_bss_car_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
     section = journey.sections.add()
@@ -1056,6 +1092,8 @@ def get_bss_car_journey():
     section.street_network.mode = response_pb2.Walking
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
+    if random_vjs:
+        section.uris.vehicle_journey = get_next_vj_name()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
@@ -1072,24 +1110,27 @@ def get_bss_car_journey():
 
 def choose_best_alternatives_simple_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
+    saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
     eq_(len(journeys), 1)
-    eq_(journeys[0], get_bss_walking_journey())
+    eq_(journeys[0], saved_journeys[2])
 
 def choose_best_alternatives__bike_bss_test():
     journeys = [get_bike_bss_journey(), get_bike_car_journey()]
+    saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
     eq_(len(journeys), 1)
-    eq_(journeys[0], get_bike_bss_journey())
+    eq_(journeys[0], saved_journeys[0])
 
 def choose_best_alternatives__car_test():
     journeys = [get_bike_car_journey()]
+    saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
     eq_(len(journeys), 1)
-    eq_(journeys[0], get_bike_car_journey())
+    eq_(journeys[0], saved_journeys[0])
 
 def choose_best_alternatives_non_pt_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
@@ -1101,10 +1142,12 @@ def choose_best_alternatives_non_pt_test():
     j2.type = 'non_pt_bike'
     journeys.append(j2)
 
+    saved_journeys = deepcopy(journeys)
+
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
     eq_(len(journeys), 3)
-    eq_(journeys[0], get_bss_walking_journey())
+    eq_(journeys[0], saved_journeys[2])
     eq_(journeys[1], j1)
     eq_(journeys[2], j2)
 
@@ -1112,58 +1155,131 @@ def remove_extra_journeys_less_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
-    scenario._remove_extra_journeys(journeys, 3)
+    scenario._remove_extra_journeys(journeys, 3, clockwise=True, timezone='UTC')
     eq_(len(journeys), 2)
 
 def remove_extra_journeys_enougth_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
-    scenario._remove_extra_journeys(journeys, 2)
+    scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
     eq_(len(journeys), 2)
 
 def remove_extra_journeys_more_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+    saved_journeys = deepcopy(journeys)
 
     scenario = destineo.Scenario()
-    scenario._remove_extra_journeys(journeys, None)
+    scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
     eq_(len(journeys), 3)
 
-    scenario._remove_extra_journeys(journeys, 2)
+    scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
     eq_(len(journeys), 2)
-    eq_(journeys[0], get_bss_bss_journey())
-    eq_(journeys[1], get_bike_car_journey())
+    eq_(journeys[0], saved_journeys[0])
+    eq_(journeys[1], saved_journeys[1])
 
 def remove_extra_journeys_more_with_walking_last_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
     j1 = response_pb2.Journey()
     j1.type = 'non_pt_walk'
     journeys.append(j1)
+    saved_journeys = deepcopy(journeys)
 
     scenario = destineo.Scenario()
-    scenario._remove_extra_journeys(journeys, None)
+    scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
     eq_(len(journeys), 4)
 
-    scenario._remove_extra_journeys(journeys, 2)
+    scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
     eq_(len(journeys), 3)
-    eq_(journeys[0], get_bss_bss_journey())
-    eq_(journeys[1], get_bike_car_journey())
+    eq_(journeys[0], saved_journeys[0])
+    eq_(journeys[1], saved_journeys[1])
     eq_(journeys[2], j1)
 
 def remove_extra_journeys_more_with_walking_first_test():
     j1 = response_pb2.Journey()
     j1.type = 'non_pt_walk'
     journeys = [j1, get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
+    saved_journeys = deepcopy(journeys)
 
     scenario = destineo.Scenario()
-    scenario._remove_extra_journeys(journeys, None)
+    scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
     eq_(len(journeys), 4)
 
-    scenario._remove_extra_journeys(journeys, 2)
+    scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
     eq_(len(journeys), 3)
     eq_(journeys[0], j1)
-    eq_(journeys[1], get_bss_bss_journey())
-    eq_(journeys[2], get_bike_car_journey())
+    eq_(journeys[1], saved_journeys[1])
+    eq_(journeys[2], saved_journeys[2])
+
+
+def remove_extra_journeys_similar_journey_latest_dep():
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+
+    j_eq1 = generate_journey(['bob'])
+    j_eq1.type = 'bob'  # used as an id in the test
+    j_eq1.departure_date_time = 1425989999 # leave after, it's better
+    j_eq1.arrival_date_time = 1425990000
+
+    j_eq2 = generate_journey(['bob'])
+    j_eq2.type = 'bobette'
+    j_eq2.departure_date_time = 1425984855
+    j_eq2.arrival_date_time = 1425990000
+
+    journeys = [j1, j_eq1, j_eq2]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
+    eq_(len(journeys), 2)
+    eq_(journeys[1].type, 'bob')
+
+
+def remove_extra_journeys_not_similar_journeys():
+
+    j_eq1 = generate_journey(['bob', 'bobette', '', 'bobitto'])
+    j_eq1.type = 'bobitto'  # used as an id in the test
+
+    j_eq2 = generate_journey(['bob', 'bobette', '', 'babitta'])
+    j_eq2.type = 'babitta'
+
+    journeys = [j_eq1, j_eq2]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
+    eq_(len(journeys), 2) #nothing filtered, they are not equivalent
+    eq_(journeys[0].type, 'bobitto')
+    eq_(journeys[1].type, 'babitta')
+
+
+def remove_extra_journeys_max_and_similar():
+    """
+    test the filtering with a max and similar journeys
+
+    bobitto1 is equivalent to bobitto2, but 2 has less fallback, to bobitto1 is removed
+
+    we still has too much journey, so babitta is removed too
+    """
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_walk'
+
+    j_eq1 = generate_journey(['bob', 'bobette', '', 'bobitto'])
+    j_eq1.type = 'bobitto1'  # used as an id in the test
+    j_eq1.sections[0].duration = 12
+
+    j_eq2 = generate_journey(['bob', 'bobette', '', 'bobitto'])
+    j_eq2.type = 'bobitto2'
+    j_eq1.sections[0].duration = 24
+
+    j_not_eq = generate_journey(['bob', 'bobette', '', 'babitta'])
+    j_not_eq.type = 'babitta'
+
+    journeys = [j_eq1, j_eq2, j_not_eq, j1]
+
+    scenario = destineo.Scenario()
+    scenario._remove_extra_journeys(journeys, 1, clockwise=True, timezone='UTC')
+    eq_(len(journeys), 2)
+    eq_(journeys[0].type, 'bobitto1')
+    eq_(journeys[1].type, 'non_pt_walk')

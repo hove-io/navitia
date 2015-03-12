@@ -44,15 +44,15 @@ struct principal_destination_fixture {
     ed::builder b;
     principal_destination_fixture() : b("20140301") {
 
-        b.vj("network:R", "line:A", "1", "", true, "VJA")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "1", "", true, "VJB")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "1", "", true, "VJD")("stop1", 12 * 3600, 12 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60)
+        b.vj_with_network("network:R", "line:A", "1", "", true, "VJA")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
+        b.vj_with_network("network:R", "line:A", "1", "", true, "VJB")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
+        b.vj_with_network("network:R", "line:A", "1", "", true, "VJD")("stop1", 12 * 3600, 12 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60)
                                                          ("stop3", 19 * 3600, 19 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "1", "", true, "VJE")("stop1", 13 * 3600, 13 * 3600 + 10 * 60)("stop2", 20 * 3600, 20 * 3600 + 10 * 60)
+        b.vj_with_network("network:R", "line:A", "1", "", true, "VJE")("stop1", 13 * 3600, 13 * 3600 + 10 * 60)("stop2", 20 * 3600, 20 * 3600 + 10 * 60)
                                                          ("stop3", 21 * 3600, 21 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "1", "", true, "VJF")("stop1", 14 * 3600, 14 * 3600 + 10 * 60)("stop2", 22 * 3600, 22 * 3600 + 10 * 60)
+        b.vj_with_network("network:R", "line:A", "1", "", true, "VJF")("stop1", 14 * 3600, 14 * 3600 + 10 * 60)("stop2", 22 * 3600, 22 * 3600 + 10 * 60)
                                                          ("stop3", 22 * 3600, 22 * 3600 + 10 * 60);
-        b.vj("network:K", "line:B", "1", "", true, "VJJ");
+        b.vj_with_network("network:K", "line:B", "1", "", true, "VJJ");
         b.data->build_uri();
         b.data->pt_data->index();
     }

@@ -59,13 +59,22 @@ struct ValidityPatternTime {
 };
 
 
-enum ItemType { //TODO add class
+enum class ItemType {
     public_transport,
-    walking, //transfer
+    walking,
     stay_in,
-    guarantee, //REMOVE
     waiting
 };
+
+inline std::ostream& operator<< (std::ostream& ss, ItemType t) {
+    switch (t) {
+    case ItemType::public_transport: return ss << "public_transport";
+    case ItemType::walking: return ss << "transfer";
+    case ItemType::stay_in: return ss << "stay_in";
+    case ItemType::waiting: return ss << "waiting";
+    }
+    return ss;
+}
 
 /** Étape d'un itinéraire*/
 struct PathItem {

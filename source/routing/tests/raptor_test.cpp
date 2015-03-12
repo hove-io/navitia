@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(stay_in_short) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl) {
 
     auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 60780, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type, ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
 }
 
@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl_counterclock) {
 
     auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 63200, 0, DateTimeUtils::inf, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,  ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
 }
 
@@ -859,7 +859,7 @@ BOOST_AUTO_TEST_CASE(stay_in_teleport) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,  ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 
@@ -1643,12 +1643,12 @@ static void test_2nd_and_3rd_pass_checks(const std::vector<navitia::routing::Pat
 }
 BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass) {
     ed::builder b("20120614");
-    b.vj("1")("A", 8000, 8000)("B", 9000, 9000);
-    b.vj("1")("A", 9000, 9000)("B", 10000, 10000);
-    b.vj("2")("B", 11000, 11000)("C", 12000, 12000);
-    b.vj("2")("B", 12000, 12000)("C", 13000, 13000);
-    b.vj("3")("C", 14000, 14000)("D", 15000, 15000);
-    b.vj("3")("C", 15000, 15000)("D", 16000, 16000);
+    b.vj("1", "1")("A", 8000, 8000)("B", 9000, 9000);
+    b.vj("1", "1")("A", 9000, 9000)("B", 10000, 10000);
+    b.vj("2", "1")("B", 11000, 11000)("C", 12000, 12000);
+    b.vj("2", "1")("B", 12000, 12000)("C", 13000, 13000);
+    b.vj("3", "1")("C", 14000, 14000)("D", 15000, 15000);
+    b.vj("3", "1")("C", 15000, 15000)("D", 16000, 16000);
 
     b.connection("B", "B", 1000);
     b.connection("C", "C", 1000);
@@ -1687,14 +1687,14 @@ static void test_2nd_and_3rd_pass_ext_checks(const std::vector<navitia::routing:
 
     BOOST_CHECK_EQUAL(res[0].items[3].departure.time_of_day().total_seconds(), 11100);
     BOOST_CHECK_EQUAL(res[0].items[3].arrival.time_of_day().total_seconds(), 11100);
-    BOOST_CHECK_EQUAL(res[0].items[3].type, stay_in);
+    BOOST_CHECK_EQUAL(res[0].items[3].type, ItemType::stay_in);
 
     BOOST_CHECK_EQUAL(res[0].items[4].departure.time_of_day().total_seconds(), 11100);
     BOOST_CHECK_EQUAL(res[0].items[4].arrival.time_of_day().total_seconds(), 11200);
 
     BOOST_CHECK_EQUAL(res[0].items[5].departure.time_of_day().total_seconds(), 11200);
     BOOST_CHECK_EQUAL(res[0].items[5].arrival.time_of_day().total_seconds(), 11200);
-    BOOST_CHECK_EQUAL(res[0].items[5].type, stay_in);
+    BOOST_CHECK_EQUAL(res[0].items[5].type, ItemType::stay_in);
 
     BOOST_CHECK_EQUAL(res[0].items[6].departure.time_of_day().total_seconds(), 11200);
     BOOST_CHECK_EQUAL(res[0].items[6].arrival.time_of_day().total_seconds(), 12000);
@@ -1712,13 +1712,13 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
     b.vj("1", "1", "", true)("A", 8000, 8000)("B", 9000, 9000);
     b.vj("1", "1", "", true)("A", 9000, 9000)("B", 10000, 10000);
 
-    b.vj("2", "111", "block1", true)("B", 11000, 11000)("E", 11100, 11100);
+    b.vj("2", "1", "block1", true)("B", 11000, 11000)("E", 11100, 11100);
     b.vj("4", "1", "block1", true)("E", 11100, 11100)("F", 11200, 11200);
-    b.vj("5", "111", "block1", true)("F", 11200, 11200)("C", 12000, 12000);
+    b.vj("5", "1", "block1", true)("F", 11200, 11200)("C", 12000, 12000);
 
-    b.vj("2", "111", "block2", true)("B", 12000, 12000)("E", 12100, 12100);
+    b.vj("2", "1", "block2", true)("B", 12000, 12000)("E", 12100, 12100);
     b.vj("4", "1", "block2", true)("E", 12100, 12100)("F", 12200, 12200);
-    b.vj("5", "111", "block2", true)("F", 12200, 12200)("C", 13000, 13000);
+    b.vj("5", "1", "block2", true)("F", 12200, 12200)("C", 13000, 13000);
 
     b.vj("3", "1", "", true)("C", 14000, 14000)("D", 15000, 15000);
     b.vj("3", "1", "", true)("C", 15000, 15000)("D", 16000, 16000);
@@ -1743,8 +1743,6 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
     test_2nd_and_3rd_pass_ext_checks(res2);
 }
 
-// this test doesn't pass for the moment because of performances problems
-#if 0
 // 1: A-----------B---C
 // 2:     A---B
 // We want:
@@ -1752,8 +1750,8 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
 //        A-2-BzzzB-1-C
 BOOST_AUTO_TEST_CASE(direct_and_1trans_at_same_dt) {
     ed::builder b("20120614");
-    b.vj("1")("A", 8000, 8000)("B", 11000, 11000)("C", 12000, 12000);
-    b.vj("2")("A", 9000, 9000)("B", 10000, 10000);
+    b.vj("1", "1")("A", 8000, 8000)("B", 11000, 11000)("C", 12000, 12000);
+    b.vj("2", "1")("A", 9000, 9000)("B", 10000, 10000);
     b.connection("B", "B", 100);
 
     b.data->pt_data->index();
@@ -1767,19 +1765,73 @@ BOOST_AUTO_TEST_CASE(direct_and_1trans_at_same_dt) {
                               7900, 0, DateTimeUtils::inf, false, false, true);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
-    BOOST_REQUIRE_EQUAL(res[0].items.size(), 1);
-    BOOST_REQUIRE_EQUAL(res[1].items.size(), 3);
+    const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
+    const auto& fastest = res[0].items.size() == 1 ? res[1] : res[0];
+    BOOST_REQUIRE_EQUAL(direct.items.size(), 1);
+    BOOST_REQUIRE_EQUAL(fastest.items.size(), 3);
 
     //    A-------1-------C
-    BOOST_CHECK_EQUAL(res[0].items[0].departure.time_of_day().total_seconds(), 8000);
-    BOOST_CHECK_EQUAL(res[0].items[0].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(direct.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(direct.items[0].arrival.time_of_day().total_seconds(), 12000);
 
     //        A-2-BzzzB-1-C
-    BOOST_CHECK_EQUAL(res[1].items[0].departure.time_of_day().total_seconds(), 9000);
-    BOOST_CHECK_EQUAL(res[1].items[0].arrival.time_of_day().total_seconds(), 10000);
-    BOOST_CHECK_EQUAL(res[1].items[1].departure.time_of_day().total_seconds(), 10000);
-    BOOST_CHECK_EQUAL(res[1].items[1].arrival.time_of_day().total_seconds(), 11000);
-    BOOST_CHECK_EQUAL(res[1].items[2].departure.time_of_day().total_seconds(), 11000);
-    BOOST_CHECK_EQUAL(res[1].items[2].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[0].departure.time_of_day().total_seconds(), 9000);
+    BOOST_CHECK_EQUAL(fastest.items[0].arrival.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(fastest.items[1].departure.time_of_day().total_seconds(), 10000);
+    BOOST_CHECK_EQUAL(fastest.items[1].arrival.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[2].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[2].arrival.time_of_day().total_seconds(), 12000);
 }
-#endif
+
+// we have:
+//   ====A-----1-----B-----1-----C
+//===========D-2-B
+//                       B-3-C
+//
+// we want:
+//   ====A-----1-----B-----1-----C
+//   ====A-----1-----BzzzB-3-C
+//
+// and not:
+//===========D-2-BzzzB-----1-----C
+BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
+    ed::builder b("20120614");
+    b.vj("1", "1")("A", 8000, 8000)("B", 11000, 11000)("C", 14000, 14000);
+    b.vj("2", "1")("D", 9000, 9000)("B", 10000, 10000);
+    b.vj("3", "1")("B", 12000, 12000)("C", 13000, 13000);
+    b.connection("B", "B", 0);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 1000_s},
+        {SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front()), 3000_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front()), 0_s}
+    };
+    auto res = raptor.compute_all(departures, arrivals, 1000, false, true);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
+    const auto& fastest = res[0].items.size() == 1 ? res[1] : res[0];
+
+    //   ====A-----1-----B-----1-----C
+    BOOST_REQUIRE_EQUAL(direct.items.size(), 1);
+    BOOST_CHECK_EQUAL(direct.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(direct.items[0].arrival.time_of_day().total_seconds(), 14000);
+
+    //   ====A-----1-----BzzzB-3-C
+    BOOST_REQUIRE_EQUAL(fastest.items.size(), 3);
+    BOOST_CHECK_EQUAL(fastest.items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(fastest.items[0].arrival.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[1].departure.time_of_day().total_seconds(), 11000);
+    BOOST_CHECK_EQUAL(fastest.items[1].arrival.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[2].departure.time_of_day().total_seconds(), 12000);
+    BOOST_CHECK_EQUAL(fastest.items[2].arrival.time_of_day().total_seconds(), 13000);
+}

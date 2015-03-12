@@ -70,6 +70,7 @@ struct RAPTOR
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
     std::vector<Labels> labels;
+    std::vector<Labels> first_pass_labels;
     ///Contains the best arrival (or departure time) for each stoppoint
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
@@ -89,8 +90,10 @@ struct RAPTOR
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
-        Q(data.pt_data->journey_patterns) {
-            labels.assign(10, data.dataRaptor->labels_const);
+        Q(data.pt_data->journey_patterns)
+    {
+        labels.assign(10, data.dataRaptor->labels_const);
+        first_pass_labels.assign(10, data.dataRaptor->labels_const);
     }
 
     void clear(bool clockwise, DateTime bound);

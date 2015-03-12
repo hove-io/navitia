@@ -44,18 +44,16 @@ std::string PathItem::print() const {
     const navitia::type::StopArea* start = stop_points.front()->stop_area;
     const navitia::type::StopArea* dest = stop_points.back()->stop_area;
     ss << "Section de type ";
-    if(type == public_transport)
+    if(type == ItemType::public_transport)
         ss << "transport en commun";
-    else if(type == walking)
+    else if(type == ItemType::walking)
         ss << "marche";
-    else if(type == stay_in)
+    else if(type == ItemType::stay_in)
         ss << "prolongement de service";
-    else if(type ==guarantee)
-        ss << "corresopondance garantie";
     ss << "\n";
 
 
-    if(type == public_transport && ! stop_times.empty()){
+    if(type == ItemType::public_transport && ! stop_times.empty()){
         const navitia::type::StopTime* st = stop_times.front();
         const navitia::type::VehicleJourney* vj = st->vehicle_journey;
         const navitia::type::JourneyPattern* journey_pattern = vj->journey_pattern;
