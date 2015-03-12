@@ -279,7 +279,12 @@ class Scenario(simple.Scenario):
             if not request['debug']:
                 self._delete_non_optimal_journey(resp.journeys)
 
-            nb_typed_journeys = count_typed_journeys(resp.journeys)
+            new_nb_typed_journeys = count_typed_journeys(resp.journeys)
+            if cpt_attempt != 0 and new_nb_typed_journeys == nb_typed_journeys:
+                # for the first round, we might want to retry
+                logging.getLogger(__name__).debug('no new good journey found, we stop')
+                break
+            nb_typed_journeys = new_nb_typed_journeys
             cpt_attempt += 1
 
         if not request['debug']:
