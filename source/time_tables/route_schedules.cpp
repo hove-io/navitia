@@ -51,8 +51,7 @@ get_all_stop_times(const vector_idx& journey_patterns,
                    const boost::optional<const std::string> calendar_id) {
     std::vector<std::vector<datetime_stop_time> > result;
 
-    //On cherche les premiers journey_pattern_points
-    //de tous les journey_patterns
+    // We take the first journey pattern points from every journey_pattern
     std::vector<type::idx_t> first_journey_pattern_points;
     for(type::idx_t jp_idx : journey_patterns) {
         auto jpp = d.pt_data->journey_patterns[jp_idx];
@@ -62,13 +61,15 @@ get_all_stop_times(const vector_idx& journey_patterns,
 
     std::vector<datetime_stop_time> first_dt_st;
     if(!calendar_id) {
-        //On fait un best_stop_time sur ces journey_pattern points
+        // If there is no calendar we get all stop times in
+        // the desired timeframe
         first_dt_st = get_stop_times(first_journey_pattern_points,
                                           dateTime, max_datetime,
                                           max_stop_date_times, d, disruption_active);
     }
     else {
-        //On fait un best_stop_time sur ces journey_pattern points
+        // Otherwise we only take stop_times in a vehicle_journey associated to
+        // the desired calendar and in the timeframe
         first_dt_st = get_stop_times(first_journey_pattern_points,
                                           DateTimeUtils::hour(dateTime), DateTimeUtils::hour(max_datetime),
                                           d, *calendar_id);
