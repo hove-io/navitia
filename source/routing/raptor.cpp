@@ -193,6 +193,7 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
 
+// copy and do the off by one for strict comparison for the second pass.
 static IdxMap<type::StopPoint, DateTime>
 snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> best_labels) {
     for (auto& dt: best_labels.values()) {
@@ -200,6 +201,7 @@ snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> bes
     }
     return std::move(best_labels);
 }
+// Set the departure bounds on best_labels_pts for the second pass.
 static void init_best_pts_snd_pass(const RAPTOR::vec_stop_point_duration& departures,
                                    const DateTime& departure_datetime,
                                    const bool clockwise,
@@ -233,6 +235,17 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active, allow_odt,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
+    // Now, we do the second pass.  In case of clockwise (resp
+    // anticlockwise) search, the goal of the second pass is to find
+    // the earliest (resp. tardiest) departure (resp arrival)
+    // datetime.  For each count, we launch a backward raptor.
+    //
+    // As we do a backward raptor, the bound computed during the first
+    // pass can be used in the second pass.  The arrival at a stop
+    // point (as in best_labels_transfers) is a bound to the get in
+    // (as in best_labels_pt) in the second pass.  Then, we can reuse
+    // these bounds, modulo an off by one because of strict comparison
+    // on best_labels.
     swap(labels, first_pass_labels);
     auto best_labels_pts_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_transfers);
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
