@@ -233,12 +233,12 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     virtual bool func_on_vj(nt::VehicleJourney&) = 0;
 
     void log_start_action(std::string uri) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                         "Start to " << action << " impact " << impact.get()->uri << " on object " << uri);
     }
 
     void log_end_action(std::string uri) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                         "Finished to " << action << " impact " << impact.get()->uri << " on object " << uri);
     }
 
@@ -454,11 +454,11 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                     "Adding impact: " << impact.get()->uri);
     add_impacts_visitor v(impact, pt_data, meta);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                     impact.get()->uri << " impact added");
 }
 
@@ -483,7 +483,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         });
         for (auto i: vj.impacted_by) {
             if (auto spt = i.lock()) {
-                apply_impact(spt, pt_data, meta);
+                auto v = add_impacts_visitor(spt, pt_data, meta);
+                v.func_on_vj(vj);
             }
         }
         return true;
@@ -497,7 +498,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         std::set<nt::idx_t> vehicle_journeys_to_erase;
         std::set<nt::idx_t> jpp_to_erase;
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                         "Removing jpp from stop_points");
         for (auto journey_pattern : impact->impacted_journey_patterns) {
             journey_pattern->for_each_vehicle_journey(
