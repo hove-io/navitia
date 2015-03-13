@@ -450,10 +450,11 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint: return indexes(this->stop_point_list); break;
-    case Type_e::CommercialMode:{
+    case Type_e::CommercialMode:
+    case Type_e::PhysicalMode:{
          std::set<idx_t> tmp_result;
         for(const auto& stp: stop_point_list){
-            std::vector<idx_t> tmp = stp->get(Type_e::CommercialMode, data);
+            std::vector<idx_t> tmp = stp->get(type, data);
             for(const idx_t idx: tmp){
                 tmp_result.insert(idx);
             }
@@ -674,6 +675,13 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
         for(const auto& jpp: journey_pattern_point_list){
             if(jpp->journey_pattern && jpp->journey_pattern->commercial_mode){
                 result.push_back(jpp->journey_pattern->commercial_mode->idx);
+            }
+        }
+        break;
+    case Type_e::PhysicalMode:
+        for(const auto& jpp: journey_pattern_point_list){
+            if(jpp->journey_pattern && jpp->journey_pattern->physical_mode){
+                result.push_back(jpp->journey_pattern->physical_mode->idx);
             }
         }
         break;
