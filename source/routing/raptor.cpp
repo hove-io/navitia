@@ -238,7 +238,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     // Now, we do the second pass.  In case of clockwise (resp
     // anticlockwise) search, the goal of the second pass is to find
     // the earliest (resp. tardiest) departure (resp arrival)
-    // datetime.  For each count, we launch a backward raptor.
+    // datetime.  For each count and arrival (resp departure), we
+    // launch a backward raptor.
     //
     // As we do a backward raptor, the bound computed during the first
     // pass can be used in the second pass.  The arrival at a stop
@@ -254,15 +255,12 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     const unsigned first_pass_count = count;
     for (unsigned c = 1; c <= first_pass_count; ++c) {
         const auto& working_labels = first_pass_labels[c];
-        bool launch_snd_pass = false;
+
         for (const auto& a: calc_dest) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
 
-            if (! launch_snd_pass) { clear(!clockwise, departure_datetime + (clockwise ? -1 : 1)); }
-            launch_snd_pass = true;
+            clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
             init({{a.first, 0_s}}, working_labels.dt_pt(a.first), !clockwise, accessibilite_params.properties);
-        }
-        if (launch_snd_pass) {
             best_labels_pts = best_labels_pts_for_snd_pass;
             best_labels_transfers = best_labels_transfers_for_snd_pass;
             boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
