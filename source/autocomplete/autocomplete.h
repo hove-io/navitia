@@ -310,7 +310,6 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str,
-                                          const autocomplete_map& synonyms,
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
@@ -341,7 +340,7 @@ struct Autocomplete
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
-                                                      const autocomplete_map& synonyms, const int word_weight,
+                                                      const int word_weight,
                                                       size_t nbmax,
                                                       std::function<bool(T)> keep_element)
                                                       const{
@@ -355,7 +354,7 @@ struct Autocomplete
         std::vector<fl_quality> vec_quality;
         fl_quality quality;
 
-        auto vec_word = tokenize(str, synonyms);
+        auto vec_word = tokenize(str);
         std::vector<std::string> vec_pattern = make_vec_pattern(vec_word, 2); //2-grams
         int wordLength = words_length(vec_word);
         int pattern_count = vec_pattern.size();
