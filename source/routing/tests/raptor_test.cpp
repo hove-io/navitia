@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "routing/routing.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 struct logger_initialized {
     logger_initialized() { init_logger(); }
@@ -1834,4 +1835,59 @@ BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
     BOOST_CHECK_EQUAL(fastest.items[1].arrival.time_of_day().total_seconds(), 12000);
     BOOST_CHECK_EQUAL(fastest.items[2].departure.time_of_day().total_seconds(), 12000);
     BOOST_CHECK_EQUAL(fastest.items[2].arrival.time_of_day().total_seconds(), 13000);
+}
+
+//       DC1     1J      GM1     1J           C1
+//     /->+<--------------+<-------------------+
+//     |  +-------------->+                     + C2
+//     | DC2     1R      GM2                    ^
+//     |                                        |
+//     |                                        |2
+//     |                                        |
+//     |                    42                  |
+//     \--------------------<-------------------+ VG
+//
+// We ask for VG to GM. We want VG--2->C2=zC2--1J->GM1
+BOOST_AUTO_TEST_CASE(second_pass) {
+    ed::builder b("20150101");
+
+    b.vj("2")("VG", "8:31"_t)("C2", "8:36"_t);
+    b.vj("1J")("C1", "8:42"_t)("GM1", "8:47"_t)("DC1", "8:49"_t);
+    b.vj("1R")("DC2", "8:51"_t)("GM2", "8:53"_t);
+    b.vj("42")("VG", "8:35"_t)("DC1", "8:45"_t);
+
+    b.connection("C1", "C2", "00:02"_t);
+    b.connection("C2", "C1", "00:02"_t);
+    b.connection("GM1", "GM2", "00:02"_t);
+    b.connection("DC1", "DC2", "00:02"_t);
+    b.connection("DC2", "DC1", "00:02"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_areas_map.at("VG")->stop_point_list.front()), 0_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_areas_map.at("GM1")->stop_point_list.front()), 0_s},
+        {SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front()), 0_s}
+    };
+
+    auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false, true, DateTimeUtils::inf, 10, {}, {}, true);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 4);
+
+    BOOST_CHECK_EQUAL(res[0].items[0].departure, "20150103T083100"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150103T083600"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[1].departure, "20150103T083600"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival, "20150103T083800"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[2].departure, "20150103T083800"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival, "20150103T084200"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[3].departure, "20150103T084200"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[3].arrival, "20150103T084700"_dt);
 }

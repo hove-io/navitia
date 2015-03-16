@@ -1,3 +1,11 @@
+navitia2 (1.13.2) unstable; urgency=low
+
+  * add a real second pass <https://github.com/CanalTP/navitia/pull/958>
+  * remove an infinite loop on imapcts <https://github.com/CanalTP/navitia/pull/959>
+  * serialize channel properties on impacts <https://github.com/CanalTP/navitia/pull/957>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 16 Mar 2015 11:03:26 +0100
+
 navitia2 (1.13.1) unstable; urgency=low
 
   * Jormungandr: stop if no new responses  <https://github.com/CanalTP/navitia/pull/955>

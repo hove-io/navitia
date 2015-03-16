@@ -47,11 +47,11 @@ get_all_stop_times(const vector_idx& journey_patterns,
                    const DateTime& max_datetime,
                    const size_t max_stop_date_times,
                    const type::Data& d,
-                   bool disruption_active) {
+                   bool disruption_active,
+                   const boost::optional<const std::string> calendar_id) {
     std::vector<std::vector<datetime_stop_time> > result;
 
-    //On cherche les premiers journey_pattern_points
-    //de tous les journey_patterns
+    // We take the first journey pattern points from every journey_pattern
     std::vector<type::idx_t> first_journey_pattern_points;
     for(type::idx_t jp_idx : journey_patterns) {
         auto jpp = d.pt_data->journey_patterns[jp_idx];
@@ -59,10 +59,21 @@ get_all_stop_times(const vector_idx& journey_patterns,
         first_journey_pattern_points.push_back(first_jpp_idx);
     }
 
-    //On fait un best_stop_time sur ces journey_pattern points
-    auto first_dt_st = get_stop_times(first_journey_pattern_points,
-                                      dateTime, max_datetime,
-                                      max_stop_date_times, d, disruption_active);
+    std::vector<datetime_stop_time> first_dt_st;
+    if(!calendar_id) {
+        // If there is no calendar we get all stop times in
+        // the desired timeframe
+        first_dt_st = get_stop_times(first_journey_pattern_points,
+                                          dateTime, max_datetime,
+                                          max_stop_date_times, d, disruption_active);
+    }
+    else {
+        // Otherwise we only take stop_times in a vehicle_journey associated to
+        // the desired calendar and in the timeframe
+        first_dt_st = get_stop_times(first_journey_pattern_points,
+                                          DateTimeUtils::hour(dateTime), DateTimeUtils::hour(max_datetime),
+                                          d, *calendar_id);
+    }
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -177,6 +188,7 @@ make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
 
 pbnavitia::Response
 route_schedule(const std::string& filter,
+               const boost::optional<const std::string> calendar_id,
                const std::vector<std::string>& forbidden_uris,
                const pt::ptime datetime,
                uint32_t duration, size_t max_stop_date_times, uint32_t interface_version,
@@ -201,7 +213,7 @@ route_schedule(const std::string& filter,
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, max_stop_date_times,
-                                             d, disruption_active);
+                                             d, disruption_active, calendar_id);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
             auto jp = d.pt_data->journey_patterns[jp_idx];
