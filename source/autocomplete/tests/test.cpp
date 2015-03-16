@@ -59,10 +59,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
 
     autocomplete_map synonyms;
     synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
     synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
     synonyms["ld"]="Lieu-Dit";
     synonyms["de"]="";
     synonyms["la"]="";
@@ -76,8 +73,6 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     synonyms["cc"]="centre commercial";
     synonyms["chu"]="hopital";
     synonyms["chr"]="hopital";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
     synonyms["all"]="allée";
     synonyms["allee"]="allée";
     synonyms["ave"]="avenue";
@@ -170,14 +165,11 @@ BOOST_AUTO_TEST_CASE(regex_replace_tests){
     BOOST_CHECK_EQUAL( boost::regex_replace(std::string("bonjour c c revoir"), re , "centre commercial"), "bonjour centre commercial revoir");
 }
 
-BOOST_AUTO_TEST_CASE(regex_toknize_tests){
+BOOST_AUTO_TEST_CASE(regex_toknize_with_synonyms_tests){
 
     autocomplete_map synonyms;
     synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
     synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
     synonyms["ld"]="Lieu-Dit";
     synonyms["de"]="";
     synonyms["la"]="";
@@ -200,12 +192,66 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     BOOST_CHECK(vec.find("soie") != vec.end());
 
     vec.clear();
-    //synonyme : "c c"= "centre commercial" / synonym : de = ""
-    //"c c Carré de Soie" -> "centre commercial carré de soie"
-    vec = ac.tokenize("c c Carré de Soie", synonyms);
+    //synonyme : "cc"= "centre commercial" / synonym : de = ""
+    //"c Carré de Soie" -> "centre commercial carré de soie"
+    vec = ac.tokenize("cc Carré de Soie", synonyms);
     BOOST_CHECK(vec.find("carre") != vec.end());
     BOOST_CHECK(vec.find("centre") != vec.end());
     BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
+}
+
+BOOST_AUTO_TEST_CASE(regex_toknize_without_synonyms_tests){
+
+    Autocomplete<unsigned int> ac;
+    std::set<std::string> vec;
+
+    //"cc Carré de Soie" -> "cc carre de soie"
+    vec = ac.tokenize("cc Carré de Soie");
+    BOOST_CHECK(vec.find("cc") != vec.end());
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("de") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
+}
+
+BOOST_AUTO_TEST_CASE(regex_toknize_without_tests){
+
+    autocomplete_map synonyms;
+    synonyms["hotel de ville"]="mairie";
+    synonyms["cc"]="centre commercial";
+    synonyms["ld"]="Lieu-Dit";
+    synonyms["de"]="";
+    synonyms["la"]="";
+    synonyms["les"]="";
+    synonyms["des"]="";
+    synonyms["d"]="";
+    synonyms["l"]="";
+    synonyms["st"]="saint";
+    synonyms["r"]="rue";
+
+    Autocomplete<unsigned int> ac;
+    std::set<std::string> vec;
+
+    //synonyme : "cc" = "centre commercial" / synonym : de = ""
+    //"cc Carré de Soie" -> "cc centre commercial carré de soie"
+    vec = ac.tokenize_without_replace("cc Carré de Soie", synonyms);
+    BOOST_CHECK(vec.find("cc") != vec.end());
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("de") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
+
+
+    vec.clear();
+    //synonyme : "cc"= "centre commercial" / synonym : de = ""
+    //"c c Carré de Soie" -> "centre commercial carré de soie"
+    vec = ac.tokenize_without_replace("cc Carré de Soie", synonyms);
+    BOOST_CHECK(vec.find("cc") != vec.end());
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("de") != vec.end());
     BOOST_CHECK(vec.find("soie") != vec.end());
 }
 
@@ -213,10 +259,7 @@ BOOST_AUTO_TEST_CASE(regex_address_type_tests){
 
     autocomplete_map synonyms;
     synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
     synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
     synonyms["ld"]="Lieu-Dit";
     synonyms["av"]="avenue";
     synonyms["r"]="rue";
@@ -234,9 +277,6 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 
     autocomplete_map synonyms;
     synonyms["gare sncf"]="gare";
-    synonyms["gare snc"]="gare";
-    synonyms["gare sn"]="gare";
-    synonyms["gare s"]="gare";
     synonyms["de"]="";
     synonyms["la"]="";
     synonyms["les"]="";
@@ -254,61 +294,35 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
     std::set<std::string> vec;
 
     //synonyme : "gare sncf" = "gare"
-    //"gare sncf" -> "gare"
+    //"gare sncf" -> "gare sncf"
     vec = ac.tokenize("gare sncf", synonyms);
-    BOOST_CHECK_EQUAL(vec.size(),1);
-    vec.clear();
-
-    //synonyme : "gare snc" = "gare"
-    //"gare snc" -> "gare"
-    vec = ac.tokenize("gare snc", synonyms);
-    BOOST_CHECK_EQUAL(vec.size(),1);
-    vec.clear();
-
-    //synonyme : "gare sn" = "gare"
-    //"gare sn" -> "gare"
-    vec = ac.tokenize("gare sn", synonyms);
-    BOOST_CHECK(vec.find("gare") != vec.end());
-    BOOST_CHECK_EQUAL(vec.size(),1);
-    vec.clear();
-
-    //synonyme : "gare s" = "gare"
-    //"gare s" -> "gare"
-    vec = ac.tokenize("gare s", synonyms);
-    BOOST_CHECK(vec.find("gare") != vec.end());
-    BOOST_CHECK_EQUAL(vec.size(),1);
-    vec.clear();
-
-    //synonyme : "gare sn nantes" = "gare nantes"
-    //"gare sn nantes" -> "gare nantes"
-    vec = ac.tokenize("gare sn nantes", synonyms);
-    BOOST_CHECK(vec.find("gare") != vec.end());
-    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
-    //synonyme : "gare sn nantes" = "gare nantes"
-    //"gare sn  nantes" -> "gare nantes"
+    //synonyme : "gare sncf" = "gare"
+    //"gare snc" -> "gare sncf snc"
+    vec = ac.tokenize("gare snc", synonyms);
+    BOOST_CHECK_EQUAL(vec.size(),3);
+    vec.clear();
+
+    //synonyme : "gare sncf" = "gare"
+    //"gare sn  nantes" -> "gare sncf sn nantes"
     vec = ac.tokenize("gare sn  nantes", synonyms);
     BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK(vec.find("nantes") != vec.end());
-    BOOST_CHECK_EQUAL(vec.size(),2);
+    BOOST_CHECK(vec.find("sncf") != vec.end());
+    BOOST_CHECK(vec.find("sn") != vec.end());
+    BOOST_CHECK_EQUAL(vec.size(),4);
     vec.clear();
 
-    //synonyme : "gare sn nantes" = "gare nantes"
-    //"gare s  nantes" -> "gare nantes"
+    //synonyme : "gare sncf" = "gare"
+    //"gare s nantes" -> "gare s sncf nantes"
     vec = ac.tokenize("gare  s  nantes", synonyms);
     BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK(vec.find("nantes") != vec.end());
-    BOOST_CHECK_EQUAL(vec.size(),2);
-    vec.clear();
-
-    //synonyme : "gare sn nantes" = "gare nantes"
-    //"gare s    nantes" -> "gare nantes"
-    vec = ac.tokenize("gare  s    nantes", synonyms);
-    BOOST_CHECK(vec.find("gare") != vec.end());
-    BOOST_CHECK(vec.find("nantes") != vec.end());
-    BOOST_CHECK_EQUAL(vec.size(),2);
+    BOOST_CHECK(vec.find("sncf") != vec.end());
+    BOOST_CHECK(vec.find("s") != vec.end());
+    BOOST_CHECK_EQUAL(vec.size(),4);
     vec.clear();
 }
 
@@ -532,8 +546,6 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         synonyms["cc"]="centre commercial";
         synonyms["chu"]="hopital";
         synonyms["chr"]="hopital";
-        synonyms["c.h.u"]="hopital";
-        synonyms["c.h.r"]="hopital";
         synonyms["all"]="allée";
         synonyms["allee"]="allée";
         synonyms["ave"]="avenue";
@@ -610,8 +622,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     synonyms["cc"]="centre commercial";
     synonyms["chu"]="hopital";
     synonyms["chr"]="hopital";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
     synonyms["all"]="allée";
     synonyms["allee"]="allée";
     synonyms["ave"]="avenue";

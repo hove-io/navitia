@@ -143,8 +143,8 @@ struct Autocomplete
         int distance = 0;
 
         //Appeler la méthode pour traiter les synonymes avant de les ajouter dans le dictionaire:
+        //auto vec_word = tokenize_without_replace(str, synonyms);
         auto vec_word = tokenize(str, synonyms);
-
         //créer des patterns pour chaque mot et les ajouter dans temp_pattern_map:
         add_vec_pattern(vec_word, position);
 
@@ -315,7 +315,7 @@ struct Autocomplete
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
-        auto vec = tokenize(str, synonyms);
+        auto vec = tokenize(str);
         int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
@@ -477,17 +477,56 @@ struct Autocomplete
         return str;
     }
 
-    std::set<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms) const{
+    std::set<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms = autocomplete_map()) const{
         std::set<std::string> vec;
         boost::to_lower(strFind);
         strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
 
         //traiter les caractères accentués
         strFind = strip_accents(strFind);
+        std::string strTemp = strFind;
 
-       for(const auto& it : synonyms){
-            strFind = boost::regex_replace(strFind,boost::regex("\\<" + it.first + "\\>"), it.second);
+        //if synonyms contains something, add all synonyms if found while serching on ket et value.
+        if (synonyms.size() > 0){
+            //For each synonyms.key found in strFind add synonyms.value
+            for(const auto& it : synonyms){
+                if  (boost::regex_search(strFind,boost::regex("\\<" + it.first + "\\>"))){
+                    strTemp += " " + it.second;
+                }
+            }
+
+            //For each synonyms.value found in strFind add synonyms.key
+            for(const auto& it : synonyms){
+                if  (boost::regex_search(strFind,boost::regex("\\<" + it.second + "\\>"))){
+                    strTemp += " " + it.first;
+                }
+            }
         }
+
+
+        boost::tokenizer <> tokens(strTemp);
+        for (auto token_it: tokens){
+            if (!token_it.empty()){
+                vec.insert(token_it);
+            }
+        }
+        return vec;
+    }
+
+    std::set<std::string> tokenize_without_replace(std::string strFind, const autocomplete_map& synonyms) const{
+        std::set<std::string> vec;
+
+        boost::to_lower(strFind);
+        strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
+
+        //traiter les caractères accentués
+        strFind = strip_accents(strFind);
+
+        for(const auto& it : synonyms){
+            if  (boost::regex_search(strFind,boost::regex("\\<" + it.first + "\\>"))){
+                strFind += " " + it.second;
+            }
+         }
 
         boost::tokenizer <> tokens(strFind);
         for (auto token_it: tokens){
@@ -497,6 +536,7 @@ struct Autocomplete
         }
         return vec;
     }
+
 
     bool is_address_type(const std::string & str,
                          const autocomplete_map& synonyms) const{
