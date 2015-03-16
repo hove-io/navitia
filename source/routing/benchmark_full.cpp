@@ -28,7 +28,9 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "raptor_api.h"
 #include "raptor.h"
+#include "georef/street_network.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
@@ -44,14 +46,16 @@ www.navitia.io
 
 using namespace navitia;
 using namespace routing;
-namespace ba = boost::algorithm;
 namespace po = boost::program_options;
+namespace ba = boost::algorithm;
 
 struct PathDemand {
     type::idx_t start;
     type::idx_t target;
     unsigned int date;
     unsigned int hour;
+    type::Mode_e start_mode = type::Mode_e::Walking;
+    type::Mode_e target_mode = type::Mode_e::Walking;
 };
 
 struct Result {
@@ -60,10 +64,7 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration.total_seconds()), time(-1), arrival(-1), nb_changes(path.nb_changes) {
-        if(!path.items.empty())
-            arrival = path.items.back().arrival.time_of_day().total_seconds();
-    }
+    Result(pbnavitia::Journey journey) : duration(journey.duration()), time(-1), arrival(journey.arrival_date_time()), nb_changes(journey.nb_transfers()) {}
 };
 
 int main(int argc, char** argv){
@@ -182,6 +183,7 @@ int main(int argc, char** argv){
     std::vector<Result> results;
     data.build_raptor();
     RAPTOR router(data);
+    auto georef_worker = georef::StreetNetwork(*data.geo_ref);
 
     std::cout << "On lance le benchmark de l'algo " << std::endl;
     boost::progress_display show_progress(demands.size());
@@ -194,64 +196,51 @@ int main(int argc, char** argv){
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
+        auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1) - boost::gregorian::date(1970, 1, 1);
         if (verbose){
-            std::cout << data.pt_data->stop_areas[demand.start]->uri
+            std::cout << data.pt_data->stop_areas[demand.start]->label
                       << ", " << demand.start
-                      << ", " << data.pt_data->stop_areas[demand.target]->uri
+                      << ", " << data.pt_data->stop_areas[demand.target]->label
                       << ", " << demand.target
-                      << ", " << demand.date
+                      << ", " << date
                       << ", " << demand.hour
                       << "\n";
         }
-        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target],
-                demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),
-                false, true, true, {}, 10);
 
-        Path path;
-        if(res.size() > 0) {
-            path = res[0];
+        type::EntryPoint origin = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas[demand.start]->uri, 0);
+        type::EntryPoint destination = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas[demand.target]->uri, 0);
+        origin.coordinates = data.pt_data->stop_areas[demand.start]->coord;
+        destination.coordinates = data.pt_data->stop_areas[demand.target]->coord;
+        origin.streetnetwork_params.mode = demand.start_mode;
+        origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
+        origin.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        origin.streetnetwork_params.speed_factor = 1;
+        destination.streetnetwork_params.mode = demand.target_mode;
+        destination.streetnetwork_params.offset = data.geo_ref->offsets[demand.target_mode];
+        destination.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        destination.streetnetwork_params.speed_factor = 1;
+        type::AccessibiliteParams accessibilite_params;
+        auto resp = make_response(router, origin, destination,
+              {DateTimeUtils::set(date.days(), demand.hour)}, true,
+              accessibilite_params,
+              {},
+              georef_worker,
+              false,
+              true,
+              std::numeric_limits<int>::max(), 10, false);
+
+        if(resp.journeys_size() > 0) {
             ++ nb_reponses;
-        }
 
-        Result result(path);
-        result.time = t2.ms();
-        results.push_back(result);
+            Result result(resp.journeys(0));
+            result.time = t2.ms();
+            results.push_back(result);
+        }
     }
     //ProfilerStop();
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_STOP_INSTRUMENTATION;
 #endif
-
-
-    Timer ecriture("Writing results");
-    std::fstream out_file(output, std::ios::out);
-    out_file << "Start, Start id, Target, Target id, Day, Hour";
-        out_file << ", "
-                 << "arrival, "
-                 << "duration, "
-                 << "nb_change, "
-                 << "visited, "
-                 << "time";
-    out_file << "\n";
-
-    for(size_t i = 0; i < demands.size(); ++i){
-        PathDemand demand = demands[i];
-        out_file << data.pt_data->stop_areas[demand.start]->uri
-                 << ", " << demand.start
-                 << ", " << data.pt_data->stop_areas[demand.target]->uri
-                 << ", " << demand.target
-                 << ", " << demand.date
-                 << ", " << demand.hour;
-
-        out_file << ", "
-                 << results[i].arrival << ", "
-                 << results[i].duration << ", "
-                 << results[i].nb_changes << ", "
-                 << results[i].time;
-
-        out_file << "\n";
-    }
-    out_file.close();
 
     std::cout << "Number of requests: " << demands.size() << std::endl;
     std::cout << "Number of results with solution: " << nb_reponses << std::endl;
