@@ -1,3 +1,32 @@
+navitia2 (1.12.2) unstable; urgency=medium
+
+  * remove an infinite loop on imapcts <https://github.com/CanalTP/navitia/pull/959>
+  * serialize channel properties on impacts <https://github.com/CanalTP/navitia/pull/957>
+  * Jormungandr: filter equivalent journeys in destineo  <https://github.com/CanalTP/navitia/pull/945>
+  * jormun: remove walking solution for alternatives journeys in destineo  <https://github.com/CanalTP/navitia/pull/952>
+  * Jormungandr: stop if no new responses  <https://github.com/CanalTP/navitia/pull/955>
+  * Jormungandr: in destineo we don't wnat an alternative already present  <https://github.com/CanalTP/navitia/pull/944>
+  * Jormungandr: remove journey with a lot of walking  <https://github.com/CanalTP/navitia/pull/941>
+  * Disruptions: load only disruptions active in the data period  <https://github.com/CanalTP/navitia/pull/936>
+  * Jormunangr: handle nb_max_journeys for destineo  <https://github.com/CanalTP/navitia/pull/925>
+  * Ed: do not read pois from OSM if for one instance we red it from poi2ed  <https://github.com/CanalTP/navitia/pull/922>
+  * Kraken: fix use of weak_ptr  <https://github.com/CanalTP/navitia/pull/920>
+  * Jormun: update of fallback modes for traveler profile  <https://github.com/CanalTP/navitia/pull/918>
+  * Jormungandr: ask for more journeys if you only have street_network journeys  <https://github.com/CanalTP/navitia/pull/917>
+  * Jormungandr: min_bike and others for all scenario and not only destineo  <https://github.com/CanalTP/navitia/pull/916>
+  * Kraken: handle shapes of odt sections  <https://github.com/CanalTP/navitia/pull/915>
+  * Timetables: take in account max_date_times in route_schedules  <https://github.com/CanalTP/navitia/pull/914>
+  * Ed: look for admin in cities only for objects without admin  <https://github.com/CanalTP/navitia/pull/913>
+  * Kraken: fix arrivals api  <https://github.com/CanalTP/navitia/pull/912>
+  * Kraken: enable disruptions on departures and arrivals  <https://github.com/CanalTP/navitia/pull/911>
+  * jormungandr: the link for a object must be to the impact not the disruption  <https://github.com/CanalTP/navitia/pull/910>
+  * jormungandr: don't use journey with 0 duration as standard for too long journeys <https://github.com/CanalTP/navitia/pull/907>
+  * Jormungandr: save forbidden uris for every calls  <https://github.com/CanalTP/navitia/pull/906>
+  * Tyr: do not purge if missing backup file  <https://github.com/CanalTP/navitia/pull/902>
+  * Tyr: add a way to import shape in tyr  <https://github.com/CanalTP/navitia/pull/901>
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Mon, 16 Mar 2015 16:18:50 +0100
+
 navitia2 (1.12.1) unstable; urgency=low
 
   * Jormungandr: wrong variable user in stat_manager
