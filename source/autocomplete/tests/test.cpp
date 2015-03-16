@@ -232,27 +232,15 @@ BOOST_AUTO_TEST_CASE(regex_toknize_without_tests){
     Autocomplete<unsigned int> ac;
     std::set<std::string> vec;
 
-    //synonyme : "cc" = "centre commercial" / synonym : de = ""
+    //synonyme : "cc" = "centre commercial"
     //"cc Carré de Soie" -> "cc centre commercial carré de soie"
-    vec = ac.tokenize_without_replace("cc Carré de Soie", synonyms);
+    vec = ac.tokenize("cc Carré de Soie", synonyms);
     BOOST_CHECK(vec.find("cc") != vec.end());
     BOOST_CHECK(vec.find("carre") != vec.end());
     BOOST_CHECK(vec.find("centre") != vec.end());
     BOOST_CHECK(vec.find("commercial") != vec.end());
     BOOST_CHECK(vec.find("de") != vec.end());
-    BOOST_CHECK(vec.find("soie") != vec.end());
-
-
-    vec.clear();
-    //synonyme : "cc"= "centre commercial" / synonym : de = ""
-    //"c c Carré de Soie" -> "centre commercial carré de soie"
-    vec = ac.tokenize_without_replace("cc Carré de Soie", synonyms);
-    BOOST_CHECK(vec.find("cc") != vec.end());
-    BOOST_CHECK(vec.find("carre") != vec.end());
-    BOOST_CHECK(vec.find("centre") != vec.end());
-    BOOST_CHECK(vec.find("commercial") != vec.end());
-    BOOST_CHECK(vec.find("de") != vec.end());
-    BOOST_CHECK(vec.find("soie") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());    
 }
 
 BOOST_AUTO_TEST_CASE(regex_address_type_tests){

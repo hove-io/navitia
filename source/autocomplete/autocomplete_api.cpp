@@ -226,7 +226,7 @@ pbnavitia::Response autocomplete(const std::string &q,
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
     //Compute number of words in the query:
-    std::set<std::string> query_word_vec = d.geo_ref->fl_admin.tokenize(q,d.geo_ref->synonyms);
+    std::set<std::string> query_word_vec = d.geo_ref->fl_admin.tokenize(q);
 
     ///Find max(100, count) éléments for each pt_object
     for(nt::Type_e type : filter) {
