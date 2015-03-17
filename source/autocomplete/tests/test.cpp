@@ -1085,8 +1085,6 @@ BOOST_AUTO_TEST_CASE(synonyms_with_grand_champ_test){
     synonyms["ste"]="sainte";
     synonyms["vla"]="villa";
     synonyms["grand-champ"]="grandchamp";
-    synonyms["DE"]="";
-    synonyms["la"]="";
 
     Autocomplete<unsigned int> ac;
     ac.add_string("Grand-Champ 56390", 0, synonyms);
