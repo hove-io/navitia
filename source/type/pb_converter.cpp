@@ -1008,6 +1008,17 @@ static void finalize_section(pbnavitia::Section* section,
     }
 }
 
+
+pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object) {
+    switch(pt_object.embedded_type()) {
+    case pbnavitia::NavitiaType::STOP_AREA: return pt_object.stop_area().coord();
+    case pbnavitia::NavitiaType::STOP_POINT: return pt_object.stop_point().coord();
+    case pbnavitia::NavitiaType::POI: return pt_object.poi().coord();
+    case pbnavitia::NavitiaType::ADDRESS: return pt_object.address().coord();
+    default: return pbnavitia::GeographicalCoord();
+    }
+}
+
 static pbnavitia::Section* create_section(EnhancedResponse& response,
                                           pbnavitia::Journey* pb_journey,
                                           const navitia::georef::PathItem& first_item,
@@ -1041,6 +1052,15 @@ static pbnavitia::Section* create_section(EnhancedResponse& response,
     }
 
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
+
+    auto origin_coord = get_coord(section->origin());
+    if (origin_coord.IsInitialized() && !first_item.coordinates.empty() &&
+        first_item.coordinates.front().is_initialized() &&
+        first_item.coordinates.front() != type::GeographicalCoord(origin_coord.lon(), origin_coord.lat())) {
+        pbnavitia::GeographicalCoord * pb_coord = section->mutable_street_network()->add_coordinates();
+        pb_coord->set_lon(origin_coord.lon());
+        pb_coord->set_lat(origin_coord.lat());
+    }
 
     return section;
 }
@@ -1151,8 +1171,26 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
     }
 
     finalize_section(section, path.path_items.back(), {}, data, session_departure, depth, now, action_period);
-}
+    //We add consistency between origin/destination places and geojson
 
+    auto sections = pb_journey->mutable_sections();
+    for (auto section = sections->begin(); section != sections->end(); ++section) {
+        auto destination_coord = get_coord(section->destination());
+        auto sn = section->mutable_street_network();
+        if (destination_coord.IsInitialized() ||
+                sn->coordinates().size() == 0) {
+            continue;
+        }
+        auto last_coord = sn->coordinates(sn->coordinates_size()-1);
+        if (last_coord.IsInitialized() &&
+            type::GeographicalCoord(last_coord.lon(), last_coord.lat())
+                != type::GeographicalCoord(destination_coord.lon(), destination_coord.lat())) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(destination_coord.lon());
+            pb_coord->set_lat(destination_coord.lat());
+        }
+    }
+}
 
 void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item,
                     const type::EntryPoint &ori_dest, const navitia::type::Data& data) {
@@ -1167,11 +1205,12 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
 
     //we add each path item coordinate to the global coordinate list
     for(auto coord : item.coordinates) {
-        if(coord.is_initialized()) {
-            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-            pb_coord->set_lon(coord.lon());
-            pb_coord->set_lat(coord.lat());
+        if(!coord.is_initialized()) {
+            continue;
         }
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+        pb_coord->set_lon(coord.lon());
+        pb_coord->set_lat(coord.lat());
     }
 }
 
