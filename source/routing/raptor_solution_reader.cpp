@@ -419,7 +419,8 @@ struct RaptorSolutionReader {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
                 jpp.idx, begin_dt, v.clockwise(), disruption_active,
-                accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
+                accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true,
+                begin_limit);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 
