@@ -61,28 +61,15 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     synonyms["hotel de ville"]="mairie";
     synonyms["cc"]="centre commercial";
     synonyms["ld"]="Lieu-Dit";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
 
     synonyms["st"]="saint";
     synonyms["ste"]="sainte";
     synonyms["cc"]="centre commercial";
     synonyms["chu"]="hopital";
     synonyms["chr"]="hopital";
-    synonyms["all"]="allée";
-    synonyms["allee"]="allée";
-    synonyms["ave"]="avenue";
-    synonyms["av"]="avenue";
     synonyms["bvd"]="boulevard";
     synonyms["bld"]="boulevard";
     synonyms["bd"]="boulevard";
-    synonyms["b"]="boulevard";
-    synonyms["r"]="rue";
-    synonyms["pl"]="place";
 
     Autocomplete<unsigned int> ac;
     ac.add_string("hotel de ville paris", 0, synonyms);
@@ -171,14 +158,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_with_synonyms_tests){
     synonyms["hotel de ville"]="mairie";
     synonyms["cc"]="centre commercial";
     synonyms["ld"]="Lieu-Dit";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
     synonyms["st"]="saint";
-    synonyms["r"]="rue";
 
     Autocomplete<unsigned int> ac;
     std::set<std::string> vec;
@@ -220,14 +200,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_without_tests){
     synonyms["hotel de ville"]="mairie";
     synonyms["cc"]="centre commercial";
     synonyms["ld"]="Lieu-Dit";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
     synonyms["st"]="saint";
-    synonyms["r"]="rue";
 
     Autocomplete<unsigned int> ac;
     std::set<std::string> vec;
@@ -265,15 +238,7 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 
     autocomplete_map synonyms;
     synonyms["gare sncf"]="gare";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
     synonyms["st"]="saint";
-    synonyms["av"]="avenue";
-    synonyms["r"]="rue";
     synonyms["bvd"]="boulevard";
     synonyms["bld"]="boulevard";
     synonyms["bd"]="boulevard";
@@ -520,30 +485,15 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         autocomplete_map synonyms;
         std::vector<std::string> admins;
         std::string admin_uri;
-        int nbmax = 10;
-
-        synonyms["de"]="";
-        synonyms["la"]="";
-        synonyms["les"]="";
-        synonyms["des"]="";
-        synonyms["d"]="";
-        synonyms["l"]="";
-
+        int nbmax = 10;        
         synonyms["st"]="saint";
         synonyms["ste"]="sainte";
         synonyms["cc"]="centre commercial";
         synonyms["chu"]="hopital";
         synonyms["chr"]="hopital";
-        synonyms["all"]="allée";
-        synonyms["allee"]="allée";
-        synonyms["ave"]="avenue";
-        synonyms["av"]="avenue";
         synonyms["bvd"]="boulevard";
         synonyms["bld"]="boulevard";
         synonyms["bd"]="boulevard";
-        synonyms["b"]="boulevard";
-        synonyms["r"]="rue";
-        synonyms["pl"]="place";
 
         Autocomplete<unsigned int> ac;
         ac.add_string("rue jeanne d'arc", 0, synonyms);
@@ -597,29 +547,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     std::string admin_uri;
     int nbmax = 10;
 
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["le"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
-
     synonyms["st"]="saint";
     synonyms["ste"]="sainte";
     synonyms["cc"]="centre commercial";
     synonyms["chu"]="hopital";
     synonyms["chr"]="hopital";
-    synonyms["all"]="allée";
-    synonyms["allee"]="allée";
-    synonyms["ave"]="avenue";
-    synonyms["av"]="avenue";
     synonyms["bvd"]="boulevard";
     synonyms["bld"]="boulevard";
     synonyms["bd"]="boulevard";
-    synonyms["b"]="boulevard";
-    synonyms["r"]="rue";
-    synonyms["pl"]="place";
 
     Autocomplete<unsigned int> ac;
     ac.add_string("gare de Tours Tours", 0, synonyms);
@@ -984,5 +919,105 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     BOOST_CHECK_EQUAL(resp.places(2).embedded_type(), pbnavitia::LINE);
     BOOST_CHECK_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
     BOOST_CHECK_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
+}
+
+BOOST_AUTO_TEST_CASE(find_with_synonyms_mairie_de_vannes_test){
+    int nbmax = 10;
+    autocomplete_map synonyms;
+    synonyms["hotel de ville"]="mairie";
+    synonyms["cc"]="centre commercial";
+    synonyms["gare sncf"]="gare";
+    synonyms["bd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bvd"]="boulevard";
+    synonyms["chr"]="hopital";
+    synonyms["chu"]="hopital";
+    synonyms["ld"]="lieu-dit";
+    synonyms["pt"]="pont";
+    synonyms["rle"]="ruelle";
+    synonyms["rte"]="route";
+    synonyms["sq"]="square";
+    synonyms["st"]="saint";
+    synonyms["ste"]="sainte";
+    synonyms["vla"]="villa";
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("mairie vannes", 0, synonyms);
+    ac.add_string("place hotel de ville vannes", 1, synonyms);
+    ac.add_string("rue DE L'HOTEL DIEU vannes", 2, synonyms);
+    ac.add_string("place vannes", 3, synonyms);
+    ac.add_string("Hôtel-Dieu vannes", 4, synonyms);
+    ac.add_string("Hôtel de Région vannes", 5, synonyms);
+    ac.add_string("Centre Commercial Caluire 2", 6, synonyms);
+    ac.add_string("Rue René", 7, synonyms);
+    ac.build();
+
+    //Dans le dictionnaire : "mairie vannes" -> "mairie hotel de ville vannes"
+    //search : "hotel vannes" -> "hotel vannes" no synonym is applied for search string
+    //Found : mairie vannes et place hotel de ville vannes
+    auto res = ac.find_complete("mairie vannes", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+
+    //Dans le dictionnaire : "mairie vannes" -> "mairie hotel de ville vannes"
+    //search : "hotel vannes" -> "hotel vannes" no synonym is applied for search
+    //Found : mairie vannes, place hotel de ville vannes, rue DE L'HOTEL DIEU vannes, Hôtel-Dieu vannes et Hôtel de Région vannes
+    auto res1 = ac.find_complete("hotel vannes", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 5);
+}
+
+BOOST_AUTO_TEST_CASE(find_with_synonyms_gare_with_or_without_sncf_test){
+    int nbmax = 10;
+    autocomplete_map synonyms;
+    synonyms["hotel de ville"]="mairie";
+    synonyms["cc"]="centre commercial";
+    synonyms["gare sncf"]="gare";
+    synonyms["bd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bvd"]="boulevard";
+    synonyms["chr"]="hopital";
+    synonyms["chu"]="hopital";
+    synonyms["ld"]="lieu-dit";
+    synonyms["pt"]="pont";
+    synonyms["rle"]="ruelle";
+    synonyms["rte"]="route";
+    synonyms["sq"]="square";
+    synonyms["st"]="saint";
+    synonyms["ste"]="sainte";
+    synonyms["vla"]="villa";
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("gare SNCF et routière Rennes", 0, synonyms);
+    ac.add_string("Pré Garel Rennes", 1, synonyms);
+    ac.add_string("Gare Sud Féval Rennes", 2, synonyms);
+    ac.add_string("Parking gare SNCF et routière Rennes", 3, synonyms);
+    ac.add_string("place DE LA GARE Rennes", 4, synonyms);
+    ac.add_string("rue DU PRE GAREL Rennes", 5, synonyms);
+    ac.add_string("Parking SNCF Rennes", 6, synonyms);
+    ac.add_string("parc de la victoire Rennes", 7, synonyms);
+    ac.build();
+
+    //Dans le dictionnaire :
+    //"gare SNCF et routière Rennes" -> "gare sncf et routiere rennes"
+    //"Pré Garel Rennes" -> "Pre garel rennes"
+    //"Gare Sud Féval Rennes" -> "gare sud feval rennes sncf"
+    //"Parking gare SNCF et routière Rennes" -> "parking gare sncf et routiere rennes"
+    //"place DE LA GARE Rennes" -> "place de la gare rennes sncf"
+    //"rue DU PRE GAREL Rennes" -> "rue du pre garel rennes"
+    //"Parking SNCF Rennes" -> "parking sncf rennes"
+
+    //search : "Gare SNCF Rennes" -> "gare sncf rennes" no synonym is applied for search string
+    //Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" et "place DE LA GARE Rennes"
+    auto res = ac.find_complete("gare sncf rennes", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res.size(), 4);
+
+    //search : "SNCF Rennes" -> "sncf rennes" no synonym is applied for search string
+    //Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" ,"place DE LA GARE Rennes" et "Parking SNCF Rennes"
+    auto res1 = ac.find_complete("sncf rennes", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 5);
+
+    //search : "Gare Rennes" -> "gare rennes" no synonym is applied for search string
+    //Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" ,"place DE LA GARE Rennes" et "Parking SNCF Rennes"
+    auto res2 = ac.find_complete("gare rennes", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res2.size(), 6);
 
 }
