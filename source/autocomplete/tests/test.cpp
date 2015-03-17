@@ -1021,3 +1021,89 @@ BOOST_AUTO_TEST_CASE(find_with_synonyms_gare_with_or_without_sncf_test){
     BOOST_REQUIRE_EQUAL(res2.size(), 6);
 
 }
+
+BOOST_AUTO_TEST_CASE(synonyms_without_grand_champ_test){
+    int nbmax = 10;
+    autocomplete_map synonyms;
+    synonyms["hotel de ville"]="mairie";
+    synonyms["cc"]="centre commercial";
+    synonyms["gare sncf"]="gare";
+    synonyms["bd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bvd"]="boulevard";
+    synonyms["chr"]="hopital";
+    synonyms["chu"]="hopital";
+    synonyms["ld"]="lieu-dit";
+    synonyms["pt"]="pont";
+    synonyms["rle"]="ruelle";
+    synonyms["rte"]="route";
+    synonyms["sq"]="square";
+    synonyms["st"]="saint";
+    synonyms["ste"]="sainte";
+    synonyms["vla"]="villa";
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("Grand-Champ 56390", 0, synonyms);
+    ac.add_string("Locmaria-Grand-Champ 56390", 1, synonyms);
+    ac.add_string("Place de la Mairie Grand-Champ", 2, synonyms);
+    ac.add_string("Champs-Elysées - Clémenceau - Grand Palais Paris", 3, synonyms);
+    ac.add_string("Collec Locmaria-Grand-Champ", 4, synonyms);
+    ac.add_string("Grandchamp 52600", 5, synonyms);
+    ac.add_string("Parking Grandchamp Grandchamp", 6, synonyms);
+    ac.add_string("impasse DE GRANDCHAMP Trégunc", 7, synonyms);
+    ac.build();
+
+    //search : "grand-champ" -> "grand champ" no synonym is applied for search string
+    //Found : "Grand-Champ 56390", "Locmaria-Grand-Champ 56390", "Place de la Mairie Grand-Champ" ,
+    //"Champs-Elysées - Clémenceau - Grand Palais Paris" et "Collec Locmaria-Grand-Champ"
+    auto res = ac.find_complete("grand-champ", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res.size(), 5);
+
+    //search : "grandchamp" -> "grandchamp" no synonym is applied for search string
+    //Found : "Grandchamp 52600", "Parking Grandchamp Grandchamp" et "impasse DE GRANDCHAMP Trégunc"
+    auto res1 = ac.find_complete("grandchamp", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(synonyms_with_grand_champ_test){
+    int nbmax = 10;
+    autocomplete_map synonyms;
+    synonyms["hotel de ville"]="mairie";
+    synonyms["cc"]="centre commercial";
+    synonyms["gare sncf"]="gare";
+    synonyms["bd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bvd"]="boulevard";
+    synonyms["chr"]="hopital";
+    synonyms["chu"]="hopital";
+    synonyms["ld"]="lieu-dit";
+    synonyms["pt"]="pont";
+    synonyms["rle"]="ruelle";
+    synonyms["rte"]="route";
+    synonyms["sq"]="square";
+    synonyms["st"]="saint";
+    synonyms["ste"]="sainte";
+    synonyms["vla"]="villa";
+    synonyms["grand-champ"]="grandchamp";
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("Grand-Champ 56390", 0, synonyms);
+    ac.add_string("Locmaria-Grand-Champ 56390", 1, synonyms);
+    ac.add_string("Place de la Mairie Grand-Champ", 2, synonyms);
+    ac.add_string("Champs-Elysées - Clémenceau - Grand Palais Paris", 3, synonyms);
+    ac.add_string("Collec Locmaria-Grand-Champ", 4, synonyms);
+    ac.add_string("Grandchamp 52600", 5, synonyms);
+    ac.add_string("Parking Grandchamp Grandchamp", 6, synonyms);
+    ac.add_string("impasse DE GRANDCHAMP Trégunc", 7, synonyms);
+    ac.build();
+
+    //search : "grand-champ" -> "grand champ" no synonym is applied for search string
+    //Found : all
+    auto res = ac.find_complete("grand-champ", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res.size(), 8);
+
+    //search : "grandchamp" -> "grandchamp" no synonym is applied for search string
+    //Found : All except "Champs-Elysées - Clémenceau - Grand Palais Paris"
+    auto res1 = ac.find_complete("grandchamp", nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 7);
+}
