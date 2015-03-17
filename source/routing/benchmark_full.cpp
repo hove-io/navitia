@@ -73,6 +73,9 @@ int main(int argc, char** argv){
     std::string file, output, stop_input_file;
     int iterations, start, target, date, hour;
 
+    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
+
     desc.add_options()
             ("help", "Show this message")
             ("interations,i", po::value<int>(&iterations)->default_value(100),
@@ -153,11 +156,11 @@ int main(int argc, char** argv){
         std::mt19937 rng(31442);
         std::uniform_int_distribution<> gen(0,data.pt_data->stop_areas.size()-1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days({7});
+        std::vector<unsigned int> days({date != 1 ? unsigned(date) : 7});
         if(data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
-            days.push_back(8);
+            days.push_back(days.front() + 1);
         else
-            days.push_back(13);
+            days.push_back(days.front() + 6);
 
         for(int i = 0; i < iterations; ++i) {
             PathDemand demand;
