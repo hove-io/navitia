@@ -122,12 +122,15 @@ next_valid_discrete_pick_up(const dataRAPTOR& dataRaptor,
                             const JppIdx jpp_idx,
                             const DateTime dt,
                             const bool adapted,
-                            const type::VehicleProperties& vehicle_props) {
+                            const type::VehicleProperties& vehicle_props,
+                            const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->departure_time));
+        if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
-            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, cur_dt};
         }
     }
 
@@ -135,8 +138,10 @@ next_valid_discrete_pick_up(const dataRAPTOR& dataRaptor,
     date++;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->departure_time));
+        if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
-            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, cur_dt};
         }
     }
 
@@ -239,12 +244,15 @@ previous_valid_discrete_drop_off(const dataRAPTOR& dataRaptor,
                                  const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
-                                 const type::VehicleProperties& vehicle_props) {
+                                 const type::VehicleProperties& vehicle_props,
+                                 const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->arrival_time));
+        if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
-            return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, cur_dt};
         }
     }
 
@@ -255,8 +263,10 @@ previous_valid_discrete_drop_off(const dataRAPTOR& dataRaptor,
     --date;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->arrival_time));
+        if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
-            return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, cur_dt};
         }
     }
 
@@ -268,10 +278,11 @@ NextStopTime::earliest_stop_time(const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
                                  const type::VehicleProperties& vehicle_props,
-                                 const bool check_freq) const
+                                 const bool check_freq,
+                                 const DateTime bound) const
 {
     const auto first_discrete_st_pair =
-        next_valid_discrete_pick_up(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props);
+        next_valid_discrete_pick_up(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
 
     if (check_freq) {
         const auto first_frequency_st_pair =
@@ -290,10 +301,11 @@ NextStopTime::tardiest_stop_time(const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
                                  const type::VehicleProperties& vehicle_props,
-                                 const bool check_freq) const
+                                 const bool check_freq,
+                                 const DateTime bound) const
 {
     const auto first_discrete_st_pair =
-        previous_valid_discrete_drop_off(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props);
+        previous_valid_discrete_drop_off(*data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
 
     if (check_freq) {
         const auto first_frequency_st_pair =

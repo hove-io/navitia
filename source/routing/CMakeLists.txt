@@ -19,4 +19,8 @@ add_executable(cli routing_cli.cpp)
 target_link_libraries(cli linenoise routing_cli_utils routing pb_lib boost_program_options data fare routing thermometer time_tables pb_lib
     georef utils autocomplete ${BOOST_LIBS} log4cplus pthread protobuf)
 
+add_executable(benchmark_full benchmark_full.cpp)
+target_link_libraries(benchmark_full routing  boost_program_options data fare routing
+    georef utils autocomplete time_tables ${BOOST_LIBS} log4cplus pb_lib protobuf)
+
 add_subdirectory(tests)

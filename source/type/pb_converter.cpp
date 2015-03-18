@@ -361,7 +361,7 @@ void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::D
         fill_pb_object(nb_way.second, data, address, nb_way.first,
                        coord, max_depth, now, action_period);
     }catch(proximitylist::NotFound){
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("Logger"),
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                        "unable to find a way from coord ["<< coord.lon() << "-" << coord.lat() << "]");
     }
 }

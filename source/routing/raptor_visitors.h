@@ -4,6 +4,9 @@
 
 namespace navitia { namespace routing {
 struct raptor_visitor {
+    typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
+    typedef boost::iterator_range<stop_time_iterator> stop_time_range;
+
     inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
         return a <= st.section_end(current_dt, clockwise());
     }
@@ -14,9 +17,7 @@ struct raptor_visitor {
         return boost::make_iterator_range(jpps.begin() + jpp_order, jpps.end());
     }
 
-    typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
-    boost::iterator_range<stop_time_iterator>
-    st_range(const type::StopTime& st) const {
+    inline stop_time_range st_range(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
         return boost::make_iterator_range(vj->stop_time_list.begin() + jpp->order,
@@ -49,9 +50,7 @@ struct raptor_visitor {
        }
     }
 
-    inline
-    boost::iterator_range<std::vector<type::StopTime>::const_iterator>
-    stop_time_list(const type::VehicleJourney* vj) const {
+    inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {
         return boost::make_iterator_range(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
 
@@ -62,6 +61,9 @@ struct raptor_visitor {
 
 
 struct raptor_reverse_visitor {
+    typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
+    typedef boost::iterator_range<stop_time_iterator> stop_time_range;
+
     inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
         return a >= st.section_end(current_dt, clockwise());
     }
@@ -72,9 +74,7 @@ struct raptor_reverse_visitor {
         return boost::make_iterator_range(jpps.rbegin() + jpps.size() - jpp_order - 1, jpps.rend());
     }
 
-    typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
-    inline boost::iterator_range<stop_time_iterator>
-    st_range(const type::StopTime& st) const {
+    inline stop_time_range st_range(const type::StopTime& st) const {
         const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
         return boost::make_iterator_range(
@@ -108,9 +108,7 @@ struct raptor_reverse_visitor {
         }
     }
 
-    inline
-    boost::iterator_range<std::vector<type::StopTime>::const_reverse_iterator>
-    stop_time_list(const type::VehicleJourney* vj) const {
+    inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {
         return boost::make_iterator_range(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
     }
 
