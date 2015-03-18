@@ -193,6 +193,50 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
 
+namespace {
+struct StartingPointSndPhase {
+    SpIdx sp_idx;
+    unsigned count;
+    DateTime end_dt;
+    unsigned fallback_dur;
+};
+struct Dom {
+    Dom(bool c): clockwise(c) {}
+    bool clockwise;
+    typedef StartingPointSndPhase Arg;
+    inline bool operator()(const Arg& lhs, const Arg& rhs) const {
+        return lhs.count <= rhs.count
+            && (clockwise ? lhs.end_dt <= rhs.end_dt : lhs.end_dt >= rhs.end_dt)
+            && lhs.fallback_dur <= rhs.fallback_dur;
+    }
+};
+ParetoFront<StartingPointSndPhase, Dom>
+make_starting_points_snd_phase(const RAPTOR& raptor,
+                               const RAPTOR::vec_stop_point_duration& arrs,
+                               const bool clockwise)
+{
+    auto res = ParetoFront<StartingPointSndPhase, Dom>(Dom(clockwise));
+
+    for (unsigned count = 1; count <= raptor.count; ++count) {
+        const auto& working_labels = raptor.labels[count];
+        for (const auto& a: arrs) {
+            if (! working_labels.pt_is_initialized(a.first)) { continue; }
+
+            const unsigned walking_t = a.second.total_seconds();
+            StartingPointSndPhase starting_point = {
+                a.first,
+                count,
+                (clockwise ? working_labels.dt_pt(a.first) + walking_t
+                           : working_labels.dt_pt(a.first) - walking_t),
+                walking_t
+            };
+            res.add(starting_point);
+        }
+    }
+
+    return res;
+}
+}
 // copy and do the off by one for strict comparison for the second pass.
 static IdxMap<type::StopPoint, DateTime>
 snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> best_labels) {
@@ -247,28 +291,24 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     // (as in best_labels_pt) in the second pass.  Then, we can reuse
     // these bounds, modulo an off by one because of strict comparison
     // on best_labels.
+    auto starting_points = make_starting_points_snd_phase(*this, calc_dest, clockwise);
     swap(labels, first_pass_labels);
     auto best_labels_pts_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_transfers);
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
     auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
 
-    const unsigned first_pass_count = count;
-    for (unsigned c = 1; c <= first_pass_count; ++c) {
-        const auto& working_labels = first_pass_labels[c];
+    for (const auto& start: starting_points) {
+        const auto& working_labels = first_pass_labels[start.count];
 
-        for (const auto& a: calc_dest) {
-            if (! working_labels.pt_is_initialized(a.first)) { continue; }
-
-            clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
-            init({{a.first, 0_s}}, working_labels.dt_pt(a.first), !clockwise, accessibilite_params.properties);
-            best_labels_pts = best_labels_pts_for_snd_pass;
-            best_labels_transfers = best_labels_transfers_for_snd_pass;
-            boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
-            const auto reader_results =
-                read_solutions(*this, !clockwise, departures_, destinations,
-                               disruption_active, accessibilite_params);
-            for (const auto& s: reader_results) { solutions.add(s); }
-        }
+        clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
+        init({{start.sp_idx, 0_s}}, working_labels.dt_pt(start.sp_idx),
+             !clockwise, accessibilite_params.properties);
+        best_labels_pts = best_labels_pts_for_snd_pass;
+        best_labels_transfers = best_labels_transfers_for_snd_pass;
+        boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
+        const auto reader_results = read_solutions(*this, !clockwise, departures_, destinations,
+                                                   disruption_active, accessibilite_params);
+        for (const auto& s: reader_results) { solutions.add(s); }
     }
 
     std::vector<Path> result;
