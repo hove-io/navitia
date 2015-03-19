@@ -74,3 +74,6 @@ MODULES = {
         'class_name': 'V1Routing'
     }
 }
+
+# Default region instance
+# DEFAULT_REGION = 'default'
