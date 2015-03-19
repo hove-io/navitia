@@ -345,22 +345,34 @@ pbnavitia::Response autocomplete(const std::string &q,
     }
 
 
-    //Sort the list of objects (sort by object type and quality)
+    //Sort the list of objects (sort by object type ,score, quality and name)
     //delete unwanted objects at the end of the list
     auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
+        //Sort by object type
         if (a.embedded_type() != b.embedded_type()){
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order < b_order;
+        } else if (a.quality() == 100  || b.quality() == 100){
+            //Sort by quality, score and then by name
+            if (a.quality() == b.quality()) {
+                if (a.score() == b.score()) {
+                    return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+                } else {
+                    return a.score() > b.score();
+                }
+
+            } else {
+                return a.quality() > b.quality();
+            }
         } else if(a.score() == b.score()) {
+            //Sort by quality and then by name
             if (a.quality() == b.quality()){
                 return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
             } else {
                 return a.quality() > b.quality();
             }
-
-        }
-        else {
+        } else {
             return a.score() > b.score();
         }
     };
