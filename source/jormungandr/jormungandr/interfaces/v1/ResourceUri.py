@@ -44,14 +44,16 @@ import navitiacommon.type_pb2 as type_pb2
 
 class ResourceUri(StatedResource):
 
-    def __init__(self, authentication=True, *args, **kwargs):
+    def __init__(self, authentication=True, links=True, *args, **kwargs):
         StatedResource.__init__(self, *args, **kwargs)
         self.region = None
-        self.method_decorators.append(add_id_links())
+        if links:
+            self.method_decorators.append(add_id_links())
+            self.method_decorators.append(add_computed_resources(self))
+            self.method_decorators.append(add_pagination_links())
+            self.method_decorators.append(clean_links())
         self.method_decorators.append(add_address_poi_id(self))
-        self.method_decorators.append(add_computed_resources(self))
-        self.method_decorators.append(add_pagination_links())
-        self.method_decorators.append(clean_links())
+
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
             #by default ALWAYS use authentication=True

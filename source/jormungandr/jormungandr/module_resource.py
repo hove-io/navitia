@@ -54,6 +54,7 @@ class ModuleResourcesManager(object):
 class ModuleResource(Resource):
     def __init__(self):
         Resource.__init__(self)
+        self.method_decorators = []
         self.module_name = ''
 
     def associate_to(self, module):
