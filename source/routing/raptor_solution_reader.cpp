@@ -275,19 +275,26 @@ struct RaptorSolutionReader {
     typedef std::pair<const type::StopTime*, DateTime> StDt;
     struct Transfer {
         DateTime end_vj;
-        unsigned waiting_t;
-        unsigned transfer_t;
+        unsigned waiting_dur;
+        unsigned transfer_dur;
         StDt end_st_dt;
         StDt begin_st_dt;
-        inline bool is_better_than(const Transfer& that) const {
+    };
+    struct DomTr {
+        // This dominance function is used to choose the different
+        // transfer to go to a given journey pattern.  First, we want
+        // only the best vj.  Then, for the transfers that go to the
+        // best vj, we want the different tradeoff between maximizing
+        // the waiting duration and minimizing the transfer duration.
+        inline bool operator()(const Transfer& lhs, const Transfer& rhs) const {
             const Visitor v;
-            if (v.comp(end_vj, that.end_vj)) { return true; }
-            if (v.comp(that.end_vj, end_vj)) { return false; }
-            if (waiting_t > that.waiting_t) { return true; }
-            if (that.waiting_t > waiting_t) { return false; }
-            return transfer_t < that.transfer_t;
+            if (v.comp(lhs.end_vj, rhs.end_vj)) { return true; }
+            if (v.comp(rhs.end_vj, lhs.end_vj)) { return false; }
+            return lhs.waiting_dur >= rhs.waiting_dur
+                && lhs.transfer_dur <= rhs.transfer_dur;
         }
     };
+    typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
 
     RaptorSolutionReader(const RAPTOR& r,
                          const Visitor& vis,// 2nd pass visitor
@@ -324,11 +331,11 @@ struct RaptorSolutionReader {
         }
     }
 
-    std::map<JpIdx, Transfer>
+    Transfers
     create_transfers(const unsigned count,
                      const PathElt* path,
                      const StDt& begin_st_dt) {
-        std::map<JpIdx, Transfer> transfers;
+        Transfers transfers;
         auto cur_dt = begin_st_dt.second;
         if (begin_st_dt.first->is_frequency()) {
             //for frequency, we need cur_dt to be the begin in the stoptime
@@ -354,7 +361,7 @@ struct RaptorSolutionReader {
                         const uint16_t begin_zone,
                         DateTime cur_dt,
                         const typename Visitor::stop_time_range& st_range,
-                        std::map<JpIdx, Transfer>& transfers) {
+                        Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
 
         for (const auto& end_st: st_range) {
@@ -382,7 +389,7 @@ struct RaptorSolutionReader {
     void try_transfer(const unsigned count,
                       const SpIdx sp_idx,
                       const StDt& end_st_dt,
-                      std::map<JpIdx, Transfer>& transfers) {
+                      Transfers& transfers) {
         const auto& cnx_list = v.clockwise() ?
             raptor.data.dataRaptor->connections.forward_connections :
             raptor.data.dataRaptor->connections.backward_connections;
@@ -412,7 +419,7 @@ struct RaptorSolutionReader {
                       const SpIdx begin_sp_idx,
                       const DateTime begin_dt,
                       const StDt& end_st_dt,
-                      std::map<JpIdx, Transfer>& transfers) {
+                      Transfers& transfers) {
         const unsigned transfer_t = begin_dt - end_st_dt.second;
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
@@ -432,24 +439,21 @@ struct RaptorSolutionReader {
                 end_st_dt,
                 begin_st_dt
             };
-            const auto search = transfers.find(jpp.jp_idx);
-            if (search == transfers.end()) {
-                transfers[jpp.jp_idx] = tr;
-            } else if (tr.is_better_than(search->second)) {
-                search->second = tr;
-            }
+            transfers[jpp.jp_idx].add(tr);
         }
     }
 
     void step(const unsigned count, const PathElt* path, const StDt& begin_st_dt) {
         const auto transfers = create_transfers(count, path, begin_st_dt);
-        for (const auto& tr: transfers) {
-            const PathElt new_path(*begin_st_dt.first,
-                                   begin_st_dt.second,
-                                   *tr.second.end_st_dt.first,
-                                   tr.second.end_st_dt.second,
-                                   path);
-            step(count - 1, &new_path, tr.second.begin_st_dt);
+        for (const auto& pareto: transfers) {
+            for (const auto& tr: pareto.second) {
+                const PathElt new_path(*begin_st_dt.first,
+                                       begin_st_dt.second,
+                                       *tr.end_st_dt.first,
+                                       tr.end_st_dt.second,
+                                       path);
+                step(count - 1, &new_path, tr.begin_st_dt);
+            }
         }
     }
 
