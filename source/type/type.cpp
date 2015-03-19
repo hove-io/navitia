@@ -449,7 +449,7 @@ std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
 std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::StopPoint: return indexes(this->stop_point_list); break;
+    case Type_e::StopPoint: return indexes(this->stop_point_list);
     case Type_e::CommercialMode:
     case Type_e::PhysicalMode:{
          std::set<idx_t> tmp_result;
@@ -603,7 +603,11 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Route: result.push_back(route->idx); break;
-    case Type_e::CommercialMode: result.push_back(commercial_mode->idx); break;
+    case Type_e::CommercialMode:
+        if (this->commercial_mode){
+            result.push_back(commercial_mode->idx);
+        }
+        break;
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list);
     case Type_e::VehicleJourney:
         for(const auto& f_vj: frequency_vehicle_journey_list) {
@@ -611,6 +615,11 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
         }
         for(const auto& d_vj: discrete_vehicle_journey_list) {
             result.push_back(d_vj->idx);
+        }
+        break;
+    case Type_e::PhysicalMode:
+        if (this->physical_mode){
+            result.push_back(physical_mode->idx);
         }
         break;
     default: break;
@@ -651,17 +660,20 @@ JourneyPattern::JourneyPattern(const JourneyPattern& other):
     uri = other.uri;
 }
 
-std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::JourneyPattern: result.push_back(journey_pattern->idx); break;
     case Type_e::StopPoint: result.push_back(stop_point->idx); break;
+    case Type_e::CommercialMode:
+    case Type_e::PhysicalMode:
+        result = journey_pattern->get(type, data);break;
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area->idx); break;
@@ -672,18 +684,20 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
             result.push_back(stop_cnx->idx);
         break;
     case Type_e::CommercialMode:
+    case Type_e::PhysicalMode:{
+         std::set<idx_t> tmp_result;
         for(const auto& jpp: journey_pattern_point_list){
-            if(jpp->journey_pattern && jpp->journey_pattern->commercial_mode){
-                result.push_back(jpp->journey_pattern->commercial_mode->idx);
+            std::vector<idx_t> tmp = jpp->get(type, data);
+            for(const idx_t idx: tmp){
+                tmp_result.insert(idx);
             }
         }
-        break;
-    case Type_e::PhysicalMode:
-        for(const auto& jpp: journey_pattern_point_list){
-            if(jpp->journey_pattern && jpp->journey_pattern->physical_mode){
-                result.push_back(jpp->journey_pattern->physical_mode->idx);
+        if(tmp_result.size() > 0){
+            for(const idx_t idx: tmp_result){
+                result.push_back(idx);
             }
         }
+    }
         break;
     default: break;
     }
