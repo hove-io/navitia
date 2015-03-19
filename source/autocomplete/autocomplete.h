@@ -254,6 +254,12 @@ struct Autocomplete
             // Premier résultat. Il y aura au plus ces indexes
             result = match(*vec, word_dictionnary);
 
+            //If there is only one word to search we have to sort and delete duplicate results
+            if (vecStr.size() == 1) {
+                std::sort(result.begin(), result.end());
+                result.erase(unique(result.begin(), result.end()), result.end());
+            }
+
             for(++vec; vec != vecStr.end(); ++vec){
                 std::vector<T> new_result;
                 std::sort(result.begin(), result.end());
