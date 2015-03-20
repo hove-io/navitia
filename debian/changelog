@@ -1,3 +1,22 @@
+navitia2 (1.14.0) unstable; urgency=low
+
+  * Revert "Jormungandr: stop if no new responses"  <https://github.com/CanalTP/navitia/pull/966>
+  * raptor solution reader: branch on more alternatives  <https://github.com/CanalTP/navitia/pull/963>
+  * Improve raptor solution reader  <https://github.com/CanalTP/navitia/pull/962>
+  * Autocomplete: Tests added for grand-champ  <https://github.com/CanalTP/navitia/pull/961>
+  * Places fix tokenizer navitiaii 1158  <https://github.com/CanalTP/navitia/pull/960>
+  * Raptor: fix second pass  <https://github.com/CanalTP/navitia/pull/958>
+  * raptor: comment the second pass and its dedicated best_labels tricks  <https://github.com/CanalTP/navitia/pull/956>
+  * Pt object  <https://github.com/CanalTP/navitia/pull/954>
+  * Timetable: add calendar filter on route_schedules API  <https://github.com/CanalTP/navitia/pull/953>
+  * Fare: use default ticket for out of date ticket  <https://github.com/CanalTP/navitia/pull/951>
+  * Jormungandr: brief log for authentication  <https://github.com/CanalTP/navitia/pull/948>
+  * Jormungandr: .5s timeout on tests  <https://github.com/CanalTP/navitia/pull/946>
+  * Raptor: change domination function  <https://github.com/CanalTP/navitia/pull/942>
+  * Kraken: enable debuging of streetnetwork with quantum  <https://github.com/CanalTP/navitia/pull/933>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 20 Mar 2015 15:03:00 +0100
+
 navitia2 (1.13.2) unstable; urgency=low
 
   * add a real second pass <https://github.com/CanalTP/navitia/pull/958>
