@@ -109,7 +109,7 @@ struct Ticket {
     bool is_default_ticket() const { return value.undefined; }
 
     Ticket() : value(0), type(None) {}
-    Ticket(const std::string & key, const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
+    Ticket(const std::string& key, const std::string& caption, int value, const std::string& comment, ticket_type type = FlatFare) :
         key(key), caption(caption), value(value), comment(comment), type(type){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -143,7 +143,7 @@ struct DateTicket {
     Ticket get_fare(boost::gregorian::date date) const;
 
     /// Ajoute une nouvelle période
-    void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, Ticket ticket);
+    void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, const Ticket& ticket);
 
     /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
     DateTicket operator+(const DateTicket & other) const;
@@ -295,7 +295,7 @@ struct Transition {
     std::string ticket_key; //< clef vers le tarif correspondant
     GlobalCondition global_condition = GlobalCondition::nothing; //< condition telle que exclusivité ou OD
 
-    bool valid(const SectionKey & section, const Label & label) const;
+    bool valid(const SectionKey& section, const Label& label) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & start_conditions & end_conditions & ticket_key & global_condition;
@@ -360,7 +360,7 @@ struct Fare {
     size_t nb_transitions() const;
 private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
-    DateTicket get_od(Label label, SectionKey section) const;
+    DateTicket get_od(const Label& label, const SectionKey& section) const;
 
     void add_default_ticket();
 

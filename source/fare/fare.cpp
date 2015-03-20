@@ -40,7 +40,7 @@ namespace greg = boost::gregorian;
 
 namespace navitia { namespace fare {
 
-static Label next_label(Label label, Ticket ticket, const SectionKey & section) {
+static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
     // we save the informations about the last mod used
     label.line = section.line;
     label.mode = section.mode;
@@ -86,7 +86,7 @@ static Label next_label(Label label, Ticket ticket, const SectionKey & section) 
     return label;
 }
 
-static bool valid(const State & state, SectionKey section){
+static bool valid(const State& state, const SectionKey& section){
     if((state.mode != "" && !boost::iequals(state.mode, section.mode)) ||
             (state.network != "" && !boost::iequals(state.network, section.network)) ||
             (state.line != "" && !boost::iequals(state.line, section.line)) )
@@ -94,7 +94,7 @@ static bool valid(const State & state, SectionKey section){
     return true;
 }
 
-static bool valid(const State & state, Label label){
+static bool valid(const State& state, const Label& label){
     if((state.mode != "" && !boost::iequals(state.mode, label.mode)) ||
             (state.network != "" && !boost::iequals(state.network, label.network)) ||
             (state.line != "" && !boost::iequals(state.line, label.line))  ||
@@ -153,9 +153,9 @@ results Fare::compute_fare(const routing::Path& path) const {
                 if (! valid(g[v], section_key))
                     continue;
 
-                for (Label label: labels[u]) {
+                for (const Label& label: labels[u]) {
                     Ticket ticket;
-                    Transition transition = g[e];
+                    const Transition& transition = g[e];
                     if (valid(g[u], label) && transition.valid(section_key, label)) {
                         if (transition.ticket_key != "") {
                             bool ticket_found = false; //TODO refactor this, optional is way better
@@ -210,7 +210,7 @@ results Fare::compute_fare(const routing::Path& path) const {
             }
         }
         // exclusive segment, we have to use that ticket
-        catch(Ticket ticket) {
+        catch(const Ticket& ticket) {
             LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
             new_labels.clear();
             new_labels.resize(nb_nodes);
@@ -218,14 +218,14 @@ results Fare::compute_fare(const routing::Path& path) const {
                 new_labels.at(0).push_back(next_label(label, ticket, section_key));
             }
         }
-        labels = new_labels;
+        labels = std::move(new_labels);
 
     }
 
     // We look for the cheapest label
     // if 2 label have the same cost, we take the one with the least number of tickets
     boost::optional<Label> best_label;
-    for(Label label : labels.at(0)) {
+    for(const Label& label : labels.at(0)) {
         if(!best_label || label < (*best_label)) {
             res.tickets = label.tickets;
             res.not_found = (label.nb_undefined_sub_cost != 0);
@@ -238,7 +238,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 }
 
 
-void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, Ticket ticket){
+void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket){
     tickets.push_back(PeriodTicket(greg::date_period(begin, end), ticket));
 }
 
@@ -260,7 +260,7 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     mode = jp->physical_mode->uri; //CHECK
 }
 
-template<class T> bool compare(T a, T b, Comp_e comp) {
+template<class T> bool compare(const T& a, const T& b, Comp_e comp) {
     switch(comp) {
     case Comp_e::LT: return a < b; break;
     case Comp_e::GT: return a > b; break;
@@ -295,7 +295,7 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
     throw no_ticket();
 }
 
-DateTicket DateTicket::operator +(const DateTicket & other) const{
+DateTicket DateTicket::operator +(const DateTicket& other) const{
     DateTicket new_ticket = *this;
     if(this->tickets.size() != other.tickets.size())
         LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets n'ayant pas le même nombre de dates");
@@ -309,7 +309,7 @@ DateTicket DateTicket::operator +(const DateTicket & other) const{
     return new_ticket;
 }
 
-bool Transition::valid(const SectionKey & section, const Label & label) const
+bool Transition::valid(const SectionKey& section, const Label& label) const
 {
     bool result = true;
     if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
@@ -352,7 +352,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
 }
 
 
-DateTicket Fare::get_od(Label label, SectionKey section) const {
+DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     OD_key sa(OD_key::StopArea, label.stop_area);
     OD_key sb(OD_key::Mode, label.mode);
     OD_key sc(OD_key::Zone, boost::lexical_cast<std::string>(label.zone));
