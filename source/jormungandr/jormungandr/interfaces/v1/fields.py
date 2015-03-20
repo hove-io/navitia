@@ -347,7 +347,6 @@ class SectionGeoJson(fields.Raw):
 class Co2Emission(fields.Raw):
     def output(self, key, obj):
         if not obj.HasField("co2_emission"):
-            logging.warn("co2_emission not in object, we skip")
             return
         return {
             'value': obj.co2_emission.value,
