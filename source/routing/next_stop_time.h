@@ -34,6 +34,7 @@ www.navitia.io
 #include "utils/idx_map.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
+#include <boost/optional.hpp>
 
 namespace navitia {
 
@@ -124,11 +125,14 @@ struct NextStopTime {
                    const bool clockwise,
                    const bool adapted,
                    const type::VehicleProperties& vehicle_props,
-                   const bool check_freq = true) const {
+                   const bool check_freq = true,
+                   const boost::optional<DateTime>& bound = boost::none) const {
         if (clockwise) {
-            return earliest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq);
+            return earliest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq,
+                                      bound ? *bound : DateTimeUtils::inf);
         } else {
-            return tardiest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq);
+            return tardiest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq,
+                                      bound ? *bound : DateTimeUtils::min);
         }
     }
 
@@ -141,7 +145,8 @@ struct NextStopTime {
                        const DateTime dt,
                        const bool adapted,
                        const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true) const;
+                       const bool check_freq = true,
+                       const DateTime bound = DateTimeUtils::inf) const;
 
     /// Next backward stop time for a given datetime (dt).  Look for
     /// the first stop_time arriving before dt on the journey pattern
@@ -152,7 +157,8 @@ struct NextStopTime {
                        const DateTime dt,
                        const bool adapted,
                        const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true) const;
+                       const bool check_freq = true,
+                       const DateTime bound = DateTimeUtils::min) const;
 
 private:
     const type::Data& data;

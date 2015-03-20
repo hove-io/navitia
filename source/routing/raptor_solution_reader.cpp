@@ -272,6 +272,30 @@ struct stop_search {};
 
 template<typename Visitor>
 struct RaptorSolutionReader {
+    typedef std::pair<const type::StopTime*, DateTime> StDt;
+    struct Transfer {
+        DateTime end_vj;
+        unsigned waiting_dur;
+        unsigned transfer_dur;
+        StDt end_st_dt;
+        StDt begin_st_dt;
+    };
+    struct DomTr {
+        // This dominance function is used to choose the different
+        // transfer to go to a given journey pattern.  First, we want
+        // only the best vj.  Then, for the transfers that go to the
+        // best vj, we want the different tradeoff between maximizing
+        // the waiting duration and minimizing the transfer duration.
+        inline bool operator()(const Transfer& lhs, const Transfer& rhs) const {
+            const Visitor v;
+            if (v.comp(lhs.end_vj, rhs.end_vj)) { return true; }
+            if (v.comp(rhs.end_vj, lhs.end_vj)) { return false; }
+            return lhs.waiting_dur >= rhs.waiting_dur
+                && lhs.transfer_dur <= rhs.transfer_dur;
+        }
+    };
+    typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+
     RaptorSolutionReader(const RAPTOR& r,
                          const Visitor& vis,// 2nd pass visitor
                          const RAPTOR::vec_stop_point_duration& deps,
@@ -307,30 +331,37 @@ struct RaptorSolutionReader {
         }
     }
 
-    void transfer(const unsigned count,
-                  const SpIdx sp_idx,
-                  const DateTime begin_dt,
-                  const PathElt* path) {
-        const auto& cnx_list = v.clockwise() ?
-            raptor.data.dataRaptor->connections.forward_connections :
-            raptor.data.dataRaptor->connections.backward_connections;
-        for (const auto& conn: cnx_list[sp_idx]) {
-            const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
-            const DateTime transfer_end = v.combine(begin_dt, conn.duration);
-            if (v.comp(transfer_limit, transfer_end)) { continue; }
-
-            // transfer is OK
-            begin_pt(count, conn.sp_idx, transfer_end, path);
+    Transfers
+    create_transfers(const unsigned count,
+                     const PathElt* path,
+                     const StDt& begin_st_dt) {
+        Transfers transfers;
+        auto cur_dt = begin_st_dt.second;
+        if (begin_st_dt.first->is_frequency()) {
+            //for frequency, we need cur_dt to be the begin in the stoptime
+            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
         }
+        const auto begin_zone = begin_st_dt.first->local_traffic_zone;
+        cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+                            v.st_range(*begin_st_dt.first).advance_begin(1), transfers);
+
+        // continuing in the stay in
+        for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
+             stay_in_vj != nullptr;
+             stay_in_vj = v.get_extension_vj(stay_in_vj)) {
+            cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+                                v.stop_time_list(stay_in_vj), transfers);
+        }
+        return transfers;
     }
 
-    template<typename Range>
-    void end_pt(const unsigned count,
-                const PathElt* path,
-                const std::pair<const type::StopTime*, DateTime>& begin_st_dt,
-                const uint16_t begin_zone,
-                DateTime& cur_dt,
-                const Range& st_range) {
+    DateTime try_end_pt(const unsigned count,
+                        const PathElt* path,
+                        const StDt& begin_st_dt,
+                        const uint16_t begin_zone,
+                        DateTime cur_dt,
+                        const typename Visitor::stop_time_range& st_range,
+                        Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
 
         for (const auto& end_st: st_range) {
@@ -344,20 +375,91 @@ struct RaptorSolutionReader {
             if (v.comp(end_limit, cur_dt)) { continue; }
 
             // great, we can end
-            const PathElt new_path(*begin_st_dt.first, begin_st_dt.second, end_st, cur_dt, path);
             if (count == 1) {
                 // we've finished, and it's a valid end as it is initialized
+                const PathElt new_path(*begin_st_dt.first, begin_st_dt.second, end_st, cur_dt, path);
                 handle_solution(new_path);
             } else {
-                transfer(count - 1, end_sp_idx, cur_dt, &new_path);
+                try_transfer(count - 1, end_sp_idx, StDt(&end_st, cur_dt), transfers);
+            }
+        }
+        return cur_dt;
+    }
+
+    void try_transfer(const unsigned count,
+                      const SpIdx sp_idx,
+                      const StDt& end_st_dt,
+                      Transfers& transfers) {
+        const auto& cnx_list = v.clockwise() ?
+            raptor.data.dataRaptor->connections.forward_connections :
+            raptor.data.dataRaptor->connections.backward_connections;
+        for (const auto& conn: cnx_list[sp_idx]) {
+            const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
+            const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
+            if (v.comp(transfer_limit, transfer_end)) { continue; }
+
+            // transfer is OK
+            try_begin_pt(count, conn.sp_idx, transfer_end, end_st_dt, transfers);
+        }
+    }
+
+    DateTime get_vj_end(const StDt& begin_st_dt) const {
+        auto cur_dt = begin_st_dt.second;
+        if (begin_st_dt.first->is_frequency()) {
+            //for frequency, we need cur_dt to be the begin in the stoptime
+            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
+        }
+        for (const auto& end_st: v.st_range(*begin_st_dt.first).advance_begin(1)) {
+            cur_dt = end_st.section_end(cur_dt, v.clockwise());
+        }
+        return cur_dt;
+    }
+
+    void try_begin_pt(const unsigned count,
+                      const SpIdx begin_sp_idx,
+                      const DateTime begin_dt,
+                      const StDt& end_st_dt,
+                      Transfers& transfers) {
+        const unsigned transfer_t = begin_dt - end_st_dt.second;
+        const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
+        for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
+            // trying to begin
+            const auto begin_st_dt = raptor.next_st.next_stop_time(
+                jpp.idx, begin_dt, v.clockwise(), disruption_active,
+                accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true,
+                begin_limit);
+            if (begin_st_dt.first == nullptr) { continue; }
+            if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
+
+            // great, we can begin
+            const Transfer tr = {
+                get_vj_end(begin_st_dt),
+                v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second,
+                transfer_t,
+                end_st_dt,
+                begin_st_dt
+            };
+            transfers[jpp.jp_idx].add(tr);
+        }
+    }
+
+    void step(const unsigned count, const PathElt* path, const StDt& begin_st_dt) {
+        const auto transfers = create_transfers(count, path, begin_st_dt);
+        for (const auto& pareto: transfers) {
+            for (const auto& tr: pareto.second) {
+                const PathElt new_path(*begin_st_dt.first,
+                                       begin_st_dt.second,
+                                       *tr.end_st_dt.first,
+                                       tr.end_st_dt.second,
+                                       path);
+                step(count - 1, &new_path, tr.begin_st_dt);
             }
         }
     }
 
     void begin_pt(const unsigned count,
                   const SpIdx begin_sp_idx,
-                  const DateTime begin_dt,
-                  const PathElt* path = nullptr) {
+                  const DateTime begin_dt) {
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
             // trying to begin
@@ -368,22 +470,7 @@ struct RaptorSolutionReader {
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 
             // great, we can begin
-            auto cur_dt = begin_st_dt.second;
-            if (begin_st_dt.first->is_frequency()) {
-                //for frequency, we need cur_dt to be the begin in the stoptime
-                cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
-            }
-            const auto begin_zone = begin_st_dt.first->local_traffic_zone;
-            end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
-                   v.st_range(*begin_st_dt.first).advance_begin(1));
-
-            // continuing in the stay in
-            for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
-                 stay_in_vj != nullptr;
-                 stay_in_vj = v.get_extension_vj(stay_in_vj)) {
-                end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
-                       v.stop_time_list(stay_in_vj));
-            }
+            step(count, nullptr, begin_st_dt);
         }
     }
 };

@@ -144,7 +144,6 @@ struct Autocomplete
 
         //Appeler la méthode pour traiter les synonymes avant de les ajouter dans le dictionaire:
         auto vec_word = tokenize(str, synonyms);
-
         //créer des patterns pour chaque mot et les ajouter dans temp_pattern_map:
         add_vec_pattern(vec_word, position);
 
@@ -311,11 +310,10 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str,
-                                          const autocomplete_map& synonyms,
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
-        auto vec = tokenize(str, synonyms);
+        auto vec = tokenize(str);
         int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
@@ -342,7 +340,7 @@ struct Autocomplete
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
-                                                      const autocomplete_map& synonyms, const int word_weight,
+                                                      const int word_weight,
                                                       size_t nbmax,
                                                       std::function<bool(T)> keep_element)
                                                       const{
@@ -356,7 +354,7 @@ struct Autocomplete
         std::vector<fl_quality> vec_quality;
         fl_quality quality;
 
-        auto vec_word = tokenize(str, synonyms);
+        auto vec_word = tokenize(str);
         std::vector<std::string> vec_pattern = make_vec_pattern(vec_word, 2); //2-grams
         int wordLength = words_length(vec_word);
         int pattern_count = vec_pattern.size();
@@ -477,19 +475,31 @@ struct Autocomplete
         return str;
     }
 
-    std::set<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms) const{
+    std::set<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms = autocomplete_map()) const{
         std::set<std::string> vec;
         boost::to_lower(strFind);
         strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
 
         //traiter les caractères accentués
         strFind = strip_accents(strFind);
+        std::string strTemp = strFind;
 
-       for(const auto& it : synonyms){
-            strFind = boost::regex_replace(strFind,boost::regex("\\<" + it.first + "\\>"), it.second);
+        //if synonyms contains something, add all synonyms if found while serching on ket et value.
+        //For each synonyms.key found in strFind add synonyms.value
+        for(const auto& it : synonyms){
+            if  (boost::regex_search(strFind,boost::regex("\\<" + it.first + "\\>"))){
+                strTemp += " " + it.second;
+            }
         }
 
-        boost::tokenizer <> tokens(strFind);
+        //For each synonyms.value found in strFind add synonyms.key
+        for(const auto& it : synonyms){
+            if  (boost::regex_search(strFind,boost::regex("\\<" + it.second + "\\>"))){
+                strTemp += " " + it.first;
+            }
+        }
+
+        boost::tokenizer <> tokens(strTemp);
         for (auto token_it: tokens){
             if (!token_it.empty()){
                 vec.insert(token_it);

@@ -1509,6 +1509,17 @@ BOOST_AUTO_TEST_CASE(simple_odt_virtual_with_stop_time){
 // 4
 //
 // We want 1->2->4 and not 1->3->4 (see the 7-pages ppt that explain the bug)
+static void
+check_y_line_the_ultimate_political_blocking_bug(const std::vector<navitia::routing::Path>& res) {
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 3);
+    BOOST_CHECK_EQUAL(res[0].items[0].departure.time_of_day().total_seconds(), 8000);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival.time_of_day().total_seconds(), 8100);
+    BOOST_CHECK_EQUAL(res[0].items[1].departure.time_of_day().total_seconds(), 8100);// A stop2
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival.time_of_day().total_seconds(), 8500);// B stop2
+    BOOST_CHECK_EQUAL(res[0].items[2].departure.time_of_day().total_seconds(), 8500);
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival.time_of_day().total_seconds(), 8600);
+}
 BOOST_AUTO_TEST_CASE(y_line_the_ultimate_political_blocking_bug){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8000)("stop2", 8100, 8100)("stop3", 8200, 8200);
@@ -1518,19 +1529,15 @@ BOOST_AUTO_TEST_CASE(y_line_the_ultimate_political_blocking_bug){
     b.connection("stop3", "stop3", 10);
     b.connection("stop4", "stop4", 10);
     b.data->pt_data->index();
+    b.data->build_uri();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0], d.stop_areas[3], 7900, 0, DateTimeUtils::inf, false, false);
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1[0].items.size(), 3);
-    BOOST_CHECK_EQUAL(res1[0].items[0].departure.time_of_day().total_seconds(), 8000);
-    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 8100);
-    BOOST_CHECK_EQUAL(res1[0].items[1].departure.time_of_day().total_seconds(), 8100);// A stop2
-    BOOST_CHECK_EQUAL(res1[0].items[1].arrival.time_of_day().total_seconds(), 8500);// B stop2
-    BOOST_CHECK_EQUAL(res1[0].items[2].departure.time_of_day().total_seconds(), 8500);
-    BOOST_CHECK_EQUAL(res1[0].items[2].arrival.time_of_day().total_seconds(), 8600);
+    auto res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 7900, 0, DateTimeUtils::inf, false, false);
+    check_y_line_the_ultimate_political_blocking_bug(res1);
+    auto res2 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 9000, 0, DateTimeUtils::min, false, false, false);
+    check_y_line_the_ultimate_political_blocking_bug(res2);
 }
 
 /*

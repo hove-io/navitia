@@ -486,9 +486,9 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
         search_str = str;
     }
     if (search_type == 0){
-        to_return = fl_way.find_complete(search_str, this->synonyms, nbmax, keep_element);
+        to_return = fl_way.find_complete(search_str, nbmax, keep_element);
     }else{
-        to_return = fl_way.find_partial_with_pattern(search_str, this->synonyms, word_weight, nbmax, keep_element);
+        to_return = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element);
     }
 
     /// récupération des coordonnées du numéro recherché pour chaque rue

@@ -1243,6 +1243,8 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     pathitem = section.street_network().path_items(cpt_item++);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     BOOST_CHECK_EQUAL(pathitem.duration(), 10);
+    BOOST_CHECK_EQUAL(section.origin().poi().coord().lon(), section.street_network().coordinates(0).lon());
+    BOOST_CHECK_EQUAL(section.origin().poi().coord().lat(), section.street_network().coordinates(0).lat());
 
     //putting back the bss bike
     prev_section = section;
@@ -1278,6 +1280,8 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
 //    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //projection
     BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / (get_default_speed()[nt::Mode_e::Walking]), 1);
+    BOOST_CHECK_EQUAL(section.origin().address().coord().lon(), section.street_network().coordinates(0).lon());
+    BOOST_CHECK_EQUAL(section.origin().address().coord().lat(), section.street_network().coordinates(0).lat());
 }
 
 /**
