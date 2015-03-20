@@ -164,6 +164,8 @@ message StopArea {
     repeated Code codes = 12;
     optional string timezone = 15;
     optional string label = 16;
+    repeated CommercialMode commercial_modes = 21;
+    repeated PhysicalMode physical_modes = 22;
 }
 
 message StopPoint {
