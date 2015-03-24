@@ -213,6 +213,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     // We add coherence with the origin of the request
                     fill_pb_placemark(origin, d, section->mutable_origin(), 2, now, action_period, show_codes);
                     // We add coherence with the first pt section
+                    section->mutable_destination()->Clear();
                     fill_pb_placemark(departure_stop_point, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
