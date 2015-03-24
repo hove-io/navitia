@@ -187,6 +187,16 @@ class Instance(object):
         instance_db = self._get_models()
         return get_value_or_default('min_duration_too_long_journey', instance_db, self.name)
 
+    @property
+    def max_duration_criteria(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_duration_criteria', instance_db, self.name)
+
+    @property
+    def max_duration_fallback_mode(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_duration_fallback_mode', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None
