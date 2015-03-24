@@ -30,14 +30,24 @@
 from collections import OrderedDict
 
 class TravelerProfile(object):
-    def __init__(self, walking_speed=1.12, bike_speed=3.33, car_speed=11.11, max_duration_to_pt=15*60,
+    def __init__(self, walking_speed=1.12, bike_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
                  first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
-                 keolis_type_map={}):
+                 keolis_type_map={}, max_walking_duration_to_pt=15*60, max_bike_duration_to_pt=15*60,
+                 max_bss_duration_to_pt=15*60, max_car_duration_to_pt=15*60):
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
         self.car_speed = car_speed
 
-        self.max_duration_to_pt = max_duration_to_pt
+        if max_duration_to_pt:
+            self.max_walking_duration_to_pt = max_duration_to_pt
+            self.max_bike_duration_to_pt = max_duration_to_pt
+            self.max_bss_duration_to_pt = max_duration_to_pt
+            self.max_car_duration_to_pt = max_duration_to_pt
+        else:
+            self.max_walking_duration_to_pt = max_walking_duration_to_pt
+            self.max_bike_duration_to_pt = max_bike_duration_to_pt
+            self.max_bss_duration_to_pt = max_bss_duration_to_pt
+            self.max_car_duration_to_pt = max_car_duration_to_pt
 
         if first_and_last_section_mode:
             self.first_section_mode = self.last_section_mode = first_and_last_section_mode
@@ -58,7 +68,11 @@ class TravelerProfile(object):
         args['bike_speed'] = self.bike_speed
         args['bss_speed'] = self.bss_speed
         args['car_speed'] = self.car_speed
-        args['max_duration_to_pt'] = self.max_duration_to_pt
+
+        args['max_walking_duration_to_pt'] = self.max_walking_duration_to_pt
+        args['max_bike_duration_to_pt'] = self.max_bike_duration_to_pt
+        args['max_bss_duration_to_pt'] = self.max_bss_duration_to_pt
+        args['max_car_duration_to_pt'] = self.max_car_duration_to_pt
 
         args['origin_mode'] = self.first_section_mode
         args['destination_mode'] = self.last_section_mode
@@ -140,7 +154,8 @@ travelers_profile = {
 
     'motorist': TravelerProfile(walking_speed=1.11,
                                 car_speed=11.11,
-                                max_duration_to_pt=15*60,
+                                max_walking_duration_to_pt=15*60,
+                                max_car_duration_to_pt=35*60,
                                 first_section_mode=['walking', 'car'],
                                 last_section_mode=['walking'],
                                 keolis_type_map={'rapid': ['best'],
