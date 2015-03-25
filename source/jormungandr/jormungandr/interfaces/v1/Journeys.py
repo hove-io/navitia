@@ -218,7 +218,7 @@ ticket = {
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
-    "tickets": NonNullList(NonNullNested(ticket)),
+    "tickets": fields.List(NonNullNested(ticket)),
     "disruptions": DisruptionsField,
 }
 

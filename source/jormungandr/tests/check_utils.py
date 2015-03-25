@@ -401,7 +401,7 @@ def is_valid_journey_response(response, tester, query_str):
     # check the fare section
     # the fares must be structurally valid and all link to sections must be ok
     all_tickets = unique_dict('id')
-    fares = get_not_null(response, "tickets")
+    fares = response['tickets']
     for f in fares:
         is_valid_ticket(f, tester)
         all_tickets[f['id']] = f
