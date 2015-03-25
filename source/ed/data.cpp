@@ -304,10 +304,38 @@ void Data::clean() {
                         vjs2 = *vj1;
                     }
 
+                    using ed::types::StopTime;
+                    const bool are_equal =
+                        (*vj1)->validity_pattern->days != (*vj2)->validity_pattern->days
+                        && boost::equal((*vj1)->stop_time_list, (*vj2)->stop_time_list,
+                                     [](const StopTime* st1, const StopTime* st2) {
+                                         return st1->departure_time == st2->departure_time
+                                         && st1->arrival_time == st2->arrival_time;
+                                     });
+                    if (are_equal) {
+                        LOG4CPLUS_WARN(logger, "Data::clean(): are equal with different overlapping vp: "
+                                       << (*vj1)->uri << " and " << (*vj2)->uri);
+                        continue;
+                    }
+
                     for(auto rp = (*vj1)->journey_pattern->journey_pattern_point_list.begin(); rp != (*vj1)->journey_pattern->journey_pattern_point_list.end();++rp) {
                         if(vjs1->stop_time_list.at((*rp)->order)->departure_time >= vjs2->stop_time_list.at((*rp)->order)->departure_time ||
                            vjs1->stop_time_list.at((*rp)->order)->arrival_time >= vjs2->stop_time_list.at((*rp)->order)->arrival_time) {
                             toErase.insert((*vj2)->uri);
+                            LOG4CPLUS_WARN(logger, "Data::clean(): overlap: "
+                                           << (*vj1)->uri << ":"
+                                           << (*vj1)->stop_time_list.front()->departure_time << "->"
+                                           << (*vj1)->stop_time_list.at((*rp)->order)->departure_time
+                                           << "->"
+                                           << (*vj1)->stop_time_list.at((*rp)->order)->arrival_time
+                                           << " and "
+                                           << (*vj2)->uri << ":"
+                                           << (*vj2)->stop_time_list.front()->departure_time << "->"
+                                           << (*vj2)->stop_time_list.at((*rp)->order)->departure_time
+                                           << "->"
+                                           << (*vj2)->stop_time_list.at((*rp)->order)->arrival_time
+                                );
+
                             ++erase_overlap;
                             break;
                         }
