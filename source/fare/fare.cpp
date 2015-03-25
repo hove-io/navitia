@@ -128,8 +128,8 @@ results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);
 
-    if (! nb_nodes) {
-        LOG4CPLUS_WARN(logger, "no fare data loaded, cannot compute fare");
+    if (nb_nodes < 2) {
+        LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
         return res;
     }
     std::vector< std::vector<Label> > labels(nb_nodes);
