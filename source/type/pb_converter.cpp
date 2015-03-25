@@ -333,6 +333,8 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
             fill_pb_object(adm, data,  stop_point->add_administrative_regions(),
                            depth-1, now, action_period);
         }
+    }
+    if(depth > 2){
         fill_pb_object(sp->coord, data, stop_point->mutable_address(), depth - 1, now, action_period);
     }
 
