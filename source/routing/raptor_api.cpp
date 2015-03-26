@@ -332,9 +332,9 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 // has estimated datetime we need to set it has estimated too.
                 if (pb_journey->sections_size() > 1) {
                     for (int i=pb_journey->sections_size()-1; i>=0; --i) {
-                        auto section = pb_journey->sections(i);
-                        if (section.type() == pbnavitia::PUBLIC_TRANSPORT) {
-                            if (section.add_info_vehicle_journey().has_date_time_estimated()) {
+                        auto section = pb_journey->mutable_sections(i);
+                        if (section->type() == pbnavitia::PUBLIC_TRANSPORT) {
+                            if (section->add_info_vehicle_journey().has_date_time_estimated()) {
                                 pb_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
                             }
                             break;
