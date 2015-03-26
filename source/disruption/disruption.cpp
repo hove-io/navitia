@@ -34,6 +34,18 @@ www.navitia.io
 
 namespace navitia { namespace disruption {
 
+static int min_priority(const DisruptionSet& disruptions){
+    int min = std::numeric_limits<int>::max();
+    for(const auto& wp: disruptions){
+        auto i = wp.lock();
+        if(!i || !i->severity) continue;
+        if(i->severity->priority < min){
+            min = i->severity->priority;
+        }
+    }
+    return min;
+}
+
 Disrupt& Disruption::find_or_create(const type::Network* network){
     auto find_predicate = [&](const Disrupt& network_disrupt) {
         return network == network_disrupt.network;
@@ -158,7 +170,15 @@ void Disruption::sort_disruptions(){
 
     auto sort_lines = [&](const std::pair<const type::Line*, DisruptionSet>& l1,
                           const std::pair<const type::Line*, DisruptionSet>& l2) {
-        return l1.first < l2.first;
+        int p1 = min_priority(l1.second);
+        int p2 = min_priority(l2.second);
+        if(p1 != p2){
+            return p1 < p2;
+        }else if(l1.first->code != l2.first->code){
+            return l1.first->code < l2.first->code;
+        }else{
+            return l1.first->name < l2.first->name;
+        }
     };
 
     std::sort(this->disrupts.begin(), this->disrupts.end(), sort_disruption);

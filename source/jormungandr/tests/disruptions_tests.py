@@ -327,6 +327,9 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
 
     def test_disruption_on_route_and_line(self):
+        """
+        and we check the sort order of the lines
+        """
         response = self.query_region('traffic_reports?_current_datetime=20150125T090000')
 
         impacts = get_impacts(response)
@@ -335,18 +338,20 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('traffic_reports?_current_datetime=20150127T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 1)
+        eq_(len(impacts), 3)
         assert 'too_bad_route_A:0_and_line' in impacts
 
         traffic_report = get_not_null(response, 'traffic_reports')
         eq_(len(traffic_report), 1)
 
         impacted_lines = get_not_null(traffic_report[0], 'lines')
-        eq_(len(impacted_lines), 1)
+        eq_(len(impacted_lines), 3)
         is_valid_line(impacted_lines[0], depth_check=0)
-        eq_(impacted_lines[0]['id'], 'A')
+        eq_(impacted_lines[0]['id'], 'B')
+        eq_(impacted_lines[1]['id'], 'A')
+        eq_(impacted_lines[2]['id'], 'C')
 
-        lines_disrupt = get_disruptions(impacted_lines[0], response)
+        lines_disrupt = get_disruptions(impacted_lines[1], response)
         eq_(len(lines_disrupt), 1)
         for d in lines_disrupt:
             is_valid_disruption(d)

@@ -493,13 +493,22 @@ struct routing_api_data {
         info_severity->uri = "info";
         info_severity->wording = "information severity";
         info_severity->color = "#FFFF00";
+        info_severity->priority = 25;
         holder.severities[info_severity->uri] = info_severity;
 
         auto bad_severity = boost::make_shared<Severity>();
         bad_severity->uri = "disruption";
         bad_severity->wording = "bad severity";
         bad_severity->color = "#FFFFF0";
+        bad_severity->priority = 0;
         holder.severities[bad_severity->uri] = bad_severity;
+
+        auto foo_severity = boost::make_shared<Severity>();
+        foo_severity->uri = "foo";
+        foo_severity->wording = "foo severity";
+        foo_severity->color = "#FFFFF0";
+        foo_severity->priority = 50;
+        holder.severities[foo_severity->uri] = foo_severity;
 
         {
             //we create one disruption on stop A
@@ -679,6 +688,30 @@ struct routing_api_data {
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
 
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_line_B";
+            impact->application_periods = {period};
+
+            impact->severity = bad_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_line_C";
+            impact->application_periods = {period};
+
+            impact->severity = foo_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
+
             impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
 
             disruption->add_impact(impact);
