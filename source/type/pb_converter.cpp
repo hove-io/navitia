@@ -71,7 +71,7 @@ compute_disruption_status(const boost::shared_ptr<type::new_disruption::Impact>&
 
 template <typename T>
 void fill_address(const T* obj, const nt::Data& data,
-                    pbnavitia::Address* address, const std::string address_name, int house_number,
+                    pbnavitia::Address* address, const std::string& address_name, int house_number,
                     const type::GeographicalCoord& coord, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period) {
     if(obj == nullptr)
@@ -216,13 +216,12 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
 void fill_pb_object(const nt::Contributor*,
                     const nt::Data& , pbnavitia::Contributor* ,
                     int , const pt::ptime& ,
-                    const pt::time_period& , const bool, const bool){}
+                    const pt::time_period& , const bool){}
 
-void fill_pb_object(const nt::StopArea * sa,
+void fill_pb_object(const nt::StopArea* sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
                     int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period, const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const pt::time_period& action_period, const bool show_codes){
     if(sa == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -249,24 +248,18 @@ void fill_pb_object(const nt::StopArea * sa,
         for (const nt::idx_t idx : indexes) {
             nt::CommercialMode* commercial_mode = data.pt_data->commercial_modes[idx];
             fill_pb_object(commercial_mode, data, stop_area->add_commercial_modes(), 0, now, action_period,
-                           show_codes, display_all_publishable_disruption);
+                           show_codes);
         }
         indexes = sa->get(navitia::type::Type_e::PhysicalMode, *(data.pt_data));
         for (const nt::idx_t idx : indexes) {
             nt::PhysicalMode* physical_mode = data.pt_data->physical_modes[idx];
             fill_pb_object(physical_mode, data, stop_area->add_physical_modes(), 0, now, action_period,
-                           show_codes, display_all_publishable_disruption);
+                           show_codes);
         }
     }
 
-    if(display_all_publishable_disruption){
-        for(const auto message : sa->get_publishable_messages(now)){
-            fill_message(message, data, stop_area, max_depth-1, now, action_period);
-        }
-    }else{
-        for(const auto message : sa->get_applicable_messages(now, action_period)){
-            fill_message(message, data, stop_area, max_depth-1, now, action_period);
-        }
+    for(const auto message : sa->get_applicable_messages(now, action_period)){
+        fill_message(message, data, stop_area, max_depth-1, now, action_period);
     }
     if(show_codes) {
         for(auto type_value : sa->codes) {
@@ -278,8 +271,7 @@ void fill_pb_object(const nt::StopArea * sa,
 
 void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
                     pbnavitia::StopPoint* stop_point, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
     if(sp == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -340,17 +332,11 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
 
     if(depth > 0 && sp->stop_area != nullptr)
         fill_pb_object(sp->stop_area, data, stop_point->mutable_stop_area(),
-                       depth-1, now, action_period, show_codes, display_all_publishable_disruption);
+                       depth-1, now, action_period, show_codes);
 
 
-    if(display_all_publishable_disruption){
-        for(const auto message : sp->get_publishable_messages(now)){
-            fill_message(message, data, stop_point, max_depth-1, now, action_period);
-        }
-    }else{
-        for(const auto message : sp->get_applicable_messages(now, action_period)){
-            fill_message(message, data, stop_point, max_depth-1, now, action_period);
-        }
+    for(const auto message : sp->get_applicable_messages(now, action_period)){
+        fill_message(message, data, stop_point, max_depth-1, now, action_period);
     }
     if(show_codes) {
         for(auto type_value : sp->codes) {
@@ -385,8 +371,7 @@ void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::D
 
 void fill_pb_object(nt::Line const* l, const nt::Data& data,
         pbnavitia::Line * line, int max_depth, const pt::ptime& now,
-        const pt::time_period& action_period, const bool show_codes,
-        const bool display_all_publishable_disruption){
+        const pt::time_period& action_period, const bool show_codes){
     if(l == nullptr)
         return ;
 
@@ -413,26 +398,20 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
-            fill_pb_object(route, data, line->add_routes(), depth-1, now, action_period, show_codes, display_all_publishable_disruption);
+            fill_pb_object(route, data, line->add_routes(), depth-1, now, action_period, show_codes);
         }
         for(auto physical_mode : l->physical_mode_list){
             fill_pb_object(physical_mode, data, line->add_physical_mode(),
-                    depth-1, now, action_period, show_codes, display_all_publishable_disruption);
+                    depth-1, now, action_period, show_codes);
         }
 
         fill_pb_object(l->commercial_mode, data,
-                line->mutable_commercial_mode(), depth-1, now, action_period, show_codes, display_all_publishable_disruption);
-        fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes, display_all_publishable_disruption);
+                line->mutable_commercial_mode(), depth-1, now, action_period, show_codes);
+        fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
     }
 
-    if(display_all_publishable_disruption){
-        for(const auto message : l->get_publishable_messages(now)){
-            fill_message(message, data, line, depth-1, now, action_period);
-        }
-    }else{
-        for(const auto message : l->get_applicable_messages(now, action_period)){
-            fill_message(message, data, line, depth-1, now, action_period);
-        }
+    for(const auto message : l->get_applicable_messages(now, action_period)){
+        fill_message(message, data, line, depth-1, now, action_period);
     }
 
     if(show_codes) {
@@ -445,8 +424,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
 void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
         pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period, const bool,
-        const bool display_all_publishable_disruption){
+        const pt::ptime& now, const pt::time_period& action_period, const bool){
     if(jp == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -455,7 +433,7 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     journey_pattern->set_uri(jp->uri);
     if(depth > 0 && jp->route != nullptr) {
         fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
-                depth-1, now, action_period, display_all_publishable_disruption);
+                depth-1, now, action_period);
     }
 }
 
@@ -472,8 +450,7 @@ void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::MultiLineString
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::Route* route, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
     if(r == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -488,14 +465,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     }
 
     route->set_uri(r->uri);
-    if(display_all_publishable_disruption){
-        for(const auto& message : r->get_publishable_messages(now)){
-            fill_message(message, data, route, max_depth-1, now, action_period);
-        }
-    }else{
-        for(const auto& message : r->get_applicable_messages(now, action_period)){
-            fill_message(message, data, route, max_depth-1, now, action_period);
-        }
+    for(const auto& message : r->get_applicable_messages(now, action_period)){
+        fill_message(message, data, route, max_depth-1, now, action_period);
     }
 
     if(show_codes) {
@@ -508,7 +479,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     }
     if(r->line != nullptr) {
         fill_pb_object(r->line, data, route->mutable_line(), depth-1,
-                       now, action_period, show_codes, display_all_publishable_disruption);
+                       now, action_period, show_codes);
     }
 
     fill_pb_object(r->shape, route->mutable_geojson());
@@ -519,7 +490,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         for(auto idx : thermometer.get_thermometer()) {
             auto stop_point = data.pt_data->stop_points[idx];
                 fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
-                        now, action_period, show_codes, display_all_publishable_disruption);
+                        now, action_period, show_codes);
         }
         std::set<nt::PhysicalMode*> physical_modes;
         for (auto journey_pattern : r->journey_pattern_list) {
@@ -527,7 +498,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         }
         for (auto physical_mode : physical_modes) {
             fill_pb_object(physical_mode, data, route->add_physical_modes(), 0, now, action_period,
-                           show_codes, display_all_publishable_disruption);
+                           show_codes);
         }
     }
 }
@@ -535,22 +506,15 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
 void fill_pb_object(const nt::Network* n, const nt::Data& data,
                     pbnavitia::Network* network, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
     if(n == nullptr)
         return ;
 
     network->set_name(n->name);
     network->set_uri(n->uri);
 
-    if(display_all_publishable_disruption){
-        for(const auto& message : n->get_publishable_messages(now)){
-            fill_message(message, data, network, max_depth-1, now, action_period);
-        }
-    }else{
-        for(const auto& message : n->get_applicable_messages(now, action_period)){
-            fill_message(message, data, network, max_depth-1, now, action_period);
-        }
+    for(const auto& message : n->get_applicable_messages(now, action_period)){
+        fill_message(message, data, network, max_depth-1, now, action_period);
     }
     if(show_codes) {
         for(auto type_value : n->codes) {
@@ -562,8 +526,7 @@ void fill_pb_object(const nt::Network* n, const nt::Data& data,
 
 void fill_pb_object(const nt::CommercialMode* m, const nt::Data&,
                     pbnavitia::CommercialMode* commercial_mode,
-                    int, const pt::ptime&, const pt::time_period&, const bool,
-                    const bool){
+                    int, const pt::ptime&, const pt::time_period&, const bool){
     if(m == nullptr)
         return ;
 
@@ -574,8 +537,7 @@ void fill_pb_object(const nt::CommercialMode* m, const nt::Data&,
 
 void fill_pb_object(const nt::PhysicalMode* m, const nt::Data&,
                     pbnavitia::PhysicalMode* physical_mode, int,
-                    const pt::ptime&, const pt::time_period&, const bool,
-                    const bool){
+                    const pt::ptime&, const pt::time_period&, const bool){
     if(m == nullptr)
         return ;
 
@@ -586,8 +548,7 @@ void fill_pb_object(const nt::PhysicalMode* m, const nt::Data&,
 
 void fill_pb_object(const nt::Company* c, const nt::Data&,
                     pbnavitia::Company* company, int, const pt::ptime&,
-                    const pt::time_period&, const bool show_codes,
-                    const bool){
+                    const pt::time_period&, const bool show_codes){
     if(c == nullptr)
         return ;
 
@@ -624,7 +585,7 @@ void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data,
 
 void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
                     pbnavitia::ValidityPattern* validity_pattern, int,
-                    const pt::ptime&, const pt::time_period&, const bool, const bool){
+                    const pt::ptime&, const pt::time_period&, const bool){
     if(vp == nullptr)
         return;
     auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
@@ -665,8 +626,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
-                    const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const bool show_codes){
     if(vj == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -717,14 +677,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                                      action_period);
     }
 
-    if(display_all_publishable_disruption){
-        for(auto message : vj->get_publishable_messages(now)){
-            fill_message(message, data, vehicle_journey, max_depth-1, now, action_period);
-        }
-    }else{
-        for(auto message : vj->get_applicable_messages(now, action_period)){
-            fill_message(message, data, vehicle_journey, max_depth-1, now, action_period);
-        }
+    for(auto message : vj->get_applicable_messages(now, action_period)){
+        fill_message(message, data, vehicle_journey, max_depth-1, now, action_period);
     }
 
     //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
@@ -788,8 +742,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
 void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
                     pbnavitia::JourneyPatternPoint * journey_pattern_point,
                     int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period, const bool show_codes,
-                    const bool display_all_publishable_disruption){
+                    const pt::time_period& action_period, const bool show_codes){
     if(jpp == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -801,12 +754,12 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
         if(jpp->stop_point != nullptr) {
             fill_pb_object(jpp->stop_point, data,
                            journey_pattern_point->mutable_stop_point(),
-                           depth-1, now, action_period, display_all_publishable_disruption);
+                           depth-1, now, action_period);
         }
         if(jpp->journey_pattern != nullptr) {
             fill_pb_object(jpp->journey_pattern, data,
                            journey_pattern_point->mutable_journey_pattern(),
-                           depth - 1, now, action_period, show_codes, display_all_publishable_disruption);
+                           depth - 1, now, action_period, show_codes);
         }
     }
 }
@@ -1550,7 +1503,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 
 void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
                     pbnavitia::Calendar* pb_cal, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes, const bool)
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes)
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);

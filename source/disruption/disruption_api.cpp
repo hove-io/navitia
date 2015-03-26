@@ -67,14 +67,23 @@ pbnavitia::Response disruptions(const navitia::type::Data& d,
     for (const Disrupt& dist: disrupts) {
         pbnavitia::Disruptions* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-        navitia::fill_pb_object(dist.network, d, pb_network, depth, now_dt, action_period, false, true);
-        for (const type::Line* line: dist.lines) {
-            pbnavitia::Line* pb_line = pb_disruption->add_lines();
-            navitia::fill_pb_object(line, d, pb_line, depth-1, now_dt, action_period, false, true);
+        for(const auto& impact: dist.network_disruptions){
+            fill_message(impact, d, pb_network, depth-1, now_dt, action_period);
         }
-        for (const type::StopArea* stop_area: dist.stop_areas) {
+        navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
+        for (const auto& line_item: dist.lines) {
+            pbnavitia::Line* pb_line = pb_disruption->add_lines();
+            navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
+            for(const auto& impact: line_item.second){
+                fill_message(impact, d, pb_line, depth-1, now_dt, action_period);
+            }
+        }
+        for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
-            navitia::fill_pb_object(stop_area, d, pb_stop_area, depth-1, now_dt, action_period, false, true);
+            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1, bt::not_a_date_time, action_period, false);
+            for(const auto& impact: sa_item.second){
+                fill_message(impact, d, pb_stop_area, depth-1, now_dt, action_period);
+            }
         }
     }
     auto pagination = pb_response.mutable_pagination();

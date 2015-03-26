@@ -36,12 +36,14 @@ www.navitia.io
 
 namespace navitia { namespace disruption {
 
+using DisruptionSet = std::set<boost::weak_ptr<type::new_disruption::Impact>>;
 
 struct Disrupt{
     type::idx_t idx;
     const type::Network* network = nullptr;
-    std::vector<const type::Line*> lines;
-    std::vector<const type::StopArea*> stop_areas;
+    DisruptionSet network_disruptions;
+    std::vector<std::pair<const type::Line*, DisruptionSet>> lines;
+    std::vector<std::pair<const type::StopArea*, DisruptionSet>> stop_areas;
 };
 
 class Disruption{
@@ -55,15 +57,15 @@ private:
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                      const boost::posix_time::ptime now);
 
     void add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                      const boost::posix_time::ptime now);
     void add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                      const boost::posix_time::ptime now);
     void sort_disruptions();
 public:
     Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
@@ -71,7 +73,7 @@ public:
     void disruptions_list(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
                     const type::Data &d,
-                    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                    const boost::posix_time::ptime now);
 
     const std::vector<Disrupt>& get_disrupts() const;
     size_t get_disrupts_size();

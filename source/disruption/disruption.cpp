@@ -78,14 +78,17 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
             const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
             if (stop_area->has_publishable_message(now)){
                 Disrupt& dist = this->find_or_create(network);
-                auto find_predicate = [&](const type::StopArea* sa) {
-                    return stop_area == sa;
+                auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
+                    return item.first == stop_area;
                 };
                 auto it = std::find_if(dist.stop_areas.begin(),
                                        dist.stop_areas.end(),
                                        find_predicate);
+                auto v = stop_area->get_publishable_messages(now);
                 if(it == dist.stop_areas.end()){
-                    dist.stop_areas.push_back(stop_area);
+                    dist.stop_areas.push_back(std::make_pair(stop_area, DisruptionSet(v.begin(), v.end())));
+                }else{
+                    it->second.insert(v.begin(), v.end());
                 }
             }
         }
@@ -99,7 +102,9 @@ void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
     for(auto idx : network_idx){
         const auto* network = d.pt_data->networks[idx];
         if (network->has_publishable_message(now)){
-            this->find_or_create(network);
+            auto& res = this->find_or_create(network);
+            auto v = network->get_publishable_messages(now);
+            res.network_disruptions.insert(v.begin(), v.end());
         }
     }
 }
@@ -111,8 +116,7 @@ void Disruption::add_lines(const std::string& filter,
 
     std::vector<type::idx_t> line_list;
     try{
-        line_list  = ptref::make_query(type::Type_e::Line, filter,
-                forbidden_uris, d);
+        line_list  = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
     } catch(const ptref::parsing_error &parse_error) {
         LOG4CPLUS_WARN(logger, "Disruption::add_lines : Unable to parse filter " + parse_error.more);
     } catch(const ptref::ptref_error &ptref_error){
@@ -120,16 +124,23 @@ void Disruption::add_lines(const std::string& filter,
     }
     for(auto idx : line_list){
         const auto* line = d.pt_data->lines[idx];
-        if (line->has_publishable_message(now)){
+        auto v = line->get_publishable_messages(now);
+        for(const auto* route: line->route_list){
+            auto vr = route->get_publishable_messages(now);
+            v.insert(v.end(), vr.begin(), vr.end());
+        }
+        if (!v.empty()){
             Disrupt& dist = this->find_or_create(line->network);
-            auto find_predicate = [&](const type::Line* l) {
-                return line == l;
+            auto find_predicate = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
+                return line == item.first;
             };
             auto it = std::find_if(dist.lines.begin(),
                                    dist.lines.end(),
                                    find_predicate);
             if(it == dist.lines.end()){
-                dist.lines.push_back(line);
+                dist.lines.push_back(std::make_pair(line, DisruptionSet(v.begin(), v.end())));
+            }else{
+                it->second.insert(v.begin(), v.end());
             }
         }
     }
@@ -141,8 +152,9 @@ void Disruption::sort_disruptions(){
             return d1.network->idx < d2.network->idx;
     };
 
-    auto sort_lines = [&](const type::Line* l1, const type::Line* l2) {
-        return l1 < l2;
+    auto sort_lines = [&](const std::pair<const type::Line*, DisruptionSet>& l1,
+                          const std::pair<const type::Line*, DisruptionSet>& l2) {
+        return l1.first < l2.first;
     };
 
     std::sort(this->disrupts.begin(), this->disrupts.end(), sort_disruption);
