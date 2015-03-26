@@ -76,7 +76,12 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
         }
         for(auto stop_area_idx: line_list){
             const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
-            if (stop_area->has_publishable_message(now)){
+            auto v = stop_area->get_publishable_messages(now);
+            for(const auto* stop_point: stop_area->stop_point_list){
+                auto vsp = stop_point->get_publishable_messages(now);
+                v.insert(v.end(), vsp.begin(), vsp.end());
+            }
+            if (!v.empty()){
                 Disrupt& dist = this->find_or_create(network);
                 auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
                     return item.first == stop_area;
@@ -84,7 +89,6 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                 auto it = std::find_if(dist.stop_areas.begin(),
                                        dist.stop_areas.end(),
                                        find_predicate);
-                auto v = stop_area->get_publishable_messages(now);
                 if(it == dist.stop_areas.end()){
                     dist.stop_areas.push_back(std::make_pair(stop_area, DisruptionSet(v.begin(), v.end())));
                 }else{
