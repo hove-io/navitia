@@ -169,6 +169,12 @@ class Instance(db.Model):
     min_duration_too_long_journey = db.Column(db.Integer, default=default_values.min_duration_too_long_journey, \
             nullable=False)
 
+    max_duration_criteria = db.Column(db.Enum('time', 'duration', name='max_duration_criteria'),
+            default=default_values.max_duration_criteria, nullable=False)
+
+    max_duration_fallback_mode = db.Column(db.Enum('walking', 'bss', 'bike', 'car', name='max_duration_fallback_mode'),
+            default=default_values.max_duration_fallback_mode, nullable=False)
+
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):

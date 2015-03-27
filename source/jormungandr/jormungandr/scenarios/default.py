@@ -42,7 +42,7 @@ from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, cou
 from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
-from operator import attrgetter
+from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -321,22 +321,15 @@ class Scenario(simple.Scenario):
 
     def _find_max_duration(self, journeys, instance, clockwise):
         """
-        calculate the max duration of a journey from a pool of journey
-        we search the earliest one who doesn't use car, bike or bss
+        Calculate the max duration of a journey from a pool of journey.
+        We can search the earliest one (by default) or the shortest one.
+        Restriction are put on the fallback mode used, by default only walking is allowed.
         """
-        section_is_walking_or_pt = lambda section: section.type not in \
-                (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                           or section.street_network.mode == response_pb2.Walking
-        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections) \
-                and journey.duration > 0
-
-        list_journeys = filter(filter_journey, journeys)
-        if not list_journeys:
+        criteria = {'time': select_best_journey_by_time, 'duration': select_best_journey_by_duration}
+        fallback_modes = max_duration_fallback_modes[instance.max_duration_fallback_mode]
+        asap_journey = criteria[instance.max_duration_criteria](journeys, clockwise, fallback_modes)
+        if not asap_journey:
             return None
-        if clockwise:
-            asap_journey = min(list_journeys, key=attrgetter('arrival_date_time'))
-        else:
-            asap_journey = max(list_journeys, key=attrgetter('departure_date_time'))
         return (asap_journey.duration * instance.factor_too_long_journey) + instance.min_duration_too_long_journey
 
     def _delete_non_optimal_journey(self, journeys):

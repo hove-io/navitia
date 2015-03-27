@@ -697,6 +697,8 @@ instance_parameters = {
     'min_tc_with_bss': fields.Raw,
     'factor_too_long_journey': fields.Raw,
     'min_duration_too_long_journey': fields.Raw,
+    'max_duration_criteria': fields.Raw,
+    'max_duration_fallback_mode': fields.Raw,
 }
 
 instance_status_with_parameters = deepcopy(instance_status)
