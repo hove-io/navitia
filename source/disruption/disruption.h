@@ -33,10 +33,16 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "utils/logger.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include <boost/smart_ptr/owner_less.hpp>
 
 namespace navitia { namespace disruption {
 
-using DisruptionSet = std::set<boost::weak_ptr<type::new_disruption::Impact>>;
+struct Comp{
+    bool operator()(const boost::weak_ptr<type::new_disruption::Impact>& lhs,
+                    const boost::weak_ptr<type::new_disruption::Impact>& rhs);
+};
+
+using DisruptionSet = std::set<boost::weak_ptr<type::new_disruption::Impact>, Comp>;
 
 struct Disrupt{
     type::idx_t idx;

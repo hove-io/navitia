@@ -46,6 +46,20 @@ static int min_priority(const DisruptionSet& disruptions){
     return min;
 }
 
+
+bool Comp::operator()(const boost::weak_ptr<type::new_disruption::Impact>& lhs,
+                      const boost::weak_ptr<type::new_disruption::Impact>& rhs){
+    auto i1 = lhs.lock();
+    auto i2 = rhs.lock();
+    if(!i1){
+        return true;
+    }
+    if(!i2){
+        return false;
+    }
+    return *i1 < *i2;
+}
+
 Disrupt& Disruption::find_or_create(const type::Network* network){
     auto find_predicate = [&](const Disrupt& network_disrupt) {
         return network == network_disrupt.network;
