@@ -203,10 +203,12 @@ class StatManager(object):
         g.stat_regions = regions
 
     def fill_parameters(self, stat_request):
-        for item in request.args.iteritems():
-            stat_parameter = stat_request.parameters.add()
-            stat_parameter.key = item[0]
-            stat_parameter.value = item[1]
+        for key in request.args:
+            items = request.args.getlist(key)
+            for value in items:
+                stat_parameter = stat_request.parameters.add()
+                stat_parameter.key = key
+                stat_parameter.value = unicode(value)
 
         if hasattr(g, 'stat_interpreted_parameters'):
             for item in g.stat_interpreted_parameters.iteritems():
