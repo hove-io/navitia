@@ -73,9 +73,7 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['uri'], 'too_bad_again')
         eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
-        eq_(lines_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
         eq_(lines_disrupt[1]['uri'], 'later_impact')
-        eq_(lines_disrupt[1]['severity']['name'], 'information severity')
 
         impacted_network = get_not_null(traffic_report[0], 'network')
         is_valid_network(impacted_network, depth_check=0)
@@ -102,19 +100,17 @@ class TestDisruptions(AbstractTestFixture):
         eq_(stop_disrupt[0]['uri'], 'too_bad')
 
         """
-        by querying directly the impacted object, we find the same results
+        by querying directly the impacted object, we only find active disruptions
         """
         networks = self.query_region('networks/base_network?' + default_date_filter)
         network = get_not_null(networks, 'networks')[0]
         is_valid_network(network)
         network_disrupt = get_disruptions(network, response)
-        eq_(len(network_disrupt), 2)
+        eq_(len(network_disrupt), 1)
         for d in network_disrupt:
             is_valid_disruption(d)
         eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['uri'], 'too_bad_again')
-        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['uri'], 'later_impact')
 
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
