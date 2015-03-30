@@ -111,9 +111,6 @@ PtObj make_pt_obj(Type_e type,
 }
 
 bool Impact::operator<(const Impact& other){
-    if(this->uri == other.uri){
-        return false;
-    }
     if(this->severity->priority != other.severity->priority){
         return this->severity->priority < other.severity->priority;
     }if(this->created_at != other.created_at){

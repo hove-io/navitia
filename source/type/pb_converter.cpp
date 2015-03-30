@@ -101,10 +101,9 @@ void fill_address(const T* obj, const nt::Data& data,
 }
 
 template <typename T>
-void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_weak_ptr,
+void fill_message(const boost::shared_ptr<type::new_disruption::Impact>& impact,
         const type::Data&, T pb_object, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period& action_period) {
-    auto impact = impact_weak_ptr.lock();
     if (! impact) {
         return; //impact is no longer valid, we have nothing to do
     }

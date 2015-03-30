@@ -31,42 +31,32 @@ www.navitia.io
 #include "disruption.h"
 #include "ptreferential/ptreferential.h"
 #include "type/data.h"
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace navitia { namespace disruption {
 
 static int min_priority(const DisruptionSet& disruptions){
     int min = std::numeric_limits<int>::max();
-    for(const auto& wp: disruptions){
-        auto i = wp.lock();
-        if(!i || !i->severity) continue;
-        if(i->severity->priority < min){
-            min = i->severity->priority;
+    for(const auto& impact: disruptions){
+        if(!impact->severity) continue;
+        if(impact->severity->priority < min){
+            min = impact->severity->priority;
         }
     }
     return min;
 }
 
 
-bool Comp::operator()(const boost::weak_ptr<type::new_disruption::Impact>& lhs,
-                      const boost::weak_ptr<type::new_disruption::Impact>& rhs){
-    auto i1 = lhs.lock();
-    auto i2 = rhs.lock();
-    if(!i1){
-        return true;
-    }
-    if(!i2){
-        return false;
-    }
-    return *i1 < *i2;
+bool Comp::operator()(const boost::shared_ptr<type::new_disruption::Impact>& lhs,
+                      const boost::shared_ptr<type::new_disruption::Impact>& rhs){
+    return *lhs < *rhs;
 }
 
 Disrupt& Disruption::find_or_create(const type::Network* network){
     auto find_predicate = [&](const Disrupt& network_disrupt) {
         return network == network_disrupt.network;
     };
-    auto it = std::find_if(this->disrupts.begin(),
-                           this->disrupts.end(),
-                           find_predicate);
+    auto it = boost::find_if(this->disrupts, find_predicate);
     if(it == this->disrupts.end()){
         Disrupt dist;
         dist.network = network;
@@ -87,7 +77,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
         if(!filter.empty()){
-            new_filter  += " and " + filter;
+            new_filter += " and " + filter;
         }
         std::vector<type::idx_t> line_list;
 
@@ -112,9 +102,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                 auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
                     return item.first == stop_area;
                 };
-                auto it = std::find_if(dist.stop_areas.begin(),
-                                       dist.stop_areas.end(),
-                                       find_predicate);
+                auto it = boost::find_if(dist.stop_areas, find_predicate);
                 if(it == dist.stop_areas.end()){
                     dist.stop_areas.push_back(std::make_pair(stop_area, DisruptionSet(v.begin(), v.end())));
                 }else{
@@ -164,9 +152,7 @@ void Disruption::add_lines(const std::string& filter,
             auto find_predicate = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
                 return line == item.first;
             };
-            auto it = std::find_if(dist.lines.begin(),
-                                   dist.lines.end(),
-                                   find_predicate);
+            auto it = boost::find_if(dist.lines, find_predicate);
             if(it == dist.lines.end()){
                 dist.lines.push_back(std::make_pair(line, DisruptionSet(v.begin(), v.end())));
             }else{
