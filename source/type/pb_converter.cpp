@@ -1111,9 +1111,14 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
             fill_pb_placemark(address.second, data, place, address.first, point.coordinates, max_depth, now,
                     action_period);
         }catch(proximitylist::NotFound){
+            //we didn't find a address at this coordinate, we fill the address manually with the coord, so we have a valid output
             place->set_name("");
             place->set_uri(point.coordinates.uri());
             place->set_embedded_type(pbnavitia::ADDRESS);
+            auto addr = place->mutable_address();
+            auto c = addr->mutable_coord();
+            c->set_lon(point.coordinates.lon());
+            c->set_lat(point.coordinates.lat());
         }
 
     }
