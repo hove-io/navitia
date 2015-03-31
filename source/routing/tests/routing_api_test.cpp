@@ -1049,7 +1049,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
 
     // section 2: goto B
     BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().name(), "rue bs");
+    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().name(), "rue bd");
     BOOST_CHECK_EQUAL(sections.Get(2).destination().name(), "stop_point:stopB");
     BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 10);

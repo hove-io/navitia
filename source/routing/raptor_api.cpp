@@ -207,14 +207,17 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     departure_time = path.items.front().departure - walking_time.to_posix();
                     fill_street_sections(enhanced_response, origin, temp, d, pb_journey,
                         departure_time);
-                    auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
-                    bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                                  navitia::from_posix_timestamp(section->end_date_time()));
-                    // We add coherence with the origin of the request
-                    fill_pb_placemark(origin, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    // We add coherence with the first pt section
-                    section->mutable_destination()->Clear();
-                    fill_pb_placemark(departure_stop_point, d, section->mutable_destination(), 2, now, action_period, show_codes);
+                    if(pb_journey->sections_size() > 0){
+                        auto first_section = pb_journey->mutable_sections(0);
+                        auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
+                        bt::time_period action_period(navitia::from_posix_timestamp(first_section->begin_date_time()),
+                                                      navitia::from_posix_timestamp(last_section->end_date_time()));
+                        // We add coherence with the origin of the request
+                        fill_pb_placemark(origin, d, first_section->mutable_origin(), 2, now, action_period, show_codes);
+                        // We add coherence with the first pt section
+                        last_section->mutable_destination()->Clear();
+                        fill_pb_placemark(departure_stop_point, d, last_section->mutable_destination(), 2, now, action_period, show_codes);
+                    }
                 }
             }
         }
