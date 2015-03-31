@@ -116,7 +116,7 @@ int main(int argc, char * argv[])
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    LOG4CPLUS_INFO(logger, "Starting da ugly TAD hack...");
+    LOG4CPLUS_INFO(logger, "Starting da ugly ODT hack...");
     size_t nb_hacked = 0;
     for (auto* vj: data.vehicle_journeys) {
         if (vj->stop_time_list.size() != 2) { continue; }
@@ -132,7 +132,7 @@ int main(int argc, char * argv[])
         vj->stop_time_list[1]->arrival_time += 10 * 60;
         vj->stop_time_list[1]->departure_time += 10 * 60;
     }
-    LOG4CPLUS_INFO(logger, "Da ugly TAD hack: " << nb_hacked << " patched");
+    LOG4CPLUS_INFO(logger, "Da ugly ODT hack: " << nb_hacked << " patched");
 
     start = pt::microsec_clock::local_time();
     data.clean();
