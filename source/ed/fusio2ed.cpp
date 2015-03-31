@@ -112,10 +112,27 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections << " connections "
                    " because they had no duration time");
 
-
     start = pt::microsec_clock::local_time();
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    LOG4CPLUS_INFO(logger, "Starting da ugly TAD hack...");
+    size_t nb_hacked = 0;
+    for (auto* vj: data.vehicle_journeys) {
+        if (vj->stop_time_list.size() != 2) { continue; }
+        if (vj->stop_time_list[0]->journey_pattern_point->stop_point
+            != vj->stop_time_list[1]->journey_pattern_point->stop_point) {
+            continue;
+        }
+        if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) { continue; }
+
+        // No, teleportation can't exist, even on a null distance!
+        // You'll take 10 min, I said!
+        ++nb_hacked;
+        vj->stop_time_list[1]->arrival_time += 10 * 60;
+        vj->stop_time_list[1]->departure_time += 10 * 60;
+    }
+    LOG4CPLUS_INFO(logger, "Da ugly TAD hack: " << nb_hacked << " patched");
 
     start = pt::microsec_clock::local_time();
     data.clean();
