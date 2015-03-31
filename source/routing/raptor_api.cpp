@@ -120,7 +120,7 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     fill_co2_emission(pb_section, d, vj);
 }
 
-void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
+static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     double co2_emission = 0.;
     bool to_add = false;
     if (pb_journey->sections().size() > 0){
@@ -497,7 +497,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             co2_emission_aggregator(pb_journey);
         }
     }
-
 }
 
 static pbnavitia::Response
