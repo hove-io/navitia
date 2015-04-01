@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/message.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace ng = navitia::georef;
 
@@ -492,13 +493,22 @@ struct routing_api_data {
         info_severity->uri = "info";
         info_severity->wording = "information severity";
         info_severity->color = "#FFFF00";
+        info_severity->priority = 25;
         holder.severities[info_severity->uri] = info_severity;
 
         auto bad_severity = boost::make_shared<Severity>();
         bad_severity->uri = "disruption";
         bad_severity->wording = "bad severity";
         bad_severity->color = "#FFFFF0";
+        bad_severity->priority = 0;
         holder.severities[bad_severity->uri] = bad_severity;
+
+        auto foo_severity = boost::make_shared<Severity>();
+        foo_severity->uri = "foo";
+        foo_severity->wording = "foo severity";
+        foo_severity->color = "#FFFFF0";
+        foo_severity->priority = 50;
+        holder.severities[foo_severity->uri] = foo_severity;
 
         {
             //we create one disruption on stop A
@@ -623,6 +633,85 @@ struct routing_api_data {
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
 
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
+
+        {
+            auto period = boost::posix_time::time_period("20150326T060000"_dt, "20150330T120000"_dt);
+            //we create one disruption on line A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_route_A:0";
+            disruption->publication_period = period;
+            auto tag = boost::make_shared<Tag>();
+            tag->uri = "tag";
+            tag->name = "tag name";
+            disruption->tags.push_back(tag);
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_route_A:0";
+            impact->application_periods = {period};
+
+            impact->severity = info_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
+
+        {
+            auto period = boost::posix_time::time_period("20150126T060000"_dt, "20150130T120000"_dt);
+            //we create one disruption on line A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_route_A:0_and_line";
+            disruption->publication_period = period;
+            auto tag = boost::make_shared<Tag>();
+            tag->uri = "tag";
+            tag->name = "tag name";
+            disruption->tags.push_back(tag);
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_route_A:0_and_line";
+            impact->application_periods = {period};
+
+            impact->severity = info_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_line_B";
+            impact->application_periods = {period};
+
+            impact->severity = bad_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_line_C";
+            impact->application_periods = {period};
+
+            impact->severity = foo_severity;
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
+
             impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date});
 
             disruption->add_impact(impact);

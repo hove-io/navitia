@@ -42,7 +42,7 @@ pbnavitia::Response disruptions(const navitia::type::Data& d,
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page,
-                                const std::string &filter,
+                                const std::string& filter,
                                 const std::vector<std::string>& forbidden_uris) {
     pbnavitia::Response pb_response;
 
@@ -63,18 +63,27 @@ pbnavitia::Response disruptions(const navitia::type::Data& d,
     }
 
     size_t total_result = result.get_disrupts_size();
-    std::vector<disrupt> disrupts = paginate(result.get_disrupts(), count, start_page);
-    for (disrupt dist: disrupts) {
+    std::vector<Disrupt> disrupts = paginate(result.get_disrupts(), count, start_page);
+    for (const Disrupt& dist: disrupts) {
         pbnavitia::Disruptions* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-        navitia::fill_pb_object(d.pt_data->networks[dist.network_idx], d, pb_network, depth, now_dt, action_period, false, true);
-        for (type::idx_t idx : dist.line_idx) {
-            pbnavitia::Line* pb_line = pb_disruption->add_lines();
-            navitia::fill_pb_object(d.pt_data->lines[idx], d, pb_line, depth-1, now_dt, action_period, false, true);
+        for(const auto& impact: dist.network_disruptions){
+            fill_message(*impact, d, pb_network, depth-1, now_dt, action_period);
         }
-        for (type::idx_t idx : dist.stop_area_idx) {
+        navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
+        for (const auto& line_item: dist.lines) {
+            pbnavitia::Line* pb_line = pb_disruption->add_lines();
+            navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
+            for(const auto& impact: line_item.second){
+                fill_message(*impact, d, pb_line, depth-1, now_dt, action_period);
+            }
+        }
+        for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
-            navitia::fill_pb_object(d.pt_data->stop_areas[idx], d, pb_stop_area, depth-1, now_dt, action_period, false, true);
+            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1, bt::not_a_date_time, action_period, false);
+            for(const auto& impact: sa_item.second){
+                fill_message(*impact, d, pb_stop_area, depth-1, now_dt, action_period);
+            }
         }
     }
     auto pagination = pb_response.mutable_pagination();
@@ -90,5 +99,5 @@ pbnavitia::Response disruptions(const navitia::type::Data& d,
     }
     return pb_response;
 }
-}
-}
+
+}}//namespace

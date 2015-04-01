@@ -187,6 +187,8 @@ struct Impact {
     }
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
+
+    bool operator<(const Impact& other);
 };
 
 struct Tag {

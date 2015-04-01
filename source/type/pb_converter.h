@@ -90,8 +90,7 @@ struct EnhancedResponse {
 #define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
     void fill_pb_object(const navitia::type::type_name* item, const navitia::type::Data& data, pbnavitia::type_name *, int max_depth = 0,\
             const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
-            const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false,\
-            const bool display_all_publiable_disruption=false);
+            const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false);
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
 
@@ -163,7 +162,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &or
         const boost::posix_time::time_period& action_period = null_time_period);
 
 template <typename T>
-void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact, const type::Data &data, T pb_object, int max_depth = 0,
+void fill_message(const type::new_disruption::Impact& impact, const type::Data &data, T pb_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -208,8 +207,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
-                    const bool show_codes,
-                    const bool display_all_publiable_disruption);
+                    const bool show_codes);
 
 void fill_pb_object(const type::VehicleJourney* vj,
                     const type::Data& data,
