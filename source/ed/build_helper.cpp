@@ -402,9 +402,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      if (uri == "0x0"){
          return 4.;
      }
-     if (uri == "0x1"){
-         return 3.;
-     }
      if (uri == "Bss"){
          return 0.;
      }
@@ -475,10 +472,14 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
+        double co2_emission;
         mode->idx = mt->idx;
         mode->name = mt->name;
         mode->uri = "physical_mode:" + mt->uri;
-        mode->co2_emission = get_co2_emission(mt->uri);
+        co2_emission = get_co2_emission(mt->uri);
+        if (co2_emission >=0.){
+            mode->co2_emission = co2_emission;
+        }
         this->data->pt_data->physical_modes.push_back(mode);
     }
  }

@@ -485,7 +485,11 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
         values.push_back(std::to_string(mode->idx));
         values.push_back(navitia::encode_uri(mode->uri));
         values.push_back(mode->name);
-        values.push_back(std::to_string(mode->co2_emission));
+        if(mode->co2_emission){
+            values.push_back(std::to_string(*mode->co2_emission));
+        }else{
+            values.push_back(lotus.null_value);
+        }
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
