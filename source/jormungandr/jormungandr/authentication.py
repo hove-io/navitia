@@ -83,9 +83,13 @@ def get_token():
           The second part is the username and the password separate by a ":"
           and encoded in base64
     """
-    if 'Authorization' not in request.headers:
+    auth = None
+    if 'Authorization' in request.headers:
+        auth = request.headers['Authorization']
+    elif 'key' in request.args:
+        auth = request.args['key']
+    if not auth:
         return None
-    auth = request.headers['Authorization']
     args = auth.split(' ')
     if len(args) == 2:
         b64 = args[1]
