@@ -162,7 +162,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &or
         const boost::posix_time::time_period& action_period = null_time_period);
 
 template <typename T>
-void fill_message(const boost::shared_ptr<type::new_disruption::Impact>& impact, const type::Data &data, T pb_object, int max_depth = 0,
+void fill_message(const type::new_disruption::Impact& impact, const type::Data &data, T pb_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 

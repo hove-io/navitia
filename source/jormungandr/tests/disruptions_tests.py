@@ -298,7 +298,7 @@ class TestDisruptions(AbstractTestFixture):
 
     def test_disruption_on_route(self):
         """
-        check that disruption on route are displayed a disruption on line
+        check that disruption on route are displayed on the corresponding line
         """
         response = self.query_region('traffic_reports?_current_datetime=20150325T090000')
 
