@@ -1592,10 +1592,10 @@ void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& d
     if (!mode_uri.empty()){
       const auto it_physical_mode = data.pt_data->physical_modes_map.find(mode_uri);
       if ((it_physical_mode != data.pt_data->physical_modes_map.end())
-              && (it_physical_mode->second->co2_emission != std::numeric_limits<double>::max())){
+              && (it_physical_mode->second->co2_emission)){
           pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
           pb_co2_emission->set_unit("gEC");
-          pb_co2_emission->set_value((pb_section->length()/1000.0) * it_physical_mode->second->co2_emission);
+          pb_co2_emission->set_value((pb_section->length()/1000.0) * (*it_physical_mode->second->co2_emission));
       }
     }
 }

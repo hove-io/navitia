@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     pbnavitia::Co2Emission co2_emission = section.co2_emission();
     int32_t distance = dep->coord.distance_to(arr->coord);
     BOOST_REQUIRE_EQUAL(co2_emission.unit(), "gEC");
-    BOOST_REQUIRE_EQUAL(co2_emission.value(), ((double(distance))/1000.0) * mt->co2_emission);
+    BOOST_REQUIRE_EQUAL(co2_emission.value(), ((double(distance))/1000.0) * (*mt->co2_emission));
 }
 
 // co2_emission defined and = 0.0
@@ -142,9 +142,8 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
 
-    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
-    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
-    mt->co2_emission=std::numeric_limits<double>::max();
+    navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x1"];
+    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];    
     jp->physical_mode = mt;
     navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
