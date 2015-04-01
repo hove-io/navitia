@@ -44,6 +44,7 @@ struct Disrupt{
     type::idx_t idx;
     const type::Network* network = nullptr;
     DisruptionSet network_disruptions;
+    //we use a vector of pair because we need to sort by the priority of the impacts
     std::vector<std::pair<const type::Line*, DisruptionSet>> lines;
     std::vector<std::pair<const type::StopArea*, DisruptionSet>> stop_areas;
 };
