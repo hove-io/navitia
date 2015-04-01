@@ -397,7 +397,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->departure->stop_point_connection_list.push_back(connexion);
     connexion->destination->stop_point_connection_list.push_back(connexion);
 }
- double builder::get_co2_emission(const std::string& uri){
+
+ static double get_co2_emission(const std::string& uri){
      if (uri == "0x0"){
          return 4.;
      }

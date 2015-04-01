@@ -147,7 +147,6 @@ struct builder{
     void build_autocomplete();
 
     nt::MetaVehicleJourney* get_or_create_metavj(const std::string name);
-    double get_co2_emission(const std::string& uri);
 };
 
 }
