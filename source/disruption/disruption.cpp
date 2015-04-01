@@ -47,11 +47,6 @@ static int min_priority(const DisruptionSet& disruptions){
 }
 
 
-bool Comp::operator()(const boost::shared_ptr<type::new_disruption::Impact>& lhs,
-                      const boost::shared_ptr<type::new_disruption::Impact>& rhs){
-    return *lhs < *rhs;
-}
-
 Disrupt& Disruption::find_or_create(const type::Network* network){
     auto find_predicate = [&](const Disrupt& network_disrupt) {
         return network == network_disrupt.network;

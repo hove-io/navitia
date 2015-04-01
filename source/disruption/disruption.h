@@ -33,15 +33,12 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "utils/logger.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "utils/functions.h"
 
 namespace navitia { namespace disruption {
 
-struct Comp{
-    bool operator()(const boost::shared_ptr<type::new_disruption::Impact>& lhs,
-                    const boost::shared_ptr<type::new_disruption::Impact>& rhs);
-};
 
-using DisruptionSet = std::set<boost::shared_ptr<type::new_disruption::Impact>, Comp>;
+using DisruptionSet = std::set<boost::shared_ptr<type::new_disruption::Impact>, Less>;
 
 struct Disrupt{
     type::idx_t idx;
