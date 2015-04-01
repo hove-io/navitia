@@ -36,7 +36,7 @@ from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
 from jormungandr import authentication
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
@@ -562,10 +562,6 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
-        parser_get.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
 
         self.method_decorators.append(complete_links(self))
 
@@ -585,13 +581,10 @@ class Journeys(ResourceUri, ResourceUtc):
     @add_fare_links()
     @add_journey_pagination()
     @add_journey_href()
-    @use_old_disruptions_if_needed()
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
-
-        g.use_old_disruptions = args['_use_old_disruptions']
 
         if args['traveler_type']:
             profile = travelers_profile[args['traveler_type']]

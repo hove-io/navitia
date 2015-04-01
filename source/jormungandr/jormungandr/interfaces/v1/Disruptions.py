@@ -41,7 +41,7 @@ from errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -83,12 +83,7 @@ class Disruptions(ResourceUri):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
-        parser_get.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=True)
 
-    @use_old_disruptions_if_needed()
     @marshal_with(disruptions)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
@@ -108,11 +103,6 @@ class Disruptions(ResourceUri):
 
         response = i_manager.dispatch(args, "disruptions",
                                       instance_name=self.region)
-
-        # we store in g if we want the disruptions in the old or in the new format
-        # It's not well designed, but it is temporary
-        # DELETE that asap
-        g.use_old_disruptions = args['_use_old_disruptions']
 
         return response
 
@@ -145,18 +135,12 @@ class TrafficReport(ResourceUri):
                                 dest="forbidden_uris[]",
                                 action="append")
 
-    @use_old_disruptions_if_needed()
     @marshal_with(traffic)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
-
-        # we store in g if we want the disruptions in the old or in the new format
-        # It's not well designed, but it is temporary
-        # DELETE that asap
-        g.use_old_disruptions = False
 
         if uri:
             if uri[-1] == "/":

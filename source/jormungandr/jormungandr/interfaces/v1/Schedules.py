@@ -44,7 +44,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.utils import ResourceUtc
 from make_links import create_external_link
 from functools import wraps
@@ -96,10 +96,6 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Id of the calendar")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
@@ -110,7 +106,6 @@ class Schedules(ResourceUri, ResourceUtc):
         args = self.parsers["get"].parse_args()
         args["nb_stoptimes"] = args["count"]
         args["interface_version"] = 1
-        g.use_old_disruptions = args['_use_old_disruptions']
 
         if uri is None:
             first_filter = args["filter"].lower().split("and")[0].strip()
@@ -196,7 +191,6 @@ class RouteSchedules(Schedules):
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
 
-    @use_old_disruptions_if_needed()
     @marshal_with(route_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -228,7 +222,6 @@ class StopSchedules(Schedules):
         self.parsers["get"].add_argument("interface_version", type=int,
                                          default=1, hidden=True)
 
-    @use_old_disruptions_if_needed()
     @marshal_with(stop_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -306,7 +299,6 @@ class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
 
-    @use_old_disruptions_if_needed()
     @add_passages_links()
     @marshal_with(departures)
     @ManageError()
@@ -321,7 +313,6 @@ class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
 
-    @use_old_disruptions_if_needed()
     @add_passages_links()
     @marshal_with(arrivals)
     @ManageError()
