@@ -67,4 +67,13 @@ else:
     rest_api.app.logger.warning('MODULES isn\'t defined in config. No module will be loaded, then no route '
                                 'will be defined.')
 
+if rest_api.app.config.get('ACTIVATE_PROFILING'):
+    rest_api.app.logger.warning('=======================================================')
+    rest_api.app.logger.warning('activation of the profiling, all query will be slow !')
+    rest_api.app.logger.warning('=======================================================')
+    from werkzeug.contrib.profiler import ProfilerMiddleware
+    rest_api.app.config['PROFILE'] = True
+    f = open('/tmp/profiler.log', 'a')
+    rest_api.app.wsgi_app = ProfilerMiddleware(rest_api.app.wsgi_app, f, restrictions=[80], profile_dir='/tmp/profile')
+
 index(rest_api)
