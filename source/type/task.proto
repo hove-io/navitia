@@ -1,7 +1,5 @@
 package pbnavitia;
 
-import "realtime.proto";
-
 enum Action{
     RELOAD = 0;
     HEARTBEAT = 3;
