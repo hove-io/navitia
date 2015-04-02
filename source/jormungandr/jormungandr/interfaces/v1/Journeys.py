@@ -46,7 +46,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, complete_links, update_journeys_status
+from ResourceUri import ResourceUri, complete_links
 import datetime
 from functools import wraps
 from fields import DateTime
@@ -204,7 +204,7 @@ journey = {
     'type': fields.String(),
     'fare': NonNullNested(fare),
     'tags': fields.List(fields.String),
-    "status": enum_type(attribute="message_status"),
+    "status": fields.String(attribute="most_serious_disruption_effect"),
     "calendars": NonNullList(NonNullNested(calendar)),
     "co2_emission": Co2Emission(),
 }
@@ -568,7 +568,6 @@ class Journeys(ResourceUri, ResourceUtc):
                                 default=False)
 
         self.method_decorators.append(complete_links(self))
-        self.method_decorators.append(update_journeys_status(self))
 
         # manage post protocol (n-m calculation)
         self.parsers["post"] = deepcopy(parser_get)

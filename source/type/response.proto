@@ -158,6 +158,7 @@ message Journey {
     repeated string tags = 11;
     repeated Calendar calendars = 12;
     optional Co2Emission co2_emission = 13;
+    optional string most_serious_disruption_effect = 14;
 }
 
 enum ResponseType {

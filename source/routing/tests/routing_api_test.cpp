@@ -780,6 +780,8 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     // check that the shape is used, i.e. there is not only 2 points
     // from the stop times.
     journey = resp.journeys(0);
+    BOOST_CHECK_EQUAL(journey.most_serious_disruption_effect(), ""); //no disruption should be found
+
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
     BOOST_CHECK_EQUAL(section.shape().size(), 3);
@@ -1632,3 +1634,206 @@ BOOST_AUTO_TEST_CASE(isochrone) {
 
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 }
+
+
+//test with disruption active
+// we add 2 disruptions, and we check that the status of the journey is correct
+BOOST_AUTO_TEST_CASE(with_information_disruptions) {
+    ed::builder b("20150314");
+    b.vj("l")("A", 8*3600 + 25 * 60)("B", 8*3600 + 35 * 60);
+
+    b.finish();
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+    auto default_date = "20150314T000000"_dt;
+    auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
+
+    auto info_severity = boost::make_shared<Severity>();
+    info_severity->uri = "info";
+    info_severity->wording = "information severity";
+    info_severity->color = "#FFFF00";
+    info_severity->priority = 25;
+    info_severity->effect = nt::new_disruption::Effect::MODIFIED_SERVICE;
+    holder.severities[info_severity->uri] = info_severity;
+
+    auto bad_severity = boost::make_shared<Severity>();
+    bad_severity->uri = "disruption";
+    bad_severity->wording = "bad severity";
+    bad_severity->color = "#FFFFF0";
+    bad_severity->priority = 0;
+    bad_severity->effect = nt::new_disruption::Effect::DETOUR;
+    holder.severities[bad_severity->uri] = bad_severity;
+
+    {
+        //we create one disruption on stop A
+        auto disruption = std::make_unique<Disruption>();
+        disruption->uri = "info_on_stop_A";
+        disruption->publication_period = default_period;
+        auto tag = boost::make_shared<Tag>();
+        tag->uri = "tag";
+        tag->name = "tag name";
+        disruption->tags.push_back(tag);
+
+        auto impact = boost::make_shared<Impact>();
+        impact->uri = "too_bad";
+        impact->application_periods = {default_period};
+
+        impact->severity = info_severity;
+
+        impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "A", *b.data->pt_data, impact));
+
+        impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+
+        disruption->add_impact(impact);
+
+        holder.disruptions.push_back(std::move(disruption));
+    }
+    {
+        //we create one disruption on line 2
+        auto disruption = std::make_unique<Disruption>();
+        disruption->uri = "detour_on_line_2";
+        disruption->publication_period = default_period;
+        auto tag = boost::make_shared<Tag>();
+        tag->uri = "tag";
+        tag->name = "tag name";
+        disruption->tags.push_back(tag);
+
+        auto impact = boost::make_shared<Impact>();
+        impact->uri = "too_bad";
+        impact->application_periods = {default_period};
+
+        impact->severity = bad_severity;
+
+        impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "l", *b.data->pt_data, impact));
+
+        disruption->add_impact(impact);
+
+        holder.disruptions.push_back(std::move(disruption));
+    }
+
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("A");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("B");
+    navitia::type::EntryPoint origin(origin_type, "A");
+    navitia::type::EntryPoint destination(destination_type, "B");
+
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20150315T080000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, {}, sn_worker, false, true);
+
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    const auto& j = resp.journeys(0);
+    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR");
+
+    BOOST_REQUIRE_EQUAL(j.sections_size(), 1);
+}
+
+#ifdef __NETWORK_DISRUPTION_BUG__ //network disruption on journeys does not work for the moment see http://jira.canaltp.fr/browse/NAVP-161
+//test with network disruption too
+// we add 2 disruptions, and we check that the status of the journey is correct
+BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
+    ed::builder b("20150314");
+    b.vj("l")("A", 8*3600 + 25 * 60)("B", 8*3600 + 35 * 60);
+
+    b.finish();
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+    auto default_date = "20150314T000000"_dt;
+    auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
+
+    auto info_severity = boost::make_shared<Severity>();
+    info_severity->uri = "info";
+    info_severity->wording = "information severity";
+    info_severity->color = "#FFFF00";
+    info_severity->priority = 0;
+    info_severity->effect = nt::new_disruption::Effect::MODIFIED_SERVICE;
+    holder.severities[info_severity->uri] = info_severity;
+
+    auto bad_severity = boost::make_shared<Severity>();
+    bad_severity->uri = "disruption";
+    bad_severity->wording = "bad severity";
+    bad_severity->color = "#FFFFF0";
+    bad_severity->priority = 0;
+    bad_severity->effect = nt::new_disruption::Effect::DETOUR;
+    holder.severities[bad_severity->uri] = bad_severity;
+
+    {
+        //we create one disruption on stop A
+        auto disruption = std::make_unique<Disruption>();
+        disruption->uri = "info_on_stop_A";
+        disruption->publication_period = default_period;
+        auto tag = boost::make_shared<Tag>();
+        tag->uri = "tag";
+        tag->name = "tag name";
+        disruption->tags.push_back(tag);
+
+        auto impact = boost::make_shared<Impact>();
+        impact->uri = "too_bad";
+        impact->application_periods = {default_period};
+
+        impact->severity = info_severity;
+
+        impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "A", *b.data->pt_data, impact));
+
+        impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date});
+
+        disruption->add_impact(impact);
+
+        holder.disruptions.push_back(std::move(disruption));
+    }
+    {
+        //we create one disruption on line 2
+        auto disruption = std::make_unique<Disruption>();
+        disruption->uri = "detour_on_line_2";
+        disruption->publication_period = default_period;
+        auto tag = boost::make_shared<Tag>();
+        tag->uri = "tag";
+        tag->name = "tag name";
+        disruption->tags.push_back(tag);
+
+        auto impact = boost::make_shared<Impact>();
+        impact->uri = "too_bad";
+        impact->application_periods = {default_period};
+
+        impact->severity = bad_severity;
+
+        impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+
+        disruption->add_impact(impact);
+
+        holder.disruptions.push_back(std::move(disruption));
+    }
+
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("A");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("B");
+    navitia::type::EntryPoint origin(origin_type, "A");
+    navitia::type::EntryPoint destination(destination_type, "B");
+
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20150315T080000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, {}, sn_worker, false, true);
+
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    const auto& j = resp.journeys(0);
+    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR"); //we should have the network's disruption's effect
+}
+#endif
