@@ -94,7 +94,7 @@ static void
 _update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disruption,
                      type::new_disruption::Effect new_val) {
 
-    //the severity are sorted, the first one is the worst one
+    //the effect are sorted, the first one is the worst one
     if (! worst_disruption || static_cast<size_t>(new_val) < static_cast<size_t>(*worst_disruption)) {
         worst_disruption = new_val;
     }
@@ -278,7 +278,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             }
         }
 
-        boost::optional<type::new_disruption::Severity> most_serius_disruption_severity;
         size_t item_idx(0);
         // La partie TC et correspondances
         boost::optional<navitia::type::ValidityPattern> vp;
