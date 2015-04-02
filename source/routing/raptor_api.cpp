@@ -90,6 +90,44 @@ static void fill_shape(pbnavitia::Section* pb_section,
     }
 }
 
+static void
+_update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disruption,
+                     type::new_disruption::Effect new_val) {
+
+    //the severity are sorted, the first one is the worst one
+    if (! worst_disruption || static_cast<size_t>(new_val) < static_cast<size_t>(*worst_disruption)) {
+        worst_disruption = new_val;
+    }
+}
+
+template <typename T>
+void _update_max_impact_severity(boost::optional<type::new_disruption::Effect>& max, const T& pb_obj) {
+    for (const auto& disruption: pb_obj.disruptions()) {
+        _update_max_severity(max, type::new_disruption::from_string(disruption.severity().effect()));
+    }
+}
+
+static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
+    boost::optional<type::new_disruption::Effect> max_severity = boost::none;
+
+    for (const auto& section: pb_journey->sections()) {
+        if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
+            continue;
+        }
+        _update_max_impact_severity(max_severity, section.pt_display_informations());
+
+        _update_max_impact_severity(max_severity, section.origin().stop_point());
+        _update_max_impact_severity(max_severity, section.origin().stop_point().stop_area());
+
+        _update_max_impact_severity(max_severity, section.destination().stop_point());
+        _update_max_impact_severity(max_severity, section.destination().stop_point().stop_area());
+    }
+
+    if (max_severity) {
+        pb_journey->set_most_serious_disruption_effect(type::new_disruption::to_string(*max_severity));
+    }
+}
+
 static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
         const std::vector<const type::StopTime*>& stop_times, const nt::Data & d,
         bt::ptime now, bt::time_period action_period) {
@@ -240,11 +278,12 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             }
         }
 
+        boost::optional<type::new_disruption::Severity> most_serius_disruption_severity;
         size_t item_idx(0);
         // La partie TC et correspondances
         boost::optional<navitia::type::ValidityPattern> vp;
         for(auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
-            const auto item = *path_i;
+            const auto& item = *path_i;
 
             pbnavitia::Section* pb_section = pb_journey->add_sections();
             pb_section->set_id(enhanced_response.register_section(pb_journey, item, item_idx++));
@@ -288,6 +327,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         const auto & current_coord = item.stop_points[i]->coord;
                         length += previous_coord.distance_to(current_coord);
                     }
+
                 }
                 if (! item.stop_points.empty()) {
                     //some time there is only one stop points, typically in case of "extension of services"
@@ -295,7 +335,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     //in this case we want to display this only point as the departure and the destination of this section
                     auto arr_time = item.arrivals[0];
                     auto dep_time = item.departures[0];
-                    bt::time_period action_period(dep_time, arr_time);
+                    bt::time_period action_period(dep_time, arr_time + bt::seconds(1));
 
                     // for 'taxi like' odt, we want to start from the address, not the 1 stop point
                     if (item_idx == 1 && journey_begin_with_address_odt) {
@@ -432,14 +472,14 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         //and the origin of the street network part
                         auto section = pb_journey->mutable_sections(nb_section);
                         bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time()));
+                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
                         fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
                     }
 
                     //We add coherence with the destination object of the request
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time()));
+                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
@@ -450,6 +490,8 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         pb_journey->set_departure_date_time(str_departure);
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
+
+        compute_most_serious_disruption(pb_journey);
 
         //fare computation, done at the end for the journey to be complete
         auto fare = d.fare->compute_fare(path);

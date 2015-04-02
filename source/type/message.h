@@ -57,7 +57,7 @@ namespace navitia { namespace type {
 namespace new_disruption {
 
 enum class Effect {
-  NO_SERVICE,
+  NO_SERVICE = 0,
   REDUCED_SERVICE,
   SIGNIFICANT_DELAYS,
   DETOUR,
@@ -84,6 +84,18 @@ inline std::string to_string(Effect effect) {
     }
 }
 
+inline Effect from_string(const std::string& str) {
+    if (str == "NO_SERVICE") { return Effect::NO_SERVICE; }
+    if (str == "REDUCED_SERVICE") { return Effect::REDUCED_SERVICE; }
+    if (str == "SIGNIFICANT_DELAYS") { return Effect::SIGNIFICANT_DELAYS; }
+    if (str == "DETOUR") { return Effect::DETOUR; }
+    if (str == "ADDITIONAL_SERVICE") { return Effect::ADDITIONAL_SERVICE; }
+    if (str == "MODIFIED_SERVICE") { return Effect::MODIFIED_SERVICE; }
+    if (str == "OTHER_EFFECT") { return Effect::OTHER_EFFECT; }
+    if (str == "UNKNOWN_EFFECT") { return Effect::UNKNOWN_EFFECT; }
+    if (str == "STOP_MOVED") { return Effect::STOP_MOVED; }
+    throw navitia::exception("unhandled effect case");
+}
 
 struct Cause {
     std::string uri;
