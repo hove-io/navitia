@@ -1,3 +1,9 @@
+navitia2 (1.14.1) unstable; urgency=low
+
+  * do not remove mostly equal vjs <https://github.com/CanalTP/navitia/pull/972>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Thu, 02 Apr 2015 11:04:25 +0100
+
 navitia2 (1.14.0) unstable; urgency=low
 
   * Revert "Jormungandr: stop if no new responses"  <https://github.com/CanalTP/navitia/pull/966>
