@@ -653,11 +653,15 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
+    double co2_emission;
     mode->name = row[name_c];
     mode->uri = row[id_c];
     if(has_col(co2_emission_c, row)) {
         try{
-            mode->co2_emission = boost::lexical_cast<double>(row[co2_emission_c]);
+            co2_emission = boost::lexical_cast<double>(row[co2_emission_c]);
+            if (co2_emission >= 0.){
+                mode->co2_emission = co2_emission;
+            }
         }
         catch(boost::bad_lexical_cast) {
             LOG4CPLUS_WARN(logger, "Impossible to parse the co2_emission for "

@@ -398,6 +398,25 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->destination->stop_point_connection_list.push_back(connexion);
 }
 
+ static double get_co2_emission(const std::string& uri){
+     if (uri == "0x0"){
+         return 4.;
+     }
+     if (uri == "Bss"){
+         return 0.;
+     }
+     if (uri == "Bike"){
+         return 0.;
+     }
+     if (uri == "Bus"){
+         return 132.;
+     }
+     if (uri == "Car"){
+         return 184.;
+     }
+    return -1.;
+ }
+
  void builder::generate_dummy_basis() {
     navitia::type::Company *company = new navitia::type::Company();
     company->idx = this->data->pt_data->companies.size();
@@ -427,11 +446,40 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->uri = "0x1";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bss";
+    commercial_mode->uri = "Bss";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bike";
+    commercial_mode->uri = "Bike";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Bus";
+    commercial_mode->uri = "Bus";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
+    commercial_mode->name = "Car";
+    commercial_mode->uri = "Car";
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
+
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
+        double co2_emission;
         mode->idx = mt->idx;
         mode->name = mt->name;
-        mode->uri = mt->uri;
+        mode->uri = "physical_mode:" + mt->uri;
+        co2_emission = get_co2_emission(mt->uri);
+        if (co2_emission >=0.){
+            mode->co2_emission = co2_emission;
+        }
         this->data->pt_data->physical_modes.push_back(mode);
     }
  }

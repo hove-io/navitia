@@ -157,6 +157,7 @@ message Journey {
     optional Fare fare = 10;
     repeated string tags = 11;
     repeated Calendar calendars = 12;
+    optional Co2Emission co2_emission = 13;
 }
 
 enum ResponseType {

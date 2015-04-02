@@ -846,6 +846,37 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
+
+    // co2_emission Tests
+    // First Journey
+    // Bike mode
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().value(), 0.);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().unit(), "gEC");
+    // Tram mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tram");
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
+
+    // Walk mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
+    // Aggregator co2_emission
+    BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
+
+    // Second Journey
+    // Bike mode
+    BOOST_REQUIRE_EQUAL(resp.journeys(1).sections_size(), 1);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().value(), 0.);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().unit(), "gEC");
+    // Aggregator co2_emission
+    BOOST_CHECK_EQUAL(resp.journeys(1).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().value(), 0.);
+    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().unit(), "gEC");
 }
 
 //biking
@@ -986,6 +1017,48 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     pathitem = section.street_network().path_items(3);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ef");
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
+
+    // co2_emission Tests
+    // First Journey
+    // Car mode
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 7);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().value(), 12.144);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().unit(), "gEC");
+
+
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), false);
+    // Walk mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
+    // Tram mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).pt_display_informations().physical_mode(), "Tram");
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().unit(), "gEC");
+    // Walk mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(4).has_co2_emission(), false);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(5).has_co2_emission(), false);
+
+    // Car mode
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().value(), 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().unit(), "gEC");
+    // Aggregator co2_emission
+    BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.48 + 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
+
+    // Second Journey
+    // Car mode
+    BOOST_REQUIRE_EQUAL(resp.journeys(1).sections_size(), 1);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().value(), 36.616);
+    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().unit(), "gEC");
+    // Aggregator co2_emission
+    BOOST_CHECK_EQUAL(resp.journeys(1).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().value(), 36.616);
+    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().unit(), "gEC");
 }
 
 // car + bus using parking

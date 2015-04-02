@@ -117,7 +117,25 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
         add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
     }
-    fill_co2_emission(pb_section, vj);
+    fill_co2_emission(pb_section, d, vj);
+}
+
+static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
+    double co2_emission = 0.;
+    bool to_add = false;
+    if (pb_journey->sections().size() > 0){
+        for (int idx_section = 0; idx_section < pb_journey->sections().size(); ++idx_section) {
+            if (pb_journey->sections(idx_section).has_co2_emission()){
+                co2_emission += pb_journey->sections(idx_section).co2_emission().value();
+                to_add = true;
+            }
+        }
+    }
+    if(to_add){
+        pbnavitia::Co2Emission* pb_co2_emission = pb_journey->mutable_co2_emission();
+        pb_co2_emission->set_unit("gEC");
+        pb_co2_emission->set_value(co2_emission);
+    }
 }
 
 static void add_pathes(EnhancedResponse& enhanced_response,
@@ -441,6 +459,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             pb_journey->clear_fare();
             LOG4CPLUS_WARN(logger, "Unable to compute fare, error : " << e.what());
         }
+        co2_emission_aggregator(pb_journey);
     }
 
     auto temp = worker.get_direct_path(origin, destination);
@@ -475,6 +494,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
             destination_pb->Clear();
             fill_pb_placemark(destination, d, destination_pb, 2);
+            co2_emission_aggregator(pb_journey);
         }
     }
 }

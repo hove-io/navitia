@@ -42,7 +42,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message, SectionGeoJson
+    generic_message, SectionGeoJson, Co2Emission
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
@@ -178,6 +178,7 @@ section = {
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
     "departure_date_time": DateTime(attribute="begin_date_time"),
     "arrival_date_time": DateTime(attribute="end_date_time"),
+    "co2_emission": Co2Emission(),
 }
 
 cost = {
@@ -205,6 +206,7 @@ journey = {
     'tags': fields.List(fields.String),
     "status": enum_type(attribute="message_status"),
     "calendars": NonNullList(NonNullNested(calendar)),
+    "co2_emission": Co2Emission(),
 }
 
 ticket = {

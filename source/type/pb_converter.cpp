@@ -953,9 +953,11 @@ static void finalize_section(pbnavitia::Section* section,
         break;
     case georef::PathItem::TransportCaracteristic::Bike:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
+        fill_co2_emission_by_mode(section, data, "physical_mode:Bike");
         break;
     case georef::PathItem::TransportCaracteristic::Car:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
+        fill_co2_emission_by_mode(section, data, "physical_mode:Car");
         break;
     case georef::PathItem::TransportCaracteristic::BssTake:
         section->set_type(pbnavitia::BSS_RENT);
@@ -1586,14 +1588,23 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
 
 }
 
-void fill_co2_emission(pbnavitia::Section *pb_section, const type::VehicleJourney* vehicle_journey){
+void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data, const std::string& mode_uri){
+    if (!mode_uri.empty()){
+      const auto it_physical_mode = data.pt_data->physical_modes_map.find(mode_uri);
+      if ((it_physical_mode != data.pt_data->physical_modes_map.end())
+              && (it_physical_mode->second->co2_emission)){
+          pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
+          pb_co2_emission->set_unit("gEC");
+          pb_co2_emission->set_value((pb_section->length()/1000.0) * (*it_physical_mode->second->co2_emission));
+      }
+    }
+}
+
+void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data, const type::VehicleJourney* vehicle_journey){
     if (vehicle_journey
             && vehicle_journey->journey_pattern
-            && vehicle_journey->journey_pattern->physical_mode
-            &&  (vehicle_journey->journey_pattern->physical_mode->co2_emission > 0.0)){
-        pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
-        pb_co2_emission->set_unit("gEC");
-        pb_co2_emission->set_value((pb_section->length()/1000.0) * vehicle_journey->journey_pattern->physical_mode->co2_emission);
+            && vehicle_journey->journey_pattern->physical_mode){
+        fill_co2_emission_by_mode(pb_section, data, vehicle_journey->journey_pattern->physical_mode->uri);
     }
 }
 

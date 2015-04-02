@@ -75,7 +75,7 @@ physical_mode = Table('physical_mode', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('co2_emission', FLOAT(), primary_key=False, nullable=False, default=0)],
+    Column('co2_emission', FLOAT(), primary_key=False, nullable=True)],
     schema='navitia')
 
 
