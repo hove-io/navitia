@@ -69,40 +69,53 @@ struct Result {
 
 type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point, const navitia::type::Data& data) {
     type::GeographicalCoord result;
-    if(entry_point.type == type::Type_e::Address){
-        auto way = data.geo_ref->way_map.find(entry_point.uri);
-        if (way != data.geo_ref->way_map.end()){
-            const auto geo_way = data.geo_ref->ways[way->second];
-            return geo_way->nearest_coord(entry_point.house_number, data.geo_ref->graph);
+    switch (entry_point.type) {
+    case type::Type_e::Address: {
+            auto way = data.geo_ref->way_map.find(entry_point.uri);
+            if (way != data.geo_ref->way_map.end()){
+                const auto geo_way = data.geo_ref->ways[way->second];
+                return geo_way->nearest_coord(entry_point.house_number, data.geo_ref->graph);
+            }
         }
-    } else if (entry_point.type == type::Type_e::StopPoint) {
-        auto sp_it = data.pt_data->stop_points_map.find(entry_point.uri);
-        if(sp_it != data.pt_data->stop_points_map.end()) {
-            return  sp_it->second->coord;
+        break;
+    case type::Type_e::StopPoint: {
+            auto sp_it = data.pt_data->stop_points_map.find(entry_point.uri);
+            if(sp_it != data.pt_data->stop_points_map.end()) {
+                return  sp_it->second->coord;
+            }
         }
-    } else if (entry_point.type == type::Type_e::StopArea) {
-           auto sa_it = data.pt_data->stop_areas_map.find(entry_point.uri);
-           if(sa_it != data.pt_data->stop_areas_map.end()) {
-               return  sa_it->second->coord;
-           }
-    } else if (entry_point.type == type::Type_e::Coord) {
-        result = entry_point.coordinates;
-    } else if (entry_point.type == type::Type_e::Admin) {
-        auto it_admin = data.geo_ref->admin_map.find(entry_point.uri);
-        if (it_admin != data.geo_ref->admin_map.end()) {
-            const auto admin = data.geo_ref->admins[it_admin->second];
-            return  admin->coord;
+        break;
+    case type::Type_e::StopArea: {
+            auto sa_it = data.pt_data->stop_areas_map.find(entry_point.uri);
+            if(sa_it != data.pt_data->stop_areas_map.end()) {
+                return  sa_it->second->coord;
+            }
         }
-
-    } else if(entry_point.type == type::Type_e::POI){
-        auto poi = data.geo_ref->poi_map.find(entry_point.uri);
-        if (poi != data.geo_ref->poi_map.end()){
-            const auto geo_poi = data.geo_ref->pois[poi->second];
-            return geo_poi->coord;
+        break;
+    case type::Type_e::Coord:
+        return entry_point.coordinates;
+        break;
+    case type::Type_e::Admin: {
+            auto it_admin = data.geo_ref->admin_map.find(entry_point.uri);
+            if (it_admin != data.geo_ref->admin_map.end()) {
+                const auto admin = data.geo_ref->admins[it_admin->second];
+                return  admin->coord;
+            }
         }
+        break;
+    case type::Type_e::POI: {
+            auto poi = data.geo_ref->poi_map.find(entry_point.uri);
+            if (poi != data.geo_ref->poi_map.end()){
+                const auto geo_poi = data.geo_ref->pois[poi->second];
+                return geo_poi->coord;
+            }
+        }
+        break;
+    default:
+        break;
     }
     std::cout << "coord not found for " << entry_point.uri << std::endl;
-    return result;
+    return {};
 }
 
 static type::EntryPoint make_entry_point(const std::string& entry_id, const type::Data& data) {
@@ -128,7 +141,7 @@ int main(int argc, char** argv){
     int iterations, date, hour;
 
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    logger.setLogLevel(log4cplus::TRACE_LOG_LEVEL);
+    logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
 
     desc.add_options()
             ("help", "Show this message")
