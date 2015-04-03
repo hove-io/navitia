@@ -726,8 +726,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         return resp
 
-    @clean_links()
-    @add_id_links()
     @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
