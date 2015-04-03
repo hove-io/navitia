@@ -576,8 +576,6 @@ class Journeys(ResourceUri, ResourceUtc):
             parser_post.args[index].location = "json"
 
     @add_debug_info()
-    @clean_links()
-    @add_id_links()
     @add_fare_links()
     @add_journey_pagination()
     @add_journey_href()
@@ -721,8 +719,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         return resp
 
-    @clean_links()
-    @add_id_links()
     @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
