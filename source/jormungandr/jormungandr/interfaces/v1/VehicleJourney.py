@@ -34,8 +34,7 @@ from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, NonNull
 vehicle_journey = {
     "id": fields.fields.String(attribute="uri"),
     "name": fields.fields.String(),
-    "messages": NonNullList(NonNullNested(fields.generic_message)),
-    "disruptions": NonNullList(NonNullNested(fields.disruption)),
+    "disruptions": NonNullList(NonNullNested(fields.disruption_marshaller)),
     "journey_pattern": PbField(fields.journey_pattern),
     "stop_times": NonNullList(NonNullNested(fields.stop_time)),
     "comment": fields.fields.String(),

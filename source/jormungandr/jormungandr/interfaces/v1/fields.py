@@ -373,20 +373,6 @@ code = {
     "value": fields.String()
 }
 
-"""
-Note: the 'generic_messages' are the old 'disruptions'
-
- For the moment we output both object, but we want to remove the generic_message as soon as possible
-"""
-generic_message = {
-    "level": enum_type(attribute="message_status"),
-    "value": fields.String(attribute="message"),
-    "start_application_date": DateTime(),
-    "end_application_date": DateTime(),
-    "start_application_daily_hour": fields.String(),
-    "end_application_daily_hour": fields.String(),
-}
-
 period = {
     "begin": DateTime(),
     "end": DateTime(),
@@ -421,12 +407,9 @@ disruption_marshaller = {
     "cause": fields.String(),
     "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
+    "uri": fields.String(),
+    "disruption_uri": fields.String(),
 }
-
-#OLD disruption, DEPRECATED
-disruption = deepcopy(disruption_marshaller)
-disruption_marshaller["uri"] = fields.String()
-disruption_marshaller["disruption_uri"] = fields.String()
 
 
 class DisruptionsField(fields.Raw):
@@ -458,7 +441,6 @@ display_informations_route = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "messages": NonNullList(NonNullNested(generic_message)),
     "links": DisruptionLinks(),
 }
 
@@ -473,7 +455,6 @@ display_informations_vj = {
     "code": fields.String(attribute="code"),
     "equipments": equipments(attribute="has_equipments"),
     "headsign": fields.String(attribute="headsign"),
-    "messages": NonNullList(NonNullNested(generic_message)),
     "links": DisruptionLinks(),
 }
 
@@ -500,13 +481,11 @@ generic_type_admin["administrative_regions"] = admins
 
 
 stop_point = deepcopy(generic_type_admin)
-stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_point["links"] = DisruptionLinks()
 stop_point["comment"] = fields.String()
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
-stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["links"] = DisruptionLinks()
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
@@ -527,7 +506,6 @@ stop_time = {
 }
 
 line = deepcopy(generic_type)
-line["messages"] = NonNullList(NonNullNested(generic_message))
 line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
@@ -538,7 +516,6 @@ line["opening_time"] = SplitDateTime(date=None, time="opening_time")
 line["closing_time"] = SplitDateTime(date=None, time="closing_time")
 
 route = deepcopy(generic_type)
-route["messages"] = NonNullList(NonNullNested(generic_message))
 route["links"] = DisruptionLinks()
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
@@ -549,7 +526,6 @@ line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
-network["messages"] = NonNullList(NonNullNested(generic_message))
 network["links"] = DisruptionLinks()
 network["lines"] = NonNullList(NonNullNested(line))
 network["codes"] = NonNullList(NonNullNested(code))
@@ -713,59 +689,3 @@ instance_parameters = {
 
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
-
-
-class use_old_disruptions_if_needed:
-    """
-    delete disruption links and put the disruptions directly in the owner objets
-
-    TEMPORARY: delete this as soon as the front end has the new disruptions integrated
-    """
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            response = f(*args, **kwargs)
-
-            if hasattr(g, 'use_old_disruptions') and g.use_old_disruptions:
-                self._change_links(response)
-            else:
-                # we clean the old AT messages
-                # after the refacto, we'll not dump those messages anymore
-                # but for the moment they have to be cleaned in the new output
-                self._clean_old_at(response)
-
-            return response
-        return wrapper
-
-    def _change_links(self, responses):
-        response = responses[0]
-
-        disruption_node = response['all_disruptions'] if 'all_disruptions' in response else response['disruptions']
-        all_disruptions = {d['id']: d for d in disruption_node}
-
-        def change_to_real_disruption(key, obj):
-            try:
-                if 'links' not in obj:
-                    return
-            except TypeError:
-                return
-
-            real_disruptions = [deepcopy(all_disruptions[d['id']]) for d in obj['links'] if d['type'] == 'disruption']
-
-            obj['disruptions'] = real_disruptions
-
-        utils.walk_dict(response, change_to_real_disruption)
-
-    def _clean_old_at(self, responses):
-        response = responses[0]
-
-        def remove_messages(_, obj):
-            try:
-                if not obj.get('messages') or 'end_application_daily_hour' not in obj.get('messages')[0]:
-                    return
-            except AttributeError:
-                return
-
-            del obj['messages']
-
-        utils.walk_dict(response, remove_messages)

@@ -141,29 +141,6 @@ void fill_message(const type::new_disruption::Impact& impact,
 
     //we need to compute the active status
     pb_disrution->set_status(compute_disruption_status(impact, action_period));
-
-    // we also fill the old message for the customer using it.
-    //will be removed as soon as possible
-    auto pb_message = pb_object->add_messages();
-    if(impact.severity->effect == type::new_disruption::Effect::NO_SERVICE){
-        pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
-    }else{
-        pb_message->set_message_status(pbnavitia::MessageStatus::warning);
-    }
-    pb_message->set_uri(impact.uri);
-    if (! impact.messages.empty()) {
-        const auto& msg = impact.messages.front();
-        pb_message->set_message(msg.text);
-        pb_message->set_title("");
-    }
-
-    if (! impact.application_periods.empty()) {
-        pb_message->set_start_application_date(navitia::to_posix_timestamp(impact.application_periods.front().begin()));
-        pb_message->set_end_application_date(navitia::to_posix_timestamp(impact.application_periods.back().last()));
-        //start/end daily hour are not relevent anymore
-        pb_message->set_start_application_daily_hour("000000");
-        pb_message->set_end_application_daily_hour("235959");
-    }
 }
 
 void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,

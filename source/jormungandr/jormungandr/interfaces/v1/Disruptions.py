@@ -41,81 +41,13 @@ from errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 
 disruption = {
     "network": PbField(network, attribute='network'),
     "lines": NonNullList(NonNullNested(line)),
     "stop_areas": NonNullList(NonNullNested(stop_area))
 }
-
-disruptions = {
-    "disruptions": NonNullList(NonNullNested(disruption)),
-    "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination),
-    "all_disruptions": DisruptionsField,
-}
-
-
-def duration(param):
-    try:
-        return aniso8601.parse_duration(param)
-    except ValueError as e:
-        raise ValueError("Unable to parse duration {}, {}".format(param, e.message))
-
-
-class Disruptions(ResourceUri):
-    def __init__(self):
-        ResourceUri.__init__(self)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
-        parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=int, default=1)
-        parser_get.add_argument("count", type=int, default=10,
-                                description="Number of disruptions per page")
-        parser_get.add_argument("start_page", type=int, default=0,
-                                description="The current page")
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
-                                description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date and it is mainly used for debug.")
-        parser_get.add_argument("forbidden_id[]", type=unicode,
-                                description="forbidden ids",
-                                dest="forbidden_uris[]",
-                                action="append")
-        parser_get.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=True)
-
-    @use_old_disruptions_if_needed()
-    @marshal_with(disruptions)
-    @ManageError()
-    def get(self, region=None, lon=None, lat=None, uri=None):
-        self.region = i_manager.get_region(region, lon, lat)
-        timezone.set_request_timezone(self.region)
-        args = self.parsers["get"].parse_args()
-
-        if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-            args["filter"] = self.get_filter(uris)
-        else:
-            args["filter"] = ""
-
-        self._register_interpreted_parameters(args)
-
-        response = i_manager.dispatch(args, "disruptions",
-                                      instance_name=self.region)
-
-        # we store in g if we want the disruptions in the old or in the new format
-        # It's not well designed, but it is temporary
-        # DELETE that asap
-        g.use_old_disruptions = args['_use_old_disruptions']
-
-        return response
-
 
 traffic = {
     "traffic_reports": NonNullList(NonNullNested(disruption), attribute='disruptions'),
@@ -145,18 +77,12 @@ class TrafficReport(ResourceUri):
                                 dest="forbidden_uris[]",
                                 action="append")
 
-    @use_old_disruptions_if_needed()
     @marshal_with(traffic)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
-
-        # we store in g if we want the disruptions in the old or in the new format
-        # It's not well designed, but it is temporary
-        # DELETE that asap
-        g.use_old_disruptions = False
 
         if uri:
             if uri[-1] == "/":
