@@ -116,11 +116,11 @@ class MockWrapper:
         assert stat.journeys[1].sections[0].arrival_date_time == str_to_time_stamp("20120614T080435") #1339653875
         assert stat.journeys[1].sections[0].duration == 275
         assert stat.journeys[1].sections[0].from_embedded_type == "address"
-        assert stat.journeys[1].sections[0].from_id == ""
+        assert stat.journeys[1].sections[0].from_id == "8.98312e-05;8.98312e-05"
         assert stat.journeys[1].sections[0].from_name == "rue bs"
         assert stat.journeys[1].sections[0].mode == "walking"
         assert stat.journeys[1].sections[0].to_embedded_type == "address"
-        assert stat.journeys[1].sections[0].to_id == ""
+        assert stat.journeys[1].sections[0].to_id == "0.00188646;0.00071865"
         assert stat.journeys[1].sections[0].to_name == "rue ag"
         assert stat.journeys[1].sections[0].type == "street_network"
 

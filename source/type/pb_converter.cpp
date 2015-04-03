@@ -89,8 +89,10 @@ void fill_address(const T* obj, const nt::Data& data,
     if(coord.is_initialized()) {
         address->mutable_coord()->set_lon(coord.lon());
         address->mutable_coord()->set_lat(coord.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << coord.lon() << ";" << coord.lat();
+        address->set_uri(ss.str());
     }
-    address->set_uri(obj->uri);
 
     if(depth > 0){
         for(georef::Admin* admin : obj->admin_list){
