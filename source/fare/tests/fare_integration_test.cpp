@@ -171,10 +171,6 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     //fare structures check
     const pbnavitia::Fare& pb_fare = journey.fare();
 
-    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 1);
-    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id(0), "unknown_ticket");
-    BOOST_CHECK_EQUAL(pb_fare.found(), false);
-
-    BOOST_REQUIRE_EQUAL(resp.tickets_size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.tickets(0).id(), "unknown_ticket");
+    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 0);
+    BOOST_REQUIRE_EQUAL(resp.tickets_size(), 0);
 }

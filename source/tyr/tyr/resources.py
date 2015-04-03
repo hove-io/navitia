@@ -74,6 +74,8 @@ instance_fields = {'id': fields.Raw,
                    'min_tc_with_bike': fields.Raw,
                    'min_tc_with_bss': fields.Raw,
                    'min_tc_with_car': fields.Raw,
+                   'max_duration_criteria': fields.Raw,
+                   'max_duration_fallback_mode': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -198,6 +200,13 @@ class Instance(flask_restful.Resource):
                 help='all journeys with a duration fewer than this value will be kept no matter what even if they ' \
                         'are 20 times slower than the earliest one', location=('json', 'values'),
                 default=instance.min_duration_too_long_journey)
+        parser.add_argument('max_duration_criteria', type=str, choices=['time', 'duration'],
+                help='', location=('json', 'values'),
+                default=instance.max_duration_criteria)
+
+        parser.add_argument('max_duration_fallback_mode', type=str, choices=['walking', 'bss', 'bike', 'car'],
+                help='', location=('json', 'values'),
+                default=instance.max_duration_fallback_mode)
 
         args = parser.parse_args()
 
@@ -221,6 +230,8 @@ class Instance(flask_restful.Resource):
             instance.min_car = args['min_car']
             instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
             instance.factor_too_long_journey = args['factor_too_long_journey']
+            instance.max_duration_criteria = args['max_duration_criteria']
+            instance.max_duration_fallback_mode = args['max_duration_fallback_mode']
             db.session.commit()
         except Exception:
             logging.exception("fail")

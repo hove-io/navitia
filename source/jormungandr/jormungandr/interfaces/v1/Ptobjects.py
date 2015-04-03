@@ -33,7 +33,7 @@ from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 from make_links import add_id_links
 from fields import NonNullList, NonNullNested, PbField, error, pt_object
 from ResourceUri import ResourceUri
@@ -79,18 +79,12 @@ class Ptobjects(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          description="The depth of objects")
-        self.parsers["get"].add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
 
-    @use_old_disruptions_if_needed()
     @marshal_with(pt_objects)
     def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
-        g.use_old_disruptions = args['_use_old_disruptions']
         self._register_interpreted_parameters(args)
         if len(args['q']) == 0:
             abort(400, message="Search word absent")

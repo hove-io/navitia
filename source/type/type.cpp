@@ -58,10 +58,10 @@ std::string VehicleJourney::get_direction() const {
     return "";
 }
 
-std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
+std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::weak_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);
@@ -72,7 +72,7 @@ std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable
             continue; //pointer might still have become invalid
         }
         if (impact_acquired->is_valid(current_time, action_period)) {
-            result.push_back(impact);
+            result.push_back(impact_acquired);
         }
     }
 
@@ -80,9 +80,9 @@ std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable
 
 }
 
-std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_publishable_messages(
+std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_publishable_messages(
             const boost::posix_time::ptime& current_time) const{
-    std::vector<boost::weak_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);
@@ -93,7 +93,7 @@ std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_publishabl
             continue; //pointer might still have become invalid
         }
         if (impact_acquired->disruption->is_publishable(current_time)) {
-            result.push_back(impact);
+            result.push_back(impact_acquired);
         }
     }
     return result;

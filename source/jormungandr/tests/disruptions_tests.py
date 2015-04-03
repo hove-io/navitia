@@ -73,9 +73,7 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['uri'], 'too_bad_again')
         eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
-        eq_(lines_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
         eq_(lines_disrupt[1]['uri'], 'later_impact')
-        eq_(lines_disrupt[1]['severity']['name'], 'information severity')
 
         impacted_network = get_not_null(traffic_report[0], 'network')
         is_valid_network(impacted_network, depth_check=0)
@@ -102,19 +100,17 @@ class TestDisruptions(AbstractTestFixture):
         eq_(stop_disrupt[0]['uri'], 'too_bad')
 
         """
-        by querying directly the impacted object, we find the same results
+        by querying directly the impacted object, we only find active disruptions
         """
         networks = self.query_region('networks/base_network?' + default_date_filter)
         network = get_not_null(networks, 'networks')[0]
         is_valid_network(network)
         network_disrupt = get_disruptions(network, response)
-        eq_(len(network_disrupt), 2)
+        eq_(len(network_disrupt), 1)
         for d in network_disrupt:
             is_valid_disruption(d)
         eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['uri'], 'too_bad_again')
-        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['uri'], 'later_impact')
 
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
@@ -296,3 +292,64 @@ class TestDisruptions(AbstractTestFixture):
         #UTC - 1, so in UTC it's 00h59 => disruptions
         assert len(response['disruptions']) > 0
 
+    def test_disruption_on_route(self):
+        """
+        check that disruption on route are displayed on the corresponding line
+        """
+        response = self.query_region('traffic_reports?_current_datetime=20150325T090000')
+
+        impacts = get_impacts(response)
+        eq_(len(impacts), 0)
+
+        response = self.query_region('traffic_reports?_current_datetime=20150327T090000')
+
+        impacts = get_impacts(response)
+        eq_(len(impacts), 1)
+        assert 'too_bad_route_A:0' in impacts
+
+        traffic_report = get_not_null(response, 'traffic_reports')
+        eq_(len(traffic_report), 1)
+
+        impacted_lines = get_not_null(traffic_report[0], 'lines')
+        eq_(len(impacted_lines), 1)
+        is_valid_line(impacted_lines[0], depth_check=0)
+        eq_(impacted_lines[0]['id'], 'A')
+
+        lines_disrupt = get_disruptions(impacted_lines[0], response)
+        eq_(len(lines_disrupt), 1)
+        for d in lines_disrupt:
+            is_valid_disruption(d)
+        eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0')
+        eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
+
+    def test_disruption_on_route_and_line(self):
+        """
+        and we check the sort order of the lines
+        """
+        response = self.query_region('traffic_reports?_current_datetime=20150125T090000')
+
+        impacts = get_impacts(response)
+        eq_(len(impacts), 0)
+
+        response = self.query_region('traffic_reports?_current_datetime=20150127T090000')
+
+        impacts = get_impacts(response)
+        eq_(len(impacts), 3)
+        assert 'too_bad_route_A:0_and_line' in impacts
+
+        traffic_report = get_not_null(response, 'traffic_reports')
+        eq_(len(traffic_report), 1)
+
+        impacted_lines = get_not_null(traffic_report[0], 'lines')
+        eq_(len(impacted_lines), 3)
+        is_valid_line(impacted_lines[0], depth_check=0)
+        eq_(impacted_lines[0]['id'], 'B')
+        eq_(impacted_lines[1]['id'], 'A')
+        eq_(impacted_lines[2]['id'], 'C')
+
+        lines_disrupt = get_disruptions(impacted_lines[1], response)
+        eq_(len(lines_disrupt), 1)
+        for d in lines_disrupt:
+            is_valid_disruption(d)
+        eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0_and_line')
+        eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0_and_line')

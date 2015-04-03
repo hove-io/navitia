@@ -36,17 +36,17 @@ from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
 from jormungandr import authentication
-from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message, SectionGeoJson
+    SectionGeoJson, Co2Emission
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, complete_links, update_journeys_status
+from ResourceUri import ResourceUri, complete_links
 import datetime
 from functools import wraps
 from fields import DateTime
@@ -178,6 +178,7 @@ section = {
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
     "departure_date_time": DateTime(attribute="begin_date_time"),
     "arrival_date_time": DateTime(attribute="end_date_time"),
+    "co2_emission": Co2Emission(),
 }
 
 cost = {
@@ -203,8 +204,9 @@ journey = {
     'type': fields.String(),
     'fare': NonNullNested(fare),
     'tags': fields.List(fields.String),
-    "status": enum_type(attribute="message_status"),
+    "status": fields.String(attribute="most_serious_disruption_effect"),
     "calendars": NonNullList(NonNullNested(calendar)),
+    "co2_emission": Co2Emission(),
 }
 
 ticket = {
@@ -218,7 +220,7 @@ ticket = {
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
-    "tickets": NonNullList(NonNullNested(ticket)),
+    "tickets": fields.List(NonNullNested(ticket)),
     "disruptions": DisruptionsField,
 }
 
@@ -560,13 +562,8 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
-        parser_get.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
 
         self.method_decorators.append(complete_links(self))
-        self.method_decorators.append(update_journeys_status(self))
 
         # manage post protocol (n-m calculation)
         self.parsers["post"] = deepcopy(parser_get)
@@ -579,18 +576,13 @@ class Journeys(ResourceUri, ResourceUtc):
             parser_post.args[index].location = "json"
 
     @add_debug_info()
-    @clean_links()
-    @add_id_links()
     @add_fare_links()
     @add_journey_pagination()
     @add_journey_href()
-    @use_old_disruptions_if_needed()
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
-
-        g.use_old_disruptions = args['_use_old_disruptions']
 
         if args['traveler_type']:
             profile = travelers_profile[args['traveler_type']]
@@ -727,8 +719,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         return resp
 
-    @clean_links()
-    @add_id_links()
     @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)

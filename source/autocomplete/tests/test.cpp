@@ -582,14 +582,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     auto res = ac.find_complete("gare", nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 8);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 5);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
-    BOOST_CHECK_EQUAL(res.at(3).idx, 4);
-    BOOST_CHECK_EQUAL(res.at(4).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 4);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(3).idx, 3);
+    BOOST_CHECK_EQUAL(res.at(4).idx, 5);
     BOOST_CHECK_EQUAL(res.at(5).idx, 0);
-    BOOST_CHECK_EQUAL(res.at(6).idx, 3);
-    BOOST_CHECK_EQUAL(res.at(7).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(6).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(7).idx, 6);
     BOOST_CHECK_EQUAL(res.at(7).quality, 100);
 
 
@@ -772,9 +772,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(7).uri(), "quai NEUF");
-    BOOST_CHECK_EQUAL(resp.places(8).uri(), "rue VIS");
-    BOOST_CHECK_EQUAL(resp.places(9).uri(), "rue DU TREGOR");
+    BOOST_CHECK_EQUAL(resp.places(7).name(), "quai NEUF (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(8).name(), "rue VIS (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(9).name(), "rue DU TREGOR (Quimper)");
 }
 
 /*
@@ -1019,7 +1019,84 @@ BOOST_AUTO_TEST_CASE(find_with_synonyms_gare_with_or_without_sncf_test){
     //Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" ,"place DE LA GARE Rennes" et "Parking SNCF Rennes"
     auto res2 = ac.find_complete("gare rennes", nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res2.size(), 6);
+}
 
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
+    //Test to verify order of places in the result:
+    //sort by type : Admin first and then stop_area
+    //sort by score (except quality=100 at the top)
+    //sort by quality
+    //sort by name
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("Santec", 0, 0);
+    b.sa("Ar Santé Les Fontaines Nantes", 0, 0);
+    b.sa("Santenay-Haut Nantes", 0, 0);
+    b.sa("Roye-Agri-Santerre Nantes", 0, 0);
+    b.sa("Fontenay-le-Comte-Santé Nantes", 0, 0);
+    b.sa("gare de Santes Nantes", 0, 0);
+    b.sa("gare de Santenay-les-Bains Nantes", 0, 0);
+    b.sa("gare de Santeuil-le-Perchay Nantes", 0, 0);
+    b.sa("chaptal", 0, 0);
+    b.sa("Tourbie", 0, 0);
+    b.sa("Bourgogne", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Santec";
+    ad->uri = "Santec";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+    b.data->geo_ref->fl_admin.word_quality_list.at(0).score = 50;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(0).score = 10;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(1).score = 7;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(2).score = 35;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(3).score = 35;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(4).score = 75;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(5).score = 70;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(6).score = 45;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(7).score = 50;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(8).score = 5;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(9).score = 5;
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(10).score = 70;
+
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, 15, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 12);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type() , pbnavitia::STOP_AREA);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Santec"); //Admin
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Santec"); //score = 7 but quality = 100
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "Fontenay-le-Comte-Santé Nantes"); //score = 75
+    BOOST_CHECK_EQUAL(resp.places(3).uri(), "Bourgogne"); //score = 70
+    BOOST_CHECK_EQUAL(resp.places(3).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(4).uri(), "gare de Santes Nantes"); //score = 70
+    BOOST_CHECK_EQUAL(resp.places(4).quality(), 60);
+    BOOST_CHECK_EQUAL(resp.places(5).uri(), "gare de Santeuil-le-Perchay Nantes"); //score = 50
+    BOOST_CHECK_EQUAL(resp.places(5).quality(), 40);
+    BOOST_CHECK_EQUAL(resp.places(6).uri(), "gare de Santenay-les-Bains Nantes"); //score = 45
+    BOOST_CHECK_EQUAL(resp.places(6).quality(), 40);
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Santenay-Haut Nantes"); //score = 35
+    BOOST_CHECK_EQUAL(resp.places(7).quality(), 70);
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Roye-Agri-Santerre Nantes"); //score = 35
+    BOOST_CHECK_EQUAL(resp.places(8).quality(), 60);
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Ar Santé Les Fontaines Nantes"); //score = 7
+    BOOST_CHECK_EQUAL(resp.places(9).quality(), 50);
+    BOOST_CHECK_EQUAL(resp.places(10).uri(), "chaptal"); // score = 5
+    BOOST_CHECK_EQUAL(resp.places(10).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(11).uri(), "Tourbie"); //score = 5
+    BOOST_CHECK_EQUAL(resp.places(11).quality(), 90);
 }
 
 BOOST_AUTO_TEST_CASE(synonyms_without_grand_champ_test){

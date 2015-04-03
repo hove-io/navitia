@@ -74,6 +74,12 @@ factor_too_long_journey = 4
 #all journeys with a duration fewer than this value will be kept no matter what even if they are 20 times slower than the earliest one
 min_duration_too_long_journey = 15*60
 
+#criteria used for select the journey used for calculate the max duration
+max_duration_criteria = 'time'
+
+#only journey with this mode (or slower mode) will be used for calculate the max_duration
+max_duration_fallback_mode = 'walking'
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

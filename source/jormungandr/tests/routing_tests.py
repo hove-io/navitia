@@ -342,9 +342,13 @@ class TestShapeInGeoJson(AbstractTestFixture):
         #print response['journeys'][0]['sections'][1]
         eq_(len(response['journeys']), 2)
         eq_(len(response['journeys'][0]['sections']), 3)
+        eq_(response['journeys'][0]['co2_emission']['value'], 0.48)
+        eq_(response['journeys'][0]['co2_emission']['unit'], 'gEC')
         eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
         eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
+        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.48)
+        eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
 
 @dataset(["main_routing_test", "basic_routing_test"])
 class TestOneDeadRegion(AbstractTestFixture):

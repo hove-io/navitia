@@ -15,7 +15,7 @@ dict2xml==1.1
 itsdangerous==0.23
 mock==1.0.1
 nose==1.3.1
-protobuf==2.4.1
+protobuf
 psycopg2==2.4.5
 pyzmq==2.1.11
 redis==2.9.1
@@ -28,3 +28,4 @@ pytz==2013.9
 retrying==1.2.3
 aniso8601==0.82
 elasticsearch==1.4.0
+simplejson==3.6.5

@@ -45,7 +45,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, date_time_format
 from errors import ManageError
 from Coord import Coord
-from jormungandr.interfaces.v1.fields import DisruptionsField, use_old_disruptions_if_needed
+from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
@@ -80,10 +80,6 @@ class Uri(ResourceUri):
         parser.add_argument("odt_level", type=option_value(odt_levels),
                                          default="all",
                                          description="odt level")
-        parser.add_argument("_use_old_disruptions", type=bool,
-                                description="temporary boolean to use the old disruption interface. "
-                                            "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
         parser.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
                                 description="The datetime used to consider the state of the pt object"
                                             " Default is the current date and it is used for debug."
@@ -96,7 +92,6 @@ class Uri(ResourceUri):
                                 description="The filter parameter")
         self.collection = collection
         self.method_decorators.insert(0, ManageError())
-        self.method_decorators.append(use_old_disruptions_if_needed())
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
@@ -127,8 +122,6 @@ class Uri(ResourceUri):
 
         #we store the region in the 'g' object, which is local to a request
         set_request_timezone(self.region)
-
-        g.use_old_disruptions = args['_use_old_disruptions']
 
         if not self.region:
             return {"error": "No region"}, 404

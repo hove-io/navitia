@@ -31,10 +31,11 @@
 # www.navitia.io
 import importlib
 from flask_restful.representations import json
-from flask import request
+from flask import request, make_response
 from jormungandr import rest_api
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
+import simplejson
 
 
 @rest_api.representation("text/jsonp")
@@ -44,6 +45,14 @@ def output_jsonp(data, code, headers=None):
     callback = request.args.get('callback', False)
     if callback:
         resp.data = str(callback) + '(' + resp.data + ')'
+    return resp
+
+
+@rest_api.representation("text/json")
+@rest_api.representation("application/json")
+def output_json(data, code, headers=None):
+    resp = make_response(simplejson.dumps(data), code)
+    resp.headers.extend(headers or {})
     return resp
 
 # If modules are configured, then load and run them
@@ -57,5 +66,14 @@ if 'MODULES' in rest_api.app.config:
 else:
     rest_api.app.logger.warning('MODULES isn\'t defined in config. No module will be loaded, then no route '
                                 'will be defined.')
+
+if rest_api.app.config.get('ACTIVATE_PROFILING'):
+    rest_api.app.logger.warning('=======================================================')
+    rest_api.app.logger.warning('activation of the profiling, all query will be slow !')
+    rest_api.app.logger.warning('=======================================================')
+    from werkzeug.contrib.profiler import ProfilerMiddleware
+    rest_api.app.config['PROFILE'] = True
+    f = open('/tmp/profiler.log', 'a')
+    rest_api.app.wsgi_app = ProfilerMiddleware(rest_api.app.wsgi_app, f, restrictions=[80], profile_dir='/tmp/profile')
 
 index(rest_api)

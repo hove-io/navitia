@@ -33,47 +33,52 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "utils/logger.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "utils/functions.h"
 
 namespace navitia { namespace disruption {
 
 
-struct disrupt{
+using DisruptionSet = std::set<boost::shared_ptr<type::new_disruption::Impact>, Less>;
+
+struct Disrupt{
     type::idx_t idx;
-    type::idx_t network_idx;
-    std::vector<type::idx_t> line_idx;
-    std::vector<type::idx_t> stop_area_idx;
+    const type::Network* network = nullptr;
+    DisruptionSet network_disruptions;
+    //we use a vector of pair because we need to sort by the priority of the impacts
+    std::vector<std::pair<const type::Line*, DisruptionSet>> lines;
+    std::vector<std::pair<const type::StopArea*, DisruptionSet>> stop_areas;
 };
 
 class Disruption{
 private:
 
-    std::vector<disrupt> disrupts;
+    std::vector<Disrupt> disrupts;
     log4cplus::Logger logger;
 
-    type::idx_t find_or_create(const type::Network* network);
+    Disrupt& find_or_create(const type::Network* network);
     void add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                      const boost::posix_time::ptime now);
 
     void add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                      const boost::posix_time::ptime now);
     void add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
-    void sort_disruptions(const type::Data &d);
+                      const boost::posix_time::ptime now);
+    void sort_disruptions();
 public:
     Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
 
     void disruptions_list(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
                     const type::Data &d,
-                    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+                    const boost::posix_time::ptime now);
 
-    const std::vector<disrupt>& get_disrupts() const;
+    const std::vector<Disrupt>& get_disrupts() const;
     size_t get_disrupts_size();
 };
 }}

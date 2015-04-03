@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from navitiacommon import response_pb2
+from operator import attrgetter
 
 def has_walking_first(journey):
     for section in journey.sections:
@@ -182,3 +183,33 @@ def is_non_pt_walk(journey):
 
 def is_non_pt_bike(journey):
     return journey.type == 'non_pt_bike'
+
+max_duration_fallback_modes = {'walking': [response_pb2.Walking],
+                               'bss': [response_pb2.Walking, response_pb2.Bss],
+                               'bike': [response_pb2.Walking, response_pb2.Bss, response_pb2.Bike],
+                               'car': [response_pb2.Walking, response_pb2.Bss, response_pb2.Bike, response_pb2.Car],
+                            }
+
+def filter_journeys_by_fallback_modes(journeys, fallback_modes):
+    section_is_fallback_or_pt = lambda section: section.type not in \
+            (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                       or section.street_network.mode in fallback_modes
+    filter_journey = lambda journey: all(section_is_fallback_or_pt(section) for section in journey.sections) \
+            and journey.duration > 0
+
+    return filter(filter_journey, journeys)
+
+def select_best_journey_by_time(journeys, clockwise, fallback_modes):
+    list_journeys = filter_journeys_by_fallback_modes(journeys, fallback_modes)
+    if not list_journeys:
+        return None
+    if clockwise:
+        return min(list_journeys, key=attrgetter('arrival_date_time'))
+    else:
+        return max(list_journeys, key=attrgetter('departure_date_time'))
+
+def select_best_journey_by_duration(journeys, clockwise, fallback_modes):
+    list_journeys = filter_journeys_by_fallback_modes(journeys, fallback_modes)
+    if not list_journeys:
+        return None
+    return min(list_journeys, key=attrgetter('duration'))

@@ -192,6 +192,8 @@ class Instance(object):
     def __init__(self):
         self.factor_too_long_journey = 4
         self.min_duration_too_long_journey = 60
+        self.max_duration_criteria = 'time'
+        self.max_duration_fallback_mode = 'walking'
 
 def find_max_duration_clockwise_test():
     response = response_pb2.Response()

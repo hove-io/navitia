@@ -210,11 +210,6 @@ class V1Routing(AModule):
                           '/stop_schedules',
                           endpoint='stop_schedules')
 
-        self.add_resource(Disruptions.Disruptions,
-                          region + 'disruptions',
-                          region + '<uri:uri>/disruptions',
-                          endpoint='disruptions')
-
         self.add_resource(Disruptions.TrafficReport,
                           region + 'traffic_reports',
                           region + '<uri:uri>/traffic_reports',

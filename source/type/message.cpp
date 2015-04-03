@@ -110,4 +110,14 @@ PtObj make_pt_obj(Type_e type,
     }
 }
 
+bool Impact::operator<(const Impact& other){
+    if(this->severity->priority != other.severity->priority){
+        return this->severity->priority < other.severity->priority;
+    }if(this->created_at != other.created_at){
+        return this->created_at < other.created_at;
+    }else{
+        return this->uri < other.uri;
+    }
+}
+
 }}}//namespace

@@ -116,6 +116,8 @@ def walk_dict(tree, visitor):
     depth first search on a dict.
     call the visit(elem) method on the visitor for each node
 
+    if the visitor returns True, stop the search
+
     >>> bob = {'tutu': 1,
     ... 'tata': [1, 2],
     ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
@@ -141,6 +143,18 @@ def walk_dict(tree, visitor):
     bobette=13
     tata=2
     tata=1
+
+    >>> def my_stoper_visitor(name, val):
+    ...     print "{}={}".format(name, val)
+    ...     if name == 'tete':
+    ...         return True
+
+    >>> walk_dict(bob, my_stoper_visitor)
+    titi={'b': 1}
+    b=1
+    titi={'a': 1}
+    a=1
+    tete=ltuple2
     """
     queue = deque()
 
@@ -159,7 +173,9 @@ def walk_dict(tree, visitor):
         elem = queue.pop()
         #we don't want to visit the list, we'll visit each node separately
         if not isinstance(elem[1], (list, tuple)):
-            visitor(elem[0], elem[1])
+            if visitor(elem[0], elem[1]) is True:
+                #we stop the search if the visitor returns True
+                break
         #for list and tuple, the name is the parent's name
         add_elt(elem[0], elem[1])
 

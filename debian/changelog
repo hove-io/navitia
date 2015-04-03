@@ -1,3 +1,32 @@
+navitia2 (1.15.0) unstable; urgency=low
+
+  * jormungandr: create address id on kraken  <https://github.com/CanalTP/navitia/pull/987>
+  * Jormungandr: add profiling facilities  <https://github.com/CanalTP/navitia/pull/986>
+  * Jormungandr: those functions were called twice  <https://github.com/CanalTP/navitia/pull/985>
+  * Stats: Speed up stats  <https://github.com/CanalTP/navitia/pull/984>
+  * Jormun: Remove old disruptions  <https://github.com/CanalTP/navitia/pull/983>
+  * Disruption: compute a disruption status on journey  <https://github.com/CanalTP/navitia/pull/982>
+  * ed: forbid teleportation by patching the vj to take 10min instead of 0.  <https://github.com/CanalTP/navitia/pull/981>
+  * Kraken: don't mess with the origin of the streetnetwork section  <https://github.com/CanalTP/navitia/pull/980>
+  * Revert "jormungandr: when sorting by departure, we always sort by departure"  <https://github.com/CanalTP/navitia/pull/979>
+  * Kraken: always put an address in the response even if we didn't find one  <https://github.com/CanalTP/navitia/pull/978>
+  * Kraken: fix handling of disruption in ptref  <https://github.com/CanalTP/navitia/pull/977>
+  * requirements: do not force a version number for protobuf  <https://github.com/CanalTP/navitia/pull/976>
+  * Jormungandr: handle list of parameter in stats  <https://github.com/CanalTP/navitia/pull/975>
+  * Traffic reports  <https://github.com/CanalTP/navitia/pull/974>
+  * Optim  <https://github.com/CanalTP/navitia/pull/973>
+  * do not remove mostly equal vjs  <https://github.com/CanalTP/navitia/pull/972>
+  * Optimisation  <https://github.com/CanalTP/navitia/pull/971>
+  * kraken: don't calculate the adress of the stop_point in journeys  <https://github.com/CanalTP/navitia/pull/970>
+  * kraken: remove an useless adress on the to attribute of the first section  <https://github.com/CanalTP/navitia/pull/969>
+  * jormungandr: filter on too long duration can select standard by duration  <https://github.com/CanalTP/navitia/pull/968>
+  * jormungandr: set the max_car_duration_to_pt at 35min for motorist profile  <https://github.com/CanalTP/navitia/pull/967>
+  * Revert "Jormungandr: stop if no new responses"  <https://github.com/CanalTP/navitia/pull/966>
+  * fare: add some reference for less copy  <https://github.com/CanalTP/navitia/pull/965>
+  * Places fix quality 100 navitiaii 1496  <https://github.com/CanalTP/navitia/pull/964>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 03 Apr 2015 14:04:38 +0100
+
 navitia2 (1.14.1) unstable; urgency=low
 
   * do not remove mostly equal vjs <https://github.com/CanalTP/navitia/pull/972>

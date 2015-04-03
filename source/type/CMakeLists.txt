@@ -3,7 +3,6 @@ SET(PROTO_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/response.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/request.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/task.proto
-    ${CMAKE_CURRENT_SOURCE_DIR}/realtime.proto
     ${CMAKE_SOURCE_DIR}/chaos-proto/chaos.proto
     ${CMAKE_SOURCE_DIR}/chaos-proto/gtfs-realtime.proto
 )
@@ -11,7 +10,6 @@ SET(PROTO_FILES
 SET(PROTO_HDRS
     ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/realtime.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/request.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/response.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/task.pb.h
@@ -20,7 +18,6 @@ SET(PROTO_HDRS
 
 SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/realtime.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/request.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/response.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/task.pb.cc
@@ -42,13 +39,13 @@ target_link_libraries(pb_lib vptranslator pthread ${PROTOBUF_LIBRARY})
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon" type.proto
-    response.proto request.proto task.proto realtime.proto stat.proto
+    response.proto request.proto task.proto stat.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/stat_persistor/stat_persistor" type.proto
-    task.proto realtime.proto stat.proto
+    task.proto stat.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 

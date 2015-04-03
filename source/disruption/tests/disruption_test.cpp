@@ -217,19 +217,6 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     BOOST_REQUIRE_EQUAL(disruption.application_periods_size(), 1);
     BOOST_CHECK_EQUAL(disruption.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131220T123200"));
     BOOST_CHECK_EQUAL(disruption.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
-
-
-    //old output, to be cleaned as soon as NMP uses disruptions
-    {
-        line = disruptions.lines(0);
-        BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
-        pbnavitia::Message message = line.messages(0);
-        BOOST_REQUIRE_EQUAL(message.uri(), "mess1");
-        BOOST_REQUIRE_EQUAL(message.start_application_date(), navitia::test::to_posix_timestamp("20131220T123200"));
-        BOOST_REQUIRE_EQUAL(message.end_application_date(), navitia::test::to_posix_timestamp("20131221T123200"));
-        BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
-        BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235959");
-    }
 }
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {

@@ -58,43 +58,47 @@ def get_mode(mode, previous_section):
             return 'bss'
     return mode
 
+
 class FindAdminVisitor(object):
     def __init__(self):
-        self.admins = []
+        self.admin = None
 
     def __call__(self, name, value):
-        if name in ['administrative_regions', 'administrative_region'] and 'level' in value and value['level'] == 8:
-            self.admins.append(value)
+        if name in ['administrative_regions', 'administrative_region'] and value.get('level') == 8:
+            self.admin = value
+            return True  # we have found the admin, we can stop
 
     def get_admin_id(self):
-        if not self.admins:
+        if not self.admin:
             return None
-        return self.admins[0]['id']
+        return self.admin['id']
 
     def get_admin_insee(self):
-        if not self.admins:
+        if not self.admin:
             return None
-        return self.admins[0]['insee']
+        return self.admin['insee']
 
     def get_admin_name(self):
-        if not self.admins:
+        if not self.admin:
             return None
-        return self.admins[0]['name']
+        return self.admin['name']
+
 
 def find_admin(point):
     visitor = FindAdminVisitor()
     utils.walk_dict(point, visitor)
-    return (visitor.get_admin_id(), visitor.get_admin_insee(), visitor.get_admin_name())
+    return visitor.get_admin_id(), visitor.get_admin_insee(), visitor.get_admin_name()
+
 
 def find_origin_admin(journey):
     if 'sections' not in journey:
-        return (None, None, None)
+        return None, None, None
     return find_admin(journey['sections'][0]['from'])
 
 
 def find_destination_admin(journey):
     if 'sections' not in journey:
-        return (None, None, None)
+        return None, None, None
     return find_admin(journey['sections'][-1]['to'])
 
 
@@ -203,10 +207,12 @@ class StatManager(object):
         g.stat_regions = regions
 
     def fill_parameters(self, stat_request):
-        for item in request.args.iteritems():
-            stat_parameter = stat_request.parameters.add()
-            stat_parameter.key = item[0]
-            stat_parameter.value = item[1]
+        for key in request.args:
+            items = request.args.getlist(key)
+            for value in items:
+                stat_parameter = stat_request.parameters.add()
+                stat_parameter.key = key
+                stat_parameter.value = unicode(value)
 
         if hasattr(g, 'stat_interpreted_parameters'):
             for item in g.stat_interpreted_parameters.iteritems():

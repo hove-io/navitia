@@ -52,7 +52,6 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(add_computed_resources(self))
             self.method_decorators.append(add_pagination_links())
             self.method_decorators.append(clean_links())
-        self.method_decorators.append(add_address_poi_id(self))
 
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
@@ -93,39 +92,6 @@ class ResourceUri(StatedResource):
                     filter_list.append(type_ + ".uri=" + item)
                 type_ = None
         return " and ".join(filter_list)
-
-
-class add_address_poi_id(object):
-
-    def __init__(self, resource):
-        self.resource = resource
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-
-            def add_id(objects, region, type_=None):
-                if isinstance(objects, (list, tuple)):
-                    for item in objects:
-                        add_id(item, region, type_)
-                elif hasattr(objects, 'keys'):
-                    for v in objects.keys():
-                        add_id(objects[v], region, v)
-                    if 'address' == type_ and 'coord' in objects:
-                        lon = objects['coord']['lon']
-                        lat = objects['coord']['lat']
-                        objects['id'] = lon + ';' + lat
-                    if 'embedded_type' in objects.keys() and\
-                        (objects['embedded_type'] == 'address' or
-                         objects['embedded_type'] == 'poi' or
-                         objects['embedded_type'] == 'administrative_region') and\
-                         objects['embedded_type'] in objects:
-                        objects["id"] = objects[objects['embedded_type']]["id"]
-            if self.resource.region:
-                add_id(objects, self.resource.region)
-            return objects
-        return wrapper
 
 
 class add_computed_resources(object):
@@ -183,7 +149,7 @@ class add_computed_resources(object):
                     })
                 if collection in ['stop_areas', 'lines', 'networks']:
                     data['links'].append({
-                        "href": url_for("v1.disruptions", **kwargs),
+                        "href": url_for("v1.traffic_reports", **kwargs),
                         "rel": "disruptions",
                         "templated": templated
                     })
@@ -245,60 +211,6 @@ class complete_links(object):
                         note = self.complete(data, collection[col])
                         [res.append(item) for item in note if not item in res]
                         data[col].extend(res)
-
-            if isinstance(objects, tuple):
-                return data, code, header
-            else:
-                return data
-
-        return wrapper
-
-class update_journeys_status(object):
-
-    def __init__(self, resource):
-        self.resource = resource
-
-    def update_status(self, journey, disruptions):
-
-        class find_most_dangerous_disruption:
-            def __init__(self):
-                self.max_priority_label = None
-                self.max_priority = []
-
-            def __call__(self, key, obj):
-                try:
-                    if 'links' not in obj:
-                        return
-                except TypeError:
-                    return
-                real_disruptions = [disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
-                for d in real_disruptions:
-                    prio = d['severity']['priority']
-                    self.max_priority = prio if not self.max_priority else max(self.max_priority, prio)
-                    if self.max_priority == prio:
-                        self.max_priority_label = d['severity']['effect']
-
-        v = find_most_dangerous_disruption()
-        utils.walk_dict(journey, v)
-
-        if v.max_priority_label:
-            journey['status'] = v.max_priority_label
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if isinstance(objects, tuple):
-                data, code, header = unpack(objects)
-            else:
-                data = objects
-
-            if self.resource.region and "journeys" in data:
-
-                all_disruptions = {d['id']: d for d in data['disruptions']}
-
-                for journey in data["journeys"]:
-                    self.update_status(journey, all_disruptions)
 
             if isinstance(objects, tuple):
                 return data, code, header

@@ -252,8 +252,9 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
         nt::PhysicalMode* mode = new nt::PhysicalMode();
         const_it["uri"].to(mode->uri);
         const_it["name"].to(mode->name);
-        const_it["co2_emission"].to(mode->co2_emission);
-
+        if (!const_it["co2_emission"].is_null()){
+            mode->co2_emission = const_it["co2_emission"].as<double>();
+        }
         mode->idx = data.pt_data->physical_modes.size();
 
         data.pt_data->physical_modes.push_back(mode);
