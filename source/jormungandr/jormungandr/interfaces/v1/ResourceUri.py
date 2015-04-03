@@ -52,7 +52,6 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(add_computed_resources(self))
             self.method_decorators.append(add_pagination_links())
             self.method_decorators.append(clean_links())
-        self.method_decorators.append(add_address_poi_id(self))
 
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
@@ -93,39 +92,6 @@ class ResourceUri(StatedResource):
                     filter_list.append(type_ + ".uri=" + item)
                 type_ = None
         return " and ".join(filter_list)
-
-
-class add_address_poi_id(object):
-
-    def __init__(self, resource):
-        self.resource = resource
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-
-            def add_id(objects, region, type_=None):
-                if isinstance(objects, (list, tuple)):
-                    for item in objects:
-                        add_id(item, region, type_)
-                elif hasattr(objects, 'keys'):
-                    for v in objects.keys():
-                        add_id(objects[v], region, v)
-                    if 'address' == type_ and 'coord' in objects:
-                        lon = objects['coord']['lon']
-                        lat = objects['coord']['lat']
-                        objects['id'] = lon + ';' + lat
-                    if 'embedded_type' in objects.keys() and\
-                        (objects['embedded_type'] == 'address' or
-                         objects['embedded_type'] == 'poi' or
-                         objects['embedded_type'] == 'administrative_region') and\
-                         objects['embedded_type'] in objects:
-                        objects["id"] = objects[objects['embedded_type']]["id"]
-            if self.resource.region:
-                add_id(objects, self.resource.region)
-            return objects
-        return wrapper
 
 
 class add_computed_resources(object):

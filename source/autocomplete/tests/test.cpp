@@ -772,9 +772,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(7).uri(), "quai NEUF");
-    BOOST_CHECK_EQUAL(resp.places(8).uri(), "rue VIS");
-    BOOST_CHECK_EQUAL(resp.places(9).uri(), "rue DU TREGOR");
+    BOOST_CHECK_EQUAL(resp.places(7).name(), "quai NEUF (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(8).name(), "rue VIS (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(9).name(), "rue DU TREGOR (Quimper)");
 }
 
 /*
