@@ -35,6 +35,9 @@ namespace ed{ namespace connectors{
 Projection::Projection(const std::string& name, const std::string& num_epsg, bool is_degree){
     definition = "+init=epsg:" + num_epsg;
     proj_pj = pj_init_plus(definition.c_str());
+    if (! proj_pj) {
+        throw navitia::exception("invalid projection system: " + name + " definition: " + definition);
+    }
     this->name = name;
     this->is_degree = is_degree;
 
