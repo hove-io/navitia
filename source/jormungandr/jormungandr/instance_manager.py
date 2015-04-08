@@ -137,8 +137,7 @@ class InstanceManager(object):
         logging.info('clear cache')
         cache.delete_memoized(self._all_keys_of_id)
 
-    def dispatch(self, arguments, api, instance_name=None,
-                 request=None):
+    def dispatch(self, arguments, api, instance_name=None):
         if instance_name not in self.instances:
             raise RegionNotFound(instance_name)
 
