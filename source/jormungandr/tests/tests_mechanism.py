@@ -151,12 +151,6 @@ class AbstractTestFixture:
                 pass
         User.get_from_token = bob.mock_get_token
 
-        #we don't want to use the database for the scenario, so we mock the property of instance
-        @property
-        def mock_scenario(self):
-            return jormungandr.scenarios.default.Scenario()
-        Instance.scenario = mock_scenario
-
         @property
         def mock_journey_order(self):
             return 'arrival_time'

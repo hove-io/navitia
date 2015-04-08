@@ -146,10 +146,12 @@ class InstanceManager(object):
             raise RegionNotFound(instance_name)
 
         instance = self.instances[instance_name]
-        if not hasattr(instance.scenario, api) or not callable(getattr(instance.scenario, api)):
+
+        scenario = instance.scenario(request.get('_override_scenario') if request else None)
+        if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
-        api_func = getattr(instance.scenario, api)
+        api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
         if resp.HasField("publication_date") and\
           instance.publication_date != resp.publication_date:

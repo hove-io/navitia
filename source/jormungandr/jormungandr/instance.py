@@ -43,6 +43,7 @@ from jormungandr import cache, app
 from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry
+from flask import g
 import json
 
 type_to_pttype = {
@@ -80,8 +81,20 @@ class Instance(object):
             return None
         return models.Instance.get_by_name(self.name)
 
-    @property
-    def scenario(self):
+    def scenario(self, override_scenario=None):
+        if hasattr(g, 'scenario') and g.scenario:
+            """
+            once a scenario has been chosen for a request, we cannot change it
+            """
+            return g.scenario
+
+        if override_scenario:
+            logging.debug('overriding the scenario for %s with %s', self.name, override_scenario)
+            module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
+            scenario = module.Scenario()
+            g.scenario = scenario
+            return scenario
+
         if not self._scenario:
             logger = logging.getLogger(__name__)
             instance_db = self._get_models()
@@ -95,6 +108,9 @@ class Instance(object):
                 module = import_module('jormungandr.scenarios.default')
                 self._scenario_name = 'default'
                 self._scenario = module.Scenario()
+
+        #we save the used scenario for futur use
+        g.scenario = self._scenario
         return self._scenario
 
     @property
