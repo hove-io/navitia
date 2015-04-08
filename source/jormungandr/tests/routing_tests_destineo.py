@@ -45,8 +45,6 @@ class TestJourneysDestineo(TestJourneys):
 
     def setup(self):
         logging.debug('setup for destineo')
-        #we don't want to use the database for the scenario, so we mock the property of instance
-        #but we want to test the scenario for destineo
         from jormungandr import i_manager
         dest_instance = i_manager.instances['main_routing_test']
         self.old_scenario = dest_instance._scenario

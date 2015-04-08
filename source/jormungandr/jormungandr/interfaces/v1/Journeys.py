@@ -562,6 +562,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
+        parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
 
         self.method_decorators.append(complete_links(self))
 

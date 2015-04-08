@@ -32,6 +32,7 @@
 from contextlib import contextmanager
 import Queue
 from threading import Lock
+from flask.ext.restful import abort
 import zmq
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
@@ -90,7 +91,10 @@ class Instance(object):
 
         if override_scenario:
             logging.debug('overriding the scenario for %s with %s', self.name, override_scenario)
-            module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
+            try:
+                module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
+            except ImportError:
+                abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
             g.scenario = scenario
             return scenario
