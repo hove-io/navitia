@@ -63,6 +63,10 @@ message StreetNetworkParams{
     optional int32 max_bike_duration_to_pt      = 14;
     optional int32 max_bss_duration_to_pt       = 15;
     optional int32 max_car_duration_to_pt       = 16;
+
+    optional int32 min_bss_duration             = 17;
+    optional int32 min_bike_duration            = 18;
+    optional int32 min_car_duration             = 19;
 }
 
 
