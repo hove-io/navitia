@@ -40,7 +40,7 @@ status = {
 class Status(Resource):
     @marshal_with(status)
     def get(self, region):
-        response = protobuf_to_dict(i_manager.dispatch([], "status", instance_name=region), use_enum_labels=True)
+        response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
         response['status']['parameters'] = instance
         return response, 200

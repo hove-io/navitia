@@ -137,26 +137,23 @@ class InstanceManager(object):
         logging.info('clear cache')
         cache.delete_memoized(self._all_keys_of_id)
 
-
-    def dispatch(self, arguments, api, instance_obj=None, instance_name=None,
-                 request=None):
-        if instance_obj:
-            instance_name = instance_obj.name
+    def dispatch(self, arguments, api, instance_name=None):
         if instance_name not in self.instances:
             raise RegionNotFound(instance_name)
 
         instance = self.instances[instance_name]
-        if not hasattr(instance.scenario, api) or not callable(getattr(instance.scenario, api)):
+
+        scenario = instance.scenario(arguments.get('_override_scenario'))
+        if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
-        api_func = getattr(instance.scenario, api)
+        api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
         if resp.HasField("publication_date") and\
           instance.publication_date != resp.publication_date:
             self._clear_cache()
             instance.publication_date = resp.publication_date
         return resp
-
 
     def init_kraken_instances(self):
         """
