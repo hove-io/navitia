@@ -798,7 +798,6 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 
         BOOST_CHECK_EQUAL(journey_duration, total_dur);
     }
-
 }
 
 //biking
@@ -1359,6 +1358,27 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(section.origin().address().coord().lat(), section.street_network().coordinates(0).lat());
 }
 
+/**
+  * test the fallback lower bound
+  *
+  * it takes 20s to go to B, so if the min is 20s, we can touche both stops,
+  * and if the min is 21, we can only touch A
+  */
+BOOST_FIXTURE_TEST_CASE(min_fallback_test, streetnetworkmode_fixture<test_speed_provider>) {
+    origin.streetnetwork_params.min_duration = 20_s;
+    origin.streetnetwork_params.max_duration = bt::pos_infin;
+
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+    sn_worker.init(origin);
+    auto sp = nr::get_stop_points(origin, *b.data, sn_worker, false);
+    BOOST_CHECK_EQUAL(sp.size(), 2);
+
+    origin.streetnetwork_params.min_duration = 21_s;
+    //it takes 20s to go to B, so if the min is 30s, we cannot touch the stop point B,
+    //and there is only the direct path
+    sp = nr::get_stop_points(origin, *b.data, sn_worker, false);
+    BOOST_CHECK_EQUAL(sp.size(), 1);
+}
 /**
   * With the test_default_speed it's difficult to test the length of the journeys, so here is a new fixture with classical default speed
  */
