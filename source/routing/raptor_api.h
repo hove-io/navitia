@@ -32,16 +32,20 @@ www.navitia.io
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/request.pb.h"
+#include <utils/idx_map.h>
 #include <limits>
 
 namespace navitia{
     namespace type{
         struct EntryPoint;
+        struct StopPoint;
         struct AccessibiliteParams;
+        struct Data;
     }
     namespace georef{
         struct StreetNetwork;
     }
+    struct time_duration;
 }
 
 namespace navitia { namespace routing {
@@ -85,5 +89,8 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                    bool show_codes = false);
 
+std::vector<std::pair<navitia::Idx<navitia::type::StopPoint>, navitia::time_duration>>
+get_stop_points(const type::EntryPoint &ep, const type::Data& data,
+        georef::StreetNetwork& worker, bool use_second = false);
 
 }}

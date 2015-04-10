@@ -673,10 +673,9 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
     return data.geo_ref->find_admins(ep.coordinates);
 }
 
-static
 std::vector<std::pair<SpIdx, navitia::time_duration> >
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
-        georef::StreetNetwork & worker, bool use_second = false){
+        georef::StreetNetwork & worker, bool use_second){
     std::vector<std::pair<SpIdx, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
@@ -714,9 +713,15 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
-        LOG4CPLUS_TRACE(logger, "find " << tmp_sn.size() << " stop_points");
+        LOG4CPLUS_TRACE(logger, tmp_sn.size() << " stop_points found");
         for(auto idx_duration : tmp_sn) {
             auto sp_idx = SpIdx(idx_duration.first);
+
+            if (idx_duration.second < ep.streetnetwork_params.min_duration) {
+                // we sometimes want a minimum fallback duration (not to take the car for 1mn for example)
+                LOG4CPLUS_DEBUG(logger, idx_duration.second << " is not enough, we skip this stop");
+                continue;
+            }
             if(stop_points.find(sp_idx) == stop_points.end()) {
                 stop_points.insert(sp_idx);
                 result.push_back({sp_idx, idx_duration.second});
@@ -834,8 +839,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         }
         return response;
     }
-
-
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 

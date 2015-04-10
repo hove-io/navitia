@@ -43,7 +43,6 @@ std::vector<Path> filter_journeys(const std::vector<Path>& paths) {
 }
 
 bool is_valid_journey(const Path& p) {
-
     //we don't want journeys with 2 zone ODT in transfers
     const type::VehicleJourney* previous_vj = nullptr;
     for (const auto& item: p.items) {
