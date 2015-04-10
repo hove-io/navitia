@@ -698,7 +698,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
 
             if (idx_duration.second < ep.streetnetwork_params.min_duration) {
                 // we sometimes want a minimum fallback duration (not to take the car for 1mn for example)
-                LOG4CPLUS_INFO(logger, idx_duration.second << " is not enough, we skip this stop");
+                LOG4CPLUS_DEBUG(logger, idx_duration.second << " is not enough, we skip this stop");
                 continue;
             }
             if(stop_points.find(sp_idx) == stop_points.end()) {
@@ -818,8 +818,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         }
         return response;
     }
-
-
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 

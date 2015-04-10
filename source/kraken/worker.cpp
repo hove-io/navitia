@@ -360,7 +360,8 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
         result.mode = type::static_data::get()->modeByCaption(request.destination_mode());
         result.set_filter(request.destination_filter());
     }
-    int max_non_pt, min_non_pt(0);
+    int max_non_pt(0);
+    int min_non_pt(0);
     switch(result.mode){
         case type::Mode_e::Bike:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bike];

@@ -1374,8 +1374,6 @@ BOOST_FIXTURE_TEST_CASE(min_fallback_test, streetnetworkmode_fixture<test_speed_
     BOOST_CHECK_EQUAL(sp.size(), 2);
 
     origin.streetnetwork_params.min_duration = 21_s;
-    //it takes 20s to go to B, so if the min is 30s, we cannot touch the stop point B,
-    //and there is only the direct path
     sp = nr::get_stop_points(origin, *b.data, sn_worker, false);
     BOOST_CHECK_EQUAL(sp.size(), 1);
 }
