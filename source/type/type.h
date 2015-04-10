@@ -1074,17 +1074,15 @@ public:
 };
 
 /**
-
-Gestion des paramètres de rabattement
-
-*/
+ * fallback params
+ */
 struct StreetNetworkParams{
     Mode_e mode = Mode_e::Walking;
     idx_t offset = 0;
     float speed_factor = 1;
     Type_e type_filter = Type_e::Unknown; // filtre sur le départ/arrivée : exemple les arrêts les plus proches à une site type
-    std::string uri_filter; // l'uri de l'objet
-    float radius_filter = 150; // ce paramètre est utilisé pour le filtre
+    std::string uri_filter;
+    float radius_filter = 150;
     void set_filter(const std::string & param_uri);
 
     navitia::time_duration max_duration = 1_s;
