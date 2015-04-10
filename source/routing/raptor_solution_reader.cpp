@@ -420,7 +420,8 @@ struct RaptorSolutionReader {
                       const DateTime begin_dt,
                       const StDt& end_st_dt,
                       Transfers& transfers) {
-        const unsigned transfer_t = begin_dt - end_st_dt.second;
+        const unsigned transfer_t =
+            v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
             // trying to begin
