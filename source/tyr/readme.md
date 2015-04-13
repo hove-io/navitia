@@ -5,7 +5,7 @@ This module is the conductor of Navitia.
 Note: the installation of this module is not mandatory to have a fully operational Navitia.
 
 In a running environment, Tyr is responsible for:
- 
+
  * detecting new data and integrating them in the system
  * handling different kraken instances and their functional configuration
  * the authentication
@@ -15,7 +15,7 @@ Tyr uses the same database as Jormungandr
 
 ## Setup
 
-### Overview 
+### Overview
 
 Tyr is based on flask, so it is used like:
 
@@ -34,7 +34,7 @@ To setup the tyr database you need to call:
     PYTHONPATH=<path_to_tyr>:<path_to_navitiacommon> TYR_CONFIG_FILE=<your_config_file.py> manage_tyr.py db upgrade
 
 
-### Services 
+### Services
 
 Tyr is split in 3 different services:
 
@@ -103,7 +103,7 @@ Subscription is done via calls to Tyr webservice. Tyr handles:
 * Users
 * Keys
 * Authorization
- 
+
 The api returns 4XX response on failure, with a json message containing the attribute error and the message.
 
 For a simple user account creation see the [example section](#simple-example)
@@ -114,7 +114,7 @@ For a simple user account creation see the [example section](#simple-example)
 
 Returns the list of instances
 
-    GET $HOST/v0/instances/  
+    GET $HOST/v0/instances/
 
 response:
 ```json
@@ -153,7 +153,7 @@ Delete, add or update a user
 
 To get the list of users
 
-    GET $HOST/v0/users/ 
+    GET $HOST/v0/users/
 
 ```json
 [
@@ -169,10 +169,10 @@ To get the list of users
     }
 ]
 ```
- 
+
 Look for a user with his email:
 
-    GET $HOST/v0/users/?email=foo@example.com  
+    GET $HOST/v0/users/?email=foo@example.com
 
 ```json
 [
@@ -186,7 +186,7 @@ Look for a user with his email:
 
 Get all a user information:
 
-    GET $HOST/v0/users/$USERID/  
+    GET $HOST/v0/users/$USERID/
 
 ```json
 {
@@ -197,13 +197,28 @@ Get all a user information:
     "login": "alex"
 }
 ```
- 
 
-To create a user, parameters need to given in the query's body 
+
+To create a user, parameters need to given in the query's string or in json send in the body
 
 Note: email addresses are validated via api not only on the format but on it's existence. However no email are send.
 
-    POST /v0/users/?email=alex@example.com&login=alex  
+#### Parameters
+
+name   | description                                                                         | required | default                |
+-------|-------------------------------------------------------------------------------------|----------|------------------------|
+email  | adress email of the user                                                            | true     |                        |
+login  | login of the user                                                                   | true     |                        |
+type   | type of the user between: [with_free_instances, without_free_instances, super_user] | false    | with_free_instances    |
+
+
+    POST /v0/users/?email=alex@example.com&login=alex
+
+Or
+
+    curl -XPOST 'http://127.0.0.1:9000/v0/users/' -d'{"email": "foo@foo.com", "login": "foo"}' -H'content-type: application/json'
+
+If you use the json format as input, boolean need to be passed as string.
 
 ```json
 {
@@ -214,7 +229,7 @@ Note: email addresses are validated via api not only on the format but on it's e
     "login": "alex"
 }
 ```
- 
+
 #### Keys
 
 The API handle the user's token
@@ -244,7 +259,7 @@ The token is returned by the API. This token will be need for jormungandr authen
 
 To delete a token:
 
-    DELETE /v0/users/$USERID/keys/$KEYID  
+    DELETE /v0/users/$USERID/keys/$KEYID
 
 ```json
 {
@@ -262,7 +277,7 @@ This API handle access policy for a given user and a given kraken instance.
 
 This is useful only is the instance is not "free"
 
-    POST /v0/users/$USERID/authorizations/?api_id=$APIID&instance_id=$INSTANCEID  
+    POST /v0/users/$USERID/authorizations/?api_id=$APIID&instance_id=$INSTANCEID
 
 ```json
 {
@@ -303,8 +318,8 @@ If the creation went well, a json is returned with an id:
 ```json
 [
     {
-        "email": "toto@canaltp.fr", 
-        "id": 1, 
+        "email": "toto@canaltp.fr",
+        "id": 1,
         "login": "bob"
     }
 ]
@@ -317,16 +332,16 @@ Use the id in the next query
 
 ```json
 {
-    "authorizations": [], 
-    "email": "toto@canaltp.fr", 
-    "id": 1, 
+    "authorizations": [],
+    "email": "toto@canaltp.fr",
+    "id": 1,
     "keys": [
         {
-            "id": 1, 
-            "token": "faa80b5f-f747-45bf-ad89-b3f2b29dd4aa", 
+            "id": 1,
+            "token": "faa80b5f-f747-45bf-ad89-b3f2b29dd4aa",
             "valid_until": null
         }
-    ], 
+    ],
     "login": "bob"
 }
 
