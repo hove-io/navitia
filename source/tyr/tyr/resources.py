@@ -80,12 +80,20 @@ instance_fields = {'id': fields.Raw,
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
-user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
-user_fields_full = {'id': fields.Raw, 'login': fields.Raw, \
-        'email': fields.Raw, 'keys': fields.List(fields.Nested(key_fields)),
-        'authorizations': fields.List(fields.Nested(
-            {'instance': fields.Nested(instance_fields),
-                'api': fields.Nested(api_fields)}))}
+user_fields = {'id': fields.Raw,
+               'login': fields.Raw,
+               'email': fields.Raw,
+               'type': fields.Raw(),
+            }
+user_fields_full = {'id': fields.Raw,
+                    'login': fields.Raw,
+                    'email': fields.Raw,
+                    'type': fields.Raw(),
+                    'keys': fields.List(fields.Nested(key_fields)),
+                    'authorizations': fields.List(fields.Nested(
+                        {'instance': fields.Nested(instance_fields),
+                         'api': fields.Nested(api_fields)}))
+                }
 
 jobs_fields = {'jobs': fields.List(fields.Nested({
         'id': fields.Raw,
@@ -276,9 +284,13 @@ class User(flask_restful.Resource):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument('login', type=unicode, required=True,
-                case_sensitive=False, help='login is required')
+                case_sensitive=False, help='login is required', location=('json', 'values'))
         parser.add_argument('email', type=unicode, required=True,
-                case_sensitive=False, help='email is required')
+                case_sensitive=False, help='email is required', location=('json', 'values'))
+        parser.add_argument('type', type=str, required=False, default='with_free_instances',
+                            help='type of user: [with_free_instances, without_free_instances, super_user]',
+                            location=('json', 'values'),
+                            choices=['with_free_instances', 'without_free_instances', 'super_user'])
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -288,6 +300,7 @@ class User(flask_restful.Resource):
 
         try:
             user = models.User(login=args['login'], email=args['email'])
+            user.type = args['type']
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
@@ -300,8 +313,11 @@ class User(flask_restful.Resource):
     def put(self, user_id):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('email', type=unicode, required=True,
-                case_sensitive=False, help='email is required')
+        parser.add_argument('email', type=unicode, required=False, default=user.email,
+                case_sensitive=False, help='email is required', location=('json', 'values'))
+        parser.add_argument('type', type=str, required=False, default=user.type, location=('json', 'values'),
+                            help='type of user: [with_free_instances, without_free_instances, super_user]',
+                            choices=['with_free_instances', 'without_free_instances', 'super_user'])
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -311,6 +327,7 @@ class User(flask_restful.Resource):
 
         try:
             user.email = args['email']
+            user.type = args['type']
             db.session.commit()
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
@@ -346,9 +363,9 @@ class Key(flask_restful.Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
-                case_sensitive=False, help='end validity date of the key')
-        parser.add_argument('app_name', type=str, required=True,
-                case_sensitive=False, help='app name associated to this key')
+                            help='end validity date of the key', location=('json', 'values'))
+        parser.add_argument('app_name', type=str, required=True, case_sensitive=False,
+                            help='app name associated to this key', location=('json', 'values'))
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -377,9 +394,9 @@ class Key(flask_restful.Resource):
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
-                case_sensitive=False, help='end validity date of the key')
+                case_sensitive=False, help='end validity date of the key', location=('json', 'values'))
         parser.add_argument('app_name', type=str, required=True,
-                case_sensitive=False, help='eapp name associated to this key')
+                case_sensitive=False, help='eapp name associated to this key', location=('json', 'values'))
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -403,9 +420,9 @@ class Authorization(flask_restful.Resource):
     def delete(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('api_id', type=int, required=True,
-                case_sensitive=False, help='api_id is required')
+                            help='api_id is required', location=('json', 'values'))
         parser.add_argument('instance_id', type=int, required=True,
-                case_sensitive=False, help='instance_id is required')
+                            help='instance_id is required', location=('json', 'values'))
         args = parser.parse_args()
 
         try:
@@ -424,9 +441,9 @@ class Authorization(flask_restful.Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('api_id', type=int, required=True,
-                case_sensitive=False, help='api_id is required')
+                            help='api_id is required', location=('json', 'values'))
         parser.add_argument('instance_id', type=int, required=True,
-                case_sensitive=False, help='instance_id is required')
+                            help='instance_id is required', location=('json', 'values'))
         args = parser.parse_args()
 
         user = models.User.query.get_or_404(user_id)

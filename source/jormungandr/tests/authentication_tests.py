@@ -36,6 +36,7 @@ from flask import appcontext_pushed, g
 from jormungandr import app
 import json
 import logging
+from nose.util import *
 
 
 authorizations = {
@@ -56,6 +57,12 @@ authorizations = {
         "departure_board_test": {'ALL': True},
         "empty_routing_test": {'ALL': False}
     },
+    'tgv': {
+        #tgv can only access main_routing_test
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': False},
+        "empty_routing_test": {'ALL': False}
+    },
 }
 
 
@@ -63,12 +70,14 @@ class FakeUser:
     """
     We create a user independent from a database
     """
-    def __init__(self, name, id):
+    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False):
         """
         We just need a fake user, we don't really care about its identity
         """
         self.id = id
         self.login = name
+        self.have_access_to_free_instances = have_access_to_free_instances
+        self.is_super_user = is_super_user
 
     @classmethod
     def get_from_token(cls, token):
@@ -98,7 +107,8 @@ class FakeInstance(models.Instance):
 user_in_db = {
     'bob': FakeUser('bob', 1),
     'bobette': FakeUser('bobette', 2),
-    'bobitto': FakeUser('bobitto', 3)
+    'bobitto': FakeUser('bobitto', 3),
+    'tgv': FakeUser('tgv', 4, have_access_to_free_instances=False),
 }
 
 mock_instances = {
@@ -206,6 +216,15 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             # bobette does not have access to anything, so we only have the free region here
             assert 'empty_routing_test' in region_ids
 
+        with user_set(app, 'tgv'):
+            response = self.query('v1/coverage')
+            r = get_not_null(response, 'regions')
+
+            region_ids = {region['id']: region for region in r}
+            assert len(region_ids) == 1
+            # tgv must not see free regions
+            assert 'empty_routing_test' not in region_ids
+
     def test_pt_ref_for_bobitto(self):
         with user_set(app, 'bobitto'):
             response = self.query('v1/coverage/main_routing_test/stop_points')
@@ -240,6 +259,16 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
                                              'stopbidon/stop_schedules')
             assert status == 404
 
+    def test_stop_schedules_for_tgv(self):
+        with user_set(app, 'tgv'):
+            response = self.query('v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules?from_datetime=20120614T080000')
+            assert 'error' not in response
+            _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
+            eq_(status, 403)
+            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
+                                             'stopbidon/stop_schedules')
+            eq_(status, 403)
+
     def test_stop_schedules_for_bobitto(self):
         with user_set(app, 'bobitto'):
             response = self.query('v1/coverage/main_routing_test/stop_areas/'
@@ -259,6 +288,16 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert 'error' not in response
             response = self.query('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
             assert 'error' not in response
+
+    def test_journeys_for_tgv(self):
+        with user_set(app, 'tgv'):
+            response = self.query('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
+            assert 'error' not in response
+            _, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
+            eq_(status, 403)
+
+            _, status = self.query_no_assert('/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000')
+            eq_(status, 403)
 
     def test_wrong_journeys_for_bobitto(self):
         """
@@ -307,6 +346,18 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert status == 403
             response = self.query('v1/coverage/empty_routing_test/places?q=toto')
             assert 'error' not in response
+            # this test suppose no elasticsearch is lanched at localhost
+            _, status = self.query_no_assert('v1/places?q=toto')
+            assert status == 500
+
+    def test_places_for_tgv(self):
+        with user_set(app, "tgv"):
+            response = self.query('v1/coverage/main_routing_test/places?q=toto')
+            assert 'error' not in response
+            _, status = self.query_no_assert('v1/coverage/departure_board_test/places?q=toto')
+            assert status == 403
+            _, status = self.query_no_assert('v1/coverage/empty_routing_test/places?q=toto')
+            assert status == 403
             # this test suppose no elasticsearch is lanched at localhost
             _, status = self.query_no_assert('v1/places?q=toto')
             assert status == 500
