@@ -58,7 +58,8 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     int ext_code_c,
         property_id_c,
         comment_id_c,
-        visible_c;
+        visible_c,
+        geometry_id_c;
 
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);

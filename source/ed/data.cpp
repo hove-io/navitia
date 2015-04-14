@@ -231,6 +231,18 @@ void Data::complete(){
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
 
+    // set StopPoint from old zonal ODT to is_zonal
+    for (const auto* vj: vehicle_journeys) {
+        using nt::VehicleJourneyType;
+        if (in(vj->vehicle_journey_type,
+               {VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point}))
+        {
+            for (const auto* st: vj->stop_time_list) {
+                st->journey_pattern_point->stop_point->is_zonal = true;
+            }
+        }
+    }
+
     // generates default connections inside each stop area
     auto connections = make_departure_destinations_map(stop_point_connections);
     const auto sa_sps = make_stop_area_stop_points_map(stop_points);

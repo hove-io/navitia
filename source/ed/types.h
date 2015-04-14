@@ -292,10 +292,9 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::string external_code;
     nt::GeographicalCoord coord;
     int fare_zone;
+    bool is_zonal = false;
+    boost::optional<nt::MultiPolygon> area;
 
-    std::string address_name;
-    std::string address_number;
-    std::string address_type_name;
     std::string platform_code;
 
     StopArea* stop_area;

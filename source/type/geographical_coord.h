@@ -35,6 +35,8 @@ www.navitia.io
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 #include <boost/lexical_cast.hpp>
@@ -136,3 +138,8 @@ typedef std::vector<LineString> MultiLineString;
 BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
 BOOST_GEOMETRY_REGISTER_LINESTRING(navitia::type::LineString)
 BOOST_GEOMETRY_REGISTER_MULTI_LINESTRING(navitia::type::MultiLineString)
+
+namespace navitia { namespace type {
+    typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
+    typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
+}}

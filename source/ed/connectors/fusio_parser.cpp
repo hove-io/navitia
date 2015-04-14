@@ -101,6 +101,7 @@ void StopsFusioHandler::init(Data& data) {
         property_id_c = csv.get_pos_col("property_id");
         comment_id_c =  csv.get_pos_col("comment_id");
         visible_c =  csv.get_pos_col("visible");
+        geometry_id_c = csv.get_pos_col("geometry_id");
 }
 
 //in fusio we want to delete all stop points without stop area
@@ -160,6 +161,17 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
     if (return_wrapper.second != nullptr && is_valid(visible_c, row)) {
         return_wrapper.second->visible = (row[visible_c] == "1");
     }
+    if (return_wrapper.first != nullptr && has_col(type_c, row) && row[type_c] == "2") {
+        return_wrapper.first->is_zonal = true;
+    }
+    if (return_wrapper.first != nullptr && is_valid(geometry_id_c, row)) {
+        const auto search = data.areas.find(row.at(geometry_id_c));
+        if (search != data.areas.end()) {
+            return_wrapper.first->area = search->second;
+        } else {
+            LOG4CPLUS_WARN(logger, "geometry_id " << row.at(geometry_id_c) << " not found");
+        }
+    }
     return return_wrapper;
 }
 
@@ -178,7 +190,7 @@ void RouteFusioHandler::init(Data& ) {
 void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(gtfs_data.route_map.find(row[route_id_c]) != gtfs_data.route_map.end()) {
         ignored++;
-        LOG4CPLUS_WARN(logger, "dupplicate on route line " + row[route_id_c]);
+        LOG4CPLUS_WARN(logger, "duplicate on route line " + row[route_id_c]);
         return;
     }
     ed::types::Line* ed_line = nullptr;
@@ -275,6 +287,16 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
     }
 }
 
+template<typename T>
+static boost::optional<T> read_wkt(const std::string& s) {
+    try {
+        T g;
+        boost::geometry::read_wkt(s, g);
+        return g;
+    } catch (const boost::geometry::read_wkt_exception&) {
+        return boost::none;
+    }
+}
 void GeometriesFusioHandler::init(Data&) {
     LOG4CPLUS_INFO(logger, "Reading geometries");
     geometry_id_c = csv.get_pos_col("geometry_id");
@@ -282,13 +304,13 @@ void GeometriesFusioHandler::init(Data&) {
 }
 void GeometriesFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     try {
-        nt::MultiLineString multiline;
-        boost::geometry::read_wkt(row.at(geometry_wkt_c), multiline);
-        data.shapes[row.at(geometry_id_c)] = multiline;
-    } catch (const boost::geometry::read_wkt_exception&) {
-        nt::LineString line;
-        boost::geometry::read_wkt(row.at(geometry_wkt_c), line);
-        data.shapes[row.at(geometry_id_c)] = {line};
+        if (const auto g = read_wkt<nt::MultiLineString>(row.at(geometry_wkt_c))) {
+            data.shapes[row.at(geometry_id_c)] = *g;
+        } else if (const auto g = read_wkt<nt::LineString>(row.at(geometry_wkt_c))) {
+            data.shapes[row.at(geometry_id_c)] = {*g};
+        } else if (const auto g = read_wkt<nt::MultiPolygon>(row.at(geometry_wkt_c))) {
+            data.areas[row.at(geometry_id_c)] = *g;
+        }
     } catch (const std::exception& e) {
         LOG4CPLUS_WARN(logger, "Geometry cannot be read: " << e.what());
     }
