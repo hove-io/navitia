@@ -46,7 +46,7 @@ FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
 
 #boost 1.53/1.54 bugs with local datetime...
 #see http://stackoverflow.com/questions/15234527/boost-1-53-local-date-time-compiler-error-with-std-c0x
-add_definitions(-DBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
+add_definitions(-DBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS -DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 #decomment for enabling streetnetwork debuging with quantu
 #add_definitions(-D_DEBUG_DIJKSTRA_QUANTUM_)
 

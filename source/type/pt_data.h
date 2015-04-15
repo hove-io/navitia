@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #pragma once
+#include "multi_polygon_map.h"
 #include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
@@ -40,6 +41,7 @@ www.navitia.io
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
+#include "utils/serialization_tuple.h"
 
 namespace navitia { 
 template <>
@@ -102,6 +104,9 @@ struct PT_Data : boost::noncopyable{
     // comments for stop times, indexed by (vj->uri, jpp->order)
     std::map<std::pair<std::string, uint16_t>, std::string> stop_time_comment;
 
+    // rtree for zonal stop_points
+    MultiPolygonMap<const StopPoint*> stop_points_by_area;
+
     const std::string& get_comment(const StopTime& st) const {
         const auto* jpp = st.journey_pattern_point;
         return find_or_default(
@@ -128,7 +133,8 @@ struct PT_Data : boost::noncopyable{
                 & stop_point_connections
                 & disruption_holder
                 & meta_vj
-                & stop_time_comment;
+                & stop_time_comment
+                & stop_points_by_area;
     }
 
     /** Initialise tous les indexes

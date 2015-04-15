@@ -356,6 +356,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
+    bool is_zonal;
     std::string platform_code;
     std::string label;
 
@@ -371,7 +372,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
         //
         // stop_point_connection_list is managed by StopPointConnection
         // journey_pattern_point_list is managed by JourneyPatternPoint
-        ar & uri & label & name & stop_area & coord & fare_zone & idx & platform_code
+        ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
             & admin_list & _properties & impacts & comment & codes;
     }
 

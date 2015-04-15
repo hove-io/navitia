@@ -40,6 +40,7 @@ www.navitia.io
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace navitia { namespace type {
 
@@ -142,4 +143,21 @@ BOOST_GEOMETRY_REGISTER_MULTI_LINESTRING(navitia::type::MultiLineString)
 namespace navitia { namespace type {
     typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
     typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
+}}
+namespace boost { namespace serialization {
+    template<class Archive>
+    void serialize(Archive& ar, navitia::type::Polygon& poly, const unsigned int) {
+        ar & boost::serialization::make_nvp("outer", poly.outer());
+        ar & boost::serialization::make_nvp("inners", poly.inners());
+    }
+    template<class Archive>
+    void serialize(Archive& ar, navitia::type::MultiPolygon& multipoly, const unsigned int) {
+        std::vector<navitia::type::Polygon>& impl = multipoly;
+        ar & boost::serialization::make_nvp("polygon", impl);
+    }
+    template<class Archive>
+    void serialize(Archive& ar, boost::geometry::model::ring<navitia::type::GeographicalCoord>& ring, const unsigned int) {
+        std::vector<navitia::type::GeographicalCoord>& impl = ring;
+        ar & boost::serialization::make_nvp("ring", impl);
+    }
 }}
