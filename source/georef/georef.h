@@ -155,7 +155,7 @@ public:
     template <typename Stream, typename G>
     void print(Stream& stream, const G& g){
         for(auto& edge: this->edges){
-            stream << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat()
+            stream << std::setprecision(16) << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat()
                    << ", " << g[edge.second].coord.lon() << " " << g[edge.second].coord.lat() << ")" << std::endl;
         }
     }

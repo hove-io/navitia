@@ -266,9 +266,9 @@ struct printer_distance_visitor : public distance_visitor {
 
     void init_files() {
         file_vertex.open((boost::format("vertexes_%s.csv") % name).str());
-        file_vertex << "idx; lat; lon; vertex_id" << std::endl;
+        file_vertex << std::setprecision(16) << "idx; lat; lon; vertex_id" << std::endl;
         file_edge.open((boost::format("edges_%s.csv") % name).str());
-        file_edge << "idx; lat from; lon from; lat to; long to; wkt; duration; edge" << std::endl;
+        file_edge << std::setprecision(16) << "idx; lat from; lon from; lat to; long to; wkt; duration; edge" << std::endl;
     }
 
     printer_distance_visitor(time_duration max_dur, const std::vector<time_duration>& dur, const std::string& name) :

@@ -1077,6 +1077,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         node_to_ignore.insert(source);
         BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(vertex_idx, geo_ref_temp.graph)) {
             uint64_t target = boost::target(e, geo_ref_temp.graph);
+            //no need to store the edge to ignore since we won't import the required nodes
             node_to_ignore.insert(map_idx_to_id[target]);
             graph_edge_to_ignore.insert(e); //used for the ways
         }
