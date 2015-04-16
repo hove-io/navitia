@@ -53,6 +53,9 @@ class User(db.Model):
     authorizations = db.relationship('Authorization', backref='user',
                                      lazy='joined', cascade='save-update, merge, delete')
 
+    type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
+                              default='with_free', nullable=False)
+
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
         self.login = login
         self.email = email
@@ -60,6 +63,14 @@ class User(db.Model):
             self.keys = keys
         if authorizations:
             self.authorizations = authorizations
+
+    @property
+    def have_access_to_free_instances(self):
+        return self.type in ('with_free_instances', 'super_user')
+
+    @property
+    def is_super_user(self):
+        return self.type == 'super_user'
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -87,6 +98,8 @@ class User(db.Model):
         return res
 
     def has_access(self, instance_id, api_name):
+        if self.is_super_user:
+            return True
         query = Instance.query.join(Authorization, Api)\
             .filter(Instance.id == instance_id,
                     Api.name == api_name,
