@@ -310,6 +310,8 @@ void GeometriesFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
             data.shapes[row.at(geometry_id_c)] = {*g};
         } else if (const auto g = read_wkt<nt::MultiPolygon>(row.at(geometry_wkt_c))) {
             data.areas[row.at(geometry_id_c)] = *g;
+        } else {
+            LOG4CPLUS_WARN(logger, "Geometry cannot be read as [Multi]Line or MultiPolygon: " << row.at(geometry_wkt_c));
         }
     } catch (const std::exception& e) {
         LOG4CPLUS_WARN(logger, "Geometry cannot be read: " << e.what());
