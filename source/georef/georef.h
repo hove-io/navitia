@@ -151,6 +151,16 @@ public:
     }
     std::string get_label() const;
 
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+    template <typename Stream, typename G>
+    void print(Stream& stream, const G& g){
+        for(auto& edge: this->edges){
+            stream << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat()
+                   << ", " << g[edge.second].coord.lon() << " " << g[edge.second].coord.lat() << ")" << std::endl;
+        }
+    }
+#endif
+
 private:
       nt::GeographicalCoord get_geographical_coord(const std::vector<HouseNumber>&, const int) const;
       nt::GeographicalCoord extrapol_geographical_coord(int) const;

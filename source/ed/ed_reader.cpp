@@ -1007,6 +1007,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
     std::unordered_map<uint64_t, idx_t> node_map_temp;
     std::unordered_map<idx_t, size_t> way_nb_edges;
 
+
     // chargement des vertex
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
     pqxx::result result = work.exec(request);
@@ -1078,8 +1079,9 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(vertex_idx, geo_ref_temp.graph)) {
             uint64_t target = boost::target(e, geo_ref_temp.graph);
             edge_to_ignore.insert({source, target});
-            node_to_ignore.insert(target);
+            node_to_ignore.insert(osmid_idex[target]);
             graph_edge_to_ignore.insert(e); //used for the ways
+
         }
     }
 
@@ -1134,17 +1136,20 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         auto it_source = node_map.find(const_it["source_node_id"].as<uint64_t>());
         auto it_target = node_map.find(const_it["target_node_id"].as<uint64_t>());
 
-        if (it_source == node_map.end() || it_target == node_map.end())
+        if (it_source == node_map.end() || it_target == node_map.end()){
             continue;
+        }
 
         uint64_t source = it_source->second;
         uint64_t target = it_target->second;
 
-        if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max())
+        if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max()){
             continue;
+        }
 
-        if (edge_to_ignore.find({source, target}) != edge_to_ignore.end())
+        if (edge_to_ignore.find({source, target}) != edge_to_ignore.end()){
             continue;
+        }
 
         if (! way) {
             nb_edges_no_way ++;
