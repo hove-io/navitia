@@ -360,26 +360,22 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
         result.mode = type::static_data::get()->modeByCaption(request.destination_mode());
         result.set_filter(request.destination_filter());
     }
-    int max_non_pt(0);
-    int min_non_pt(0);
+    int max_non_pt;
     switch(result.mode){
         case type::Mode_e::Bike:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bike];
             result.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
             max_non_pt = request.max_bike_duration_to_pt();
-            min_non_pt = request.min_bike_duration();
             break;
         case type::Mode_e::Car:
             result.offset = data->geo_ref->offsets[type::Mode_e::Car];
             result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
             max_non_pt = request.max_car_duration_to_pt();
-            min_non_pt = request.min_car_duration();
             break;
         case type::Mode_e::Bss:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bss];
             result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
             max_non_pt = request.max_bss_duration_to_pt();
-            min_non_pt = request.min_bss_duration();
             break;
         default:
             result.offset = data->geo_ref->offsets[type::Mode_e::Walking];
@@ -388,8 +384,6 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             break;
     }
     result.max_duration = navitia::seconds(max_non_pt);
-    result.min_duration = navitia::seconds(min_non_pt);
-
     return result;
 }
 
