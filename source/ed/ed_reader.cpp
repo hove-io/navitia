@@ -1003,9 +1003,10 @@ void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
 void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
  const double min_non_connected_graph_ratio) {
     navitia::georef::GeoRef geo_ref_temp;
-    std::unordered_map<idx_t, uint64_t> osmid_idex;
+    std::unordered_map<idx_t, uint64_t> map_idx_to_id;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
     std::unordered_map<idx_t, size_t> way_nb_edges;
+
 
     // chargement des vertex
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
@@ -1017,7 +1018,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         v.coord.set_lat(const_it["lat"].as<double>());
         boost::add_vertex(v, geo_ref_temp.graph);
         node_map_temp[const_it["id"].as<uint64_t>()] = idx;
-        osmid_idex[idx] = const_it["id"].as<uint64_t>();
+        map_idx_to_id[idx] = const_it["id"].as<uint64_t>();
         idx++;
     }
     // construction du graph temporaire
@@ -1062,8 +1063,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
     LOG4CPLUS_INFO(log, "the biggest has " << principal_component->second << " nodes");
 
     std::set<navitia::georef::edge_t> graph_edge_to_ignore;
-    // we fill the node_to_ignore and edge_to_ignore lists
-    // those edges and nodes will be erased
+    // we fill the node_to_ignore to erase them later
     for (navitia::georef::vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
         auto comp = vertex_component[vertex_idx];
 
@@ -1072,13 +1072,13 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         if (nb_elt_in_component / principal_component->second >= min_non_connected_graph_ratio)
             continue; //big enough, we skip
 
-        uint64_t source = osmid_idex[vertex_idx];
+        uint64_t source = map_idx_to_id[vertex_idx];
 
         node_to_ignore.insert(source);
         BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(vertex_idx, geo_ref_temp.graph)) {
             uint64_t target = boost::target(e, geo_ref_temp.graph);
-            edge_to_ignore.insert({source, target});
-            node_to_ignore.insert(target);
+            //no need to store the edge to ignore since we won't import the required nodes
+            node_to_ignore.insert(map_idx_to_id[target]);
             graph_edge_to_ignore.insert(e); //used for the ways
         }
     }
@@ -1095,7 +1095,6 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
     }
 
     LOG4CPLUS_INFO(log, way_to_ignore.size() << " way to ignore");
-    LOG4CPLUS_INFO(log, edge_to_ignore.size() << " edge to ignore");
     LOG4CPLUS_INFO(log, node_to_ignore.size() << " node to ignore");
 }
 
@@ -1134,17 +1133,16 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         auto it_source = node_map.find(const_it["source_node_id"].as<uint64_t>());
         auto it_target = node_map.find(const_it["target_node_id"].as<uint64_t>());
 
-        if (it_source == node_map.end() || it_target == node_map.end())
+        if (it_source == node_map.end() || it_target == node_map.end()){
             continue;
+        }
 
         uint64_t source = it_source->second;
         uint64_t target = it_target->second;
 
-        if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max())
+        if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max()){
             continue;
-
-        if (edge_to_ignore.find({source, target}) != edge_to_ignore.end())
-            continue;
+        }
 
         if (! way) {
             nb_edges_no_way ++;
