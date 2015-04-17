@@ -1084,6 +1084,8 @@ struct StreetNetworkParams{
     std::string uri_filter;
     float radius_filter = 150;
     void set_filter(const std::string & param_uri);
+
+    navitia::time_duration max_duration = 1_s;
 };
 /**
   Gestion de l'accessibilié
