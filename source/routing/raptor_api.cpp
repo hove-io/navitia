@@ -835,6 +835,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         return response;
     }
 
+
+
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 
     for(bt::ptime datetime : datetimes) {
