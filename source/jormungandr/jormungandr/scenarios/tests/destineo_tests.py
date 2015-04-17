@@ -580,6 +580,8 @@ def remove_not_long_enough_no_removal_test():
     section.duration = 60
 
     scenario = destineo.Scenario()
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
     scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 2)
 
@@ -669,11 +671,15 @@ def remove_not_long_enough_bss_test():
     section.duration = 60
 
     scenario = destineo.Scenario()
-    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 3)
     eq_(response.journeys[0], journey1)
-    eq_(response.journeys[1], journey2)
+    eq_(response.journeys[1], journey3)
     eq_(response.journeys[2], journey4)
+    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey4)
 
 
 def remove_not_long_enough_bike_test():
@@ -732,11 +738,15 @@ def remove_not_long_enough_bike_test():
     section.duration = 30
 
     scenario = destineo.Scenario()
-    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 3)
     eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey2)
+    eq_(response.journeys[1], journey3)
     eq_(response.journeys[2], journey4)
+    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey)
+    eq_(response.journeys[1], journey4)
 
 
 def remove_not_long_enough_car_test():
@@ -795,11 +805,15 @@ def remove_not_long_enough_car_test():
     section.duration = 20
 
     scenario = destineo.Scenario()
-    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 3)
     eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey2)
+    eq_(response.journeys[1], journey3)
     eq_(response.journeys[2], journey4)
+    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey)
+    eq_(response.journeys[1], journey4)
 
 
 def get_walking_walking_journey():

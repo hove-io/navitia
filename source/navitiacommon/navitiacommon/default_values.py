@@ -64,7 +64,7 @@ min_tc_with_bss = 5*60
 
 min_bike = 4*60
 
-min_bss = 0
+min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss
 
 min_car = 5*60
 

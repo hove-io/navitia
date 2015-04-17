@@ -76,15 +76,6 @@ class Scenario(simple.Scenario):
         if not request['car_speed']:
             request['car_speed'] = instance.car_speed
 
-        if not request.get('min_bike_duration'):
-            request['min_bike_duration'] = instance.min_bike
-
-        if not request.get('min_bss_duration'):
-            request['min_bss_duration'] = instance.min_bss
-
-        if not request.get('min_car_duration'):
-            request['min_car_duration'] = instance.min_car
-
     def parse_journey_request(self, requested_type, request):
         """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
@@ -121,10 +112,6 @@ class Scenario(simple.Scenario):
         sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
         sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
         sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
-        sn_params.min_bike_duration = request["min_bike_duration"]
-        sn_params.min_bss_duration = request["min_bss_duration"]
-        sn_params.min_car_duration = request["min_car_duration"]
-
         sn_params.walking_speed = request["walking_speed"]
         sn_params.bike_speed = request["bike_speed"]
         sn_params.car_speed = request["car_speed"]
@@ -301,6 +288,7 @@ class Scenario(simple.Scenario):
             cpt_attempt += 1
 
         if not request['debug']:
+            self._remove_not_long_enough_fallback(resp.journeys, instance)
             self._remove_not_long_enough_tc_with_fallback(resp.journeys, instance)
             self._delete_too_long_journey(resp.journeys, instance, request['clockwise'])
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
@@ -501,6 +489,29 @@ class Scenario(simple.Scenario):
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
+
+    def _remove_not_long_enough_fallback(self, journeys, instance):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                continue
+            bike_dur = bike_duration(journey)
+            car_dur = car_duration(journey)
+            bss_dur = bss_duration(journey)
+            if bike_dur and bike_dur < instance.min_bike:
+                to_delete.append(idx)
+            elif bss_dur and bss_dur < instance.min_bss:
+                to_delete.append(idx)
+            elif car_dur and car_dur < instance.min_car:
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s journey with not enough fallback duration: %s',
+                len(to_delete), [journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
+
 
     def _remove_not_long_enough_tc_with_fallback(self, journeys, instance):
         to_delete = []
