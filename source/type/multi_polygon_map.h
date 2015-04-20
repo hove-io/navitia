@@ -31,45 +31,63 @@ www.navitia.io
 #pragma once
 
 #include "geographical_coord.h"
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
+#include "third_party/RTree/RTree.h"
+#include <boost/geometry.hpp>
+#include <boost/serialization/deque.hpp>
 
 namespace navitia { namespace type {
 
 namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 template<typename T>
 struct MultiPolygonMap {
     typedef boost::geometry::model::box<GeographicalCoord> Box;
-    typedef std::tuple<Box, MultiPolygon, T> Value;
-    typedef bgi::rtree<Value, bgi::quadratic<16>> RTree;
+    typedef std::pair<MultiPolygon, T> Value;
+    typedef RTree<const Value*, double, 2> RT;
 
     void insert(const MultiPolygon& key, T data) {
-        rtree.insert(Value(bg::return_envelope<Box>(key), key, data));
+        pool.emplace_back(key, data);
+        rtree_insert(pool.back());
     }
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & rtree;
+    template<class Archive> void save(Archive & ar, const unsigned int ) const {
+        ar & pool;
     }
+    template<class Archive> void load(Archive & ar, const unsigned int ) {
+        ar & pool;
+        for (const auto& elt: pool) { rtree_insert(elt); }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    boost::iterator_range<typename RTree::const_query_iterator>
+    std::vector<T>
     find(const GeographicalCoord& key) const {
-        std::vector<T> res;
-        auto within_key = [key](const Value& v) { return bg::within(key, std::get<1>(v)); };
-        auto begin = rtree.qbegin(bgi::contains(key) && bgi::satisfies(within_key));
-        return boost::make_iterator_range(begin, rtree.qend());
-    }
-
-    typename RTree::const_query_iterator begin() const {
-        return rtree.qbegin(bgi::satisfies([](Value const&) { return true; }));
-    }
-    typename RTree::const_query_iterator end() const {
-        return rtree.qend();
+        typedef std::vector<T> result_type;
+        result_type res;
+        typedef std::pair<const GeographicalCoord&, result_type&> context_type;
+        context_type ctx = {key, res};
+        const double coord[] = {key.lon(), key.lat()};
+        auto callback = [](const Value* val, void* ctx_ptr) -> bool {
+            context_type& ctx = *static_cast<context_type*>(ctx_ptr);
+            if (boost::geometry::within(ctx.first, val->first)) {
+                ctx.second.push_back(val->second);
+            }
+            return true;
+        };
+        rtree.Search(coord, coord, callback, &ctx);
+        return res;
     }
 
 private:
-    RTree rtree;
+    void rtree_insert(const Value& elt) {
+        const auto box = boost::geometry::return_envelope<Box>(elt.first);
+        const auto& min_corner = box.min_corner();
+        const double min[] = {min_corner.lon(), min_corner.lat()};
+        const auto& max_corner = box.max_corner();
+        const double max[] = {max_corner.lon(), max_corner.lat()};
+        rtree.Insert(min, max, &elt);
+    }
+    mutable RT rtree;// RTree::Search is not const!
+    std::deque<Value> pool;// using a deque as there is no iterator invalidation after push_back
 };
 
 }} // namespace navitia::type

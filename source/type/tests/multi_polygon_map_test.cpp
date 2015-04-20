@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 
 #include "type/multi_polygon_map.h"
+#include <boost/geometry.hpp>
 
 using namespace navitia::type;
 
@@ -48,8 +49,6 @@ BOOST_AUTO_TEST_CASE(inserting_diamon_and_find) {
     search = map.find(GeographicalCoord(5, 5));
     BOOST_CHECK(search.empty());
     search = map.find(GeographicalCoord(4, 4));
-    BOOST_REQUIRE(!search.empty());
-    BOOST_CHECK_EQUAL(std::get<2>(*search.begin()), 42);
-
-    for (const auto& e: map) {}
+    BOOST_REQUIRE_EQUAL(search.size(), 1);
+    BOOST_CHECK_EQUAL(search.at(0), 42);
 }
