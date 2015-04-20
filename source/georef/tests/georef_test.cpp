@@ -969,27 +969,32 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
 }
 
 ////small test to make sure the time manipulation works in the SpeedDistanceCombiner
-//BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
-//    navitia::time_duration dur = 10_s;
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
+    GeoRef sn;
+    GraphBuilder b(sn);
+    navitia::time_duration dur = 10_s;
+    b("a","b",60_s);
 
-//    SpeedDistanceCombiner comb(2);
+    SpeedDistanceCombiner comb(2, sn, 0_s, false);
 
-//    BOOST_CHECK_EQUAL(dur / 2, 5_s);
+    BOOST_CHECK_EQUAL(dur / 2, 5_s);
 
-//    navitia::time_duration dur2 = 60_s;
-//    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10+60/2));
-//}
+    BOOST_CHECK_EQUAL(comb({dur}, b.get("a", "b")).duration, navitia::seconds(10+60/2));
+}
 
-//BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
-//    navitia::time_duration dur = 10_s;
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
+    GeoRef sn;
+    GraphBuilder b(sn);
+    navitia::time_duration dur = 10_s;
+    b("a","b",60_s);
 
-//    SpeedDistanceCombiner comb(0.5);
 
-//    BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
+    SpeedDistanceCombiner comb(0.5, sn, 0_s, false);
 
-//    navitia::time_duration dur2 = 60_s;
-//    BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
-//}
+    BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
+
+    BOOST_CHECK_EQUAL(comb({dur}, b.get("a", "b")).duration, 130_s);
+}
 
 //test allowed mode creation
 BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
