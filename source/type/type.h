@@ -356,7 +356,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
-    bool is_zonal;
+    bool is_zonal = false;
     std::string platform_code;
     std::string label;
 

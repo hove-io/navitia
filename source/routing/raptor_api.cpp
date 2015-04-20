@@ -72,13 +72,6 @@ static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
     if (stop_times.empty()) return;
-    const auto& vj = stop_times.front()->vehicle_journey;
-    if (vj->is_odt() && vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time) {
-        for (const auto& st : stop_times) {
-            add_coord(st->journey_pattern_point->stop_point->coord, pb_section);
-        }
-        return;
-    }
 
     type::GeographicalCoord last_coord;
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
@@ -275,16 +268,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
          *     (since the stop point has been artificially created on the data side)
          *     we want a odt section from the departure asked by the user to the destination of the odt)
          **/
-
-        const nt::VehicleJourney* first_vj = path.items.front().get_vj();
-        const nt::VehicleJourney* last_vj = path.items.back().get_vj();
-        bool journey_begin_with_address_odt = first_vj &&
-                in(first_vj->vehicle_journey_type,
-                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
-
-        bool journey_end_with_address_odt = last_vj &&
-                in(last_vj->vehicle_journey_type,
-                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
+        const bool journey_begin_with_address_odt = !path.items.front().stop_points.empty() &&
+            path.items.front().stop_points.front()->is_zonal;
+        const bool journey_end_with_address_odt = !path.items.back().stop_points.empty() &&
+            path.items.back().stop_points.back()->is_zonal;
 
         if (journey_begin_with_address_odt) {
             // nor crow fly section, but we'll have to update the start of the journey
