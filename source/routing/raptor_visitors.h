@@ -4,6 +4,7 @@
 
 namespace navitia { namespace routing {
 struct raptor_visitor {
+    raptor_visitor() = default;
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 
@@ -61,6 +62,7 @@ struct raptor_visitor {
 
 
 struct raptor_reverse_visitor {
+    raptor_reverse_visitor() = default;
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 

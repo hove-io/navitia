@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     sn.init();
 
     PathFinder path_finder(sn);
-    path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
+    path_finder.init({0, 0, true}, Mode_e::Walking, 1, 0_s); //starting from a
     Path p = compute_path(path_finder, {4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
 //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
+    path_finder.init({3, 3, true}, Mode_e::Walking, 1, 0_s); //starting from d
     p = compute_path(path_finder, {4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     GeographicalCoord destination;
     destination.set_xy(4, 11);
     sn.init();
-    path_finder.init(start, Mode_e::Walking, 1);
+    path_finder.init(start, Mode_e::Walking, 1, 0_s);
     Path p = compute_path(path_finder, destination);
     auto coords = get_coords_from_path(p);
     print_coord(coords);
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
-    path_finder.init(start, Mode_e::Walking, 1);
+    path_finder.init(start, Mode_e::Walking, 1, 0_s);
     p = compute_path(path_finder, destination);
     coords = get_coords_from_path(p);
     print_coord(coords);
@@ -364,6 +364,100 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4,10, false) );
 }
 
+/**
+  *         C-------------------------D
+  *        /                           \
+  *       /                             \
+  * O----A ============================= B
+  *
+  * from A to B we can either go by foot or by bss
+  *
+  *  Bss is faster so without a virtual bss cost we got a bss solution
+  *
+  *  with enough bss virtual cost, we walk
+  *
+  * The travel duration should not be impacted by the virtual bss cost
+  */
+struct bss_fixture {
+    bss_fixture(): sn(), path_finder(sn), b(sn) {
+        b("o", 0, 0)("a", 1, 1)("b", 1, 1)("c", 2, 2)("d", 3, 3)("dest", 4, 4);
+
+        sn.init();
+
+        b("o", "a", 10_s)("a", "b", 10_min);
+        b({"a", nt::Mode_e::Walking}, {"c", nt::Mode_e::Bike}, 2_min);
+        b({"c", nt::Mode_e::Bike}, {"d", nt::Mode_e::Bike}, 3_min);
+        b({"d", nt::Mode_e::Bike}, {"b", nt::Mode_e::Walking}, 1_min);
+    }
+    GeoRef sn;
+    PathFinder path_finder;
+    GraphBuilder b;
+
+};
+
+/**
+ *  simple test we can only walk, we got the walking solution
+ **/
+BOOST_FIXTURE_TEST_CASE(simple_walking, bss_fixture) {
+    path_finder.init({1, 1, true}, nt::Mode_e::Walking, 1.0, 0_s);
+
+    path_finder.start_distance_dijkstra(1_h);
+
+    auto dur_to_b = path_finder.distances[b.get("b")];
+
+    BOOST_CHECK_EQUAL(dur_to_b.duration, 10_min);
+    BOOST_CHECK_EQUAL(dur_to_b.bss_taken, false);
+    BOOST_CHECK_EQUAL(dur_to_b.duration, path_finder.get_real_duration(b.get("b")));
+}
+
+/**
+ *  simple test we can only walk and take a bss, we got the bss solution
+ **/
+BOOST_FIXTURE_TEST_CASE(simple_bss, bss_fixture) {
+    path_finder.init({1, 1, true}, nt::Mode_e::Bss, 1.0, 0_s);
+
+    path_finder.start_distance_dijkstra(1_h);
+
+    auto dur_to_b = path_finder.distances[b.get("b")];
+
+    BOOST_CHECK_EQUAL(dur_to_b.duration, 6_min);
+    BOOST_CHECK_EQUAL(dur_to_b.bss_taken, true);
+    BOOST_CHECK_EQUAL(dur_to_b.duration, path_finder.get_real_duration(b.get("b")));
+}
+
+/**
+ *  test with a bss additional cost, but not enough to make the bss irrelevent
+ **/
+BOOST_FIXTURE_TEST_CASE(bss_additional_cost_1, bss_fixture) {
+    path_finder.init({1, 1, true}, nt::Mode_e::Bss, 1.0, 3_min);
+
+    path_finder.start_distance_dijkstra(1_h);
+
+    auto dur_to_b = path_finder.distances[b.get("b")];
+
+    BOOST_CHECK_EQUAL(dur_to_b.duration, 9_min);
+    BOOST_CHECK_EQUAL(dur_to_b.bss_taken, true);
+    BOOST_CHECK_EQUAL(path_finder.get_real_duration(b.get("b")), 6_min); //the real duration stays 6 mn
+}
+
+/**
+ *  test with a bss additional cost, so the walking solution is better
+ **/
+BOOST_FIXTURE_TEST_CASE(bss_additional_cost_2, bss_fixture) {
+    path_finder.init({1, 1, true}, nt::Mode_e::Bss, 1.0, 7_min);
+
+    path_finder.start_distance_dijkstra(1_h);
+
+    auto dur_to_b = path_finder.distances[b.get("b")];
+
+    BOOST_CHECK_EQUAL(dur_to_b.duration, 10_min);
+    BOOST_CHECK_EQUAL(dur_to_b.bss_taken, false);
+    BOOST_CHECK_EQUAL(path_finder.get_real_duration(b.get("b")), 10_min);
+
+    BOOST_CHECK_EQUAL(path_finder.distances[b.get("c") + sn.offsets[nt::Mode_e::Bike]].duration, 9_min);
+    BOOST_CHECK_EQUAL(path_finder.distances[b.get("c") + sn.offsets[nt::Mode_e::Bike]].bss_taken, true);
+    BOOST_CHECK_EQUAL(path_finder.get_real_duration(b.get("c") + sn.offsets[nt::Mode_e::Bike]), 2_min); //the real duration stays 2 mn
+}
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
@@ -874,28 +968,28 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     BOOST_CHECK_CLOSE(1.0 * angle, -1 * val, 1.0);
 }
 
-//small test to make sure the time manipulation works in the SpeedDistanceCombiner
-BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
-    navitia::time_duration dur = 10_s;
+////small test to make sure the time manipulation works in the SpeedDistanceCombiner
+//BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
+//    navitia::time_duration dur = 10_s;
 
-    SpeedDistanceCombiner comb(2);
+//    SpeedDistanceCombiner comb(2);
 
-    BOOST_CHECK_EQUAL(dur / 2, 5_s);
+//    BOOST_CHECK_EQUAL(dur / 2, 5_s);
 
-    navitia::time_duration dur2 = 60_s;
-    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10+60/2));
-}
+//    navitia::time_duration dur2 = 60_s;
+//    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10+60/2));
+//}
 
-BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
-    navitia::time_duration dur = 10_s;
+//BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
+//    navitia::time_duration dur = 10_s;
 
-    SpeedDistanceCombiner comb(0.5);
+//    SpeedDistanceCombiner comb(0.5);
 
-    BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
+//    BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
 
-    navitia::time_duration dur2 = 60_s;
-    BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
-}
+//    navitia::time_duration dur2 = 60_s;
+//    BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
+//}
 
 //test allowed mode creation
 BOOST_AUTO_TEST_CASE(transportation_mode_creation) {

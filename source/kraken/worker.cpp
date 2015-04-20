@@ -384,6 +384,10 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             break;
     }
     result.max_duration = navitia::seconds(max_non_pt);
+    result.min_duration = navitia::seconds(min_non_pt);
+
+    result.bss_additional_cost = navitia::seconds(request.bss_additional_cost());
+
     return result;
 }
 

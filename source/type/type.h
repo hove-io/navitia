@@ -1086,6 +1086,9 @@ struct StreetNetworkParams{
     void set_filter(const std::string & param_uri);
 
     navitia::time_duration max_duration = 1_s;
+    navitia::time_duration min_duration = 0_s;
+
+    navitia::time_duration bss_additional_cost = 0_s;
 };
 /**
   Gestion de l'accessibilié

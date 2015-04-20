@@ -86,4 +86,29 @@ edge_t GraphBuilder::get(const std::string &source_name, const std::string &targ
     else return e;
 }
 
+GraphBuilder & GraphBuilder::operator()(GraphBuilder::edge_and_mode source, GraphBuilder::edge_and_mode target, navitia::time_duration dur, bool bidirectionnal) {
+    vertex_t source_idx, target_idx;
+    auto it = this->vertex_map.find(source.first);
+    if(it == this->vertex_map.end()) {
+        throw navitia::exception("source not found");
+    }
+    source_idx = it->second;
+    source_idx += geo_ref.offsets[source.second];
+
+    it = this->vertex_map.find(target.first);
+    if(it == this->vertex_map.end()) {
+        throw navitia::exception("source not found");
+    }
+    target_idx = it->second;
+    target_idx += geo_ref.offsets[target.second];
+
+    Edge edge;
+    edge.duration = dur;
+
+    boost::add_edge(source_idx, target_idx, edge, this->geo_ref.graph);
+    if(bidirectionnal)
+        boost::add_edge(target_idx, source_idx, edge, this->geo_ref.graph);
+
+    return *this;
+}
 }}
