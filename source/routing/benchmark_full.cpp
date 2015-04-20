@@ -40,6 +40,7 @@ www.navitia.io
 #include "utils/init.h"
 #include "utils/csv.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 #ifdef __BENCH_WITH_CALGRIND__
 #include "valgrind/callgrind.h"
 #endif
@@ -52,19 +53,22 @@ namespace ba = boost::algorithm;
 struct PathDemand {
     std::string start;
     std::string target;
-    unsigned int date;
-    unsigned int hour;
+    boost::posix_time::ptime datetime;
+
     type::Mode_e start_mode = type::Mode_e::Walking;
     type::Mode_e target_mode = type::Mode_e::Walking;
 };
 
 struct Result {
-    int duration;
+    size_t nb_sol;
     int time;
-    int arrival;
-    int nb_changes;
+    boost::posix_time::ptime datetime;
 
-    Result(pbnavitia::Journey journey) : duration(journey.duration()), time(-1), arrival(journey.arrival_date_time()), nb_changes(journey.nb_transfers()) {}
+    std::string start;
+    std::string target;
+    type::Mode_e start_mode;
+    type::Mode_e target_mode;
+
 };
 
 type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point, const navitia::type::Data& data) {
@@ -138,7 +142,8 @@ int main(int argc, char** argv){
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output, stop_input_file, start, target;
-    int iterations, date, hour;
+    int iterations;
+    std::string datetime;
 
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
@@ -153,10 +158,8 @@ int main(int argc, char** argv){
                     "Start of a particular journey")
             ("target,t", po::value<std::string>(&target),
                     "Target of a particular journey")
-            ("date,d", po::value<int>(&date)->default_value(-1),
+            ("datetime,d", po::value<std::string>(&datetime),
                     "Begginning date of a particular journey")
-            ("hour,h", po::value<int>(&hour)->default_value(-1),
-                    "Begginning hour of a particular journey")
             ("verbose,v", "Verbose debugging output")
             ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
@@ -188,18 +191,16 @@ int main(int argc, char** argv){
             PathDemand demand;
             demand.start = it[0];
             demand.target = it[1];
-            demand.hour = boost::lexical_cast<unsigned int>(it[5]);
-            demand.date = boost::lexical_cast<unsigned int>(it[4]);
+            demand.datetime = boost::posix_time::from_iso_string(it[2]);
             demands.push_back(demand);
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
     }
-    else if(start != "" && target != "" && date != -1 && hour != -1) {
+    else if(! start.empty() && ! target.empty() && ! datetime.empty()) {
         PathDemand demand;
         demand.start = start;
         demand.target = target;
-        demand.hour = hour;
-        demand.date = date;
+        demand.datetime = boost::posix_time::from_iso_string(datetime);
         std::cout << "we use the entry param " << start << " -> " << target << std::endl;
         demands.push_back(demand);
     } else {
@@ -207,12 +208,9 @@ int main(int argc, char** argv){
         std::random_device rd;
         std::mt19937 rng(31442);
         std::uniform_int_distribution<> gen(0,data.pt_data->stop_areas.size()-1);
-        std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days({date != 1 ? unsigned(date) : 7});
-        if(data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
-            days.push_back(days.front() + 1);
-        else
-            days.push_back(days.front() + 6);
+        std::uniform_int_distribution<> days_gen(30, 45);
+        std::uniform_int_distribution<> hour_gen(0, 86399);
+
 
         for(int i = 0; i < iterations; ++i) {
             PathDemand demand;
@@ -228,13 +226,14 @@ int main(int argc, char** argv){
                     || ba::starts_with(sa_dest->uri, "stop_area:SNC:")
                     || ba::starts_with(sa_start->uri, "stop_area:SNC:"));
 
-            for(auto day : days) {
-                for(auto hour : hours) {
-                    demand.date = day;
-                    demand.hour = hour;
-                    demands.push_back(demand);
-                }
+            if (! datetime.empty()) {
+                demand.datetime = boost::posix_time::from_iso_string(datetime);
+            } else {
+                unsigned d = days_gen(rng);
+                demand.datetime = boost::posix_time::ptime(data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(d),
+                                                           boost::posix_time::seconds(hour_gen(rng)));
             }
+            demands.push_back(demand);
         }
     }
 
@@ -255,17 +254,15 @@ int main(int argc, char** argv){
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
-        auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1) - boost::gregorian::date(1970, 1, 1);
         if (verbose){
             std::cout << demand.start
                       << ", " << demand.start
                       << ", " << demand.target
-                      << ", " << demand.target
-                      << ", " << date
-                      << ", " << demand.hour
+                      << ", " << demand.datetime
                       << "\n";
         }
 
+        Result result;
         type::EntryPoint origin = make_entry_point(demand.start, data);
         type::EntryPoint destination = make_entry_point(demand.target, data);
 
@@ -279,7 +276,7 @@ int main(int argc, char** argv){
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
         auto resp = make_response(router, origin, destination,
-              {DateTimeUtils::set(date.days(), demand.hour)}, true,
+              {navitia::to_posix_timestamp(demand.datetime)}, true,
               accessibilite_params,
               {},
               georef_worker,
@@ -289,16 +286,38 @@ int main(int argc, char** argv){
 
         if(resp.journeys_size() > 0) {
             ++ nb_reponses;
-
-            Result result(resp.journeys(0));
-            result.time = t2.ms();
-            results.push_back(result);
         }
+
+        result.start = origin.uri;
+        result.target = destination.uri;
+        result.datetime = demand.datetime;
+        result.start_mode = demand.start_mode;
+        result.target_mode = demand.target_mode;
+        result.nb_sol = resp.journeys_size();
+        result.time = t2.ms();
+
+        results.push_back(result);
     }
     //ProfilerStop();
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_STOP_INSTRUMENTATION;
 #endif
+
+    Timer file_write("Writing results\n");
+    std::fstream out_file(output, std::ios::out);
+    out_file << "Start, Target, datetime"
+             << ", nb solutions, time \n";
+
+    for (const auto& res: results) {
+
+        out_file << res.start
+                 << "," << res.target
+                 << "," << boost::posix_time::to_iso_string(res.datetime)
+                 << "," << res.nb_sol
+                 << "," << res.time
+                 << "\n";
+    }
+    out_file.close();
 
     std::cout << "Number of requests: " << demands.size() << std::endl;
     std::cout << "Number of results with solution: " << nb_reponses << std::endl;
