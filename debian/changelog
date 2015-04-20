@@ -1,3 +1,19 @@
+navitia2 (1.16.0) unstable; urgency=low
+
+  * Stat: add some basic indexes  <https://github.com/CanalTP/navitia/pull/1001>
+  * ed2nav: fix bug with lacking edges on street network  <https://github.com/CanalTP/navitia/pull/1000>
+  * Change on authentication: disabling open data and super user  <https://github.com/CanalTP/navitia/pull/997>
+  * kraken: log level change  <https://github.com/CanalTP/navitia/pull/996>
+  * raptor solution reader: fix branching scheme  <https://github.com/CanalTP/navitia/pull/995>
+  * kraken: shift to UTC was done by postgresl when loading disruption  <https://github.com/CanalTP/navitia/pull/993>
+  * Raptor: do not compute direct path for some journeys  <https://github.com/CanalTP/navitia/pull/992>
+  * Call custom scenario  <https://github.com/CanalTP/navitia/pull/991>
+  * Ed: check the projection system  <https://github.com/CanalTP/navitia/pull/990>
+  * Jormungandr: use ujson  <https://github.com/CanalTP/navitia/pull/989>
+  * benchmark: add other way to run the bench  <https://github.com/CanalTP/navitia/pull/988>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 20 Apr 2015 12:04:43 +0100
+
 navitia2 (1.15.0) unstable; urgency=low
 
   * jormungandr: create address id on kraken  <https://github.com/CanalTP/navitia/pull/987>
