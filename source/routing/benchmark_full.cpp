@@ -50,8 +50,8 @@ namespace po = boost::program_options;
 namespace ba = boost::algorithm;
 
 struct PathDemand {
-    type::idx_t start;
-    type::idx_t target;
+    std::string start;
+    std::string target;
     unsigned int date;
     unsigned int hour;
     type::Mode_e start_mode = type::Mode_e::Walking;
@@ -67,11 +67,78 @@ struct Result {
     Result(pbnavitia::Journey journey) : duration(journey.duration()), time(-1), arrival(journey.arrival_date_time()), nb_changes(journey.nb_transfers()) {}
 };
 
+type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point, const navitia::type::Data& data) {
+    type::GeographicalCoord result;
+    switch (entry_point.type) {
+    case type::Type_e::Address: {
+            auto way = data.geo_ref->way_map.find(entry_point.uri);
+            if (way != data.geo_ref->way_map.end()){
+                const auto geo_way = data.geo_ref->ways[way->second];
+                return geo_way->nearest_coord(entry_point.house_number, data.geo_ref->graph);
+            }
+        }
+        break;
+    case type::Type_e::StopPoint: {
+            auto sp_it = data.pt_data->stop_points_map.find(entry_point.uri);
+            if(sp_it != data.pt_data->stop_points_map.end()) {
+                return  sp_it->second->coord;
+            }
+        }
+        break;
+    case type::Type_e::StopArea: {
+            auto sa_it = data.pt_data->stop_areas_map.find(entry_point.uri);
+            if(sa_it != data.pt_data->stop_areas_map.end()) {
+                return  sa_it->second->coord;
+            }
+        }
+        break;
+    case type::Type_e::Coord:
+        return entry_point.coordinates;
+        break;
+    case type::Type_e::Admin: {
+            auto it_admin = data.geo_ref->admin_map.find(entry_point.uri);
+            if (it_admin != data.geo_ref->admin_map.end()) {
+                const auto admin = data.geo_ref->admins[it_admin->second];
+                return  admin->coord;
+            }
+        }
+        break;
+    case type::Type_e::POI: {
+            auto poi = data.geo_ref->poi_map.find(entry_point.uri);
+            if (poi != data.geo_ref->poi_map.end()){
+                const auto geo_poi = data.geo_ref->pois[poi->second];
+                return geo_poi->coord;
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    std::cout << "coord not found for " << entry_point.uri << std::endl;
+    return {};
+}
+
+static type::EntryPoint make_entry_point(const std::string& entry_id, const type::Data& data) {
+    type::EntryPoint entry;
+    try {
+        type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
+
+        //if it is a idx, we consider it to be a stop area idx
+        entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
+    } catch (boost::bad_lexical_cast) {
+        // else we use the same way to identify an entry point as the api
+        entry = type::EntryPoint(data.get_type_of_id(entry_id), entry_id);
+    }
+
+    entry.coordinates = coord_of_entry_point(entry, data);
+    return entry;
+}
+
 int main(int argc, char** argv){
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
-    std::string file, output, stop_input_file;
-    int iterations, start, target, date, hour;
+    std::string file, output, stop_input_file, start, target;
+    int iterations, date, hour;
 
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
@@ -82,9 +149,9 @@ int main(int argc, char** argv){
                      "Number of iterations (10 calcuations par iteration)")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"),
                      "Path to data.nav.lz4")
-            ("start,s", po::value<int>(&start)->default_value(-1),
+            ("start,s", po::value<std::string>(&start),
                     "Start of a particular journey")
-            ("target,t", po::value<int>(&target)->default_value(-1),
+            ("target,t", po::value<std::string>(&target),
                     "Target of a particular journey")
             ("date,d", po::value<int>(&date)->default_value(-1),
                     "Begginning date of a particular journey")
@@ -118,37 +185,22 @@ int main(int argc, char** argv){
         csv.next();
         size_t cpt_not_found = 0;
         for (auto it = csv.next(); ! csv.eof(); it = csv.next()) {
-            const auto it_start = data.pt_data->stop_areas_map.find(it[0]);
-            if (it_start == data.pt_data->stop_areas_map.end()) {
-                std::cout << "impossible to find " << it[0] << std::endl;
-                cpt_not_found++;
-                continue;
-            }
-            const auto start = it_start->second;
-
-            const auto it_end = data.pt_data->stop_areas_map.find(it[2]);
-            if (it_end == data.pt_data->stop_areas_map.end()) {
-                std::cout << "impossible to find " << it[2] << std::endl;
-                cpt_not_found++;
-                continue;
-            }
-            const auto end = it_end->second;
-
             PathDemand demand;
-            demand.start = start->idx;
-            demand.target = end->idx;
+            demand.start = it[0];
+            demand.target = it[1];
             demand.hour = boost::lexical_cast<unsigned int>(it[5]);
             demand.date = boost::lexical_cast<unsigned int>(it[4]);
             demands.push_back(demand);
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
     }
-    else if(start != -1 && target != -1 && date != -1 && hour != -1) {
+    else if(start != "" && target != "" && date != -1 && hour != -1) {
         PathDemand demand;
         demand.start = start;
         demand.target = target;
         demand.hour = hour;
         demand.date = date;
+        std::cout << "we use the entry param " << start << " -> " << target << std::endl;
         demands.push_back(demand);
     } else {
         // Génération des instances
@@ -164,14 +216,18 @@ int main(int argc, char** argv){
 
         for(int i = 0; i < iterations; ++i) {
             PathDemand demand;
-            demand.start = gen(rng);
-            demand.target = gen(rng);
-            while(demand.start == demand.target
-                    || ba::starts_with(data.pt_data->stop_areas[demand.start]->uri, "stop_area:SNC:")
-                    || ba::starts_with(data.pt_data->stop_areas[demand.target]->uri, "stop_area:SNC:")) {
-                demand.target = gen(rng);
-                demand.start = gen(rng);
+            const type::StopArea* sa_start;
+            const type::StopArea* sa_dest;
+            do {
+                sa_start = data.pt_data->stop_areas[gen(rng)];
+                sa_dest = data.pt_data->stop_areas[gen(rng)];
+                demand.start = sa_start->uri;
+                demand.target = sa_dest->uri;
             }
+            while(sa_start == sa_dest
+                    || ba::starts_with(sa_dest->uri, "stop_area:SNC:")
+                    || ba::starts_with(sa_start->uri, "stop_area:SNC:"));
+
             for(auto day : days) {
                 for(auto hour : hours) {
                     demand.date = day;
@@ -201,19 +257,18 @@ int main(int argc, char** argv){
         Timer t2;
         auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1) - boost::gregorian::date(1970, 1, 1);
         if (verbose){
-            std::cout << data.pt_data->stop_areas[demand.start]->label
+            std::cout << demand.start
                       << ", " << demand.start
-                      << ", " << data.pt_data->stop_areas[demand.target]->label
+                      << ", " << demand.target
                       << ", " << demand.target
                       << ", " << date
                       << ", " << demand.hour
                       << "\n";
         }
 
-        type::EntryPoint origin = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas[demand.start]->uri, 0);
-        type::EntryPoint destination = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas[demand.target]->uri, 0);
-        origin.coordinates = data.pt_data->stop_areas[demand.start]->coord;
-        destination.coordinates = data.pt_data->stop_areas[demand.target]->coord;
+        type::EntryPoint origin = make_entry_point(demand.start, data);
+        type::EntryPoint destination = make_entry_point(demand.target, data);
+
         origin.streetnetwork_params.mode = demand.start_mode;
         origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
         origin.streetnetwork_params.max_duration = navitia::seconds(15*60);

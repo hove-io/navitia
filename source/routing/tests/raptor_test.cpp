@@ -1898,3 +1898,49 @@ BOOST_AUTO_TEST_CASE(second_pass) {
     BOOST_CHECK_EQUAL(res[0].items[3].departure, "20150103T084200"_dt);
     BOOST_CHECK_EQUAL(res[0].items[3].arrival, "20150103T084700"_dt);
 }
+
+// A---1---B
+//         B===C===D
+//             C---D---2---E
+//
+// We want
+// A---1---B===C---D---2---E
+// and not
+// A---1---B===C===D---2---E
+static void test_good_connection_when_walking_as_fast_as_bus(const std::vector<navitia::routing::Path>& res) {
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 3);
+
+    // A---1---B===C---D---2---E
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 09:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].departure, time_from_string("2015-01-01 09:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival, time_from_string("2015-01-01 10:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].departure, time_from_string("2015-01-01 10:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival, time_from_string("2015-01-01 12:00:00"));
+}
+BOOST_AUTO_TEST_CASE(good_connection_when_walking_as_fast_as_bus) {
+    ed::builder b("20150101");
+
+    b.vj("1")("A", "8:00"_t)("B", "9:00"_t);
+    b.vj("2")("C", "10:00"_t)("D", "11:00"_t)("E", "12:00"_t);
+    b.connection("B", "C", "01:00"_t);
+    b.connection("B", "D", "02:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
+                               "8:00"_t, 0, DateTimeUtils::inf, false, false, true);
+    test_good_connection_when_walking_as_fast_as_bus(res1);
+
+    // non clockwise test
+    auto res2 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
+                               "12:00"_t, 0, 0, false, false, false);
+    test_good_connection_when_walking_as_fast_as_bus(res2);
+}

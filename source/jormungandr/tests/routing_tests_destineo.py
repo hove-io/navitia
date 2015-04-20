@@ -45,16 +45,15 @@ class TestJourneysDestineo(TestJourneys):
 
     def setup(self):
         logging.debug('setup for destineo')
-        #we don't want to use the database for the scenario, so we mock the property of instance
-        #but we want to test the scenario for destineo
-        @property
-        def mock_scenario(self):
-            return jormungandr.scenarios.destineo.Scenario()
-        self.old_scenario = Instance.scenario
-        Instance.scenario = mock_scenario
+        from jormungandr import i_manager
+        dest_instance = i_manager.instances['main_routing_test']
+        self.old_scenario = dest_instance._scenario
+        dest_instance._scenario = jormungandr.scenarios.destineo.Scenario()
 
     def teardown(self):
-        Instance.scenario = self.old_scenario
+        from jormungandr import i_manager
+        i_manager.instances['main_routing_test']._scenario = self.old_scenario
+
 
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys

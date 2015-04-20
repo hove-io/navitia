@@ -176,6 +176,61 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     }
 }
 
+static void add_direct_path(EnhancedResponse& enhanced_response,
+                       const nt::Data& d,
+                       georef::StreetNetwork& worker,
+                       const type::EntryPoint& origin,
+                       const type::EntryPoint& destination,
+                       const std::vector<bt::ptime>& datetimes,
+                       const bool clockwise) {
+    pbnavitia::Response& pb_response = enhanced_response.response;
+
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
+            || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
+        // we don't want direct path for admin to admin (it has no meaning)
+        // and we do not compute direct path for car because:
+        //  * our car pathes are not very realistic
+        //  * we do not want to promote car solution
+        return;
+    }
+
+    auto temp = worker.get_direct_path(origin, destination);
+    if(!temp.path_items.empty()) {
+        pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
+        LOG4CPLUS_DEBUG(logger, "direct path found!");
+
+        //for each date time we add a direct street journey
+        for(bt::ptime datetime : datetimes) {
+            pbnavitia::Journey* pb_journey = pb_response.add_journeys();
+            pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime));
+            pb_journey->set_duration(temp.duration.total_seconds());
+
+            bt::ptime departure;
+            if (clockwise) {
+                departure = datetime;
+            } else {
+                departure = datetime - temp.duration.to_posix();
+            }
+            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
+
+            const auto str_departure = navitia::to_posix_timestamp(departure);
+            const auto str_arrival = navitia::to_posix_timestamp(departure + temp.duration.to_posix());
+            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(str_arrival);
+            // We add coherence with the origin of the request
+            auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
+            origin_pb->Clear();
+            fill_pb_placemark(origin, d, origin_pb, 2);
+            //We add coherence with the destination object of the request
+            auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
+            destination_pb->Clear();
+            fill_pb_placemark(destination, d, destination_pb, 2);
+            co2_emission_aggregator(pb_journey);
+        }
+    }
+}
+
 static void add_pathes(EnhancedResponse& enhanced_response,
                        const std::vector<navitia::routing::Path>& paths,
                        const nt::Data& d,
@@ -503,41 +558,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         co2_emission_aggregator(pb_journey);
     }
 
-    auto temp = worker.get_direct_path(origin, destination);
-    if(!temp.path_items.empty()) {
-
-        pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        LOG4CPLUS_DEBUG(logger, "direct path found!");
-
-        //for each date time we add a direct street journey
-        for(bt::ptime datetime : datetimes) {
-            pbnavitia::Journey* pb_journey = pb_response.add_journeys();
-            pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime));
-            pb_journey->set_duration(temp.duration.total_seconds());
-
-            bt::ptime departure;
-            if (clockwise) {
-                departure = datetime;
-            } else {
-                departure = datetime - temp.duration.to_posix();
-            }
-            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
-
-            const auto str_departure = navitia::to_posix_timestamp(departure);
-            const auto str_arrival = navitia::to_posix_timestamp(departure + temp.duration.to_posix());
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
-            // We add coherence with the origin of the request
-            auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
-            origin_pb->Clear();
-            fill_pb_placemark(origin, d, origin_pb, 2);
-            //We add coherence with the destination object of the request
-            auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
-            destination_pb->Clear();
-            fill_pb_placemark(destination, d, destination_pb, 2);
-            co2_emission_aggregator(pb_journey);
-        }
-    }
+    add_direct_path(enhanced_response, d, worker, origin, destination, datetimes, clockwise);
 }
 
 static pbnavitia::Response

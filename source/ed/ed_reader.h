@@ -90,7 +90,6 @@ private:
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
-    std::set<std::pair<uint64_t, uint64_t>> edge_to_ignore;
     std::set<uint64_t> node_to_ignore;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);

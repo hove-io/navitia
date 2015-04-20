@@ -301,10 +301,10 @@ class add_journey_pagination(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            #self is the first parameter, so the ressources
-            region = i_manager.instances[args[0].region]
-            if region and hasattr(region.scenario, 'extremes') and callable(region.scenario.extremes):
-                datetime_before, datetime_after = region.scenario.extremes(objects[0])
+            #self is the first parameter, so the resources
+            scenario = g.scenario
+            if scenario and hasattr(scenario, 'extremes') and callable(scenario.extremes):
+                datetime_before, datetime_after = scenario.extremes(objects[0])
             else:
                 datetime_before, datetime_after = self.extremes(objects[0])
             if datetime_before and datetime_after:
@@ -562,6 +562,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
+        parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
 
         self.method_decorators.append(complete_links(self))
 

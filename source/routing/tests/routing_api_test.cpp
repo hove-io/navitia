@@ -996,29 +996,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     dump_response(resp, "car_direct");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //2 pathes, one direct path, and one by PT even if the car is faster than PT
-    auto journey = resp.journeys(0).sections_size()==1 ? resp.journeys(0) : resp.journeys(1);
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    auto section = journey.sections(0);
-
-    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
-    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
-    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 5);
-    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_CHECK_EQUAL(section.street_network().duration(), 18); // (20+50+20)/5
-    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 4);
-    //since R is not accessible by car, we project R in the closest edge in the car graph
-    //this edge is F-C, so this is the end of the journey (the rest of it is as the crow flies)
-    auto pathitem = section.street_network().path_items(0);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
-    pathitem = section.street_network().path_items(1);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue cb");
-    pathitem = section.street_network().path_items(2);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue fc");
-    pathitem = section.street_network().path_items(3);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue ef");
-    BOOST_CHECK_EQUAL(pathitem.length(), 0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 pathe, just the PT one, we do not compute the direct path for car
 
     // co2_emission Tests
     // First Journey
@@ -1027,7 +1005,6 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().value(), 12.144);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().unit(), "gEC");
-
 
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), false);
     // Walk mode
@@ -1050,17 +1027,6 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.48 + 32.568);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
-
-    // Second Journey
-    // Car mode
-    BOOST_REQUIRE_EQUAL(resp.journeys(1).sections_size(), 1);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().value(), 36.616);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().unit(), "gEC");
-    // Aggregator co2_emission
-    BOOST_CHECK_EQUAL(resp.journeys(1).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().value(), 36.616);
-    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().unit(), "gEC");
 }
 
 // car + bus using parking
@@ -1094,7 +1060,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     dump_response(resp, "car_parking_bus");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct car + 1 car->bus->walk
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 car->bus->walk (no direct, it's for car)
 
     // the car->bus->walk journey
     const auto journey = resp.journeys(0);
