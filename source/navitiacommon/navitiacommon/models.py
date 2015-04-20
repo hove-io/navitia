@@ -177,6 +177,8 @@ class Instance(db.Model):
 
     min_car = db.Column(db.Integer, default=default_values.min_car, nullable=False)
 
+    bss_additional_cost = db.Column(db.Integer, nullable=True)
+
     factor_too_long_journey = db.Column(db.Float, default=default_values.factor_too_long_journey, nullable=False)
 
     min_duration_too_long_journey = db.Column(db.Integer, default=default_values.min_duration_too_long_journey, \
