@@ -134,22 +134,9 @@ struct TransportationModeFilter {
     template <typename vertex_t>
     bool operator()(const vertex_t& e) const {
         int graph_number = e / nb_vertex_by_mode;
-
-//        std::cout << "for node " << e << " in graph " << graph_number << " we can " << (acceptable_modes[graph_number] ? " " : "not ") << "go" << std::endl;
         return acceptable_modes[graph_number];
     }
 };
-
-struct edge_getter: std::unary_function<edge_t, edge_t> {
-    edge_getter(const Graph& g): graph(g) {}
-    const Graph& graph;
-
-    edge_t operator()(edge_t e) const {
-        return e;
-//        return graph[e];
-    }
-};
-
 
 struct PathFinder {
     const GeoRef & geo_ref;
@@ -215,8 +202,8 @@ struct PathFinder {
 
         boost::dijkstra_shortest_paths_no_init(filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
                                                start, &predecessors[0], &distances[0],
-                                               boost::make_function_property_map<edge_t, edge_t, edge_getter>(edge_getter(geo_ref.graph)), // weigth map
-                                               boost::identity_property_map(),
+                                               boost::typed_identity_property_map<edge_t>(), // weigth map
+                                               boost::typed_identity_property_map<vertex_t>(),
                                                std::less<cost>(),
                                                speed_combiner,
                                                cost(navitia::seconds(0), false),
