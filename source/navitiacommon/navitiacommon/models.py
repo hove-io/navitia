@@ -109,7 +109,7 @@ class User(db.Model):
         return self.type == 'super_user'
 
     def __repr__(self):
-        return '<User %r>' % self.email
+        return '<User {}-{}>'.format(self.id, self.email)
 
     def add_key(self, app_name, valid_until=None):
         """

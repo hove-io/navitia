@@ -179,6 +179,9 @@ class StatManager(object):
         if user is not None:
             stat_request.user_id = user.id
             stat_request.user_name = user.login
+            if user.end_point_id:
+                stat_request.end_point_id = user.end_point_id
+                stat_request.end_point_name = user.end_point.name
 
         stat_request.application_id = -1
         app_name = get_app_name(get_token())
