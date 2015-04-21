@@ -181,6 +181,15 @@ class enum_type(fields.Raw):
         return str.lower(enum[getattr(obj, key)].name)
 
 
+class PbEnum(fields.Raw):
+
+    def __init__(self, pb_enum_type, *args, **kwargs):
+        super(PbEnum, self).__init__(*args, **kwargs)
+        self.pb_enum_type = pb_enum_type
+
+    def format(self, value):
+        return str.lower(self.pb_enum_type.Name(value))
+
 class NonNullList(fields.List):
 
     def __init__(self, *args, **kwargs):

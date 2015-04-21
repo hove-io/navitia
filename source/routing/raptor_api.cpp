@@ -404,11 +404,33 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
                 fill_section(pb_section, vj, item.stop_times, d, now, action_period);
+
+                // setting additional_informations
+                const bool has_datetime_estimated = ! item.stop_times.empty()
+                    && (item.stop_times.front()->date_time_estimated()
+                        || item.stop_times.back()->date_time_estimated());
+                const bool has_odt = ! item.stop_times.empty()
+                    && (item.stop_times.front()->odt() || item.stop_times.back()->odt());
+                const bool is_zonal = ! item.stop_points.empty()
+                    && (item.stop_points.front()->is_zonal || item.stop_points.back()->is_zonal);
+                if (has_datetime_estimated) {
+                    pb_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
+                }
+                if (is_zonal) {
+                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_ZONE);
+                } else if (has_odt && has_datetime_estimated) {
+                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_STOP_POINT);
+                } else if (has_odt) {
+                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_STOP_TIME);
+                }
+                if (pb_section->additional_informations().empty()) {
+                    pb_section->add_additional_informations(pbnavitia::REGULAR);
+                }
+
                 // If this section has estimated stop times,
                 // if the previous section is a waiting section, we also
                 // want to set it to estimated.
-                if (pb_section->add_info_vehicle_journey().has_date_time_estimated() &&
-                        pb_journey->sections_size()>=2) {
+                if (has_datetime_estimated && pb_journey->sections_size() >= 2) {
                     auto previous_section = pb_journey->mutable_sections(pb_journey->sections_size()-2);
                     if (previous_section->type() == pbnavitia::WAITING) {
                         previous_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
