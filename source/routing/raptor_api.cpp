@@ -692,6 +692,18 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         for (const auto* admin: admins) {
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
+                if (stop_points.find(sp_idx) == stop_points.end()) {
+                    result.push_back({sp_idx, {}});
+                    stop_points.insert(sp_idx);
+                }
+            }
+        }
+
+        // checking for zonal stop points
+        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+        for (const auto* sp: zonal_sps) {
+            const SpIdx sp_idx = SpIdx(*sp);
+            if (stop_points.find(sp_idx) == stop_points.end()) {
                 result.push_back({sp_idx, {}});
                 stop_points.insert(sp_idx);
             }
