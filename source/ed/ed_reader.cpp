@@ -366,7 +366,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
        "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
        "sp.platform_code as platform_code,"
        "sp.is_zonal as is_zonal,"
-       "sp.area as area,"
+       "ST_AsText(sp.area) as area,"
        "pr.wheelchair_boarding as wheelchair_boarding,"
        "pr.sheltered as sheltered, pr.elevator as elevator,"
        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
