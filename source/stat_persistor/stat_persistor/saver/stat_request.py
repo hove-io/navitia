@@ -119,7 +119,9 @@ def build_stat_request_dict(stat):
         'api': stat.api,
         'host': stat.host,
         'client': stat.client,
-        'response_size': stat.response_size
+        'response_size': stat.response_size,
+        'end_point_id': stat.end_point_id,
+        'end_point_name': stat.end_point_name,
     }
 
 def build_journey_request_dict(journey_request, request_id):
