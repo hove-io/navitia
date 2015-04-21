@@ -60,8 +60,8 @@ void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const ty
                                start.streetnetwork_params.speed_factor, start.streetnetwork_params.bss_additional_cost);
 
     if (end) {
-        arrival_path_finder.init((*end).coordinates, (*end).streetnetwork_params.mode,
-                                 (*end).streetnetwork_params.speed_factor, (*end).streetnetwork_params.bss_additional_cost);
+        arrival_path_finder.init(end->coordinates, end->streetnetwork_params.mode,
+                                 end->streetnetwork_params.speed_factor, end->streetnetwork_params.bss_additional_cost);
     }
 }
 
@@ -177,7 +177,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
 PathFinder::PathFinder(const GeoRef& gref):
     geo_ref(gref) {}
 
-void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode,
+void PathFinder::init(const type::GeographicalCoord& start_coord, const nt::Mode_e mode,
                       const float speed_factor, const navitia::time_duration bss_cost) {
     computation_launch = false;
     bss_additional_cost = bss_cost;
@@ -190,7 +190,7 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
 
     //we initialize the distances to the maximum value
     size_t n = boost::num_vertices(geo_ref.graph);
-    distances.assign(n, {bt::pos_infin});
+    distances.assign(n, cost());
     //for the predecessors no need to clean the values, the important one will be updated during search
     predecessors.resize(n);
 

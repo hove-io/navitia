@@ -35,7 +35,6 @@ www.navitia.io
 #include <boost/graph/two_bit_color_map.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/format.hpp>
-#include <boost/property_map/function_property_map.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -47,7 +46,7 @@ struct cost {
     cost() {}
     bool operator<(const cost& c) const { return duration < c.duration; }
     bool operator==(const cost& c) const { return duration == c.duration && bss_taken == c.bss_taken; }
-    navitia::time_duration duration = {};
+    navitia::time_duration duration = bt::pos_infin;
     bool bss_taken = false;
 };
 
@@ -167,7 +166,7 @@ struct PathFinder {
      *  The init HAS to be called before any other methods
      */
     void init(const type::GeographicalCoord& start_coord,
-              nt::Mode_e mode,
+              const nt::Mode_e mode,
               const float speed_factor,
               const navitia::time_duration);
 
@@ -206,7 +205,7 @@ struct PathFinder {
                                                boost::typed_identity_property_map<vertex_t>(),
                                                std::less<cost>(),
                                                speed_combiner,
-                                               cost(navitia::seconds(0), false),
+                                               cost(0_s, false),
                                                visitor,
                                                color
                                                );
