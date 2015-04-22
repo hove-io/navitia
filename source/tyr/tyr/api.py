@@ -59,6 +59,6 @@ api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/',
 @app.errorhandler(Exception)
 def error_handler(exception):
     """
-    se charge de générer la réponse d'erreur au bon format
+    log exception
     """
     app.logger.exception('')

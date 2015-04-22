@@ -684,7 +684,7 @@ class Journeys(ResourceUri, ResourceUtc):
 
             if response.HasField('error') \
                     and len(possible_regions) != 1:
-                logging.getLogger(__name__).info("impossible to find journeys for the region {},"
+                logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
                                                  " we'll try the next possible region ".format(r))
 
                 if args['debug']:
