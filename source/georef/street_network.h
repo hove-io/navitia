@@ -50,7 +50,7 @@ struct cost {
     bool bss_taken = false;
 };
 
-struct SpeedDistanceCombiner : public std::binary_function<cost, cost, edge_t> {
+struct SpeedDistanceCombiner : public std::binary_function<edge_t, cost, cost> {
     /// speed factor compared to the default speed of the transportation mode
     /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
     ///
