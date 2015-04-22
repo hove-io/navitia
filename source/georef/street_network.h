@@ -41,9 +41,9 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace georef {
 
 struct cost {
-    cost(navitia::time_duration d, bool b): duration(d), bss_taken(b) {}
-    cost(navitia::time_duration d): duration(d) {}
-    cost() {}
+    explicit cost(navitia::time_duration d, bool b): duration(d), bss_taken(b) {}
+    explicit cost(navitia::time_duration d): duration(d) {}
+    explicit cost() {}
     bool operator<(const cost& c) const { return duration < c.duration; }
     bool operator==(const cost& c) const { return duration == c.duration && bss_taken == c.bss_taken; }
     navitia::time_duration duration = bt::pos_infin;
@@ -70,18 +70,18 @@ struct SpeedDistanceCombiner : public std::binary_function<cost, cost, edge_t> {
     {}
     inline cost operator()(cost a, edge_t e) const {
         if (a.duration == bt::pos_infin) {
-            return {bt::pos_infin, false};
+            return cost{bt::pos_infin, false};
         }
 
         const Edge& edge = graph[e];
 
         auto b = edge.duration;
         if (b == bt::pos_infin) {
-            return {bt::pos_infin, false};
+            return cost{bt::pos_infin, false};
         }
         auto d = a.duration + b / speed_factor;
         if ( ! bss_allowed || a.bss_taken) {
-            return {d, a.bss_taken};
+            return cost{d, a.bss_taken};
         }
 
         auto origin_mode = boost::source(e, graph) / nb_vertex_by_mode;
@@ -92,7 +92,7 @@ struct SpeedDistanceCombiner : public std::binary_function<cost, cost, edge_t> {
         if (bss_taken) {
             d += bss_additional_cost;
         }
-        return {d, bss_taken};
+        return cost{d, bss_taken};
     }
 };
 template <typename T>
@@ -200,8 +200,10 @@ struct PathFinder {
         auto speed_combiner = SpeedDistanceCombiner(speed_factor, geo_ref, bss_additional_cost, mode == nt::Mode_e::Bss);
 
         boost::dijkstra_shortest_paths_no_init(filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
-                                               start, &predecessors[0], &distances[0],
-                                               boost::typed_identity_property_map<edge_t>(), // weigth map
+                                               start,
+                                               &predecessors[0],
+                                               &distances[0],
+                                               boost::typed_identity_property_map<edge_t>(),
                                                boost::typed_identity_property_map<vertex_t>(),
                                                std::less<cost>(),
                                                speed_combiner,

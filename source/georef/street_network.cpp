@@ -196,8 +196,8 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, const nt::Mode
 
     if (starting_edge.found) {
         //durations initializations
-        distances[starting_edge[source_e]] = {crow_fly_duration(starting_edge.distances[source_e])}; //for the projection, we use the default walking speed.
-        distances[starting_edge[target_e]] = {crow_fly_duration(starting_edge.distances[target_e])};
+        distances[starting_edge[source_e]] = cost{crow_fly_duration(starting_edge.distances[source_e])}; //for the projection, we use the default walking speed.
+        distances[starting_edge[target_e]] = cost{crow_fly_duration(starting_edge.distances[target_e])};
         predecessors[starting_edge[source_e]] = starting_edge[source_e];
         predecessors[starting_edge[target_e]] = starting_edge[target_e];
 
@@ -205,16 +205,16 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, const nt::Mode
         if (starting_edge.distances[source_e] < 0.01) {
             predecessors[starting_edge[target_e]] = starting_edge[source_e];
             auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).first;
-            distances[starting_edge[target_e]] = {geo_ref.graph[e].duration};
+            distances[starting_edge[target_e]] = cost{geo_ref.graph[e].duration};
         } else if (starting_edge.distances[target_e] < 0.01) {
             predecessors[starting_edge[source_e]] = starting_edge[target_e];
             auto edge_pair = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph);
             if (edge_pair.second) {
-                distances[starting_edge[source_e]] = {geo_ref.graph[edge_pair.first].duration};
+                distances[starting_edge[source_e]] = cost{geo_ref.graph[edge_pair.first].duration};
             } else {
                 // since we reverse the edge (from target to source) the edge might not exists
                 // (for one way street for example). we thus forbid to start from the source
-                distances[starting_edge[source_e]] = {bt::pos_infin};
+                distances[starting_edge[source_e]] = cost{bt::pos_infin};
             }
         }
     }

@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
 
     BOOST_CHECK_EQUAL(dur / 2, 5_s);
 
-    BOOST_CHECK_EQUAL(comb({dur}, b.get("a", "b")).duration, navitia::seconds(10+60/2));
+    BOOST_CHECK_EQUAL(comb(cost{dur}, b.get("a", "b")).duration, navitia::seconds(10+60/2));
 }
 
 BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
@@ -993,7 +993,7 @@ BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
 
     BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
 
-    BOOST_CHECK_EQUAL(comb({dur}, b.get("a", "b")).duration, 130_s);
+    BOOST_CHECK_EQUAL(comb(cost{dur}, b.get("a", "b")).duration, 130_s);
 }
 
 //test allowed mode creation
