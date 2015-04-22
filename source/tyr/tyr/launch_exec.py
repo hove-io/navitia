@@ -34,6 +34,9 @@ import subprocess
 import os
 import select
 import re
+import fcntl
+import errno
+
 
 class LogLine(object):
     def __init__(self, line):
@@ -62,6 +65,23 @@ def parse_log(buff):
         buff = line#we put back the last unterminated line in the buffer
     return (logs, buff)
 
+
+#from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
+def make_async(fd):
+    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+
+
+# Helper function to read some data from a file descriptor, ignoring EAGAIN errors
+# (those errors mean that there are no data available for the moment)
+def read_async(fd):
+    try:
+        return fd.read()
+    except IOError, e:
+        if e.errno != errno.EAGAIN:
+            raise e
+        else:
+            return ''
+
 def launch_exec(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
     log = 'Launching ' + exec_name + ' ' + ' '.join(args)
@@ -69,25 +89,27 @@ def launch_exec(exec_name, args, logger):
     logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
 
     args.insert(0, exec_name)
-    fdr, fdw = os.pipe()
+
+    proc = subprocess.Popen(args,
+                            stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            close_fds=True)
     try:
-        proc = subprocess.Popen(args, stderr=fdw,
-                         stdout=fdw, close_fds=True)
-        poller = select.poll()
-        poller.register(fdr)
-        line = ''
+        make_async(proc.stderr)
+        make_async(proc.stdout)
         while True:
-            if poller.poll(1000):
-                line += os.read(fdr, 1000)
-                logs, line = parse_log(line)
+            select.select([proc.stdout, proc.stderr], [], [])
+
+            for pipe in proc.stdout, proc.stderr:
+                log_pipe = read_async(pipe)
+                logs, line = parse_log(log_pipe)
                 for l in logs:
                     logger.log(l.level, l.msg)
+
             if proc.poll() is not None:
                 break
-
     finally:
-        os.close(fdr)
-        os.close(fdw)
-
+        proc.stdout.close()
+        proc.stderr.close()
 
     return proc.returncode
