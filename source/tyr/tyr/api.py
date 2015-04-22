@@ -53,6 +53,7 @@ api.add_resource(resources.Authorization,
 
 api.add_resource(resources.Index, '/')
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint='jobs')
+api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint='end_points')
 
 
 

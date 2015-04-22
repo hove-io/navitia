@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import abort, current_app, url_for
+from flask import abort, current_app, url_for, request
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
@@ -51,6 +51,11 @@ class FieldDate(fields.Raw):
         else:
             return 'null'
 
+end_point_fields = {'id': fields.Raw,
+                    'name': fields.Raw,
+                    'default': fields.Raw,
+                    'hostnames': fields.List(fields.String),
+                   }
 
 key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
@@ -84,6 +89,7 @@ user_fields = {'id': fields.Raw,
                'login': fields.Raw,
                'email': fields.Raw,
                'type': fields.Raw(),
+                'end_point': fields.Nested(end_point_fields),
             }
 user_fields_full = {'id': fields.Raw,
                     'login': fields.Raw,
@@ -92,7 +98,8 @@ user_fields_full = {'id': fields.Raw,
                     'keys': fields.List(fields.Nested(key_fields)),
                     'authorizations': fields.List(fields.Nested(
                         {'instance': fields.Nested(instance_fields),
-                         'api': fields.Nested(api_fields)}))
+                         'api': fields.Nested(api_fields)})),
+                    'end_point': fields.Nested(end_point_fields),
                 }
 
 jobs_fields = {'jobs': fields.List(fields.Nested({
@@ -264,6 +271,7 @@ class User(flask_restful.Resource):
                     case_sensitive=False, help='email')
             parser.add_argument('key', type=unicode, required=False,
                     case_sensitive=False, help='key')
+            parser.add_argument('end_point_id', type=int)
             args = parser.parse_args()
 
             if args['key']:
@@ -287,6 +295,8 @@ class User(flask_restful.Resource):
                 case_sensitive=False, help='login is required', location=('json', 'values'))
         parser.add_argument('email', type=unicode, required=True,
                 case_sensitive=False, help='email is required', location=('json', 'values'))
+        parser.add_argument('end_point_id', type=int, required=False,
+                            help='id of the end_point', location=('json', 'values'))
         parser.add_argument('type', type=str, required=False, default='with_free_instances',
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
@@ -298,9 +308,16 @@ class User(flask_restful.Resource):
                           verify=current_app.config['EMAIL_CHECK_SMTP']):
             return ({'error': 'email invalid'}, 400)
 
+        end_point = None
+        if args['end_point_id']:
+            end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        else:
+            end_point = models.EndPoint.get_default()
+
         try:
             user = models.User(login=args['login'], email=args['email'])
             user.type = args['type']
+            user.end_point = end_point
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
@@ -318,6 +335,8 @@ class User(flask_restful.Resource):
         parser.add_argument('type', type=str, required=False, default=user.type, location=('json', 'values'),
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
+        parser.add_argument('end_point_id', type=int, default=user.end_point_id,
+                            help='id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -325,9 +344,12 @@ class User(flask_restful.Resource):
                           verify=current_app.config['EMAIL_CHECK_SMTP']):
             return ({'error': 'email invalid'}, 400)
 
+        end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+
         try:
             user.email = args['email']
             user.type = args['type']
+            user.end_point = end_point
             db.session.commit()
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
@@ -464,3 +486,64 @@ class Authorization(flask_restful.Resource):
             logging.exception("fail")
             raise
         return marshal(user, user_fields_full)
+
+class EndPoint(flask_restful.Resource):
+
+    @marshal_with(end_point_fields)
+    def get(self):
+        return models.EndPoint.query.all()
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=True,
+                            help='name of the endpoint', location=('json'))
+        args = parser.parse_args()
+
+        try:
+            end_point = models.EndPoint()
+            end_point.name = args['name']
+            if 'hostnames' in request.json:
+                for host in request.json['hostnames']:
+                    end_point.hosts.append(models.Host(host))
+
+            db.session.add(end_point)
+            db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+            return ({'error': str(e)}, 409)
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(end_point, end_point_fields)
+
+    def put(self, id):
+        end_point = models.EndPoint.query.get_or_404(id)
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, default=end_point.name,
+                            help='name of the endpoint', location=('json'))
+        args = parser.parse_args()
+
+        try:
+            end_point.name = args['name']
+            if 'hostnames' in request.json:
+                end_point.hosts = []
+                for host in request.json['hostnames']:
+                    end_point.hosts.append(models.Host(host))
+
+            db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+            return ({'error': str(e)}, 409)
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(end_point, end_point_fields)
+
+    @marshal_with(user_fields_full)
+    def delete(self, id):
+        end_point = models.EndPoint.query.get_or_404(id)
+        try:
+            db.session.delete(end_point)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return ({}, 204)
