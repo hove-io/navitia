@@ -342,8 +342,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     vp->days &= vj->validity_pattern->days;
                 }
 
-                for(size_t i=0;i<item.stop_points.size();++i) {
+                const size_t nb_sps = item.stop_points.size();
+                for (size_t i = 0; i < nb_sps; ++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
+                        continue;
+                    }
+                    // skipping estimated stop points
+                    if (i != 0 && i != nb_sps - 1 && item.stop_times[i]->date_time_estimated()) {
                         continue;
                     }
                     pbnavitia::StopDateTime* stop_time = pb_section->add_stop_date_times();
