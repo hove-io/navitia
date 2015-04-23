@@ -73,14 +73,36 @@ static void fill_shape(pbnavitia::Section* pb_section,
 {
     if (stop_times.empty()) return;
 
-    type::GeographicalCoord last_coord;
+    type::GeographicalCoord last_coord = stop_times.front()->journey_pattern_point->stop_point->coord;
+    add_coord(last_coord, pb_section);
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
         for (const auto& cur_coord: (*it)->journey_pattern_point->shape_from_prev) {
             if (cur_coord == last_coord) continue;
             add_coord(cur_coord, pb_section);
             last_coord = cur_coord;
         }
+        const auto& sp_coord = (*it)->journey_pattern_point->stop_point->coord;
+        if (sp_coord != last_coord) {
+            add_coord(sp_coord, pb_section);
+            last_coord = sp_coord;
+        }
     }
+}
+
+static void set_length(pbnavitia::Section* pb_section) {
+    type::GeographicalCoord prev_geo;
+    if (pb_section->shape_size() > 0) {
+        const auto& first_coord = pb_section->shape(0);
+        prev_geo = type::GeographicalCoord(first_coord.lon(), first_coord.lat());
+    }
+    double length = 0;
+    for (int i = 1; i < pb_section->shape_size(); ++i) {
+        const auto& cur_coord = pb_section->shape(i);
+        const auto cur_geo = type::GeographicalCoord(cur_coord.lon(), cur_coord.lat());
+        length += prev_geo.distance_to(cur_geo);
+        prev_geo = cur_geo;
+    }
+    pb_section->set_length(length);
 }
 
 static void
@@ -142,12 +164,13 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
 
     fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
-    if (!stop_times.front()->odt()) {
-        fill_shape(pb_section, stop_times);
-    } else {
+    if (stop_times.front()->date_time_estimated() || stop_times.back()->date_time_estimated()) {
         add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
         add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
+   } else {
+        fill_shape(pb_section, stop_times);
     }
+    set_length(pb_section);
     fill_co2_emission(pb_section, d, vj);
 }
 
@@ -333,7 +356,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
-                int length = 0;
 
                 if (!vp) {
                     vp = *vj->validity_pattern;
@@ -368,12 +390,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         departure_ptime = p_deptime;
                     // L'heure d'arrivée au dernier stop point
                     arrival_ptime = p_arrtime;
-                    if(i > 0) {
-                        const auto & previous_coord = item.stop_points[i-1]->coord;
-                        const auto & current_coord = item.stop_points[i]->coord;
-                        length += previous_coord.distance_to(current_coord);
-                    }
-
                 }
                 if (! item.stop_points.empty()) {
                     //some time there is only one stop points, typically in case of "extension of services"
@@ -406,7 +422,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     }
 
                 }
-                pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
                 fill_section(pb_section, vj, item.stop_times, d, now, action_period);
 

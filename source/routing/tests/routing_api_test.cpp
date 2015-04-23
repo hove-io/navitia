@@ -859,14 +859,14 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     // Tram mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tram");
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
 
     // Walk mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
 
     // Second Journey
@@ -1012,7 +1012,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     // Tram mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).pt_display_informations().physical_mode(), "Tram");
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().unit(), "gEC");
     // Walk mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(4).has_co2_emission(), false);
@@ -1025,7 +1025,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().unit(), "gEC");
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.48 + 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.58 + 32.568);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
 }
 
