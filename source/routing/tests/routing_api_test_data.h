@@ -425,7 +425,7 @@ struct routing_api_data {
                 .st_shape({A, K, J});
             auto jp_d = builder_vj.vj->journey_pattern;
             jp_d->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
-            assert (jp_d->physical_mode.name == "Metro");
+            assert (jp_d->physical_mode->name == "Metro");
             jp_d->physical_mode->journey_pattern_list.push_back(jp_d);
         }
 
