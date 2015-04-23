@@ -7,6 +7,8 @@ import sys
 
 from stat_persistor.daemon import StatPersistor
 import argparse
+import logging
+from exceptions import KeyboardInterrupt
 
 
 def main():
@@ -23,8 +25,14 @@ def main():
     except argparse.ArgumentTypeError:
         print("Bad usage, learn how to use me with %s -h" % sys.argv[0])
         sys.exit(1)
-    daemon = StatPersistor(config_file)
-    daemon.run()
+    try:
+        daemon = StatPersistor(config_file)
+        daemon.run()
+    except KeyboardInterrupt:
+        pass
+    except:
+        logging.exception('fatal error')
+        sys.exit(2)
 
     sys.exit(0)
 
