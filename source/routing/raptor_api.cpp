@@ -731,7 +731,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
         auto it_admin = data.geo_ref->admin_map.find(ep.uri);
         if (it_admin == data.geo_ref->admin_map.end()) {
-            LOG4CPLUS_ERROR(logger, "impossible to find admin " << ep.uri);
+            LOG4CPLUS_WARN(logger, "impossible to find admin " << ep.uri);
             return result;
         }
         const auto admin = data.geo_ref->admins[it_admin->second];
@@ -752,7 +752,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 result.push_back({SpIdx(elt.first), elt.second});
             }
         }
-        LOG4CPLUS_ERROR(logger, result.size() << " sp found for admin");
+        LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
     }
 
     return result;

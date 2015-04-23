@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from flask import request
+from werkzeug.exceptions import HTTPException
 import logging
 
 
@@ -110,15 +111,13 @@ class TechnicalError(Exception):
 
 
 def log_exception(sender, exception, **extra):
+    logger = logging.getLogger(__name__)
     message = ""
     if hasattr(exception, "data") and "message" in exception.data:
         message = exception.data['message']
     error = exception.__class__.__name__ + " " + message + " " + request.url
 
-    if hasattr(exception, "data"):
-        # if an exception is thrown with 'brief_log', we just log it in one line in debug
-        if 'brief_log' in exception.data:
-            logging.debug(error)
-            return
-
-    logging.exception(error)
+    if isinstance(exception, (HTTPException, RegionNotFound)):
+        logger.debug(error)
+    else:
+        logger.exception(error)

@@ -90,7 +90,8 @@ class Instance(object):
             return g.scenario
 
         if override_scenario:
-            logging.debug('overriding the scenario for %s with %s', self.name, override_scenario)
+            logger = logging.getLogger(__name__)
+            logger.debug('overriding the scenario for %s with %s', self.name, override_scenario)
             try:
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
@@ -250,7 +251,8 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logging.error("request: " + str(request) + " failed " + self.socket_path)
+                    logger = logging.getLogger(__name__)
+                    logger.error('request on %s failed: %s', self.socket_path, str(request))
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):

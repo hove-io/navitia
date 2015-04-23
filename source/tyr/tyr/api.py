@@ -60,6 +60,6 @@ api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>
 @app.errorhandler(Exception)
 def error_handler(exception):
     """
-    se charge de générer la réponse d'erreur au bon format
+    log exception
     """
     app.logger.exception('')
