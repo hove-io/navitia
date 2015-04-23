@@ -86,6 +86,8 @@ class Uri(ResourceUri):
                                             " Note: it will mainly change the disruptions that concern the object"
                                             " The timezone should be specified in the format,"
                                             " else we consider it as UTC")
+        parser.add_argument("distance", type=int, default=200,
+                                description="Distance range of the query. Used only if a coord is in the query")
 
         if is_collection:
             parser.add_argument("filter", type=str, default="",
@@ -134,7 +136,7 @@ class Uri(ResourceUri):
             uris = uri.split("/")
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
-            args["filter"] = self.get_filter(uris)
+            args["filter"] = self.get_filter(uris, args)
         #else:
         #    abort(503, message="Not implemented")
         response = i_manager.dispatch(args, collection,
