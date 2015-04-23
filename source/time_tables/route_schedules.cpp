@@ -249,13 +249,10 @@ route_schedule(const std::string& filter,
                     fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
                     is_vj_set[j] = true;
                 }
-                if(interface_version == 1) {
-                    auto pb_dt = row->add_date_times();
-                    fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
-                                   now, action_period, dt_stop_time.first);
-                } else if(interface_version == 0) {
-                    row->add_stop_times(navitia::iso_string(dt_stop_time.first, d));
-                }
+
+                auto pb_dt = row->add_date_times();
+                fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
+                               now, action_period, dt_stop_time.first);
             }
         }
         fill_pb_object(route->shape, schedule->mutable_geojson());
