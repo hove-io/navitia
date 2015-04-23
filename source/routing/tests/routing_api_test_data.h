@@ -414,6 +414,19 @@ struct routing_api_data {
                 ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
                 ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
                 .st_shape({A, I, B});
+
+            //we add another stop not used in the routing tests, but used for ptref tests
+
+            b.sa("stopC", J.lon(), J.lat());
+            //and we add some one vj from a to D with a metro
+            auto& builder_vj = b.vj("D")
+                ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
+                ("stop_point:stopC", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+                .st_shape({A, K, J});
+            auto jp_d = builder_vj.vj->journey_pattern;
+            jp_d->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
+            assert (jp_d->physical_mode.name == "Metro");
+            jp_d->physical_mode->journey_pattern_list.push_back(jp_d);
         }
 
         b.finish();
