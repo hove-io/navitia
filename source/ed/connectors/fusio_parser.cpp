@@ -36,9 +36,15 @@ namespace ed { namespace connectors {
 
 void AgencyFusioHandler::init(Data& data) {
     AgencyGtfsHandler::init(data);
+    if (id_c == -1) { id_c = csv.get_pos_col("network_id"); }
+    if (name_c == -1) { name_c = csv.get_pos_col("network_name"); }
+    if (time_zone_c == -1) { time_zone_c = csv.get_pos_col("network_timezone"); }
     ext_code_c = csv.get_pos_col("external_code");
+    if (ext_code_c == -1) { ext_code_c = csv.get_pos_col("network_external_code"); }
     sort_c = csv.get_pos_col("agency_sort");
+    if (sort_c == -1) { sort_c = csv.get_pos_col("network_sort"); }
     agency_url_c = csv.get_pos_col("agency_url");
+    if (agency_url_c == -1) { agency_url_c = csv.get_pos_col("network_url"); }
 }
 
 void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -1145,9 +1151,14 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 
 void FusioParser::parse_files(Data& data) {
     parse<GeometriesFusioHandler>(data, "geometries.txt");
-    parse<AgencyFusioHandler>(data, "agency.txt", true);
+
+    // TODO: we need at least one of agency.txt or networks.txt
+    parse<AgencyFusioHandler>(data, "agency.txt");
+    parse<AgencyFusioHandler>(data, "networks.txt");
+
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");
+    parse<CompanyFusioHandler>(data, "companies.txt");
     parse<PhysicalModeFusioHandler>(data, "physical_modes.txt");
     parse<CommercialModeFusioHandler>(data, "commercial_modes.txt");
     parse<CommentFusioHandler>(data, "comments.txt");

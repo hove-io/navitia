@@ -31,9 +31,6 @@ www.navitia.io
 #pragma once
 #include "ed/data.h"
 #include <boost/unordered_map.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
 #include <queue>
 #include "utils/csv.h"
 #include "utils/logger.h"
