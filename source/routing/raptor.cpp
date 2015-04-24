@@ -35,7 +35,6 @@ www.navitia.io
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/fill.hpp>
-#include "raptor_solution_filter.h"
 
 namespace bt = boost::posix_time;
 
@@ -313,7 +312,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
 
     std::vector<Path> result;
     for (const auto& s: solutions) { result.push_back(make_path(s, data)); }
-    return filter_journeys(result);
+    return result;
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>

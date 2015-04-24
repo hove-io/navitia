@@ -88,6 +88,17 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     return {nullptr, 0};
 }
 
+bool is_valid(const Journey& j) {
+    // We don't want journeys with a transfert between 2 estimated stop times.
+    for (auto it_prev = j.sections.begin(), it = it_prev++; it != j.sections.end(); it = it_prev++) {
+        if (it_prev->get_out_st->date_time_estimated() && it->get_in_st->date_time_estimated()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // align every section to left, ie take the first vj of a jp, as
 // opposed to wait to another one.
 template<typename Visitor>
@@ -322,6 +333,7 @@ struct RaptorSolutionReader {
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j = make_journey(path, *this);
+        if (! is_valid(j)) { return; }
         ++nb_sol_added;
         solutions.add(std::move(j));
         if (nb_sol_added > 1000) {
