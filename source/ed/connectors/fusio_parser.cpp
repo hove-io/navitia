@@ -342,6 +342,10 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     std::vector<ed::types::VehicleJourney*> res;
 
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
+    // Store the meta vj with its external code, only if this code exists
+    if(is_valid(ext_code_c, row)){
+        gtfs_data.metavj_by_external_code.insert({row[ext_code_c], &meta_vj});
+    }
 
     // get shape if possible
     const std::string &shape_id = has_col(geometry_id_c, row) ? row.at(geometry_id_c) : "";
@@ -978,6 +982,83 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
     }
     cal->second->line_list.push_back(it->second);
 }
+
+void CalendarTripFusioHandler::init(Data&){
+    calendar_c = csv.get_pos_col("calendar_id");
+    trip_c = csv.get_pos_col("trip_external_code");
+}
+
+void CalendarTripFusioHandler::handle_line(Data& data, const csv_row& row, bool){
+    if(!has_col(calendar_c, row) || !(has_col(trip_c, row))) {
+        LOG4CPLUS_FATAL(logger, "CalendarTripFusioHandler: Error while reading " + csv.filename +
+                        " file has no calendar_id or trip_external_code column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    if (cal == gtfs_data.calendars_map.end()) {
+        LOG4CPLUS_ERROR(logger, "CalendarTripFusioHandler: Impossible to find the calendar " << row[calendar_c]);
+        return;
+    }
+
+    auto meta_vj = gtfs_data.metavj_by_external_code.find(row[trip_c]);
+    if (meta_vj == gtfs_data.metavj_by_external_code.end()) {
+        LOG4CPLUS_ERROR(logger, "CalendarTripFusioHandler: Impossible to find the trip " << row[trip_c]);
+        return;
+    }
+    auto associated_cal = new ed::types::AssociatedCalendar();
+    associated_cal->idx = data.associated_calendars.size();
+    data.associated_calendars.push_back(associated_cal);
+    associated_cal->calendar = cal->second;
+    meta_vj->second->associated_calendars.insert({cal->second->uri, associated_cal});
+}
+
+void GridCalendarTripExceptionDatesFusioHandler::init(Data &){
+    calendar_c = csv.get_pos_col("calendar_id");
+    trip_c = csv.get_pos_col("trip_external_code");
+    date_c = csv.get_pos_col("date");
+    type_c = csv.get_pos_col("type");
+}
+
+void GridCalendarTripExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool){
+    if(!has_col(calendar_c, row) || !(has_col(trip_c, row))) {
+        LOG4CPLUS_FATAL(logger, "GridCalendarTripExceptionDatesFusioHandler: Error while reading " + csv.filename +
+                        " file has no calendar_id or trip_external_code column");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    if(cal == gtfs_data.calendars_map.end()) {
+        LOG4CPLUS_WARN(logger, "GridCalendarTripExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        return;
+    }
+    if(!has_col(type_c, row)) {
+        LOG4CPLUS_WARN(logger, "GridCalendarTripExceptionDatesFusioHandler: No column type for calendar " << row[calendar_c]);
+        return;
+    }
+    if(row[type_c] != "0" && row[type_c] != "1") {
+        LOG4CPLUS_WARN(logger, "GridCalendarTripExceptionDatesFusioHandler : Unknown type " << row[type_c]);
+        return;
+    }
+    if(!has_col(date_c, row)) {
+        LOG4CPLUS_WARN(logger, "GridCalendarTripExceptionDatesFusioHandler: No column datetime for calendar " << row[calendar_c]);
+        return;
+    }
+    auto meta_vj = gtfs_data.metavj_by_external_code.find(row[trip_c]);
+    if (meta_vj == gtfs_data.metavj_by_external_code.end()) {
+        LOG4CPLUS_ERROR(logger, "CalendarTripFusioHandler: Impossible to find the trip " << row[trip_c]);
+        return;
+    }
+    boost::gregorian::date date(parse_date(row[date_c]));
+    if(date.is_not_a_date()) {
+        LOG4CPLUS_ERROR(logger, "GridCalendarTripExceptionDatesFusioHandler: Date format not valid, we do not add the exception " <<
+                       row[type_c] << " for " << row[calendar_c]);
+        return;
+    }
+    navitia::type::ExceptionDate exception_date;
+    exception_date.date = date;
+    exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(boost::lexical_cast<int>(row[type_c]));
+    meta_vj->second->associated_calendars[cal->second->uri]->exceptions.push_back(exception_date);
+}
 }
 
 void AdminStopAreaFusioHandler::init(Data&){
@@ -1066,6 +1147,8 @@ void FusioParser::parse_files(Data& data) {
     parse<grid_calendar::PeriodFusioHandler>(data, "grid_periods.txt");
     parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");
     parse<grid_calendar::CalendarLineFusioHandler>(data, "grid_rel_calendar_line.txt");
+    parse<grid_calendar::CalendarTripFusioHandler>(data, "grid_rel_calendar_trip.txt");
+    parse<grid_calendar::GridCalendarTripExceptionDatesFusioHandler>(data, "grid_calendar_trip_exception_dates.txt");
     parse<AdminStopAreaFusioHandler>(data, "admin_stations.txt");
 }
 }

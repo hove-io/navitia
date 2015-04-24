@@ -674,11 +674,18 @@ void Data::build_associated_calendar() {
     std::multimap<types::ValidityPattern, types::AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
+    size_t nb_ignored(0);
 
     for(auto meta_vj_pair : meta_vj_map) {
         auto& meta_vj = meta_vj_map[meta_vj_pair.first]; //meta_vj_pair.second;
 
         assert (! meta_vj.theoric_vj.empty());
+
+        if(!meta_vj.associated_calendars.empty()) {
+            LOG4CPLUS_TRACE(log, "The meta_vj " << meta_vj_pair.first << " was already linked to a grid_calendar");
+            nb_ignored++;
+            continue;
+        }
 
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
@@ -754,6 +761,9 @@ void Data::build_associated_calendar() {
     LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
     if (nb_not_matched_vj) {
         LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+    }
+    if (nb_ignored) {
+        LOG4CPLUS_WARN(log, nb_ignored << " vehicle journey were already linked and therefore ignored" );
     }
 }
 
