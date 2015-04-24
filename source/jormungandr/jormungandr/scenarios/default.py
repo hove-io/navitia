@@ -38,7 +38,8 @@ from datetime import datetime, timedelta
 import itertools
 from flask import current_app
 import time
-from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter
+from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter, \
+    change_ids, updated_request_with_default
 from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
@@ -47,34 +48,6 @@ from jormungandr.scenarios.helpers import select_best_journey_by_time, select_be
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
 class Scenario(simple.Scenario):
-
-    def _updated_request_with_default(self, request, instance):
-        if not request['max_walking_duration_to_pt']:
-            request['max_walking_duration_to_pt'] = instance.max_walking_duration_to_pt
-
-        if not request['max_bike_duration_to_pt']:
-            request['max_bike_duration_to_pt'] = instance.max_bike_duration_to_pt
-
-        if not request['max_bss_duration_to_pt']:
-            request['max_bss_duration_to_pt'] = instance.max_bss_duration_to_pt
-
-        if not request['max_car_duration_to_pt']:
-            request['max_car_duration_to_pt'] = instance.max_car_duration_to_pt
-
-        if not request['max_transfers']:
-            request['max_transfers'] = instance.max_nb_transfers
-
-        if not request['walking_speed']:
-            request['walking_speed'] = instance.walking_speed
-
-        if not request['bike_speed']:
-            request['bike_speed'] = instance.bike_speed
-
-        if not request['bss_speed']:
-            request['bss_speed'] = instance.bss_speed
-
-        if not request['car_speed']:
-            request['car_speed'] = instance.car_speed
 
     def parse_journey_request(self, requested_type, request):
         """Parse the request dict and create the protobuf version"""
@@ -144,6 +117,14 @@ class Scenario(simple.Scenario):
                 req.journeys.forbidden_uris.append(forbidden_uri)
         if not "type" in request:
             request["type"] = "all" #why ?
+
+        #for the default scenario, we filter the walking if we have walking + bss
+
+        # Technically, bss mode enable walking (if it is better than bss)
+        # so if the user ask for walking and bss, we only keep bss
+        for fallback_modes in self.origin_modes, self.destination_modes:
+            if 'walking' in fallback_modes and 'bss' in fallback_modes:
+                fallback_modes.remove('walking')
 
         return req
 
@@ -370,7 +351,7 @@ class Scenario(simple.Scenario):
         #since it's not the first call to kraken, some kraken's id
         #might not be uniq anymore
         logger = logging.getLogger(__name__)
-        self.change_ids(new_response, len(initial_response.journeys))
+        change_ids(new_response, len(initial_response.journeys))
         if len(new_response.journeys) == 0:
             return
 
@@ -394,22 +375,6 @@ class Scenario(simple.Scenario):
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
         initial_response.tickets.extend([t for t in new_response.tickets if t.id in tickets_to_add])
-
-    @staticmethod
-    def change_ids(new_journeys, journey_count):
-        #we need to change the fare id, the section id and the fare ref in the journey
-        for ticket in new_journeys.tickets:
-            ticket.id = ticket.id + '_' + str(journey_count)
-            for i in range(len(ticket.section_id)):
-                ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
-
-        for new_journey in new_journeys.journeys:
-            for i in range(len(new_journey.fare.ticket_id)):
-                new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                                + '_' + str(journey_count)
-
-            for section in new_journey.sections:
-                section.id = section.id + '_' + str(journey_count)
 
     def delete_journeys(self, resp, request, final_filter):
         """
@@ -474,7 +439,7 @@ class Scenario(simple.Scenario):
             resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
     def __on_journeys(self, requested_type, request, instance):
-        self._updated_request_with_default(request, instance)
+        updated_request_with_default(request, instance)
         req = self.parse_journey_request(requested_type, request)
 
         # call to kraken
