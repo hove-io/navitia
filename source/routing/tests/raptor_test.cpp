@@ -1438,8 +1438,10 @@ BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
-    for (auto vj : b.data->pt_data->vehicle_journeys) {
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
+    for (auto* vj: b.data->pt_data->vehicle_journeys) {
+        for (auto& st: vj->stop_time_list) {
+            st.set_date_time_estimated(true);
+        }
     }
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -1456,8 +1458,10 @@ BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
 BOOST_AUTO_TEST_CASE(simple_odt){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250)("stop4", 8500, 8650);
-    for (auto vj : b.data->pt_data->vehicle_journeys) {
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
+    for (auto* vj: b.data->pt_data->vehicle_journeys) {
+        for (auto& st: vj->stop_time_list) {
+            st.set_date_time_estimated(true);
+        }
     }
     b.data->pt_data->index();
     b.data->build_raptor();

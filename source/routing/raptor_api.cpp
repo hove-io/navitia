@@ -71,21 +71,27 @@ static void add_coord(const type::GeographicalCoord& coord, pbnavitia::Section* 
 static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
-    if (stop_times.empty()) return;
+    if (stop_times.empty()) { return; }
 
-    type::GeographicalCoord last_coord = stop_times.front()->journey_pattern_point->stop_point->coord;
-    add_coord(last_coord, pb_section);
+    type::GeographicalCoord prev_coord = stop_times.front()->journey_pattern_point->stop_point->coord;
+    add_coord(prev_coord, pb_section);
+    auto prev_order = stop_times.front()->journey_pattern_point->order;
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
-        for (const auto& cur_coord: (*it)->journey_pattern_point->shape_from_prev) {
-            if (cur_coord == last_coord) continue;
-            add_coord(cur_coord, pb_section);
-            last_coord = cur_coord;
+        const auto* jpp = (*it)->journey_pattern_point;
+        const auto cur_order = jpp->order;
+        if (prev_order + 1 == cur_order) {
+            for (const auto& cur_coord: jpp->shape_from_prev) {
+                if (cur_coord == prev_coord) { continue; }
+                add_coord(cur_coord, pb_section);
+                prev_coord = cur_coord;
+            }
         }
-        const auto& sp_coord = (*it)->journey_pattern_point->stop_point->coord;
-        if (sp_coord != last_coord) {
+        const auto& sp_coord = jpp->stop_point->coord;
+        if (sp_coord != prev_coord) {
             add_coord(sp_coord, pb_section);
-            last_coord = sp_coord;
+            prev_coord = sp_coord;
         }
+        prev_order = cur_order;
     }
 }
 
@@ -164,12 +170,7 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
 
     fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
-    if (stop_times.front()->date_time_estimated() || stop_times.back()->date_time_estimated()) {
-        add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
-        add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
-   } else {
-        fill_shape(pb_section, stop_times);
-    }
+    fill_shape(pb_section, stop_times);
     set_length(pb_section);
     fill_co2_emission(pb_section, d, vj);
 }

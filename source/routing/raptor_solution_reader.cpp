@@ -90,7 +90,7 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
 
 bool is_valid(const Journey& j) {
     // We don't want journeys with a transfert between 2 estimated stop times.
-    for (auto it_prev = j.sections.begin(), it = it_prev++; it != j.sections.end(); it = it_prev++) {
+    for (auto it = j.sections.begin(), it_prev = it++; it != j.sections.end(); it_prev = it++) {
         if (it_prev->get_out_st->date_time_estimated() && it->get_in_st->date_time_estimated()) {
             return false;
         }
@@ -637,10 +637,9 @@ Path make_path(const Journey& journey, const type::Data& data) {
             path.items.emplace_back(ItemType::public_transport);
             auto& item = path.items.back();
             for (const auto& st_dt: vj_section.stop_times_and_dt) {
-                // for odt (all but virtual_with_stop_time) we want to
-                // hide the intermediate stops since they are not relevant
-                if (vj_section.vj->is_odt()
-                        && vj_section.vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time
+                // We don't want to show estimated intermediate stops
+                // since they are not relevant
+                if (st_dt.st.date_time_estimated()
                         && &st_dt.st != &vj_section.stop_times_and_dt.front().st
                         && &st_dt.st != &vj_section.stop_times_and_dt.back().st) {
                         continue;
