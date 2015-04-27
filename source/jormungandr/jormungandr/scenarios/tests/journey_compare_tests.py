@@ -26,8 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.scenarios import journey_filter
+from jormungandr.scenarios.journey_filter import journeys_gen
 import navitiacommon.response_pb2 as response_pb2
-from ..default import Scenario, are_equals
+from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
 from nose.tools import eq_
 
@@ -290,3 +292,61 @@ def journeys_equality_test_almost_same_journeys():
     modified_section.transfer_type = response_pb2.stay_in
 
     assert are_equals(journey1, journey2)
+
+
+def similar_journeys_test():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    journey2 = responses[0].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[0].uris.vehicle_journey = 'bob'
+
+    new_list = journey_filter.filter_journeys(responses)
+
+    assert journey2 not in journeys_gen(new_list)
+
+
+def similar_journeys_test2():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bob'
+
+    new_list = journey_filter.filter_journeys(responses)
+
+    print new_list
+
+    assert journey2 not in journeys_gen(new_list)
+
+
+def similar_journeys_test3():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bobette'
+
+    new_list = journey_filter.filter_journeys(responses)
+
+    assert journey2 in journeys_gen(new_list)

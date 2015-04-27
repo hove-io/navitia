@@ -26,11 +26,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from copy import deepcopy
 import itertools
 import logging
 from flask.ext.restful import abort
-from jormungandr.scenarios import simple
+from jormungandr.scenarios import simple, journey_filter
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default
 from navitiacommon import type_pb2, response_pb2, request_pb2
 
@@ -139,6 +140,9 @@ def call_kraken(request_type, request, instance, krakens_call):
     
     return the list of all responses
     """
+    #TODO: handle min_alternative_journeys
+    #TODO: call first bss|bss and do not call walking|walking if no bss in first results
+
     resp = []
     logger = logging.getLogger(__name__)
     for dep_mode, arr_mode in krakens_call:
@@ -203,11 +207,6 @@ def nb_journeys(responses):
     return sum(len(r.journeys) for r in responses)
 
 
-def filter_journeys(responses):
-    print 'todo'
-    return responses
-
-
 def merge_responses(responses):
     """
     Merge all responses in one protobuf response
@@ -231,9 +230,11 @@ def merge_responses(responses):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-        errors = {e.id: e for r in responses for e in r.errors if r.HasField('errors')}
+
+        errors = {r.error.id: r.error for r in responses if r.HasField('error')}
         if len(errors) == 1:
-            merged_response.error = next(errors.itervalues())
+            merged_response.error.id = next(errors.itervalues()).id
+            merged_response.error.message = next(errors.itervalues()).message
         else:
             # we need to merge the errors
             merged_response.error.id = response_pb2.Error.no_solution
@@ -266,7 +267,7 @@ class Scenario(simple.Scenario):
                 break
             
             #we filter unwanted journeys by side effects
-            filter_journeys(responses)
+            journey_filter.filter_journeys(responses, args=request)
 
             if last_nb_journeys == new_nb_journeys:
                 #we are stuck with the same number of journeys, we stops
