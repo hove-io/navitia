@@ -283,6 +283,22 @@ struct CalendarLineFusioHandler : public GenericHandler {
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"calendar_id", "line_external_code"}; }
 };
+
+struct CalendarTripFusioHandler : public GenericHandler {
+    CalendarTripFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int calendar_c, trip_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"calendar_id", "trip_external_code"}; }
+};
+
+struct GridCalendarTripExceptionDatesFusioHandler : public GenericHandler {
+    GridCalendarTripExceptionDatesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int calendar_c, trip_c, date_c, type_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"calendar_id", "trip_external_code", "date", "type"}; }
+};
 }
 
 struct AdminStopAreaFusioHandler : public GenericHandler {
