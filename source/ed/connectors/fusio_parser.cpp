@@ -1045,12 +1045,12 @@ void GridCalendarTripExceptionDatesFusioHandler::handle_line(Data&, const csv_ro
     }
     auto meta_vj = gtfs_data.metavj_by_external_code.find(row[trip_c]);
     if (meta_vj == gtfs_data.metavj_by_external_code.end()) {
-        LOG4CPLUS_ERROR(logger, "CalendarTripFusioHandler: Impossible to find the trip " << row[trip_c]);
+        LOG4CPLUS_WARN(logger, "CalendarTripFusioHandler: Impossible to find the trip " << row[trip_c]);
         return;
     }
     boost::gregorian::date date(parse_date(row[date_c]));
     if(date.is_not_a_date()) {
-        LOG4CPLUS_ERROR(logger, "GridCalendarTripExceptionDatesFusioHandler: Date format not valid, we do not add the exception " <<
+        LOG4CPLUS_WARN(logger, "GridCalendarTripExceptionDatesFusioHandler: Date format not valid, we do not add the exception " <<
                        row[type_c] << " for " << row[calendar_c]);
         return;
     }
