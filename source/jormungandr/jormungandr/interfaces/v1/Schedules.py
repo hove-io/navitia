@@ -232,7 +232,9 @@ class StopSchedules(Schedules):
 passage = {
     "route": PbField(route, attribute="vehicle_journey.route"),
     "stop_point": PbField(stop_point),
-    "stop_date_time": PbField(stop_date_time)
+    "stop_date_time": PbField(stop_date_time),
+    "display_informations": PbField(display_informations_vj,
+                                    attribute='pt_display_informations'),
 }
 
 departures = {

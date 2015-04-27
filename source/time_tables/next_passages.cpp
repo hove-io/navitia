@@ -92,6 +92,7 @@ next_passages(const std::string &request,
         fill_pb_object(route, data, m_route, 0, current_datetime, action_period, show_codes);
         fill_pb_object(line, data, m_route->mutable_line(), 0, current_datetime, action_period, show_codes);
         fill_pb_object(physical_mode, data, m_physical_mode, 0, current_datetime, action_period);
+        fill_pb_object(vj, data, passage->mutable_pt_display_informations(), 0, current_datetime, action_period);
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
