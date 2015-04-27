@@ -181,7 +181,7 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('networks/base_network/arrivals?from_datetime=20120614T070000&_current_datetime=20120614T080000')
 
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 1)
+        eq_(len(arrivals), 2)
 
         arrival = arrivals[0]
         disruptions = get_all_disruptions(arrival, response)

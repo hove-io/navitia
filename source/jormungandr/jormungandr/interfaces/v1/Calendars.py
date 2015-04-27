@@ -113,6 +113,8 @@ class Calendars(ResourceUri):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
+        parser_get.add_argument("distance", type=int, default=200,
+                                description="Distance range of the query. Used only if a coord is in the query")
 
     @marshal_with(calendars)
     @ManageError()
@@ -120,14 +122,14 @@ class Calendars(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
 
-        if(id):
+        if id:
             args["filter"] = "calendar.uri=" + id
-        elif(uri):
+        elif uri:
             # Calendars of line
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-            args["filter"] = self.get_filter(uris)
+            args["filter"] = self.get_filter(uris, args)
         else:
             args["filter"] = ""
 

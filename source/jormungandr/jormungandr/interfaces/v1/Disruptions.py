@@ -76,6 +76,8 @@ class TrafficReport(ResourceUri):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
+        parser_get.add_argument("distance", type=int, default=200,
+                                description="Distance range of the query. Used only if a coord is in the query")
 
     @marshal_with(traffic)
     @ManageError()
@@ -88,7 +90,7 @@ class TrafficReport(ResourceUri):
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-            args["filter"] = self.get_filter(uris)
+            args["filter"] = self.get_filter(uris, args)
         else:
             args["filter"] = ""
 

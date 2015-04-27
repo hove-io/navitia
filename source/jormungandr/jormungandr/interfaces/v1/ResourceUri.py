@@ -58,7 +58,7 @@ class ResourceUri(StatedResource):
             #by default ALWAYS use authentication=True
             self.method_decorators.append(authentication_required)
 
-    def get_filter(self, items):
+    def get_filter(self, items, args):
         filter_list = []
         if len(items) % 2 != 0:
             items = items[:-1]
@@ -67,7 +67,7 @@ class ResourceUri(StatedResource):
         for item in items:
             if not type_:
                 if item != "coord":
-                    if(item == "calendars"):
+                    if item == "calendars":
                         type_ = 'calendar'
                     else:
                         type_ = collections_to_resource_type[item]
@@ -79,10 +79,10 @@ class ResourceUri(StatedResource):
                     if len(splitted_coord) == 2:
                         lon, lat = splitted_coord
                         object_type = "stop_point"
-                        if(self.collection == "pois"):
+                        if self.collection == "pois":
                             object_type = "poi"
-                        filter_ = object_type + ".coord DWITHIN(" + lon + ","
-                        filter_ += lat + ",200)"
+                        filter_ = '{obj}.coord DWITHIN({lon},{lat},{distance})'.format(
+                            obj=object_type, lon=lon, lat=lat, distance=args.get('distance', 200))
                         filter_list.append(filter_)
                     else:
                         filter_list.append(type_ + ".uri=" + item)
