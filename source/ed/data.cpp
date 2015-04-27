@@ -763,7 +763,7 @@ void Data::build_associated_calendar() {
         LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
     }
     if (nb_ignored) {
-        LOG4CPLUS_WARN(log, nb_ignored << " vehicle journey were already linked and therefore ignored" );
+        LOG4CPLUS_INFO(log, nb_ignored << " vehicle journey were already linked and therefore ignored" );
     }
 }
 
