@@ -139,6 +139,24 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
 
 }
 
+void EdReader::fill_admins_postal_codes(navitia::type::Data& , pqxx::work& work){
+    std::string request = "select admin_id, postal_code from georef.postal_codes";
+    size_t nb_unknown_admin(0);
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        auto it_admin = admin_map.find(const_it["admin_id"].as<idx_t>());
+        if (it_admin == admin_map.end()) {
+            LOG4CPLUS_TRACE(log, "impossible to find admin " << const_it["admin_id"]
+                    << " for postal code " << const_it["postal_code"]);
+            nb_unknown_admin++;
+            continue;
+        }
+        it_admin->second->postal_codes.push_back(const_it["postal_code"].as<std::string>());
+    }
+    if (nb_unknown_admin) {
+        LOG4CPLUS_WARN(log, nb_unknown_admin << " admin not found for postal codes");
+    }
+}
 
 void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
     std::string request = "SELECT admin_id, stop_area_id from navitia.admin_stop_area";
