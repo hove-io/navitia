@@ -199,6 +199,11 @@ class Instance(object):
         return get_value_or_default('min_car', instance_db, self.name)
 
     @property
+    def bss_additional_cost(self):
+        instance_db = self._get_models()
+        return get_value_or_default('bss_additional_cost', instance_db, self.name)
+
+    @property
     def factor_too_long_journey(self):
         instance_db = self._get_models()
         return get_value_or_default('factor_too_long_journey', instance_db, self.name)

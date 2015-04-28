@@ -62,6 +62,8 @@ min_tc_with_bike = 5*60
 
 min_tc_with_bss = 5*60
 
+bss_additional_cost = 3*60  # we take a bss if it reduce the travel time by 'bss_additional_cost' seconds
+
 min_bike = 4*60
 
 min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss

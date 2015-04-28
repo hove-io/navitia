@@ -45,21 +45,26 @@ namespace bt = boost::posix_time;
 
 using dir = ProjectionData::Direction;
 
+static std::ostream& operator<<(std::ostream& os, const cost& c) {
+    os << c.duration;
+    return os;
+}
+
 struct computation_results {
-    navitia::time_duration duration; //asked duration
-    std::vector<navitia::time_duration> durations_matrix; //duration matrix
+    cost duration; //asked duration
+    std::vector<cost> durations_matrix; //duration matrix
     std::vector<vertex_t> predecessor;
 
-    computation_results(navitia::time_duration d, const PathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
+    computation_results(cost d, const PathFinder& worker): duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator ==(const computation_results& other) {
 
-        BOOST_CHECK_EQUAL(other.duration, duration);
+        BOOST_CHECK_EQUAL(other.duration.duration, duration.duration);
 
         BOOST_REQUIRE_EQUAL(other.durations_matrix.size(), durations_matrix.size());
 
         for (size_t i = 0 ; i < durations_matrix.size() ; ++i) {
-            BOOST_CHECK_EQUAL(other.durations_matrix.at(i), durations_matrix.at(i));
+            BOOST_CHECK_EQUAL(other.durations_matrix.at(i).duration, durations_matrix.at(i).duration);
         }
 
         BOOST_CHECK(predecessor == other.predecessor);
@@ -123,7 +128,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     type::idx_t target_idx(sp->idx);
 
-    worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
+    worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking], 0_s);
 
     auto distance = worker.get_distance(target_idx);
 
@@ -137,14 +142,14 @@ BOOST_AUTO_TEST_CASE(idempotence) {
               << " distance to target " << worker.distances[proj[dir::Target]] << std::endl;
 
     // the distance matrix also has to be updated
-    BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
-                    || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == distance);
+    BOOST_CHECK(worker.get_real_duration(proj[dir::Source]) + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
+                    || worker.get_real_duration(proj[dir::Target]) + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == distance);
 
     computation_results first_res {distance, worker};
 
     //we ask again with the init again
     {
-        worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
+        worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking], 0_s);
         auto other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
@@ -152,8 +157,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_REQUIRE_NE(other_distance, bt::pos_infin);
         // the distance matrix  also has to be updated
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.get_real_duration(proj[dir::Source]) + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.get_real_duration(proj[dir::Target]) + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_REQUIRE(first_res == other_res);
     }
@@ -166,8 +171,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_CHECK_NE(other_distance, bt::pos_infin);
 
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.get_real_duration(proj[dir::Source]) + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.get_real_duration(proj[dir::Target]) + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_CHECK(first_res == other_res);
     }

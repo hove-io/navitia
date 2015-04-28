@@ -40,15 +40,59 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace georef {
 
-struct SpeedDistanceCombiner : public std::binary_function<navitia::time_duration, navitia::time_duration, navitia::time_duration> {
+struct cost {
+    explicit cost(navitia::time_duration d, bool b): duration(d), bss_taken(b) {}
+    explicit cost(navitia::time_duration d): duration(d) {}
+    explicit cost() {}
+    bool operator<(const cost& c) const { return duration < c.duration; }
+    bool operator==(const cost& c) const { return duration == c.duration && bss_taken == c.bss_taken; }
+    navitia::time_duration duration = bt::pos_infin;
+    bool bss_taken = false;
+};
+
+struct SpeedDistanceCombiner : public std::binary_function<edge_t, cost, cost> {
     /// speed factor compared to the default speed of the transportation mode
     /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
+    ///
+    /// for bss we also store if the bss has been taken to be able to handle an addtional cost
     float speed_factor;
-    SpeedDistanceCombiner(float speed_) : speed_factor(speed_) {}
-    inline navitia::time_duration operator()(navitia::time_duration a, navitia::time_duration b) const {
-        if (a == bt::pos_infin || b == bt::pos_infin)
-            return bt::pos_infin;
-        return a + b / speed_factor;
+    type::idx_t nb_vertex_by_mode;
+    const Graph& graph;
+    navitia::time_duration bss_additional_cost;
+    bool bss_allowed;
+
+    SpeedDistanceCombiner(float speed_, const georef::GeoRef& geo_ref, navitia::time_duration d, bool can_have_bss):
+        speed_factor(speed_),
+        nb_vertex_by_mode(geo_ref.nb_vertex_by_mode),
+        graph(geo_ref.graph),
+        bss_additional_cost(d),
+        bss_allowed(can_have_bss)
+    {}
+    inline cost operator()(cost a, edge_t e) const {
+        if (a.duration == bt::pos_infin) {
+            return cost{bt::pos_infin, false};
+        }
+
+        const Edge& edge = graph[e];
+
+        auto b = edge.duration;
+        if (b == bt::pos_infin) {
+            return cost{bt::pos_infin, false};
+        }
+        auto d = a.duration + b / speed_factor;
+        if ( ! bss_allowed || a.bss_taken) {
+            return cost{d, a.bss_taken};
+        }
+
+        auto origin_mode = boost::source(e, graph) / nb_vertex_by_mode;
+        auto destination_mode = boost::target(e, graph) / nb_vertex_by_mode;
+        bool bss_taken = (static_cast<type::Mode_e>(origin_mode) == type::Mode_e::Walking
+                          && static_cast<type::Mode_e>(destination_mode) == type::Mode_e::Bike);
+
+        if (bss_taken) {
+            d += bss_additional_cost;
+        }
+        return cost{d, bss_taken};
     }
 };
 template <typename T>
@@ -89,8 +133,6 @@ struct TransportationModeFilter {
     template <typename vertex_t>
     bool operator()(const vertex_t& e) const {
         int graph_number = e / nb_vertex_by_mode;
-
-//        std::cout << "for node " << e << " in graph " << graph_number << " we can " << (acceptable_modes[graph_number] ? " " : "not ") << "go" << std::endl;
         return acceptable_modes[graph_number];
     }
 };
@@ -109,10 +151,13 @@ struct PathFinder {
     float speed_factor = 0.;
 
     /// Distance array for the Dijkstra
-    std::vector<navitia::time_duration> distances;
+    std::vector<cost> distances;
 
     /// Predecessors array for the Dijkstra
     std::vector<vertex_t> predecessors;
+
+    /// virtual cost on the bss
+    navitia::time_duration bss_additional_cost;
 
     PathFinder(const GeoRef& geo_ref);
 
@@ -120,7 +165,10 @@ struct PathFinder {
      *  Update the structure for a given starting point and transportation mode
      *  The init HAS to be called before any other methods
      */
-    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
+    void init(const type::GeographicalCoord& start_coord,
+              const nt::Mode_e mode,
+              const float speed_factor,
+              const navitia::time_duration);
 
     void start_distance_dijkstra(navitia::time_duration radius);
 
@@ -148,13 +196,18 @@ struct PathFinder {
 
         //we filter the graph to only use certain mean of transport
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
+
+        auto speed_combiner = SpeedDistanceCombiner(speed_factor, geo_ref, bss_additional_cost, mode == nt::Mode_e::Bss);
+
         boost::dijkstra_shortest_paths_no_init(filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
-                                               start, &predecessors[0], &distances[0],
-                                               boost::get(&Edge::duration, geo_ref.graph), // weigth map
-                                               boost::identity_property_map(),
-                                               std::less<navitia::time_duration>(),
-                                               SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
-                                               navitia::seconds(0),
+                                               start,
+                                               &predecessors[0],
+                                               &distances[0],
+                                               boost::typed_identity_property_map<edge_t>(),
+                                               boost::typed_identity_property_map<vertex_t>(),
+                                               std::less<cost>(),
+                                               speed_combiner,
+                                               cost(0_s, false),
                                                visitor,
                                                color
                                                );
@@ -168,6 +221,9 @@ struct PathFinder {
      *  return a pair with the edge corresponding to the target and the distance
      */
     std::pair<navitia::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
+
+    navitia::time_duration get_real_duration(const vertex_t) const;
+    bool has_been_visited(const vertex_t) const;
 
 private:
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
@@ -242,9 +298,9 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 // Visitor who stops (throw a DestinationFound exception) when a certain distance is reached
 struct distance_visitor : public boost::dijkstra_visitor<> {
     navitia::time_duration max_duration;
-    const std::vector<navitia::time_duration>& durations;
+    const std::vector<cost>& durations;
 
-    distance_visitor(time_duration max_dur, const std::vector<time_duration>& dur):
+    distance_visitor(time_duration max_dur, const std::vector<cost>& dur):
         max_duration(max_dur), durations(dur) {}
 
     /*
@@ -252,7 +308,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
      */
     template<typename G>
     void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G&) {
-        if (durations[u] > max_duration)
+        if (durations[u].duration > max_duration)
             throw DestinationFound();
     }
 };

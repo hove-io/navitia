@@ -56,10 +56,12 @@ StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
 {}
 
 void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const type::EntryPoint&> end) {
-    departure_path_finder.init(start.coordinates, start.streetnetwork_params.mode, start.streetnetwork_params.speed_factor);
+    departure_path_finder.init(start.coordinates, start.streetnetwork_params.mode,
+                               start.streetnetwork_params.speed_factor, start.streetnetwork_params.bss_additional_cost);
 
     if (end) {
-        arrival_path_finder.init((*end).coordinates, (*end).streetnetwork_params.mode, (*end).streetnetwork_params.speed_factor);
+        arrival_path_finder.init(end->coordinates, end->streetnetwork_params.mode,
+                                 end->streetnetwork_params.speed_factor, end->streetnetwork_params.bss_additional_cost);
     }
 }
 
@@ -133,12 +135,12 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
         const type::EntryPoint& destination) {
     if (!departure_launched()) {
         departure_path_finder.init(origin.coordinates, origin.streetnetwork_params.mode,
-                                   origin.streetnetwork_params.speed_factor);
+                                   origin.streetnetwork_params.speed_factor, origin.streetnetwork_params.bss_additional_cost);
         departure_path_finder.start_distance_dijkstra(origin.streetnetwork_params.max_duration);
     }
     if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
         arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
-                                 origin.streetnetwork_params.speed_factor);
+                                 origin.streetnetwork_params.speed_factor, origin.streetnetwork_params.bss_additional_cost);
         //@TODO: use the max_duration of the origin?
         arrival_path_finder.start_distance_dijkstra(destination.streetnetwork_params.max_duration);
     }
@@ -148,12 +150,14 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
     navitia::time_duration min_dist = bt::pos_infin;
     vertex_t target = std::numeric_limits<size_t>::max();
     for(vertex_t u = 0; u != num_vertices; ++u) {
-        if((departure_path_finder.distances[u] <= origin.streetnetwork_params.max_duration)
-                && (arrival_path_finder.distances[u] != destination.streetnetwork_params.max_duration)
-                && ((departure_path_finder.distances[u] + arrival_path_finder.distances[u]) < min_dist)) {
+        auto dep_dur = departure_path_finder.get_real_duration(u);
+        auto arr_dur = arrival_path_finder.get_real_duration(u);
+        if((dep_dur <= origin.streetnetwork_params.max_duration)
+                && (arr_dur != destination.streetnetwork_params.max_duration)
+                && (dep_dur + arr_dur < min_dist)) {
             target = u;
 
-            min_dist = departure_path_finder.distances[u] + arrival_path_finder.distances[u];
+            min_dist = dep_dur + arr_dur;
         }
     }
 
@@ -170,10 +174,13 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
     return result;
 }
 
-PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref) {}
+PathFinder::PathFinder(const GeoRef& gref):
+    geo_ref(gref) {}
 
-void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
+void PathFinder::init(const type::GeographicalCoord& start_coord, const nt::Mode_e mode,
+                      const float speed_factor, const navitia::time_duration bss_cost) {
     computation_launch = false;
+    bss_additional_cost = bss_cost;
     // we look for the nearest edge from the start coorinate in the right transport mode (walk, bike, car, ...) (ie offset)
     this->mode = mode;
     this->speed_factor = speed_factor; //the speed factor is the factor we have to multiply the edge cost with
@@ -183,14 +190,14 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
 
     //we initialize the distances to the maximum value
     size_t n = boost::num_vertices(geo_ref.graph);
-    distances.assign(n, bt::pos_infin);
+    distances.assign(n, cost());
     //for the predecessors no need to clean the values, the important one will be updated during search
     predecessors.resize(n);
 
     if (starting_edge.found) {
         //durations initializations
-        distances[starting_edge[source_e]] = crow_fly_duration(starting_edge.distances[source_e]); //for the projection, we use the default walking speed.
-        distances[starting_edge[target_e]] = crow_fly_duration(starting_edge.distances[target_e]);
+        distances[starting_edge[source_e]] = cost{crow_fly_duration(starting_edge.distances[source_e])}; //for the projection, we use the default walking speed.
+        distances[starting_edge[target_e]] = cost{crow_fly_duration(starting_edge.distances[target_e])};
         predecessors[starting_edge[source_e]] = starting_edge[source_e];
         predecessors[starting_edge[target_e]] = starting_edge[target_e];
 
@@ -198,19 +205,32 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         if (starting_edge.distances[source_e] < 0.01) {
             predecessors[starting_edge[target_e]] = starting_edge[source_e];
             auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).first;
-            distances[starting_edge[target_e]] = geo_ref.graph[e].duration;
+            distances[starting_edge[target_e]] = cost{geo_ref.graph[e].duration};
         } else if (starting_edge.distances[target_e] < 0.01) {
             predecessors[starting_edge[source_e]] = starting_edge[target_e];
             auto edge_pair = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph);
             if (edge_pair.second) {
-                distances[starting_edge[source_e]] = geo_ref.graph[edge_pair.first].duration;
+                distances[starting_edge[source_e]] = cost{geo_ref.graph[edge_pair.first].duration};
             } else {
                 // since we reverse the edge (from target to source) the edge might not exists
                 // (for one way street for example). we thus forbid to start from the source
-                distances[starting_edge[source_e]] = bt::pos_infin;
+                distances[starting_edge[source_e]] = cost{bt::pos_infin};
             }
         }
     }
+}
+
+navitia::time_duration PathFinder::get_real_duration(const vertex_t v) const {
+    auto dur = distances[v].duration;
+    if (distances[v].bss_taken) {
+        //a virtual cost has been added as the bss was taken, so we need to remove it
+        dur -= bss_additional_cost;
+    }
+    return dur;
+}
+
+bool PathFinder::has_been_visited(const vertex_t v) const {
+    return distances[v].duration != bt::pos_infin;
 }
 
 void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
@@ -262,10 +282,11 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proxim
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
             navitia::time_duration best_dist = max;
-            if (distances[projection[source_e]] < max) {
-                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]); }
-            if (distances[projection[target_e]] < max) {
-                best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
+            if (has_been_visited(projection[source_e])) {
+                best_dist = get_real_duration(projection[source_e]) + crow_fly_duration(projection.distances[source_e]);
+            }
+            if (has_been_visited(projection[target_e])) {
+                best_dist = std::min(best_dist, get_real_duration(projection[target_e]) + crow_fly_duration(projection.distances[target_e]));
             }
             if (best_dist <= radius) {
                 result.push_back(std::make_pair(element.first, best_dist));
@@ -294,11 +315,11 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_ne
     if (! target.found)
         return {max, source_e};
 
-    if (distances[target[source_e]] == max) //if one distance has not been reached, both have not been reached
+    if (! has_been_visited(target[source_e])) //if one distance has not been reached, both have not been reached
         return {max, source_e};
 
-    auto source_dist = distances[target[source_e]] + crow_fly_duration(target.distances[source_e]);
-    auto target_dist = distances[target[target_e]] + crow_fly_duration(target.distances[target_e]);
+    auto source_dist = get_real_duration(target[source_e]) + crow_fly_duration(target.distances[source_e]);
+    auto target_dist = get_real_duration(target[target_e]) + crow_fly_duration(target.distances[target_e]);
 
     if (target_dist < source_dist)
         return {target_dist, target_e};
@@ -445,7 +466,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
 
     computation_launch = true;
 
-    if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
+    if (! has_been_visited(target[source_e]) || ! has_been_visited(target[target_e])) {
         bool found = false;
         try {
             dijkstra(starting_edge[source_e], target_all_visitor({target[source_e], target[target_e]}));
@@ -469,7 +490,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
 
     }
     //if we succeded in the first search, we must have found one of the other distances
-    assert(distances[target[source_e]] != max && distances[target[target_e]] != max);
+    assert(get_real_duration(target[source_e]) != max && get_real_duration(target[target_e]) != max);
 
     return find_nearest_vertex(target);
 }

@@ -36,38 +36,35 @@ namespace navitia { namespace georef {
     C'est essentiellement destiné aux tests unitaires
   */
 struct GraphBuilder{
-    /// Graphe que l'on veut construire
-    //StreetNetwork & street_network;
     GeoRef & geo_ref;
 
-    /// Associe une chaine de caractères à un nœud
     std::map<std::string, vertex_t> vertex_map;
 
-    /// Le constructeur : on précise sur quel graphe on va construire
-    //GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
     GraphBuilder(GeoRef & geo_ref) : geo_ref(geo_ref){}
 
-    /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
+    /// Add or update a vertex
     GraphBuilder & add_vertex(std::string node_name, float x, float y);
 
-    /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
-    /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
+    /// add an edge. create the vertex if it does not exists.
+    /// if no duration provided a default one is taken (crow fly)
     GraphBuilder & add_edge(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false);
 
-    /// Surchage de la création de nœud pour plus de confort
+    /// Node creation
     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
 
 
-    /// Surchage de la création d'arc pour plus de confort
+    /// Edge creation
     GraphBuilder & operator()(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false){
         return add_edge(source_name, target_name, dur, bidirectionnal);
     }
 
+    /// edge creation for different mode.
+    /// The vertex has to be created before and the init method called
+    typedef std::pair<std::string, nt::Mode_e> edge_and_mode;
+    GraphBuilder & operator()(edge_and_mode source, edge_and_mode target, navitia::time_duration dur = {}, bool bidirectionnal = false);
 
-    /// Retourne le nœud demandé, jette une exception si on ne trouve pas
     vertex_t get(const std::string & node_name);
 
-    /// Retourne l'arc demandé, jette une exception si on ne trouve pas
     edge_t get(const std::string & source_name, const std::string & target_name);
 };
 
