@@ -87,6 +87,11 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: add admins data");
     this->insert_admins(data);
     LOG4CPLUS_INFO(logger, "End: add admins data");
+
+    LOG4CPLUS_INFO(logger, "Begin: add postal codes data");
+    this->insert_postal_codes(data);
+    LOG4CPLUS_INFO(logger, "End: add postal codes data");
+
     LOG4CPLUS_INFO(logger, "Begin: add ways data");
     this->insert_ways(data);
     LOG4CPLUS_INFO(logger, "End: add ways data");
@@ -131,6 +136,20 @@ void EdPersistor::insert_admins(const ed::Georef& data){
     }
     this->lotus.finish_bulk_insert();
 }
+
+void EdPersistor::insert_postal_codes(const ed::Georef& data){
+    this->lotus.prepare_bulk_insert("georef.postal_codes",
+            {"admin_id", "postal_code"});
+    for(const auto& itm : data.admins){
+        if(itm.second->is_used){
+            for (const auto& postal_code: itm.second->postal_codes){
+                this->lotus.insert({std::to_string(itm.second->id), postal_code});
+            }
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
 
 void EdPersistor::insert_ways(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type"});
@@ -415,7 +434,7 @@ void EdPersistor::insert_metadata_georef() {
 
 void EdPersistor::clean_georef(){
     this->lotus.exec(
-        "TRUNCATE georef.node, georef.house_number, georef.admin, "
+        "TRUNCATE georef.node, georef.house_number, georef.postal_codes, georef.admin, "
         "georef.way CASCADE;");
 }
 

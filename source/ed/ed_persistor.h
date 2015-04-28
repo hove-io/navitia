@@ -65,6 +65,7 @@ struct EdPersistor{
 
     /// Données Georef
     void insert_admins(const ed::Georef& data);
+    void insert_postal_codes(const ed::Georef& data);
     void insert_ways(const ed::Georef& data);
     void insert_nodes(const ed::Georef& data);
     void insert_house_numbers(const ed::Georef& data);
