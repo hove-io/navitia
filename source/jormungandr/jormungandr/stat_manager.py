@@ -38,6 +38,7 @@ from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
 import re
+from threading import Lock
 
 import time
 import sys
@@ -122,6 +123,8 @@ class StatManager(object):
 
         if self.save_stat:
             self._init_rabbitmq()
+
+        self.lock = Lock()
 
     def _init_rabbitmq(self):
         """
@@ -458,18 +461,20 @@ class StatManager(object):
                 previous_section = stat_section
 
     def publish_request(self, stat_request):
-        try:
-            self.producer.publish(stat_request.SerializeToString())
-        except self.connection.connection_errors + self.connection.channel_errors:
-            logging.getLogger(__name__).exception('Server went away, will be reconnected..')
-            #Relese and close the previous connection
-            if self.connection and self.connection.connected:
-                self.connection.release()
-            #Initialize a new connection to RabbitMQ
-            self._init_rabbitmq()
-            #If connection is established publish the stat message.
-            if self.save_stat:
-                self.producer.publish(stat_request.SerializeToString())
+        pbf = stat_request.SerializeToString()
+        with self.lock:
+            try:
+                self.producer.publish(pbf)
+            except self.connection.connection_errors + self.connection.channel_errors:
+                logging.getLogger(__name__).exception('Server went away, will be reconnected..')
+                #Relese and close the previous connection
+                if self.connection and self.connection.connected:
+                    self.connection.release()
+                #Initialize a new connection to RabbitMQ
+                self._init_rabbitmq()
+                #If connection is established publish the stat message.
+                if self.save_stat:
+                    self.producer.publish(pbf)
 
     def fill_admin_from(self, stat_section, admin):
         if admin[0]:
