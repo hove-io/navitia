@@ -67,12 +67,13 @@ namespace navitia {
 
             // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
             std::vector<const nt::StopPoint*> odt_stop_points; // zone odt stop points for the admin
+            std::vector<std::string> postal_codes;
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
                 ar & idx & level & from_original_dataset & post_code & insee
-                        & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points;
+                        & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points & postal_codes;
             }
         };
     }
