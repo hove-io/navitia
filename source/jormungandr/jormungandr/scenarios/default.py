@@ -39,7 +39,7 @@ import itertools
 from flask import current_app
 import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter, \
-    change_ids, updated_request_with_default
+    change_ids, updated_request_with_default, fill_uris
 from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
@@ -129,23 +129,6 @@ class Scenario(simple.Scenario):
         return req
 
 
-    def __fill_uris(self, resp):
-        if not resp:
-            return
-        for journey in resp.journeys:
-            for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
-                    continue
-                if section.HasField("pt_display_informations"):
-                    uris = section.uris
-                    pt_infos = section.pt_display_informations
-                    uris.vehicle_journey = pt_infos.uris.vehicle_journey
-                    uris.line = pt_infos.uris.line
-                    uris.route = pt_infos.uris.route
-                    uris.commercial_mode = pt_infos.uris.commercial_mode
-                    uris.physical_mode = pt_infos.uris.physical_mode
-                    uris.network = pt_infos.uris.network
-
     def call_kraken(self, req, instance, tag=None):
         resp = None
 
@@ -179,7 +162,7 @@ class Scenario(simple.Scenario):
                 resp = local_resp
             logger.debug("for mode %s|%s we have found %s journeys: %s", o_mode, d_mode, len(local_resp.journeys), [j.type for j in local_resp.journeys])
 
-        self.__fill_uris(resp)
+        fill_uris(resp)
         return resp
 
     def change_request(self, pb_req, resp, forbidden_uris=[]):

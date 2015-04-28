@@ -6,7 +6,7 @@
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
 # Help us simplify mobility and open public transport:
-#     a non ending quest to the responsive locomotion way of traveling!
+#     a non ending quest to the res locomotion way of traveling!
 #
 # LICENCE: This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.scenarios import journey_filter
-from jormungandr.scenarios.journey_filter import journeys_gen
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
@@ -277,6 +276,12 @@ def journeys_equality_test_same_journeys():
     journey2 = create_dummy_journey()
     assert are_equals(journey1, journey2)
 
+
+def journeys_gen(list_responses):
+    for r in list_responses:
+        for j in r.journeys:
+            yield j
+
 def journeys_equality_test_almost_same_journeys():
     """
     test the are_equals method, applied to different journeys, but with meaningless differences
@@ -307,9 +312,9 @@ def similar_journeys_test():
     journey2.duration = 43
     journey2.sections[0].uris.vehicle_journey = 'bob'
 
-    new_list = journey_filter.filter_journeys(responses)
+    new_list = journey_filter.filter_journeys(responses, {})
 
-    assert journey2 not in journeys_gen(new_list)
+    assert len([journeys_gen(new_list)]) == 1
 
 
 def similar_journeys_test2():
@@ -326,11 +331,11 @@ def similar_journeys_test2():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bob'
 
-    new_list = journey_filter.filter_journeys(responses)
+    new_list = journey_filter.filter_journeys(responses, {})
 
     print new_list
 
-    assert journey2 not in journeys_gen(new_list)
+    assert len([journeys_gen(new_list)]) == 1
 
 
 def similar_journeys_test3():
@@ -347,6 +352,6 @@ def similar_journeys_test3():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    new_list = journey_filter.filter_journeys(responses)
+    new_list = journey_filter.filter_journeys(responses, {})
 
     assert journey2 in journeys_gen(new_list)

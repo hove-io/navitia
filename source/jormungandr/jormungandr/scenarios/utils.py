@@ -264,3 +264,21 @@ def change_ids(new_journeys, journey_count):
 
         for section in new_journey.sections:
             section.id = section.id + '_' + str(journey_count)
+
+
+def fill_uris(resp):
+    if not resp:
+        return
+    for journey in resp.journeys:
+        for section in journey.sections:
+            if section.type != response_pb2.PUBLIC_TRANSPORT:
+                continue
+            if section.HasField("pt_display_informations"):
+                uris = section.uris
+                pt_infos = section.pt_display_informations
+                uris.vehicle_journey = pt_infos.uris.vehicle_journey
+                uris.line = pt_infos.uris.line
+                uris.route = pt_infos.uris.route
+                uris.commercial_mode = pt_infos.uris.commercial_mode
+                uris.physical_mode = pt_infos.uris.physical_mode
+                uris.network = pt_infos.uris.network

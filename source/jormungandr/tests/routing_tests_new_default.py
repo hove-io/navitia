@@ -27,19 +27,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
+from tests.tests_mechanism import AbstractTestFixture
 
 from tests_mechanism import dataset
-from routing_tests import TestJourneys
 from check_utils import *
 from nose.tools import eq_
 import jormungandr.scenarios.new_default
 from jormungandr.instance import Instance
 
 @dataset(["main_routing_test"])
-class TestJourneysNewDefault(TestJourneys):
+class TestJourneysNewDefault(AbstractTestFixture):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
+
+
+    NOTE: for the moment we cannot import all routing tests, so we only get 2, but we need to add some more
     """
 
     def setup(self):
@@ -53,4 +56,28 @@ class TestJourneysNewDefault(TestJourneys):
         from jormungandr import i_manager
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
+    def test_journeys(self):
+        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #not to use the jormungandr database
+        response = self.query_region(journey_basic_query, display=True)
+
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
+    def test_error_on_journeys(self):
+        """ if we got an error with kraken, an error should be returned"""
+
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
+            datetime="20110614T080000")  # 2011 should not be in the production period
+
+        response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query_out_of_production_bound)
+
+        assert status != 200, "the response should not be valid"
+
+        assert response['error']['id'] == "date_out_of_bounds"
+        assert response['error']['message'] == "date is not in data production period"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
 
