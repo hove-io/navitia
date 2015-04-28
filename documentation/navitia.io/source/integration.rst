@@ -287,13 +287,13 @@ Collections
 Specific parameters
 ###################
 
-There are som specific parameters.
+There are other specific parameters.
 A least, there is one: *odt_level* which can be applied only on /lines collection...
 
 It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
 
 * none : to get standard public transport lines. Trips are predefined.
-* mixt : to get lines with some non-predefined trips 
+* mixt : to get lines with predefined and some non-predefined trips 
 * zonal : to get lines with only non-predefined trips 
 * all (default value) : to get all public transport lines
 
@@ -584,10 +584,6 @@ Parameters
 |          |                       |           | into account, and thus avoid disrupted    |                 |
 |          |                       |           | public transport                          |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration          | int       | Maximum duration of the journey           | 3600*24 s (24h) |
-|          |                       |           |                                           |                 |
-|          |                       |           | Like all duration, the unit is seconds    |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
 |          |                       |           | be using a wheelchair, thus only          |                 |
 |          |                       |           | accessible public transport are used      |                 |
@@ -678,8 +674,9 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    |   .. image:: crow_fly.png                          |
 |                         |                                    |      :scale: 25 %                                  |
 |                         |                                    |                                                    |
-|                         |                                    | * ``on_demand_transport``: on demand transport     |
-|                         |                                    |   section (odt)                                    |
+|                         |                                    | * ``on_demand_transport``: vehicle may not drive   |
+|                         |                                    |   along: traveler will have to call agency to      |
+|                         |                                    |   confirm journey                                  |
 |                         |                                    | * ``bss_rent``: taking a bike from a bike sharing  |
 |                         |                                    |   system (bss)                                     |
 |                         |                                    | * ``bss_put_back``: putting back a bike from a bike|
@@ -708,8 +705,12 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    | * ``has_date_time_estimated``: section with at     |
 |                         |                                    |   least one estimated date time                    |
 |                         |                                    | * ``odt_with_stop_time``: odt with                 |
-|                         |                                    |   fix schedule                                     |
-|                         |                                    | * ``odt_with_zone``: odt with zone                 |
+|                         |                                    |   fix schedule, but travelers have to call agency! |
+|                         |                                    | * ``odt_with_stop_point``: odt where pickup or     | 
+|                         |                                    |   drop off are specific points                     |
+|                         |                                    | * ``odt_with_zone``: odt which is like a cab,      |
+|                         |                                    |   from wherever you want to wherever you want,     |
+|                         |                                    |   whenever it is possible                          |
 +-------------------------+------------------------------------+----------------------------------------------------+
 | geojson                 | `GeoJson <http://www.geojson.org>`_|                                                    |        
 +-------------------------+------------------------------------+----------------------------------------------------+
