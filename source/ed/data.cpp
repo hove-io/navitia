@@ -76,6 +76,8 @@ void Data::build_block_id() {
         } else if (vj1->utc_to_local_offset != vj2->utc_to_local_offset) {
             // we don't want to link the splited vjs
             return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
+        } else  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+            return vj1->stop_time_list.size() < vj2->stop_time_list.size();
         } else {
             return vj1->stop_time_list.front()->departure_time <
                     vj2->stop_time_list.front()->departure_time;
