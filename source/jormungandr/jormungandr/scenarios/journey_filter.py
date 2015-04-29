@@ -30,8 +30,26 @@ from collections import namedtuple
 import logging
 import itertools
 import datetime
+from operator import attrgetter
 from jormungandr.scenarios.utils import compare
 from navitiacommon import response_pb2
+
+
+def _delete_journeys(responses, request):
+
+    if request.get('debug', False):
+        return
+
+    nb_deleted = 0
+    for r in responses:
+        for idx, j in enumerate(reversed(r.journeys)):
+            if not _to_be_deleted(j):
+                continue
+            del r.journeys[idx]
+            nb_deleted += 1
+
+    if nb_deleted:
+        logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
 def filter_journeys(response_list, request):
@@ -40,26 +58,24 @@ def filter_journeys(response_list, request):
 
     first draft, we only remove the journeys with the same vjs
     """
-    if request.get('debug', False):
-        return response_list
 
-    _filter_similar_journeys(response_list, request)
+    # for clarity purpose we build a temporary list
+    journeys = [j for r in response_list for j in r.journeys]
+
+    #DEBUG
+    for j in journeys:
+        _debug_journey(j)
+
+    _filter_similar_journeys(journeys, request)
+
+    _filter_not_coherent_journeys(journeys, request)
+
+    _delete_journeys(response_list, request)
 
     return response_list
 
 
-class JourneysIdx:
-    def __init__(self, response_idx, journey_idx, journey):
-        self.response_idx = response_idx
-        self.journey_idx = journey_idx
-        self.journey = journey
-
-    @property
-    def key(self):
-        return self.response_idx, self.journey_idx
-
-
-def _get_worst_similar_vjs(journey_idxs1, journey_idxs2, request):
+def _get_worst_similar_vjs(j1, j2, request):
     """
     Decide which is the worst journey between 2 similar journeys.
 
@@ -68,25 +84,34 @@ def _get_worst_similar_vjs(journey_idxs1, journey_idxs2, request):
      - less fallback
      - duration
     """
-    j1 = journey_idxs1.journey
-    j2 = journey_idxs2.journey
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
-            return journey_idxs1 if j1.arrival_date_time < j2.arrival_date_time else journey_idxs2
+            return j1 if j1.arrival_date_time < j2.arrival_date_time else j2
     else:
         if j1.departure_date_time != j2.departure_date_time:
-            return journey_idxs1 if j1.departure_date_time > j2.departure_date_time else journey_idxs2
+            return j1 if j1.departure_date_time > j2.departure_date_time else j2
 
     fallback1 = fallback_duration(j1)
     fallback2 = fallback_duration(j2)
 
     if fallback1 != fallback2:
-        return journey_idxs1 if fallback1 < fallback2 else journey_idxs2
+        return j1 if fallback1 < fallback2 else j2
 
-    return journey_idxs1 if j1.duration < j2.duration else journey_idxs2
+    return j1 if j1.duration < j2.duration else j2
 
 
-def _filter_similar_journeys(response_list, request):
+def _to_be_deleted(journey):
+    return 'to_delete' in journey.tags
+
+
+def _mark_as_dead(journey, *reasons):
+    journey.tags.append('to_delete')
+    for reason in reasons:
+        journey.tags.append('deleted_because_' + reason)
+
+
+
+def _filter_similar_journeys(journeys, request):
     """
     for the moment very simple filter.
 
@@ -95,32 +120,48 @@ def _filter_similar_journeys(response_list, request):
     in case of similar journeys we let _get_worst_similar_vjs decide which one to delete
     """
     logger = logging.getLogger(__name__)
-    to_delete = []
-
-    # for clarity purpose we build a temporary list
-    journeys = [JourneysIdx(r_idx, j_idx, j) for r_idx, r in enumerate(response_list)
-                for j_idx, j in enumerate(r.journeys)]
-
-    #DEBUG
-    for j in journeys:
-        _debug_journey(j)
-
-    for tuple1, tuple2 in itertools.combinations(journeys, 2):
-        if tuple2.key in to_delete:
+    for j1, j2 in itertools.combinations(journeys, 2):
+        if _to_be_deleted(j1) or _to_be_deleted(j2):
             continue
-        if compare(tuple1.journey, tuple2.journey, similar_journeys_generator):
+        if compare(j1, j2, similar_journeys_generator):
             #chose the best
-            worst = _get_worst_similar_vjs(tuple1, tuple2, request)
-            logger.debug("the journeys {}, {} are similar, we delete {}".format(tuple1.key,
-                                                                                tuple2.key,
-                                                                                worst.key))
-            to_delete.append(worst.key)
+            worst = _get_worst_similar_vjs(j1, j2, request)
+            logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
+                                                                                j2.internal_id,
+                                                                                worst.internal_id))
 
-    if to_delete:
-        logger.info('filtering {} journeys because they are dupplicates ({})'.format(len(to_delete), to_delete))
+            _mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
+                          .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
-    for response_idx, j_idx in reversed(to_delete):
-        del response_list[response_idx].journeys[j_idx]
+
+def way_later(journey, asap_journey, request):
+    return False  #TODO
+
+
+def _filter_not_coherent_journeys(journeys, request):
+    """
+    Filter not coherent journeys
+
+    The aim is to keep that as simple as possible
+    """
+
+    logger = logging.getLogger(__name__)
+    # we filter journeys that arrive way later than other ones
+    if request.get('clockwise', True):
+        comp_func = lambda j: j.arrival_date_time
+    else:
+        comp_func = lambda j: j.departure_date_time
+
+    asap_journey = min((j for j in journeys if not _to_be_deleted(j)), key=comp_func)
+
+    for j in journeys:
+        if _to_be_deleted(j):
+            continue
+        if way_later(j, asap_journey, request):
+            logger.debug("the journey {} is too long compared to {}, we delete it"
+                         .format(j.internal_id, asap_journey.internal_id))
+
+            _mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
 
 
 def similar_journeys_generator(journey):
@@ -137,7 +178,7 @@ def fallback_duration(journey):
     return duration
 
 
-def _debug_journey(journey_and_idx):
+def _debug_journey(journey):
     """
     For debug purpose print the journey
     """
@@ -159,7 +200,7 @@ def _debug_journey(journey_and_idx):
         return __shorten.get(name, name)
 
     sections = []
-    for s in journey_and_idx.journey.sections:
+    for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             sections.append("{line} ({vj})".format(line=s.pt_display_informations.uris.line,
                                                    vj=s.pt_display_informations.uris.vehicle_journey))
@@ -173,10 +214,10 @@ def _debug_journey(journey_and_idx):
         dt = datetime.datetime.utcfromtimestamp(ts)
         return dt.strftime("%dT%H:%M:%S")
 
-    logger.debug("journey {}-{}: {dep} -> {arr} - {duration} ({fallback} map) | ({sec})".format(
-        journey_and_idx.response_idx, journey_and_idx.journey_idx,
-        dep=_datetime_to_str(journey_and_idx.journey.departure_date_time),
-        arr=_datetime_to_str(journey_and_idx.journey.arrival_date_time),
-        duration=datetime.timedelta(seconds=journey_and_idx.journey.duration),
-        fallback=datetime.timedelta(seconds=fallback_duration(journey_and_idx.journey)),
+    logger.debug("journey {id}: {dep} -> {arr} - {duration} ({fallback} map) | ({sec})".format(
+        id=journey.internal_id,
+        dep=_datetime_to_str(journey.departure_date_time),
+        arr=_datetime_to_str(journey.arrival_date_time),
+        duration=datetime.timedelta(seconds=journey.duration),
+        fallback=datetime.timedelta(seconds=fallback_duration(journey)),
         sec=" - ".join(sections)))

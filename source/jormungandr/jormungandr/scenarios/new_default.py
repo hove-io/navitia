@@ -134,28 +134,6 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     return req
 
 
-def call_kraken(request_type, request, instance, krakens_call):
-    """
-    For all krakens_call, call the kraken and aggregate the responses
-    
-    return the list of all responses
-    """
-    #TODO: handle min_alternative_journeys
-    #TODO: call first bss|bss and do not call walking|walking if no bss in first results
-
-    resp = []
-    logger = logging.getLogger(__name__)
-    for dep_mode, arr_mode in krakens_call:
-        pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
-        
-        local_resp = instance.send_and_receive(pb_request)
-
-        resp.append(local_resp)
-        logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
-
-    return resp
-
-
 def create_next_kraken_request(request, responses):
     """
     create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
@@ -247,6 +225,10 @@ class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
     """
+    def __init__(self):
+        super(Scenario, self).__init__()
+        self.nb_kraken_calls = 0
+
     def fill_journeys(self, request_type, api_request, instance):
 
         krakens_call = get_kraken_calls(api_request)
@@ -258,7 +240,7 @@ class Scenario(simple.Scenario):
         last_nb_journeys = 0
         while nb_journeys(responses) < min_asked_journeys:
 
-            tmp_resp = call_kraken(request_type, request, instance, krakens_call)
+            tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
 
             responses.extend(tmp_resp)
             new_nb_journeys = nb_journeys(responses)
@@ -282,6 +264,33 @@ class Scenario(simple.Scenario):
         culling_journeys(pb_resp, request)
 
         return pb_resp
+
+
+    def call_kraken(self, request_type, request, instance, krakens_call):
+        """
+        For all krakens_call, call the kraken and aggregate the responses
+
+        return the list of all responses
+        """
+        #TODO: handle min_alternative_journeys
+        #TODO: call first bss|bss and do not call walking|walking if no bss in first results
+
+        resp = []
+        logger = logging.getLogger(__name__)
+        for dep_mode, arr_mode in krakens_call:
+            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
+            self.nb_kraken_calls += 1
+
+            local_resp = instance.send_and_receive(pb_request)
+
+            #for log purpose we put and id in each journeys
+            for idx, j in enumerate(local_resp.journeys):
+                j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
+
+            resp.append(local_resp)
+            logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
+
+        return resp
 
     def __on_journeys(self, requested_type, request, instance):
         updated_request_with_default(request, instance)
