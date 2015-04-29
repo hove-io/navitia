@@ -10,7 +10,9 @@ Endpoint
 ********
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
-See `authentication`_ section to find out **how to use your token**. 
+
+See `authentication`_ section to find out **how to use your token**.
+
 If you use a web browser, you only have to paste it in the user area, with no password.
 
 Some easy examples
@@ -124,6 +126,7 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
     Authorization: mysecretkey
 
 .. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
+
 .. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
@@ -1030,6 +1033,7 @@ equipments              array of string       list of `equipment`_ of the stop p
 stop_area               `stop_area`_          Stop Area containing this stop point
 ======================= ===================== =====================================================================
 
+
 .. _stop_area:
 
 Stop Area
@@ -1058,6 +1062,7 @@ id               string                          Identifier of the commercial mo
 name             string                          Name of the commercial mode
 physical_modes   array of `physical_mode`_       Physical modes of this commercial mode
 ================ =============================== =======================================
+
 
 .. _physical_mode:
 
@@ -1349,16 +1354,19 @@ non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
 
 .. _odt:
+
 On demand transportation
 ************************
 
 Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
+
 Besides, **in data**, the stop times can be "estimated" (with no guarantee on time respect by the agency)
 or not (the transport agencies should arrive on time).
+
 After all, the stop points can be standard (such as bus stop or railway station) 
 or "zonal" (where agency can pick you up you anywhere, like a cab).
 
-That's really responsive locomotion (ɔ).
+That's some kind of "responsive locomotion" (ɔ).
 
 So public transport lines can mix different methods to pick up travelers:
 
