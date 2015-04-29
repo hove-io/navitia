@@ -75,10 +75,10 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
 
 static nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
     switch(pb_odt_level){
-        case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt;
+        case pbnavitia::OdtLevel::with_stops: return nt::OdtLevel_e::with_stops;
         case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal;
         case pbnavitia::OdtLevel::all: return nt::OdtLevel_e::all;
-        default: return nt::OdtLevel_e::none;
+        default: return nt::OdtLevel_e::scheduled;
     }
 }
 

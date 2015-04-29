@@ -186,8 +186,8 @@ message StopPoint {
 }
 
 enum OdtLevel{
-	odt_none = 0;
-	mixt = 1;
+	scheduled = 0;
+	with_stops = 1;
 	zonal = 2;
 	all = 3;
 }

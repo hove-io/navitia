@@ -239,13 +239,13 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
             const navitia::type::Line* line = data.pt_data->lines[idx];
             navitia::type::hasOdtProperties odt_property = line->get_odt_properties();
             switch(odt_level){
-                case navitia::type::OdtLevel_e::none:
-                    if (odt_property.is_none()){
+                case navitia::type::OdtLevel_e::scheduled:
+                    if (odt_property.is_scheduled()){
                         odt_level_idx.push_back(idx);
                     };
                     break;
-                case navitia::type::OdtLevel_e::mixt:
-                    if (odt_property.is_mixed()){
+                case navitia::type::OdtLevel_e::with_stops:
+                    if (odt_property.is_with_stops()){
                         odt_level_idx.push_back(idx);
                     };
                     break;

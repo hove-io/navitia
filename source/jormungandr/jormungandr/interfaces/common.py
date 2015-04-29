@@ -29,11 +29,11 @@
 
 import navitiacommon.type_pb2 as type_pb2
 
-odt_levels = {"none","mixt", "zonal", "all"}
+odt_levels = {"scheduled","with_stops", "zonal", "all"}
 
 pb_odt_level = {
-    'none': type_pb2.odt_none,
-    'mixt': type_pb2.mixt,
+    'none': type_pb2.scheduled,
+    'mixt': type_pb2.with_stops,
     'zonal': type_pb2.zonal,
     'all': type_pb2.all
 }

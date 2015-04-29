@@ -122,8 +122,8 @@ enum class Mode_e {
 };
 
 enum class OdtLevel_e {
-    none = 0,
-    mixt = 1,
+    scheduled = 0,
+    with_stops = 1,
     zonal = 2,
     all = 3
 };
@@ -583,8 +583,8 @@ struct hasOdtProperties {
     void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
     void set_zonal(const bool val = true) { odt_properties.set(ZONAL_ODT, val); }
 
-    bool is_none() const { return odt_properties.none(); }
-    bool is_mixed() const { return ! odt_properties[ZONAL_ODT]; }
+    bool is_scheduled() const { return odt_properties.none(); }
+    bool is_with_stops() const { return ! odt_properties[ZONAL_ODT]; }
     bool is_estimated() const { return odt_properties[ESTIMATED_ODT]; }
     bool is_zonal() const { return odt_properties[ZONAL_ODT]; }
 

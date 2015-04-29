@@ -155,8 +155,8 @@ BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test4, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
     const auto* jp = b.data->pt_data->journey_patterns_map.at("none:0:0");
 
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_none(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_mixed(), true);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), true);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), true);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), false);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), false);
 }
@@ -164,8 +164,8 @@ BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(jp_mixed_odt_test, aggregate_odt_fixture) {
     const auto* jp = b.data->pt_data->journey_patterns_map.at("mixed:1:0");
 
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_none(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_mixed(), true);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), false);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), true);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), true);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), false);
 }
@@ -173,8 +173,8 @@ BOOST_FIXTURE_TEST_CASE(jp_mixed_odt_test, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test, aggregate_odt_fixture) {
     const auto* jp = b.data->pt_data->journey_patterns_map.at("zonal:2:0");
 
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_none(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_mixed(), false);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), false);
+    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), false);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), true);
     BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), true);
 }
@@ -183,8 +183,8 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(route_none_odt, aggregate_odt_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("none:0");
 
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_none(), true);
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_mixed(), true);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_scheduled(), true);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_with_stops(), true);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_estimated(), false);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_zonal(), false);
 }
@@ -192,8 +192,8 @@ BOOST_FIXTURE_TEST_CASE(route_none_odt, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(route_mixed_odt, aggregate_odt_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("mixed:1");
 
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_none(), false);
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_mixed(), true);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_scheduled(), false);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_with_stops(), true);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_estimated(), true);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_zonal(), false);
 }
@@ -201,8 +201,8 @@ BOOST_FIXTURE_TEST_CASE(route_mixed_odt, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(route_zonal_odt, aggregate_odt_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("zonal:2");
 
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_none(), false);
-    BOOST_CHECK_EQUAL(route->get_odt_properties().is_mixed(), false);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_scheduled(), false);
+    BOOST_CHECK_EQUAL(route->get_odt_properties().is_with_stops(), false);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_estimated(), true);
     BOOST_CHECK_EQUAL(route->get_odt_properties().is_zonal(), true);
 }
@@ -211,8 +211,8 @@ BOOST_FIXTURE_TEST_CASE(route_zonal_odt, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(line_none_odt, aggregate_odt_fixture) {
     const auto* line = b.data->pt_data->lines_map.at("none");
 
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_none(), true);
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_mixed(), true);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_scheduled(), true);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_with_stops(), true);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_estimated(), false);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_zonal(), false);
 }
@@ -220,8 +220,8 @@ BOOST_FIXTURE_TEST_CASE(line_none_odt, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(line_mixed_odt, aggregate_odt_fixture) {
     const auto* line = b.data->pt_data->lines_map.at("mixed");
 
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_none(), false);
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_mixed(), true);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_scheduled(), false);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_with_stops(), true);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_estimated(), true);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_zonal(), false);
 }
@@ -229,8 +229,8 @@ BOOST_FIXTURE_TEST_CASE(line_mixed_odt, aggregate_odt_fixture) {
 BOOST_FIXTURE_TEST_CASE(line_zonal_odt, aggregate_odt_fixture) {
     const auto* line = b.data->pt_data->lines_map.at("zonal");
 
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_none(), false);
-    BOOST_CHECK_EQUAL(line->get_odt_properties().is_mixed(), false);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_scheduled(), false);
+    BOOST_CHECK_EQUAL(line->get_odt_properties().is_with_stops(), false);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_estimated(), true);
     BOOST_CHECK_EQUAL(line->get_odt_properties().is_zonal(), true);
 }
