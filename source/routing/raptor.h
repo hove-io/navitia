@@ -120,7 +120,6 @@ struct RAPTOR
     std::vector<Path>
     compute(const type::StopArea* departure, const type::StopArea* destination,
             int departure_hour, int departure_day, DateTime bound, bool disruption_active,
-            bool allow_odt,
             bool clockwise = true,
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
             max_transfers=std::numeric_limits<uint32_t>::max(),
@@ -134,7 +133,7 @@ struct RAPTOR
     std::vector<Path>
     compute_all(const vec_stop_point_duration &departs,
                 const vec_stop_point_duration &destinations,
-                const DateTime &departure_datetime, bool disruption_active, bool allow_odt,
+                const DateTime &departure_datetime, bool disruption_active,
                 const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers = 10,
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
@@ -150,7 +149,6 @@ struct RAPTOR
                    const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration > > &arrivals,
                    const DateTime &departure_datetime,
                    bool disruption_active, 
-                   bool allow_odt,
                    const DateTime &bound,
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
@@ -168,7 +166,7 @@ struct RAPTOR
               uint32_t max_transfers = 10,
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
-              bool clockwise = true, bool disruption_active = false, bool allow_odt = true);
+              bool clockwise = true, bool disruption_active = false);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
@@ -177,7 +175,6 @@ struct RAPTOR
                               const type::AccessibiliteParams & accessibilite_params,
                               const std::vector<std::string> & forbidden,
                               bool disruption_active,
-                              bool allow_odt,
                               const vec_stop_point_duration &departs = {},
                               const vec_stop_point_duration &destinations = {});
 
@@ -214,7 +211,6 @@ struct RAPTOR
                            const vec_stop_point_duration& arr,
                            const DateTime& departure_datetime,
                            bool disruption_active,
-                           bool allow_odt,
                            const DateTime& bound,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,

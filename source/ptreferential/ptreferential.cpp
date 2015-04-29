@@ -240,7 +240,7 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
             navitia::type::hasOdtProperties odt_property = line->get_odt_properties();
             switch(odt_level){
                 case navitia::type::OdtLevel_e::none:
-                    if (odt_property.is_regular()){
+                    if (odt_property.is_none()){
                         odt_level_idx.push_back(idx);
                     };
                     break;
@@ -250,7 +250,7 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
                     };
                     break;
                 case navitia::type::OdtLevel_e::zonal:
-                    if (odt_property.is_zonal_odt()){
+                    if (odt_property.is_zonal()){
                         odt_level_idx.push_back(idx);
                     };
                     break;

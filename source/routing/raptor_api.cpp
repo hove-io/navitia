@@ -834,7 +834,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               bool disruption_active,
-              bool allow_odt,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -890,7 +889,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
@@ -922,7 +921,6 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                  std::vector<std::string> forbidden,
                  georef::StreetNetwork & worker,
                  bool disruption_active,
-                 bool allow_odt,
                  uint32_t max_duration, uint32_t max_transfers,
                  bool show_codes) {
 
@@ -989,7 +987,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
         // compute m trip in one call
         auto paths_by_entrypoint = raptor.
-                compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers,
+                compute_nm_all(departures, arrivals, init_dt, disruption_active, bound, max_transfers,
                                accessibilite_params, forbidden, clockwise);
 
         // compute isochron style result at "m point"
@@ -1029,7 +1027,6 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    bool disruption_active,
-                                   bool allow_odt,
                                    int max_duration, uint32_t max_transfers, bool show_codes) {
     pbnavitia::Response response;
 
@@ -1054,7 +1051,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params, forbidden, clockwise, disruption_active, allow_odt);
+                           accessibilite_params, forbidden, clockwise, disruption_active);
 
     add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
                            init_dt, bound, max_duration, show_codes, false);

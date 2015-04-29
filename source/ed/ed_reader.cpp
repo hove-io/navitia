@@ -693,6 +693,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["odt_message"].to(vj->odt_message);
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         const_it["external_code"].to(vj->codes["external_code"]);
+        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->journey_pattern = journey_pattern;
 

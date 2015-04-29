@@ -206,6 +206,15 @@ bool VehicleJourney::has_date_time_estimated() const{
     return false;
 }
 
+bool VehicleJourney::has_zonal_stop_point() const {
+    for(const StopTime& st : this->stop_time_list){
+        if (st.journey_pattern_point->stop_point->is_zonal){
+            return true;
+        }
+    }
+    return false;
+}
+
 bool VehicleJourney::has_boarding() const{
     std::string physical_mode;
     if ((this->journey_pattern != nullptr) && (this->journey_pattern->physical_mode != nullptr))
@@ -228,31 +237,6 @@ bool VehicleJourney::has_landing() const{
     }
     return false;
 
-}
-
-type::OdtLevel_e VehicleJourney::get_odt_level() const{
-    type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->stop_time_list.empty()){
-        return result;
-    }
-
-    if (stop_time_list.front().is_odt_and_date_time_estimated()){
-        result = type::OdtLevel_e::zonal;
-    }
-    for(const auto& st: stop_time_list){
-        if (st.is_odt_and_date_time_estimated()){
-            if (result != type::OdtLevel_e::zonal){
-                result = type::OdtLevel_e::mixt;
-                break;
-            }
-        }else{
-            if(result == type::OdtLevel_e::zonal){
-                result = type::OdtLevel_e::mixt;
-                break;
-            }
-        }
-    }
-    return result;
 }
 
 bool ValidityPattern::is_valid(int day) const {
@@ -589,12 +573,8 @@ type::hasOdtProperties Route::get_odt_properties() const{
 
 void JourneyPattern::build_odt_properties(){
     for_each_vehicle_journey([&](const VehicleJourney& vj) {
-        if (vj.is_virtual_odt()) {
-            this->odt_properties.set_virtual_odt();
-        }
-        if (vj.is_zonal_odt()) {
-            this->odt_properties.set_zonal_odt();
-        }
+        this->odt_properties.set_estimated(vj.has_date_time_estimated());
+        this->odt_properties.set_zonal(vj.has_zonal_stop_point());
         return true;
     });
 }

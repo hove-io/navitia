@@ -332,6 +332,7 @@ enum class ConnectionType {
     undefined
 };
 
+// TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
 enum class VehicleJourneyType {
     regular = 0,                    // ligne régulière
     virtual_with_stop_time = 1,       // TAD virtuel avec horaires
@@ -566,7 +567,7 @@ struct Calendar;
 
 typedef std::bitset<2> OdtProperties;
 struct hasOdtProperties {
-    static const uint8_t VIRTUAL_ODT = 0;
+    static const uint8_t ESTIMATED_ODT = 0;
     static const uint8_t ZONAL_ODT = 1;
     OdtProperties odt_properties;
 
@@ -578,47 +579,14 @@ struct hasOdtProperties {
         odt_properties |= other.odt_properties;
     }
 
-    void reset_odt() {
-        odt_properties.reset();
-    }
+    void reset() { odt_properties.reset(); }
+    void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
+    void set_zonal(const bool val = true) { odt_properties.set(ZONAL_ODT, val); }
 
-    void set_regular() {
-        odt_properties.reset();
-    }
-
-    void set_virtual_odt() {
-        odt_properties.set(VIRTUAL_ODT, true);
-    }
-
-    void unset_virtual_odt() {
-        odt_properties.set(VIRTUAL_ODT, false);
-    }
-
-    void set_zonal_odt() {
-        odt_properties.set(ZONAL_ODT, true);
-    }
-    void unset_zonal_odt() {
-        odt_properties.set(ZONAL_ODT, false);
-    }
-
-    bool is_regular() const {
-        return odt_properties.none();
-    }
-
-    bool is_odt() const {
-        return odt_properties.any();
-    }
-
-    bool is_mixed() const {
-        return odt_properties.all();
-    }
-
-    bool is_virtual_odt() const {
-        return odt_properties[VIRTUAL_ODT];
-    }
-    bool is_zonal_odt() const {
-        return odt_properties[ZONAL_ODT];
-    }
+    bool is_none() const { return odt_properties.none(); }
+    bool is_mixed() const { return ! odt_properties[ZONAL_ODT]; }
+    bool is_estimated() const { return odt_properties[ESTIMATED_ODT]; }
+    bool is_zonal() const { return odt_properties[ZONAL_ODT]; }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & odt_properties;
@@ -720,6 +688,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     const MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
 
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
@@ -739,13 +708,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     std::string get_direction() const;
     bool has_date_time_estimated() const;
-
-    bool is_odt()  const{
-        return vehicle_journey_type != VehicleJourneyType::regular;
-    }
-    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
-    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
-    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
+    bool has_zonal_stop_point() const;
 
     bool has_boarding() const;
     bool has_landing() const;
@@ -763,7 +726,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & impacted_by;
     }
 
-    type::OdtLevel_e get_odt_level() const;
     virtual ~VehicleJourney();
     //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
 private:

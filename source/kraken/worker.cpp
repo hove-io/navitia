@@ -554,19 +554,19 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
             return navitia::routing::make_isochrone(*planner, origins[0], request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
         case pbnavitia::NMPLANNER:
             return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
         default:
             return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
     }
 }

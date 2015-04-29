@@ -430,11 +430,13 @@ void Data::aggregate_odt(){
         jp->build_odt_properties();
     }
 
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
+    //
     // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
     // for some ODT kind, we have to fill the Admin structure with the ODT stop points
     std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
     for (const auto jp: pt_data->journey_patterns) {
-        if (! jp->odt_properties.is_zonal_odt()) {
+        if (! jp->odt_properties.is_zonal()) {
             continue;
         }
         if (jp->journey_pattern_point_list.size() != 2) {

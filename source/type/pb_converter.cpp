@@ -613,6 +613,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     }
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
+    // TODO ODT this will not work correctly now
     vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
     vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
@@ -1383,6 +1384,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         uris->set_physical_mode(vj->journey_pattern->physical_mode->uri);
     }
     pt_display_info->set_description(vj->odt_message);
+    // TODO ODT: this will not work correctly now
     pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if(origin && destination){
@@ -1530,6 +1532,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 {
     if(vj == nullptr)
         return;
+    // TODO ODT: this will not work correctly now
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     if(stop_times.empty()){
         add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
