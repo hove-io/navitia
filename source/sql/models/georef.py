@@ -110,8 +110,8 @@ admin = Table('admin', metadata,*[
 
 
 admin = Table('postal_codes', metadata,*[
-    Column('admin_id', TEXT(), primary_key=False),
-    Column('postal_code', TEXT(), primary_key=False),
+    Column('admin_id', TEXT(), primary_key=False, nullable=False),
+    Column('postal_code', TEXT(), primary_key=False, nullable=False),
     ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'postal_codes_admin_id_fkey')
     ],
     schema='georef')
