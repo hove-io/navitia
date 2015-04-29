@@ -16,27 +16,24 @@ If you use a web browser, you only have to paste it in the user area, with no pa
 Some easy examples
 ******************
 
-* Geographical coverage of the service
-  * https://api.navitia.io/v1/coverage 
+* Geographical coverage of the service > https://api.navitia.io/v1/coverage 
 * Where am I? (WGS 84 coordinates)
-  * https://api.navitia.io/v1/coord/2.377310;48.847002
-  * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-* Which services are available on this coverage? Take a look at the links at the bottom of this stream
-  * https://api.navitia.io/v1/coverage/fr-idf
-* Networks available?
-  * https://api.navitia.io/v1/coverage/fr-idf/networks
-* RATP network lines?
-  * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
+    * https://api.navitia.io/v1/coord/2.377310;48.847002
+    * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+* Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
+    * https://api.navitia.io/v1/coverage/fr-idf
+* Networks available? > https://api.navitia.io/v1/coverage/fr-idf/networks
+* RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
-  * physical modes managed by RATP 
+    * physical modes managed by RATP 
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
-  * metro lines 
+    * metro lines 
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
-* By the way, what is close to me?
-  * https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
-  * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
-  * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
-  * or ...
+* By the way, what stuff are close to me?
+    * https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+    * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+    * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+    * or ...
 
 Resources
 *********
@@ -691,8 +688,8 @@ tags                array of string    List of tags on the journey. The tags add
 +-------------------------+------------------------------------+----------------------------------------------------+
 | id                      | string                             | Id of the section                                  |      
 +-------------------------+------------------------------------+----------------------------------------------------+
-| mode                    | *enum* string                      | Mode of the street network: ``Walking``, ``Bike``, |      
-|                         |                                    |   ``Car``                                          |        
+| mode                    | *enum* string                      | Mode of the street network:                        |      
+|                         |                                    |   ``Walking``, ``Bike``, ``Car``                   |        
 +-------------------------+------------------------------------+----------------------------------------------------+
 | duration                | int                                | Duration of this section                           |      
 +-------------------------+------------------------------------+----------------------------------------------------+
@@ -1205,7 +1202,7 @@ level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
 
-In France, cities are on the 8 level.
+Cities are mainly on the 8 level, dependant on the country (http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative)
 
 Other objects
 *************
@@ -1306,8 +1303,8 @@ datetime
 
 A date time with the format YYYYMMDDThhmmss
 
-Misc mechanisms (and boring stuff)
-=================================
+Misc mechanisms (and few boring stuff)
+======================================
 
 .. _multiple_journeys: 
 
@@ -1366,18 +1363,18 @@ That's really responsive locomotion (ɔ).
 So public transport lines can mix different methods to pick up travelers:
 
 * regular
-  * line does not contain any estimated stop times, nor zonal stop point location. 
-  * No need to call too.
+    * line does not contain any estimated stop times, nor zonal stop point location. 
+    * No need to call too.
 * odt_with_stop_time
-  * line does not contain any estimated stop times, nor zonal stop point location.
-  * But you will have to call to take it.
+    * line does not contain any estimated stop times, nor zonal stop point location.
+    * But you will have to call to take it.
 * odt_with_stop_point
-  * line can contain some estimated stop times, but no zonal stop point location.
-  * And you will have to call to take it.
+    * line can contain some estimated stop times, but no zonal stop point location.
+    * And you will have to call to take it.
 * odt_with_zone
-  * line can contain some estimated stop times, and zonal stop point location.
-  * And you will have to call to take it
-  * well, not really a public transport line, more a cab...
+    * line can contain some estimated stop times, and zonal stop point location.
+    * And you will have to call to take it
+    * well, not really a public transport line, more a cab...
 
 
 
