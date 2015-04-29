@@ -1,4 +1,4 @@
-"""potal_codes table added
+"""postal_codes table added
 
 Revision ID: 13673746db16
 Revises: 23dd34bfaeaf
