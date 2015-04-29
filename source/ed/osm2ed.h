@@ -130,8 +130,9 @@ struct OSMRelation {
     const u_int64_t osm_id;
     CanalTP::References references;
     const std::string insee = "",
-                      postal_code = "",
                       name = "";
+    std::string postal_code = "";
+    std::vector<std::string> postal_codes;
     const uint32_t level = std::numeric_limits<uint32_t>::max();
 
     // these attributes are mutable because this object would be use in a set, and
@@ -141,9 +142,7 @@ struct OSMRelation {
 
     OSMRelation(const u_int64_t osm_id, const std::vector<CanalTP::Reference>& refs,
                 const std::string& insee, const std::string postal_code,
-                const std::string& name, const uint32_t level) :
-        osm_id(osm_id), references(refs), insee(insee),
-        postal_code(postal_code), name(name), level(level) {}
+                const std::string& name, const uint32_t level);
 
     bool operator <(const OSMRelation& other) const{
         return this->osm_id < other.osm_id;
@@ -296,6 +295,7 @@ struct OSMCache {
     void insert_ways();
     void insert_edges();
     void insert_relations();
+    void insert_postal_codes();
     void insert_rel_way_admins();
     void build_way_map();
     void fusion_ways();

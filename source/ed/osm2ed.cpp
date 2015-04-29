@@ -376,6 +376,24 @@ void OSMCache::insert_relations() {
             << " admins because their polygons were empty");
 }
 
+/*
+ * Insert poastal codes into the database
+ */
+void OSMCache::insert_postal_codes() {
+    size_t n_inserted = 0 ;
+    lotus.prepare_bulk_insert("georef.postal_codes", {"admin_id", "postal_code"});
+    for (auto relation : relations) {
+        if((!relation.polygon.empty()) && (!relation.postal_codes.empty())){
+            for(std::string& pst_code: relation.postal_codes){
+                lotus.insert({std::to_string(relation.osm_id), pst_code});
+                ++n_inserted;
+            }
+        }
+    }
+    lotus.finish_bulk_insert();
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, n_inserted << " postal codes inserted" );
+}
 
 void OSMCache::insert_rel_way_admins() {
     lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
@@ -561,6 +579,22 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     }
     if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {
         bg::centroid(polygon, centre);
+    }
+}
+
+OSMRelation::OSMRelation(const u_int64_t osm_id,
+                         const std::vector<CanalTP::Reference>& refs,
+                         const std::string& insee,
+                         const std::string postal_code,
+                         const std::string& name,
+                         const uint32_t level) :
+    osm_id(osm_id), references(refs), insee(insee),
+    name(name), level(level){
+    if(!postal_code.empty()){
+        boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
+        if (this->postal_codes.size()>0){
+            this->postal_code = this->postal_codes.front();
+        }
     }
 }
 
@@ -910,6 +944,7 @@ int main(int argc, char** argv) {
     cache.insert_ways();
     cache.insert_edges();
     cache.insert_relations();
+    cache.insert_postal_codes();
     cache.insert_rel_way_admins();
 
     ed::Georef data;
