@@ -10,32 +10,33 @@ Endpoint
 ********
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
+See `authentication`_ section to find out **how to use your token**. 
+If you use a web browser, you only have to paste it in the user area, with no password.
 
 Some easy examples
 ******************
 
 * Geographical coverage of the service
-	* https://api.navitia.io/v1/coverage 
+  * https://api.navitia.io/v1/coverage 
 * Where am I? (WGS 84 coordinates)
-	* https://api.navitia.io/v1/coord/2.377310;48.847002
-	* I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-* Which services are available on this coverage? take a look at the links under this URL
-	* https://api.navitia.io/v1/coverage/fr-idf
+  * https://api.navitia.io/v1/coord/2.377310;48.847002
+  * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+* Which services are available on this coverage? Take a look at the links at the bottom of this stream
+  * https://api.navitia.io/v1/coverage/fr-idf
 * Networks available?
-	* https://api.navitia.io/v1/coverage/fr-idf/networks
+  * https://api.navitia.io/v1/coverage/fr-idf/networks
 * RATP network lines?
-	* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
+  * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
-	* physical modes managed by RATP 
-		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
-	* metro lines 
-		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+  * physical modes managed by RATP 
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+  * metro lines 
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
 * By the way, what is close to me?
-	* https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
-	* or ...
+  * https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+  * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+  * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+  * or ...
 
 Resources
 *********
@@ -110,6 +111,7 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
 
+.. _authentication:
 
 Authentication
 ================
@@ -290,18 +292,21 @@ Specific parameters
 There are other specific parameters.
 A least, there is one: *odt_level* which can be applied only on /lines collection...
 
-It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
+It allows you to request navitia for specific pick up lines. It refers to the `odt`_ section.
+"odt_level" can take one of these values:
 
-* none : to get standard public transport lines. Trips are predefined.
-* mixt : to get lines with predefined and some non-predefined trips 
-* zonal : to get lines with only non-predefined trips 
-* all (default value) : to get all public transport lines
+* all (default value): no filter, provide all public transport lines, whatever its type
+* scheduled : provide only regular lines (see the `odt`_ section)
+* with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines. 
+  * You can easily request route_schedule and stop_schedule with these kind of lines.
+  * Be aware of "estimated" stop times
+* zonal : to get "odt_with_zone" lines with non-detailed trips 
 
 For example
 
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
 
-https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=none
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=regular
 
 Examples
 ########
@@ -333,13 +338,13 @@ Response example for this request https://api.navitia.io/v1/coverage/fr-idf/phys
 Other examples
 
 * Network list
-	* https://api.navitia.io/v1/coverage/fr-idf/networks
+  * https://api.navitia.io/v1/coverage/fr-idf/networks
 * Physical mode list
-	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes
+  * https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 * Line list
-	* https://api.navitia.io/v1/coverage/fr-idf/lines
+  * https://api.navitia.io/v1/coverage/fr-idf/lines
 * Line list for one mode
-	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
+  * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
 Places
@@ -1301,13 +1306,13 @@ datetime
 
 A date time with the format YYYYMMDDThhmmss
 
-Misc mechanisms
-***************
+Misc mechanisms (and boring stuff)
+=================================
 
 .. _multiple_journeys: 
 
 Multiple journeys
-#################
+*****************
 
 Navitia can compute several kind of trips within a journey query.
 
@@ -1323,7 +1328,7 @@ Those journeys have the ``next`` (or ``previous``) value in their tags.
 .. _journey_qualif:
 
 Journey qualification process
-#############################
+*****************************
 
 Since Navitia can return several journeys, it tags them to help the user choose the best one for his needs.
 
@@ -1345,5 +1350,34 @@ non_pt_walk           A trip without public transport, only walking
 non_pt_bike           A trip without public transport, only biking
 non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
+
+.. _odt:
+On demand transportation
+************************
+
+Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
+Besides, **in data**, the stop times can be "estimated" (with no guarantee on time respect by the agency)
+or not (the transport agencies should arrive on time).
+After all, the stop points can be standard (such as bus stop or railway station) 
+or "zonal" (where agency can pick you up you anywhere, like a cab).
+
+That's really responsive locomotion (ɔ).
+
+So public transport lines can mix different methods to pick up travelers:
+
+* regular
+  * line does not contain any estimated stop times, nor zonal stop point location. 
+  * No need to call too.
+* odt_with_stop_time
+  * line does not contain any estimated stop times, nor zonal stop point location.
+  * But you will have to call to take it.
+* odt_with_stop_point
+  * line can contain some estimated stop times, but no zonal stop point location.
+  * And you will have to call to take it.
+* odt_with_zone
+  * line can contain some estimated stop times, and zonal stop point location.
+  * And you will have to call to take it
+  * well, not really a public transport line, more a cab...
+
 
 
