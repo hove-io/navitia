@@ -592,7 +592,7 @@ OSMRelation::OSMRelation(const u_int64_t osm_id,
     name(name), level(level){
     if(!postal_code.empty()){
         boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
-        if (this->postal_codes.size() >0 ){
+        if (this->postal_codes.size() > 0 ){
             this->postal_code = this->postal_codes.front();
         }
     }
