@@ -80,6 +80,10 @@ static void fill_shape(pbnavitia::Section* pb_section,
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
         const auto* jpp = (*it)->journey_pattern_point;
         const auto cur_order = jpp->order;
+
+        // As every stop times may not be present (because they can be
+        // filtered because of estimated datetime), we can only print
+        // the shape if the 2 stop times are consecutive
         if (prev_order + 1 == cur_order) {
             for (const auto& cur_coord: jpp->shape_from_prev) {
                 if (cur_coord == prev_coord) { continue; }
@@ -87,6 +91,8 @@ static void fill_shape(pbnavitia::Section* pb_section,
                 prev_coord = cur_coord;
             }
         }
+        // Add the coordinates of the stop point if not already added
+        // by the shape.
         const auto& sp_coord = jpp->stop_point->coord;
         if (sp_coord != prev_coord) {
             add_coord(sp_coord, pb_section);
