@@ -431,6 +431,18 @@ Parameters
 |         |               |                 | for example: places_type.id=theater      |                                      |
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
 
+Filter parameter can be use to make some advanced requests:
+
+* request for the city of "Paris" on fr-idf
+    * http://api.navitia.io/v1/coverage/fr-idf/places?q=paris
+* then pois nearby this city
+    * http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby
+* and then, let's catch every parking around
+    * "distance=10000" Paris is not so big
+    * "type[]=poi" to take pois only
+    * "filter=poi_type.id=poi_type:amenity:parking" to get parking
+    * http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking
+
 Example
 ########
 
