@@ -70,7 +70,7 @@ void GeopalParser::fill() {
     LOG4CPLUS_INFO(logger, "Admin count: " << this->data.admins.size());
     this->fill_postal_codes();
     this->fill_ways_edges();
-    LOG4CPLUS_INFO(logger, "Noeud count: " << this->data.nodes.size());
+    LOG4CPLUS_INFO(logger, "Node count: " << this->data.nodes.size());
     LOG4CPLUS_INFO(logger, "Way count: " << this->data.ways.size());
     LOG4CPLUS_INFO(logger, "Edge count: " << this->data.edges.size());
 
