@@ -175,7 +175,7 @@ public:
     FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false) :
         csv(ss, ',' , true), fail_if_no_file(fail), handler(gdata, csv)  {}
 
-    void fill(Data& data);
+    bool fill(Data& data);
 };
 
 /**
@@ -368,7 +368,7 @@ protected:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
     template <typename Handler>
-    void parse(Data&, std::string file_name, bool fail_if_no_file = false);
+    bool parse(Data&, std::string file_name, bool fail_if_no_file = false);
     template <typename Handler>
     void parse(Data&); //some parser do not need a file since they just add default data
 
@@ -393,9 +393,9 @@ public:
 };
 
 template <typename Handler>
-inline void GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
+inline bool GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
     FileParser<Handler> parser (this->gtfs_data, path + "/" + file_name, fail_if_no_file);
-    parser.fill(data);
+    return parser.fill(data);
 }
 template <typename Handler>
 inline void GenericGtfsParser::parse(Data& data) {
@@ -437,7 +437,7 @@ struct InvalidHeaders {
 };
 
 template <typename Handler>
-inline void FileParser<Handler>::fill(Data& data) {
+inline bool FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (! csv.is_open() && ! csv.filename.empty()) {
         if ( fail_if_no_file ) {
@@ -445,7 +445,7 @@ inline void FileParser<Handler>::fill(Data& data) {
             throw FileNotFoundException(csv.filename);
         }
         LOG4CPLUS_WARN(logger, "Impossible to read " << csv.filename);
-        return;
+        return false;
     }
 
     typename Handler::csv_row headers = handler.required_headers();
@@ -465,6 +465,8 @@ inline void FileParser<Handler>::fill(Data& data) {
         }
     }
     handler.finish(data);
+
+    return true;
 }
 
 template<typename T> bool

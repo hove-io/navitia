@@ -1152,13 +1152,16 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 void FusioParser::parse_files(Data& data) {
     parse<GeometriesFusioHandler>(data, "geometries.txt");
 
-    // TODO: we need at least one of agency.txt or networks.txt
-    parse<AgencyFusioHandler>(data, "agency.txt");
-    parse<AgencyFusioHandler>(data, "networks.txt");
+    if (! parse<AgencyFusioHandler>(data, "networks.txt")) {
+        parse<AgencyFusioHandler>(data, "agency.txt", true);
+    }
 
     parse<ContributorFusioHandler>(data, "contributors.txt");
-    parse<CompanyFusioHandler>(data, "company.txt");
-    parse<CompanyFusioHandler>(data, "companies.txt");
+
+    if (! parse<CompanyFusioHandler>(data, "companies.txt")) {
+        parse<CompanyFusioHandler>(data, "company.txt");
+    }
+
     parse<PhysicalModeFusioHandler>(data, "physical_modes.txt");
     parse<CommercialModeFusioHandler>(data, "commercial_modes.txt");
     parse<CommentFusioHandler>(data, "comments.txt");
