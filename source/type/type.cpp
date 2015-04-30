@@ -197,20 +197,23 @@ bool FrequencyVehicleJourney::is_valid(int day, const bool is_adapted) const {
     }
 }
 
-bool VehicleJourney::has_date_time_estimated() const{
-    for(const StopTime& st : this->stop_time_list){
-        if (st.date_time_estimated()){
-            return true;
-        }
+bool VehicleJourney::has_datetime_estimated() const {
+    for (const StopTime& st : this->stop_time_list) {
+        if (st.date_time_estimated()) { return true; }
     }
     return false;
 }
 
 bool VehicleJourney::has_zonal_stop_point() const {
-    for(const StopTime& st : this->stop_time_list){
-        if (st.journey_pattern_point->stop_point->is_zonal){
-            return true;
-        }
+    for (const StopTime& st : this->stop_time_list) {
+        if (st.journey_pattern_point->stop_point->is_zonal) { return true; }
+    }
+    return false;
+}
+
+bool VehicleJourney::has_odt() const {
+    for (const StopTime& st : this->stop_time_list) {
+        if (st.odt()) { return true; }
     }
     return false;
 }
@@ -573,7 +576,7 @@ type::hasOdtProperties Route::get_odt_properties() const{
 
 void JourneyPattern::build_odt_properties(){
     for_each_vehicle_journey([&](const VehicleJourney& vj) {
-        this->odt_properties.set_estimated(vj.has_date_time_estimated());
+        this->odt_properties.set_estimated(vj.has_datetime_estimated());
         this->odt_properties.set_zonal(vj.has_zonal_stop_point());
         return true;
     });

@@ -568,33 +568,6 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
     validity_pattern->set_days(vp->days.to_string());
 }
 
-
-static pbnavitia::VehicleJourneyType
-get_pb_odt_type(const navitia::type::VehicleJourneyType vehicle_journey_type){
-    pbnavitia::VehicleJourneyType result = pbnavitia::VehicleJourneyType::regular;
-    switch(vehicle_journey_type){
-        case type::VehicleJourneyType::virtual_with_stop_time:
-            result = pbnavitia::VehicleJourneyType::virtual_with_stop_time;
-            break;
-    case type::VehicleJourneyType::virtual_without_stop_time:
-        result = pbnavitia::VehicleJourneyType::virtual_without_stop_time;
-            break;
-    case type::VehicleJourneyType::stop_point_to_stop_point:
-        result = pbnavitia::VehicleJourneyType::stop_point_to_stop_point;
-            break;
-    case type::VehicleJourneyType::adress_to_stop_point:
-        result = pbnavitia::VehicleJourneyType::address_to_stop_point;
-            break;
-    case type::VehicleJourneyType::odt_point_to_point:
-        result = pbnavitia::VehicleJourneyType::odt_point_to_point;
-            break;
-    default :
-        result = pbnavitia::VehicleJourneyType::regular;
-    }
-    return result;
-}
-
-
 void fill_pb_object(const nt::VehicleJourney* vj,
                     const nt::Data& data,
                     pbnavitia::VehicleJourney * vehicle_journey,
@@ -613,8 +586,6 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     }
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
-    // TODO ODT this will not work correctly now
-    vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
     vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
     vehicle_journey->set_bike_accepted(vj->bike_accepted());
@@ -1384,8 +1355,6 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         uris->set_physical_mode(vj->journey_pattern->physical_mode->uri);
     }
     pt_display_info->set_description(vj->odt_message);
-    // TODO ODT: this will not work correctly now
-    pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if(origin && destination){
         fill_pb_object(vj, data, has_equipments, origin, destination,  max_depth-1, now, action_period);
@@ -1522,26 +1491,24 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const nt::VehicleJourney* vj,
-                    const nt::Data&,
-                    const std::vector<const type::StopTime*>& stop_times,
-                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey,
-                    int,
-                    const pt::ptime&,
-                    const pt::time_period&)
-{
-    if(vj == nullptr)
-        return;
-    // TODO ODT: this will not work correctly now
-    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
-    if(stop_times.empty()){
-        add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
-    }else{
-        bool time_estimated = stop_times.front()->date_time_estimated() || stop_times.back()->date_time_estimated();
-        add_info_vehicle_journey->set_has_date_time_estimated(time_estimated);
+void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
+                                  const bool has_datetime_estimated,
+                                  const bool has_odt,
+                                  const bool is_zonal) {
+    if (has_datetime_estimated) {
+        infos->Add(pbnavitia::HAS_DATETIME_ESTIMATED);
+    }
+    if (is_zonal) {
+        infos->Add(pbnavitia::ODT_WITH_ZONE);
+    } else if (has_odt && has_datetime_estimated) {
+        infos->Add(pbnavitia::ODT_WITH_STOP_POINT);
+    } else if (has_odt) {
+        infos->Add(pbnavitia::ODT_WITH_STOP_TIME);
+    }
+    if (infos->empty()) {
+        infos->Add(pbnavitia::REGULAR);
     }
 }
-
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& message,
                     pbnavitia::Error* error, int ,

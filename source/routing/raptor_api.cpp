@@ -32,14 +32,15 @@ www.navitia.io
 #include "raptor.h"
 #include "georef/street_network.h"
 #include "type/pb_converter.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
-#include <unordered_set>
-#include <chrono>
 #include "type/meta_data.h"
 #include "fare/fare.h"
 #include "vptranslator/block_pattern_to_pb.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/algorithm/count.hpp>
+#include <unordered_set>
+#include <chrono>
 
 
 namespace navitia { namespace routing {
@@ -162,14 +163,12 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         return;
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
-    auto* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
     if(! stop_times.empty()){
         fill_pb_object(vj, d, vj_pt_display_information, stop_times.front()->journey_pattern_point->stop_point, stop_times.back()->journey_pattern_point->stop_point, 0, now, action_period);
     }else{
         fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
     }
 
-    fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
     fill_shape(pb_section, stop_times);
     set_length(pb_section);
     fill_co2_emission(pb_section, d, vj);
@@ -434,19 +433,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     && (item.stop_times.front()->odt() || item.stop_times.back()->odt());
                 const bool is_zonal = ! item.stop_points.empty()
                     && (item.stop_points.front()->is_zonal || item.stop_points.back()->is_zonal);
-                if (has_datetime_estimated) {
-                    pb_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
-                }
-                if (is_zonal) {
-                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_ZONE);
-                } else if (has_odt && has_datetime_estimated) {
-                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_STOP_POINT);
-                } else if (has_odt) {
-                    pb_section->add_additional_informations(pbnavitia::ODT_WITH_STOP_TIME);
-                }
-                if (pb_section->additional_informations().empty()) {
-                    pb_section->add_additional_informations(pbnavitia::REGULAR);
-                }
+                fill_additional_informations(pb_section->mutable_additional_informations(),
+                                             has_datetime_estimated,
+                                             has_odt,
+                                             is_zonal);
 
                 // If this section has estimated stop times,
                 // if the previous section is a waiting section, we also
@@ -454,7 +444,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 if (has_datetime_estimated && pb_journey->sections_size() >= 2) {
                     auto previous_section = pb_journey->mutable_sections(pb_journey->sections_size()-2);
                     if (previous_section->type() == pbnavitia::WAITING) {
-                        previous_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                        previous_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
                     }
                 }
             } else {
@@ -466,7 +456,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         int section_idx = pb_journey->sections_size() - 2;
                         if(section_idx >= 0 && pb_journey->sections(section_idx).type() == pbnavitia::PUBLIC_TRANSPORT){
                             auto* prec_section = pb_journey->mutable_sections(section_idx);
-                            prec_section->mutable_add_info_vehicle_journey()->set_stay_in(true);
+                            prec_section->add_additional_informations(pbnavitia::STAY_IN);
                         }
                         break;
                     }
@@ -475,15 +465,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 }
                 // For a waiting section, if the previous public transport section,
                 // has estimated datetime we need to set it has estimated too.
-                if (pb_journey->sections_size() > 1) {
-                    for (const auto& section: pb_journey->sections()) {
-                        if (section.type() == pbnavitia::PUBLIC_TRANSPORT) {
-                            if (section.add_info_vehicle_journey().has_date_time_estimated()) {
-                                pb_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
-                            }
-                            break;
-                        }
+                const auto& sections = pb_journey->sections();
+                for (auto it = sections.rbegin(); it != sections.rend(); ++it) {
+                    if (it->type() != pbnavitia::PUBLIC_TRANSPORT) { continue; }
+                    if (boost::count(it->additional_informations(), pbnavitia::HAS_DATETIME_ESTIMATED)) {
+                        pb_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
                     }
+                    break;
                 }
 
                 bt::time_period action_period(item.departure, item.arrival);
@@ -730,6 +718,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             }
         }
 
+        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         //we need to check if the admin has zone odt
         const auto& admins = find_admins(ep, data);
         for (const auto* admin: admins) {

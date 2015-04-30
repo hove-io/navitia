@@ -207,36 +207,6 @@ class additional_informations(fields.Raw):
                 in properties.additional_informations]
 
 
-class additional_informations_vj(fields.Raw):
-
-    def output(self, key, obj):
-        addinfo = obj.add_info_vehicle_journey
-        result = []
-        if addinfo.has_date_time_estimated:
-            result.append("has_date_time_estimated")
-
-        if addinfo.stay_in:
-            result.append('stay_in')
-
-        descriptor = addinfo.DESCRIPTOR
-        enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
-        values = enum_t.values_by_name
-        vj_type = addinfo.vehicle_journey_type
-        if not vj_type:
-            return result
-        if vj_type == values['virtual_with_stop_time'].number:
-            result.append("odt_with_stop_time")
-        else:
-            if vj_type == values['virtual_without_stop_time'].number or \
-               vj_type == values['stop_point_to_stop_point'].number or \
-               vj_type == values['address_to_stop_point'].number or \
-               vj_type == values['odt_point_to_point'].number:
-                result.append("odt_with_zone")
-            else:
-                result.append("regular")
-        return result
-
-
 class equipments(fields.Raw):
     def output(self, key, obj):
         equipments = obj.has_equipments

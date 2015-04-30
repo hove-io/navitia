@@ -38,6 +38,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "georef/street_network.h"
 #include "type/data.h"
+#include <boost/range/algorithm/count.hpp>
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
@@ -291,7 +292,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -300,7 +301,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
 
 
     section = journey.sections(2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
     auto st3 = section.stop_date_times(0);
     auto st4 = section.stop_date_times(2);
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "start");
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -369,7 +370,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.duration(), 60);
 
     section = journey.sections(2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
     auto st3 = section.stop_date_times(0);
     auto st4 = section.stop_date_times(2);
@@ -426,7 +427,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
 }
 
 
@@ -481,7 +482,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4");
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -492,7 +493,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
     BOOST_CHECK_EQUAL(section.origin().uri(), "end");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_CHECK_EQUAL(section.duration(), 0);
 }
 
@@ -545,7 +546,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
 }
 
 

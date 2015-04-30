@@ -707,8 +707,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
 
     std::string get_direction() const;
-    bool has_date_time_estimated() const;
+    bool has_datetime_estimated() const;
     bool has_zonal_stop_point() const;
+    bool has_odt() const;
 
     bool has_boarding() const;
     bool has_landing() const;

@@ -122,32 +122,32 @@ struct aggregate_odt_fixture {
 
 // Tests for VehicleJourney Object
 BOOST_FIXTURE_TEST_CASE(vj_none_odt_test, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(regular_vj->has_date_time_estimated(), false);
+    BOOST_CHECK_EQUAL(regular_vj->has_datetime_estimated(), false);
     BOOST_CHECK_EQUAL(regular_vj->has_zonal_stop_point(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_virtual_odt_test, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->has_date_time_estimated(), false);
+    BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->has_datetime_estimated(), false);
     BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->has_zonal_stop_point(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test1, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->has_date_time_estimated(), true);
+    BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->has_datetime_estimated(), true);
     BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->has_zonal_stop_point(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test2, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->has_date_time_estimated(), true);
+    BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->has_datetime_estimated(), true);
     BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->has_zonal_stop_point(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test3, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(address_to_stop_point_vj->has_date_time_estimated(), true);
+    BOOST_CHECK_EQUAL(address_to_stop_point_vj->has_datetime_estimated(), true);
     BOOST_CHECK_EQUAL(address_to_stop_point_vj->has_zonal_stop_point(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test4, aggregate_odt_fixture) {
-    BOOST_CHECK_EQUAL(odt_point_to_point_vj->has_date_time_estimated(), true);
+    BOOST_CHECK_EQUAL(odt_point_to_point_vj->has_datetime_estimated(), true);
     BOOST_CHECK_EQUAL(odt_point_to_point_vj->has_zonal_stop_point(), true);
 }
 

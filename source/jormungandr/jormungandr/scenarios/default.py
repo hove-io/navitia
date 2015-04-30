@@ -170,10 +170,9 @@ class Scenario(simple.Scenario):
             result = []
             for section in journey.sections:
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
-                    if section.pt_display_informations.vehicle_journey_type in [type_pb2.virtual_without_stop_time,
-                                                                                type_pb2.stop_point_to_stop_point,
-                                                                                type_pb2.address_to_stop_point,
-                                                                                type_pb2.odt_point_to_point]:
+                    tags = section.additional_informations
+                    if response_pb2.ODT_WITH_ZONE in tags or \
+                       response_pb2.ODT_WITH_STOP_POINT in tags:
                         result.append(section.uris.line)
                     else:
                         return []
