@@ -215,7 +215,10 @@ def get_or_default(request, val, default):
     so here is a simple helper to get the default value is the key
     is not in the dict or if the value is None
     """
-    return request.get(val, default) or default
+    val = request.get(val, default)
+    if val is not None:
+        return val
+    return default
 
 def updated_request_with_default(request, instance):
     if not request['max_walking_duration_to_pt']:

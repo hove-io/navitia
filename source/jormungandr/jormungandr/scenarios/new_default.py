@@ -94,11 +94,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
             location.place = place
             location.access_duration = duration
 
-    if "datetime" in request and request["datetime"]:
-        if isinstance(request["datetime"], int) or isinstance(request["datetime"], long):
-            request["datetime"] = [request["datetime"]]
-        for dte in request["datetime"]:
-            req.journeys.datetimes.append(dte)
+    req.journeys.datetimes.append(request["datetime"])  #TODO remove this datetime list completly in another PR
 
     req.journeys.clockwise = request["clockwise"]
     sn_params = req.journeys.streetnetwork_params
@@ -249,7 +245,7 @@ class Scenario(simple.Scenario):
                 break
             
             #we filter unwanted journeys by side effects
-            journey_filter.filter_journeys(responses, request=request)
+            journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)
 
             if last_nb_journeys == new_nb_journeys:
                 #we are stuck with the same number of journeys, we stops

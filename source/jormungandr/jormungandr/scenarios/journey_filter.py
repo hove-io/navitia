@@ -26,13 +26,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from collections import namedtuple
+from itertools import izip
 import logging
 import itertools
 import datetime
-from operator import attrgetter
 from jormungandr.scenarios.utils import compare
 from navitiacommon import response_pb2
+
+#we can't use reverse(enumerate(list)) without creating a temporary list, so we define our own reverse enumerate
+reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
 
 def _delete_journeys(responses, request):
@@ -42,9 +44,10 @@ def _delete_journeys(responses, request):
 
     nb_deleted = 0
     for r in responses:
-        for idx, j in enumerate(reversed(r.journeys)):
+        for idx, j in reverse_enumerate(r.journeys):
             if not _to_be_deleted(j):
                 continue
+
             del r.journeys[idx]
             nb_deleted += 1
 
@@ -52,7 +55,7 @@ def _delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
-def filter_journeys(response_list, request):
+def filter_journeys(response_list, instance, request, original_request):
     """
     Filter by side effect the list of pb responses's journeys
 
@@ -68,7 +71,7 @@ def filter_journeys(response_list, request):
 
     _filter_similar_journeys(journeys, request)
 
-    _filter_not_coherent_journeys(journeys, request)
+    _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
     _delete_journeys(response_list, request)
 
@@ -110,7 +113,6 @@ def _mark_as_dead(journey, *reasons):
         journey.tags.append('deleted_because_' + reason)
 
 
-
 def _filter_similar_journeys(journeys, request):
     """
     for the moment very simple filter.
@@ -134,11 +136,43 @@ def _filter_similar_journeys(journeys, request):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def way_later(journey, asap_journey, request):
-    return False  #TODO
+def way_later(journey, asap_journey, original_request):
+    """
+    to check if a journey is way later than the asap journey
+    we check for each journey the difference between the requested datetime and the arrival datetime
+    (the other way around for non clockwise)
+
+    requested dt
+    *
+                   |=============>
+                          asap
+
+                                           |=============>
+                                                 journey
+
+    -------------------------------
+             asap pseudo duration
+
+    ------------------------------------------------------
+                       journey pseudo duration
+
+    """
+    requested_dt = original_request['datetime']
+    if original_request.get('clockwise', True):
+        pseudo_asap_duration = asap_journey.arrival_date_time - requested_dt
+        pseudo_journey_duration = journey.arrival_date_time - requested_dt
+    else:
+        pseudo_asap_duration = requested_dt - asap_journey.departure_date_time
+        pseudo_journey_duration = requested_dt - journey.departure_date_time
+
+    max_factor = 3  #TODO get it in instance
+    base_factor = 60*60  #TODO get it in instance, for the moment 1h
+
+    max_value = pseudo_asap_duration * max_factor + base_factor
+    return pseudo_journey_duration > max_value
 
 
-def _filter_not_coherent_journeys(journeys, request):
+def _filter_not_coherent_journeys(journeys, instance, request, original_request):
     """
     Filter not coherent journeys
 
@@ -157,7 +191,7 @@ def _filter_not_coherent_journeys(journeys, request):
     for j in journeys:
         if _to_be_deleted(j):
             continue
-        if way_later(j, asap_journey, request):
+        if way_later(j, asap_journey, original_request):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j.internal_id, asap_journey.internal_id))
 
