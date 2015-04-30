@@ -26,8 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.scenarios import journey_filter
+from jormungandr.scenarios.journey_filter import _to_be_deleted
 import navitiacommon.response_pb2 as response_pb2
-from ..default import Scenario, are_equals
+from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
 from nose.tools import eq_
 
@@ -275,6 +277,14 @@ def journeys_equality_test_same_journeys():
     journey2 = create_dummy_journey()
     assert are_equals(journey1, journey2)
 
+
+def journeys_gen(list_responses):
+    for r in list_responses:
+        for j in r.journeys:
+            if not _to_be_deleted(j):
+                yield j
+
+
 def journeys_equality_test_almost_same_journeys():
     """
     test the are_equals method, applied to different journeys, but with meaningless differences
@@ -290,3 +300,129 @@ def journeys_equality_test_almost_same_journeys():
     modified_section.transfer_type = response_pb2.stay_in
 
     assert are_equals(journey1, journey2)
+
+
+def similar_journeys_test():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    journey2 = responses[0].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[0].uris.vehicle_journey = 'bob'
+
+    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+
+    assert len([journeys_gen(responses)]) == 1
+
+
+def similar_journeys_test2():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bob'
+
+    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+
+    assert len([journeys_gen(responses)]) == 1
+
+
+def similar_journeys_test3():
+
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[0].uris.vehicle_journey = 'bob'
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bobette'
+
+    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+
+    assert journey2 in journeys_gen(responses)
+
+
+class MockInstance(object):
+    def __init__(self):
+        pass  #TODO when we'll got instances's param
+
+def too_late_journeys():
+    request = {'datetime': 1000}
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.departure_date_time = 2000
+    journey1.arrival_date_time = 3000
+
+    journey2 = responses[0].journeys.add()  # later than journey1, but acceptable
+    journey2.departure_date_time = 2700
+    journey2.arrival_date_time = 5000
+
+    responses.append(response_pb2.Response())  # too late compared to journey1
+    journey3 = responses[-1].journeys.add()
+    journey3.departure_date_time = 10000
+    journey3.arrival_date_time = 13000
+
+    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+
+    assert journey1 in journeys_gen(responses)
+    assert journey2 not in journeys_gen(responses)
+
+
+def not_too_late_journeys():
+    request = {'datetime': 1000}
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.departure_date_time = 2000
+    journey1.arrival_date_time = 3000
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.departure_date_time = 3100
+    journey2.arrival_date_time = 3200
+
+    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+
+    journeys = [journeys_gen(responses)]
+
+    assert journey1 in journeys
+    assert journey2 in journeys
+
+
+def not_too_late_journeys_non_clockwise():
+    request = {'datetime': 10000, 'clockwise': False}
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.departure_date_time = 2000  # way too soon compared to the second one
+    journey1.arrival_date_time = 3000
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.departure_date_time = 8000
+    journey2.arrival_date_time = 9000
+
+    journey3 = responses[-1].journeys.add() # before journey2, but acceptable
+    journey3.departure_date_time = 7000
+    journey3.arrival_date_time = 7500
+
+    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+
+    journeys = [journeys_gen(responses)]
+    assert journey1 not in journeys
+    assert journey2 in journeys
+    assert journey3 in journeys

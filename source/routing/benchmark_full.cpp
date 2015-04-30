@@ -52,8 +52,10 @@ namespace ba = boost::algorithm;
 struct PathDemand {
     std::string start;
     std::string target;
+
     unsigned int date;
     unsigned int hour;
+
     type::Mode_e start_mode = type::Mode_e::Walking;
     type::Mode_e target_mode = type::Mode_e::Walking;
 };
