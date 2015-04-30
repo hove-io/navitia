@@ -153,12 +153,14 @@ message Journey {
     repeated Section sections = 6;
     optional PtObject origin = 7;
     optional PtObject destination = 8;
-    optional string type = 9;
+    optional string type = 9; // for jormungandr only
     optional Fare fare = 10;
-    repeated string tags = 11;
+    repeated string tags = 11; //for jormungandr only
     repeated Calendar calendars = 12;
     optional Co2Emission co2_emission = 13;
     optional string most_serious_disruption_effect = 14;
+
+    optional string internal_id = 15;  //for jormungandr only. for log purpose we add an id to the journey
 }
 
 enum ResponseType {

@@ -184,6 +184,20 @@ Look for a user with his email:
 ]
 ```
 
+Get all users for a specific endpoint
+
+    GET $HOST/v0/users/?end_point_id=4
+
+```json
+[
+    {
+        "email": "foo@example.com",
+        "id": 1,
+        "login": "foo"
+    }
+]
+```
+
 Get all a user information:
 
     GET $HOST/v0/users/$USERID/
@@ -205,11 +219,12 @@ Note: email addresses are validated via api not only on the format but on it's e
 
 #### Parameters
 
-name   | description                                                                         | required | default                |
--------|-------------------------------------------------------------------------------------|----------|------------------------|
-email  | adress email of the user                                                            | true     |                        |
-login  | login of the user                                                                   | true     |                        |
-type   | type of the user between: [with_free_instances, without_free_instances, super_user] | false    | with_free_instances    |
+name         | description                                                                          | required | default                            |
+-------------|--------------------------------------------------------------------------------------|----------|------------------------------------|
+email        | adress email of the user                                                             | true     |                                    |
+login        | login of the user                                                                    | true     |                                    |
+type         | type of the user between: [with_free_instances, without_free_instances, super_user]  | false    | with_free_instances                |
+end_point_id | the id of the endpoint for this user (in most case the default value is good enough  | false    | the default end_point (navitia.io) |
 
 
     POST /v0/users/?email=alex@example.com&login=alex
@@ -300,6 +315,93 @@ This is useful only is the instance is not "free"
     "login": "alex"
 }
 ```
+
+### Simple example
+
+Here a quick example of how to create a user with access to public instances using curl (but you can use whatever you want):
+
+Note: by default tyr is accessed on localhost:5000
+
+Create a user:
+
+    curl -X POST "localhost:5000/v0/users/?email=toto@canaltp.fr&login=bob"
+
+Note: the email must exists
+
+If the creation went well, a json is returned with an id:
+
+```json
+[
+    {
+        "email": "toto@canaltp.fr",
+        "id": 1,
+        "login": "bob"
+    }
+]
+
+```
+
+Use the id in the next query
+
+    curl -X POST "localhost:5000/v0/users/1/keys"
+
+```json
+{
+    "authorizations": [],
+    "email": "toto@canaltp.fr",
+    "id": 1,
+    "keys": [
+        {
+            "id": 1,
+            "token": "faa80b5f-f747-45bf-ad89-b3f2b29dd4aa",
+            "valid_until": null
+        }
+    ],
+    "login": "bob"
+}
+
+```
+
+
+#### EndPoints
+
+Endpoints are used for handling multiple user base with the same plateform. Each user is associated with only one
+endpoint. it's possible for a user to have an account in two separate endpoint with the same email used.
+
+you can see all endpoints with the ```end_points``` ressource:
+
+    GET /v0/end_points/
+
+```json
+[
+    {
+        "default": false,
+        "hostnames": [
+            "bar"
+        ],
+        "id": 10,
+        "name": "foo1"
+    },
+    {
+        "default": true,
+        "hostnames": [],
+        "id": 1,
+        "name": "navitia.io"
+    }
+]
+```
+
+For creating a new one the POST verb must be use and the request must contain a json of this form:
+
+```json
+{
+    "name": "foo",
+    "hostnames": ["foo.com"]
+}
+```
+
+The hostnames are facultavies, it's only have to be set if we want to enforce the host used for accessing the API.
+Update can be done with the PUT verb with the same kind of json.
 
 ### Simple example
 

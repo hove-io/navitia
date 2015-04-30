@@ -613,13 +613,6 @@ class Journeys(ResourceUri, ResourceUtc):
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
 
-        # Technically, bss mode enable walking (if it is better than bss)
-        # so if the user ask for walking and bss, we only keep bss
-        if 'walking' in args['origin_mode'] and 'bss' in args['origin_mode']:
-            args['origin_mode'].remove('walking')
-        if 'walking' in args['destination_mode'] and 'bss' in args['destination_mode']:
-            args['destination_mode'].remove('walking')
-
         if region:
             self.region = i_manager.get_region(region)
             if uri:
@@ -684,7 +677,7 @@ class Journeys(ResourceUri, ResourceUtc):
 
             if response.HasField('error') \
                     and len(possible_regions) != 1:
-                logging.getLogger(__name__).info("impossible to find journeys for the region {},"
+                logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
                                                  " we'll try the next possible region ".format(r))
 
                 if args['debug']:

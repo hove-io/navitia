@@ -98,7 +98,7 @@ def get_token():
             return decoded.split(':')[0]
         except binascii.Error:
             logging.info('badly formated token %s', auth)
-            flask_restful.abort(401, message="Unauthorized, invalid token", status=401, brief_log=True)
+            flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
             return None
     else:
         return auth
@@ -160,7 +160,7 @@ def get_user(token, abort_if_no_token=True):
             #a token is mandatory for non public jormungandr
             if not current_app.config.get('PUBLIC', False):
                 if abort_if_no_token:
-                    flask_restful.abort(401, message='no token', brief_log=True)
+                    flask_restful.abort(401, message='no token')
                 else:
                     return None
             else:  # for public one we allow unknown user
@@ -168,8 +168,6 @@ def get_user(token, abort_if_no_token=True):
                 g.user.id = 0
         else:
             g.user = cache_get_user(token)
-
-        logging.debug('user %s', g.user)
 
         return g.user
 
@@ -192,4 +190,4 @@ def abort_request(user=None):
     if user:
         flask_restful.abort(403)
     else:
-        flask_restful.abort(401, brief_log=True)
+        flask_restful.abort(401)

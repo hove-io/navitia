@@ -47,6 +47,8 @@ message StatRequest {
     repeated StatJourneyResponse journeys = 16;
     repeated InterpretedParameter interpreted_parameters = 17;
     optional JourneyRequest journey_request = 18;
+    optional int32 end_point_id = 19;
+    optional string end_point_name = 20;
 }
 
 message JourneyRequest {

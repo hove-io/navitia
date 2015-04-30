@@ -35,7 +35,7 @@ from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, UniqueConstraint
 from navitiacommon import default_values
 
 db = SQLAlchemy()
@@ -44,17 +44,53 @@ class TimestampMixin(object):
     created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
 
-class User(db.Model):
+
+class EndPoint(db.Model):
+    """
+    define a DNS name exposed by navitia, each useris associated wich one
+    """
     id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.Text, unique=True, nullable=False)
-    email = db.Column(db.Text, unique=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    hosts = db.relationship('Host', backref='end_point', lazy='joined', cascade='save-update, merge, delete, delete-orphan')
+    default = db.Column(db.Boolean, nullable=False, default=False)
+    users = db.relationship('User', lazy='dynamic', cascade='save-update, merge, delete, delete-orphan')
+
+    @property
+    def hostnames(self):
+        return [host.value for host in self.hosts]
+
+    @classmethod
+    def get_default(cls):
+        return cls.query.filter(cls.default == True).first_or_404()
+
+class Host(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    value = db.Column(db.Text, nullable=False)
+    end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
+
+    def __init__(self, value):
+        self.value = value
+
+    def __unicode__(self):
+        return self.value
+
+class User(db.Model):
+    __table_args__ = (UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
+                      UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'))
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.Text, nullable=False)
+    email = db.Column(db.Text, nullable=False)
+
+    end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
+    end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
+
     keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
 
     authorizations = db.relationship('Authorization', backref='user',
                                      lazy='joined', cascade='save-update, merge, delete')
 
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
-                              default='with_free', nullable=False)
+                             default='with_free', nullable=False)
 
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
         self.login = login
@@ -73,7 +109,7 @@ class User(db.Model):
         return self.type == 'super_user'
 
     def __repr__(self):
-        return '<User %r>' % self.email
+        return '<User {}-{}>'.format(self.id, self.email)
 
     def add_key(self, app_name, valid_until=None):
         """

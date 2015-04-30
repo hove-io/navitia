@@ -177,7 +177,7 @@ nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
     try{
         boost::geometry::centroid(line, centroid);
     }catch(...){
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                        "Can't find the centroid of the way::  " << this->name);
     }
 

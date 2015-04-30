@@ -94,6 +94,8 @@ class Schedules(ResourceUri, ResourceUtc):
                                 action="append")
         parser_get.add_argument("calendar", type=str,
                                 description="Id of the calendar")
+        parser_get.add_argument("distance", type=int, default=200,
+                                description="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
@@ -117,7 +119,7 @@ class Schedules(ResourceUri, ResourceUtc):
                 self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
             self.collection = 'schedules'
-            args["filter"] = self.get_filter(uri.split("/"))
+            args["filter"] = self.get_filter(uri.split("/"), args)
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
 
@@ -232,7 +234,9 @@ class StopSchedules(Schedules):
 passage = {
     "route": PbField(route, attribute="vehicle_journey.route"),
     "stop_point": PbField(stop_point),
-    "stop_date_time": PbField(stop_date_time)
+    "stop_date_time": PbField(stop_date_time),
+    "display_informations": PbField(display_informations_vj,
+                                    attribute='pt_display_informations'),
 }
 
 departures = {

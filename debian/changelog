@@ -1,3 +1,21 @@
+navitia2 (1.17.0) unstable; urgency=low
+
+  * Nm: fix nm  <https://github.com/CanalTP/navitia/pull/1019>
+  * Jormungandr: New scenario  <https://github.com/CanalTP/navitia/pull/1018>
+  * Ed: fix sort function  <https://github.com/CanalTP/navitia/pull/1016>
+  * Jormungandr: stat_manager was not threadsafe  <https://github.com/CanalTP/navitia/pull/1014>
+  * Stat: Added other indexes  <https://github.com/CanalTP/navitia/pull/1011>
+  * Jormungandr: Add display_information on next_passages api  <https://github.com/CanalTP/navitia/pull/1010>
+  * Ed: add two fusio files to import associated calendars  <https://github.com/CanalTP/navitia/pull/1009>
+  * Jormungandr: Add distance param  <https://github.com/CanalTP/navitia/pull/1008>
+  * Tyr: improvement of the logging  <https://github.com/CanalTP/navitia/pull/1007>
+  * Tyr: better log handling  <https://github.com/CanalTP/navitia/pull/1006>
+  * Doc: add documentation sncf  <https://github.com/CanalTP/navitia/pull/1005>
+  * Tyr/Jormungandr: Implement a way to have the same user multiple time in the database  <https://github.com/CanalTP/navitia/pull/1004>
+  * Revert min bss  <https://github.com/CanalTP/navitia/pull/1002>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Thu, 30 Apr 2015 14:04:42 +0100
+
 navitia2 (1.16.1) unstable; urgency=low
 
   * Fix stat_manager: it was not threadsafe! <https://github.com/CanalTP/navitia/pull/1014>
