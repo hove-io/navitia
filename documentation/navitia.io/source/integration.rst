@@ -24,7 +24,8 @@ Some easy examples
     * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
 * Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
     * https://api.navitia.io/v1/coverage/fr-idf
-* Networks available? > https://api.navitia.io/v1/coverage/fr-idf/networks
+* Networks available? (see what network_ is)
+    * https://api.navitia.io/v1/coverage/fr-idf/networks
 * RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
     * physical modes managed by RATP 
@@ -292,7 +293,7 @@ Specific parameters
 There are other specific parameters.
 A least, there is one: *odt_level* which can be applied only on /lines collection...
 
-It allows you to request navitia for specific pick up lines. It refers to the `odt`_ section.
+It allows you to request navitia for specific pickup lines. It refers to the `odt`_ section.
 "odt_level" can take one of these values:
 
 * all (default value): no filter, provide all public transport lines, whatever its type
@@ -306,7 +307,7 @@ For example
 
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
 
-https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=regular
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=scheduled
 
 Examples
 ########
@@ -431,7 +432,7 @@ Parameters
 |         |               |                 | for example: places_type.id=theater      |                                      |
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
 
-Filter parameter can be use to make some advanced requests:
+Filters can be added:
 
 * request for the city of "Paris" on fr-idf
     * http://api.navitia.io/v1/coverage/fr-idf/places?q=paris
@@ -722,7 +723,8 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    | * ``has_date_time_estimated``: section with at     |
 |                         |                                    |   least one estimated date time                    |
 |                         |                                    | * ``odt_with_stop_time``: odt with                 |
-|                         |                                    |   fix schedule, but travelers have to call agency! |
+|                         |                                    |   fixed schedule, but travelers have to call       |
+|                         |                                    |   agency!                                          |
 |                         |                                    | * ``odt_with_stop_point``: odt where pickup or     | 
 |                         |                                    |   drop off are specific points                     |
 |                         |                                    | * ``odt_with_zone``: odt which is like a cab,      |
@@ -992,6 +994,8 @@ Public transport objects
 Network
 #######
 
+Networks are fed by agencies in GTFS format.
+
 ====== ============= ==========================
 Field  Type          Description
 ====== ============= ==========================
@@ -1151,7 +1155,7 @@ _____________
 ===================== ============================================================
 Value                 Description
 ===================== ============================================================
-stop_point            a location where vehicles can pick up or drop off passengers
+stop_point            a location where vehicles can pickup or drop off passengers
 stop_area             a nameable zone, where there are some stop points  
 address               a point located in a street
 poi                   a point of interest
@@ -1372,15 +1376,17 @@ On demand transportation
 
 Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
 
-Besides, **in data**, the stop times can be "estimated" (with no guarantee on time respect by the agency)
-or not (the transport agencies should arrive on time).
+Besides, some stop times can be "estimated" *in data by design*.
+* A standard GTFS contains only regular time: that means transport agencies should arrive on time :)
+* But navitia can be fed with more specific data, where "estimated time" means that there will be
+no guarantee on time respect by the agency. It often occurs in suburban or rural zone.
 
 After all, the stop points can be standard (such as bus stop or railway station) 
 or "zonal" (where agency can pick you up you anywhere, like a cab).
 
 That's some kind of "responsive locomotion" (ɔ).
 
-So public transport lines can mix different methods to pick up travelers:
+So public transport lines can mix different methods to pickup travelers:
 
 * regular
     * line does not contain any estimated stop times, nor zonal stop point location. 
