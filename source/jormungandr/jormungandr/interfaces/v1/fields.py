@@ -101,16 +101,16 @@ class DateTime(fields.Raw):
         if value is None:
             return self.default
 
-        return self.format(value, tz)
+        return format_datetime(value, tz)
 
-    def format(self, value, timezone):
-        dt = datetime.datetime.utcfromtimestamp(value)
+def format_datetime(value, timezone):
+    dt = datetime.datetime.utcfromtimestamp(value)
 
-        if timezone:
-            dt = pytz.utc.localize(dt)
-            dt = dt.astimezone(timezone)
-            return dt.strftime("%Y%m%dT%H%M%S")
-        return None  # for the moment I prefer not to display anything instead of something wrong
+    if timezone:
+        dt = pytz.utc.localize(dt)
+        dt = dt.astimezone(timezone)
+        return dt.strftime("%Y%m%dT%H%M%S")
+    return None  # for the moment I prefer not to display anything instead of something wrong
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -150,7 +150,7 @@ class SplitDateTime(DateTime):
 
         date_time = date + time
         tz = get_timezone()
-        return self.format(date_time, timezone=tz)
+        return format_datetime(date_time, timezone=tz)
 
     @staticmethod
     def format_time(time):
