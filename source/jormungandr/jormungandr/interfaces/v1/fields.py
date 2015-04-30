@@ -182,6 +182,9 @@ class enum_type(fields.Raw):
 
 
 class PbEnum(fields.Raw):
+    """
+    output a protobuf enum as lower case string
+    """
 
     def __init__(self, pb_enum_type, *args, **kwargs):
         super(PbEnum, self).__init__(*args, **kwargs)
