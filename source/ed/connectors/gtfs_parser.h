@@ -94,6 +94,8 @@ struct GtfsData {
     ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
 
+    std::unordered_map<std::string, std::vector<ed::types::StopTime*>> stop_time_map; // there may be several stoptimes for one id because of dst
+
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
