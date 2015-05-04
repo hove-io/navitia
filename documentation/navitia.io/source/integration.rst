@@ -838,8 +838,8 @@ Parameters
 |          |                     |           | between from_datetime        |               |
 |          |                     |           | and the retrieved datetimes. |               |
 +----------+---------------------+-----------+------------------------------+---------------+
-| nop      | max_stop_date_times | int       | Maximum number of            |               |
-|          |                     |           | stop_date_times per          |               |
+| nop      | max_date_times      | int       | Maximum number of            |               |
+|          |                     |           | columns per                  |               |
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
