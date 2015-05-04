@@ -69,6 +69,8 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
+
+    this->fill_admins_postal_codes(data, work);
     this->fill_admin_stop_areas(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
@@ -113,7 +115,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
 
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
+    std::string request = "SELECT id, name, uri, comment, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
         "FROM georef.admin";
 
@@ -125,7 +127,6 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
         const_it["name"].to(admin->name);
         const_it["insee"].to(admin->insee);
         const_it["level"].to(admin->level);
-        const_it["post_code"].to(admin->post_code);
         admin->coord.set_lon(const_it["lon"].as<double>());
         admin->coord.set_lat(const_it["lat"].as<double>());
 
