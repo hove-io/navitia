@@ -69,7 +69,7 @@ std::string Way::get_label() const {
 /** Recherche des coordonnées les plus proches à un un numéro
     * les coordonnées par extrapolation
 */
-nt::GeographicalCoord Way::extrapol_geographical_coord(int number) const {
+nt::GeographicalCoord Way::extrapol_geographical_coord(int number, const Graph& graph) const {
     HouseNumber hn_upper, hn_lower;
     nt::GeographicalCoord to_return;
 
@@ -103,7 +103,8 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number) const {
     double y_step = (hn_upper.coord.lat() - hn_lower.coord.lat()) /diff_house_number;
     to_return.set_lat(hn_lower.coord.lat() + y_step*diff_number);
 
-    return to_return;
+    const auto multiline = make_multiline(graph);
+    return project(multiline, to_return);
 }
 
 /**
@@ -113,9 +114,11 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number) const {
     * Sinon, les coordonnées par extrapolation
 */
 
-nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number) const {
-    if (!house_number_list.empty()){
+nt::GeographicalCoord Way::get_geographical_coord(const int number, const Graph& graph) const {
+    const std::vector< HouseNumber>& house_number_list =
+        number % 2 == 0 ? house_number_right : house_number_left;
 
+    if (!house_number_list.empty()){
         /// Dans le cas où le numéro recherché est plus grand que tous les numéros de liste
         if (house_number_list.back().number <= number){
             return house_number_list.back().coord;
@@ -134,7 +137,7 @@ nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber
         }
 
         /// Dans le cas où le numéro recherché est dans la liste et <> à tous les numéros
-        return extrapol_geographical_coord(number);
+        return extrapol_geographical_coord(number, graph);
     }
     nt::GeographicalCoord to_return;
     return to_return;
@@ -155,48 +158,31 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
             || number <= 0)
         return projected_centroid(graph);
 
-    if (number % 2 == 0) // Pair
-        return get_geographical_coord(this->house_number_right, number);
-    else // Impair
-        return get_geographical_coord(this->house_number_left, number);
+    return get_geographical_coord(number, graph);
 }
+
+nt::MultiLineString Way::make_multiline(const Graph& graph) const {
+    nt::MultiLineString multiline;
+    for (auto edge: this->edges) {
+        multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
+    }
+    return multiline;
+}
+
 
 // returns the centroid projected on the way
 nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
-    std::vector<nt::GeographicalCoord> line;
+    const auto multiline = make_multiline(graph);
+
     nt::GeographicalCoord centroid;
-
-    std::pair<vertex_t, vertex_t> previous(type::invalid_idx, type::invalid_idx);
-    for(auto edge : this->edges){
-        if(edge.first != previous.second || edge.second != previous.first ){
-            line.push_back(graph[edge.first].coord);
-            line.push_back(graph[edge.second].coord);
-        }
-        previous = edge;
-    }
-    try{
-        boost::geometry::centroid(line, centroid);
-    }catch(...){
+    try {
+        boost::geometry::centroid(multiline, centroid);
+    } catch(...) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                       "Can't find the centroid of the way::  " << this->name);
+                        "Can't find the centroid of the way: " << this->name);
     }
 
-    if (line.empty()) { return centroid; }
-
-    // project the centroid on the way
-    nt::GeographicalCoord projected_centroid = line.front();
-    float min_dist = centroid.distance_to(projected_centroid);
-    nt::GeographicalCoord last = line.front();
-    auto cur = line.begin();
-    for (++cur; cur != line.end(); last = *cur, ++cur) {
-        auto projection = centroid.project(last, *cur);
-        if (projection.second < min_dist) {
-            min_dist = projection.second;
-            projected_centroid = projection.first;
-        }
-    }
-
-    return projected_centroid;
+    return nt::project(multiline, centroid);
 }
 
 /** Recherche du némuro le plus proche à des coordonnées

@@ -86,4 +86,40 @@ std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
     return os;
 }
 
+GeographicalCoord project(const LineString& line, const GeographicalCoord& p) {
+    if (line.empty()) { return p; }
+
+    // project the p on the way
+    GeographicalCoord projected = line.front();
+    float min_dist = p.distance_to(projected);
+    GeographicalCoord prev = line.front();
+    auto cur = line.begin();
+    for (++cur; cur != line.end(); prev = *cur, ++cur) {
+        auto projection = p.project(prev, *cur);
+        if (projection.second < min_dist) {
+            min_dist = projection.second;
+            projected = projection.first;
+        }
+    }
+
+    return projected;
+}
+
+GeographicalCoord project(const MultiLineString& multiline, const GeographicalCoord& p) {
+    if (multiline.empty()) { return p; }
+
+    GeographicalCoord projected;
+    float min_dist = std::numeric_limits<float>::infinity();
+    for (const auto& line: multiline) {
+        const auto projection = project(line, p);
+        const auto cur_dist = projection.distance_to(p);
+        if (cur_dist < min_dist) {
+            min_dist = cur_dist;
+            projected = projection;
+        }
+    }
+
+    return projected;
+}
+
 }}// namespace navitia::type

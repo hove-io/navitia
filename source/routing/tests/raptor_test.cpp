@@ -1571,9 +1571,8 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     type::PT_Data& d = *b.data->pt_data;
 
     const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
-    const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
 
-    raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
+    raptor.first_raptor_loop({{dep, {}}},
                              DateTimeUtils::set(0, 7900), false,
                              DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
@@ -1608,9 +1607,8 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     type::PT_Data& d = *b.data->pt_data;
 
     const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
-    const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
 
-    raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
+    raptor.first_raptor_loop({{dep, {}}},
                              DateTimeUtils::set(0, 7900), false,
                              DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 

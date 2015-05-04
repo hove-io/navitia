@@ -168,7 +168,6 @@ void RAPTOR::init(const vec_stop_point_duration& dep,
 }
 
 void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
-                               const vec_stop_point_duration& arr,
                                const DateTime& departure_datetime,
                                bool disruption_active,
                                const DateTime& bound,
@@ -180,9 +179,7 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden_uri,
-                         disruption_active,
-                         dep,
-                         arr);
+                         disruption_active);
 
     clear(clockwise, bound);
     init(dep, departure_datetime, clockwise, accessibilite_params.properties);
@@ -272,7 +269,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     const auto& calc_dep = clockwise ? departures_ : destinations;
     const auto& calc_dest = clockwise ? destinations : departures_;
 
-    first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active,
+    first_raptor_loop(calc_dep, departure_datetime, disruption_active,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
     // Now, we do the second pass.  In case of clockwise (resp
@@ -389,9 +386,7 @@ void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams & accessibilite_params,
     const std::vector<std::string> & forbidden,
-    bool disruption_active,
-    const vec_stop_point_duration &departures_,
-    const vec_stop_point_duration &destinations)
+    bool disruption_active)
 {
 
     if(disruption_active){
