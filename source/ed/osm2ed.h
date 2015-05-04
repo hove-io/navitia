@@ -139,7 +139,7 @@ struct OSMRelation {
     mutable point centre = point(0.0, 0.0);
 
     OSMRelation(const u_int64_t osm_id, const std::vector<CanalTP::Reference>& refs,
-                const std::string& insee, const std::string postal_code,
+                const std::string& insee, const std::string& postal_code,
                 const std::string& name, const uint32_t level);
 
     bool operator <(const OSMRelation& other) const{

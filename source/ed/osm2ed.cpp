@@ -584,7 +584,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
 OSMRelation::OSMRelation(const u_int64_t osm_id,
                          const std::vector<CanalTP::Reference>& refs,
                          const std::string& insee,
-                         const std::string postal_code,
+                         const std::string& postal_code,
                          const std::string& name,
                          const uint32_t level) :
     osm_id(osm_id), references(refs), insee(insee),
