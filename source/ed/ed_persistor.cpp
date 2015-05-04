@@ -126,11 +126,10 @@ std::string EdPersistor::to_geographic_point(const navitia::type::GeographicalCo
 
 void EdPersistor::insert_admins(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.admin",
-            {"id", "name", "post_code", "insee", "level", "coord", "uri"});
+            {"id", "name", "insee", "level", "coord", "uri"});
     for(const auto& itm : data.admins){
         if(itm.second->is_used){
-            this->lotus.insert({std::to_string(itm.second->id), itm.second->name,
-                                    itm.second->postcode, itm.second->insee,
+            this->lotus.insert({std::to_string(itm.second->id), itm.second->name, itm.second->insee,
                                itm.second->level, this->to_geographic_point(itm.second->coord),"admin:" + itm.second->insee});
         }
     }
