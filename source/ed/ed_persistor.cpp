@@ -857,7 +857,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(stop->comment);
+//        values.push_back(stop->comment);
         values.push_back(std::to_string(stop->date_time_estimated));
         this->lotus.insert(values);
         ++inserted_count;

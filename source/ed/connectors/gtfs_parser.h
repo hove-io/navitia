@@ -100,11 +100,13 @@ struct GtfsData {
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
 
+    //for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
+    std::unordered_map<std::string, std::string> comments_id_map;
+
     // timezone management
     TzHandler tz;
 
     // used only by fusio2ed
-    std::unordered_map<std::string, std::string> comment_map;
     std::unordered_map<std::string, std::string> odt_conditions_map;
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
