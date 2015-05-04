@@ -285,6 +285,8 @@ stop_point = Table('stop_point', metadata,*[
     Column('comment', TEXT(), primary_key=False),
     Column('stop_area_id', BIGINT(), primary_key=False, nullable=False),
     Column('platform_code', TEXT(), primary_key=False),
+    Column('is_zonal', BOOLEAN(), primary_key=False, nullable=False, default=text(u'false')),
+    Column('area', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False, nullable=True),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_point_properties_id_fkey'),
     ForeignKeyConstraint(['stop_area_id'], [u'navitia.stop_area.id'], name=u'stop_point_stop_area_id_fkey'),],
     schema='navitia')

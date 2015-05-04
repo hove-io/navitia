@@ -50,7 +50,8 @@ struct AgencyFusioHandler : public AgencyGtfsHandler {
         agency_url_c;
     void init(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"agency_id", "agency_name", "agency_url", "agency_timezone"}; }
+    const std::vector<std::string> required_headers() const { return {}; }
+    //const std::vector<std::string> required_headers() const { return {"network_id", "network_name", "network_url", "network_timezone"}; }
 };
 
 struct StopsFusioHandler : public StopsGtfsHandler {
@@ -58,7 +59,8 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     int ext_code_c,
         property_id_c,
         comment_id_c,
-        visible_c;
+        visible_c,
+        geometry_id_c;
 
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);

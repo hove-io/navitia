@@ -365,6 +365,8 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
        "ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,"
        "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
        "sp.platform_code as platform_code,"
+       "sp.is_zonal as is_zonal,"
+       "ST_AsText(sp.area) as area,"
        "pr.wheelchair_boarding as wheelchair_boarding,"
        "pr.sheltered as sheltered, pr.elevator as elevator,"
        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
@@ -385,6 +387,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         const_it["fare_zone"].to(sp->fare_zone);
         const_it["external_code"].to(sp->codes["external_code"]);
         const_it["platform_code"].to(sp->platform_code);
+        const_it["is_zonal"].to(sp->is_zonal);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()){
@@ -419,6 +422,11 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         }
         sp->stop_area = stop_area_map[const_it["stop_area_id"].as<idx_t>()];
         sp->stop_area->stop_point_list.push_back(sp);
+        if (!const_it["area"].is_null() && sp->is_zonal) {
+            nt::MultiPolygon area;
+            boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
+            data.pt_data->stop_points_by_area.insert(area, sp);
+        }
 
         data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
@@ -685,6 +693,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["odt_message"].to(vj->odt_message);
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         const_it["external_code"].to(vj->codes["external_code"]);
+        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->journey_pattern = journey_pattern;
 

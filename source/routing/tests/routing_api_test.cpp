@@ -38,6 +38,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "georef/street_network.h"
 #include "type/data.h"
+#include <boost/range/algorithm/count.hpp>
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -107,7 +108,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
@@ -210,7 +211,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -274,7 +275,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -291,7 +292,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -300,7 +301,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
 
 
     section = journey.sections(2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
     auto st3 = section.stop_date_times(0);
     auto st4 = section.stop_date_times(2);
@@ -348,7 +349,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "start");
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -369,7 +370,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.duration(), 60);
 
     section = journey.sections(2);
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
     auto st3 = section.stop_date_times(0);
     auto st4 = section.stop_date_times(2);
@@ -413,7 +414,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -426,7 +427,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
 }
 
 
@@ -467,7 +468,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     dump_response(resp, "arrival_before");
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -481,7 +482,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4");
-    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 1);
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -492,7 +493,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
     BOOST_CHECK_EQUAL(section.origin().uri(), "end");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
     BOOST_CHECK_EQUAL(section.duration(), 0);
 }
 
@@ -532,7 +533,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -545,7 +546,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(section.origin().uri(), "start");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
-    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
 }
 
 
@@ -576,7 +577,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T174000")}, false, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, false);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T174000")}, false, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -635,7 +636,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     //we put the time not in the right order to check that they are correctly sorted
     std::vector<uint64_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
     pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true,
-                                                 navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+                                                 navitia::type::AccessibiliteParams(), forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -670,7 +671,7 @@ struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait>
     pbnavitia::Response make_response() {
         ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
         nr::RAPTOR raptor(*this->b.data);
-        return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
+        return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false);
     }
 };
 
@@ -859,14 +860,14 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     // Tram mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tram");
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
 
     // Walk mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
 
     // Second Journey
@@ -1012,7 +1013,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     // Tram mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).pt_display_informations().physical_mode(), "Tram");
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.48);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().unit(), "gEC");
     // Walk mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(4).has_co2_emission(), false);
@@ -1025,7 +1026,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().unit(), "gEC");
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.48 + 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.58 + 32.568);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
 }
 
@@ -1145,7 +1146,7 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
 
     ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
     nr::RAPTOR raptor(*this->b.data);
-    auto resp = nr::make_response(raptor, this->destination, this->origin, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
+    auto resp = nr::make_response(raptor, this->destination, this->origin, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false);
 
     dump_response(resp, "bus_car_parking");
 
@@ -1596,7 +1597,7 @@ BOOST_AUTO_TEST_CASE(isochrone) {
 
     auto result = nr::make_isochrone(raptor, ep,
             navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {},
-            sn_worker, false, true);
+            sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 }
@@ -1690,7 +1691,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
 
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20150315T080000")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, {}, sn_worker, false, true);
+                                             true, navitia::type::AccessibiliteParams(), {}, sn_worker, false);
 
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);

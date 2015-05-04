@@ -181,6 +181,18 @@ class enum_type(fields.Raw):
         return str.lower(enum[getattr(obj, key)].name)
 
 
+class PbEnum(fields.Raw):
+    """
+    output a protobuf enum as lower case string
+    """
+
+    def __init__(self, pb_enum_type, *args, **kwargs):
+        super(PbEnum, self).__init__(*args, **kwargs)
+        self.pb_enum_type = pb_enum_type
+
+    def format(self, value):
+        return str.lower(self.pb_enum_type.Name(value))
+
 class NonNullList(fields.List):
 
     def __init__(self, *args, **kwargs):
@@ -196,36 +208,6 @@ class additional_informations(fields.Raw):
         enum = descriptor.enum_types_by_name["AdditionalInformation"]
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
-
-
-class additional_informations_vj(fields.Raw):
-
-    def output(self, key, obj):
-        addinfo = obj.add_info_vehicle_journey
-        result = []
-        if addinfo.has_date_time_estimated:
-            result.append("has_date_time_estimated")
-
-        if addinfo.stay_in:
-            result.append('stay_in')
-
-        descriptor = addinfo.DESCRIPTOR
-        enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
-        values = enum_t.values_by_name
-        vj_type = addinfo.vehicle_journey_type
-        if not vj_type:
-            return result
-        if vj_type == values['virtual_with_stop_time'].number:
-            result.append("odt_with_stop_time")
-        else:
-            if vj_type == values['virtual_without_stop_time'].number or \
-               vj_type == values['stop_point_to_stop_point'].number or \
-               vj_type == values['address_to_stop_point'].number or \
-               vj_type == values['odt_point_to_point'].number:
-                result.append("odt_with_zone")
-            else:
-                result.append("regular")
-        return result
 
 
 class equipments(fields.Raw):

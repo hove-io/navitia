@@ -64,6 +64,8 @@ namespace navitia {
             polygon_type boundary;
             std::vector<const Admin*> admin_list;
             std::vector<const nt::StopArea*> main_stop_areas;
+
+            // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
             std::vector<const nt::StopPoint*> odt_stop_points; // zone odt stop points for the admin
 
             Admin():level(-1){}

@@ -25,12 +25,6 @@ target_link_libraries(next_stop_time_test ed connectors data fare types routing
     autocomplete pb_lib thermometer autocomplete georef utils ${BOOST_LIBS} log4cplus protobuf)
 ADD_BOOST_TEST(next_stop_time_test)
 
-
-add_executable(raptor_odt_test raptor_odt_test.cpp)
-target_link_libraries(raptor_odt_test ed data types routing fare pb_lib thermometer georef
-    autocomplete utils ${BOOST_LIBS} log4cplus pthread protobuf)
-ADD_BOOST_TEST(raptor_odt_test)
-
 add_executable(disruptions_test disruptions_test.cpp)
 target_link_libraries(disruptions_test ed data types routing fare pb_lib thermometer georef
   autocomplete utils workers

@@ -286,7 +286,6 @@ int main(int argc, char** argv){
               {},
               georef_worker,
               false,
-              true,
               std::numeric_limits<int>::max(), 10, false);
 
         if(resp.journeys_size() > 0) {

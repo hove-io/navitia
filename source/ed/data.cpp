@@ -76,6 +76,8 @@ void Data::build_block_id() {
         } else if (vj1->utc_to_local_offset != vj2->utc_to_local_offset) {
             // we don't want to link the splited vjs
             return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
+        } else  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+            return vj1->stop_time_list.size() < vj2->stop_time_list.size();
         } else {
             return vj1->stop_time_list.front()->departure_time <
                     vj2->stop_time_list.front()->departure_time;
@@ -230,6 +232,18 @@ void Data::complete(){
 
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
+
+    // set StopPoint from old zonal ODT to is_zonal
+    for (const auto* vj: vehicle_journeys) {
+        using nt::VehicleJourneyType;
+        if (in(vj->vehicle_journey_type,
+               {VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point}))
+        {
+            for (const auto* st: vj->stop_time_list) {
+                st->journey_pattern_point->stop_point->is_zonal = true;
+            }
+        }
+    }
 
     // generates default connections inside each stop area
     auto connections = make_departure_destinations_map(stop_point_connections);

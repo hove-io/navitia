@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri){
 
     auto res1 = raptor.compute(b.data->pt_data->stop_areas[0],
             b.data->pt_data->stop_areas[3], 7900, 0, DateTimeUtils::inf, false,
-            true, true, {}, std::numeric_limits<uint32_t>::max(), {"stop2"});
+            true, {}, std::numeric_limits<uint32_t>::max(), {"stop2"});
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 18000);
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
 
-    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
+    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.time_of_day().total_seconds(), 9*3600 + 20 * 60);
 }
@@ -839,7 +839,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl_counterclock) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 63200, 0, DateTimeUtils::inf, false, false);
+    auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 63200, 0, DateTimeUtils::inf, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_REQUIRE_EQUAL(res1.back().items[1].type,  ItemType::stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
@@ -1126,7 +1126,7 @@ BOOST_AUTO_TEST_CASE(max_transfers){
 
     for(uint32_t nb_transfers=0; nb_transfers<=2; ++nb_transfers) {
         //        type::Properties p;
-        auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 7900, 0, DateTimeUtils::inf, false, true, true, type::AccessibiliteParams(), nb_transfers);
+        auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 7900, 0, DateTimeUtils::inf, false, true, type::AccessibiliteParams(), nb_transfers);
         BOOST_REQUIRE(res1.size()>=1);
         for(auto r : res1) {
             BOOST_REQUIRE(r.nb_changes <= nb_transfers);
@@ -1254,7 +1254,7 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals =
         {{SpIdx(*b.sps["stop5"]), 0_s}};
 
-    auto results = raptor.compute_all(departures, arrivals, 6000, false, true);
+    auto results = raptor.compute_all(departures, arrivals, 6000, false);
 
     BOOST_CHECK_EQUAL(results.size(), 2);
     for (const auto& res: results) {
@@ -1297,7 +1297,7 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
         {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 320_s},
         {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
     };
-    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
+    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
     BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
         {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 15_min},
         {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
     };
-    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
+    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
     BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
@@ -1438,8 +1438,10 @@ BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
-    for (auto vj : b.data->pt_data->vehicle_journeys) {
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
+    for (auto* vj: b.data->pt_data->vehicle_journeys) {
+        for (auto& st: vj->stop_time_list) {
+            st.set_date_time_estimated(true);
+        }
     }
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -1456,8 +1458,10 @@ BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
 BOOST_AUTO_TEST_CASE(simple_odt){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250)("stop4", 8500, 8650);
-    for (auto vj : b.data->pt_data->vehicle_journeys) {
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
+    for (auto* vj: b.data->pt_data->vehicle_journeys) {
+        for (auto& st: vj->stop_time_list) {
+            st.set_date_time_estimated(true);
+        }
     }
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -1481,11 +1485,13 @@ BOOST_AUTO_TEST_CASE(simple_odt_virtual_with_stop_time){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250)("stop4", 8500, 8650);
     for (auto vj : b.data->pt_data->vehicle_journeys) {
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
+        for (auto& st: vj->stop_time_list) {
+            st.set_odt(true);
+        }
     }
     b.data->pt_data->index();
-    b.data->build_raptor();
     b.data->aggregate_odt();
+    b.data->build_raptor();
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
@@ -1534,9 +1540,9 @@ BOOST_AUTO_TEST_CASE(y_line_the_ultimate_political_blocking_bug){
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 7900, 0, DateTimeUtils::inf, false, false);
+    auto res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 7900, 0, DateTimeUtils::inf, false, true);
     check_y_line_the_ultimate_political_blocking_bug(res1);
-    auto res2 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 9000, 0, DateTimeUtils::min, false, false, false);
+    auto res2 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop4"), 9000, 0, DateTimeUtils::min, false, false);
     check_y_line_the_ultimate_political_blocking_bug(res2);
 }
 
@@ -1568,7 +1574,7 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
 
     raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
-                             DateTimeUtils::set(0, 7900), false, true,
+                             DateTimeUtils::set(0, 7900), false,
                              DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
@@ -1605,7 +1611,7 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     const auto arr = routing::SpIdx(*d.stop_points_map["D"]);
 
     raptor.first_raptor_loop({{dep, {}}}, {{arr, {}}},
-                             DateTimeUtils::set(0, 7900), false, true,
+                             DateTimeUtils::set(0, 7900), false,
                              DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
@@ -1668,11 +1674,11 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
-                               7900, 0, DateTimeUtils::inf, false, false);
+                               7900, 0, DateTimeUtils::inf, false, true);
     test_2nd_and_3rd_pass_checks(res1);
 
     // non clockwise test
-    auto res2 = raptor.compute(d.stop_areas[0], d.stop_areas[3], 16100, 0, 0, false, false, false);
+    auto res2 = raptor.compute(d.stop_areas[0], d.stop_areas[3], 16100, 0, 0, false, false);
     test_2nd_and_3rd_pass_checks(res2);
 }
 
@@ -1742,12 +1748,12 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
-                               7900, 0, DateTimeUtils::inf, false, false, true);
+                               7900, 0, DateTimeUtils::inf, false, true);
     test_2nd_and_3rd_pass_ext_checks(res1);
 
     // non clockwise test
     auto res2 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
-                               16100, 0, 0, false, false, false);
+                               16100, 0, 0, false, false);
     test_2nd_and_3rd_pass_ext_checks(res2);
 }
 
@@ -1770,7 +1776,7 @@ BOOST_AUTO_TEST_CASE(direct_and_1trans_at_same_dt) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("C"),
-                              7900, 0, DateTimeUtils::inf, false, false, true);
+                              7900, 0, DateTimeUtils::inf, false, true);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
@@ -1823,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
     std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
         {SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front()), 0_s}
     };
-    auto res = raptor.compute_all(departures, arrivals, 1000, false, true);
+    auto res = raptor.compute_all(departures, arrivals, 1000, false);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     const auto& direct = res[0].items.size() == 1 ? res[0] : res[1];
@@ -1884,7 +1890,7 @@ BOOST_AUTO_TEST_CASE(second_pass) {
         {SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front()), 0_s}
     };
 
-    auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false, true, DateTimeUtils::inf, 10, {}, {}, true);
+    auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false, DateTimeUtils::inf, 10, {}, {}, true);
 
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res[0].items.size(), 4);
@@ -1936,11 +1942,11 @@ BOOST_AUTO_TEST_CASE(good_connection_when_walking_as_fast_as_bus) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
-                               "8:00"_t, 0, DateTimeUtils::inf, false, false, true);
+                               "8:00"_t, 0, DateTimeUtils::inf, false, true);
     test_good_connection_when_walking_as_fast_as_bus(res1);
 
     // non clockwise test
     auto res2 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
-                               "12:00"_t, 0, 0, false, false, false);
+                               "12:00"_t, 0, 0, false, false);
     test_good_connection_when_walking_as_fast_as_bus(res2);
 }

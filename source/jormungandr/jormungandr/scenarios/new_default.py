@@ -119,8 +119,6 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     req.journeys.disruption_active = request["disruption_active"]
     req.journeys.show_codes = request["show_codes"]
 
-    req.journeys.allow_odt = True  #TODO if it is not used, remove this param !
-
     if "details" in request and request["details"]:
         req.journeys.details = request["details"]
 

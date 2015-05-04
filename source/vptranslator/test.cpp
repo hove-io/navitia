@@ -33,6 +33,7 @@ www.navitia.io
 
 #include <boost/test/unit_test.hpp>
 #include "vptranslator/vptranslator.h"
+#include "tests/utils_test.h"
 
 using namespace navitia::vptranslator;
 using navitia::type::ValidityPattern;
@@ -40,25 +41,6 @@ using navitia::type::ExceptionDate;
 typedef navitia::type::Calendar::Week Week;
 using boost::gregorian::date;
 using boost::gregorian::date_period;
-
-namespace std {
-template<typename T>
-static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
-    os << "{";
-    auto it = s.cbegin(), end = s.cend();
-    if (it != end) os << *it++;
-    for (; it != end; ++it) os << ", " << *it;
-    return os << "}";
-}
-template<typename T>
-static std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
-    os << "[";
-    auto it = v.cbegin(), end = v.cend();
-    if (it != end) { os << *it++; }
-    for (; it != end; ++it) { os << ", " << *it; }
-    return os << "]";
-}
-}
 
 //       July 2012              
 // Mo Tu We Th Fr Sa Su

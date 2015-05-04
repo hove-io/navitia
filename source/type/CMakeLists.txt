@@ -105,6 +105,9 @@ target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
 add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
 
+add_executable(multi_polygon_map_test tests/multi_polygon_map_test.cpp)
+target_link_libraries(multi_polygon_map_test ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(multi_polygon_map_test)
 
 
 add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)

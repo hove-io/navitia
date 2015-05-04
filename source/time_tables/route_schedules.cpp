@@ -243,10 +243,12 @@ route_schedule(const std::string& filter,
                 if (!is_vj_set[j] && dt_stop_time.second != nullptr) {
                     pbnavitia::Header* header = table->add_headers();
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
-                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
                     auto vj = dt_stop_time.second->vehicle_journey;
                     fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
-                    fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
+                    fill_additional_informations(header->mutable_additional_informations(),
+                                                 vj->has_datetime_estimated(),
+                                                 vj->has_odt(),
+                                                 vj->has_zonal_stop_point());
                     is_vj_set[j] = true;
                 }
 

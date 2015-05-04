@@ -95,6 +95,8 @@ public:
     // the shapes are here, and then copied where needed
     std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
 
+    std::unordered_map<std::string, nt::MultiPolygon> areas;
+
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
@@ -113,25 +115,6 @@ public:
          *
          */
     void sort();
-
-    // Sort qui fait erreur valgrind
-    struct sort_vehicle_journey_list {
-        const navitia::type::PT_Data & data;
-        sort_vehicle_journey_list(const navitia::type::PT_Data & data) : data(data){}
-        bool operator ()(const nt::VehicleJourney* vj1, const nt::VehicleJourney* vj2) const {
-            if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                unsigned int dt1 = vj1->stop_time_list.front().departure_time;
-                unsigned int dt2 = vj2->stop_time_list.front().departure_time;
-                unsigned int at1 = vj1->stop_time_list.back().arrival_time;
-                unsigned int at2 = vj2->stop_time_list.back().arrival_time;
-                if(dt1 != dt2)
-                    return dt1 < dt2;
-                else
-                    return at1 < at2;
-            } else
-                return false;
-        }
-    };
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();

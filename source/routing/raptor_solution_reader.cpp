@@ -88,6 +88,17 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     return {nullptr, 0};
 }
 
+bool is_valid(const Journey& j) {
+    // We don't want journeys with a transfert between 2 estimated stop times.
+    for (auto it = j.sections.begin(), it_prev = it++; it != j.sections.end(); it_prev = it++) {
+        if (it_prev->get_out_st->date_time_estimated() && it->get_in_st->date_time_estimated()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // align every section to left, ie take the first vj of a jp, as
 // opposed to wait to another one.
 template<typename Visitor>
@@ -322,6 +333,7 @@ struct RaptorSolutionReader {
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j = make_journey(path, *this);
+        if (! is_valid(j)) { return; }
         ++nb_sol_added;
         solutions.add(std::move(j));
         if (nb_sol_added > 1000) {
@@ -625,10 +637,9 @@ Path make_path(const Journey& journey, const type::Data& data) {
             path.items.emplace_back(ItemType::public_transport);
             auto& item = path.items.back();
             for (const auto& st_dt: vj_section.stop_times_and_dt) {
-                // for odt (all but virtual_with_stop_time) we want to
-                // hide the intermediate stops since they are not relevant
-                if (vj_section.vj->is_odt()
-                        && vj_section.vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time
+                // We don't want to show estimated intermediate stops
+                // since they are not relevant
+                if (st_dt.st.date_time_estimated()
                         && &st_dt.st != &vj_section.stop_times_and_dt.front().st
                         && &st_dt.st != &vj_section.stop_times_and_dt.back().st) {
                         continue;
