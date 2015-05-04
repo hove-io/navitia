@@ -161,42 +161,33 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
         return get_geographical_coord(this->house_number_left, number);
 }
 
-// returns the centroid projected on the way
-nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
-    std::vector<nt::GeographicalCoord> line;
-    nt::GeographicalCoord centroid;
-
+nt::LineString Way::make_line(const Graph& graph) const {
+    nt::LineString line;
     std::pair<vertex_t, vertex_t> previous(type::invalid_idx, type::invalid_idx);
-    for(auto edge : this->edges){
-        if(edge.first != previous.second || edge.second != previous.first ){
+    for (auto edge: this->edges) {
+        if (edge.first != previous.second || edge.second != previous.first) {
             line.push_back(graph[edge.first].coord);
             line.push_back(graph[edge.second].coord);
         }
         previous = edge;
     }
-    try{
+    return line;
+}
+
+
+// returns the centroid projected on the way
+nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
+    const auto line = make_line(graph);
+
+    nt::GeographicalCoord centroid;
+    try {
         boost::geometry::centroid(line, centroid);
-    }catch(...){
+    } catch(...) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                       "Can't find the centroid of the way::  " << this->name);
+                        "Can't find the centroid of the way: " << this->name);
     }
 
-    if (line.empty()) { return centroid; }
-
-    // project the centroid on the way
-    nt::GeographicalCoord projected_centroid = line.front();
-    float min_dist = centroid.distance_to(projected_centroid);
-    nt::GeographicalCoord last = line.front();
-    auto cur = line.begin();
-    for (++cur; cur != line.end(); last = *cur, ++cur) {
-        auto projection = centroid.project(last, *cur);
-        if (projection.second < min_dist) {
-            min_dist = projection.second;
-            projected_centroid = projection.first;
-        }
-    }
-
-    return projected_centroid;
+    return nt::project(line, centroid);
 }
 
 /** Recherche du némuro le plus proche à des coordonnées

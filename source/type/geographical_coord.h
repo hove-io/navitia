@@ -133,6 +133,9 @@ bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 typedef std::vector<GeographicalCoord> LineString;
 typedef std::vector<LineString> MultiLineString;
 
+// Project a point on a line.  The returned point is the nearest point on the line.
+GeographicalCoord project(const LineString&, const GeographicalCoord&);
+
 }}// namespace navitia::type
 
 // Registering GeographicalCoord as a boost::geometry::point
