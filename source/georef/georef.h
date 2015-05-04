@@ -163,8 +163,8 @@ public:
 #endif
 
 private:
-      nt::GeographicalCoord get_geographical_coord(const std::vector<HouseNumber>&, const int) const;
-      nt::GeographicalCoord extrapol_geographical_coord(int) const;
+    nt::GeographicalCoord get_geographical_coord(const int, const Graph&) const;
+    nt::GeographicalCoord extrapol_geographical_coord(int, const Graph&) const;
 };
 
 
