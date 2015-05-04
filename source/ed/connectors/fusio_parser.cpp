@@ -190,6 +190,7 @@ void RouteFusioHandler::init(Data& ) {
     comment_id_c = csv.get_pos_col("comment_id");
     contributor_id_c = csv.get_pos_col("contributor_id");
     geometry_id_c = csv.get_pos_col("geometry_id");
+    destination_id_c = csv.get_pos_col("destination_id");
     ignored = 0;
 }
 
@@ -226,6 +227,15 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
     if (is_valid(geometry_id_c, row))
         ed_route->shape = find_or_default(row.at(geometry_id_c), data.shapes);
+
+    if (is_valid(destination_id_c, row)){
+        const auto search = gtfs_data.stop_area_map.find(row.at(destination_id_c));
+        if (search != gtfs_data.stop_area_map.end()){
+            ed_route->destination =  search->second;
+        }else{
+            LOG4CPLUS_WARN(logger, "impossible to find destination: " + row[route_id_c]);
+        }
+    }
 
     gtfs_data.route_map[row[route_id_c]] = ed_route;
     data.routes.push_back(ed_route);

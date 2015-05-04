@@ -220,6 +220,7 @@ struct Route : public Header, Nameable{
     std::string external_code;
     Line * line;
     nt::MultiLineString shape;
+    StopArea* destination = nullptr;
 
     bool operator<(const Route& other) const;
 };

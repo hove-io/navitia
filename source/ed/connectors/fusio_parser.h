@@ -77,7 +77,8 @@ struct RouteFusioHandler : public GenericHandler {
         comment_id_c,
         commercial_mode_id_c,
         contributor_id_c,
-        geometry_id_c;
+        geometry_id_c,
+        destination_id_c;
     int ignored;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
