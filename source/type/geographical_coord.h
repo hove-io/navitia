@@ -136,6 +136,9 @@ typedef std::vector<LineString> MultiLineString;
 // Project a point on a line.  The returned point is the nearest point on the line.
 GeographicalCoord project(const LineString&, const GeographicalCoord&);
 
+// Project a point on a multiline.  The returned point is the nearest point on the multiline.
+GeographicalCoord project(const MultiLineString&, const GeographicalCoord&);
+
 }}// namespace navitia::type
 
 // Registering GeographicalCoord as a boost::geometry::point

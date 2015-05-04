@@ -102,8 +102,9 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number, const Graph& 
 
     double y_step = (hn_upper.coord.lat() - hn_lower.coord.lat()) /diff_house_number;
     to_return.set_lat(hn_lower.coord.lat() + y_step*diff_number);
-    const auto line = make_line(graph);
-    return project(line, to_return);
+
+    const auto multiline = make_multiline(graph);
+    return project(multiline, to_return);
 }
 
 /**
@@ -160,33 +161,28 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
     return get_geographical_coord(number, graph);
 }
 
-nt::LineString Way::make_line(const Graph& graph) const {
-    nt::LineString line;
-    std::pair<vertex_t, vertex_t> previous(type::invalid_idx, type::invalid_idx);
+nt::MultiLineString Way::make_multiline(const Graph& graph) const {
+    nt::MultiLineString multiline;
     for (auto edge: this->edges) {
-        if (edge.first != previous.second || edge.second != previous.first) {
-            line.push_back(graph[edge.first].coord);
-            line.push_back(graph[edge.second].coord);
-        }
-        previous = edge;
+        multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
     }
-    return line;
+    return multiline;
 }
 
 
 // returns the centroid projected on the way
 nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
-    const auto line = make_line(graph);
+    const auto multiline = make_multiline(graph);
 
     nt::GeographicalCoord centroid;
     try {
-        boost::geometry::centroid(line, centroid);
+        boost::geometry::centroid(multiline, centroid);
     } catch(...) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                         "Can't find the centroid of the way: " << this->name);
     }
 
-    return nt::project(line, centroid);
+    return nt::project(multiline, centroid);
 }
 
 /** Recherche du némuro le plus proche à des coordonnées
