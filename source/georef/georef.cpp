@@ -379,9 +379,9 @@ void GeoRef::build_autocomplete_list(){
         ++pos;
         if (way->name.empty()) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
-            std::string key = way->way_type + " " + way->name + " " + admin->name;
-            if (!admin->post_code.empty()) { key += " " + admin->post_code; }
+            std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
             fl_way.add_string(key, pos, this->synonyms);
+
         }
     }
     fl_way.build();
@@ -400,13 +400,7 @@ void GeoRef::build_autocomplete_list(){
 
     fl_admin.clear();
     for(Admin* admin : admins){
-        std::string key="";
-
-        if (!admin->post_code.empty())
-        {
-            key = admin->post_code;
-        }
-        fl_admin.add_string(admin->name + " " + key, admin->idx , this->synonyms);
+        fl_admin.add_string(admin->name + " " + admin->postal_codes_to_string(), admin->idx , this->synonyms);
     }
     fl_admin.build();
 }
