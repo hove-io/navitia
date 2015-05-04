@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 
+#include <set>
 #include "type/type.h"
 
 namespace navitia {

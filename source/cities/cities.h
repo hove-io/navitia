@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #pragma once
+#include <set>
 #include "type/type.h"
 #include "third_party/osmpbfreader/osmpbfreader.h"
 #include "utils/lotus.h"
