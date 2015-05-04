@@ -129,9 +129,7 @@ private:
 struct OSMRelation {
     const u_int64_t osm_id;
     CanalTP::References references;
-    const std::string insee = "",
-                      name = "";
-    std::string postal_code = "";
+    const std::string insee = "", name = "";
     std::vector<std::string> postal_codes;
     const uint32_t level = std::numeric_limits<uint32_t>::max();
 
