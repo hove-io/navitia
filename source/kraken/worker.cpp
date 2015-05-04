@@ -277,7 +277,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     boost::optional<const std::string>(),
                     forbidden_uri,
                     from_datetime,
-                    request.duration(), max_date_times, request.interface_version(), request.depth(),
+                    request.duration(), max_date_times, request.depth(),
                     request.count(), request.start_page(), *data, false, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
