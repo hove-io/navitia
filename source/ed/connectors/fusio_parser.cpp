@@ -821,27 +821,31 @@ void ObjectPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool i
     if("line" == row[object_type_c]) {
         auto line = gtfs_data.line_map.find(row[object_id_c]);
         if (line == gtfs_data.line_map.end()) {
-            LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: Impossible to find the line " << row[object_id_c]);
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the line " << row[object_id_c]);
             return;
         }
     } else if ("route" == row[object_type_c]) {
         auto route = gtfs_data.route_map.find(row[object_id_c]);
         if (route == gtfs_data.route_map.end()) {
-            LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: Impossible to find the route " << row[object_id_c]);
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the route " << row[object_id_c]);
             return;
         } 
     } else if ("trip" == row[object_type_c]) {
-        //auto trip = gtfs_data.
+        auto trip = gtfs_data.metavj_by_external_code.find(row[object_id_c]);
+        if (trip == gtfs_data.metavj_by_external_code.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the trip " << row[object_id_c]);
+            return;
+        }
     } else if ("stop_area" == row[object_type_c]) {
         auto stop_area = gtfs_data.stop_area_map.find(row[object_id_c]);
         if (stop_area == gtfs_data.stop_area_map.end()) {
-            LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop area " << row[object_id_c]);
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop area " << row[object_id_c]);
             return;
         }
     } else if ("stop_point" == row[object_type_c]) {
         auto stop_point = gtfs_data.stop_map.find(row[object_id_c]);
         if (stop_point == gtfs_data.stop_map.end()) {
-            LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop point " << row[object_id_c]);
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop point " << row[object_id_c]);
             return;
         }
     } else {
