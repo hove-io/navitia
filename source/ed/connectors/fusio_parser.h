@@ -232,6 +232,17 @@ struct StopPropertiesFusioHandler: public GenericHandler{
     const std::vector<std::string> required_headers() const { return {"property_id"}; }
 };
 
+struct ObjectPropertiesFusioHandler: public GenericHandler{
+    ObjectPropertiesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int object_id_c,
+    object_type_c,
+    property_name_c,
+    property_value_c;
+    void init(Data&);
+    void handle_line(Data&, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "object_property_name", "object_property_value"}; }
+};
+
 struct TripPropertiesFusioHandler: public GenericHandler{
     TripPropertiesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c,
