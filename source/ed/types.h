@@ -443,4 +443,11 @@ struct AdminStopArea{
     std::vector<const StopArea*> stop_area;
 };
 
+struct ObjectProperty{
+    std::string object_id;
+    std::string object_type;
+    std::string property_name;
+    std::string property_value;
+};
+
 }}//end namespace ed::types

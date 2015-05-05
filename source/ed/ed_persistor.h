@@ -108,6 +108,8 @@ private:
 
     void insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas);
 
+    void insert_object_properties(const std::vector<types::ObjectProperty*> object_properties);
+
     /// Inserer les données fiche horaire par période
     void insert_week_patterns(const std::vector<types::Calendar*>& calendars);
     void insert_calendars(const std::vector<types::Calendar*>& calendars);

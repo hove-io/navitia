@@ -812,7 +812,7 @@ void ObjectPropertiesFusioHandler::init(Data &){
     property_value_c = csv.get_pos_col("object_property_value");
 }
 
-void ObjectPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
+void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(!is_first_line && !(has_col(object_id_c, row) && has_col(object_type_c, row) && has_col(property_name_c, row) && has_col(property_value_c, row))) {
         LOG4CPLUS_FATAL(logger, "ObjectPropertiesFusioHandler: Error while reading " + csv.filename +
                         " file has no object_id or object_type or object_property_name or object_property_value column");
@@ -852,6 +852,12 @@ void ObjectPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool i
         LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
         return;
     }
+    ed::types::ObjectProperty* object_property = new ed::types::ObjectProperty();
+    object_property->object_id = row[object_id_c];
+    object_property->object_type = row[object_type_c];
+    object_property->property_name = row[property_name_c];
+    object_property->property_value = row[property_value_c];
+    data.object_properties.push_back(object_property);
 }
 
 void TripPropertiesFusioHandler::init(Data &){
