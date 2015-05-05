@@ -1,14 +1,14 @@
 """postal_codes table added
 
 Revision ID: 13673746db16
-Revises: 23dd34bfaeaf
+Revises: 29fc422c56cb
 Create Date: 2015-04-27 17:08:52.775839
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '13673746db16'
-down_revision = '23dd34bfaeaf'
+down_revision = '29fc422c56cb'
 
 from alembic import op
 import sqlalchemy as sa
