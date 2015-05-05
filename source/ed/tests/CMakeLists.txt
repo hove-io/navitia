@@ -6,8 +6,12 @@ target_link_libraries(jpp_shape_test ed data types ${BOOST_LIBS})
 ADD_BOOST_TEST(jpp_shape_test)
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
-target_link_libraries(gtfs_parser_test ed connectors data types utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(gtfs_parser_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(gtfs_parser_test)
+
+add_executable(fusio_parser_test fusioparser_test.cpp)
+target_link_libraries(fusio_parser_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(fusio_parser_test)
 
 
 add_executable(associated_calendar_test associated_calendar_test.cpp)

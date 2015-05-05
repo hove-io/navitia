@@ -291,9 +291,9 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
         if (is_valid(id_c, row)) {
             //the stop time name is optional and only used to make the link with the comment
             //since the stop time can be split by dst we aggregate the vj's uri to have a unique uri
-            stop_time->uri = row[id_c];
+            stop_time->uri = row[id_c] + ":" + stop_time->vehicle_journey->uri;
 
-            gtfs_data.stop_time_map[stop_time->uri].push_back(stop_time);
+            gtfs_data.stop_time_map[row[id_c]].push_back(stop_time);
         }
 
         if (is_valid(desc_c, row)) {
@@ -579,7 +579,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
                         "  file has more than one line and no line_id column");
         throw InvalidHeaders(csv.filename);
     }
-    ed::types::Line * line = new ed::types::Line();
+    ed::types::Line* line = new ed::types::Line();
     line->uri = row[id_c];
     line->name = row[name_c];
 
