@@ -3,20 +3,20 @@ SNCF API documentation
 
 Index
 ========
-I.*Overview*
-II. *Authentication*
-III. *Endpoint*
+I.Overview
+II. Authentication
+III. Endpoint
 3.1 Some easy examples
 3.2. Resources
-IV. *Interface*
+IV. Interface
 4.1. Paging
 4.2. Templated url
 4.3. Inner references
-V. *Errors*
+V. Errors
 5.1. Example
 	5.1.1. Code 40x
 	5.1.2. Code 50x
-VI. *Apis*
+VI. Apis
 6.1. Coverage
 6.2. Public transportation objects
 	6.2.1. Collections
@@ -64,16 +64,16 @@ VII. Lexique
 I. Overview
 ========
 
-This document describes how to call the SNCF API based on navitia via the v1 interface, and the returned resources.
-navitia is an Open Source software technology developed by Canal TP company. (www.canaltp.fr)
+This document describes how to use the SNCF API based on navitia via the v1 interface, and the returned resources.
+Navitia is an Open Source software developed by Canal TP. (www.canaltp.fr)
 
 The SNCF API handle to :
-* compute journey from "station" to "station" or "administrative region" to "station"
+* compute journey from and to "station" or "administrative region" 
 * display next departures or arrivals
 * display route schedules
-* autocomplete objects (au pif!)
+* lexicographical search (autocomplete)
 
-The SNCF API contains theorical train data and the following commercial modes : TGV, TER, Transilien, Intercités.
+The SNCF API contain theorical train data for the following commercial modes : TGV, TER, Transilien, Intercités.
 
 II. Authentication
 ================
@@ -100,7 +100,7 @@ Additional explanantion :
 III. Endpoint
 ********
 
-The only endpoint of this version of the api is : https://api.sncf.com/v1
+The only endpoint of this version of the api is : https://api.sncf.com/v1/coverage/sncf
 
 3.1 Some easy examples
 ******************
@@ -130,7 +130,7 @@ The only endpoint of this version of the api is : https://api.sncf.com/v1
 
 All the resources return a response containing a links object, a paging object, and the requested object.
 
-* **Coverage** : List of the region covered by SNCF API
+* **Coverage** :
 
 +---------------------------------------------------------------+--------------------------------------+
 | ``get`` /coverage                                             | List of the areas covered by SNCF API|
@@ -178,7 +178,7 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*resource_path*/arrivals                    | List of the arrivals                |
 +---------------------------------------------------------------+-------------------------------------+
 
-* **Places/Autocomplete ??** : Search in the datas
+* **Places/Autocomplete** : Search in the datas
 
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/places                                      | List of objects                     |
@@ -202,7 +202,7 @@ Links allow you to know all accessible uris and services for a given point.
 4.1. Paging
 ======
 
-All response contains a paging object
+All responses contain a paging object
 
 =============== ==== =======================================
 Key             Type Description
@@ -316,21 +316,16 @@ Ouch. Technical issue :/
 VI. Apis
 ====
 
-6.1. Coverage
-********
-You can easily navigate through regions covered by SNCF API, with the coverage api. ?? non sense ??
-The only arguments are the ones of `paging`_.
-
-6.2. Public transportation objects
+6.1. Public transportation objects
 ******************************
 
-Once you have selected a region, you can explore the public transportation objects 
+You can explore the public transportation objects 
 easily with these apis. You just need to add at the end of your url 
 a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
 The only arguments are the ones of `paging`_.
 
-6.2.1. Collections
+6.1.1. Collections
 ###########
 
 * networks
@@ -380,31 +375,10 @@ Other examples
 	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
-6.2.2. Specific parameters
-###################
-
-There are som specific parameters.
-A least, there is one: *odt_level* which can be applied only on /lines collection...
-
-It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
-
-* none : to get standard public transport lines. Trips are predefined.
-* mixt : to get lines with some non-predefined trips 
-* zonal : to get lines with only non-predefined trips 
-* all (default value) : to get all public transport lines
-
-For example
-
-https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
-
-https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=none
-
-
-
 6.3. Places
 ******
 
-This api search in public transport/train ?? objects via their names.
+This api search in public transport objects via their names.
 It returns, in addition of classic objects, a collection of `place`_.
 
 
@@ -423,16 +397,16 @@ It returns, in addition of classic objects, a collection of `place`_.
 | yep     | q             | string          | The search term                        |                                      |
 +---------+---------------+-----------------+----------------------------------------+--------------------------------------+
 | nop     | type\[\]      | array of string | Type of objects you want to query      | \[``stop_area``, ``stop_point``,     |
-|         |               |                 |                                        | ``administrative_region``\] |
+|         |               |                 |                                        | ``administrative_region``\]          |
 +---------+---------------+-----------------+----------------------------------------+--------------------------------------+
 | nop     | admin_uri\[\] | array of string | If filled, will restrained the search  |                                      |
-|         |               |                 | within the given admin uris            | ""                                   |
+|         |               |                 | within the given admin uris            |                                      |
 +---------+---------------+-----------------+----------------------------------------+--------------------------------------+
 
 +-------------------------------------------------------------------------+
 | *Warning*                                                               |
 |                                                                         |
-|    In the API SNCF, there are no POI and adresses			  |
+|    In the SNCF API, there are no POI and adresses.			  |
 +-------------------------------------------------------------------------+
 
 6.3.2. Example
@@ -526,27 +500,17 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
 
 This api compute journeys.
 
-If used within the coverage api, it will retrieve the next journeys from 
-the selected public transport/train ?? object or coordinates.
+It will retrieve the next journeys from 
+the selected public transport object.
 
-There are two ways to access this api.
-
-The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
+To access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
 
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                                                                      |
 |                                                                                                                                                             |
-| The API SNCF handle computation journey from "Stop Area" to " Stop Area" or "Stop Area" to "Administrative Region"            |
+| The API SNCF handle computation journey from and to "station" or "administrative region"      							      |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| *Note*                                                                                                                                                      |
-|                                                                                                                                                             |
-| Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.                                        |
-|                                                                                                                                                             |
-| If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                          |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _journeys_parameters:
 
@@ -622,25 +586,19 @@ links               link_              Links related to the journeys
 Field               Type               Description
 =================== ================== ===========================================================================
 _duration            int                Duration of the journey
-nb_transfers        int                Number of transfers in the journey
-departure_date_time `<datetime>`_      Departure date and time of the journey
+nb_transfers        int                 Number of transfers in the journey
+departure_date_time `<datetime>`_       Departure date and time of the journey
 requested_date_time `datetime`_         Requested date and time of the journey
 arrival_date_time   `datetime`_         Arrival date and time of the journey
-sections            array `section`_  All the sections of the journey
-from                `place <place>`_             The place from where the journey starts
-to                  `<place>`_             The place from where the journey ends
-links               `link`_              Links related to this journey
-type                *enum* string      Used to qualified a journey. See the `journey_qualif`_ section for more information
-fare                fare_              Fare of the journey (tickets and price)
-tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
+sections            array `section`_    All the sections of the journey
+from                `place <place>`_    The place from where the journey starts
+to                  `<place>`_          The place from where the journey ends
+links               `link`_             Links related to this journey
+type                *enum* string       Used to qualified a journey. See the `journey_qualif`_ section for more information
+fare                fare_               Fare of the journey (tickets and price)
+tags                array of string     List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
 =================== ================== ===========================================================================
 
-
-+-----------------------------------------------------------------------------------------------------------+
-| *Note*                                                                                                    |
-|                                                                                                           |
-| When used with just a "from" or a "to" parameter, it will not contain any sections                        |
-+-----------------------------------------------------------------------------------------------------------+
 
 .. _section:
 
@@ -687,9 +645,7 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    |   fix schedule                                     |
 |                         |                                    | * ``odt_with_zone``: odt with zone                 |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| geojson                 | `GeoJson <http://www.geojson.org>`_|                                                    |        
-+-------------------------+------------------------------------+----------------------------------------------------+
-|                         |                                    | tracé sur la carte en collier de perle             |
+| geojson                 | `GeoJson <http://www.geojson.org>`_|                                        	    |        
 +-------------------------+------------------------------------+----------------------------------------------------+
 | transfer_type           | *enum* string                      | The type of this transfer it can be: ``walking``,  |
 |                         |                                    |  ``guaranteed``, ``extension``                     |
@@ -870,7 +826,15 @@ Arrival are ordered chronologically in growing order.
 6.9.2. Objects
 #######
 
-?? copié collé de departure ou bien ?
+* arrival object
+
+===================== ========================= ========================================
+Field                 Type                      Description
+===================== ========================= ========================================
+route                 route_                    The route of the schedule
+stop_date_time        Array of stop_date_time_  When does a bus stops at the stop point
+stop_point            stop_point_               The stop point of the schedule
+===================== ========================= ========================================
 
 VII. Geographical Objects
 ********************
@@ -920,8 +884,8 @@ commercial_mode `commercial_mode`_     Commercial mode of the line
 +-----------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                    |
 |                                                                                                           |
-| The fiels "Code" and "Color" in this API are not available                                                |
-| The lines you get with API do not correspond to commercial line but only to origin and destination mode   |
+| The fields "Code" and "Color" in this API are not available.                                              |
+| The lines you will get with API do not correspond to commercial lines.				    |
 ------------------------------------------------------------------------------------------------------------+
 
 .. _route:
@@ -1044,7 +1008,7 @@ name                 string                             Name of the company
 
 7.2.9. Place
 #####
-A container containing either a `stop_point`_, `stop_area`_, `address`_, `poi`_, `admin`_
+A container containing either a `stop_point`_, `stop_area`_, `admin`_
 
 ===================== ============================= =================================
 Field                 Type                          Description
@@ -1054,8 +1018,6 @@ id                    string                        The id of the embedded objec
 embedded_type         `embedded_type_place`_        The type of the embedded object
 stop_point            *optional* `stop_point`_      Embedded Stop point
 stop_area             *optional* `stop_area`_       Embedded Stop area
-address               *optional* `address`_         Embedded address
-poi                   *optional* `poi`_             Embedded poi
 administrative_region *optional* `admin`_           Embedded administrative region
 ===================== ============================= =================================
 
@@ -1069,8 +1031,6 @@ Value                 Description
 ===================== ============================================================
 stop_point            a location where vehicles can pick up or drop off passengers
 stop_area             a nameable zone, where there are some stop points  
-address               a point located in a street
-poi                   a point of interest
 administrative_region a city, a district, a neighborhood
 ===================== ============================================================
 
@@ -1153,7 +1113,7 @@ label           String          The label of the object
 color           String          The hexadecimal code of the line
 code            String          The code of the line
 description     String          A description
-Train number   
+headsign	String		Train Number
 =============== =============== ==================================
 
 .. _link:
