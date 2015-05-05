@@ -1948,3 +1948,39 @@ BOOST_AUTO_TEST_CASE(good_connection_when_walking_as_fast_as_bus) {
                                "12:00"_t, 0, 0, false, false);
     test_good_connection_when_walking_as_fast_as_bus(res2);
 }
+
+// We have 2 sp at the sa A: A1 not wheelchair, and A2 wheelchair. A
+// vj do A1->B and arrive at 9, and a vj do A2->B and arrive at 10.
+// We should not take the first vj as we can't take it with a
+// wheelchair.
+BOOST_AUTO_TEST_CASE(accessible_on_first_sp) {
+    using navitia::type::hasProperties;
+    using boost::posix_time::time_from_string;
+
+    ed::builder b("20150101");
+
+    b.sa("A")("A1", 0, 0, false)("A2", 0, 0, true);
+    b.sa("B")("B1", 0, 0, true);
+    b.vj("1")("A1", "8:30"_t)("B1", "9:00"_t);
+    b.vj("2")("A2", "8:00"_t)("B1", "10:00"_t);
+    auto params = type::AccessibiliteParams();
+    params.properties.set(hasProperties::WHEELCHAIR_BOARDING, true);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("B"),
+                              "8:00"_t, 0, DateTimeUtils::inf, false, true, params);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items.back().arrival, time_from_string("2015-01-01 10:00:00"));
+
+    // non clockwise test
+    res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("B"),
+                         "10:00"_t, 0, 0, false, false, params);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items.back().arrival, time_from_string("2015-01-01 10:00:00"));
+}
