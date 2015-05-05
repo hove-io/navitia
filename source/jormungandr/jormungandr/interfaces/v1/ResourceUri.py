@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource
+from flask.ext.restful import Resource, abort
 from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
 from jormungandr import utils
@@ -70,6 +70,8 @@ class ResourceUri(StatedResource):
                     if item == "calendars":
                         type_ = 'calendar'
                     else:
+                        if item not in collections_to_resource_type:
+                            abort(400, message="unknown type: {}".format(item))
                         type_ = collections_to_resource_type[item]
                 else:
                     type_ = "coord"
