@@ -646,6 +646,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 struct Route : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Route;
     Line* line = nullptr;
+    StopArea* destination = nullptr;
     MultiLineString shape;
     std::vector<JourneyPattern*> journey_pattern_list;
 
@@ -653,7 +654,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape & comment;
+        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & codes & shape & comment;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;

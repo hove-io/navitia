@@ -501,7 +501,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, line_id, external_code, "
+    std::string request = "SELECT id, name, uri, comment, line_id, stop_area_id, external_code, "
         "ST_AsText(shape) AS shape FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -516,6 +516,10 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);
+
+        if (!const_it["stop_area_id"].is_null()) {
+            route->destination = stop_area_map[const_it["stop_area_id"].as<idx_t>()];
+        }
 
         data.pt_data->routes.push_back(route);
         this->route_map[const_it["id"].as<idx_t>()] = route;
