@@ -1,26 +1,117 @@
-Navitia documentation: v1 interface 
+SNCF API documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Overview
+Index
+========
+I.*Overview*
+II. *Authentication*
+III. *Endpoint*
+3.1 Some easy examples
+3.2. Resources
+IV. *Interface*
+4.1. Paging
+4.2. Templated url
+4.3. Inner references
+V. *Errors*
+5.1. Example
+	5.1.1. Code 40x
+	5.1.2. Code 50x
+VI. *Apis*
+6.1. Coverage
+6.2. Public transportation objects
+	6.2.1. Collections
+	6.2.2. Specific parameters
+6.3. Places
+	6.3.1 Parameters
+	6.3.2. Example
+6.4. Places Nearby
+	6.4.1. Parameters
+	6.4.2. Example
+6.5. Journeys
+	6.5.1. Parameters
+	6.5.2. Objects
+6.6. Route Schedules
+	6.6.1. Parameters
+	6.6.2. Objects
+6.7. Stop Schedules
+	6.7.1. Parameters
+	6.7.2. Objects
+6.8. Departures
+	6.8.1. Parameters
+	6.8.2. Objects
+6.9. Arrivals
+	6.9.1. Parameters
+	6.9.2. Objects
+VII. Geographical Objects
+7.1. Coord
+7.2. Public transport objects
+	7.2.1. Network
+	7.2.2. Line
+	7.2.3. Route
+	7.2.4. Stop Point
+	7.2.5. Stop Area
+	7.2.6. Commercial Mode
+	7.2.7. Physical Mode
+	7.2.8. Company
+	7.2.9. Place
+7.3. Street network object
+7.4. Other objects
+7.5. Special Parameters
+	7.5.1. datetime
+	7.5.2. Misc mechanisms
+VII. Lexique
+
+I. Overview
 ========
 
-This document describes how to call navitia via the v1 interface, and the returned resources.
+This document describes how to call the SNCF API based on navitia via the v1 interface, and the returned resources.
+navitia is an Open Source software technology developed by Canal TP company. (www.canaltp.fr)
 
-Endpoint
+The SNCF API handle to :
+* compute journey from "station" to "station" or "administrative region" to "station"
+* display next departures or arrivals
+* display route schedules
+* autocomplete objects (au pif!)
+
+The SNCF API contains theorical train data and the following commercial modes : TGV, TER, Transilien, Intercités.
+
+II. Authentication
+================
+
+You must authenticate to use **SNCF API**. When you register we give you an authentication key to the API.
+
+There is two ways for authentication:
+
+You can use a `Basic HTTP authentication`_, where the username is the key, and without password.
+Username : copy / paste your key
+Password : leave the field blank
+
+
+The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
+
+.. code-block:: none
+
+    Authorization: mysecretkey
+
+Additional explanantion :
+.. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
+.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
+
+III. Endpoint
 ********
 
-The only endpoint of this version of the api is : https://api.navitia.io/v1/
+The only endpoint of this version of the api is : https://api.sncf.com/v1
 
-Some easy examples
+3.1 Some easy examples
 ******************
 
-* Geographical coverage of the service
-	* https://api.navitia.io/v1/coverage 
+* Transport mode available in the service
+	* http://api.sncf.com/v1/coverage/sncf/
 * Which services are available on this coverage? take a look at the links under this URL
 	* https://api.navitia.io/v1/coverage/fr-idf
 * Networks available?
 	* https://api.navitia.io/v1/coverage/fr-idf/networks
-* RATP network lines?
+* SNCF network lines?
 	* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
 	* physical modes managed by RATP 
@@ -34,18 +125,18 @@ Some easy examples
 	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
 	* or ...
 
-Resources
+3.2. Resources
 *********
 
 All the resources return a response containing a links object, a paging object, and the requested object.
 
-* **Coverage** : List of the region covered by navitia
+* **Coverage** : List of the region covered by SNCF API
 
-+---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage                                             | List of the areas covered by navitia|
-+---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/*region_id*                                 | Information about a specific region |
-+---------------------------------------------------------------+-------------------------------------+ |
++---------------------------------------------------------------+--------------------------------------+
+| ``get`` /coverage                                             | List of the areas covered by SNCF API|
++---------------------------------------------------------------+--------------------------------------+
+| ``get`` /coverage/*region_id*                                 | Information about a specific region  |
++---------------------------------------------------------------+--------------------------------------+ 
 
 * **Public transportation objects** : List of the public transport objects of a region
 
@@ -87,7 +178,7 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*resource_path*/arrivals                    | List of the arrivals                |
 +---------------------------------------------------------------+-------------------------------------+
 
-* **Places** : Search in the datas
+* **Places/Autocomplete ??** : Search in the datas
 
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/places                                      | List of objects                     |
@@ -101,26 +192,14 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
 
+IV. Interface
+=========
+We aim to implement `HATEOAS <http://en.wikipedia.org/wiki/HATEOAS>`_ concept with Navitia.
 
-Authentification
-================
+Each response contains a linkable object and lots of links. 
+Links allow you to know all accessible uris and services for a given point.
 
-You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
-
-There is two ways for authentication, you can use a `Basic HTTP authentication`_, where the username is the key, and without password.
-
-The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
-
-.. code-block:: none
-
-    Authorization: mysecretkey
-
-.. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
-.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
-
-.. _paging:
-
-Paging
+4.1. Paging
 ======
 
 All response contains a paging object
@@ -143,16 +222,9 @@ start_page      int  The page number
 count           int  Number of items per page
 =============== ==== =======================================
 
-.. _interface:
 
-Interface
-=========
-We aim to implement `HATEOAS <http://en.wikipedia.org/wiki/HATEOAS>`_ concept with Navitia.
 
-Each response contains a linkable object and lots of links. 
-Links allow you to know all accessible uris and services for a given point.
-
-Templated url
+4.2. Templated url
 *************
 
 Under some link sections, you will find a "templated" property. If "templated" is true, 
@@ -172,7 +244,7 @@ you will find a *links* section:
 You have to put one line id instead of "{lines.id}". For example:
 https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
 
-Inner references
+4.3. Inner references
 ****************
 
 Some link sections look like
@@ -191,12 +263,12 @@ That means you will find inside the same stream ( *"internal": true* ) a "disrup
 ( *"rel": "disruptions"* ) containing some disruptions objects ( *"type": "disruption"* ) 
 where you can find the details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"* ).
 
-Errors
+V. Errors
 ======
 
 When there's an error you'll receive a response with a error object containing an id
 
-Example
+5.1. Example
 *******
 
 .. code-block:: json
@@ -208,7 +280,7 @@ Example
         }
     }
 
-Code 40x
+5.1.1. Code 40x
 ********
 
 This errors appears when there is an error in the request
@@ -236,20 +308,20 @@ bad_filter      When you use a custom filter
 unable_to_parse When you use a mal-formed custom filter
 =============== ========================================
 
-Code 50x
+5.1.2. Code 50x
 ********
 
 Ouch. Technical issue :/
 
-Apis
+VI. Apis
 ====
 
-Coverage
+6.1. Coverage
 ********
-You can easily navigate through regions covered by navitia.io, with the coverage api.
+You can easily navigate through regions covered by SNCF API, with the coverage api. ?? non sense ??
 The only arguments are the ones of `paging`_.
 
-Public transportation objects
+6.2. Public transportation objects
 ******************************
 
 Once you have selected a region, you can explore the public transportation objects 
@@ -258,7 +330,7 @@ a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
 The only arguments are the ones of `paging`_.
 
-Collections
+6.2.1. Collections
 ###########
 
 * networks
@@ -271,7 +343,6 @@ Collections
 * companies
 
 Examples
-########
 
 Response example for this request https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 
@@ -309,7 +380,7 @@ Other examples
 	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
-Specific parameters
+6.2.2. Specific parameters
 ###################
 
 There are som specific parameters.
@@ -330,10 +401,10 @@ https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_lev
 
 
 
-Places
+6.3. Places
 ******
 
-This api search in public transport objects via their names.
+This api search in public transport/train ?? objects via their names.
 It returns, in addition of classic objects, a collection of `place`_.
 
 
@@ -343,7 +414,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |    There is no pagination for this api   |
 +------------------------------------------+
 
-Parameters
+6.3.1 Parameters
 ##########
 
 +---------+---------------+-----------------+----------------------------------------+--------------------------------------+
@@ -361,10 +432,10 @@ Parameters
 +-------------------------------------------------------------------------+
 | *Warning*                                                               |
 |                                                                         |
-|    In the API SNCF, there are no POI and adresses|
+|    In the API SNCF, there are no POI and adresses			  |
 +-------------------------------------------------------------------------+
 
-Example
+6.3.2. Example
 #######
 
 Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
@@ -390,7 +461,7 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
      ],
     }
 
-Places Nearby
+6.4. Places Nearby
 *************
 
 This api search for public transport object near another object, or near coordinates.
@@ -402,7 +473,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |    There is no pagination for this api   |
 +------------------------------------------+
 
-Parameters
+6.4.1. Parameters
 ##########
 
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
@@ -420,7 +491,7 @@ Parameters
 |         |               |                 | for example: places_type.id=theater      |                                      |
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
 
-Example
+6.4.2. Example
 ########
 
 Response example for this request 
@@ -450,13 +521,13 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
     }
 
 
-Journeys
+6.5. Journeys
 ********
 
 This api compute journeys.
 
 If used within the coverage api, it will retrieve the next journeys from 
-the selected public transport object or coordinates.
+the selected public transport/train ?? object or coordinates.
 
 There are two ways to access this api.
 
@@ -465,7 +536,7 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                                                                      |
 |                                                                                                                                                             |
-| The API SNCF handle to compute journey from "Stop Area" to " Stop Area" or "Stop Area" to "Administrative Region"            |
+| The API SNCF handle computation journey from "Stop Area" to " Stop Area" or "Stop Area" to "Administrative Region"            |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -479,7 +550,7 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 
 .. _journeys_parameters:
 
-Parameters
+6.5.1. Parameters
 ##########
 
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
@@ -527,7 +598,7 @@ Parameters
 |          |                       |           | Like all duration, the unit is seconds    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 
-Objects
+6.5.2. Objects
 #######
 
 Here is a typical journey, all sections are detailed below
@@ -630,14 +701,14 @@ tags                array of string    List of tags on the journey. The tags add
 | arrival_date_time       | `date_time <date_time_object>`_    | Date and time of arrival                           |
 +-------------------------+------------------------------------+----------------------------------------------------+
 
-Route Schedules
+6.6. Route Schedules
 ***************
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
-Parameters
+6.6.1. Parameters
 ##########
 
 +----------+---------------------+-----------+------------------------------+---------------+
@@ -655,7 +726,7 @@ Parameters
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
-Objects
+6.6.2. Objects
 #######
 
 * route_schedule object
@@ -709,14 +780,14 @@ Rows    Array of row_     A row of the schedule
 
 
 
-Stop Schedules
+6.7. Stop Schedules
 **************
 
 This api give you access to schedules of stops.
 The response is made of an array of stop_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
-Parameters
+6.7.1. Parameters
 ##########
 
 +----------+---------------------+-----------+------------------------------+---------------+
@@ -730,7 +801,7 @@ Parameters
 |          |                     |           | and the retrieved datetimes. |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
-Objects
+6.7.2. Objects
 #######
 
 * stop_schedule object
@@ -744,13 +815,13 @@ date_times            Array of `date_time <date_time_object>`_        When does 
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
-Departures
+6.8. Departures
 **********
 
 This api retrieves a list of departures from a datetime of a selected object.
 Departures are ordered chronologically in growing order.
 
-Parameters
+6.8.1. Parameters
 ##########
 
 +----------+---------------------+-----------+------------------------------+---------------+
@@ -764,7 +835,7 @@ Parameters
 |          |                     |           | and the retrieved datetimes. |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
-Objects
+6.8.2. Objects
 #######
 
 * departure object
@@ -777,12 +848,12 @@ stop_date_time        Array of stop_date_time_  When does a bus stops at the sto
 stop_point            stop_point_               The stop point of the schedule
 ===================== ========================= ========================================
 
-Arrivals
+6.9. Arrivals
 ********
 This api retrieves a list of arrival from a datetime of a selected object.
 Arrival are ordered chronologically in growing order.
 
-Parameters
+6.9.1. Parameters
 ##########
 
 +----------+---------------------+-----------+------------------------------+---------------+
@@ -795,16 +866,19 @@ Parameters
 |          |                     |           | between from_datetime        |               |
 |          |                     |           | and the retrieved datetimes. |               |
 +----------+---------------------+-----------+------------------------------+---------------+
-Objects
-=======
 
-Geographical Objects
+6.9.2. Objects
+#######
+
+?? copié collé de departure ou bien ?
+
+VII. Geographical Objects
 ********************
 
 .. _coord:
 
-Coord
-#####
+7.1. Coord
+********
 
 ====== ====== ============
 Field  Type   Description
@@ -813,12 +887,12 @@ lon    float  Longitude
 lat    float  Latitude
 ====== ====== ============
 
-Public transport objects
-************************
+7.2. Public transport objects
+********
 
 .. _network:
 
-Network
+7.2.1. Network
 #######
 
 ====== ============= ==========================
@@ -830,7 +904,7 @@ name   string        Name of the network
 
 .. _line:
 
-Line
+7.2.2. Line
 #####
 
 =============== ====================== ============================
@@ -852,7 +926,7 @@ commercial_mode `commercial_mode`_     Commercial mode of the line
 
 .. _route:
 
-Route
+7.2.3. Route
 #####
 
 ============ ===================== ==================================
@@ -866,7 +940,7 @@ line         `line`_               The line of this route
 
 .. _stop_point:
 
-Stop Point
+7.2.4. Stop Point
 ##########
 
 ======================= ===================== =====================================================================
@@ -882,7 +956,7 @@ stop_area               `stop_area`_          Stop Area containing this stop poi
 
 .. _stop_area:
 
-Stop Area
+7.2.5. Stop Area
 #########
 
 ====================== =========================== ==================================================================
@@ -898,7 +972,7 @@ stop_points            array of `stop_point`_      Stop points contained in this
 
 .. _commercial_mode:
 
-Commercial Mode
+7.2.6. Commercial Mode
 ###############
 
 ================ =============================== =======================================
@@ -911,12 +985,16 @@ physical_modes   array of `physical_mode`_       Physical modes of this commerci
 
 +-----------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                    |
-| As commercial mode you will find in the API SNCF (TGV, TER, Intercité, Transilien)                                                                                                         |   
+| The commercial mode available in the SNCF API :							    |
+| *TGV													    |
+| *TER													    |
+| *Intercité												    |
+| *Transilien                                                                                               |            
 ------------------------------------------------------------------------------------------------------------+
 
 .. _physical_mode:
 
-Physical Mode
+7.2.7. Physical Mode
 #############
 
 ==================== ================================ ========================================
@@ -952,7 +1030,7 @@ You can use these ids in the forbidden_uris[] parameter from `journeys_parameter
 
 .. _company:
 
-Company
+7.2.8. Company
 #######
 
 ==================== ============================= =================================
@@ -964,7 +1042,7 @@ name                 string                             Name of the company
 
 .. _place:
 
-Place
+7.2.9. Place
 #####
 A container containing either a `stop_point`_, `stop_area`_, `address`_, `poi`_, `admin`_
 
@@ -996,7 +1074,7 @@ poi                   a point of interest
 administrative_region a city, a district, a neighborhood
 ===================== ============================================================
 
-Street network object
+7.3. Street network object
 **********************
 
 .. _admin:
@@ -1017,7 +1095,7 @@ zip_code              string                      Zip code of the admin
 
 In France, cities are on the 8 level.
 
-Other objects
+7.4. Other objects
 *************
 
 .. _date_time_object:
@@ -1085,17 +1163,17 @@ link
 
 See `interface`_ section.
 
-Special Parameters
+7.5. Special Parameters
 ******************
 
 .. _datetime:
 
-datetime
+7.5.1. datetime
 ########
 
 A date time with the format YYYYMMDDThhmmss
 
-Misc mechanisms
+7.5.2. Misc mechanisms
 ***************
 
 .. _multiple_journeys: 
@@ -1140,4 +1218,5 @@ non_pt_bike           A trip without public transport, only biking
 non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
 
-
+VII. Lexique
+========
