@@ -379,6 +379,7 @@ void GeoRef::build_autocomplete_list(){
         ++pos;
         if (way->name.empty()) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
+            // @TODO: Construct the dictonary by one postal code
             std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
             fl_way.add_string(key, pos, this->synonyms);
 
