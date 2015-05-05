@@ -287,10 +287,23 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
         else
             stop_time->date_time_estimated = false;
 
+
+        if (is_valid(id_c, row)) {
+            //the stop time name is optional and only used to make the link with the comment
+            //since the stop time can be split by dst we aggregate the vj's uri to have a unique uri
+            stop_time->uri = row[id_c];
+
+            gtfs_data.stop_time_map[stop_time->uri].push_back(stop_time);
+        }
+
         if (is_valid(desc_c, row)) {
+            if (stop_time->uri.empty()) {
+                //for compatibility issue we need to generate the id when we want to add a comment
+                stop_time->uri = stop_time->vehicle_journey->uri + "_" + std::to_string(stop_time->order);
+            }
             auto it_comment = data.comment_by_id.find(row[desc_c]);
-            if(it_comment != data.comment_by_id.end()){
-                data.stop_time_comments[{stop_time->vehicle_journey->uri, stop_time->order}].push_back(row[desc_c]);
+            if (it_comment != data.comment_by_id.end()) {
+                data.comments[{"stop_time", stop_time->uri}].push_back(row[desc_c]);
             }
         }
 
@@ -300,12 +313,10 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
                 stop_time->local_traffic_zone = local_traffic_zone;
             }
         }
-        else
+        else {
             stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
-
-        if (is_valid(id_c, row)) {
-            gtfs_data.stop_time_map[row[id_c]].push_back(stop_time);
         }
+
     }
 }
 
@@ -1256,26 +1267,29 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
             LOG4CPLUS_INFO(logger, "impossible to find " << object_id << ", cannot add the comment, skipping line");
             return;
         }
+        //the trips are split by dst, we add the comment on each one
+        for (auto vj_it = range.first; vj_it != range.second; ++vj_it) {
+            data.comments[{object_type, vj_it->second->uri}].push_back(comment_id);
+        }
+        return;
     } else if (object_type == "stop_time") {
-        // for the stop times it is a bit more complicated because the stop time does not have any real id
-        // for the comment link file the possibility of a stop time to have an id have been added, we have to
-        // change this id to the real stop time id (vj uri + stop time order)
+        // the stop time are also split by dst
         const auto& list_st = gtfs_data.stop_time_map[object_id];
         if (list_st.empty()) {
             LOG4CPLUS_INFO(logger, "impossible to find the stoptime " << object_id << ", cannot add the comment, skipping line");
             return;
         }
 
-        std::cout << "wouhou on ajoute le commentaire " << comment_id << std::endl;
         //the stop times can be split by dst, so we add the comment on each stop time
         for (const auto* st: list_st) {
-            data.stop_time_comments[{st->vehicle_journey->uri, st->order}].push_back(comment_id);
+            data.comments[{object_type, st->uri}].push_back(comment_id);
         }
         return;
     } else {
         LOG4CPLUS_INFO(logger, "Unkown object type " << object_type << ", impossible to add a comment");
         return;
     }
+
     //the comment key is the object type and object id
     data.comments[{object_type, object_id}].push_back(comment_id);
 }

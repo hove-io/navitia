@@ -305,6 +305,7 @@ struct ObjectCode {
 };
 
 struct StopTime {
+    std::string uri;
     int arrival_time; /// Number of seconds from midnight can be negative when
     int departure_time; /// we shift in UTC conversion
     VehicleJourney* vehicle_journey;

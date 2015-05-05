@@ -119,10 +119,6 @@ public:
     std::map<comment_key, std::vector<std::string>> comments;
     std::map<std::string, std::string> comment_by_id;
 
-    // the stop times have no ids, so there is a separated map
-    // the id is the id of the vj and the stoptime order
-    std::map<std::pair<std::string, unsigned int>, std::vector<std::string>> stop_time_comments;
-
     /**
          * trie les différentes donnée et affecte l'idx
          *

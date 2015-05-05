@@ -112,6 +112,9 @@ private:
 
     void insert_object_properties(const std::vector<types::ObjectProperty>& object_properties);
 
+    void insert_comments(const std::map<std::string, std::string>& comments,
+                         const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id);
+
     /// Inserer les données fiche horaire par période
     void insert_week_patterns(const std::vector<types::Calendar*>& calendars);
     void insert_calendars(const std::vector<types::Calendar*>& calendars);
