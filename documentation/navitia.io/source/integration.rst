@@ -1031,7 +1031,10 @@ id           string                Identifier of the route
 name         string                Name of the route
 is_frequence bool                  Is the route has frequency or not
 line         `line`_               The line of this route
+direction    `place`_              The direction of this route
 ============ ===================== ==================================
+
+As "direction" is a `place`_ , it can be a poi in some data.
 
 .. _stop_point:
 
