@@ -760,7 +760,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
             return nullptr;
         }
         auto ways_it = std::find_if(it_ways->second.begin(), it_ways->second.end(),
-                [&](const std::pair<const OSMRelation*, std::set<it_way>> r) {             
+                [&](const std::pair<const OSMRelation*, std::set<it_way>> r) {
                     return boost::algorithm::join(r.first->postal_codes, ";") == it_postcode->second;
                 }
         );

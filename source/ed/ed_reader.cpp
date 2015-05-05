@@ -147,7 +147,7 @@ void EdReader::fill_admins_postal_codes(navitia::type::Data& , pqxx::work& work)
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         auto it_admin = admin_map.find(const_it["admin_id"].as<idx_t>());
         if (it_admin == admin_map.end()) {
-            LOG4CPLUS_TRACE(log, "impossible to find admin " << const_it["admin_id"]
+            LOG4CPLUS_WARN(log, "impossible to find admin " << const_it["admin_id"]
                     << " for postal code " << const_it["postal_code"]);
             nb_unknown_admin++;
             continue;
