@@ -131,7 +131,7 @@ struct TripsFusioHandler : public GenericHandler {
 
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     StopTimeFusioHandler(GtfsData& gdata, CsvReader& reader) : StopTimeGtfsHandler(gdata, reader) {}
-    int desc_c, itl_c, date_time_estimated_c;
+    int desc_c, itl_c, date_time_estimated_c, id_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
@@ -310,12 +310,20 @@ struct AdminStopAreaFusioHandler : public GenericHandler {
     // temporaty map to have a StopArea by it's external code
     std::unordered_map<std::string, ed::types::StopArea*> tmp_stop_area_map;
 
-    std::unordered_map<std::string, ed::types::AdminStopArea*> admin_stop_area_map; //Note: I don't know if that is usefull to keep so for the moment it's a temporary structure, but it might be moved to ed::Data
+    std::unordered_map<std::string, ed::types::AdminStopArea*> admin_stop_area_map;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"admin_id", "station_id"}; }
 };
 
+struct CommentLinksFusioHandler: public GenericHandler {
+    CommentLinksFusioHandler(GtfsData& gdata, CsvReader& reader): GenericHandler(gdata, reader) {}
+    int object_id_c, object_type_c, comment_id_c;
+
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "comment_id"}; }
+};
 /**
  * custom parser
  * simply define the list of elemental parsers to use
