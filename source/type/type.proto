@@ -74,6 +74,11 @@ enum ActiveStatus {
     future = 2;
 }
 
+message Property {
+    optional string name = 1;
+    optional string value = 2;
+}
+
 message Channel {
     optional string id = 1;
     optional string name = 2;
@@ -204,6 +209,8 @@ message Line {
     optional MultiLineString geojson = 17;
     optional uint32 opening_time = 18;
     optional uint32 closing_time = 19;
+
+    repeated Property properties = 21;
 }
 
 message Route {
