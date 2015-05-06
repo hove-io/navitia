@@ -146,6 +146,8 @@ public:
      */
     void complete();
 
+    void build_route_destination();
+
 
     /**
      * supprime les objets inutiles
