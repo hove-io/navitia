@@ -59,5 +59,11 @@ struct principal_destination_fixture {
 };
 
 BOOST_FIXTURE_TEST_CASE(principal_destination_found, principal_destination_fixture) {
+//    navitia::type::Route* route = b.data->pt_data->routes_map["line:A:0"];
+//    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[route->main_destination()]->uri, "stop3");
 }
 
+//BOOST_FIXTURE_TEST_CASE(principal_destination_not_found, principal_destination_fixture) {
+//    navitia::type::Route* route = b.data->pt_data->routes_map["line:B:1"];
+//    BOOST_CHECK_EQUAL(route->main_destination(), navitia::type::invalid_idx);
+//}
