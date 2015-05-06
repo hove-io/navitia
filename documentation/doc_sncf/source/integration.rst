@@ -375,7 +375,7 @@ Other examples
 	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
-6.2. Places
+6.3. Places
 ******
 
 This api search in public transport objects via their names.
@@ -388,7 +388,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |    There is no pagination for this api   |
 +------------------------------------------+
 
-6.2.1 Parameters
+6.3.1 Parameters
 ##########
 
 +---------+---------------+-----------------+----------------------------------------+--------------------------------------+
@@ -409,7 +409,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |    In the SNCF API, there are no POI and adresses.			  |
 +-------------------------------------------------------------------------+
 
-6.2.2. Example
+6.3.2. Example
 #######
 
 Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
@@ -435,7 +435,7 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
      ],
     }
 
-6.3. Places Nearby
+6.4. Places Nearby
 *************
 
 This api search for public transport object near another object, or near coordinates.
@@ -447,7 +447,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |    There is no pagination for this api   |
 +------------------------------------------+
 
-6.3.1. Parameters
+6.4.1. Parameters
 ##########
 
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
@@ -465,7 +465,7 @@ It returns, in addition of classic objects, a collection of `place`_.
 |         |               |                 | for example: places_type.id=theater      |                                      |
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
 
-6.3.2. Example
+6.4.2. Example
 ########
 
 Response example for this request 
@@ -495,7 +495,7 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
     }
 
 
-6.4. Journeys
+6.5. Journeys
 ********
 
 This api compute journeys.
@@ -514,7 +514,7 @@ To access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from=
 
 .. _journeys_parameters:
 
-6.4.1. Parameters
+6.5.1. Parameters
 ##########
 
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
@@ -562,7 +562,7 @@ To access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from=
 |          |                       |           | Like all duration, the unit is seconds    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 
-6.4.2. Objects
+6.5.2. Objects
 #######
 
 Here is a typical journey, all sections are detailed below
@@ -657,14 +657,14 @@ tags                array of string     List of tags on the journey. The tags ad
 | arrival_date_time       | `date_time <date_time_object>`_    | Date and time of arrival                           |
 +-------------------------+------------------------------------+----------------------------------------------------+
 
-6.5. Route Schedules
+6.6. Route Schedules
 ***************
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
-6.5.1. Parameters
+6.6.1. Parameters
 ##########
 
 +----------+---------------------+-----------+------------------------------+---------------+
@@ -682,7 +682,7 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
-6.5.2. Objects
+6.6.2. Objects
 #######
 
 * route_schedule object
@@ -736,46 +736,12 @@ Rows    Array of row_     A row of the schedule
 
 
 
-6.6. Stop Schedules
+6.7. Stop Schedules
 **************
 
 This api give you access to schedules of stops.
 The response is made of an array of stop_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
-
-6.6.1. Parameters
-##########
-
-+----------+---------------------+-----------+------------------------------+---------------+
-| Required | Name                | Type      | Description                  | Default Value |
-+==========+=====================+===========+==============================+===============+
-| yep      | from_datetime       | date_time | The date_time from           |               |
-|          |                     |           | which you want the schedules |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
-|          |                     |           | between from_datetime        |               |
-|          |                     |           | and the retrieved datetimes. |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-
-6.6.2. Objects
-#######
-
-* stop_schedule object
-
-===================== =============================================== ==============================================
-Field                 Type                                            Description
-===================== =============================================== ==============================================
-display_informations  display_informations_                           Usefull information about the route to display
-route                 route_                                          The route of the schedule
-date_times            Array of `date_time <date_time_object>`_        When does a bus stops at the stop point
-stop_point            stop_point_                                     The stop point of the schedule
-===================== =============================================== ==============================================
-
-6.7. Departures
-**********
-
-This api retrieves a list of departures from a datetime of a selected object.
-Departures are ordered chronologically in growing order.
 
 6.7.1. Parameters
 ##########
@@ -794,20 +760,22 @@ Departures are ordered chronologically in growing order.
 6.7.2. Objects
 #######
 
-* departure object
+* stop_schedule object
 
-===================== ========================= ========================================
-Field                 Type                      Description
-===================== ========================= ========================================
-route                 route_                    The route of the schedule
-stop_date_time        Array of stop_date_time_  When does a bus stops at the stop point
-stop_point            stop_point_               The stop point of the schedule
-===================== ========================= ========================================
+===================== =============================================== ==============================================
+Field                 Type                                            Description
+===================== =============================================== ==============================================
+display_informations  display_informations_                           Usefull information about the route to display
+route                 route_                                          The route of the schedule
+date_times            Array of `date_time <date_time_object>`_        When does a bus stops at the stop point
+stop_point            stop_point_                                     The stop point of the schedule
+===================== =============================================== ==============================================
 
-6.8. Arrivals
-********
-This api retrieves a list of arrival from a datetime of a selected object.
-Arrival are ordered chronologically in growing order.
+6.8. Departures
+**********
+
+This api retrieves a list of departures from a datetime of a selected object.
+Departures are ordered chronologically in growing order.
 
 6.8.1. Parameters
 ##########
@@ -824,6 +792,38 @@ Arrival are ordered chronologically in growing order.
 +----------+---------------------+-----------+------------------------------+---------------+
 
 6.8.2. Objects
+#######
+
+* departure object
+
+===================== ========================= ========================================
+Field                 Type                      Description
+===================== ========================= ========================================
+route                 route_                    The route of the schedule
+stop_date_time        Array of stop_date_time_  When does a bus stops at the stop point
+stop_point            stop_point_               The stop point of the schedule
+===================== ========================= ========================================
+
+6.9. Arrivals
+********
+This api retrieves a list of arrival from a datetime of a selected object.
+Arrival are ordered chronologically in growing order.
+
+6.9.1. Parameters
+##########
+
++----------+---------------------+-----------+------------------------------+---------------+
+| Required | Name                | Type      | Description                  | Default Value |
++==========+=====================+===========+==============================+===============+
+| yep      | from_datetime       | date_time | The date_time from           |               |
+|          |                     |           | which you want the schedules |               |
++----------+---------------------+-----------+------------------------------+---------------+
+| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
+|          |                     |           | between from_datetime        |               |
+|          |                     |           | and the retrieved datetimes. |               |
++----------+---------------------+-----------+------------------------------+---------------+
+
+6.9.2. Objects
 #######
 
 * arrival object
@@ -1178,4 +1178,5 @@ non_pt_bike           A trip without public transport, only biking
 non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
 
-
+VII. Lexique
+========
