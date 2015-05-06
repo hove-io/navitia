@@ -291,11 +291,13 @@ Specific parameters
 ###################
 
 There are other specific parameters.
+
 A least, there is one: *odt_level* which can be applied only on /lines collection...
 
 It allows you to request navitia for specific pickup lines. It refers to the `odt`_ section.
 "odt_level" can take one of these values:
 
+*NEW! after 1.18 versions, this parameter is more accurate*
 * all (default value): no filter, provide all public transport lines, whatever its type
 * scheduled : provide only regular lines (see the `odt`_ section)
 * with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines. 
@@ -1276,6 +1278,7 @@ equipment
 #########
 
 Enum from
+
 * has_wheelchair_accessibility
 * has_bike_accepted
 * has_air_conditioned
@@ -1379,7 +1382,8 @@ On demand transportation
 
 Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
 
-Besides, some stop times can be "estimated" *in data by design*.
+Besides, some stop times can be "estimated" *in data by design* :
+
 * A standard GTFS contains only regular time: that means transport agencies should arrive on time :)
 * But navitia can be fed with more specific data, where "estimated time" means that there will be
 no guarantee on time respect by the agency. It often occurs in suburban or rural zone.
