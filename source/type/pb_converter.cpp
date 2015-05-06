@@ -439,6 +439,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
+    fill_pb_placemark(r->destination, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
 
     route->set_uri(r->uri);
     for(const auto& message : r->get_applicable_messages(now, action_period)){
@@ -1205,6 +1206,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period,
                     const DateTime& date_time,
+                    boost::optional<const std::string> calendar_id){
     if (stop_time == nullptr) {
         //we need to represent a 'null' value (for not found datetime)
         // before it was done with a empty string, but now it is the max value (since 0 is a valid value)
@@ -1222,8 +1224,14 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
+    if ((stop_time->vehicle_journey)
+            && (stop_time->vehicle_journey->journey_pattern)
+            && (stop_time->vehicle_journey->journey_pattern->route)
+            && (stop_time->vehicle_journey->journey_pattern->route->destination)){
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
+        destination->set_uri("destination:"+std::to_string(hash_fn(stop_time->vehicle_journey->journey_pattern->route->destination->name)));
+        destination->set_destination(stop_time->vehicle_journey->journey_pattern->route->destination->name);
     }
     const auto& comment = data.pt_data->get_comment(*stop_time);
     if (!comment.empty()){
@@ -1257,6 +1265,7 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(r == nullptr)
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
@@ -1267,12 +1276,17 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
+    if(r->destination != nullptr){
         //Here we format display_informations.direction for stop_schedules.
+        pt_display_info->set_direction(r->destination->name);
+        for(auto admin : r->destination->admin_list) {
             if (admin->level == 8){
+                pt_display_info->set_direction(r->destination->name + " (" + admin->name + ")");
             }
         }
 
     }
+
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_code(r->line->code);
