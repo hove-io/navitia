@@ -540,30 +540,6 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-idx_t Route::main_destination() const {
-   // StopPoint_idx, count
-    std::map<idx_t, size_t> stop_point_map;
-    std::pair<idx_t, size_t> best{invalid_idx, 0};
-    for(const JourneyPattern* jp : this->journey_pattern_list) {
-
-        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-            if((!vj.stop_time_list.empty())
-                && (vj.stop_time_list.back().journey_pattern_point != nullptr)
-                    && (vj.stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
-                const StopPoint* sp = vj.stop_time_list.back().journey_pattern_point->stop_point;
-                stop_point_map[sp->idx] += 1;
-                size_t val = stop_point_map[sp->idx];
-                if (( best.first == invalid_idx) || (best.second < val)){
-                    best = {sp->idx, val};
-                }
-            }
-            return true;
-        });
-    }
-    return best.first;
-}
-
-
 type::hasOdtProperties Route::get_odt_properties() const{
     type::hasOdtProperties result;
     if (!this->journey_pattern_list.empty()){

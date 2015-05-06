@@ -650,7 +650,6 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     MultiLineString shape;
     std::vector<JourneyPattern*> journey_pattern_list;
 
-    idx_t main_destination() const;
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {

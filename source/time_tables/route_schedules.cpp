@@ -298,7 +298,6 @@ route_schedule(const std::string& filter,
 
                 auto pb_dt = row->add_date_times();
                 fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
-                               now, action_period, dt_stop_time.first);
             }
         }
         fill_pb_object(route->shape, schedule->mutable_geojson());

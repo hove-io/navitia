@@ -440,13 +440,6 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     route->set_name(r->name);
 
-    auto main_destination = r->main_destination();
-    if (main_destination != nt::invalid_idx) {
-        const navitia::type::StopPoint* sp = data.pt_data->stop_points[main_destination];
-
-        fill_pb_placemark(sp, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
-    }
-
     route->set_uri(r->uri);
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(*message, data, route, max_depth-1, now, action_period);
@@ -1212,8 +1205,6 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period,
                     const DateTime& date_time,
-                    boost::optional<const std::string> calendar_id,
-                    const navitia::type::StopPoint* destination){
     if (stop_time == nullptr) {
         //we need to represent a 'null' value (for not found datetime)
         // before it was done with a empty string, but now it is the max value (since 0 is a valid value)
@@ -1231,18 +1222,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
-    navitia::type::StopPoint* spt = nullptr;
-    if ((stop_time->vehicle_journey != nullptr)
-        && (!stop_time->vehicle_journey->stop_time_list.empty())
-        && (stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point != nullptr)){
-        spt = stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point->stop_point;
-    }
-
-    if(destination && spt && (spt->idx != destination->idx)){
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
-        destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
-        destination->set_destination(spt->name);
     }
     const auto& comment = data.pt_data->get_comment(*stop_time);
     if (!comment.empty()){
@@ -1276,8 +1257,6 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period,
-                    const navitia::type::StopPoint* destination){
     if(r == nullptr)
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
@@ -1288,27 +1267,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
-    if(destination != nullptr){
         //Here we format display_informations.direction for stop_schedules.
-        pt_display_info->set_direction(destination->name);
-        for(auto admin : destination->admin_list) {
             if (admin->level == 8){
-                pt_display_info->set_direction(destination->name + " (" + admin->name + ")");
             }
         }
 
-    }else{
-        //Here we format display_informations.direction for route_schedules.
-        auto main_destination = r->main_destination();
-        if (main_destination != nt::invalid_idx) {
-            navitia::type::StopPoint* spt = data.pt_data->stop_points[main_destination];
-            pt_display_info->set_direction(spt->name);
-            for(auto admin : spt->admin_list) {
-                if (admin->level == 8){
-                    pt_display_info->set_direction(spt->name + " (" + admin->name + ")");
-                }
-            }
-        }
     }
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
