@@ -25,3 +25,8 @@ ADD_BOOST_TEST(conv_coord_test)
 add_executable(shift_stop_times_test shift_stop_times.cpp)
 target_link_libraries(shift_stop_times_test ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(shift_stop_times_test)
+
+
+add_executable(route_main_destination_test route_main_destination_test.cpp)
+target_link_libraries(route_main_destination_test ed types utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(route_main_destination_test)
