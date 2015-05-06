@@ -44,8 +44,6 @@ www.navitia.io
 #include "utils/serialization_unordered_map.h"
 #include "utils/serialization_tuple.h"
 
-#include <boost/fusion/container/map.hpp>
-
 namespace navitia { 
 template <>
 struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {

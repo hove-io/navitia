@@ -28,20 +28,20 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "ed/data.h"
-#include "ed/connectors/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_ed
+#define BOOST_TEST_MODULE test_comments
+
 #include <boost/test/unit_test.hpp>
-#include <memory>
-#include <string>
-#include <type_traits>
 #include "ed/build_helper.h"
+#include "type/pt_data.h"
 #include "type/type.h"
 #include "tests/utils_test.h"
 #include "type/comment_container.h"
-
+#include <memory>
 #include <boost/archive/text_oarchive.hpp>
+#include <string>
+#include <type_traits>
+
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -56,11 +56,12 @@ BOOST_AUTO_TEST_CASE(comment_map_test) {
     b.data->pt_data->index();
     b.finish();
 
-//    navitia::type::Comments& comments_container = b.data->pt_data->comments;
-    Comments comments_container;
+    Comments& comments_container = b.data->pt_data->comments;
 
-    comments_container.add(b.data->pt_data->lines[0], "bob");
-    comments_container.add(b.data->pt_data->lines[0], "bobette");
+    const nt::Line* l = b.data->pt_data->lines[0];
+    comments_container.add(l, "bob");
+    nt::Line* l2 = b.data->pt_data->lines[0]; //to test with const or no const type
+    comments_container.add(l2, "bobette");
 
     comments_container.add(b.data->pt_data->stop_areas[0], "sabob");
     comments_container.add(b.data->pt_data->stop_points[0], "spbob");

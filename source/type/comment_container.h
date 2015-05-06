@@ -29,12 +29,17 @@ www.navitia.io
 */
 
 #include "type/type.h"
+#include <type_traits>
+#include <boost/fusion/include/at_key.hpp>
 #include <boost/fusion/container.hpp>
 #include <boost/fusion/algorithm.hpp>
 
 #pragma once
 
-using pt_object_comment_map = std::map<navitia::type::idx_t, std::vector<std::string>>;
+//using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
+using comment_list = std::vector<std::string>;
+
+using pt_object_comment_map = std::map<navitia::type::idx_t, comment_list>;
 
 template <typename T> using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map>;
 
@@ -94,7 +99,15 @@ struct Comments {
 
 private:
     template <typename T>
-    navitia::type::idx_t get_as_key(const T* obj) const {
+    navitia::type::idx_t get_as_key(const T& obj) const {
+        return obj.idx;
+    }
+    template <typename T>
+    navitia::type::idx_t get_as_key(T* const & obj) const {
+        return obj->idx;
+    }
+    template <typename T>
+    navitia::type::idx_t get_as_key(T const * const & obj) const {
         return obj->idx;
     }
 
@@ -108,7 +121,7 @@ private:
         fusion_pair_comment_map<navitia::type::Line>,
         fusion_pair_comment_map<navitia::type::Route>,
         fusion_pair_comment_map<navitia::type::VehicleJourney>,
-        boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, std::vector<std::string>>>
+        boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>
     > comment_map_type;
 
     comment_map_type map;

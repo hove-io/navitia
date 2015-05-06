@@ -165,7 +165,8 @@ network = Table('network', metadata,*[
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
     Column('sort', INTEGER(), primary_key=False, nullable=False, default=text(u'2147483647')),
-    Column('website', TEXT(), primary_key=False),],
+    Column('website', TEXT(), primary_key=False),
+    ],
     schema='navitia')
 
 

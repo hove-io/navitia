@@ -477,7 +477,8 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
-struct Network : public Header, Nameable, HasMessages, Codes{
+struct Network : public Header, HasMessages, Codes{
+    std::string name;
     const static Type_e type = Type_e::Network;
     std::string address_name;
     std::string address_number;
