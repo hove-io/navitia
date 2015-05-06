@@ -4,6 +4,8 @@
 
 namespace navitia { namespace routing {
 struct raptor_visitor {
+    raptor_visitor() {}
+
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 
@@ -54,13 +56,16 @@ struct raptor_visitor {
         return boost::make_iterator_range(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
 
-    constexpr bool clockwise() const{return true;}
-    constexpr int init_queue_item() const{return std::numeric_limits<int>::max();}
-    constexpr DateTime worst_datetime() const{return DateTimeUtils::inf;}
+    bool clockwise() const{return true;}
+    int init_queue_item() const{return std::numeric_limits<int>::max();}
+    DateTime worst_datetime() const{return DateTimeUtils::inf;}
 };
 
 
 struct raptor_reverse_visitor {
+
+    raptor_reverse_visitor() {}
+
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 
@@ -112,9 +117,9 @@ struct raptor_reverse_visitor {
         return boost::make_iterator_range(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
     }
 
-    constexpr bool clockwise() const{return false;}
-    constexpr int init_queue_item() const{return -1;}
-    constexpr DateTime worst_datetime() const{return DateTimeUtils::min;}
+    bool clockwise() const{return false;}
+    int init_queue_item() const{return -1;}
+    DateTime worst_datetime() const{return DateTimeUtils::min;}
 };
 
 }}
