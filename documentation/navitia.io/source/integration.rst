@@ -11,31 +11,32 @@ Endpoint
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
+See `authentication`_ section to find out **how to use your token**.
+
+If you use a web browser, you only have to paste it in the user area, with no password.
+
 Some easy examples
 ******************
 
-* Geographical coverage of the service
-	* https://api.navitia.io/v1/coverage 
+* Geographical coverage of the service > https://api.navitia.io/v1/coverage 
 * Where am I? (WGS 84 coordinates)
-	* https://api.navitia.io/v1/coord/2.377310;48.847002
-	* I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-* Which services are available on this coverage? take a look at the links under this URL
-	* https://api.navitia.io/v1/coverage/fr-idf
-* Networks available?
-	* https://api.navitia.io/v1/coverage/fr-idf/networks
-* RATP network lines?
-	* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
+    * https://api.navitia.io/v1/coord/2.377310;48.847002
+    * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+* Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
+    * https://api.navitia.io/v1/coverage/fr-idf
+* Networks available? (see what network_ is)
+    * https://api.navitia.io/v1/coverage/fr-idf/networks
+* RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
-	* physical modes managed by RATP 
-		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
-	* metro lines 
-		* https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
-* By the way, what is close to me?
-	* https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
-	* or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
-	* or ...
+    * physical modes managed by RATP 
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+    * metro lines 
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+* By the way, what stuff are close to me?
+    * https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+    * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+    * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+    * or ...
 
 Resources
 *********
@@ -110,6 +111,7 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
 
+.. _authentication:
 
 Authentication
 ================
@@ -125,6 +127,7 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
     Authorization: mysecretkey
 
 .. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
+
 .. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
@@ -287,21 +290,26 @@ Collections
 Specific parameters
 ###################
 
-There are som specific parameters.
+There are other specific parameters.
+
 A least, there is one: *odt_level* which can be applied only on /lines collection...
 
-It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
+It allows you to request navitia for specific pickup lines. It refers to the `odt`_ section.
+"odt_level" can take one of these values:
 
-* none : to get standard public transport lines. Trips are predefined.
-* mixt : to get lines with some non-predefined trips 
-* zonal : to get lines with only non-predefined trips 
-* all (default value) : to get all public transport lines
+*NEW! after 1.18 versions, this parameter is more accurate*
+* all (default value): no filter, provide all public transport lines, whatever its type
+* scheduled : provide only regular lines (see the `odt`_ section)
+* with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines. 
+  * You can easily request route_schedule and stop_schedule with these kind of lines.
+  * Be aware of "estimated" stop times
+* zonal : to get "odt_with_zone" lines with non-detailed trips 
 
 For example
 
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
 
-https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=none
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=scheduled
 
 Examples
 ########
@@ -333,13 +341,13 @@ Response example for this request https://api.navitia.io/v1/coverage/fr-idf/phys
 Other examples
 
 * Network list
-	* https://api.navitia.io/v1/coverage/fr-idf/networks
+  * https://api.navitia.io/v1/coverage/fr-idf/networks
 * Physical mode list
-	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes
+  * https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 * Line list
-	* https://api.navitia.io/v1/coverage/fr-idf/lines
+  * https://api.navitia.io/v1/coverage/fr-idf/lines
 * Line list for one mode
-	* https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
+  * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
 Places
@@ -425,6 +433,18 @@ Parameters
 | nop     | filter        | string          | Use to restrain returned objects.        |                                      |
 |         |               |                 | for example: places_type.id=theater      |                                      |
 +---------+---------------+-----------------+------------------------------------------+--------------------------------------+
+
+Filters can be added:
+
+* request for the city of "Paris" on fr-idf
+    * http://api.navitia.io/v1/coverage/fr-idf/places?q=paris
+* then pois nearby this city
+    * http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby
+* and then, let's catch every parking around
+    * "distance=10000" Paris is not so big
+    * "type[]=poi" to take pois only
+    * "filter=poi_type.id=poi_type:amenity:parking" to get parking
+    * http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking
 
 Example
 ########
@@ -584,10 +604,6 @@ Parameters
 |          |                       |           | into account, and thus avoid disrupted    |                 |
 |          |                       |           | public transport                          |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration          | int       | Maximum duration of the journey           | 3600*24 s (24h) |
-|          |                       |           |                                           |                 |
-|          |                       |           | Like all duration, the unit is seconds    |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
 |          |                       |           | be using a wheelchair, thus only          |                 |
 |          |                       |           | accessible public transport are used      |                 |
@@ -678,8 +694,9 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    |   .. image:: crow_fly.png                          |
 |                         |                                    |      :scale: 25 %                                  |
 |                         |                                    |                                                    |
-|                         |                                    | * ``on_demand_transport``: on demand transport     |
-|                         |                                    |   section (odt)                                    |
+|                         |                                    | * ``on_demand_transport``: vehicle may not drive   |
+|                         |                                    |   along: traveler will have to call agency to      |
+|                         |                                    |   confirm journey                                  |
 |                         |                                    | * ``bss_rent``: taking a bike from a bike sharing  |
 |                         |                                    |   system (bss)                                     |
 |                         |                                    | * ``bss_put_back``: putting back a bike from a bike|
@@ -689,8 +706,8 @@ tags                array of string    List of tags on the journey. The tags add
 +-------------------------+------------------------------------+----------------------------------------------------+
 | id                      | string                             | Id of the section                                  |      
 +-------------------------+------------------------------------+----------------------------------------------------+
-| mode                    | *enum* string                      | Mode of the street network: ``Walking``, ``Bike``, |      
-|                         |                                    |   ``Car``                                          |        
+| mode                    | *enum* string                      | Mode of the street network:                        |      
+|                         |                                    |   ``Walking``, ``Bike``, ``Car``                   |        
 +-------------------------+------------------------------------+----------------------------------------------------+
 | duration                | int                                | Duration of this section                           |      
 +-------------------------+------------------------------------+----------------------------------------------------+
@@ -708,8 +725,13 @@ tags                array of string    List of tags on the journey. The tags add
 |                         |                                    | * ``has_date_time_estimated``: section with at     |
 |                         |                                    |   least one estimated date time                    |
 |                         |                                    | * ``odt_with_stop_time``: odt with                 |
-|                         |                                    |   fix schedule                                     |
-|                         |                                    | * ``odt_with_zone``: odt with zone                 |
+|                         |                                    |   fixed schedule, but travelers have to call       |
+|                         |                                    |   agency!                                          |
+|                         |                                    | * ``odt_with_stop_point``: odt where pickup or     | 
+|                         |                                    |   drop off are specific points                     |
+|                         |                                    | * ``odt_with_zone``: odt which is like a cab,      |
+|                         |                                    |   from wherever you want to wherever you want,     |
+|                         |                                    |   whenever it is possible                          |
 +-------------------------+------------------------------------+----------------------------------------------------+
 | geojson                 | `GeoJson <http://www.geojson.org>`_|                                                    |        
 +-------------------------+------------------------------------+----------------------------------------------------+
@@ -818,8 +840,8 @@ Parameters
 |          |                     |           | between from_datetime        |               |
 |          |                     |           | and the retrieved datetimes. |               |
 +----------+---------------------+-----------+------------------------------+---------------+
-| nop      | max_stop_date_times | int       | Maximum number of            |               |
-|          |                     |           | stop_date_times per          |               |
+| nop      | max_date_times      | int       | Maximum number of            |               |
+|          |                     |           | columns per                  |               |
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 
@@ -974,6 +996,8 @@ Public transport objects
 Network
 #######
 
+Networks are fed by agencies in GTFS format.
+
 ====== ============= ==========================
 Field  Type          Description
 ====== ============= ==========================
@@ -1009,7 +1033,10 @@ id           string                Identifier of the route
 name         string                Name of the route
 is_frequence bool                  Is the route has frequency or not
 line         `line`_               The line of this route
+direction    `place`_              The direction of this route
 ============ ===================== ==================================
+
+As "direction" is a `place`_ , it can be a poi in some data.
 
 .. _stop_point:
 
@@ -1026,6 +1053,7 @@ administrative_regions  array of `admin`_     Administrative regions of the stop
 equipments              array of string       list of `equipment`_ of the stop point
 stop_area               `stop_area`_          Stop Area containing this stop point
 ======================= ===================== =====================================================================
+
 
 .. _stop_area:
 
@@ -1055,6 +1083,7 @@ id               string                          Identifier of the commercial mo
 name             string                          Name of the commercial mode
 physical_modes   array of `physical_mode`_       Physical modes of this commercial mode
 ================ =============================== =======================================
+
 
 .. _physical_mode:
 
@@ -1131,7 +1160,7 @@ _____________
 ===================== ============================================================
 Value                 Description
 ===================== ============================================================
-stop_point            a location where vehicles can pick up or drop off passengers
+stop_point            a location where vehicles can pickup or drop off passengers
 stop_area             a nameable zone, where there are some stop points  
 address               a point located in a street
 poi                   a point of interest
@@ -1199,7 +1228,7 @@ level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
 
-In France, cities are on the 8 level.
+Cities are mainly on the 8 level, dependant on the country (http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative)
 
 Other objects
 *************
@@ -1249,6 +1278,7 @@ equipment
 #########
 
 Enum from
+
 * has_wheelchair_accessibility
 * has_bike_accepted
 * has_air_conditioned
@@ -1300,13 +1330,13 @@ datetime
 
 A date time with the format YYYYMMDDThhmmss
 
-Misc mechanisms
-***************
+Misc mechanisms (and few boring stuff)
+======================================
 
 .. _multiple_journeys: 
 
 Multiple journeys
-#################
+*****************
 
 Navitia can compute several kind of trips within a journey query.
 
@@ -1322,7 +1352,7 @@ Those journeys have the ``next`` (or ``previous``) value in their tags.
 .. _journey_qualif:
 
 Journey qualification process
-#############################
+*****************************
 
 Since Navitia can return several journeys, it tags them to help the user choose the best one for his needs.
 
@@ -1344,5 +1374,40 @@ non_pt_walk           A trip without public transport, only walking
 non_pt_bike           A trip without public transport, only biking
 non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
+
+.. _odt:
+
+On demand transportation
+************************
+
+Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
+
+Besides, some stop times can be "estimated" *in data by design* :
+
+* A standard GTFS contains only regular time: that means transport agencies should arrive on time :)
+* But navitia can be fed with more specific data, where "estimated time" means that there will be
+no guarantee on time respect by the agency. It often occurs in suburban or rural zone.
+
+After all, the stop points can be standard (such as bus stop or railway station) 
+or "zonal" (where agency can pick you up you anywhere, like a cab).
+
+That's some kind of "responsive locomotion" (ɔ).
+
+So public transport lines can mix different methods to pickup travelers:
+
+* regular
+    * line does not contain any estimated stop times, nor zonal stop point location. 
+    * No need to call too.
+* odt_with_stop_time
+    * line does not contain any estimated stop times, nor zonal stop point location.
+    * But you will have to call to take it.
+* odt_with_stop_point
+    * line can contain some estimated stop times, but no zonal stop point location.
+    * And you will have to call to take it.
+* odt_with_zone
+    * line can contain some estimated stop times, and zonal stop point location.
+    * And you will have to call to take it
+    * well, not really a public transport line, more a cab...
+
 
 
