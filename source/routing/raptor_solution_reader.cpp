@@ -503,6 +503,7 @@ Solutions read_solutions(const RAPTOR& raptor,
         auto& working_labels = raptor.labels[count];
         for (const auto& a: v.clockwise() ? deps : arrs) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
+            if (! raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) { continue; }
             reader.nb_sol_added = 0;
             try {
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));

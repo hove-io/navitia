@@ -95,7 +95,7 @@ struct route_schedule_fixture {
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 100,
-                                                                   1, 3, 10, 0, *(b.data), false, false);
+                                                                   3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     auto get_vj = [](pbnavitia::RouteSchedule r, int i) {
@@ -110,7 +110,7 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 0,
-                                                                   1, 3, 10, 0, *(b.data), false, false);
+                                                                   3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     BOOST_REQUIRE_EQUAL(route_schedule.table().headers().size(), 0);
@@ -193,7 +193,7 @@ struct route_schedule_calendar_fixture {
 
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
         pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=B", calendar, {}, d("20120615T070000"), 86400, 100,
-                                                                       1, 3, 10, 0, *(b.data), false, false);
+                                                                       3, 10, 0, *(b.data), false, false);
         BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         BOOST_REQUIRE_EQUAL(route_schedule.table().headers_size(), expected_vjs.size());

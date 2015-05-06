@@ -174,9 +174,7 @@ struct RAPTOR
     void set_valid_jp_and_jpp(uint32_t date,
                               const type::AccessibiliteParams & accessibilite_params,
                               const std::vector<std::string> & forbidden,
-                              bool disruption_active,
-                              const vec_stop_point_duration &departs = {},
-                              const vec_stop_point_duration &destinations = {});
+                              bool disruption_active);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
@@ -208,7 +206,6 @@ struct RAPTOR
     /// First raptor loop
     /// externalized for testing purposes
     void first_raptor_loop(const vec_stop_point_duration& dep,
-                           const vec_stop_point_duration& arr,
                            const DateTime& departure_datetime,
                            bool disruption_active,
                            const DateTime& bound,

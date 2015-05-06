@@ -299,6 +299,7 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     sp->coord.set_lat(y);
 
     sp->stop_area = this->sa;
+    this->sa->stop_point_list.push_back(sp);
     b.sps[sp_name] = sp;
     return *this;
 }

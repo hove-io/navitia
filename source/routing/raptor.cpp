@@ -168,7 +168,6 @@ void RAPTOR::init(const vec_stop_point_duration& dep,
 }
 
 void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
-                               const vec_stop_point_duration& arr,
                                const DateTime& departure_datetime,
                                bool disruption_active,
                                const DateTime& bound,
@@ -180,9 +179,7 @@ void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden_uri,
-                         disruption_active,
-                         dep,
-                         arr);
+                         disruption_active);
 
     clear(clockwise, bound);
     init(dep, departure_datetime, clockwise, accessibilite_params.properties);
@@ -210,6 +207,7 @@ struct Dom {
 ParetoFront<StartingPointSndPhase, Dom>
 make_starting_points_snd_phase(const RAPTOR& raptor,
                                const RAPTOR::vec_stop_point_duration& arrs,
+                               const type::AccessibiliteParams& accessibilite_params,
                                const bool clockwise)
 {
     auto res = ParetoFront<StartingPointSndPhase, Dom>(Dom(clockwise));
@@ -218,6 +216,7 @@ make_starting_points_snd_phase(const RAPTOR& raptor,
         const auto& working_labels = raptor.labels[count];
         for (const auto& a: arrs) {
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
+            if (! raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) { continue; }
 
             const unsigned walking_t = a.second.total_seconds();
             StartingPointSndPhase starting_point = {
@@ -272,7 +271,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     const auto& calc_dep = clockwise ? departures_ : destinations;
     const auto& calc_dest = clockwise ? destinations : departures_;
 
-    first_raptor_loop(calc_dep, calc_dest, departure_datetime, disruption_active,
+    first_raptor_loop(calc_dep, departure_datetime, disruption_active,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
     // Now, we do the second pass.  In case of clockwise (resp
@@ -287,7 +286,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     // (as in best_labels_pt) in the second pass.  Then, we can reuse
     // these bounds, modulo an off by one because of strict comparison
     // on best_labels.
-    auto starting_points = make_starting_points_snd_phase(*this, calc_dest, clockwise);
+    auto starting_points =
+        make_starting_points_snd_phase(*this, calc_dest, accessibilite_params, clockwise);
     swap(labels, first_pass_labels);
     auto best_labels_pts_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_transfers);
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
@@ -389,9 +389,7 @@ void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams & accessibilite_params,
     const std::vector<std::string> & forbidden,
-    bool disruption_active,
-    const vec_stop_point_duration &departures_,
-    const vec_stop_point_duration &destinations)
+    bool disruption_active)
 {
 
     if(disruption_active){

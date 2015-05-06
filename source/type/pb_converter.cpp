@@ -1514,7 +1514,7 @@ void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
     } else if (has_odt) {
         infos->Add(pbnavitia::ODT_WITH_STOP_TIME);
     }
-    if (infos->empty()) {
+    if (infos->size() < 1) {
         infos->Add(pbnavitia::REGULAR);
     }
 }
