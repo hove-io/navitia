@@ -38,10 +38,13 @@ www.navitia.io
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
+#include "comment_container.h"
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
 #include "utils/serialization_tuple.h"
+
+#include <boost/fusion/container/map.hpp>
 
 namespace navitia { 
 template <>
@@ -107,6 +110,19 @@ struct PT_Data : boost::noncopyable{
     // rtree for zonal stop_points
     MultiPolygonMap<const StopPoint*> stop_points_by_area;
 
+    //comments
+    Comments comments;
+
+    template <typename T>
+    const std::vector<std::string>& get_comment(const T& obj) const {
+        return comments.get(obj);
+    }
+
+    template <typename T>
+    void add_comment(const T& obj, const std::string& comment) {
+        comments.add(obj, comment);
+    }
+
     const std::string& get_comment(const StopTime& st) const {
         const auto* jpp = st.journey_pattern_point;
         return find_or_default(
@@ -134,7 +150,8 @@ struct PT_Data : boost::noncopyable{
                 & disruption_holder
                 & meta_vj
                 & stop_time_comment
-                & stop_points_by_area;
+                & stop_points_by_area
+                & comments;
     }
 
     /** Initialise tous les indexes

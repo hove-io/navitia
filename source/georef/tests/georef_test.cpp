@@ -917,13 +917,6 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
 }
 
-namespace std {
-template<typename T, typename U>
-static std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p) {
-    return os << "(" << p.first << ", " << p.second << ")";
-}
-}
-
 BOOST_AUTO_TEST_CASE(geolocalization) {
     //     (0,100)    rue AB   (100,100)
     //      A +--------------------+ B
