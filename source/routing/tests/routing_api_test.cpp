@@ -1704,7 +1704,6 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     BOOST_REQUIRE_EQUAL(j.sections_size(), 1);
 }
 
-#ifdef __NETWORK_DISRUPTION_BUG__ //network disruption on journeys does not work for the moment see http://jira.canaltp.fr/browse/NAVP-161
 //test with network disruption too
 // we add 2 disruptions, and we check that the status of the journey is correct
 BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
@@ -1790,11 +1789,9 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     navitia::type::Type_e destination_type = b.data->get_type_of_id("B");
     navitia::type::EntryPoint origin(origin_type, "A");
     navitia::type::EntryPoint destination(destination_type, "B");
-
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20150315T080000")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, {}, sn_worker, false, true);
-
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20150314T080000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, {}, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
 
@@ -1803,4 +1800,3 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     const auto& j = resp.journeys(0);
     BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR"); //we should have the network's disruption's effect
 }
-#endif
