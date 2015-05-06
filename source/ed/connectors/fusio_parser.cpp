@@ -814,9 +814,9 @@ void ObjectPropertiesFusioHandler::init(Data &){
 
 void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(!is_first_line && !(has_col(object_id_c, row) && has_col(object_type_c, row) && has_col(property_name_c, row) && has_col(property_value_c, row))) {
-        LOG4CPLUS_FATAL(logger, "ObjectPropertiesFusioHandler: Error while reading " + csv.filename +
-                        " file has no object_id or object_type or object_property_name or object_property_value column");
-        throw InvalidHeaders(csv.filename);
+        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Line ignored in " + csv.filename +
+                        " missing object_id or object_type or object_property_name or object_property_value column");
+        return;
     }
     if("line" == row[object_type_c]) {
         auto line = gtfs_data.line_map.find(row[object_id_c]);
@@ -849,7 +849,7 @@ void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, b
             return;
         }
     } else {
-        LOG4CPLUS_ERROR(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
+        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
         return;
     }
     ed::types::ObjectProperty* object_property = new ed::types::ObjectProperty();
