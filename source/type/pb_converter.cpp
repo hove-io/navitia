@@ -439,7 +439,9 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
-    fill_pb_placemark(r->destination, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
+    if (r->destination != nullptr){
+        fill_pb_placemark(r->destination, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
+    }
 
     route->set_uri(r->uri);
     for(const auto& message : r->get_applicable_messages(now, action_period)){
@@ -1276,6 +1278,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
+
     if(r->destination != nullptr){
         //Here we format display_informations.direction for stop_schedules.
         pt_display_info->set_direction(r->destination->name);
