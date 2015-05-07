@@ -240,19 +240,24 @@ class Instance(object):
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False):
         with self.socket(self.context) as socket:
-            socket.send(request.SerializeToString())
-            if socket.poll(timeout=timeout) > 0:
-                pb = socket.recv()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                self.update_property(resp)#we update the timezone and geom of the instances at each request
-                return resp
-            else:
-                socket.setsockopt(zmq.LINGER, 0)
+            logger = logging.getLogger(__name__)
+            try:
+                socket.send(request.SerializeToString())
+                if socket.poll(timeout=timeout) > 0:
+                    pb = socket.recv()
+                    resp = response_pb2.Response()
+                    resp.ParseFromString(pb)
+                    self.update_property(resp)#we update the timezone and geom of the instances at each request
+                    return resp
+                else:
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    if not quiet:
+                        logger.error('request on %s failed: %s', self.socket_path, str(request))
+                    raise DeadSocketException(self.name, self.socket_path)
+            except zmq.ZMQError:
+                logger.exception('zmq error:')
                 socket.close()
-                if not quiet:
-                    logger = logging.getLogger(__name__)
-                    logger.error('request on %s failed: %s', self.socket_path, str(request))
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):
