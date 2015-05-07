@@ -12,6 +12,12 @@ object_type = Table('object_type', metadata,*[
     Column('name', TEXT(), primary_key=False, nullable=False),],
     schema='navitia')
 
+object_properties = Table('object_properties', metadata,*[
+    Column('object_id', BIGINT(), primary_key=False, nullable=False),
+    Column('object_type', TEXT(), primary_key=False, nullable=False),
+    Column('property_name', TEXT(), primary_key=False, nullable=False),
+    Column('property_value', TEXT(), primary_key=False, nullable=False),],
+    schema='navitia')
 
 connection_kind = Table('connection_kind', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),

@@ -809,6 +809,62 @@ void StopPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
         gtfs_data.hasProperties_map[row[id_c]] = has_properties;
     }
 }
+
+void ObjectPropertiesFusioHandler::init(Data &){
+    object_id_c = csv.get_pos_col("object_id"); 
+    object_type_c = csv.get_pos_col("object_type");
+    property_name_c = csv.get_pos_col("object_property_name");
+    property_value_c = csv.get_pos_col("object_property_value");
+}
+
+void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
+    if(!is_first_line && !(has_col(object_id_c, row) && has_col(object_type_c, row) && has_col(property_name_c, row) && has_col(property_value_c, row))) {
+        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Line ignored in " + csv.filename +
+                        " missing object_id or object_type or object_property_name or object_property_value column");
+        return;
+    }
+    if("line" == row[object_type_c]) {
+        auto line = gtfs_data.line_map.find(row[object_id_c]);
+        if (line == gtfs_data.line_map.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the line " << row[object_id_c]);
+            return;
+        }
+    } else if ("route" == row[object_type_c]) {
+        auto route = gtfs_data.route_map.find(row[object_id_c]);
+        if (route == gtfs_data.route_map.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the route " << row[object_id_c]);
+            return;
+        } 
+    } else if ("trip" == row[object_type_c]) {
+        auto trip = gtfs_data.metavj_by_external_code.find(row[object_id_c]);
+        if (trip == gtfs_data.metavj_by_external_code.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the trip " << row[object_id_c]);
+            return;
+        }
+    } else if ("stop_area" == row[object_type_c]) {
+        auto stop_area = gtfs_data.stop_area_map.find(row[object_id_c]);
+        if (stop_area == gtfs_data.stop_area_map.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop area " << row[object_id_c]);
+            return;
+        }
+    } else if ("stop_point" == row[object_type_c]) {
+        auto stop_point = gtfs_data.stop_map.find(row[object_id_c]);
+        if (stop_point == gtfs_data.stop_map.end()) {
+            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop point " << row[object_id_c]);
+            return;
+        }
+    } else {
+        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
+        return;
+    }
+    ed::types::ObjectProperty* object_property = new ed::types::ObjectProperty();
+    object_property->object_id = row[object_id_c];
+    object_property->object_type = row[object_type_c];
+    object_property->property_name = row[property_name_c];
+    object_property->property_value = row[property_value_c];
+    data.object_properties.push_back(object_property);
+}
+
 void TripPropertiesFusioHandler::init(Data &){
     id_c = csv.get_pos_col("trip_property_id");
     wheelchair_accessible_c = csv.get_pos_col("wheelchair_accessible");
@@ -1272,8 +1328,8 @@ void FusioParser::parse_files(Data& data) {
     parse<grid_calendar::CalendarTripFusioHandler>(data, "grid_rel_calendar_trip.txt");
     parse<grid_calendar::GridCalendarTripExceptionDatesFusioHandler>(data, "grid_calendar_trip_exception_dates.txt");
     parse<AdminStopAreaFusioHandler>(data, "admin_stations.txt");
+    parse<ObjectPropertiesFusioHandler>(data, "object_properties.txt");
     parse<CommentLinksFusioHandler>(data, "comment_links.txt");
-
 }
 }
 }
