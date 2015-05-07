@@ -69,9 +69,7 @@ int main(int argc, char * argv[])
     if(vm.count("version")){
         std::cout << argv[0] << " V" << navitia::config::kraken_version << " "
                   << navitia::config::navitia_build_type << std::endl;
-        return 0;    start = pt::microsec_clock::local_time();
-        data.build_route_destination();
-        main_destination = (pt::microsec_clock::local_time() - start).total_milliseconds();
+        return 0;
     }
 
     if(vm.count("config-file")){
