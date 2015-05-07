@@ -87,6 +87,7 @@ struct data_set {
                 {{1,2}, {2,2}, {4,5}},
                 {{10,20}, {20,20}, {40,50}}
             };
+            r->destination = b.sas.find("stop_area:stop2")->second;
         }
 
         b.data->build_uri();
