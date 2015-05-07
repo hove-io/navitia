@@ -442,7 +442,7 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj"
+        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
