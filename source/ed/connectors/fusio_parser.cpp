@@ -823,42 +823,41 @@ void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, b
                         " missing object_id or object_type or object_property_name or object_property_value column");
         return;
     }
+    nt::Header* object_with_idx;
     if("line" == row[object_type_c]) {
         auto line = gtfs_data.line_map.find(row[object_id_c]);
         if (line == gtfs_data.line_map.end()) {
             LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the line " << row[object_id_c]);
             return;
         }
+        object_with_idx = line->second;
     } else if ("route" == row[object_type_c]) {
         auto route = gtfs_data.route_map.find(row[object_id_c]);
         if (route == gtfs_data.route_map.end()) {
             LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the route " << row[object_id_c]);
             return;
-        } 
-    } else if ("trip" == row[object_type_c]) {
-        auto trip = gtfs_data.metavj_by_external_code.find(row[object_id_c]);
-        if (trip == gtfs_data.metavj_by_external_code.end()) {
-            LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the trip " << row[object_id_c]);
-            return;
         }
+        object_with_idx = route->second;
     } else if ("stop_area" == row[object_type_c]) {
         auto stop_area = gtfs_data.stop_area_map.find(row[object_id_c]);
         if (stop_area == gtfs_data.stop_area_map.end()) {
             LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop area " << row[object_id_c]);
             return;
         }
+        object_with_idx = stop_area->second;
     } else if ("stop_point" == row[object_type_c]) {
         auto stop_point = gtfs_data.stop_map.find(row[object_id_c]);
         if (stop_point == gtfs_data.stop_map.end()) {
             LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Impossible to find the stop point " << row[object_id_c]);
             return;
         }
+        object_with_idx = stop_point->second;
     } else {
         LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
         return;
     }
     ed::types::ObjectProperty* object_property = new ed::types::ObjectProperty();
-    object_property->object_id = row[object_id_c];
+    object_property->object_with_idx = object_with_idx;
     object_property->object_type = row[object_type_c];
     object_property->property_name = row[property_name_c];
     object_property->property_value = row[property_value_c];
@@ -1223,7 +1222,7 @@ bool add_comment(const std::unordered_map<std::string, std::vector<T>>& list_map
     return true;
 }
 
-void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
     if(! has_col(object_id_c, row) || ! has_col(object_type_c, row) || ! has_col(comment_id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  impossible to find all needed fields");

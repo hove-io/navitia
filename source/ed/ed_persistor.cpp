@@ -1090,7 +1090,7 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
 void EdPersistor::insert_object_properties(const std::vector<types::ObjectProperty*> object_properties) {
     this->lotus.prepare_bulk_insert("navitia.object_properties", {"object_id", "object_type" , "property_name", "property_value"});
     for (const types::ObjectProperty* property: object_properties) {
-        this->lotus.insert({property->object_id,
+        this->lotus.insert({std::to_string(property->object_with_idx->idx),
                             property->object_type,
                             property->property_name,
                             property->property_value

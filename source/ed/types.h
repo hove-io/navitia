@@ -444,7 +444,7 @@ struct AdminStopArea{
 };
 
 struct ObjectProperty{
-    std::string object_id;
+    Header* object_with_idx = nullptr;
     std::string object_type;
     std::string property_name;
     std::string property_value;
