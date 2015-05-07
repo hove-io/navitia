@@ -266,7 +266,7 @@ void Data::complete(){
 
     shift_stop_times();
     finalize_frequency();
-    build_route_destination();
+
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
 
