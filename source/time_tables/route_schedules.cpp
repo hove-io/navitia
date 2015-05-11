@@ -164,7 +164,7 @@ std::vector<uint32_t> compute_order(const size_t nb_vertices, const std::vector<
     try {
         for (const auto& edge: edges) { add_edge(edge.source, edge.target, g); }
         order.clear();
-        topological_sort(g, std::back_inserter(order));
+        boost::topological_sort(g, std::back_inserter(order));
         return order;
     } catch (boost::not_a_dag&) {}
 
