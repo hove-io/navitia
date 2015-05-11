@@ -306,6 +306,13 @@ struct StopPoint : public Header, Nameable, hasProperties{
     bool operator<(const StopPoint& other) const;
 };
 
+struct ObjectCode : public Header{
+    nt::Type_e object_type = nt::Type_e::Unknown;
+    nt::CodeType_e code_type = nt::CodeType_e::Unknown;
+    std::string code;
+    ObjectCode(){}
+};
+
 struct StopTime : public Nameable {
     int arrival_time; /// Number of seconds from midnight can be negative when
     int departure_time; /// we shift in UTC conversion
