@@ -379,7 +379,13 @@ void GeoRef::build_autocomplete_list(){
         ++pos;
         if (way->name.empty()) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
-            // @TODO: Construct the dictonary by one postal code
+            // @TODO:
+            // For each object admin we have one element in the dictionnary of admins.
+            // With multi postal codes for the same admin we will have to create one element
+            // for each postal code of admin.
+            // Same way for all address in the admin.
+            // After this modification the result found with postal code in search string
+            // should contain only this postal code but not others of the admin found.
             std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
             fl_way.add_string(key, pos, this->synonyms);
 
