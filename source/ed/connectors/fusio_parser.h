@@ -336,6 +336,15 @@ struct CommentLinksFusioHandler: public GenericHandler {
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "comment_id"}; }
 };
+
+struct ObjectCodesFusioHandler: public GenericHandler {
+    ObjectCodesFusioHandler(GtfsData& gdata, CsvReader& reader): GenericHandler(gdata, reader) {}
+    int object_uri_c, object_type_c, code_c, object_system_c;
+
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "object_code", "object_system"}; }
+};
 /**
  * custom parser
  * simply define the list of elemental parsers to use
