@@ -856,11 +856,11 @@ void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, b
         LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: type '" << row[object_type_c] << "' not supported");
         return;
     }
-    ed::types::ObjectProperty* object_property = new ed::types::ObjectProperty();
-    object_property->object_with_idx = object_with_idx;
-    object_property->object_type = row[object_type_c];
-    object_property->property_name = row[property_name_c];
-    object_property->property_value = row[property_value_c];
+    ed::types::ObjectProperty object_property;
+    object_property.object_with_idx = object_with_idx;
+    object_property.object_type = row[object_type_c];
+    object_property.property_name = row[property_name_c];
+    object_property.property_value = row[property_value_c];
     data.object_properties.push_back(object_property);
 }
 
