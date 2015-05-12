@@ -79,14 +79,14 @@ void Data::build_object_code_idx(){
             object_code->idx = ed::get_idx(this->networks, object_code->uri);
             break;
         case nt::Type_e::VehicleJourney:
-                object_code->idx = ed::get_idx(this->vehicle_journeys, object_code->uri);
-                break;
+            object_code->idx = ed::get_idx(this->vehicle_journeys, object_code->uri);
+            break;
         case nt::Type_e::StopArea:
-                object_code->idx = ed::get_idx(this->stop_areas, object_code->uri);
-                break;
+            object_code->idx = ed::get_idx(this->stop_areas, object_code->uri);
+            break;
         case nt::Type_e::StopPoint:
-                object_code->idx = ed::get_idx(this->stop_points, object_code->uri);
-                break;
+            object_code->idx = ed::get_idx(this->stop_points, object_code->uri);
+            break;
         default:
             break;
         }
