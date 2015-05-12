@@ -644,7 +644,6 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     data.lines.push_back(line);
     gtfs_data.line_map[line->uri] = line;
-    gtfs_data.line_map_by_external_code[line->external_code] = line;
 }
 
 void CompanyFusioHandler::init(Data&) {
@@ -1161,12 +1160,17 @@ void GridCalendarTripExceptionDatesFusioHandler::handle_line(Data&, const csv_ro
 }
 }
 
-void AdminStopAreaFusioHandler::init(Data&){
+void AdminStopAreaFusioHandler::init(Data& data){
     admin_c = csv.get_pos_col("admin_id");
     stop_area_c = csv.get_pos_col("station_id");
 
-    for (const auto& stop_area : gtfs_data.stop_area_map){
-        tmp_stop_area_map[stop_area.second->external_code] = stop_area.second;
+    for(const auto& object_code : data.object_codes){
+        if((object_code->object_type == nt::Type_e::StopArea) && (object_code->key == "external_code")){
+            const auto stop_area = gtfs_data.stop_area_map.find(object_code->uri);
+            if (stop_area != gtfs_data.stop_area_map.end()){
+                tmp_stop_area_map[object_code->value] = stop_area->second;
+            }
+        }
     }
 }
 
@@ -1309,7 +1313,7 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
 
     ed::types::ObjectCode* object_code = new ed::types::ObjectCode();
 
-    if (row[object_system_c] == "navitia1"){
+    if (boost::algorithm::to_lower_copy(row[object_system_c]) == "navitia1"){
         object_code->key = "external_code";
     }else{
         object_code->key = row[object_system_c];
@@ -1319,6 +1323,12 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
     std::string object_type = row[object_type_c];
     object_code->object_type = type_by_caption(object_type);
     data.object_codes.push_back(object_code);
+    if ((object_code->object_type == nt::Type_e::Line) && (object_code->key == "external_code")) {
+        const auto& it_line = gtfs_data.line_map.find(object_code->uri);
+        if(it_line != gtfs_data.line_map.end()){
+            gtfs_data.line_map_by_external_code[object_code->value] = it_line->second;
+        }
+    }
 }
 
 ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data & data) {
