@@ -89,6 +89,9 @@ struct data_set {
             };
             r->destination = b.sas.find("stop_area:stop2")->second;
         }
+        b.lines["line:A"]->codes["external_code"] = "A";
+        b.lines["line:A"]->codes["codeB"] = "B";
+        b.lines["line:A"]->codes["codeC"] = "C";
 
         b.data->build_uri();
 
