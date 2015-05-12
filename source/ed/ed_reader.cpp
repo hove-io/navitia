@@ -72,6 +72,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_admins_postal_codes(data, work);
     this->fill_admin_stop_areas(data, work);
+    this->fill_object_codes(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
@@ -197,6 +198,60 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
         LOG4CPLUS_WARN(log, nb_unknown_stop << " stops not found for admin main stops");
     }
 
+}
+
+void EdReader::fill_object_codes(navitia::type::Data&, pqxx::work& work){
+    std::string request = "select object_type_id, object_id, key, value from object_code";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::Type_e object_type_e = static_cast<nt::Type_e>(const_it["object_type_id"].as<int>());
+        switch(object_type_e) {
+        case nt::Type_e::Line:{
+            auto it_object = this->line_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->line_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::Route:{
+            auto it_object = this->route_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->route_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::Network:{
+            auto it_object = this->network_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->network_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::VehicleJourney:{
+            auto it_object = this->vehicle_journey_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->vehicle_journey_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::StopArea:{
+            auto it_object = this->stop_area_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->stop_area_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::StopPoint:{
+            auto it_object = this->stop_point_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->stop_point_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        default: break;
+        }
+    }
 }
 
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
