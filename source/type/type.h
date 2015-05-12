@@ -969,7 +969,7 @@ struct JourneyPatternPoint : public Header{
 };
 
 
-struct Calendar : public Nameable, public Header, public Codes {
+struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
@@ -989,7 +989,7 @@ struct Calendar : public Nameable, public Header, public Codes {
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
+        ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern;
     }
 };
 

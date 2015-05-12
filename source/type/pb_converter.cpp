@@ -1471,12 +1471,6 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     for (const auto& excep: cal->exceptions) {
         fill_pb_object(excep, data, pb_cal->add_exceptions(), max_depth, now, action_period);
     }
-
-    if(show_codes) {
-        for(auto type_value : cal->codes) {
-            fill_codes(type_value.first, type_value.second, pb_cal->add_codes());
-        }
-    }
 }
 
 void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,

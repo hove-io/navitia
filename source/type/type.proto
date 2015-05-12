@@ -437,7 +437,6 @@ message Calendar{
     repeated CalendarPeriod active_periods = 4;
     repeated CalendarException exceptions = 5;
     optional ValidityPattern validity_pattern = 6;
-    repeated Code codes = 7;
 }
 
 message ValidityPattern {
