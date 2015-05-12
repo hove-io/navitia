@@ -465,7 +465,7 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties"
+        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
@@ -475,13 +475,11 @@ void EdPersistor::clean_db(){
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
-    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri",
-                                    "external_code", "name", "comment", "sort", "website"});
+    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri", "name", "comment", "sort", "website"});
     for(types::Network* net : networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
         values.push_back(navitia::encode_uri(net->uri));
-        values.push_back(net->external_code);
         values.push_back(net->name);
         values.push_back(net->comment);
         values.push_back(std::to_string(net->sort));
@@ -628,14 +626,13 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
 
 void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
     this->lotus.prepare_bulk_insert("navitia.stop_area",
-            {"id", "uri", "external_code", "name", "coord", "comment",
+            {"id", "uri", "name", "coord", "comment",
              "properties_id", "visible", "timezone"});
 
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
         values.push_back(std::to_string(sa->idx));
         values.push_back(navitia::encode_uri(sa->uri));
-        values.push_back(sa->external_code);
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
         values.push_back(sa->comment);
@@ -686,14 +683,13 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 }
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
-            {"id", "uri", "external_code", "name", "comment", "color", "code",
+            {"id", "uri", "name", "comment", "color", "code",
              "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
         values.push_back(std::to_string(line->idx));
         values.push_back(navitia::encode_uri(line->uri));
-        values.push_back(line->external_code);
         values.push_back(line->name);
         values.push_back(line->comment);
         values.push_back(line->color);
@@ -757,13 +753,12 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "external_code", "name", "comment", "line_id", "destination_stop_area_id", "shape"});
+            {"id", "uri", "name", "comment", "line_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
         values.push_back(std::to_string(route->idx));
         values.push_back(navitia::encode_uri(route->uri));
-        values.push_back(route->external_code);
         values.push_back(route->name);
         values.push_back(route->comment);
         if(route->line != NULL){
@@ -947,7 +942,7 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
-            {"id", "uri", "external_code", "name", "comment", "validity_pattern_id",
+            {"id", "uri", "name", "comment", "validity_pattern_id",
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
@@ -957,7 +952,6 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         std::vector<std::string> values;
         values.push_back(std::to_string(vj->idx));
         values.push_back(navitia::encode_uri(vj->uri));
-        values.push_back(vj->external_code);
         values.push_back(vj->name);
         values.push_back(vj->comment);
 
