@@ -998,7 +998,7 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
     calendar->uri = row[id_c];
-    calendar->external_code = row[id_c];
+//    calendar->external_code = row[id_c];
     calendar->name =  row[name_c];
     calendar->week_pattern[navitia::Monday] = is_active(monday_c, row);
     calendar->week_pattern[navitia::Tuesday] = is_active(tuesday_c, row);
@@ -1300,13 +1300,6 @@ static nt::Type_e type_by_caption(std::string& caption){
     return nt::Type_e::Unknown;
 }
 
-static nt::CodeType_e code_type_by_caption(std::string& caption){
-    boost::algorithm::to_lower(caption);
-    if (caption == "navitia1")
-        return nt::CodeType_e::external_code;
-    return nt::CodeType_e::Unknown;
-}
-
 void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(! has_col(object_uri_c, row) || ! has_col(object_type_c, row) || ! has_col(code_c, row) || ! has_col(object_system_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
@@ -1315,10 +1308,14 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
     }
 
     ed::types::ObjectCode* object_code = new ed::types::ObjectCode();
-    object_code->code = row[code_c];
+
+    if (row[object_system_c] == "navitia1"){
+        object_code->key = "external_code";
+    }else{
+        object_code->key = row[object_system_c];
+    }
+    object_code->value = row[code_c];
     object_code->uri = row[object_uri_c];
-    std::string code_type = row[object_system_c];
-    object_code->code_type = code_type_by_caption(code_type);
     std::string object_type = row[object_type_c];
     object_code->object_type = type_by_caption(object_type);
     data.object_codes.push_back(object_code);
