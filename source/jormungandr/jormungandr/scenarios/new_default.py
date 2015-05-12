@@ -32,7 +32,8 @@ import itertools
 import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import simple, journey_filter
-from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default
+from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
+    fill_uris
 from navitiacommon import type_pb2, response_pb2, request_pb2
 
 
@@ -284,6 +285,8 @@ class Scenario(simple.Scenario):
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
 
+        for r in resp:
+            fill_uris(r)
         return resp
 
     def __on_journeys(self, requested_type, request, instance):
