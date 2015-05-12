@@ -819,7 +819,7 @@ void ObjectPropertiesFusioHandler::init(Data &){
 
 void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(!is_first_line && !(has_col(object_id_c, row) && has_col(object_type_c, row) && has_col(property_name_c, row) && has_col(property_value_c, row))) {
-        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Line ignored in " + csv.filename +
+        LOG4CPLUS_WARN(logger, "ObjectPropertiesFusioHandler: Line ignored in " << csv.filename <<
                         " missing object_id or object_type or object_property_name or object_property_value column");
         return;
     }
