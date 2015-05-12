@@ -113,11 +113,6 @@ enum class Type_e {
     Calendar                        = 24
 };
 
-enum class CodeType_e{
-    Unknown = 0,
-    external_code = 1,
-};
-
 enum class Mode_e {
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
