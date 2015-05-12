@@ -997,7 +997,6 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
     calendar->uri = row[id_c];
-//    calendar->external_code = row[id_c];
     calendar->name =  row[name_c];
     calendar->week_pattern[navitia::Monday] = is_active(monday_c, row);
     calendar->week_pattern[navitia::Tuesday] = is_active(tuesday_c, row);

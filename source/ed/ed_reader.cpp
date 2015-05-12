@@ -1441,7 +1441,7 @@ void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& w
 }
 
 void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select cal.id, cal.name, cal.uri, cal.external_code,"
+    std::string request = "select cal.id, cal.name, cal.uri, "
                 "wp.monday, wp.tuesday, wp.wednesday, "
                 "wp.thursday,wp.friday, wp.saturday, wp.sunday "
                 "from navitia.calendar  cal, navitia.week_pattern wp "
@@ -1451,7 +1451,6 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
-        const_it["external_code"].to(cal->codes["external_code"]);
         cal->week_pattern[navitia::Monday] = const_it["monday"].as<bool>();
         cal->week_pattern[navitia::Tuesday] = const_it["tuesday"].as<bool>();
         cal->week_pattern[navitia::Wednesday] = const_it["wednesday"].as<bool>();
