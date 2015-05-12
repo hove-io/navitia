@@ -51,6 +51,18 @@ void normalize_uri(std::vector<T*>& vec){
     }
 }
 
+template<typename T>
+idx_t get_idx(const std::vector<T*>& vec, const std::string& uri){
+    idx_t idx = nt::invalid_idx;
+    for(auto* element : vec){
+        if (element->uri == uri){
+            idx = element->idx;
+            break;
+        }
+    }
+    return idx;
+}
+
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
 
 // Returns a LineString begining by "from" and finishing by "to",
@@ -140,6 +152,8 @@ public:
     void build_journey_pattern_points();
 
     void build_block_id();
+
+    void build_object_code_idx();
 
     void normalize_uri();
     /**
