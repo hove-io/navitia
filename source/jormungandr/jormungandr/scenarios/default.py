@@ -431,7 +431,7 @@ class Scenario(simple.Scenario):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
     def nm_journeys(self, request, instance):
-        self._updated_request_with_default(request, instance)
+        updated_request_with_default(request, instance)
         req = self.parse_journey_request(type_pb2.NMPLANNER, request)
 
         # call to kraken
