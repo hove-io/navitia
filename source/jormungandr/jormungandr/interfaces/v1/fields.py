@@ -301,7 +301,7 @@ class SectionGeoJson(fields.Raw):
     def output(self, key, obj):
         coords = []
         if not obj.HasField("type"):
-            logging.warn("trying to output wrongly formated object as geojson, we skip")
+            logging.getLogger(__name__).warn("trying to output wrongly formated object as geojson, we skip")
             return
 
         if obj.type == response_pb2.STREET_NETWORK:
