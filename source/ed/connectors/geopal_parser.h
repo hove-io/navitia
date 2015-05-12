@@ -53,7 +53,7 @@ private:
 
     ed::types::Node* add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri);
     void fill_admins();
-    void fill_nodes();
+    void fill_postal_codes();
     void fill_ways_edges();
     bool starts_with(std::string filename, const std::string& prefex);
 

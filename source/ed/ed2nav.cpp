@@ -96,7 +96,7 @@ struct FindAdminWithCities {
         if (!georef_res.empty()) {++nb_georef; return georef_res;}
 
         std::stringstream request;
-        request << "SELECT uri, name, insee, level, post_code, "
+        request << "SELECT uri, name, insee, level, "
                 << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
                 << "FROM administrative_regions "
                 << "WHERE ST_DWithin(ST_GeographyFromText('POINT("
@@ -115,7 +115,6 @@ struct FindAdminWithCities {
                 it["name"].to(admin->name);
                 it["insee"].to(admin->insee);
                 it["level"].to(admin->level);
-                it["post_code"].to(admin->post_code);
                 admin->coord.set_lon(it["lon"].as<double>());
                 admin->coord.set_lat(it["lat"].as<double>());
                 admin->idx = georef.admins.size() - 1;

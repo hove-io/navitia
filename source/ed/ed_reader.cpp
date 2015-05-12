@@ -69,6 +69,8 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
+
+    this->fill_admins_postal_codes(data, work);
     this->fill_admin_stop_areas(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
@@ -113,7 +115,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
 
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
+    std::string request = "SELECT id, name, uri, comment, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
         "FROM georef.admin";
 
@@ -125,7 +127,6 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
         const_it["name"].to(admin->name);
         const_it["insee"].to(admin->insee);
         const_it["level"].to(admin->level);
-        const_it["post_code"].to(admin->post_code);
         admin->coord.set_lon(const_it["lon"].as<double>());
         admin->coord.set_lat(const_it["lat"].as<double>());
 
@@ -139,6 +140,24 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
 
 }
 
+void EdReader::fill_admins_postal_codes(navitia::type::Data& , pqxx::work& work){
+    std::string request = "select admin_id, postal_code from georef.postal_codes";
+    size_t nb_unknown_admin(0);
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        auto it_admin = admin_map.find(const_it["admin_id"].as<idx_t>());
+        if (it_admin == admin_map.end()) {
+            LOG4CPLUS_WARN(log, "impossible to find admin " << const_it["admin_id"]
+                    << " for postal code " << const_it["postal_code"]);
+            nb_unknown_admin++;
+            continue;
+        }
+        it_admin->second->postal_codes.push_back(const_it["postal_code"].as<std::string>());
+    }
+    if (nb_unknown_admin) {
+        LOG4CPLUS_WARN(log, nb_unknown_admin << " admin not found for postal codes");
+    }
+}
 
 void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
     std::string request = "SELECT admin_id, stop_area_id from navitia.admin_stop_area";

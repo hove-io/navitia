@@ -69,7 +69,7 @@ int main(int argc, const char* const argv[]) {
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
-    ad->post_code = "29000";
+    ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
