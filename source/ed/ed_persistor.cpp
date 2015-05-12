@@ -384,9 +384,14 @@ void EdPersistor::persist(const ed::Data& data){
     this->insert_meta_vj(data.meta_vj_map);
     LOG4CPLUS_INFO(logger, "End: insert meta vehicle journeys");
 
+    LOG4CPLUS_INFO(logger, "Begin: insert object codes");
+    this->insert_object_codes(data.object_codes);
+    LOG4CPLUS_INFO(logger, "End: insert object codes");
+
     LOG4CPLUS_INFO(logger, "Begin: insert object properties");
     this->insert_object_properties(data.object_properties);
     LOG4CPLUS_INFO(logger, "End: insert object properties");
+
 
     LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
@@ -1107,6 +1112,27 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
     }
     this->lotus.finish_bulk_insert();
 
+}
+
+void EdPersistor::insert_object_codes(const std::vector<types::ObjectCode*>& object_codes){
+    size_t count = 0;
+    this->lotus.prepare_bulk_insert("navitia.object_code", {"object_id", "object_type_id", "key", "value"});
+    for(const auto& object_code: object_codes){
+        if (object_code->idx == nt::invalid_idx){
+            ++count;
+        }else{
+            std::vector<std::string> values {
+                std::to_string(object_code->idx),
+                std::to_string(static_cast<int>(object_code->object_type)),
+                object_code->key,
+                object_code->value
+
+            };
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+    LOG4CPLUS_INFO(logger, count<<"/"<< object_codes.size()<<" object codes ignored.");
 }
 
 void EdPersistor::insert_object_properties(const std::vector<types::ObjectProperty>& object_properties) {
