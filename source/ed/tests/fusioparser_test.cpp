@@ -112,15 +112,15 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 //        {{"stop_point", "24034"}, {"bobette"}}
 //    };
     std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
-        {{"stop_time", data.stops[1]}, {"bob", "bobette"}}, //stoptimes are split
-        {{"stop_time", data.stops[1]}, {"bob", "bobette"}},
-        {{"stop_time", data.stops[1]}, {"bob"}},
-        {{"stop_time", data.stops[1]}, {"bob"}},
-        {{"route", data.routes[1]}, {"bob"}},
-        {{"trip", data.vehicle_journeys[1]}, {"bobette"}},
-        {{"trip", data.vehicle_journeys[1]}, {"bobette"}}, //split too
-        {{"stop_area", data.stop_areas[1]}, {"bob"}},
-        {{"stop_point", data.stop_points[1]}, {"bobette"}}
+        {{"stop_time", data.stops[6]}, {"bob", "bobette"}}, //stoptimes are split
+        {{"stop_time", data.stops[7]}, {"bob", "bobette"}},
+        {{"stop_time", data.stops[12]}, {"bob"}},
+        {{"stop_time", data.stops[13]}, {"bob"}},
+        {{"route", data.routes[0]}, {"bob"}},
+        {{"trip", data.vehicle_journeys[4]}, {"bobette"}},
+        {{"trip", data.vehicle_journeys[5]}, {"bobette"}}, //split too
+        {{"stop_area", data.stop_areas[2]}, {"bob"}},
+        {{"stop_point", data.stop_points[3]}, {"bobette"}}
     };
 
     BOOST_CHECK_EQUAL_COLLECTIONS(data.comments.begin(), data.comments.end(),

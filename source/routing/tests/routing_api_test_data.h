@@ -735,6 +735,7 @@ struct routing_api_data {
 
             holder.disruptions.push_back(std::move(disruption));
         }
+
     }
 
     int AA = 0;
