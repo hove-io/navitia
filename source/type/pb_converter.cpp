@@ -1444,7 +1444,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 
 void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
                     pbnavitia::Calendar* pb_cal, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period)
+                    const pt::ptime& now, const pt::time_period& action_period, const bool)
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
