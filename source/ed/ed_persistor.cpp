@@ -752,7 +752,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "external_code", "name", "comment", "line_id", "stop_area_id", "shape"});
+            {"id", "uri", "external_code", "name", "comment", "line_id", "destination_stop_area_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
