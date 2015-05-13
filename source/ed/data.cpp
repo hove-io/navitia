@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/geometry/geometry.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include "type/datetime.h"
+#include <boost/range/algorithm/max_element.hpp>
 
 
 
@@ -218,6 +219,29 @@ void Data::shift_stop_times() {
     }
 }
 
+static bool compare(const std::pair<ed::types::StopArea*, size_t>& p1,
+                    const std::pair<ed::types::StopArea*, size_t>& p2){
+    return p1.second < p2.second;
+}
+
+void Data::build_route_destination(){
+    std::unordered_map<ed::types::Route*, std::map<ed::types::StopArea*, size_t>> destinations;
+    for (const auto* vj : vehicle_journeys) {
+        if (! vj->tmp_route || vj->stop_time_list.empty()) { continue; }
+        if (vj->tmp_route->destination) { continue; } // we have a destination, don't create one
+        if (! vj->stop_time_list.back()->journey_pattern_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area) {
+            continue;
+        }
+        ++destinations[vj->tmp_route][vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area];
+    }
+    for (const auto& map_route: destinations) { // we use a const auto& to avoid useless copy of the map
+        if (map_route.second.empty()) { continue; } // we never know
+        const auto max = boost::max_element(map_route.second, compare);
+        map_route.first->destination = max->first;
+    }
+}
 
 void Data::complete(){
     build_journey_patterns();

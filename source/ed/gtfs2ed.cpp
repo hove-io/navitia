@@ -90,7 +90,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     pt::ptime start;
-    int read, complete, clean, sort, save;
+    int read, complete, clean, sort, save, main_destination(0);
 
     ed::Data data;
 
@@ -114,6 +114,10 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    start = pt::microsec_clock::local_time();
+    data.build_route_destination();
+    main_destination = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     data.normalize_uri();
 
@@ -139,6 +143,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
     LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
     LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t Destination of routes " << main_destination << "ms");
     LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;

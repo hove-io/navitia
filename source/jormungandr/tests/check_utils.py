@@ -545,8 +545,8 @@ def is_valid_route(route, depth_check=1):
     direction = get_not_null(route, "direction")
     is_valid_place(direction, depth_check - 1)
     #the direction of the route must always be a stop point
-    assert get_not_null(direction, "embedded_type") == "stop_point"
-    is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
+    assert get_not_null(direction, "embedded_type") == "stop_area"
+    is_valid_stop_area(get_not_null(direction, "stop_area"), depth_check - 1)
 
     if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)

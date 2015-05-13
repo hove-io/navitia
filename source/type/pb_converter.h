@@ -187,8 +187,7 @@ void fill_pb_object(const georef::Admin* adm, const type::Data& data, pbnavitia:
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
-                    const DateTime& date_time = DateTime(), boost::optional<const std::string> calendar_id = boost::optional<const std::string>(),
-                    const navitia::type::StopPoint* destination = nullptr);
+                    const DateTime& date_time = DateTime(), boost::optional<const std::string> calendar_id = boost::optional<const std::string>());
 
 void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     pbnavitia::Connection* connection, int max_depth,
@@ -198,8 +197,7 @@ void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
 void fill_pb_object(const type::Route* r, const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period = null_time_period,
-                    const navitia::type::StopPoint* destination = nullptr);
+                    const boost::posix_time::time_period& action_period = null_time_period);
 
 
 void fill_pb_object(const nt::VehicleJourney* vj,
