@@ -78,8 +78,8 @@ private:
     std::unordered_map<idx_t, navitia::type::JourneyPatternPoint*> journey_pattern_point_map;
     std::unordered_map<idx_t, navitia::type::VehicleJourney*> vehicle_journey_map;
 
-    //some stop time have an id to be able to link a comment to them
-    std::unordered_map<std::string, navitia::type::StopTime> stop_time_map; //copied
+    //we need a temporary structure to store the comments on the stop times
+    std::unordered_map<idx_t, std::vector<std::string>> stop_time_comments;
 
     //map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;

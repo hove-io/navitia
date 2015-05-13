@@ -114,8 +114,8 @@ public:
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
 
-    // list of comment ids by {objec_type, object_id}
-    using comment_key = std::pair<std::string, std::string>;
+    // list of comment ids by {objec_type, object}
+    using comment_key = std::pair<std::string, const nt::Header*>;
     std::map<comment_key, std::vector<std::string>> comments;
     std::map<std::string, std::string> comment_by_id;
 

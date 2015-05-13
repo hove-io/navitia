@@ -28,7 +28,7 @@ def upgrade():
     op.create_table('ptobject_comments',
     sa.Column('id', sa.BIGINT(), nullable=False),
     sa.Column('object_type', sa.TEXT(), nullable=False),
-    sa.Column('object_id', sa.TEXT(), nullable=False),
+    sa.Column('object_id', sa.BIGINT(), nullable=False),
     sa.Column('comment_id', sa.BIGINT(), nullable=False),
     sa.ForeignKeyConstraint(['comment_id'], [u'navitia.comments.id'], name=u'ptobject_comments_comment_id_fkey'),
     sa.PrimaryKeyConstraint('id'),
@@ -42,7 +42,6 @@ def upgrade():
     op.drop_column('route', 'comment', schema='navitia')
     op.drop_column('stop_area', 'comment', schema='navitia')
     op.drop_column('stop_point', 'comment', schema='navitia')
-    op.add_column('stop_time', sa.Column('uri', sa.TEXT(), nullable=True), schema='navitia')
     op.drop_column('stop_time', 'comment', schema='navitia')
     op.drop_column('vehicle_journey', 'comment', schema='navitia')
 
@@ -50,7 +49,6 @@ def upgrade():
 def downgrade():
     op.add_column('vehicle_journey', sa.Column('comment', sa.TEXT(), nullable=True), schema='navitia')
     op.add_column('stop_time', sa.Column('comment', sa.TEXT(), nullable=True), schema='navitia')
-    op.drop_column('stop_time', 'uri', schema='navitia')
     op.add_column('stop_point', sa.Column('comment', sa.TEXT(), nullable=True), schema='navitia')
     op.add_column('stop_area', sa.Column('comment', sa.TEXT(), nullable=True), schema='navitia')
     op.add_column('route', sa.Column('comment', sa.TEXT(), nullable=True), schema='navitia')

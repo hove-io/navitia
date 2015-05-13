@@ -461,7 +461,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             data.add_object_code(sa, nt::Type_e::StopArea, row[ext_code_c]);
 	}
         if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, {"stop_area", sa->uri}, row[desc_c]);
+            add_gtfs_comment(gtfs_data, data, {"stop_area", sa}, row[desc_c]);
         }
     }
     // C'est un StopPoint
@@ -492,7 +492,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         }
 
         if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, {"stop_point", sp->uri}, row[desc_c]);
+            add_gtfs_comment(gtfs_data, data, {"stop_point", sp}, row[desc_c]);
         }
 
         //we save the tz in case the stop point is later promoted to stop area
@@ -523,7 +523,7 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     line->name = row[long_name_c];
     line->code = row[short_name_c];
     if (has_col(desc_c, row)) {
-        add_gtfs_comment(gtfs_data, data, {"line", line->uri},row[desc_c]);
+        add_gtfs_comment(gtfs_data, data, {"line", line},row[desc_c]);
     }
 
     if(has_col(color_c, row)) {
@@ -1041,6 +1041,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
+        stop_time->idx = data.stops.size();
         data.stops.push_back(stop_time);
         count++;
         stop_times.push_back(stop_time);

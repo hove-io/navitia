@@ -68,9 +68,10 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
 
-    this->fill_stop_times(data, work);
-
+    //the comments are loaded before the stop time to reduce the memory foot print
     this->fill_comments(data, work);
+
+    this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
 
@@ -978,9 +979,9 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         stop.journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
         stop.vehicle_journey = vj;
 
-        // if the stop time has an id we copy it
-        if (! const_it["id"].is_null()) {
-            stop_time_map[const_it["id"].as<std::string>()] = stop;
+        // we check if we have some comments
+        for (const auto& comment: stop_time_comments[const_it["id"].as<nt::idx_t>()]) {
+            data.pt_data->comments.add(stop, comment);
         }
     }
 
@@ -992,11 +993,13 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 }
 
 template <typename T>
-void add_comment(nt::Data& data, const T* obj, const boost::shared_ptr<std::string>& comment) {
-    if (! obj) { return; }
+size_t add_comment(nt::Data& data, const T* obj, const boost::shared_ptr<std::string>& comment) {
+    if (! obj) { return 1; }
 
     std::string str_com = *comment; //TODO shared_ptr
     data.pt_data->comments.add(obj, str_com);
+
+    return 0;
 }
 
 void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
@@ -1012,9 +1015,11 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
 
     std::string pt_object_comment_request = "SELECT object_type, object_id, comment_id FROM navitia.ptobject_comments;";
     pqxx::result result = work.exec(pt_object_comment_request);
+
+    size_t cpt_not_found(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string type_str = const_it["object_type"].as<std::string>();
-        const std::string obj_id = const_it["object_id"].as<std::string>();
+        const idx_t obj_id = const_it["object_id"].as<idx_t>();
         const unsigned int comment_id = const_it["comment_id"].as<unsigned int>();
 
         const auto it = comments_by_id.find(comment_id);
@@ -1027,24 +1032,25 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
         const boost::shared_ptr<std::string>& comment = it->second;
 
         if (type_str == "route") {
-            add_comment(data, find_or_default(obj_id, data.pt_data->routes_map), comment);
+            cpt_not_found += add_comment(data, find_or_default(obj_id, route_map), comment);
         } else if (type_str == "line") {
-            add_comment(data, find_or_default(obj_id, data.pt_data->lines_map), comment);
+            cpt_not_found += add_comment(data, find_or_default(obj_id, line_map), comment);
         } else if (type_str == "stop_area") {
-            add_comment(data, find_or_default(obj_id, data.pt_data->stop_areas_map), comment);
+            cpt_not_found += add_comment(data, find_or_default(obj_id, stop_area_map), comment);
         } else if (type_str == "stop_point") {
-            add_comment(data, find_or_default(obj_id, data.pt_data->stop_points_map), comment);
+            cpt_not_found += add_comment(data, find_or_default(obj_id, stop_point_map), comment);
         } else if (type_str == "trip") {
-            add_comment(data, find_or_default(obj_id, data.pt_data->vehicle_journeys_map), comment);
+            add_comment(data, find_or_default(obj_id, vehicle_journey_map), comment);
         } else if (type_str == "stop_time") {
-            const auto it = stop_time_map.find(obj_id);
-            if (it == stop_time_map.end()) {
-                continue;
-            }
-            data.pt_data->comments.add(it->second, *comment);
+            //for stop time we store the comment on a temporary map and we will store them when the stop time is read
+            // this way we don't have to store all stoptimes in a map
+            stop_time_comments[obj_id].push_back(*comment);
         } else {
             LOG4CPLUS_WARN(log, "invalid type, skipping object comment: " << obj_id << "(" << type_str << ")");
         }
+    }
+    if (cpt_not_found) {
+        LOG4CPLUS_WARN(log, cpt_not_found << " pt object not found for comments");
     }
 
 }

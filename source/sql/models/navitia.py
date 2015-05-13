@@ -306,7 +306,6 @@ stop_time = Table('stop_time', metadata,*[
     Column('is_frequency', BOOLEAN(), primary_key=False, nullable=False),
     Column('date_time_estimated', BOOLEAN(), primary_key=False, nullable=False, default=text(u'false')),
     Column('properties_id', BIGINT(), primary_key=False),
-    Column('uri', TEXT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'stop_time_vehicle_journey_id_fkey'),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_time_properties_id_fkey'),
     ForeignKeyConstraint(['journey_pattern_point_id'], [u'navitia.journey_pattern_point.id'], name=u'stop_time_journey_pattern_point_id_fkey'),],
@@ -456,7 +455,7 @@ comments = Table('comments', metadata,*[
 object_comments = Table('ptobject_comments', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('object_type', TEXT(), primary_key=False, nullable=False),
-    Column('object_id', TEXT(), primary_key=False, nullable=False),
+    Column('object_id', BIGINT(), primary_key=False, nullable=False),
     Column('comment_id', BIGINT(), primary_key=False, nullable=False),
     ForeignKeyConstraint(['comment_id'], [u'navitia.comments.id'], name=u'ptobject_comments_comment_id_fkey'),
     ],

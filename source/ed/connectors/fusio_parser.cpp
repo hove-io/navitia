@@ -157,10 +157,10 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         auto it_comment = data.comment_by_id.find(row[comment_id_c]);
         if(it_comment != data.comment_by_id.end()){
             if( return_wrapper.first != nullptr){
-                data.comments[{"stop_point", return_wrapper.first->uri}].push_back(row[comment_id_c]);
+                data.comments[{"stop_point", return_wrapper.first}].push_back(row[comment_id_c]);
             }
             if( return_wrapper.second != nullptr){
-                data.comments[{"stop_area", return_wrapper.second->uri}].push_back(row[comment_id_c]);
+                data.comments[{"stop_area", return_wrapper.second}].push_back(row[comment_id_c]);
             }
         }
     }
@@ -223,7 +223,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if (is_valid(comment_id_c, row)) {
         auto it_comment = data.comment_by_id.find(row[comment_id_c]);
         if(it_comment != data.comment_by_id.end()){
-            data.comments[{"route", ed_route->uri}].push_back(row[comment_id_c]);
+            data.comments[{"route", ed_route}].push_back(row[comment_id_c]);
         }
     }
     if (is_valid(geometry_id_c, row))
@@ -303,7 +303,7 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             }
             auto it_comment = data.comment_by_id.find(row[desc_c]);
             if (it_comment != data.comment_by_id.end()) {
-                data.comments[{"stop_time", stop_time->uri}].push_back(row[desc_c]);
+                data.comments[{"stop_time", stop_time}].push_back(row[desc_c]);
             }
         }
 
@@ -502,7 +502,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         if (is_valid(comment_id_c, row)) {
             auto it_comment = data.comment_by_id.find(row[comment_id_c]);
             if(it_comment != data.comment_by_id.end()){
-                data.comments[{"trip", vj->uri}].push_back(row[comment_id_c]);
+                data.comments[{"trip", vj}].push_back(row[comment_id_c]);
             }
         }
 
@@ -616,7 +616,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(comment_c, row)) {
         auto itm = data.comment_by_id.find(row[comment_c]);
         if (itm != data.comment_by_id.end()) {
-            data.comments[{"line", line->uri}].push_back(row[comment_c]);
+            data.comments[{"line", line}].push_back(row[comment_c]);
         }
     }
 
@@ -1219,14 +1219,13 @@ void CommentLinksFusioHandler::init(Data&){
 }
 
 template <typename C>
-bool check_exists(const C& map, const std::string& obj_id) {
-
+nt::Header* get_object(const C& map, const std::string& obj_id) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
-    if (map.find(obj_id) == map.end()) {
+    const auto o = find_or_default(obj_id, map);
+    if (! o) {
         LOG4CPLUS_INFO(logger, "impossible to find " << obj_id << ", cannot add the comment, skipping line");
-        return false;
     }
-    return true;
+    return o;
 }
 
 
@@ -1253,14 +1252,19 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 
     // and we check that the object exists
+    nt::Header* object = nullptr; // the objects uri are changed, we need to get the new ones
     if (object_type == "stop_area") {
-        if (! check_exists(gtfs_data.stop_area_map, object_id)) { return; }
+        object = get_object(gtfs_data.stop_area_map, object_id);
+        if (! object) { return; }
     } else if (object_type == "stop_point") {
-        if (! check_exists(gtfs_data.stop_map, object_id)) { return; }
+        object = get_object(gtfs_data.stop_map, object_id);
+        if (! object) { return; }
     } else if (object_type == "line") {
-        if (! check_exists(gtfs_data.line_map, object_id)) { return; }
+        object = get_object(gtfs_data.line_map, object_id);
+        if (! object) { return; }
     } else if (object_type == "route") {
-        if (! check_exists(gtfs_data.route_map, object_id)) { return; }
+        object = get_object(gtfs_data.route_map, object_id);
+        if (! object) { return; }
     } else if (object_type == "trip") {
         const auto range = gtfs_data.tz.vj_by_name.equal_range(object_id);
         if (empty(range)) {
@@ -1269,7 +1273,7 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
         }
         //the trips are split by dst, we add the comment on each one
         for (auto vj_it = range.first; vj_it != range.second; ++vj_it) {
-            data.comments[{object_type, vj_it->second->uri}].push_back(comment_id);
+            data.comments[{object_type, vj_it->second}].push_back(comment_id);
         }
         return;
     } else if (object_type == "stop_time") {
@@ -1282,7 +1286,7 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
 
         //the stop times can be split by dst, so we add the comment on each stop time
         for (const auto* st: list_st) {
-            data.comments[{object_type, st->uri}].push_back(comment_id);
+            data.comments[{object_type, st}].push_back(comment_id);
         }
         return;
     } else {
@@ -1291,7 +1295,7 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 
     //the comment key is the object type and object id
-    data.comments[{object_type, object_id}].push_back(comment_id);
+    data.comments[{object_type, object}].push_back(comment_id);
 }
 
 void ObjectCodesFusioHandler::init(Data&){

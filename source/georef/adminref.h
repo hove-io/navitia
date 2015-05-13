@@ -58,6 +58,7 @@ namespace navitia {
 
             std::string insee;
             std::string label;
+            std::string comment;
 
             nt::GeographicalCoord coord;
             polygon_type boundary;

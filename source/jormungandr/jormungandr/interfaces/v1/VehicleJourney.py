@@ -29,7 +29,8 @@
 
 from jormungandr.interfaces.v1.Calendars import calendar
 from jormungandr.interfaces.v1 import fields
-from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, NonNullProtobufNested, PbField
+from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, NonNullProtobufNested, PbField, FirstComment, \
+    comment
 
 vehicle_journey = {
     "id": fields.fields.String(attribute="uri"),
@@ -37,7 +38,9 @@ vehicle_journey = {
     "disruptions": NonNullList(NonNullNested(fields.disruption_marshaller)),
     "journey_pattern": PbField(fields.journey_pattern),
     "stop_times": NonNullList(NonNullNested(fields.stop_time)),
-    "comment": fields.fields.String(),
+    "comment": FirstComment(),
+    # for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+    "comments": NonNullList(NonNullNested(comment)),
     "codes": NonNullList(NonNullNested(fields.code)),
     "validity_pattern": NonNullProtobufNested(fields.validity_pattern),
     "calendars": NonNullList(NonNullNested(calendar)),

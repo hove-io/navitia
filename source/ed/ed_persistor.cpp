@@ -469,7 +469,8 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code"
+        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code, "
+        "navitia.comments, navitia.ptobject_comments"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
@@ -827,7 +828,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             {"arrival_time", "departure_time", "local_traffic_zone", "odt",
              "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
-             "date_time_estimated", "uri"});
+             "date_time_estimated"});
     size_t inserted_count = 0;
     size_t size_st = stop_times.size();
     for(types::StopTime* stop : stop_times){
@@ -856,12 +857,6 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }
         values.push_back(std::to_string(stop->date_time_estimated));
 
-        if (! stop->uri.empty()) {
-            //the uri is an optional field used to make the link to a comment
-            values.push_back(stop->uri);
-        } else {
-            values.push_back(lotus.null_value);
-        }
         this->lotus.insert(values);
         ++inserted_count;
         if(inserted_count % 150000 == 0) {
@@ -869,7 +864,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             LOG4CPLUS_INFO(logger, inserted_count<<"/"<< size_st <<" inserted stop times");
             this->lotus.prepare_bulk_insert("navitia.stop_time",
             {"arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
-             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated", "uri"});
+             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated"});
         }
     }
     this->lotus.finish_bulk_insert();
@@ -1183,7 +1178,7 @@ void EdPersistor::insert_comments(const std::map<std::string, std::string>& comm
         for (const auto& comment: pt_obj_com.second) {
             lotus.insert({
                              pt_obj_com.first.first,
-                             pt_obj_com.first.second,
+                             std::to_string(pt_obj_com.first.second->idx),
                              std::to_string(comment_bd_ids[comment])
                          });
         }

@@ -47,6 +47,11 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 const std::string ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/ntfs";
 
+
+std::ostream& operator<<(std::ostream& os, const nt::Header* h) {
+    return os << h->uri;
+}
+
 BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     using namespace ed;
 
@@ -95,16 +100,27 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     //7 objects have comments
     //the file contains wrongly formated comments, but they are skiped
     BOOST_REQUIRE_EQUAL(data.comments.size(), 9);
+//    std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
+//        {{"stop_time", "StopTime:4:trip_1_dst_2"}, {"bob", "bobette"}}, //stoptimes are split
+//        {{"stop_time", "StopTime:4:trip_1_dst_1"}, {"bob", "bobette"}},
+//        {{"stop_time", "StopTime:7:trip_2_dst_1"}, {"bob"}},
+//        {{"stop_time", "StopTime:7:trip_2_dst_2"}, {"bob"}},
+//        {{"route", "route_1"}, {"bob"}},
+//        {{"trip", "trip_3_dst_1"}, {"bobette"}},
+//        {{"trip", "trip_3_dst_2"}, {"bobette"}}, //split too
+//        {{"stop_area", "SA:C"}, {"bob"}},
+//        {{"stop_point", "24034"}, {"bobette"}}
+//    };
     std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
-        {{"stop_time", "StopTime:4:trip_1_dst_2"}, {"bob", "bobette"}}, //stoptimes are split
-        {{"stop_time", "StopTime:4:trip_1_dst_1"}, {"bob", "bobette"}},
-        {{"stop_time", "StopTime:7:trip_2_dst_1"}, {"bob"}},
-        {{"stop_time", "StopTime:7:trip_2_dst_2"}, {"bob"}},
-        {{"route", "route_1"}, {"bob"}},
-        {{"trip", "trip_3_dst_1"}, {"bobette"}},
-        {{"trip", "trip_3_dst_2"}, {"bobette"}}, //split too
-        {{"stop_area", "SA:C"}, {"bob"}},
-        {{"stop_point", "24034"}, {"bobette"}}
+        {{"stop_time", data.stops[1]}, {"bob", "bobette"}}, //stoptimes are split
+        {{"stop_time", data.stops[1]}, {"bob", "bobette"}},
+        {{"stop_time", data.stops[1]}, {"bob"}},
+        {{"stop_time", data.stops[1]}, {"bob"}},
+        {{"route", data.routes[1]}, {"bob"}},
+        {{"trip", data.vehicle_journeys[1]}, {"bobette"}},
+        {{"trip", data.vehicle_journeys[1]}, {"bobette"}}, //split too
+        {{"stop_area", data.stop_areas[1]}, {"bob"}},
+        {{"stop_point", data.stop_points[1]}, {"bobette"}}
     };
 
     BOOST_CHECK_EQUAL_COLLECTIONS(data.comments.begin(), data.comments.end(),
