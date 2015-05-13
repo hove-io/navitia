@@ -1,14 +1,14 @@
 """create object_properties table
 
 Revision ID: 3bea0b3cb116
-Revises: 29fc422c56cb
+Revises: 13673746db16
 Create Date: 2015-05-05 12:24:38.022248
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '3bea0b3cb116'
-down_revision = '29fc422c56cb'
+down_revision = '13673746db16'
 
 from alembic import op
 import sqlalchemy as sa
