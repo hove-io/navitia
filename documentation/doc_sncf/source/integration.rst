@@ -3,7 +3,7 @@ SNCF API documentation
 
 Index
 ========
-I.Overview
+I. Overview
 II. Authentication
 III. Endpoint
 3.1 Some easy examples
@@ -14,49 +14,49 @@ IV. Interface
 4.3. Inner references
 V. Errors
 5.1. Example
-	5.1.1. Code 40x
-	5.1.2. Code 50x
+5.1.1. Code 40x
+5.1.2. Code 50x
 VI. Apis
 6.1. Public transportation objects
-	6.1.1. Collections
+6.1.1. Collections
 6.2. Places
-	6.2.1 Parameters
-	6.2.2. Example
+6.2.1 Parameters
+6.2.2. Example
 6.3. Places Nearby
-	6.3.1. Parameters
-	6.3.2. Example
+6.3.1. Parameters
+6.3.2. Example
 6.4. Journeys
-	6.4.1. Parameters
-	6.4.2. Objects
+6.4.1. Parameters
+6.4.2. Objects
 6.5. Route Schedules
-	6.5.1. Parameters
-	6.5.2. Objects
+6.5.1. Parameters
+6.5.2. Objects
 6.6. Stop Schedules
-	6.6.1. Parameters
-	6.6.2. Objects
+6.6.1. Parameters
+6.6.2. Objects
 6.7. Departures
-	6.7.1. Parameters
-	6.7.2. Objects
+6.7.1. Parameters
+6.7.2. Objects
 6.8. Arrivals
-	6.8.1. Parameters
-	6.8.2. Objects
+6.8.1. Parameters
+6.8.2. Objects
 VII. Geographical Objects
 7.1. Coord
 7.2. Public transport objects
-	7.2.1. Network
-	7.2.2. Line
-	7.2.3. Route
-	7.2.4. Stop Point
-	7.2.5. Stop Area
-	7.2.6. Commercial Mode
-	7.2.7. Physical Mode
-	7.2.8. Company
-	7.2.9. Place
+7.2.1. Network
+7.2.2. Line
+7.2.3. Route
+7.2.4. Stop Point
+7.2.5. Stop Area
+7.2.6. Commercial Mode
+7.2.7. Physical Mode
+7.2.8. Company
+7.2.9. Place
 7.3. Street network object
 7.4. Other objects
 7.5. Special Parameters
-	7.5.1. datetime
-	7.5.2. Misc mechanisms
+7.5.1. datetime
+7.5.2. Misc mechanisms
 
 
 I. Overview
@@ -71,7 +71,7 @@ The SNCF API handle to :
 * display route schedules
 * lexicographical search (autocomplete)
 
-The SNCF API contain theorical train data for the following commercial modes : TGV, TER, Transilien, Intercités.
+The SNCF API contains theorical train data for the following commercial modes : TGV, TER, Transilien, Intercités.
 
 Read our lexicon : https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md
 
