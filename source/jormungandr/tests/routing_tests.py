@@ -94,11 +94,12 @@ class TestJourneys(AbstractTestFixture):
         assert len(response['journeys']) == 1
         assert response['journeys'][0]["type"] == "non_pt_walk"
         assert len(response['journeys'][0]['sections']) == 1
-        print response['journeys'][0]['duration']
-        print response['journeys'][0]['sections'][0]['duration']
         assert response['journeys'][0]['duration'] == response['journeys'][0]['sections'][0]['duration']
+        assert response['journeys'][0]['duration'] == 205
         assert response['journeys'][0]['departure_date_time'] == response['journeys'][0]['sections'][0]['departure_date_time']
+        assert response['journeys'][0]['departure_date_time'] == '20120614T080000'
         assert response['journeys'][0]['arrival_date_time'] == response['journeys'][0]['sections'][0]['arrival_date_time']
+        assert response['journeys'][0]['arrival_date_time'] == '20120614T080325'
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
