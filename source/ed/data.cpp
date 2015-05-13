@@ -68,24 +68,24 @@ void Data::normalize_uri(){
 
 void Data::build_object_code_idx(){
     for(auto& object_code: object_codes){
-        switch(object_code->object_type) {
+        switch(object_code.object_type) {
         case nt::Type_e::Line:
-            object_code->idx = ed::get_idx(this->lines, object_code->uri);
+            object_code.idx = ed::get_idx(this->lines, object_code.uri);
             break;
         case nt::Type_e::Route:
-            object_code->idx = ed::get_idx(this->routes, object_code->uri);
+            object_code.idx = ed::get_idx(this->routes, object_code.uri);
             break;
         case nt::Type_e::Network:
-            object_code->idx = ed::get_idx(this->networks, object_code->uri);
+            object_code.idx = ed::get_idx(this->networks, object_code.uri);
             break;
         case nt::Type_e::VehicleJourney:
-            object_code->idx = ed::get_idx(this->vehicle_journeys, object_code->uri);
+            object_code.idx = ed::get_idx(this->vehicle_journeys, object_code.uri);
             break;
         case nt::Type_e::StopArea:
-            object_code->idx = ed::get_idx(this->stop_areas, object_code->uri);
+            object_code.idx = ed::get_idx(this->stop_areas, object_code.uri);
             break;
         case nt::Type_e::StopPoint:
-            object_code->idx = ed::get_idx(this->stop_points, object_code->uri);
+            object_code.idx = ed::get_idx(this->stop_points, object_code.uri);
             break;
         default:
             break;

@@ -1164,10 +1164,10 @@ void AdminStopAreaFusioHandler::init(Data& data){
     stop_area_c = csv.get_pos_col("station_id");
 
     for(const auto& object_code : data.object_codes){
-        if((object_code->object_type == nt::Type_e::StopArea) && (object_code->key == "external_code")){
-            const auto stop_area = gtfs_data.stop_area_map.find(object_code->uri);
+        if((object_code.object_type == nt::Type_e::StopArea) && (object_code.key == "external_code")){
+            const auto stop_area = gtfs_data.stop_area_map.find(object_code.uri);
             if (stop_area != gtfs_data.stop_area_map.end()){
-                tmp_stop_area_map[object_code->value] = stop_area->second;
+                tmp_stop_area_map[object_code.value] = stop_area->second;
             }
         }
     }
@@ -1310,22 +1310,29 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
         throw InvalidHeaders(csv.filename);
     }
 
-    ed::types::ObjectCode* object_code = new ed::types::ObjectCode();
+    ed::types::ObjectCode object_code;
 
     if (boost::algorithm::to_lower_copy(row[object_system_c]) == "navitia1"){
-        object_code->key = "external_code";
+        object_code.key = "external_code";
     }else{
-        object_code->key = row[object_system_c];
+        object_code.key = row[object_system_c];
     }
-    object_code->value = row[code_c];
-    object_code->uri = row[object_uri_c];
+    object_code.value = row[code_c];
+    object_code.uri = row[object_uri_c];
     std::string object_type = row[object_type_c];
-    object_code->object_type = type_by_caption(object_type);
+    object_code.object_type = type_by_caption(object_type);
     data.object_codes.push_back(object_code);
-    if ((object_code->object_type == nt::Type_e::Line) && (object_code->key == "external_code")) {
-        const auto& it_line = gtfs_data.line_map.find(object_code->uri);
+    if ((object_code.object_type == nt::Type_e::Line) && (object_code.key == "external_code")) {
+        const auto& it_line = gtfs_data.line_map.find(object_code.uri);
         if(it_line != gtfs_data.line_map.end()){
-            gtfs_data.line_map_by_external_code[object_code->value] = it_line->second;
+            gtfs_data.line_map_by_external_code[object_code.value] = it_line->second;
+        }
+    }
+
+    if ((object_code.object_type == nt::Type_e::StopArea) && (object_code.key == "external_code")) {
+        const auto& it_line = gtfs_data.line_map.find(object_code.uri);
+        if(it_line != gtfs_data.line_map.end()){
+            gtfs_data.line_map_by_external_code[object_code.value] = it_line->second;
         }
     }
 }
