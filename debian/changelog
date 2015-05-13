@@ -1,3 +1,8 @@
+navitia2 (1.17.1) unstable; urgency=low
+
+  * FIX 500 on NM journeys <https://github.com/CanalTP/navitia/pull/1037> 
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 13 May 2015 15:05:14 +0100
+
 navitia2 (1.17.0) unstable; urgency=low
 
   * Nm: fix nm  <https://github.com/CanalTP/navitia/pull/1019>
