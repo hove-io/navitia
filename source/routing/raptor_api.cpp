@@ -226,20 +226,22 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
         for(bt::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
             pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime));
-            pb_journey->set_duration(temp.duration.total_seconds());
 
             bt::ptime departure;
             if (clockwise) {
                 departure = datetime;
             } else {
-                departure = datetime - temp.duration.to_posix();
+                const auto duration = bt::seconds(temp.duration.total_seconds()
+                                                  / origin.streetnetwork_params.speed_factor);
+                departure = datetime - duration;
             }
             fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
 
-            const auto str_departure = navitia::to_posix_timestamp(departure);
-            const auto str_arrival = navitia::to_posix_timestamp(departure + temp.duration.to_posix());
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
+            const auto ts_departure = pb_journey->sections(0).begin_date_time();
+            const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
+            pb_journey->set_departure_date_time(ts_departure);
+            pb_journey->set_arrival_date_time(ts_arrival);
+            pb_journey->set_duration(ts_arrival - ts_departure);
             // We add coherence with the origin of the request
             auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
             origin_pb->Clear();
