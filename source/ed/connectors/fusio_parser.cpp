@@ -551,7 +551,6 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
 void LineFusioHandler::init(Data &){
     id_c = csv.get_pos_col("line_id");
     name_c = csv.get_pos_col("line_name");
-    external_code_c = csv.get_pos_col("external_code");
     code_c =  csv.get_pos_col("line_code");
     forward_name_c =  csv.get_pos_col("forward_line_name");
     backward_name_c =  csv.get_pos_col("backward_line_name");
@@ -574,9 +573,6 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->uri = row[id_c];
     line->name = row[name_c];
 
-    if (is_valid(external_code_c, row)) {
-        line->external_code = row[external_code_c];
-    }
     if (is_valid(code_c, row)) {
         line->code = row[code_c];
     }
