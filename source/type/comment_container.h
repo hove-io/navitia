@@ -44,7 +44,7 @@ using pt_object_comment_map = std::map<const T*, comment_list>;
 
 template <typename T> using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
 
-using stop_time_key = std::pair<navitia::type::idx_t, uint16_t>;
+using stop_time_key = std::pair<const navitia::type::VehicleJourney*, uint16_t>;
 
 /**
  * Boost serialize for the fusion map
@@ -112,7 +112,7 @@ private:
         return obj;
     }
     const stop_time_key get_as_key(const navitia::type::StopTime& st) const {
-        return std::make_pair(st.vehicle_journey->idx, st.journey_pattern_point->order);
+        return std::make_pair(st.vehicle_journey, st.journey_pattern_point->order);
     }
 
     typedef boost::fusion::map<

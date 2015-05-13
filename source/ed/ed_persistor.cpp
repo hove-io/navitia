@@ -825,7 +825,7 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "odt",
+            {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
              "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
              "date_time_estimated"});
@@ -833,6 +833,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
     size_t size_st = stop_times.size();
     for(types::StopTime* stop : stop_times){
         std::vector<std::string> values;
+        values.push_back(std::to_string(stop->idx));
         values.push_back(std::to_string(stop->arrival_time));
         values.push_back(std::to_string(stop->departure_time));
         if(stop->local_traffic_zone != std::numeric_limits<uint16_t>::max()){
@@ -863,7 +864,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             lotus.finish_bulk_insert();
             LOG4CPLUS_INFO(logger, inserted_count<<"/"<< size_st <<" inserted stop times");
             this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
+            {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated"});
         }
     }

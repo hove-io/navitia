@@ -955,6 +955,8 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
+
+    size_t cpt_comment_found(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         auto it = vehicle_journey_map.find(const_it["vehicle_journey_id"].as<idx_t>());
         if (it == vehicle_journey_map.end()) {
@@ -980,8 +982,13 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         stop.vehicle_journey = vj;
 
         // we check if we have some comments
-        for (const auto& comment: stop_time_comments[const_it["id"].as<nt::idx_t>()]) {
-            data.pt_data->comments.add(stop, comment);
+        const auto& it_comments = stop_time_comments.find(const_it["id"].as<nt::idx_t>());
+        if (it_comments != stop_time_comments.end()) {
+
+            for (const auto& comment: it_comments->second) {
+                data.pt_data->comments.add(stop, comment);
+            }
+            cpt_comment_found++;
         }
     }
 
@@ -990,6 +997,11 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
                   [](const nt::StopTime& st1, const nt::StopTime& st2){return st1.journey_pattern_point->order < st2.journey_pattern_point->order;});
     }
 
+    if (cpt_comment_found != stop_time_comments.size()) {
+        LOG4CPLUS_WARN(log, stop_time_comments.size() - cpt_comment_found
+                            << " / " << stop_time_comments.size()
+                            << " stoptimes comment have not found their stoptime");
+    }
 }
 
 template <typename T>
