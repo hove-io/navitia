@@ -426,7 +426,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     this->data->pt_data->companies.push_back(company);
 
     const std::string default_network_name = "base_network";
-    if (data->pt_data->networks_map.find(default_network_name) == data->pt_data->networks_map.end()) {
+    if (this->nts.find(default_network_name) == this->nts.end()) {
         navitia::type::Network *network = new navitia::type::Network();
         network->idx = this->data->pt_data->networks.size();
         network->name = default_network_name;

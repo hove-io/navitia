@@ -115,11 +115,16 @@ struct FindAdminWithCities {
                 it["name"].to(admin->name);
                 it["insee"].to(admin->insee);
                 it["level"].to(admin->level);
-                it["post_code"].to(admin->post_code);
                 admin->coord.set_lon(it["lon"].as<double>());
                 admin->coord.set_lat(it["lat"].as<double>());
                 admin->idx = georef.admins.size() - 1;
                 admin->from_original_dataset = false;
+                std::string postal_code;
+                it["post_code"].to(postal_code);
+
+                if(!postal_code.empty()){
+                    boost::split(admin->postal_codes, postal_code, boost::is_any_of("-"));
+                }
             }
             res.push_back(admin);
         }

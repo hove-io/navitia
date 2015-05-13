@@ -180,8 +180,7 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
     admin->set_label(adm->label);
-    if(adm->post_code != "")
-        admin->set_zip_code(adm->post_code);
+    admin->set_zip_code(adm->postal_codes_to_string());
     admin->set_level(adm->level);
     if(adm->coord.is_initialized()) {
         admin->mutable_coord()->set_lat(adm->coord.lat());

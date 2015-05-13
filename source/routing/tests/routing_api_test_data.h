@@ -159,7 +159,7 @@ struct routing_api_data {
         admin->name = "Condom";
         admin->insee = "32107";
         admin->level = 8;
-        admin->post_code = "32100";
+        admin->postal_codes.push_back("32100");
 
         navitia::georef::Way* way;
         way = new navitia::georef::Way();

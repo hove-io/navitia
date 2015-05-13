@@ -472,8 +472,7 @@ def compute_regions(args):
     else:
         #we need the intersection set
         possible_regions = from_regions.intersection(to_regions)
-
-    logging.debug("orig region = {o}, dest region = {d} => set = {p}".
+        logging.getLogger(__name__).debug("orig region = {o}, dest region = {d} => set = {p}".
                  format(o=from_regions, d=to_regions, p=possible_regions))
 
     if not possible_regions:

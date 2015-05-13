@@ -56,7 +56,6 @@ namespace navitia {
             // from another source)
             bool from_original_dataset = true;
 
-            std::string post_code;
             std::string insee;
             std::string label;
 
@@ -67,12 +66,15 @@ namespace navitia {
 
             // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
             std::vector<const nt::StopPoint*> odt_stop_points; // zone odt stop points for the admin
+            std::vector<std::string> postal_codes;
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
+            std::string get_range_postal_codes();
+            std::string postal_codes_to_string() const;
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & from_original_dataset & post_code & insee
-                        & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points;
+                ar & idx & level & from_original_dataset & insee
+                        & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points & postal_codes;
             }
         };
     }

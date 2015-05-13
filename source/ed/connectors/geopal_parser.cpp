@@ -68,9 +68,9 @@ void GeopalParser::fill() {
 
     this->fill_admins();
     LOG4CPLUS_INFO(logger, "Admin count: " << this->data.admins.size());
-    this->fill_nodes();
-    LOG4CPLUS_INFO(logger, "Noeud count: " << this->data.nodes.size());
+    this->fill_postal_codes();
     this->fill_ways_edges();
+    LOG4CPLUS_INFO(logger, "Node count: " << this->data.nodes.size());
     LOG4CPLUS_INFO(logger, "Way count: " << this->data.ways.size());
     LOG4CPLUS_INFO(logger, "Edge count: " << this->data.edges.size());
 
@@ -90,7 +90,7 @@ ed::types::Node* GeopalParser::add_node(const navitia::type::GeographicalCoord& 
     return node;
 }
 
-void GeopalParser::fill_nodes(){
+void GeopalParser::fill_postal_codes(){
     for(const std::string file_name : this->files){
         if(!this->starts_with(file_name, "adresse")){
             continue;
@@ -99,7 +99,7 @@ void GeopalParser::fill_nodes(){
         if(!reader.is_open()) {
             throw GeopalParserException("Error on open file " + reader.filename);
         }
-        std::vector<std::string> mandatory_headers = {"code_insee", "code_post", "x_adresse", "y_adresse"};
+        std::vector<std::string> mandatory_headers = {"code_insee", "code_post"};
         if(!reader.validate(mandatory_headers)) {
             throw GeopalParserException("Impossible to parse file "
                                         + reader.filename + " . Not find column : "
@@ -107,21 +107,14 @@ void GeopalParser::fill_nodes(){
         }
         int insee_c = reader.get_pos_col("code_insee");
         int code_post_c = reader.get_pos_col("code_post");
-        int x_c = reader.get_pos_col("x_adresse");
-        int y_c = reader.get_pos_col("y_adresse");
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
-            std::string uri;
-            if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row) && reader.is_valid(insee_c, row)){
-                uri = row[x_c] + row[y_c];
+            if (reader.is_valid(code_post_c, row) && reader.is_valid(insee_c, row)){
                 auto adm = this->data.admins.find(row[insee_c]);
                 if (adm != this->data.admins.end()){
                     if(reader.is_valid(code_post_c, row)){
-                        adm->second->postcode = row[code_post_c];
+                        adm->second->postal_codes.push_back(row[code_post_c]);
                     }
-                    auto nd = this->data.nodes.find(uri);
-                    if(nd == this->data.nodes.end())
-                        this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])), uri);
                 }
             }
         }

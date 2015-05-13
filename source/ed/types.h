@@ -378,6 +378,7 @@ struct Admin{
     std::string name;
     std::string postcode;
     navitia::type::GeographicalCoord coord;
+    std::vector<std::string> postal_codes;
     Admin():id(0), is_used(false), level("8"){}
 };
 struct Edge;

@@ -148,3 +148,12 @@ class TestDepartureBoard(AbstractTestFixture):
 
         assert "route_schedules" in response
         is_valid_route_schedule(response["route_schedules"])
+
+    def test_with_wrong_type(self):
+        """
+        we search for stop_areasS, this type doesn't exist
+        """
+        response, code = self.query_region("stop_areass/stop1/stop_schedules?"
+                                     "from_datetime=20120615T080000", check=False)
+        eq_(code, 400)
+        eq_(response['message'], 'unknown type: stop_areass')

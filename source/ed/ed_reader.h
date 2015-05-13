@@ -116,6 +116,7 @@ private:
 
     void fill_admins(navitia::type::Data& data, pqxx::work& work);
     void fill_admin_stop_areas(navitia::type::Data& data, pqxx::work& work);
+    void fill_admins_postal_codes(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_poi_types(navitia::type::Data& data, pqxx::work& work);
     void fill_pois(navitia::type::Data& data, pqxx::work& work);

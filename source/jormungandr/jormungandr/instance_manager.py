@@ -114,7 +114,7 @@ class InstanceManager(object):
         self.default_socket = None
 
         for file_name in self.ini_files:
-            logging.info("Initialisation, reading file : " + file_name)
+            logging.getLogger(__name__).info("Initialisation, reading file : " + file_name)
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
             instance = Instance(self.context, conf.get('instance', 'key'))
@@ -134,7 +134,7 @@ class InstanceManager(object):
             self.thread.start()
 
     def _clear_cache(self):
-        logging.info('clear cache')
+        logging.getLogger(__name__).info('clear cache')
         cache.delete_memoized(self._all_keys_of_id)
 
     def dispatch(self, arguments, api, instance_name=None):
@@ -208,7 +208,7 @@ class InstanceManager(object):
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = [i.name for i in self.instances.itervalues() if i.has_point(p)]
-        logging.debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
+        logging.getLogger(__name__).debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)
         return instances

@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
-    ad->post_code = "29000";
+    ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
-    ad->post_code = "29000";
+    ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
-    ad->post_code = "29000";
+    ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
@@ -883,7 +883,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     ad->name = "paris";
     ad->uri = "paris";
     ad->level = 8;
-    ad->post_code = "75000";
+    ad->postal_codes.push_back("75000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
@@ -1047,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
     ad->name = "Santec";
     ad->uri = "Santec";
     ad->level = 8;
-    ad->post_code = "29000";
+    ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
@@ -1183,4 +1183,192 @@ BOOST_AUTO_TEST_CASE(synonyms_with_grand_champ_test){
     //Found : All except "Champs-Elysées - Clémenceau - Grand Palais Paris"
     auto res1 = ac.find_complete("grandchamp", nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 7);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_test) {
+
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("Santec", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Nantes";
+    ad->uri = "URI-NANTES";
+    ad->level = 8;
+    ad->postal_codes.push_back("44000");
+    ad->postal_codes.push_back("44100");
+    ad->postal_codes.push_back("44200");
+    ad->postal_codes.push_back("44300");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(0).score = 100;
+
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, 15, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 90);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).label(), "Nantes (44000-44300)");
+}
+
+BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_alphanumeric_test) {
+
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("Santec", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Nantes";
+    ad->uri = "URI-NANTES";
+    ad->level = 8;
+    ad->postal_codes.push_back("44AAA");
+    ad->postal_codes.push_back("44100");
+    ad->postal_codes.push_back("44200");
+    ad->postal_codes.push_back("44300");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(0).score = 100;
+
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, 15, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 90);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).label(), "Nantes (44AAA;44100;44200;44300)");
+}
+
+
+BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
+
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("Santec", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Nantes";
+    ad->uri = "URI-NANTES";
+    ad->level = 8;
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(0).score = 100;
+
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, 15, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 90);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).label(), "Nantes");
+}
+
+
+BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
+
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+
+    Admin* ad = new Admin;
+    ad->name = "Nantes";
+    ad->uri = "URI-NANTES";
+    ad->level = 8;
+    ad->postal_codes.push_back("44000");
+    ad->postal_codes.push_back("44100");
+    ad->postal_codes.push_back("44200");
+    ad->postal_codes.push_back("44300");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+
+    navitia::georef::Way* w = new navitia::georef::Way();
+    w->idx = 0;
+    w->name = "Sante";
+    w->uri = w->name;
+    w->admin_list.push_back(ad);
+    b.data->geo_ref->ways.push_back(w);
+
+    ad = new Admin();
+    ad->name = "Tours";
+    ad->uri = "URI-TOURS";
+    ad->level = 8;
+    ad->postal_codes.push_back("37000");
+    ad->postal_codes.push_back("37100");
+    ad->postal_codes.push_back("37200");
+    ad->idx = 1;
+    b.data->geo_ref->admins.push_back(ad);
+
+    w = new navitia::georef::Way();
+    w->idx = 1;
+    w->name = "Sante";
+    w->uri = w->name;
+    w->admin_list.push_back(ad);
+    b.data->geo_ref->ways.push_back(w);
+
+    b.build_autocomplete();
+    type_filter.push_back(navitia::type::Type_e::Address);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante 37000", type_filter , 1, 10, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADDRESS);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).label(), "Tours (37000-37200)");
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).zip_code(), "37000;37100;37200");
+
+    resp = navitia::autocomplete::autocomplete("Sante 44000", type_filter , 1, 10, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADDRESS);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 60);
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).label(), "Nantes (44000-44300)");
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).zip_code(), "44000;44100;44200;44300");
+
+    type_filter.clear();
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    resp = navitia::autocomplete::autocomplete("37000", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
+
+    resp = navitia::autocomplete::autocomplete("37100", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
+
+    resp = navitia::autocomplete::autocomplete("37200", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
+    BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
+
 }

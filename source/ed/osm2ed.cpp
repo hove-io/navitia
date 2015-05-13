@@ -353,7 +353,7 @@ void OSMCache::insert_edges() {
  * Insert relations into the database
  */
 void OSMCache::insert_relations() {
-    lotus.prepare_bulk_insert("georef.admin", {"id", "name", "post_code", "insee", "level", "coord", "boundary", "uri"});
+    lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;
     for (auto relation : relations) {
         if(!relation.polygon.empty()){
@@ -362,8 +362,7 @@ void OSMCache::insert_relations() {
             std::string polygon_str = polygon_stream.str();
             const auto coord = "POINT(" + std::to_string(relation.centre.get<0>())
                 + " " + std::to_string(relation.centre.get<1>()) + ")";
-            lotus.insert({std::to_string(relation.osm_id), relation.name,
-                          relation.postal_code, relation.insee,
+            lotus.insert({std::to_string(relation.osm_id), relation.name, relation.insee,
                           std::to_string(relation.level), coord, polygon_str,
                           "admin:"+std::to_string(relation.osm_id)});
         } else {
@@ -376,6 +375,24 @@ void OSMCache::insert_relations() {
             << " admins because their polygons were empty");
 }
 
+/*
+ * Insert poastal codes into the database
+ */
+void OSMCache::insert_postal_codes() {
+    size_t n_inserted = 0 ;
+    lotus.prepare_bulk_insert("georef.postal_codes", {"admin_id", "postal_code"});
+    for (auto relation : relations) {
+        if((!relation.polygon.empty()) && (!relation.postal_codes.empty())){
+            for(std::string& pst_code: relation.postal_codes){
+                lotus.insert({std::to_string(relation.osm_id), pst_code});
+                ++n_inserted;
+            }
+        }
+    }
+    lotus.finish_bulk_insert();
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, n_inserted << " postal codes inserted" );
+}
 
 void OSMCache::insert_rel_way_admins() {
     lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
@@ -564,6 +581,19 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     }
 }
 
+OSMRelation::OSMRelation(const u_int64_t osm_id,
+                         const std::vector<CanalTP::Reference>& refs,
+                         const std::string& insee,
+                         const std::string& postal_code,
+                         const std::string& name,
+                         const uint32_t level) :
+    osm_id(osm_id), references(refs), insee(insee),
+    name(name), level(level){
+    if(!postal_code.empty()){
+        boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
+    }
+}
+
 void OSMRelation::build_geometry(OSMCache& cache) const {
     for (CanalTP::Reference ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
@@ -731,7 +761,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
         }
         auto ways_it = std::find_if(it_ways->second.begin(), it_ways->second.end(),
                 [&](const std::pair<const OSMRelation*, std::set<it_way>> r) {
-                    return r.first->postal_code == it_postcode->second;
+                    return boost::algorithm::join(r.first->postal_codes, ";") == it_postcode->second;
                 }
         );
         if (ways_it != it_ways->second.end()) {
@@ -910,6 +940,7 @@ int main(int argc, char** argv) {
     cache.insert_ways();
     cache.insert_edges();
     cache.insert_relations();
+    cache.insert_postal_codes();
     cache.insert_rel_way_admins();
 
     ed::Georef data;
