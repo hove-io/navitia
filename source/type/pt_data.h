@@ -102,40 +102,11 @@ struct PT_Data : boost::noncopyable{
     //Message
     new_disruption::DisruptionHolder disruption_holder;
 
-    // comments for stop times, indexed by (vj->uri, jpp->order)
-    std::map<std::pair<std::string, uint16_t>, std::string> stop_time_comment;
-
     // rtree for zonal stop_points
     MultiPolygonMap<const StopPoint*> stop_points_by_area;
 
-    //comments
+    // Comments container
     Comments comments;
-
-    template <typename T>
-    const std::vector<std::string>& get_comment(const T& obj) const {
-        return comments.get(obj);
-    }
-
-    template <typename T>
-    void add_comment(const T& obj, const std::string& comment) {
-        comments.add(obj, comment);
-    }
-
-    const std::string& get_comment(const StopTime& st) const {
-        const auto* jpp = st.journey_pattern_point;
-        return find_or_default(
-            std::pair<const std::string&, uint16_t>(st.vehicle_journey->uri, jpp->order),
-            stop_time_comment);
-    }
-    void set_comment(const std::string& comment, const StopTime& st) {
-        const auto* jpp = st.journey_pattern_point;
-        const auto key = std::make_pair(st.vehicle_journey->uri, jpp->order);
-        if (comment.empty()) {
-            stop_time_comment.erase(key);
-        } else {
-            stop_time_comment[key] = comment;
-        }
-    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
@@ -147,7 +118,6 @@ struct PT_Data : boost::noncopyable{
                 & stop_point_connections
                 & disruption_holder
                 & meta_vj
-                & stop_time_comment
                 & stop_points_by_area
                 & comments;
     }

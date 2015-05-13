@@ -39,9 +39,10 @@ www.navitia.io
 //using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
 using comment_list = std::vector<std::string>;
 
-using pt_object_comment_map = std::map<navitia::type::idx_t, comment_list>;
+template <typename T>
+using pt_object_comment_map = std::map<const T*, comment_list>;
 
-template <typename T> using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map>;
+template <typename T> using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
 
 using stop_time_key = std::pair<navitia::type::idx_t, uint16_t>;
 
@@ -99,29 +100,28 @@ struct Comments {
 
 private:
     template <typename T>
-    navitia::type::idx_t get_as_key(const T& obj) const {
-        return obj.idx;
+    const T* get_as_key(const T& obj) const {
+        return &obj;
     }
     template <typename T>
-    navitia::type::idx_t get_as_key(T* const & obj) const {
-        return obj->idx;
+    const T* get_as_key(T* const & obj) const {
+        return obj;
     }
     template <typename T>
-    navitia::type::idx_t get_as_key(T const * const & obj) const {
-        return obj->idx;
+    const T* get_as_key(T const * const & obj) const {
+        return obj;
     }
-
     const stop_time_key get_as_key(const navitia::type::StopTime& st) const {
         return std::make_pair(st.vehicle_journey->idx, st.journey_pattern_point->order);
     }
 
     typedef boost::fusion::map<
-        fusion_pair_comment_map<navitia::type::StopArea>,
-        fusion_pair_comment_map<navitia::type::StopPoint>,
-        fusion_pair_comment_map<navitia::type::Line>,
-        fusion_pair_comment_map<navitia::type::Route>,
-        fusion_pair_comment_map<navitia::type::VehicleJourney>,
-        boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>
+            fusion_pair_comment_map<navitia::type::StopArea>,
+            fusion_pair_comment_map<navitia::type::StopPoint>,
+            fusion_pair_comment_map<navitia::type::Line>,
+            fusion_pair_comment_map<navitia::type::Route>,
+            fusion_pair_comment_map<navitia::type::VehicleJourney>,
+            boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>
     > comment_map_type;
 
     comment_map_type map;

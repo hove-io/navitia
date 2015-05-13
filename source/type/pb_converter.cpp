@@ -697,8 +697,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
     pbnavitia::Properties* properties = stop_date_time->mutable_properties();
     fill_pb_object(st, data, properties, max_depth, now, action_period);
 
-    const std::string& comment = data.pt_data->get_comment(*st);
-    if(!comment.empty()){
+    for (const std::string& comment: data.pt_data->comments.get(*st)) {
         fill_pb_object(comment, data,  properties->add_notes(), max_depth, now, action_period);
     }
 }
@@ -1249,9 +1248,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         destination->set_uri("destination:"+std::to_string(hash_fn(stop_time->vehicle_journey->journey_pattern->route->destination->name)));
         destination->set_destination(stop_time->vehicle_journey->journey_pattern->route->destination->name);
     }
-    const auto& comment = data.pt_data->get_comment(*stop_time);
-    if (!comment.empty()){
-        fill_pb_object(comment, data,  hn->add_notes(),max_depth,now,action_period);
+    for (const auto& comment: data.pt_data->comments.get(*stop_time)) {
+        fill_pb_object(comment, data, hn->add_notes(), max_depth, now, action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
         if(!stop_time->vehicle_journey->odt_message.empty()){

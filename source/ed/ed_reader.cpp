@@ -1040,7 +1040,7 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
         } else if (type_str == "stop_point") {
             cpt_not_found += add_comment(data, find_or_default(obj_id, stop_point_map), comment);
         } else if (type_str == "trip") {
-            add_comment(data, find_or_default(obj_id, vehicle_journey_map), comment);
+            cpt_not_found += add_comment(data, find_or_default(obj_id, vehicle_journey_map), comment);
         } else if (type_str == "stop_time") {
             //for stop time we store the comment on a temporary map and we will store them when the stop time is read
             // this way we don't have to store all stoptimes in a map
