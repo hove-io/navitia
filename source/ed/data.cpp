@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/geometry/geometry.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include "type/datetime.h"
+#include <boost/range/algorithm/max_element.hpp>
 
 
 
@@ -218,41 +219,27 @@ void Data::shift_stop_times() {
     }
 }
 
-bool compare(const std::pair<idx_t, size_t>& p1, const std::pair<idx_t, size_t>& p2){
+static bool compare(const std::pair<ed::types::StopArea*, size_t>& p1,
+                    const std::pair<ed::types::StopArea*, size_t>& p2){
     return p1.second < p2.second;
 }
 
 void Data::build_route_destination(){
-    // <Route.idx, std::map<StopArea.idx, Count>>
-    std::unordered_map<idx_t, std::map<idx_t, size_t>> destinations;
-    for(auto vj : vehicle_journeys){
-        if((vj->tmp_route) && (!vj->tmp_route->destination)){
-            if (!vj->stop_time_list.empty()){
-                idx_t idx = nt::invalid_idx;
-                if ((vj->stop_time_list.back()->journey_pattern_point)
-                        && (vj->stop_time_list.back()->journey_pattern_point->stop_point)
-                        && (vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area)){
-                    idx = vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area->idx;
-                }
-                if (idx != nt::invalid_idx){
-                    auto map_route_it = destinations.find(vj->tmp_route->idx);
-                    if (map_route_it == destinations.end()){
-                        destinations[vj->tmp_route->idx] = std::map<idx_t, size_t>();
-                        map_route_it = destinations.find(vj->tmp_route->idx);
-                    }
-                    auto strop_area_it = map_route_it->second.find(idx);
-                    if(strop_area_it == map_route_it->second.end()){
-                        map_route_it->second[idx] = 1;
-                    }else{
-                        map_route_it->second[idx] = map_route_it->second[idx] + 1;
-                    }
-                }
-            }
+    std::unordered_map<ed::types::Route*, std::map<ed::types::StopArea*, size_t>> destinations;
+    for (const auto* vj : vehicle_journeys) {
+        if (! vj->tmp_route || vj->stop_time_list.empty()) { continue; }
+        if (vj->tmp_route->destination) { continue; } // we have a destination, don't create one
+        if (! vj->stop_time_list.back()->journey_pattern_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area) {
+            continue;
         }
+        ++destinations[vj->tmp_route][vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area];
     }
-    for (auto map_route : destinations){
-        auto max = std::max_element(map_route.second.begin(), map_route.second.end(), compare);
-        routes[map_route.first]->destination = stop_areas[max->first];
+    for (const auto& map_route: destinations) { // we use a const auto& to avoid useless copy of the map
+        if (map_route.second.empty()) { continue; } // we never know
+        const auto max = boost::max_element(map_route.second, compare);
+        map_route.first->destination = max->first;
     }
 }
 

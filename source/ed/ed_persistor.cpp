@@ -766,7 +766,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         }else{
             values.push_back(lotus.null_value);
         }
-        if(route->destination != NULL){
+        if(route->destination != nullptr){
             values.push_back(std::to_string(route->destination->idx));
         }else{
             values.push_back(lotus.null_value);

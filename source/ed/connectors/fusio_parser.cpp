@@ -233,7 +233,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         if (search != gtfs_data.stop_area_map.end()){
             ed_route->destination =  search->second;
         }else{
-            LOG4CPLUS_WARN(logger, "impossible to find destination: " + row[route_id_c]);
+            LOG4CPLUS_WARN(logger, "impossible to find destination " << row.at(destination_id_c) << " for route " << row.at(route_id_c));
         }
     }
 
