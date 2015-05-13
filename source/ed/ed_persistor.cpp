@@ -647,7 +647,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
     this->lotus.prepare_bulk_insert("navitia.stop_point",
-            {"id", "uri", "external_code", "name", "coord", "comment",
+            {"id", "uri", "name", "coord", "comment",
              "fare_zone", "stop_area_id","properties_id","platform_code",
              "is_zonal", "area"});
 
@@ -655,7 +655,6 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         std::vector<std::string> values;
         values.push_back(std::to_string(sp->idx));
         values.push_back(navitia::encode_uri(sp->uri));
-        values.push_back(sp->external_code);
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
         values.push_back(sp->comment);
@@ -1183,14 +1182,13 @@ void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& cale
 }
 
 void EdPersistor::insert_calendars(const std::vector<types::Calendar*>& calendars){
-    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "external_code", "name", "week_pattern_id"});
+    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "name", "week_pattern_id"});
 
     for(const types::Calendar* cal : calendars){
         auto id = cal->week_pattern.to_ulong();
         std::vector<std::string> values;
         values.push_back(std::to_string(cal->idx));
         values.push_back(navitia::base64_encode(cal->uri));
-        values.push_back(cal->external_code);
         values.push_back(cal->name);
         values.push_back(std::to_string(id));
         this->lotus.insert(values);
