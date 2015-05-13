@@ -446,6 +446,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         } else {
             sa->time_zone_with_name = gtfs_data.tz.default_timezone;
         }
+        if (is_valid(ext_code_c, row)) {
+            data.add_object_code(sa, nt::Type_e::StopArea, row[ext_code_c]);
+        }
     }
     // C'est un StopPoint
     else {
@@ -479,6 +482,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             gtfs_data.tz.stop_point_tz[sp] = row[timezone_c];
         }
         return_wrapper.first = sp;
+        if (is_valid(ext_code_c, row)) {
+            data.add_object_code(sp, nt::Type_e::StopPoint, row[ext_code_c]);
+        }
     }
     return return_wrapper;
 }

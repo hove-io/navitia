@@ -230,7 +230,8 @@ struct StopsGtfsHandler : public GenericHandler {
     parent_c,
     wheelchair_c,
     platform_c,
-    timezone_c;
+    timezone_c,
+    ext_code_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;

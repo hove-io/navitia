@@ -51,18 +51,6 @@ void normalize_uri(std::vector<T*>& vec){
     }
 }
 
-template<typename T>
-idx_t get_idx(const std::vector<T*>& vec, const std::string& uri){
-    idx_t idx = nt::invalid_idx;
-    for(auto* element : vec){
-        if (element->uri == uri){
-            idx = element->idx;
-            break;
-        }
-    }
-    return idx;
-}
-
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
 
 // Returns a LineString begining by "from" and finishing by "to",
@@ -121,7 +109,7 @@ public:
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
 
-    std::vector<ed::types::ObjectCode> object_codes;
+    std::map<const nt::Header*, std::vector<ed::types::ObjectCode>> object_codes;
 
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
@@ -131,6 +119,8 @@ public:
          *
          */
     void sort();
+
+    void add_object_code(const nt::Header* header, const nt::Type_e type, const std::string& value, const std::string& key="external_code");
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
@@ -152,8 +142,6 @@ public:
     void build_journey_pattern_points();
 
     void build_block_id();
-
-    void build_object_code_idx();
 
     void normalize_uri();
     /**

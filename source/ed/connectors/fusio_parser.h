@@ -56,8 +56,7 @@ struct AgencyFusioHandler : public AgencyGtfsHandler {
 
 struct StopsFusioHandler : public StopsGtfsHandler {
     StopsFusioHandler(GtfsData& gdata, CsvReader& reader) : StopsGtfsHandler(gdata, reader) {}
-    int ext_code_c,
-        property_id_c,
+    int property_id_c,
         comment_id_c,
         visible_c,
         geometry_id_c;

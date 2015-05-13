@@ -306,7 +306,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     bool operator<(const StopPoint& other) const;
 };
 
-struct ObjectCode : public Header{
+struct ObjectCode {
     nt::Type_e object_type = nt::Type_e::Unknown;
     std::string key;
     std::string value;
