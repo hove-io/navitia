@@ -109,7 +109,11 @@ class TestPtRef(AbstractTestFixture):
 
         l = lines[0]
 
-        assert len(l["codes"]) == 3
+        codes = get_not_null(l, 'codes')
+
+        assert len(codes) == 3
+
+        is_valid_codes(codes)
 
 
     def test_route(self):
