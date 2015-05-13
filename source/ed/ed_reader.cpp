@@ -487,6 +487,17 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
+
+    // Add Object properties on lines
+    std::string properties_request = "SELECT object_id, property_name, property_value FROM navitia.object_properties WHERE object_type = 'line'";
+
+    pqxx::result property_result = work.exec(properties_request);
+    for(auto const_it = property_result.begin(); const_it != property_result.end(); ++const_it){
+        auto line_it = this->line_map.find(const_it["object_id"].as<idx_t>());
+        if(line_it != this->line_map.end()) {
+            line_it->second->properties[const_it["property_name"].as<std::string>()] = const_it["property_value"].as<std::string>(); 
+        }
+    }
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){

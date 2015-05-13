@@ -102,6 +102,11 @@ void fill_address(const T* obj, const nt::Data& data,
     }
 }
 
+void fill_property(const std::string& name, const std::string& value, pbnavitia::Property* property) {
+    property->set_name(name);
+    property->set_value(value);
+}
+
 template <typename T>
 void fill_message(const type::new_disruption::Impact& impact,
         const type::Data&, T pb_object, int,
@@ -392,6 +397,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         for(auto type_value : l->codes) {
             fill_codes(type_value.first, type_value.second, line->add_codes());
         }
+    }
+
+    for(auto property : l->properties) {
+	fill_property(property.first, property.second, line->add_properties());
     }
 }
 

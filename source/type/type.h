@@ -614,12 +614,14 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     MultiLineString shape;
     boost::optional<boost::posix_time::time_duration> opening_time, closing_time;
 
+    std::map<std::string,std::string> properties;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & codes & shape & closing_time
-                & opening_time & comment;
+                & opening_time & comment & properties;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 

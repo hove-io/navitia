@@ -384,6 +384,10 @@ void EdPersistor::persist(const ed::Data& data){
     this->insert_meta_vj(data.meta_vj_map);
     LOG4CPLUS_INFO(logger, "End: insert meta vehicle journeys");
 
+    LOG4CPLUS_INFO(logger, "Begin: insert object properties");
+    this->insert_object_properties(data.object_properties);
+    LOG4CPLUS_INFO(logger, "End: insert object properties");
+
     LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -456,7 +460,7 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj"
+        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
@@ -1099,6 +1103,18 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
     }
     this->lotus.finish_bulk_insert();
 
+}
+
+void EdPersistor::insert_object_properties(const std::vector<types::ObjectProperty>& object_properties) {
+    this->lotus.prepare_bulk_insert("navitia.object_properties", {"object_id", "object_type" , "property_name", "property_value"});
+    for (const auto& property: object_properties) {
+        this->lotus.insert({std::to_string(property.object_with_idx->idx),
+                            property.object_type,
+                            property.property_name,
+                            property.property_value
+                           });
+    }
+    this->lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas) {

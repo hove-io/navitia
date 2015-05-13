@@ -355,6 +355,11 @@ code = {
     "value": fields.String()
 }
 
+prop = {
+    "name": fields.String(),
+    "value": fields.String()
+}
+
 period = {
     "begin": DateTime(),
     "end": DateTime(),
@@ -496,6 +501,7 @@ line["codes"] = NonNullList(NonNullNested(code))
 line["geojson"] = MultiLineString(attribute="geojson")
 line["opening_time"] = SplitDateTime(date=None, time="opening_time")
 line["closing_time"] = SplitDateTime(date=None, time="closing_time")
+line["properties"] = NonNullList(NonNullNested(prop))
 
 route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()
