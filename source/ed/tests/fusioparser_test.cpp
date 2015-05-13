@@ -100,22 +100,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     //7 objects have comments
     //the file contains wrongly formated comments, but they are skiped
     BOOST_REQUIRE_EQUAL(data.comments.size(), 9);
-//    std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
-//        {{"stop_time", "StopTime:4:trip_1_dst_2"}, {"bob", "bobette"}}, //stoptimes are split
-//        {{"stop_time", "StopTime:4:trip_1_dst_1"}, {"bob", "bobette"}},
-//        {{"stop_time", "StopTime:7:trip_2_dst_1"}, {"bob"}},
-//        {{"stop_time", "StopTime:7:trip_2_dst_2"}, {"bob"}},
-//        {{"route", "route_1"}, {"bob"}},
-//        {{"trip", "trip_3_dst_1"}, {"bobette"}},
-//        {{"trip", "trip_3_dst_2"}, {"bobette"}}, //split too
-//        {{"stop_area", "SA:C"}, {"bob"}},
-//        {{"stop_point", "24034"}, {"bobette"}}
-//    };
     std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
-        {{"stop_time", data.stops[6]}, {"bob", "bobette"}}, //stoptimes are split
-        {{"stop_time", data.stops[7]}, {"bob", "bobette"}},
-        {{"stop_time", data.stops[12]}, {"bob"}},
-        {{"stop_time", data.stops[13]}, {"bob"}},
         {{"route", data.routes[0]}, {"bob"}},
         {{"trip", data.vehicle_journeys[4]}, {"bobette"}},
         {{"trip", data.vehicle_journeys[5]}, {"bobette"}}, //split too
@@ -125,6 +110,17 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     BOOST_CHECK_EQUAL_COLLECTIONS(data.comments.begin(), data.comments.end(),
                                   expected_comments.begin(), expected_comments.end());
+
+
+    std::map<const ed::types::StopTime*, std::vector<std::string>> expected_st_comments = {
+            {{data.stops[6]}, {"bob", "bobette"}}, //stoptimes are split
+            {{data.stops[7]}, {"bob", "bobette"}},
+            {{data.stops[12]}, {"bob"}},
+            {{data.stops[13]}, {"bob"}},
+    };
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.stoptime_comments.begin(), data.stoptime_comments.end(),
+                                  expected_st_comments.begin(), expected_st_comments.end());
 
 }
 

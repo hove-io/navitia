@@ -119,6 +119,9 @@ public:
     std::map<comment_key, std::vector<std::string>> comments;
     std::map<std::string, std::string> comment_by_id;
 
+        //we don't want stoptime to derive from Header so we use a custom container
+    std::map<const ed::types::StopTime*, std::vector<std::string>> stoptime_comments;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *

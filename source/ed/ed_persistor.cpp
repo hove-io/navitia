@@ -362,7 +362,7 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
 
     LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
-    this->insert_comments(data.comment_by_id, data.comments);
+    this->insert_comments(data.comment_by_id, data.comments, data.stoptime_comments);
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
 
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
@@ -1158,7 +1158,8 @@ void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea
 }
 
 void EdPersistor::insert_comments(const std::map<std::string, std::string>& comments,
-                                  const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id) {
+                                  const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id,
+                                  const std::map<const ed::types::StopTime*, std::vector<std::string>>& st_comments) {
     this->lotus.prepare_bulk_insert("navitia.comments", {"id", "comment"});
 
     //we store the db id's
@@ -1184,6 +1185,17 @@ void EdPersistor::insert_comments(const std::map<std::string, std::string>& comm
                          });
         }
     }
+    // we then insert the stoptimes comments
+    for (const auto& st_com: st_comments) {
+        for (const auto& comment: st_com.second) {
+            lotus.insert({
+                             "stop_time",
+                             std::to_string(st_com.first->idx),
+                             std::to_string(comment_bd_ids[comment])
+                         });
+        }
+    }
+
     this->lotus.finish_bulk_insert();
 }
 
