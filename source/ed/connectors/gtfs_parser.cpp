@@ -457,9 +457,6 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         } else {
             sa->time_zone_with_name = gtfs_data.tz.default_timezone;
         }
-        if (is_valid(ext_code_c, row)) {
-            data.add_object_code(sa, nt::Type_e::StopArea, row[ext_code_c]);
-	}
         if (has_col(desc_c, row)) {
             add_gtfs_comment(gtfs_data, data, {"stop_area", sa}, row[desc_c]);
         }

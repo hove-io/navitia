@@ -551,7 +551,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, line_id, "
+    std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
         "ST_AsText(shape) AS shape FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -1004,8 +1004,10 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
     }
 }
 
-template <typename T>
-size_t add_comment(nt::Data& data, const T* obj, const boost::shared_ptr<std::string>& comment) {
+template <typename Map>
+size_t add_comment(nt::Data& data, const idx_t obj_id, const Map& map, const boost::shared_ptr<std::string>& comment) {
+    const auto obj = find_or_default(obj_id, map);
+
     if (! obj) { return 1; }
 
     std::string str_com = *comment; //TODO shared_ptr
@@ -1044,15 +1046,15 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
         const boost::shared_ptr<std::string>& comment = it->second;
 
         if (type_str == "route") {
-            cpt_not_found += add_comment(data, find_or_default(obj_id, route_map), comment);
+            cpt_not_found += add_comment(data, obj_id, route_map, comment);
         } else if (type_str == "line") {
-            cpt_not_found += add_comment(data, find_or_default(obj_id, line_map), comment);
+            cpt_not_found += add_comment(data, obj_id, line_map, comment);
         } else if (type_str == "stop_area") {
-            cpt_not_found += add_comment(data, find_or_default(obj_id, stop_area_map), comment);
+            cpt_not_found += add_comment(data, obj_id, stop_area_map, comment);
         } else if (type_str == "stop_point") {
-            cpt_not_found += add_comment(data, find_or_default(obj_id, stop_point_map), comment);
+            cpt_not_found += add_comment(data, obj_id, stop_point_map, comment);
         } else if (type_str == "trip") {
-            cpt_not_found += add_comment(data, find_or_default(obj_id, vehicle_journey_map), comment);
+            cpt_not_found += add_comment(data, obj_id, vehicle_journey_map, comment);
         } else if (type_str == "stop_time") {
             //for stop time we store the comment on a temporary map and we will store them when the stop time is read
             // this way we don't have to store all stoptimes in a map

@@ -361,9 +361,9 @@ void EdPersistor::persist(const ed::Data& data){
     this->insert_admin_stop_areas(data.admin_stop_areas);
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
 
-    LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
+    LOG4CPLUS_INFO(logger, "Begin: insert comments");
     this->insert_comments(data.comment_by_id, data.comments, data.stoptime_comments);
-    LOG4CPLUS_INFO(logger, "End: insert admin stop area");
+    LOG4CPLUS_INFO(logger, "End: insert comments");
 
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
@@ -752,7 +752,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "name", "line_id", "shape"});
+            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
