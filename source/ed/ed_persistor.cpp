@@ -361,6 +361,10 @@ void EdPersistor::persist(const ed::Data& data){
     this->insert_admin_stop_areas(data.admin_stop_areas);
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
 
+    LOG4CPLUS_INFO(logger, "Begin: insert comments");
+    this->insert_comments(data.comment_by_id, data.comments, data.stoptime_comments);
+    LOG4CPLUS_INFO(logger, "End: insert comments");
+
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
@@ -465,7 +469,8 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code"
+        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code, "
+        "navitia.comments, navitia.ptobject_comments"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
@@ -475,13 +480,12 @@ void EdPersistor::clean_db(){
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
-    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri", "name", "comment", "sort", "website"});
+    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri", "name", "sort", "website"});
     for(types::Network* net : networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
         values.push_back(navitia::encode_uri(net->uri));
         values.push_back(net->name);
-        values.push_back(net->comment);
         values.push_back(std::to_string(net->sort));
         values.push_back(net->website);
         this->lotus.insert(values);
@@ -522,14 +526,13 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
 
 void EdPersistor::insert_companies(const std::vector<types::Company*>& companies){
     this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri",
-            "name", "comment", "address_name", "address_number",
+            "name", "address_name", "address_number",
             "address_type_name", "phone_number","mail", "website", "fax"});
     for(types::Company* company : companies){
         std::vector<std::string> values;
         values.push_back(std::to_string(company->idx));
         values.push_back(navitia::encode_uri(company->uri));
         values.push_back(company->name);
-        values.push_back(company->comment);
         values.push_back(company->address_name);
         values.push_back(company->address_number);
         values.push_back(company->address_type_name);
@@ -626,7 +629,7 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
 
 void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
     this->lotus.prepare_bulk_insert("navitia.stop_area",
-            {"id", "uri", "name", "coord", "comment",
+            {"id", "uri", "name", "coord",
              "properties_id", "visible", "timezone"});
 
     for(types::StopArea* sa : stop_areas){
@@ -635,7 +638,6 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         values.push_back(navitia::encode_uri(sa->uri));
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
-        values.push_back(sa->comment);
         values.push_back(std::to_string(sa->to_ulog()));
         values.push_back(std::to_string(sa->visible));
         values.push_back(sa->time_zone_with_name.first);
@@ -647,7 +649,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
     this->lotus.prepare_bulk_insert("navitia.stop_point",
-            {"id", "uri", "name", "coord", "comment",
+            {"id", "uri", "name", "coord",
              "fare_zone", "stop_area_id","properties_id","platform_code",
              "is_zonal", "area"});
 
@@ -657,7 +659,6 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         values.push_back(navitia::encode_uri(sp->uri));
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
-        values.push_back(sp->comment);
         values.push_back(std::to_string(sp->fare_zone));
         if(sp->stop_area != NULL){
             values.push_back(std::to_string(sp->stop_area->idx));
@@ -682,7 +683,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 }
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
-            {"id", "uri", "name", "comment", "color", "code",
+            {"id", "uri", "name", "color", "code",
              "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time"});
 
     for(types::Line* line : lines){
@@ -690,7 +691,6 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(std::to_string(line->idx));
         values.push_back(navitia::encode_uri(line->uri));
         values.push_back(line->name);
-        values.push_back(line->comment);
         values.push_back(line->color);
         values.push_back(line->code);
         if(line->commercial_mode != NULL){
@@ -752,14 +752,13 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "name", "comment", "line_id", "destination_stop_area_id", "shape"});
+            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
         values.push_back(std::to_string(route->idx));
         values.push_back(navitia::encode_uri(route->uri));
         values.push_back(route->name);
-        values.push_back(route->comment);
         if(route->line != NULL){
             values.push_back(std::to_string(route->line->idx));
         }else{
@@ -786,7 +785,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
 
 void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_patterns){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern",
-            {"id", "uri", "name", "comment", "physical_mode_id",
+            {"id", "uri", "name", "physical_mode_id",
             "is_frequence", "route_id"});
 
     for(types::JourneyPattern* jp : journey_patterns){
@@ -794,7 +793,6 @@ void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPatter
         values.push_back(std::to_string(jp->idx));
         values.push_back(navitia::encode_uri(jp->uri));
         values.push_back(jp->name);
-        values.push_back(jp->comment);
         if (jp->physical_mode != NULL){
             values.push_back(std::to_string(jp->physical_mode->idx));
         }else{
@@ -827,14 +825,15 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "odt",
+            {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
              "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
-             "comment", "date_time_estimated"});
+             "date_time_estimated"});
     size_t inserted_count = 0;
     size_t size_st = stop_times.size();
     for(types::StopTime* stop : stop_times){
         std::vector<std::string> values;
+        values.push_back(std::to_string(stop->idx));
         values.push_back(std::to_string(stop->arrival_time));
         values.push_back(std::to_string(stop->departure_time));
         if(stop->local_traffic_zone != std::numeric_limits<uint16_t>::max()){
@@ -857,16 +856,16 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(stop->comment);
         values.push_back(std::to_string(stop->date_time_estimated));
+
         this->lotus.insert(values);
         ++inserted_count;
         if(inserted_count % 150000 == 0) {
             lotus.finish_bulk_insert();
             LOG4CPLUS_INFO(logger, inserted_count<<"/"<< size_st <<" inserted stop times");
             this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
-             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment", "date_time_estimated"});
+            {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
+             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated"});
         }
     }
     this->lotus.finish_bulk_insert();
@@ -874,7 +873,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 
 void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern_point",
-            {"id", "uri", "name", "comment", "\"order\"",
+            {"id", "uri", "name", "\"order\"",
              "stop_point_id", "journey_pattern_id", "shape_from_prev"});
 
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
@@ -882,7 +881,6 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
         values.push_back(std::to_string(jpp->idx));
         values.push_back(navitia::encode_uri(jpp->uri));
         values.push_back(jpp->name);
-        values.push_back(jpp->comment);
         values.push_back(std::to_string(jpp->order));
 
         if(jpp->stop_point != NULL){
@@ -941,7 +939,7 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
-            {"id", "uri", "name", "comment", "validity_pattern_id",
+            {"id", "uri", "name", "validity_pattern_id",
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
@@ -952,7 +950,6 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->idx));
         values.push_back(navitia::encode_uri(vj->uri));
         values.push_back(vj->name);
-        values.push_back(vj->comment);
 
         if(vj->validity_pattern != NULL){
             values.push_back(std::to_string(vj->validity_pattern->idx));
@@ -1157,6 +1154,48 @@ void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea
             this->lotus.insert(values);
         }
     }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_comments(const std::map<std::string, std::string>& comments,
+                                  const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id,
+                                  const std::map<const ed::types::StopTime*, std::vector<std::string>>& st_comments) {
+    this->lotus.prepare_bulk_insert("navitia.comments", {"id", "comment"});
+
+    //we store the db id's
+    std::map<std::string, unsigned int> comment_bd_ids;
+    unsigned int cpt = 0;
+    for (const auto& comment: comments) {
+        lotus.insert({std::to_string(cpt), comment.second});
+
+        comment_bd_ids[comment.first] = cpt++;
+    }
+
+    this->lotus.finish_bulk_insert();
+
+
+    this->lotus.prepare_bulk_insert("navitia.ptobject_comments", {"object_type", "object_id", "comment_id"});
+
+    for (const auto& pt_obj_com: comment_by_id) {
+        for (const auto& comment: pt_obj_com.second) {
+            lotus.insert({
+                             pt_obj_com.first.first,
+                             std::to_string(pt_obj_com.first.second->idx),
+                             std::to_string(comment_bd_ids[comment])
+                         });
+        }
+    }
+    // we then insert the stoptimes comments
+    for (const auto& st_com: st_comments) {
+        for (const auto& comment: st_com.second) {
+            lotus.insert({
+                             "stop_time",
+                             std::to_string(st_com.first->idx),
+                             std::to_string(comment_bd_ids[comment])
+                         });
+        }
+    }
+
     this->lotus.finish_bulk_insert();
 }
 

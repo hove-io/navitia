@@ -1,0 +1,4 @@
+route_id,route_name,is_forward,line_id,contributor_id,geometry_id
+route_1,"Route sens aller",1,l1,,
+route_2,"Route sens retour",0,l1,,
+route_3,"Route ",0,l1,,

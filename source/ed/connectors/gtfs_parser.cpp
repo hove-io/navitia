@@ -45,6 +45,21 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 namespace ed{ namespace connectors {
 
+/**
+ * add a comment.
+ * create an id for the comment if needed since the comments are handled by ID in fusio2ed
+ */
+void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const Data::comment_key& key, const std::string& comment) {
+    std::string& comment_id = gtfs_data.comments_id_map[comment];
+    if (comment_id.empty()) {
+        comment_id = "comment__" + gtfs_data.comments_id_map.size();
+    }
+
+    data.comments[key].push_back(comment_id);
+
+    data.comment_by_id[comment_id] = comment;
+}
+
 static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
@@ -407,8 +422,6 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 
     stop->name = row[name_c];
     stop->uri = row[id_c];
-    if (has_col(desc_c, row))
-        stop->comment = row[desc_c];
 
     return true;
 }
@@ -444,6 +457,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         } else {
             sa->time_zone_with_name = gtfs_data.tz.default_timezone;
         }
+        if (has_col(desc_c, row)) {
+            add_gtfs_comment(gtfs_data, data, {"stop_area", sa}, row[desc_c]);
+        }
     }
     // C'est un StopPoint
     else {
@@ -470,6 +486,10 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
                 it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
             }
             it->second.push_back(sp);
+        }
+
+        if (has_col(desc_c, row)) {
+            add_gtfs_comment(gtfs_data, data, {"stop_point", sp}, row[desc_c]);
         }
 
         //we save the tz in case the stop point is later promoted to stop area
@@ -499,11 +519,13 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     line->uri = row[id_c];
     line->name = row[long_name_c];
     line->code = row[short_name_c];
-    if ( has_col(desc_c, row) )
-        line->comment = row[desc_c];
+    if (has_col(desc_c, row)) {
+        add_gtfs_comment(gtfs_data, data, {"line", line},row[desc_c]);
+    }
 
-    if(has_col(color_c, row))
+    if(has_col(color_c, row)) {
         line->color = row[color_c];
+    }
     line->additional_data = row[long_name_c];
 
     auto it_commercial_mode = gtfs_data.commercial_mode_map.find(row[type_c]);
@@ -998,7 +1020,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 
         stop_time->tmp_stop_point = stop_it->second;
         //stop_time->journey_pattern_point = journey_pattern_point;
-        stop_time->order = boost::lexical_cast<int>(row[stop_seq_c]);
+        stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
 
         if(has_col(pickup_c, row) && has_col(drop_off_c, row))
@@ -1016,6 +1038,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
+        stop_time->idx = data.stops.size();
         data.stops.push_back(stop_time);
         count++;
         stop_times.push_back(stop_time);

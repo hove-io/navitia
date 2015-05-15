@@ -213,13 +213,11 @@ struct associated_cal_fixture {
         data.journey_patterns.push_back(journey_pattern);
 
         auto st1 = new ed::types::StopTime();
-        st1->name = "stop_area:stop1";
         st1->arrival_time = 10 * 3600 + 15 * 60;
         st1->departure_time = 10 * 3600 + 15 * 60;
         data.stops.push_back(st1);
 
         auto st2 = new ed::types::StopTime();
-        st2->name = "stop_area:stop1";
         st2->arrival_time = 11 * 3600 + 10 * 60;
         st2->departure_time = 11 * 3600 + 10 * 60;
         data.stops.push_back(st2);

@@ -64,7 +64,6 @@ parameters = Table('parameters', metadata,*[
 
 company = Table('company', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('address_name', TEXT(), primary_key=False),
@@ -138,7 +137,6 @@ rel_line_company = Table('rel_line_company', metadata,*[
 route = Table('route', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('line_id', BIGINT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
@@ -163,12 +161,12 @@ vehicle_properties = Table('vehicle_properties', metadata,*[
 
 network = Table('network', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
     Column('sort', INTEGER(), primary_key=False, nullable=False, default=text(u'2147483647')),
-    Column('website', TEXT(), primary_key=False),],
+    Column('website', TEXT(), primary_key=False),
+    ],
     schema='navitia')
 
 
@@ -239,7 +237,6 @@ journey_pattern = Table('journey_pattern', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('route_id', BIGINT(), primary_key=False, nullable=False),
     Column('physical_mode_id', BIGINT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('is_frequence', BOOLEAN(), primary_key=False, nullable=False),
@@ -256,7 +253,6 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('journey_pattern_id', BIGINT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('odt_message', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('odt_type_id', BIGINT(), primary_key=False),
@@ -288,7 +284,6 @@ stop_point = Table('stop_point', metadata,*[
     Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
     Column('fare_zone', INTEGER(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('stop_area_id', BIGINT(), primary_key=False, nullable=False),
     Column('platform_code', TEXT(), primary_key=False),
     Column('is_zonal', BOOLEAN(), primary_key=False, nullable=False, default=text(u'false')),
@@ -309,7 +304,6 @@ stop_time = Table('stop_time', metadata,*[
     Column('pick_up_allowed', BOOLEAN(), primary_key=False, nullable=False),
     Column('drop_off_allowed', BOOLEAN(), primary_key=False, nullable=False),
     Column('is_frequency', BOOLEAN(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('date_time_estimated', BOOLEAN(), primary_key=False, nullable=False, default=text(u'false')),
     Column('properties_id', BIGINT(), primary_key=False),
     ForeignKeyConstraint(['vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'stop_time_vehicle_journey_id_fkey'),
@@ -324,7 +318,6 @@ journey_pattern_point = Table('journey_pattern_point', metadata,*[
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('order', INTEGER(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('stop_point_id', BIGINT(), primary_key=False, nullable=False),
     Column('shape_from_prev', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
     ForeignKeyConstraint(['stop_point_id'], [u'navitia.stop_point.id'], name=u'journey_pattern_point_stop_point_id_fkey'),
@@ -376,7 +369,6 @@ line = Table('line', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('network_id', BIGINT(), primary_key=False, nullable=False),
     Column('commercial_mode_id', BIGINT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
@@ -439,7 +431,6 @@ stop_area = Table('stop_area', metadata,*[
     Column('external_code', TEXT(), primary_key=False, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
-    Column('comment', TEXT(), primary_key=False),
     Column('visible', BOOLEAN(), primary_key=False, nullable=False, default=text(u'true')),
     Column('timezone', TEXT(), primary_key=False),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_area_properties_id_fkey'),],
@@ -454,3 +445,18 @@ object_code = Table('object_code', metadata,*[
     ForeignKeyConstraint(['object_type_id'], [u'navitia.object_type.id'], name=u'object_type_id_fkey'),],
     schema='navitia')
 
+comments = Table('comments', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('comment', TEXT(), primary_key=False, nullable=False),
+    ],
+    schema='navitia')
+
+
+object_comments = Table('ptobject_comments', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('object_type', TEXT(), primary_key=False, nullable=False),
+    Column('object_id', BIGINT(), primary_key=False, nullable=False),
+    Column('comment_id', BIGINT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['comment_id'], [u'navitia.comments.id'], name=u'ptobject_comments_comment_id_fkey'),
+    ],
+    schema='navitia')

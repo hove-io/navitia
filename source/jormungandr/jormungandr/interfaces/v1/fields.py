@@ -291,6 +291,17 @@ class MultiLineString(fields.Raw):
         return response
 
 
+class FirstComment(fields.Raw):
+    """
+    for compatibility issue we want to continue to output a 'comment' field
+    even if now we have a list of comments, so we take the first one
+    """
+    def output(self, key, obj):
+        for c in obj.comments:
+            return c.value
+        return None
+
+
 class SectionGeoJson(fields.Raw):
     """
     format a journey section as geojson
@@ -456,6 +467,11 @@ generic_type = {
     "coord": NonNullNested(coord, True)
 }
 
+comment = {
+    'value': fields.String(),
+    'type': fields.String()
+}
+
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
@@ -469,12 +485,16 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["links"] = DisruptionLinks()
-stop_point["comment"] = fields.String()
+stop_point["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+stop_point["comments"] = NonNullList(NonNullNested(comment))
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["links"] = DisruptionLinks()
-stop_area["comment"] = fields.String()
+stop_area["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+stop_area["comments"] = NonNullList(NonNullNested(comment))
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
 stop_area["label"] = fields.String()
@@ -496,7 +516,9 @@ line = deepcopy(generic_type)
 line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
-line["comment"] = fields.String()
+line["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+line["comments"] = NonNullList(NonNullNested(comment))
 line["codes"] = NonNullList(NonNullNested(code))
 line["geojson"] = MultiLineString(attribute="geojson")
 line["opening_time"] = SplitDateTime(date=None, time="opening_time")
@@ -510,6 +532,7 @@ route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = MultiLineString(attribute="geojson")
+route["comments"] = NonNullList(NonNullNested(comment))
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 

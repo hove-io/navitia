@@ -114,6 +114,14 @@ public:
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
 
+    // list of comment ids by {objec_type, object}
+    using comment_key = std::pair<std::string, const nt::Header*>;
+    std::map<comment_key, std::vector<std::string>> comments;
+    std::map<std::string, std::string> comment_by_id;
+
+        //we don't want stoptime to derive from Header so we use a custom container
+    std::map<const ed::types::StopTime*, std::vector<std::string>> stoptime_comments;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *

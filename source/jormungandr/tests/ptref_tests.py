@@ -57,6 +57,13 @@ class TestPtRef(AbstractTestFixture):
         assert vj['stop_times'][1]['arrival_time'] == '111000'
         assert vj['stop_times'][1]['departure_time'] == '111000'
 
+        #we added some comments on the vj, we should have them
+        com = get_not_null(vj, 'comments')
+        assert len(com) == 1
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == 'hello'
+
+
     def test_vj_depth_0(self):
         """default depth is 1"""
         response = self.query_region("v1/vehicle_journeys?depth=0")
@@ -99,6 +106,11 @@ class TestPtRef(AbstractTestFixture):
         geo = get_not_null(l, 'geojson')
         shape(geo)
 
+        com = get_not_null(l, 'comments')
+        assert len(com) == 1
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == "I'm a happy comment"
+
     def test_line_codes(self):
         """test line formating"""
         response = self.query_region("v1/lines/line:A?show_codes=true")
@@ -131,6 +143,44 @@ class TestPtRef(AbstractTestFixture):
         geo = get_not_null(r, 'geojson')
         shape(geo)
 
+        com = get_not_null(r, 'comments')
+        assert len(com) == 1
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == "I'm a happy comment"
+
+    def test_stop_areas(self):
+        """test stop_areas formating"""
+        response = self.query_region("v1/stop_areas")
+
+        stops = get_not_null(response, 'stop_areas')
+
+        assert len(stops) == 2
+
+        s = next((s for s in stops if s['name'] == 'stop_area:stop1'))
+        is_valid_stop_area(s, depth_check=1)
+
+        com = get_not_null(s, 'comments')
+        assert len(com) == 2
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == "comment on stop A"
+        assert com[1]['type'] == 'standard'
+        assert com[1]['value'] == "the stop is sad"
+
+    def test_stop_points(self):
+        """test stop_areas formating"""
+        response = self.query_region("v1/stop_points")
+
+        stops = get_not_null(response, 'stop_points')
+
+        assert len(stops) == 2
+
+        s = next((s for s in stops if s['name'] == 'stop_area:stop2'))
+        is_valid_stop_area(s, depth_check=1)
+
+        com = get_not_null(s, 'comments')
+        assert len(com) == 1
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == "hello bob"
 
 @dataset(["main_routing_test"])
 class TestPtRefPlace(AbstractTestFixture):

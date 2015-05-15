@@ -135,7 +135,6 @@ template<class T> int T::* idx_getter(){return &T::idx;}
 
 struct Nameable {
     std::string name;
-    std::string comment;
     bool visible = true;
 };
 
@@ -374,7 +373,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
         // stop_point_connection_list is managed by StopPointConnection
         // journey_pattern_point_list is managed by JourneyPatternPoint
         ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
-            & admin_list & _properties & impacts & comment & codes;
+            & admin_list & _properties & impacts & codes;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
@@ -469,7 +468,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & label & uri & name & coord & stop_point_list & admin_list
         & _properties & wheelchair_boarding & impacts & visible
-                & comment & codes & timezone;
+                & codes & timezone;
     }
 
     std::vector<StopPoint*> stop_point_list;
@@ -477,7 +476,8 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
-struct Network : public Header, Nameable, HasMessages, Codes{
+struct Network : public Header, HasMessages, Codes{
+    std::string name;
     const static Type_e type = Type_e::Network;
     std::string address_name;
     std::string address_number;
@@ -621,7 +621,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & codes & shape & closing_time
-                & opening_time & comment & properties;
+                & opening_time & properties;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -653,7 +653,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & codes & shape & comment;
+        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & codes & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -722,7 +722,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
-            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
             & codes & next_vj & prev_vj
             & meta_vj & utc_to_local_offset

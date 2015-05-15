@@ -304,13 +304,14 @@ struct ObjectCode {
     std::string value;
 };
 
-struct StopTime : public Nameable {
+struct StopTime {
+    size_t idx;
     int arrival_time; /// Number of seconds from midnight can be negative when
     int departure_time; /// we shift in UTC conversion
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
-    StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
-    int order;
+    StopPoint* tmp_stop_point;// not mandatory
+    unsigned int order;
     bool ODT;
     bool pick_up_allowed;
     bool drop_off_allowed;

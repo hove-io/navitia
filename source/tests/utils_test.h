@@ -37,4 +37,19 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
     for (; it != end; ++it) { os << ", " << *it; }
     return os << "]";
 }
+
+template<typename T, typename U>
+std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p) {
+    return os << "(" << p.first << ", " << p.second << ")";
+}
+
+
+template<typename K, typename V>
+std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
+    os << "{";
+    auto it = m.cbegin(), end = m.cend();
+    if (it != end) { os << it++; }
+    for (; it != end; ++it) { os << ", " << *it; }
+    return os << "}";
+}
 }

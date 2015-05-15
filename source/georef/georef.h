@@ -134,6 +134,7 @@ struct HouseNumber{
 struct Way :public nt::Nameable, nt::Header{
 public:
     std::string way_type;
+    std::string comment;
     // liste des admins
     std::vector<Admin*> admin_list;
 
