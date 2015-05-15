@@ -201,7 +201,7 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 }
 
 void EdReader::fill_object_codes(navitia::type::Data&, pqxx::work& work){
-    std::string request = "select object_type_id, object_id, key, value from object_code";
+    std::string request = "select object_type_id, object_id, key, value from navitia.object_code";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){

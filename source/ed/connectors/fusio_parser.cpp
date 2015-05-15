@@ -134,6 +134,13 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
 
     auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
 
+    if (is_valid(ext_code_c, row)) {
+        if (return_wrapper.second) {
+            data.add_object_code(return_wrapper.second, nt::Type_e::StopArea, row[ext_code_c]);
+        } else if (return_wrapper.first) {
+            data.add_object_code(return_wrapper.first, nt::Type_e::StopPoint, row[ext_code_c]);
+        }
+    }
     if (is_valid(property_id_c, row)) {
         auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
         if(it_property != gtfs_data.hasProperties_map.end()){
@@ -365,7 +372,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     ed::types::Route* route = it->second;
 
     auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
-    if(empty(vp_range)) {
+    if (empty(vp_range)) {
         LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
@@ -407,9 +414,6 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         }
         vj->uri = vj_uri;
 
-        if(is_valid(ext_code_c, row)){
-            vj->external_code = row[ext_code_c];
-        }
         if(is_valid(headsign_c, row))
             vj->name = row[headsign_c];
         else
@@ -451,8 +455,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     //the vj might have been split over the dst,thus we loop over all split vj
     for (auto vj: split_vj) {
         if (is_valid(ext_code_c, row)) {
-            vj->external_code = row[ext_code_c];
-            data.add_object_code(vj, nt::Type_e::VehicleJourney, vj->external_code);
+            data.add_object_code(vj, nt::Type_e::VehicleJourney, row[ext_code_c]);
         }
 
         //if a physical_mode is given we override the value
@@ -1292,7 +1295,7 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
         throw InvalidHeaders(csv.filename);
     }
 
-    std::string key = boost::algorithm::to_lower_copy(row[object_system_c]);
+    std::string key = row[object_system_c];
     std::string object_type = boost::algorithm::to_lower_copy(row[object_type_c]);
 
     if (key == "navitia1") {
@@ -1307,38 +1310,29 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
                 gtfs_data.line_map_by_external_code[row[code_c]] = it_object->second;
             }
         }
-        return;
-    }
-    if (object_type == "route"){
+    } else if (object_type == "route"){
         const auto& it_object = gtfs_data.route_map.find(row[object_uri_c]);
         if(it_object != gtfs_data.route_map.end()){
             data.add_object_code(it_object->second, nt::Type_e::Route, row[code_c], key);
         }
-        return;
-    }
-    if (object_type == "network"){
+    } else if (object_type == "network"){
         const auto& it_object = gtfs_data.network_map.find(row[object_uri_c]);
         if(it_object != gtfs_data.network_map.end()){
             data.add_object_code(it_object->second, nt::Type_e::Network, row[code_c], key);
         }
-        return;
-    }
-    if (object_type == "trip"){
+    } else if (object_type == "trip"){
         const auto& it_object = data.meta_vj_map.find(row[object_uri_c]);
         if(it_object != data.meta_vj_map.end()){
             for(const auto& vj : it_object->second.theoric_vj){
                 data.add_object_code(vj, nt::Type_e::VehicleJourney, row[code_c], key);
             }
         }
-        return;
-    }
-    if (object_type == "stop_area"){
+    } else if (object_type == "stop_area"){
         const auto& it_object = gtfs_data.stop_area_map.find(row[object_uri_c]);
         if(it_object != gtfs_data.stop_area_map.end()){
             data.add_object_code(it_object->second, nt::Type_e::StopArea, row[code_c], key);
         }
-    }
-    if (object_type == "stop_point"){
+    } else if (object_type == "stop_point"){
         const auto& it_object = gtfs_data.stop_map.find(row[object_uri_c]);
         if(it_object != gtfs_data.stop_map.end()){
             data.add_object_code(it_object->second, nt::Type_e::StopPoint, row[code_c], key);

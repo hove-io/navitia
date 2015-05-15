@@ -104,7 +104,6 @@ struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
-    std::string external_code;
     std::vector<Line*> line_list;
     std::vector<boost::gregorian::date_period> period_list;
     std::vector<navitia::type::ExceptionDate> exceptions;
@@ -133,7 +132,6 @@ struct MetaVehicleJourney;
 
 struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
-    std::string external_code;
     nt::GeographicalCoord coord;
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
@@ -152,7 +150,6 @@ struct Contributor : public Header, Nameable{
 
 struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
-    std::string external_code;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -195,7 +192,6 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Line : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::Line;
-    std::string external_code;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -217,7 +213,6 @@ struct Line : public Header, Nameable {
 
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
-    std::string external_code;
     Line * line;
     nt::MultiLineString shape;
     StopArea* destination = nullptr;
@@ -240,7 +235,6 @@ struct JourneyPattern : public Header, Nameable{
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
-    std::string external_code;
     JourneyPattern* journey_pattern = nullptr;
     Company* company = nullptr;
     PhysicalMode* physical_mode = nullptr; // Read in journey_pattern
@@ -290,7 +284,6 @@ struct JourneyPatternPoint : public Header, Nameable{
 
 struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
-    std::string external_code;
     nt::GeographicalCoord coord;
     int fare_zone;
     bool is_zonal = false;
