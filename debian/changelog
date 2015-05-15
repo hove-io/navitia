@@ -1,3 +1,32 @@
+navitia2 (1.18.0) unstable; urgency=low
+
+  * All: Real multiple comments  <https://github.com/CanalTP/navitia/pull/1040>
+  * Autocomplete: Correction for ghostword  <https://github.com/CanalTP/navitia/pull/1039>
+  * Routing: fix duration and date_times for direct path when using speed_factor  <https://github.com/CanalTP/navitia/pull/1038>
+  * Ed: correction in cities  <https://github.com/CanalTP/navitia/pull/1036>
+  * All: Manage multi codes  <https://github.com/CanalTP/navitia/pull/1035>
+  * Jormungandr: replace usage of logging module directly by a logger  <https://github.com/CanalTP/navitia/pull/1034>
+  * All: Read NTFS file object_properties.txt and output it on lines API request  <https://github.com/CanalTP/navitia/pull/1032>
+  * Ed: Route main destination  <https://github.com/CanalTP/navitia/pull/1031>
+  * Time tables: use "ranked pairs" to order the vj in route_schedules  <https://github.com/CanalTP/navitia/pull/1030>
+  * kraken: fix test on journey with a disruption on a network  <https://github.com/CanalTP/navitia/pull/1029>
+  * Read NTFS file object_properties.txt and output it on lines API request  <https://github.com/CanalTP/navitia/pull/1028>
+  * Jormungandr: fill_uris  <https://github.com/CanalTP/navitia/pull/1027>
+  * jormungandr: will probably solve http://jira.canaltp.fr/browse/NAVITIAII-1693  <https://github.com/CanalTP/navitia/pull/1026>
+  * raptor: fix accessibility on the stop point at the begin and the end  <https://github.com/CanalTP/navitia/pull/1025>
+  * jormungandr: fix a 500 if a type was misspelled  <https://github.com/CanalTP/navitia/pull/1024>
+  * kraken: compatibility with protobuf 2.4  <https://github.com/CanalTP/navitia/pull/1023>
+  * Compilation fix on ubuntu 12.04 desktop  <https://github.com/CanalTP/navitia/pull/1022>
+  * TMA 1706  <https://github.com/CanalTP/navitia/pull/1021>
+  * Ed: first step to read the new comment_link file  <https://github.com/CanalTP/navitia/pull/1020>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 15 May 2015 18:05:21 +0100
+
+navitia2 (1.17.1) unstable; urgency=low
+
+  * FIX 500 on NM journeys <https://github.com/CanalTP/navitia/pull/1037> 
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 13 May 2015 15:05:14 +0100
+
 navitia2 (1.17.0) unstable; urgency=low
 
   * Nm: fix nm  <https://github.com/CanalTP/navitia/pull/1019>
