@@ -307,7 +307,6 @@ struct functor_add_vj {
         pt_data.vehicle_journeys_map[vj->uri] = vj;
         vj->name = vj_ref.name;
         vj->company = vj_ref.company;
-        vj->comment = vj_ref.comment;
         vj->next_vj = vj_ref.next_vj;
         vj->prev_vj = vj_ref.prev_vj;
         vj->meta_vj = vj_ref.meta_vj;
@@ -340,6 +339,11 @@ struct functor_add_vj {
             st.journey_pattern_point = jp->journey_pattern_point_list[order];
             st.vehicle_journey = vj;
             ++ order;
+        }
+
+        // we need to copy the vj's comments
+        for (const auto& c: pt_data.comments.get(vj_ref)) {
+            pt_data.comments.add(vj, c);
         }
         // We need to link the newly created vj with this impact
         vj->impacted_by.push_back(impact);

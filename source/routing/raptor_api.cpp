@@ -32,14 +32,15 @@ www.navitia.io
 #include "raptor.h"
 #include "georef/street_network.h"
 #include "type/pb_converter.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
-#include <unordered_set>
-#include <chrono>
 #include "type/meta_data.h"
 #include "fare/fare.h"
 #include "vptranslator/block_pattern_to_pb.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/algorithm/count.hpp>
+#include <unordered_set>
+#include <chrono>
 
 
 namespace navitia { namespace routing {
@@ -71,23 +72,50 @@ static void add_coord(const type::GeographicalCoord& coord, pbnavitia::Section* 
 static void fill_shape(pbnavitia::Section* pb_section,
                        const std::vector<const type::StopTime*>& stop_times)
 {
-    if (stop_times.empty()) return;
-    const auto& vj = stop_times.front()->vehicle_journey;
-    if (vj->is_odt() && vj->vehicle_journey_type != type::VehicleJourneyType::virtual_with_stop_time) {
-        for (const auto& st : stop_times) {
-            add_coord(st->journey_pattern_point->stop_point->coord, pb_section);
-        }
-        return;
-    }
+    if (stop_times.empty()) { return; }
 
-    type::GeographicalCoord last_coord;
+    type::GeographicalCoord prev_coord = stop_times.front()->journey_pattern_point->stop_point->coord;
+    add_coord(prev_coord, pb_section);
+    auto prev_order = stop_times.front()->journey_pattern_point->order;
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
-        for (const auto& cur_coord: (*it)->journey_pattern_point->shape_from_prev) {
-            if (cur_coord == last_coord) continue;
-            add_coord(cur_coord, pb_section);
-            last_coord = cur_coord;
+        const auto* jpp = (*it)->journey_pattern_point;
+        const auto cur_order = jpp->order;
+
+        // As every stop times may not be present (because they can be
+        // filtered because of estimated datetime), we can only print
+        // the shape if the 2 stop times are consecutive
+        if (prev_order + 1 == cur_order) {
+            for (const auto& cur_coord: jpp->shape_from_prev) {
+                if (cur_coord == prev_coord) { continue; }
+                add_coord(cur_coord, pb_section);
+                prev_coord = cur_coord;
+            }
         }
+        // Add the coordinates of the stop point if not already added
+        // by the shape.
+        const auto& sp_coord = jpp->stop_point->coord;
+        if (sp_coord != prev_coord) {
+            add_coord(sp_coord, pb_section);
+            prev_coord = sp_coord;
+        }
+        prev_order = cur_order;
     }
+}
+
+static void set_length(pbnavitia::Section* pb_section) {
+    type::GeographicalCoord prev_geo;
+    if (pb_section->shape_size() > 0) {
+        const auto& first_coord = pb_section->shape(0);
+        prev_geo = type::GeographicalCoord(first_coord.lon(), first_coord.lat());
+    }
+    double length = 0;
+    for (int i = 1; i < pb_section->shape_size(); ++i) {
+        const auto& cur_coord = pb_section->shape(i);
+        const auto cur_geo = type::GeographicalCoord(cur_coord.lon(), cur_coord.lat());
+        length += prev_geo.distance_to(cur_geo);
+        prev_geo = cur_geo;
+    }
+    pb_section->set_length(length);
 }
 
 static void
@@ -141,20 +169,14 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         return;
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
-    auto* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
     if(! stop_times.empty()){
         fill_pb_object(vj, d, vj_pt_display_information, stop_times.front()->journey_pattern_point->stop_point, stop_times.back()->journey_pattern_point->stop_point, 0, now, action_period);
     }else{
         fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
     }
 
-    fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
-    if (!stop_times.front()->odt()) {
-        fill_shape(pb_section, stop_times);
-    } else {
-        add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
-        add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
-    }
+    fill_shape(pb_section, stop_times);
+    set_length(pb_section);
     fill_co2_emission(pb_section, d, vj);
 }
 
@@ -204,20 +226,22 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
         for(bt::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
             pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime));
-            pb_journey->set_duration(temp.duration.total_seconds());
 
             bt::ptime departure;
             if (clockwise) {
                 departure = datetime;
             } else {
-                departure = datetime - temp.duration.to_posix();
+                const auto duration = bt::seconds(temp.duration.total_seconds()
+                                                  / origin.streetnetwork_params.speed_factor);
+                departure = datetime - duration;
             }
             fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
 
-            const auto str_departure = navitia::to_posix_timestamp(departure);
-            const auto str_arrival = navitia::to_posix_timestamp(departure + temp.duration.to_posix());
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
+            const auto ts_departure = pb_journey->sections(0).begin_date_time();
+            const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
+            pb_journey->set_departure_date_time(ts_departure);
+            pb_journey->set_arrival_date_time(ts_arrival);
+            pb_journey->set_duration(ts_arrival - ts_departure);
             // We add coherence with the origin of the request
             auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
             origin_pb->Clear();
@@ -275,16 +299,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
          *     (since the stop point has been artificially created on the data side)
          *     we want a odt section from the departure asked by the user to the destination of the odt)
          **/
-
-        const nt::VehicleJourney* first_vj = path.items.front().get_vj();
-        const nt::VehicleJourney* last_vj = path.items.back().get_vj();
-        bool journey_begin_with_address_odt = first_vj &&
-                in(first_vj->vehicle_journey_type,
-                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
-
-        bool journey_end_with_address_odt = last_vj &&
-                in(last_vj->vehicle_journey_type,
-                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
+        const bool journey_begin_with_address_odt = !path.items.front().stop_points.empty() &&
+            path.items.front().stop_points.front()->is_zonal;
+        const bool journey_end_with_address_odt = !path.items.back().stop_points.empty() &&
+            path.items.back().stop_points.back()->is_zonal;
 
         if (journey_begin_with_address_odt) {
             // nor crow fly section, but we'll have to update the start of the journey
@@ -346,7 +364,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
-                int length = 0;
 
                 if (!vp) {
                     vp = *vj->validity_pattern;
@@ -355,8 +372,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     vp->days &= vj->validity_pattern->days;
                 }
 
-                for(size_t i=0;i<item.stop_points.size();++i) {
+                const size_t nb_sps = item.stop_points.size();
+                for (size_t i = 0; i < nb_sps; ++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
+                        continue;
+                    }
+                    // skipping estimated stop points
+                    if (i != 0 && i != nb_sps - 1 && item.stop_times[i]->date_time_estimated()) {
                         continue;
                     }
                     pbnavitia::StopDateTime* stop_time = pb_section->add_stop_date_times();
@@ -376,12 +398,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         departure_ptime = p_deptime;
                     // L'heure d'arrivée au dernier stop point
                     arrival_ptime = p_arrtime;
-                    if(i > 0) {
-                        const auto & previous_coord = item.stop_points[i-1]->coord;
-                        const auto & current_coord = item.stop_points[i]->coord;
-                        length += previous_coord.distance_to(current_coord);
-                    }
-
                 }
                 if (! item.stop_points.empty()) {
                     //some time there is only one stop points, typically in case of "extension of services"
@@ -414,17 +430,29 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     }
 
                 }
-                pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
                 fill_section(pb_section, vj, item.stop_times, d, now, action_period);
+
+                // setting additional_informations
+                const bool has_datetime_estimated = ! item.stop_times.empty()
+                    && (item.stop_times.front()->date_time_estimated()
+                        || item.stop_times.back()->date_time_estimated());
+                const bool has_odt = ! item.stop_times.empty()
+                    && (item.stop_times.front()->odt() || item.stop_times.back()->odt());
+                const bool is_zonal = ! item.stop_points.empty()
+                    && (item.stop_points.front()->is_zonal || item.stop_points.back()->is_zonal);
+                fill_additional_informations(pb_section->mutable_additional_informations(),
+                                             has_datetime_estimated,
+                                             has_odt,
+                                             is_zonal);
+
                 // If this section has estimated stop times,
                 // if the previous section is a waiting section, we also
                 // want to set it to estimated.
-                if (pb_section->add_info_vehicle_journey().has_date_time_estimated() &&
-                        pb_journey->sections_size()>=2) {
+                if (has_datetime_estimated && pb_journey->sections_size() >= 2) {
                     auto previous_section = pb_journey->mutable_sections(pb_journey->sections_size()-2);
                     if (previous_section->type() == pbnavitia::WAITING) {
-                        previous_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                        previous_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
                     }
                 }
             } else {
@@ -436,7 +464,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                         int section_idx = pb_journey->sections_size() - 2;
                         if(section_idx >= 0 && pb_journey->sections(section_idx).type() == pbnavitia::PUBLIC_TRANSPORT){
                             auto* prec_section = pb_journey->mutable_sections(section_idx);
-                            prec_section->mutable_add_info_vehicle_journey()->set_stay_in(true);
+                            prec_section->add_additional_informations(pbnavitia::STAY_IN);
                         }
                         break;
                     }
@@ -445,15 +473,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 }
                 // For a waiting section, if the previous public transport section,
                 // has estimated datetime we need to set it has estimated too.
-                if (pb_journey->sections_size() > 1) {
-                    for (const auto& section: pb_journey->sections()) {
-                        if (section.type() == pbnavitia::PUBLIC_TRANSPORT) {
-                            if (section.add_info_vehicle_journey().has_date_time_estimated()) {
-                                pb_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
-                            }
-                            break;
-                        }
+                const auto& sections = pb_journey->sections();
+                for (auto it = sections.rbegin(); it != sections.rend(); ++it) {
+                    if (it->type() != pbnavitia::PUBLIC_TRANSPORT) { continue; }
+                    if (boost::count(it->additional_informations(), pbnavitia::HAS_DATETIME_ESTIMATED)) {
+                        pb_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
                     }
+                    break;
                 }
 
                 bt::time_period action_period(item.departure, item.arrival);
@@ -700,11 +726,24 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             }
         }
 
+        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         //we need to check if the admin has zone odt
         const auto& admins = find_admins(ep, data);
         for (const auto* admin: admins) {
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
+                if (stop_points.find(sp_idx) == stop_points.end()) {
+                    result.push_back({sp_idx, {}});
+                    stop_points.insert(sp_idx);
+                }
+            }
+        }
+
+        // checking for zonal stop points
+        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+        for (const auto* sp: zonal_sps) {
+            const SpIdx sp_idx = SpIdx(*sp);
+            if (stop_points.find(sp_idx) == stop_points.end()) {
                 result.push_back({sp_idx, {}});
                 stop_points.insert(sp_idx);
             }
@@ -792,7 +831,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               bool disruption_active,
-              bool allow_odt,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -848,7 +886,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
@@ -880,7 +918,6 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                  std::vector<std::string> forbidden,
                  georef::StreetNetwork & worker,
                  bool disruption_active,
-                 bool allow_odt,
                  uint32_t max_duration, uint32_t max_transfers,
                  bool show_codes) {
 
@@ -947,7 +984,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
         // compute m trip in one call
         auto paths_by_entrypoint = raptor.
-                compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers,
+                compute_nm_all(departures, arrivals, init_dt, disruption_active, bound, max_transfers,
                                accessibilite_params, forbidden, clockwise);
 
         // compute isochron style result at "m point"
@@ -987,7 +1024,6 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    bool disruption_active,
-                                   bool allow_odt,
                                    int max_duration, uint32_t max_transfers, bool show_codes) {
     pbnavitia::Response response;
 
@@ -1012,7 +1048,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params, forbidden, clockwise, disruption_active, allow_odt);
+                           accessibilite_params, forbidden, clockwise, disruption_active);
 
     add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
                            init_dt, bound, max_duration, show_codes, false);

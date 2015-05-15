@@ -78,6 +78,9 @@ private:
     std::unordered_map<idx_t, navitia::type::JourneyPatternPoint*> journey_pattern_point_map;
     std::unordered_map<idx_t, navitia::type::VehicleJourney*> vehicle_journey_map;
 
+    //we need a temporary structure to store the comments on the stop times
+    std::unordered_map<idx_t, std::vector<std::string>> stop_time_comments;
+
     //map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;
     std::unordered_map<idx_t, navitia::georef::Way*> way_map;
@@ -113,9 +116,13 @@ private:
 
     void fill_stop_times(navitia::type::Data& data, pqxx::work& work);
 
+    void fill_comments(navitia::type::Data& data, pqxx::work& work);
+
 
     void fill_admins(navitia::type::Data& data, pqxx::work& work);
     void fill_admin_stop_areas(navitia::type::Data& data, pqxx::work& work);
+    void fill_admins_postal_codes(navitia::type::Data& data, pqxx::work& work);
+    void fill_object_codes(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_poi_types(navitia::type::Data& data, pqxx::work& work);
     void fill_pois(navitia::type::Data& data, pqxx::work& work);

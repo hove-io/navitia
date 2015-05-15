@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/geometry/geometry.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include "type/datetime.h"
+#include <boost/range/algorithm/max_element.hpp>
 
 
 
@@ -76,6 +77,8 @@ void Data::build_block_id() {
         } else if (vj1->utc_to_local_offset != vj2->utc_to_local_offset) {
             // we don't want to link the splited vjs
             return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
+        } else  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+            return vj1->stop_time_list.size() < vj2->stop_time_list.size();
         } else {
             return vj1->stop_time_list.front()->departure_time <
                     vj2->stop_time_list.front()->departure_time;
@@ -216,6 +219,29 @@ void Data::shift_stop_times() {
     }
 }
 
+static bool compare(const std::pair<ed::types::StopArea*, size_t>& p1,
+                    const std::pair<ed::types::StopArea*, size_t>& p2){
+    return p1.second < p2.second;
+}
+
+void Data::build_route_destination(){
+    std::unordered_map<ed::types::Route*, std::map<ed::types::StopArea*, size_t>> destinations;
+    for (const auto* vj : vehicle_journeys) {
+        if (! vj->tmp_route || vj->stop_time_list.empty()) { continue; }
+        if (vj->tmp_route->destination) { continue; } // we have a destination, don't create one
+        if (! vj->stop_time_list.back()->journey_pattern_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point
+            || ! vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area) {
+            continue;
+        }
+        ++destinations[vj->tmp_route][vj->stop_time_list.back()->journey_pattern_point->stop_point->stop_area];
+    }
+    for (const auto& map_route: destinations) { // we use a const auto& to avoid useless copy of the map
+        if (map_route.second.empty()) { continue; } // we never know
+        const auto max = boost::max_element(map_route.second, compare);
+        map_route.first->destination = max->first;
+    }
+}
 
 void Data::complete(){
     build_journey_patterns();
@@ -230,6 +256,18 @@ void Data::complete(){
 
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
+
+    // set StopPoint from old zonal ODT to is_zonal
+    for (const auto* vj: vehicle_journeys) {
+        using nt::VehicleJourneyType;
+        if (in(vj->vehicle_journey_type,
+               {VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point}))
+        {
+            for (const auto* st: vj->stop_time_list) {
+                st->journey_pattern_point->stop_point->is_zonal = true;
+            }
+        }
+    }
 
     // generates default connections inside each stop area
     auto connections = make_departure_destinations_map(stop_point_connections);
@@ -440,6 +478,14 @@ void Data::clean() {
 static void affect_shape(nt::LineString& to, const nt::MultiLineString& from) {
     if (from.empty()) return;
     if (to.size() < from.front().size()) { to = from.front(); }
+}
+
+
+void Data::add_object_code(const nt::Header* header,const nt::Type_e type, const std::string& value, const std::string& key){
+    ed::types::ObjectCode object_code;
+    object_code.key = key;
+    object_code.value = value;
+    object_codes[{header, type}].push_back(object_code);
 }
 
 // TODO : For now we construct one route per journey pattern

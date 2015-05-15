@@ -41,8 +41,8 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    display_informations_vj, additional_informations_vj, error,\
-    SectionGeoJson, Co2Emission
+    display_informations_vj, error,\
+    SectionGeoJson, Co2Emission, PbEnum
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
@@ -157,6 +157,8 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
+
+
 section = {
     "type": section_type(),
     "id": fields.String(),
@@ -167,7 +169,7 @@ section = {
     "links": SectionLinks(attribute="uris"),
     "display_informations": PbField(display_informations_vj,
                                     attribute='pt_display_informations'),
-    "additional_informations": additional_informations_vj(),
+    "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
     "geojson": SectionGeoJson(),
     "path": NonNullList(NonNullNested({"length": fields.Integer(),
                                        "name": fields.String(),
@@ -470,8 +472,7 @@ def compute_regions(args):
     else:
         #we need the intersection set
         possible_regions = from_regions.intersection(to_regions)
-
-    logging.debug("orig region = {o}, dest region = {d} => set = {p}".
+        logging.getLogger(__name__).debug("orig region = {o}, dest region = {d} => set = {p}".
                  format(o=from_regions, d=to_regions, p=possible_regions))
 
     if not possible_regions:

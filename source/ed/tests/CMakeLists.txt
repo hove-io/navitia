@@ -6,8 +6,12 @@ target_link_libraries(jpp_shape_test ed data types ${BOOST_LIBS})
 ADD_BOOST_TEST(jpp_shape_test)
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
-target_link_libraries(gtfs_parser_test ed connectors data types utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(gtfs_parser_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(gtfs_parser_test)
+
+add_executable(fusio_parser_test fusioparser_test.cpp)
+target_link_libraries(fusio_parser_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(fusio_parser_test)
 
 
 add_executable(associated_calendar_test associated_calendar_test.cpp)
@@ -25,3 +29,8 @@ ADD_BOOST_TEST(conv_coord_test)
 add_executable(shift_stop_times_test shift_stop_times.cpp)
 target_link_libraries(shift_stop_times_test ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(shift_stop_times_test)
+
+
+add_executable(route_main_destination_test route_main_destination_test.cpp)
+target_link_libraries(route_main_destination_test ed types utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(route_main_destination_test)

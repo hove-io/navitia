@@ -181,6 +181,18 @@ class enum_type(fields.Raw):
         return str.lower(enum[getattr(obj, key)].name)
 
 
+class PbEnum(fields.Raw):
+    """
+    output a protobuf enum as lower case string
+    """
+
+    def __init__(self, pb_enum_type, *args, **kwargs):
+        super(PbEnum, self).__init__(*args, **kwargs)
+        self.pb_enum_type = pb_enum_type
+
+    def format(self, value):
+        return str.lower(self.pb_enum_type.Name(value))
+
 class NonNullList(fields.List):
 
     def __init__(self, *args, **kwargs):
@@ -196,36 +208,6 @@ class additional_informations(fields.Raw):
         enum = descriptor.enum_types_by_name["AdditionalInformation"]
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
-
-
-class additional_informations_vj(fields.Raw):
-
-    def output(self, key, obj):
-        addinfo = obj.add_info_vehicle_journey
-        result = []
-        if addinfo.has_date_time_estimated:
-            result.append("has_date_time_estimated")
-
-        if addinfo.stay_in:
-            result.append('stay_in')
-
-        descriptor = addinfo.DESCRIPTOR
-        enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
-        values = enum_t.values_by_name
-        vj_type = addinfo.vehicle_journey_type
-        if not vj_type:
-            return result
-        if vj_type == values['virtual_with_stop_time'].number:
-            result.append("odt_with_stop_time")
-        else:
-            if vj_type == values['virtual_without_stop_time'].number or \
-               vj_type == values['stop_point_to_stop_point'].number or \
-               vj_type == values['address_to_stop_point'].number or \
-               vj_type == values['odt_point_to_point'].number:
-                result.append("odt_with_zone")
-            else:
-                result.append("regular")
-        return result
 
 
 class equipments(fields.Raw):
@@ -309,6 +291,17 @@ class MultiLineString(fields.Raw):
         return response
 
 
+class FirstComment(fields.Raw):
+    """
+    for compatibility issue we want to continue to output a 'comment' field
+    even if now we have a list of comments, so we take the first one
+    """
+    def output(self, key, obj):
+        for c in obj.comments:
+            return c.value
+        return None
+
+
 class SectionGeoJson(fields.Raw):
     """
     format a journey section as geojson
@@ -319,7 +312,7 @@ class SectionGeoJson(fields.Raw):
     def output(self, key, obj):
         coords = []
         if not obj.HasField("type"):
-            logging.warn("trying to output wrongly formated object as geojson, we skip")
+            logging.getLogger(__name__).warn("trying to output wrongly formated object as geojson, we skip")
             return
 
         if obj.type == response_pb2.STREET_NETWORK:
@@ -370,6 +363,11 @@ validity_pattern = {
 
 code = {
     "type": fields.String(),
+    "value": fields.String()
+}
+
+prop = {
+    "name": fields.String(),
     "value": fields.String()
 }
 
@@ -469,6 +467,11 @@ generic_type = {
     "coord": NonNullNested(coord, True)
 }
 
+comment = {
+    'value': fields.String(),
+    'type': fields.String()
+}
+
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
@@ -482,12 +485,16 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["links"] = DisruptionLinks()
-stop_point["comment"] = fields.String()
+stop_point["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+stop_point["comments"] = NonNullList(NonNullNested(comment))
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["links"] = DisruptionLinks()
-stop_area["comment"] = fields.String()
+stop_area["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+stop_area["comments"] = NonNullList(NonNullNested(comment))
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
 stop_area["label"] = fields.String()
@@ -509,11 +516,14 @@ line = deepcopy(generic_type)
 line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
-line["comment"] = fields.String()
+line["comment"] = FirstComment()
+# for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
+line["comments"] = NonNullList(NonNullNested(comment))
 line["codes"] = NonNullList(NonNullNested(code))
 line["geojson"] = MultiLineString(attribute="geojson")
 line["opening_time"] = SplitDateTime(date=None, time="opening_time")
 line["closing_time"] = SplitDateTime(date=None, time="closing_time")
+line["properties"] = NonNullList(NonNullNested(prop))
 
 route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()
@@ -522,6 +532,7 @@ route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = MultiLineString(attribute="geojson")
+route["comments"] = NonNullList(NonNullNested(comment))
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 

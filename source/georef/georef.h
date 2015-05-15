@@ -134,6 +134,7 @@ struct HouseNumber{
 struct Way :public nt::Nameable, nt::Header{
 public:
     std::string way_type;
+    std::string comment;
     // liste des admins
     std::vector<Admin*> admin_list;
 
@@ -145,7 +146,8 @@ public:
     nt::GeographicalCoord nearest_coord(const int, const Graph&) const;
     // returns {house_number, distance}, return {-1, x} if not found
     std::pair<int, double> nearest_number(const nt::GeographicalCoord&) const;
-    nt::GeographicalCoord projected_centroid(const Graph& ) const;
+    nt::GeographicalCoord projected_centroid(const Graph&) const;
+    nt::MultiLineString make_multiline(const Graph&) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
@@ -162,8 +164,8 @@ public:
 #endif
 
 private:
-      nt::GeographicalCoord get_geographical_coord(const std::vector<HouseNumber>&, const int) const;
-      nt::GeographicalCoord extrapol_geographical_coord(int) const;
+    nt::GeographicalCoord get_geographical_coord(const int, const Graph&) const;
+    nt::GeographicalCoord extrapol_geographical_coord(int, const Graph&) const;
 };
 
 

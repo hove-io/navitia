@@ -430,11 +430,13 @@ void Data::aggregate_odt(){
         jp->build_odt_properties();
     }
 
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
+    //
     // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
     // for some ODT kind, we have to fill the Admin structure with the ODT stop points
     std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
     for (const auto jp: pt_data->journey_patterns) {
-        if (! jp->odt_properties.is_zonal_odt()) {
+        if (! jp->odt_properties.is_zonal()) {
             continue;
         }
         if (jp->journey_pattern_point_list.size() != 2) {
@@ -495,45 +497,12 @@ void Data::compute_labels() {
     //for admin we want the post code
     for (auto admin: geo_ref->admins) {
         std::string post_code;
-
-        if (admin->post_code.find(";") == std::string::npos) {
-            post_code = admin->post_code;
-        } else {
-            // if there is more than one post code, the label is the range of the postcode
-            // ex: Tours (37000;37100;37200) -> Tours (37000-37200)
-            // if no postcode, we'll add nothing
-            std::vector<std::string> str_vec;
-            boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
-            int min_value = std::numeric_limits<int>::max();
-            int max_value = std::numeric_limits<int>::min();
-            try {
-            for (const std::string& str_post_code : str_vec) {
-                int int_post_code;
-
-                    int_post_code = boost::lexical_cast<int>(str_post_code);
-                    min_value = std::min(min_value, int_post_code);
-                    max_value = std::max(max_value, int_post_code);
-                }
-            }
-            catch (boost::bad_lexical_cast) {
-                //if one fail, we display all postcode
-                min_value = std::numeric_limits<int>::max();
-            }
-            if (min_value != std::numeric_limits<int>::max()) {
-                post_code = boost::lexical_cast<std::string>(min_value)
-                        + "-" + boost::lexical_cast<std::string>(max_value);
-            }
-            else {
-                post_code = admin->post_code;
-            }
-        }
-
+        post_code = admin->get_range_postal_codes();
         if (post_code.empty()) {
             admin->label = admin->name;
         } else {
             admin->label = admin->name + " (" + post_code + ")";
         }
-
     }
 }
 

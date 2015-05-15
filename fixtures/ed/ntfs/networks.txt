@@ -1,0 +1,2 @@
+network_id,network_name,network_url,network_timezone,network_lang,network_phone,network_sort
+ligneflexible,"ligne flixible",http://ligneflexible.com,Europe/Paris,fr,,

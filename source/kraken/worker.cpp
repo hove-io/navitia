@@ -75,10 +75,10 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
 
 static nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
     switch(pb_odt_level){
-        case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt;
+        case pbnavitia::OdtLevel::with_stops: return nt::OdtLevel_e::with_stops;
         case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal;
         case pbnavitia::OdtLevel::all: return nt::OdtLevel_e::all;
-        default: return nt::OdtLevel_e::none;
+        default: return nt::OdtLevel_e::scheduled;
     }
 }
 
@@ -277,7 +277,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     boost::optional<const std::string>(),
                     forbidden_uri,
                     from_datetime,
-                    request.duration(), max_date_times, request.interface_version(), request.depth(),
+                    request.duration(), max_date_times, request.depth(),
                     request.count(), request.start_page(), *data, false, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
@@ -554,19 +554,19 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
             return navitia::routing::make_isochrone(*planner, origins[0], request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
         case pbnavitia::NMPLANNER:
             return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
         default:
             return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
     }
 }

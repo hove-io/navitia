@@ -97,7 +97,7 @@ int main(int argc, char * argv[])
     }
 
     pt::ptime start;
-    int read, complete, clean, sort, save, fare(0);
+    int read, complete, clean, sort, save, fare(0), main_destination(0);
 
     ed::Data data;
 
@@ -142,6 +142,10 @@ int main(int argc, char * argv[])
     data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    start = pt::microsec_clock::local_time();
+    data.build_route_destination();
+    main_destination = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
     data.normalize_uri();
 
     if(vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
@@ -180,6 +184,7 @@ int main(int argc, char * argv[])
     if (vm.count("fare")) {
         LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
     }
+    LOG4CPLUS_INFO(logger, "\t Destination of routes " << main_destination << "ms");
     LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;

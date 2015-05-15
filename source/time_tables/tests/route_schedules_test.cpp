@@ -41,6 +41,29 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
+const std::string& get_vj(const pbnavitia::RouteSchedule& r, int i) {
+    return r.table().headers(i).pt_display_informations().uris().vehicle_journey();
+}
+
+static void print_route_schedule(const pbnavitia::RouteSchedule& r) {
+    std::cout << "\t|";
+    for (const auto& row: r.table().headers()) {
+        std::cout << row.pt_display_informations().uris().vehicle_journey() << "\t|";
+    }
+    std::cout << std::endl;
+    for (const auto& row: r.table().rows()) {
+        std::cout << row.stop_point().uri() << "\t|";
+        for (const auto& elt: row.date_times()) {
+            if (elt.time() > 48 * 3600) {
+                std::cout << "-" << "\t|";
+            } else {
+                std::cout << elt.time() / 3600 << ":" << (elt.time() % 3600) / 60. << "\t|";
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
 //for more concice test
 static pt::ptime d(std::string str) {
     return boost::posix_time::from_iso_string(str);
@@ -55,12 +78,12 @@ static pt::ptime d(std::string str) {
 
         But the thermometer algorithm is buggy, is doesn't give the shorest common superstring..
         So, actually we have this schedule
-            VJ1
-        C
-        D
-        A   8h
-        B   8h10
-        D
+            VJ2    VJ1    VJ3    VJ4
+        C          8h05
+        D          9h30
+        A   8h00          8h05
+        B   8h10          8h20   8h25
+        D                        9h35
 
 With VJ1, and VJ2, we ensure that we are no more comparing the two first jpp of
 each VJ, but we have a more human order.
@@ -95,14 +118,12 @@ struct route_schedule_fixture {
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 100,
-                                                                   1, 3, 10, 0, *(b.data), false, false);
+                                                                   3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
-    auto get_vj = [](pbnavitia::RouteSchedule r, int i) {
-        return r.table().headers(i).pt_display_informations().uris().vehicle_journey();
-    };
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 0), "1");
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 1), "2");
+    print_route_schedule(route_schedule);
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 0), "2");
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 1), "1");
     BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 2), "3");
     BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 3), "4");
 }
@@ -110,9 +131,10 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 0,
-                                                                   1, 3, 10, 0, *(b.data), false, false);
+                                                                   3, 10, 0, *(b.data), false, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
     BOOST_REQUIRE_EQUAL(route_schedule.table().headers().size(), 0);
 }
 
@@ -187,15 +209,12 @@ struct route_schedule_calendar_fixture {
         b.data->meta->production_date = boost::gregorian::date_period(begin, end);
     }
 
-    std::string get_vj(pbnavitia::RouteSchedule r, int i) {
-        return r.table().headers(i).pt_display_informations().uris().vehicle_journey();
-    }
-
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
         pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=B", calendar, {}, d("20120615T070000"), 86400, 100,
-                                                                       1, 3, 10, 0, *(b.data), false, false);
+                                                                       3, 10, 0, *(b.data), false, false);
         BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+        print_route_schedule(route_schedule);
         BOOST_REQUIRE_EQUAL(route_schedule.table().headers_size(), expected_vjs.size());
         for(int i = 0 ; i < route_schedule.table().headers_size() ; i++) {
             BOOST_REQUIRE_EQUAL(get_vj(route_schedule, i), expected_vjs[i]);
@@ -212,4 +231,146 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
     check_calendar_results(c3->uri, {vj6->uri});
     // No results for calendar C4
     check_calendar_results(c4->uri, {});
+}
+
+// We want:
+//     C A B
+// st1 2   1
+// st2     3
+// st3     5
+// st4 3 5 6
+// st5 4 6 7
+// st6 5 7 8
+BOOST_AUTO_TEST_CASE(complicated_order_1) {
+    ed::builder b = {"20120614"};
+    b.vj("L", "1111111", "", true, "A", "A", "A")
+        ("st4", "5:00"_t)
+        ("st5", "6:00"_t)
+        ("st6", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "B", "B")
+        ("st1", "1:00"_t)
+        ("st2", "3:00"_t)
+        ("st3", "5:00"_t)
+        ("st4", "6:00"_t)
+        ("st5", "7:00"_t)
+        ("st6", "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "C", "C")
+        ("st1", "2:00"_t)
+        ("st4", "3:00"_t)
+        ("st5", "4:00"_t)
+        ("st6", "5:00"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule(
+        "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+        3, 10, 0, *b.data, false, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(1).time(), "5:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(2).time(), "6:00"_t);
+}
+
+// We want:
+//      C  A B
+// st1     1 2
+// st2     2 3
+// st3     3 4
+// st4     5
+// st5     7
+// st6  8  9 7
+// st7  9 10
+// st8 10 11
+BOOST_AUTO_TEST_CASE(complicated_order_2) {
+    ed::builder b = {"20120614"};
+    b.vj("L", "1111111", "", true, "A", "A", "A")
+        ("st1", "1:00"_t)
+        ("st2", "2:00"_t)
+        ("st3", "3:00"_t)
+        ("st4", "5:00"_t)
+        ("st5", "7:00"_t)
+        ("st6", "9:00"_t)
+        ("st7", "10:00"_t)
+        ("st8", "11:00"_t);
+    b.vj("L", "1111111", "", true, "B", "B", "B")
+        ("st1", "2:00"_t)
+        ("st2", "3:00"_t)
+        ("st3", "4:00"_t)
+        ("st6", "7:00"_t);
+    b.vj("L", "1111111", "", true, "C", "C", "C")
+        ("st6", "8:00"_t)
+        ("st7", "9:00"_t)
+        ("st8", "10:00"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule(
+        "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+        3, 10, 0, *b.data, false, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(0).time(), "8:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(1).time(), "9:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(2).time(), "7:00"_t);
+}
+
+// We want:
+//     A B C D E
+// st1   1 2 3 4
+// st2   2 3 4 5
+// st3 6 7
+// st4 7 8
+BOOST_AUTO_TEST_CASE(complicated_order_3) {
+    ed::builder b = {"20120614"};
+    b.vj("L", "1111111", "", true, "A", "A", "A")
+        ("st3", "6:00"_t)
+        ("st4", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "B", "B")
+        ("st1", "1:00"_t)
+        ("st2", "2:00"_t)
+        ("st3", "7:00"_t)
+        ("st4", "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "C", "C")
+        ("st1", "2:00"_t)
+        ("st2", "3:00"_t);
+    b.vj("L", "1111111", "", true, "D", "D", "D")
+        ("st1", "3:00"_t)
+        ("st2", "4:00"_t);
+    b.vj("L", "1111111", "", true, "E", "E", "E")
+        ("st1", "4:00"_t)
+        ("st2", "5:00"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule(
+        "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+        3, 10, 0, *b.data, false, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "1:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "2:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "D");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "E");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
 }

@@ -82,9 +82,6 @@ SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
 add_library(data ${DATA_SRC})
 target_link_libraries(data types fill_disruption_from_database fare routing autocomplete ${BOOST_LIBS})
 
-add_executable(main_destination_test tests/main_destination_test.cpp)
-target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
-ADD_BOOST_TEST(main_destination_test)
 
 add_executable(fill_pb_placemark_test tests/fill_pb_placemark_test.cpp)
 target_link_libraries(fill_pb_placemark_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib thermometer protobuf)
@@ -105,6 +102,9 @@ target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
 add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
 
+add_executable(multi_polygon_map_test tests/multi_polygon_map_test.cpp)
+target_link_libraries(multi_polygon_map_test ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(multi_polygon_map_test)
 
 
 add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)
@@ -116,3 +116,7 @@ ADD_BOOST_TEST(fill_pb_object_tests)
 add_executable(aggregation_odt_test tests/aggregation_odt_test.cpp)
 target_link_libraries(aggregation_odt_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(aggregation_odt_test)
+
+add_executable(comments_test tests/comments_test.cpp)
+target_link_libraries(comments_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(comments_test)

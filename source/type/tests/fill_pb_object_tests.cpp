@@ -50,22 +50,23 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
-    const Route* r = b.data->pt_data->routes_map["A:0"];
+    Route* r = b.data->pt_data->routes_map["A:0"];
+    r->destination = b.sas.find("stop1")->second;
     boost::gregorian::date d1(2014,06,14);
     boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
     navitia::fill_pb_object(r, *b.data,
                             pt_display_info, 0,
-                            {}, period, nullptr);
+                            {}, period);
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "stop1");
     pt_display_info->Clear();
 
-    auto sp = new StopPoint();
-    sp->name = "bob";
+    r->destination = new nt::StopArea();
+    r->destination->name = "bob";
     navitia::fill_pb_object(r, *b.data,
                             pt_display_info, 0,
-                            {}, period, sp);
+                            {}, period);
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "bob");
 }
 
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     boost::posix_time::time_period period(t1, t2);
     navitia::fill_pb_object(route, *b.data,
                             pt_display_info, 0,
-                            {}, period, nullptr);
+                            {}, period);
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "");
     pt_display_info->Clear();
 

@@ -521,6 +521,9 @@ def is_valid_stop_area(stop_area, depth_check=1):
     is_valid_label(get_not_null(stop_area, "label"))
     is_valid_coord(coord)
 
+    for c in stop_area.get('comments', []):
+        is_valid_comment(c)
+
 
 def is_valid_stop_point(stop_point, depth_check=1):
     """
@@ -531,6 +534,9 @@ def is_valid_stop_point(stop_point, depth_check=1):
     is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")
     is_valid_coord(coord)
+
+    for c in stop_point.get('comments', []):
+        is_valid_comment(c)
 
     if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
@@ -545,13 +551,16 @@ def is_valid_route(route, depth_check=1):
     direction = get_not_null(route, "direction")
     is_valid_place(direction, depth_check - 1)
     #the direction of the route must always be a stop point
-    assert get_not_null(direction, "embedded_type") == "stop_point"
-    is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
+    assert get_not_null(direction, "embedded_type") == "stop_area"
+    is_valid_stop_area(get_not_null(direction, "stop_area"), depth_check - 1)
 
     if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
     else:
         assert 'line' not in route
+
+    for c in route.get('comments', []):
+        is_valid_comment(c)
 
     # test if geojson is valid
     g = route.get('geojson')
@@ -561,6 +570,9 @@ def is_valid_route(route, depth_check=1):
 def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
+
+    for c in line.get('comments', []):
+        is_valid_comment(c)
 
     if depth_check > 0:
         is_valid_network(get_not_null(line, 'network'), depth_check - 1)
@@ -575,6 +587,12 @@ def is_valid_line(line, depth_check=1):
     # test if geojson is valid
     g = line.get('geojson')
     g is None or shape(g) #TODO check length
+
+
+def is_valid_codes(codes):
+    for code in codes:
+        get_not_null(code, "type")
+        get_not_null(code, "value")
 
 
 def is_valid_places(places, depth_check=1):
@@ -644,6 +662,9 @@ def is_valid_vehicle_journey(vj, depth_check=1):
     get_not_null(vj, "id")
     get_not_null(vj, "name")
 
+    for c in vj.get('comments', []):
+        is_valid_comment(c)
+
     if depth_check > 0:
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
         is_valid_validity_pattern(get_not_null(vj, 'validity_pattern'), depth_check=depth_check-1)
@@ -679,6 +700,11 @@ def is_valid_journey_pattern_point(jpp, depth_check=1):
         is_valid_stop_point(get_not_null(jpp, 'stop_point'), depth_check=depth_check - 1)
     else:
         assert 'stop_point' not in jpp
+
+
+def is_valid_comment(comment):
+    get_not_null(comment, 'type')
+    get_not_null(comment, 'value')
 
 
 def is_valid_region_status(status):

@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #pragma once
+#include "multi_polygon_map.h"
 #include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
@@ -37,9 +38,11 @@ www.navitia.io
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
+#include "comment_container.h"
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
+#include "utils/serialization_tuple.h"
 
 namespace navitia { 
 template <>
@@ -99,24 +102,11 @@ struct PT_Data : boost::noncopyable{
     //Message
     new_disruption::DisruptionHolder disruption_holder;
 
-    // comments for stop times, indexed by (vj->uri, jpp->order)
-    std::map<std::pair<std::string, uint16_t>, std::string> stop_time_comment;
+    // rtree for zonal stop_points
+    MultiPolygonMap<const StopPoint*> stop_points_by_area;
 
-    const std::string& get_comment(const StopTime& st) const {
-        const auto* jpp = st.journey_pattern_point;
-        return find_or_default(
-            std::pair<const std::string&, uint16_t>(st.vehicle_journey->uri, jpp->order),
-            stop_time_comment);
-    }
-    void set_comment(const std::string& comment, const StopTime& st) {
-        const auto* jpp = st.journey_pattern_point;
-        const auto key = std::make_pair(st.vehicle_journey->uri, jpp->order);
-        if (comment.empty()) {
-            stop_time_comment.erase(key);
-        } else {
-            stop_time_comment[key] = comment;
-        }
-    }
+    // Comments container
+    Comments comments;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
@@ -128,7 +118,8 @@ struct PT_Data : boost::noncopyable{
                 & stop_point_connections
                 & disruption_holder
                 & meta_vj
-                & stop_time_comment;
+                & stop_points_by_area
+                & comments;
     }
 
     /** Initialise tous les indexes

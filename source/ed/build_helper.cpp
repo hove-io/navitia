@@ -299,6 +299,7 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     sp->coord.set_lat(y);
 
     sp->stop_area = this->sa;
+    this->sa->stop_point_list.push_back(sp);
     b.sps[sp_name] = sp;
     return *this;
 }
@@ -425,7 +426,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     this->data->pt_data->companies.push_back(company);
 
     const std::string default_network_name = "base_network";
-    if (data->pt_data->networks_map.find(default_network_name) == data->pt_data->networks_map.end()) {
+    if (this->nts.find(default_network_name) == this->nts.end()) {
         navitia::type::Network *network = new navitia::type::Network();
         network->idx = this->data->pt_data->networks.size();
         network->name = default_network_name;

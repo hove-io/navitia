@@ -70,7 +70,6 @@ message PtDisplayInfo {
     optional string physical_mode = 7;
     optional string description = 8;
     optional Uris uris = 9;
-    optional VehicleJourneyType vehicle_journey_type = 10;
     optional hasEquipments has_equipments = 11;
     optional string name = 12;
     repeated Message messages = 13;
@@ -115,6 +114,15 @@ message Co2Emission {
     optional string unit = 2;	
 }
 
+enum SectionAdditionalInformationType {
+    ODT_WITH_ZONE = 1;
+    ODT_WITH_STOP_POINT = 2;
+    ODT_WITH_STOP_TIME = 3;
+    HAS_DATETIME_ESTIMATED = 4;
+    REGULAR = 5;
+    STAY_IN = 6;
+}
+
 message Section {
     optional SectionType type = 1;
     optional PtObject origin = 2;
@@ -138,10 +146,10 @@ message Section {
 
     optional uint64 begin_date_time = 16;
     optional uint64 end_date_time = 17;
-    optional addInfoVehicleJourney add_info_vehicle_journey = 18;
     optional int32 length = 19;
     optional string id = 20;
     optional Co2Emission co2_emission = 21;
+    repeated SectionAdditionalInformationType additional_informations = 22;
 }
 
 message Journey {
@@ -224,15 +232,9 @@ message RouteScheduleRow {
     repeated string stop_times = 3;
 }
 
-message addInfoVehicleJourney{
-    optional VehicleJourneyType vehicle_journey_type = 1;
-    optional bool has_date_time_estimated = 2;
-    optional bool stay_in = 3 [default=false];
-}
-
 message Header{
     required PtDisplayInfo pt_display_informations = 1;
-    required addInfoVehicleJourney add_info_vehicle_journey = 2;
+    repeated SectionAdditionalInformationType additional_informations = 3;
 }
 
 message Table {

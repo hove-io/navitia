@@ -31,9 +31,6 @@ www.navitia.io
 #pragma once
 #include "ed/data.h"
 #include <boost/unordered_map.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
 #include <queue>
 #include "utils/csv.h"
 #include "utils/logger.h"
@@ -97,15 +94,19 @@ struct GtfsData {
     ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
 
+    std::unordered_map<std::string, std::vector<ed::types::StopTime*>> stop_time_map; // there may be several stoptimes for one id because of dst
+
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
+
+    //for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
+    std::unordered_map<std::string, std::string> comments_id_map;
 
     // timezone management
     TzHandler tz;
 
     // used only by fusio2ed
-    std::unordered_map<std::string, std::string> comment_map;
     std::unordered_map<std::string, std::string> odt_conditions_map;
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
@@ -178,7 +179,7 @@ public:
     FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false) :
         csv(ss, ',' , true), fail_if_no_file(fail), handler(gdata, csv)  {}
 
-    void fill(Data& data);
+    bool fill(Data& data);
 };
 
 /**
@@ -231,7 +232,8 @@ struct StopsGtfsHandler : public GenericHandler {
     parent_c,
     wheelchair_c,
     platform_c,
-    timezone_c;
+    timezone_c,
+    ext_code_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;
@@ -371,7 +373,7 @@ protected:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
     template <typename Handler>
-    void parse(Data&, std::string file_name, bool fail_if_no_file = false);
+    bool parse(Data&, std::string file_name, bool fail_if_no_file = false);
     template <typename Handler>
     void parse(Data&); //some parser do not need a file since they just add default data
 
@@ -396,9 +398,9 @@ public:
 };
 
 template <typename Handler>
-inline void GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
+inline bool GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
     FileParser<Handler> parser (this->gtfs_data, path + "/" + file_name, fail_if_no_file);
-    parser.fill(data);
+    return parser.fill(data);
 }
 template <typename Handler>
 inline void GenericGtfsParser::parse(Data& data) {
@@ -440,7 +442,7 @@ struct InvalidHeaders {
 };
 
 template <typename Handler>
-inline void FileParser<Handler>::fill(Data& data) {
+inline bool FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (! csv.is_open() && ! csv.filename.empty()) {
         if ( fail_if_no_file ) {
@@ -448,7 +450,7 @@ inline void FileParser<Handler>::fill(Data& data) {
             throw FileNotFoundException(csv.filename);
         }
         LOG4CPLUS_WARN(logger, "Impossible to read " << csv.filename);
-        return;
+        return false;
     }
 
     typename Handler::csv_row headers = handler.required_headers();
@@ -468,6 +470,8 @@ inline void FileParser<Handler>::fill(Data& data) {
         }
     }
     handler.finish(data);
+
+    return true;
 }
 
 template<typename T> bool

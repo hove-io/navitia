@@ -36,8 +36,8 @@ from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
-    display_informations_route, additional_informations_vj, UrisToLinks, error, \
-    enum_type, SplitDateTime, MultiLineString
+    display_informations_route, UrisToLinks, error, \
+    enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum
 from ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -49,6 +49,7 @@ from jormungandr.utils import ResourceUtc
 from make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
+from navitiacommon import response_pb2
 
 
 class RouteSchedulesLinkField(fields.Raw):
@@ -164,7 +165,7 @@ row = {
 header = {
     "display_informations": PbField(display_informations_vj,
                                     attribute='pt_display_informations'),
-    "additional_informations": additional_informations_vj(),
+    "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
     "links": UrisToLinks()
 }
 table_field = {

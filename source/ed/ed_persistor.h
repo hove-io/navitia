@@ -65,6 +65,7 @@ struct EdPersistor{
 
     /// Données Georef
     void insert_admins(const ed::Georef& data);
+    void insert_postal_codes(const ed::Georef& data);
     void insert_ways(const ed::Georef& data);
     void insert_nodes(const ed::Georef& data);
     void insert_house_numbers(const ed::Georef& data);
@@ -98,6 +99,7 @@ private:
     void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs);
+    void insert_object_codes(const std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>>& object_codes);
 
     void insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points);
 
@@ -107,6 +109,12 @@ private:
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
 
     void insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas);
+
+    void insert_object_properties(const std::vector<types::ObjectProperty>& object_properties);
+
+    void insert_comments(const std::map<std::string, std::string>& comments,
+                         const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id,
+                         const std::map<const ed::types::StopTime*, std::vector<std::string>>& st_comments);
 
     /// Inserer les données fiche horaire par période
     void insert_week_patterns(const std::vector<types::Calendar*>& calendars);

@@ -917,13 +917,6 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
 }
 
-namespace std {
-template<typename T, typename U>
-static std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p) {
-    return os << "(" << p.first << ", " << p.second << ")";
-}
-}
-
 BOOST_AUTO_TEST_CASE(geolocalization) {
     //     (0,100)    rue AB   (100,100)
     //      A +--------------------+ B
@@ -960,7 +953,7 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     admin->name = "Condom";
     admin->insee = "32107";
     admin->level = 8;
-    admin->post_code = "32100";
+    admin->postal_codes.push_back("32100");
 
     navitia::georef::Way* ab = new navitia::georef::Way();
     ab->name = "rue AB";
@@ -1001,4 +994,19 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     const Way *const_ab = ab, *const_ac = ac;
     BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(D), std::make_pair(2, const_ab));
     BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(E), std::make_pair(3, const_ac));
+}
+
+BOOST_AUTO_TEST_CASE(range_postal_codes) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {"44000", "44100", "44200", "44300"};
+    BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "44000-44300");
+
+}
+
+
+BOOST_AUTO_TEST_CASE(list_postal_codes) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {"44000", "44100", "44200", "44300"};
+    BOOST_CHECK_EQUAL(admin->postal_codes_to_string(), "44000;44100;44200;44300");
+
 }

@@ -95,7 +95,11 @@ public:
     // the shapes are here, and then copied where needed
     std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
 
+    std::unordered_map<std::string, nt::MultiPolygon> areas;
+
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
+
+    std::vector<ed::types::ObjectProperty> object_properties;
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
@@ -105,8 +109,18 @@ public:
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
 
+    std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>> object_codes;
+
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
+
+    // list of comment ids by {objec_type, object}
+    using comment_key = std::pair<std::string, const nt::Header*>;
+    std::map<comment_key, std::vector<std::string>> comments;
+    std::map<std::string, std::string> comment_by_id;
+
+        //we don't want stoptime to derive from Header so we use a custom container
+    std::map<const ed::types::StopTime*, std::vector<std::string>> stoptime_comments;
 
     /**
          * trie les différentes donnée et affecte l'idx
@@ -114,24 +128,7 @@ public:
          */
     void sort();
 
-    // Sort qui fait erreur valgrind
-    struct sort_vehicle_journey_list {
-        const navitia::type::PT_Data & data;
-        sort_vehicle_journey_list(const navitia::type::PT_Data & data) : data(data){}
-        bool operator ()(const nt::VehicleJourney* vj1, const nt::VehicleJourney* vj2) const {
-            if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                unsigned int dt1 = vj1->stop_time_list.front().departure_time;
-                unsigned int dt2 = vj2->stop_time_list.front().departure_time;
-                unsigned int at1 = vj1->stop_time_list.back().arrival_time;
-                unsigned int at2 = vj2->stop_time_list.back().arrival_time;
-                if(dt1 != dt2)
-                    return dt1 < dt2;
-                else
-                    return at1 < at2;
-            } else
-                return false;
-        }
-    };
+    void add_object_code(const nt::Header* header, const nt::Type_e type, const std::string& value, const std::string& key="external_code");
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
@@ -155,11 +152,12 @@ public:
     void build_block_id();
 
     void normalize_uri();
-
     /**
      * Ajoute des objets
      */
     void complete();
+
+    void build_route_destination();
 
 
     /**

@@ -33,6 +33,8 @@ www.navitia.io
 #include "type/meta_data.h"
 #include <boost/foreach.hpp>
 #include <boost/geometry.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ed{
 
@@ -66,10 +68,16 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
 
+    //the comments are loaded before the stop time to reduce the memory foot print
+    this->fill_comments(data, work);
+
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
+
+    this->fill_admins_postal_codes(data, work);
     this->fill_admin_stop_areas(data, work);
+    this->fill_object_codes(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
@@ -113,7 +121,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
 
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
+    std::string request = "SELECT id, name, uri, comment, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
         "FROM georef.admin";
 
@@ -125,7 +133,6 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
         const_it["name"].to(admin->name);
         const_it["insee"].to(admin->insee);
         const_it["level"].to(admin->level);
-        const_it["post_code"].to(admin->post_code);
         admin->coord.set_lon(const_it["lon"].as<double>());
         admin->coord.set_lat(const_it["lat"].as<double>());
 
@@ -139,6 +146,24 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
 
 }
 
+void EdReader::fill_admins_postal_codes(navitia::type::Data& , pqxx::work& work){
+    std::string request = "select admin_id, postal_code from georef.postal_codes";
+    size_t nb_unknown_admin(0);
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        auto it_admin = admin_map.find(const_it["admin_id"].as<idx_t>());
+        if (it_admin == admin_map.end()) {
+            LOG4CPLUS_WARN(log, "impossible to find admin " << const_it["admin_id"]
+                    << " for postal code " << const_it["postal_code"]);
+            nb_unknown_admin++;
+            continue;
+        }
+        it_admin->second->postal_codes.push_back(const_it["postal_code"].as<std::string>());
+    }
+    if (nb_unknown_admin) {
+        LOG4CPLUS_WARN(log, nb_unknown_admin << " admin not found for postal codes");
+    }
+}
 
 void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
     std::string request = "SELECT admin_id, stop_area_id from navitia.admin_stop_area";
@@ -180,6 +205,60 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 
 }
 
+void EdReader::fill_object_codes(navitia::type::Data&, pqxx::work& work){
+    std::string request = "select object_type_id, object_id, key, value from navitia.object_code";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::Type_e object_type_e = static_cast<nt::Type_e>(const_it["object_type_id"].as<int>());
+        switch(object_type_e) {
+        case nt::Type_e::Line:{
+            auto it_object = this->line_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->line_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::Route:{
+            auto it_object = this->route_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->route_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::Network:{
+            auto it_object = this->network_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->network_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::VehicleJourney:{
+            auto it_object = this->vehicle_journey_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->vehicle_journey_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::StopArea:{
+            auto it_object = this->stop_area_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->stop_area_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        case nt::Type_e::StopPoint:{
+            auto it_object = this->stop_point_map.find(const_it["object_id"].as<idx_t>());
+            if (it_object != this->stop_point_map.end()){
+                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+            }
+        }
+        break;
+        default: break;
+        }
+    }
+}
+
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT beginning_date, end_date, timezone, st_astext(shape) as bounding_shape FROM navitia.parameters";
     pqxx::result result = work.exec(request);
@@ -209,17 +288,15 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, sort, website, external_code FROM navitia.network";
+    std::string request = "SELECT id, name, uri, sort, website FROM navitia.network";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Network* network = new nt::Network();
-        const_it["comment"].to(network->comment);
         const_it["uri"].to(network->uri);
         const_it["name"].to(network->name);
         const_it["sort"].to(network->sort);
         const_it["website"].to(network->website);
-        const_it["external_code"].to(network->codes["external_code"]);
         network->idx = data.pt_data->networks.size();
 
 
@@ -279,14 +356,13 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, website FROM navitia.company";
+    std::string request = "SELECT id, name, uri, website FROM navitia.company";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Company* company = new nt::Company();
         const_it["uri"].to(company->uri);
         const_it["name"].to(company->name);
-        const_it["comment"].to(company->comment);
         const_it["website"].to(company->website);
 
         company->idx = data.pt_data->companies.size();
@@ -298,7 +374,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
-     "sa.comment as comment, sa.visible as visible, sa.external_code as external_code, sa.timezone as timezone, "
+     "sa.visible as visible, sa.timezone as timezone, "
      "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
      "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
      "pr.elevator as elevator, pr.escalator as escalator,"
@@ -315,8 +391,6 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
         nt::StopArea* sa = new nt::StopArea();
         const_it["uri"].to(sa->uri);
         const_it["name"].to(sa->name);
-        const_it["comment"].to(sa->comment);
-        const_it["external_code"].to(sa->codes["external_code"]);
         const_it["timezone"].to(sa->timezone);
         sa->coord.set_lon(const_it["lon"].as<double>());
         sa->coord.set_lat(const_it["lat"].as<double>());
@@ -361,10 +435,11 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri, "
-       "sp.comment as comment, sp.external_code as external_code,"
        "ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,"
        "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
        "sp.platform_code as platform_code,"
+       "sp.is_zonal as is_zonal,"
+       "ST_AsText(sp.area) as area,"
        "pr.wheelchair_boarding as wheelchair_boarding,"
        "pr.sheltered as sheltered, pr.elevator as elevator,"
        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
@@ -381,10 +456,9 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         nt::StopPoint* sp = new nt::StopPoint();
         const_it["uri"].to(sp->uri);
         const_it["name"].to(sp->name);
-        const_it["comment"].to(sp->comment);
         const_it["fare_zone"].to(sp->fare_zone);
-        const_it["external_code"].to(sp->codes["external_code"]);
         const_it["platform_code"].to(sp->platform_code);
+        const_it["is_zonal"].to(sp->is_zonal);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()){
@@ -419,6 +493,11 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         }
         sp->stop_area = stop_area_map[const_it["stop_area_id"].as<idx_t>()];
         sp->stop_area->stop_point_list.push_back(sp);
+        if (!const_it["area"].is_null() && sp->is_zonal) {
+            nt::MultiPolygon area;
+            boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
+            data.pt_data->stop_points_by_area.insert(area, sp);
+        }
 
         data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
@@ -426,8 +505,8 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, code, color, "
-        "network_id, commercial_mode_id, sort, external_code, ST_AsText(shape) AS shape, "
+    std::string request = "SELECT id, name, uri, code, color, "
+        "network_id, commercial_mode_id, sort, ST_AsText(shape) AS shape, "
         "opening_time, closing_time "
         "FROM navitia.line";
 
@@ -436,11 +515,9 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         nt::Line* line = new nt::Line();
         const_it["uri"].to(line->uri);
         const_it["name"].to(line->name);
-        const_it["comment"].to(line->comment);
         const_it["code"].to(line->code);
         const_it["color"].to(line->color);
         const_it["sort"].to(line->sort);
-        const_it["external_code"].to(line->codes["external_code"]);
         if (!const_it["opening_time"].is_null()) {
             line->opening_time = boost::posix_time::duration_from_string(const_it["opening_time"].as<std::string>());
         }
@@ -460,10 +537,21 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
+
+    // Add Object properties on lines
+    std::string properties_request = "SELECT object_id, property_name, property_value FROM navitia.object_properties WHERE object_type = 'line'";
+
+    pqxx::result property_result = work.exec(properties_request);
+    for(auto const_it = property_result.begin(); const_it != property_result.end(); ++const_it){
+        auto line_it = this->line_map.find(const_it["object_id"].as<idx_t>());
+        if(line_it != this->line_map.end()) {
+            line_it->second->properties[const_it["property_name"].as<std::string>()] = const_it["property_value"].as<std::string>(); 
+        }
+    }
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, line_id, external_code, "
+    std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
         "ST_AsText(shape) AS shape FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -471,13 +559,15 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
         nt::Route* route = new nt::Route();
         const_it["uri"].to(route->uri);
         const_it["name"].to(route->name);
-        const_it["comment"].to(route->comment);
-        const_it["external_code"].to(route->codes["external_code"]);
         boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
                                   route->shape);
 
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);
+
+        if (!const_it["destination_stop_area_id"].is_null()) {
+            route->destination = stop_area_map[const_it["destination_stop_area_id"].as<idx_t>()];
+        }
 
         data.pt_data->routes.push_back(route);
         this->route_map[const_it["id"].as<idx_t>()] = route;
@@ -485,7 +575,7 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, route_id, "
+    std::string request = "SELECT id, name, uri, route_id, "
         "is_frequence, physical_mode_id FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
@@ -493,7 +583,6 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
         nt::JourneyPattern* journey_pattern = new nt::JourneyPattern();
         const_it["uri"].to(journey_pattern->uri);
         const_it["name"].to(journey_pattern->name);
-        const_it["comment"].to(journey_pattern->comment);
         const_it["is_frequence"].to(journey_pattern->is_frequence);
 
         journey_pattern->route = route_map[const_it["route_id"].as<idx_t>()];
@@ -513,7 +602,7 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, \"order\","
+    std::string request = "SELECT id, name, uri, \"order\","
         "stop_point_id, journey_pattern_id, ST_AsText(shape_from_prev) as shape "
         "FROM navitia.journey_pattern_point";
 
@@ -636,13 +725,12 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
-        "vj.comment as comment, vj.company_id as company_id, "
+        "vj.company_id as company_id, "
         "vj.journey_pattern_id as journey_pattern_id,"
         "vj.validity_pattern_id as validity_pattern_id,"
         "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,"
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
-        "vj.external_code as external_code,"
         "vj.next_vehicle_journey_id as next_vj_id,"
         "vj.previous_vehicle_journey_id as prev_vj_id,"
         "vj.start_time as start_time,"
@@ -681,10 +769,9 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         }
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);
-        const_it["comment"].to(vj->comment);
         const_it["odt_message"].to(vj->odt_message);
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
-        const_it["external_code"].to(vj->codes["external_code"]);
+        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->journey_pattern = journey_pattern;
 
@@ -862,12 +949,14 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
-    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
-        "local_traffic_zone, odt, pick_up_allowed, " // 4, 5, 6, 7
-        "drop_off_allowed, is_frequency, date_time_estimated, comment " // 8, 9
+    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, "
+        "local_traffic_zone, odt, pick_up_allowed, "
+        "drop_off_allowed, is_frequency, date_time_estimated, id "
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
+
+    size_t cpt_comment_found(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         auto it = vehicle_journey_map.find(const_it["vehicle_journey_id"].as<idx_t>());
         if (it == vehicle_journey_map.end()) {
@@ -888,9 +977,19 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
         stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
         stop.set_is_frequency(const_it["is_frequency"].as<bool>());
+
         stop.journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
         stop.vehicle_journey = vj;
-        data.pt_data->set_comment(const_it["comment"].as<std::string>(), stop);
+
+        // we check if we have some comments
+        const auto& it_comments = stop_time_comments.find(const_it["id"].as<nt::idx_t>());
+        if (it_comments != stop_time_comments.end()) {
+
+            for (const auto& comment: it_comments->second) {
+                data.pt_data->comments.add(stop, comment);
+            }
+            cpt_comment_found++;
+        }
     }
 
     for(auto* vj: data.pt_data->vehicle_journeys) {
@@ -898,7 +997,78 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
                   [](const nt::StopTime& st1, const nt::StopTime& st2){return st1.journey_pattern_point->order < st2.journey_pattern_point->order;});
     }
 
+    if (cpt_comment_found != stop_time_comments.size()) {
+        LOG4CPLUS_WARN(log, stop_time_comments.size() - cpt_comment_found
+                            << " / " << stop_time_comments.size()
+                            << " stoptimes comment have not found their stoptime");
+    }
 }
+
+template <typename Map>
+size_t add_comment(nt::Data& data, const idx_t obj_id, const Map& map, const boost::shared_ptr<std::string>& comment) {
+    const auto obj = find_or_default(obj_id, map);
+
+    if (! obj) { return 1; }
+
+    std::string str_com = *comment; //TODO shared_ptr
+    data.pt_data->comments.add(obj, str_com);
+
+    return 0;
+}
+
+void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
+
+    //since the comments can be big we use shared_ptr to share them
+    std::map<unsigned int, boost::shared_ptr<std::string>> comments_by_id;
+
+    std::string comment_request = "SELECT id, comment FROM navitia.comments;";
+    pqxx::result comment_result = work.exec(comment_request);
+    for(auto const_it = comment_result.begin(); const_it != comment_result.end(); ++const_it) {
+        comments_by_id[const_it["id"].as<unsigned int>()] = boost::make_shared<std::string>(const_it["comment"].as<std::string>());
+    }
+
+    std::string pt_object_comment_request = "SELECT object_type, object_id, comment_id FROM navitia.ptobject_comments;";
+    pqxx::result result = work.exec(pt_object_comment_request);
+
+    size_t cpt_not_found(0);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        const std::string type_str = const_it["object_type"].as<std::string>();
+        const idx_t obj_id = const_it["object_id"].as<idx_t>();
+        const unsigned int comment_id = const_it["comment_id"].as<unsigned int>();
+
+        const auto it = comments_by_id.find(comment_id);
+        if (it == comments_by_id.end()) {
+            LOG4CPLUS_WARN(log, "impossible to find comment " << comment_id << " skipping comment for "
+                           << obj_id << "(" << type_str << ")");
+            continue;
+        }
+
+        const boost::shared_ptr<std::string>& comment = it->second;
+
+        if (type_str == "route") {
+            cpt_not_found += add_comment(data, obj_id, route_map, comment);
+        } else if (type_str == "line") {
+            cpt_not_found += add_comment(data, obj_id, line_map, comment);
+        } else if (type_str == "stop_area") {
+            cpt_not_found += add_comment(data, obj_id, stop_area_map, comment);
+        } else if (type_str == "stop_point") {
+            cpt_not_found += add_comment(data, obj_id, stop_point_map, comment);
+        } else if (type_str == "trip") {
+            cpt_not_found += add_comment(data, obj_id, vehicle_journey_map, comment);
+        } else if (type_str == "stop_time") {
+            //for stop time we store the comment on a temporary map and we will store them when the stop time is read
+            // this way we don't have to store all stoptimes in a map
+            stop_time_comments[obj_id].push_back(*comment);
+        } else {
+            LOG4CPLUS_WARN(log, "invalid type, skipping object comment: " << obj_id << "(" << type_str << ")");
+        }
+    }
+    if (cpt_not_found) {
+        LOG4CPLUS_WARN(log, cpt_not_found << " pt object not found for comments");
+    }
+
+}
+
 
 void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT id, uri, name FROM georef.poi_type;";
@@ -1349,7 +1519,7 @@ void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& w
 }
 
 void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select cal.id, cal.name, cal.uri, cal.external_code,"
+    std::string request = "select cal.id, cal.name, cal.uri, "
                 "wp.monday, wp.tuesday, wp.wednesday, "
                 "wp.thursday,wp.friday, wp.saturday, wp.sunday "
                 "from navitia.calendar  cal, navitia.week_pattern wp "
@@ -1359,7 +1529,6 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
-        const_it["external_code"].to(cal->codes["external_code"]);
         cal->week_pattern[navitia::Monday] = const_it["monday"].as<bool>();
         cal->week_pattern[navitia::Tuesday] = const_it["tuesday"].as<bool>();
         cal->week_pattern[navitia::Wednesday] = const_it["wednesday"].as<bool>();

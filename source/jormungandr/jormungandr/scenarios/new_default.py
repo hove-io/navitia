@@ -32,7 +32,8 @@ import itertools
 import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import simple, journey_filter
-from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default
+from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
+    fill_uris
 from navitiacommon import type_pb2, response_pb2, request_pb2
 
 
@@ -118,8 +119,6 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     req.journeys.wheelchair = request["wheelchair"]
     req.journeys.disruption_active = request["disruption_active"]
     req.journeys.show_codes = request["show_codes"]
-
-    req.journeys.allow_odt = True  #TODO if it is not used, remove this param !
 
     if "details" in request and request["details"]:
         req.journeys.details = request["details"]
@@ -286,6 +285,8 @@ class Scenario(simple.Scenario):
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
 
+        for r in resp:
+            fill_uris(r)
         return resp
 
     def __on_journeys(self, requested_type, request, instance):

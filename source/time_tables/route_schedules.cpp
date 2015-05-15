@@ -36,6 +36,10 @@ www.navitia.io
 #include "utils/paginate.h"
 #include "type/datetime.h"
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm_ext/for_each.hpp>
+#include <boost/graph/topological_sort.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -92,67 +96,106 @@ get_all_stop_times(const vector_idx& journey_patterns,
     return result;
 }
 
-static std::vector<datetime_stop_time>::const_iterator
-get_first_dt_st_after(const std::vector<datetime_stop_time>& v, size_t order) {
-    if (order < v.size()) {
-        return std::find_if(v.begin() + order, v.end(),
-                            [](datetime_stop_time dt_st) {
-                                return dt_st.second != nullptr;
-                            });
-    }
-    return v.end();
+namespace {
+// The score is the number of aligned cells that are not on order
+// minus the number of aligned cells that are on order. Ex:
+// v1 v2
+//  1  2 => -1
+//  2  3 => -1
+//  3  4 => -1
+//  5  5
+//  7
+//  9  7 =>  1
+// score:   -2
+int score(const std::vector<datetime_stop_time>& v1,
+          const std::vector<datetime_stop_time>& v2) {
+    int res = 0;
+    boost::range::for_each(v1, v2, [&](const datetime_stop_time& a, const datetime_stop_time& b) {
+            if (a.second == nullptr || b.second == nullptr) { return; }
+            if (a.first < b.first) {
+                --res;
+            } else if (a.first > b.first) {
+                ++res;
+            }
+        });
+    return res;
 }
+typedef boost::adjacency_list<
+    boost::vecS,
+    boost::vecS,
+    boost::directedS
+    > Graph;
+struct Edge {
+    uint32_t source;
+    uint32_t target;
+    uint32_t score;
 
-static std::vector<datetime_stop_time>::const_iterator
-get_first_dt_st_before(const std::vector<datetime_stop_time>& v, size_t order) {
-    if (order < v.size()) {
-        for (auto it = v.rbegin()+order; it != v.rend(); ++ it) {
-            if (it->second != nullptr) {
-                return it.base() - 1;
+    friend bool operator<(const Edge& a, const Edge& b) {
+        if (a.score != b.score) { return a.score > b.score; }
+        if (a.source != b.source) { return a.source < b.source; }
+        return a.target < b.target;
+    }
+};
+std::vector<Edge> create_edges(std::vector<std::vector<datetime_stop_time>>& v) {
+    std::vector<Edge> edges;
+    for (uint32_t i = 0; i < v.size(); ++i) {
+        for (uint32_t j = i + 1; j < v.size(); ++j) {
+            const int s = score(v[i], v[j]);
+            if (s > 0) {
+                edges.push_back({i, j, uint32_t(s)});
+            } else if (s < 0) {
+                edges.push_back({j, i, uint32_t(-s)});
             }
         }
     }
-    return v.end();
+    boost::sort(edges);
+    return edges;
 }
+// Using http://en.wikipedia.org/wiki/Ranked_pairs to sort the vj.  As
+// if each stop time vote according to the time of the vj at its stop
+// time (don't care for the vj that don't stop).
+std::vector<uint32_t> compute_order(const size_t nb_vertices, const std::vector<Edge>& edges) {
+    Graph g(nb_vertices);
+    std::vector<uint32_t> order;
+    order.reserve(nb_vertices);
 
-/*
- *  We want to compare the first filled dt_st of v1, named d1 with order o1
- *  with the first filled dt_st of v2 having an order >= o1
- *  If cannot find such an element in v2, we will compare with the last filled
- *  dt_st in v2.
- *  We want to compare v2, with the first st in v1 before o2.
- */
-static bool compare(const std::vector<datetime_stop_time>& v1,
-                    const std::vector<datetime_stop_time>& v2) {
-    if (v1.empty()) {
-        return false;
-    }
-    if (v2.empty()) {
-        return true;
-    }
-    auto first_st_a_it = get_first_dt_st_after(v1, 0);
-    if (first_st_a_it == v1.end()) {
-        return false;
-    }
-    auto first_st_b_it = v2.end();
-    size_t order = std::distance(first_st_a_it, v1.begin());
-    if (order < v2.size()) {
-        first_st_b_it = get_first_dt_st_after(v2, order);
-    }
-    if (first_st_b_it == v2.end()) {
-        first_st_b_it = get_first_dt_st_before(v2, 0);
-        if (first_st_b_it == v2.end()) {
-            return true;
+    // most of the time, the graph will not have any cycle, thus we
+    // test directly a topological sort.
+    try {
+        for (const auto& edge: edges) { add_edge(edge.source, edge.target, g); }
+        order.clear();
+        boost::topological_sort(g, std::back_inserter(order));
+        return order;
+    } catch (boost::not_a_dag&) {}
+
+    // there is a cycle, thus we run the complete algorithm.
+    g = Graph(nb_vertices);// remove all edges
+    for (const auto& edge: edges) {
+        const auto e_desc = add_edge(edge.source, edge.target, g).first;
+        try {
+            order.clear();
+            boost::topological_sort(g, std::back_inserter(order));
+        } catch (boost::not_a_dag&) {
+            remove_edge(e_desc, g);
         }
     }
-    auto r_first_st_b_it = std::reverse_iterator<std::vector<datetime_stop_time>::const_iterator>(first_st_b_it);
-    size_t distance = std::distance(v2.rbegin(), r_first_st_b_it);
-    // Even if r_first_st_b_it == v2.rbegin(), distance will be 1... So we need to decrease it.
-    --distance;
-    first_st_a_it = get_first_dt_st_before(v1, distance);
-    return first_st_a_it->first < first_st_b_it->first;
+    order.clear();
+    topological_sort(g, std::back_inserter(order));
+    return order;
 }
+void ranked_pairs_sort(std::vector<std::vector<datetime_stop_time>>& v) {
+    const auto edges = create_edges(v);
+    const auto order = compute_order(v.size(), edges);
 
+    // reordering v according to the given order
+    std::vector<std::vector<datetime_stop_time>> res;
+    res.reserve(v.size());
+    for (const auto& idx: order) {
+        res.push_back(std::move(v[idx]));
+    }
+    boost::swap(res, v);
+}
+}
 
 static std::vector<std::vector<datetime_stop_time> >
 make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
@@ -170,13 +213,13 @@ make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
         std::vector<uint32_t> orders = thermometer.match_journey_pattern(*journey_pattern);
         int order = 0;
         for(datetime_stop_time dt_stop_time : vec) {
-            tmp[y][orders[order]] = dt_stop_time;
+            tmp.at(y).at(orders.at(order)) = dt_stop_time;
             ++order;
         }
         ++y;
     }
 
-    std::sort(tmp.begin(), tmp.end(), compare);
+    ranked_pairs_sort(tmp);
     // We rotate the matrice, so it can be handle more easily in route_schedule
     for (size_t i=0; i<tmp.size(); ++i) {
         for (size_t j=0; j<tmp[i].size(); ++j) {
@@ -191,7 +234,7 @@ route_schedule(const std::string& filter,
                const boost::optional<const std::string> calendar_id,
                const std::vector<std::string>& forbidden_uris,
                const pt::ptime datetime,
-               uint32_t duration, size_t max_stop_date_times, uint32_t interface_version,
+               uint32_t duration, size_t max_stop_date_times,
                const uint32_t max_depth, int count, int start_page,
                const type::Data &d, bool disruption_active, const bool show_codes) {
     RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
@@ -231,6 +274,7 @@ route_schedule(const std::string& filter,
         fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
 
         std::vector<bool> is_vj_set(stop_times.size(), false);
+        for (size_t i = 0; i < stop_times.size(); ++i) { table->add_headers(); }
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data->stop_points[spidx];
@@ -241,12 +285,14 @@ route_schedule(const std::string& filter,
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
                 if (!is_vj_set[j] && dt_stop_time.second != nullptr) {
-                    pbnavitia::Header* header = table->add_headers();
+                    pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
-                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
                     auto vj = dt_stop_time.second->vehicle_journey;
                     fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
-                    fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
+                    fill_additional_informations(header->mutable_additional_informations(),
+                                                 vj->has_datetime_estimated(),
+                                                 vj->has_odt(),
+                                                 vj->has_zonal_stop_point());
                     is_vj_set[j] = true;
                 }
 

@@ -29,7 +29,37 @@ www.navitia.io
 */
 
 #include "adminref.h"
+#include <boost/algorithm/string/join.hpp>
 
-namespace navitia { namespace adminref {
+namespace navitia { namespace georef {
+std::string Admin::get_range_postal_codes(){
+    std::string post_code;
+    // the label is the range of the postcode
+    // ex: Tours (37000;37100;37200) -> Tours (37000-37200)
+    if (!this->postal_codes.empty()) {
+        int min_value = std::numeric_limits<int>::max();
+        int max_value = std::numeric_limits<int>::min();
+        try {
+            for (const std::string& str_post_code : this->postal_codes) {
+                int int_post_code;
+                int_post_code = boost::lexical_cast<int>(str_post_code);
+                min_value = std::min(min_value, int_post_code);
+                max_value = std::max(max_value, int_post_code);
+            }
+            if (min_value == max_value){
+                post_code = boost::lexical_cast<std::string>(min_value);
+            }else{
+                post_code = boost::lexical_cast<std::string>(min_value)
+                        + "-" + boost::lexical_cast<std::string>(max_value);
+            }
+        }catch (boost::bad_lexical_cast) {
+            post_code = this->postal_codes_to_string();
+        }
+    }
+    return post_code;
+}
 
+std::string Admin::postal_codes_to_string() const{
+    return boost::algorithm::join(this->postal_codes, ";");
+}
 }}

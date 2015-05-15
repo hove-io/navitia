@@ -159,7 +159,7 @@ struct routing_api_data {
         admin->name = "Condom";
         admin->insee = "32107";
         admin->level = 8;
-        admin->post_code = "32100";
+        admin->postal_codes.push_back("32100");
 
         navitia::georef::Way* way;
         way = new navitia::georef::Way();
@@ -427,6 +427,10 @@ struct routing_api_data {
             jp_d->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
             assert (jp_d->physical_mode->name == "Metro");
             jp_d->physical_mode->journey_pattern_list.push_back(jp_d);
+
+            for(auto r : b.data->pt_data->routes){
+                r->destination = b.sas.find("stopA")->second;
+            }
         }
 
         b.finish();
@@ -731,6 +735,7 @@ struct routing_api_data {
 
             holder.disruptions.push_back(std::move(disruption));
         }
+
     }
 
     int AA = 0;

@@ -69,7 +69,9 @@ struct calendar_fixture {
         //both calendars are associated to the line
         b.lines["line:A"]->calendar_list.push_back(week_cal);
         b.lines["line:A"]->calendar_list.push_back(weekend_cal);
-
+        for(auto r: b.data->pt_data->routes){
+            r->destination = b.sas.find("stop2")->second;
+        }
         // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
         navitia::type::AssociatedCalendar* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
         navitia::type::AssociatedCalendar* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();

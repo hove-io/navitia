@@ -85,6 +85,22 @@ class TestJourneys(AbstractTestFixture):
         assert len(response['journeys']) == 1
         assert response['journeys'][0]["type"] == "non_pt_walk"
 
+    def test_speed_factor_direct_path(self):
+        """We test the coherence of the non pt walk solution with a speed factor"""
+
+        response = self.query_region("{query}&type=non_pt_walk&walking_speed=1.5".
+                                     format(query=journey_basic_query))
+
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]["type"] == "non_pt_walk"
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['duration'] == response['journeys'][0]['sections'][0]['duration']
+        assert response['journeys'][0]['duration'] == 205
+        assert response['journeys'][0]['departure_date_time'] == response['journeys'][0]['sections'][0]['departure_date_time']
+        assert response['journeys'][0]['departure_date_time'] == '20120614T080000'
+        assert response['journeys'][0]['arrival_date_time'] == response['journeys'][0]['sections'][0]['arrival_date_time']
+        assert response['journeys'][0]['arrival_date_time'] == '20120614T080325'
+
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
 
@@ -342,12 +358,12 @@ class TestShapeInGeoJson(AbstractTestFixture):
         #print response['journeys'][0]['sections'][1]
         eq_(len(response['journeys']), 2)
         eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['co2_emission']['value'], 0.48)
+        eq_(response['journeys'][0]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['co2_emission']['unit'], 'gEC')
         eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
         eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
-        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.48)
+        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
 
 @dataset(["main_routing_test", "basic_routing_test"])

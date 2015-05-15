@@ -87,7 +87,11 @@ struct data_set {
                 {{1,2}, {2,2}, {4,5}},
                 {{10,20}, {20,20}, {40,50}}
             };
+            r->destination = b.sas.find("stop_area:stop2")->second;
         }
+        b.lines["line:A"]->codes["external_code"] = "A";
+        b.lines["line:A"]->codes["codeB"] = "B";
+        b.lines["line:A"]->codes["codeC"] = "C";
 
         b.data->build_uri();
 
@@ -96,6 +100,17 @@ struct data_set {
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
         b.data->complete();
+
+        //we add some comments
+        auto& comments = b.data->pt_data->comments;
+        comments.add(b.data->pt_data->routes_map["line:A:0"], "I'm a happy comment");
+        comments.add(b.lines["line:A"], "I'm a happy comment");
+        comments.add(b.sas["stop_area:stop1"], "comment on stop A");
+        comments.add(b.sas["stop_area:stop1"], "the stop is sad");
+        comments.add(b.data->pt_data->stop_points_map["stop_area:stop2"], "hello bob");
+        comments.add(b.data->pt_data->vehicle_journeys[0], "hello");
+        comments.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(),
+                                      "stop time is blocked");
     }
 
     ed::builder b;
