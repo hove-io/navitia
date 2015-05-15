@@ -1161,8 +1161,8 @@ void AdminStopAreaFusioHandler::init(Data& data){
     stop_area_c = csv.get_pos_col("station_id");
     for(const auto& object_code_map : data.object_codes){
         for(auto& object_code: object_code_map.second){
-            if ((object_code.object_type == nt::Type_e::StopArea) && (object_code.key == "external_code")){
-                const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first->uri);
+            if (object_code_map.first.second == nt::Type_e::StopArea && object_code.key == "external_code") {
+                const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first.first->uri);
                 if (stop_area != gtfs_data.stop_area_map.end()){
                     tmp_stop_area_map[object_code.value] = stop_area->second;
                 }
@@ -1295,7 +1295,7 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
     std::string key = boost::algorithm::to_lower_copy(row[object_system_c]);
     std::string object_type = boost::algorithm::to_lower_copy(row[object_type_c]);
 
-    if (key == "navitia1"){
+    if (key == "navitia1") {
         key = "external_code";
     }
 
@@ -1345,6 +1345,7 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
         }
         return;
     }
+    LOG4CPLUS_DEBUG(logger, "unknown object type " << object_type << " skipping object code");
 }
 
 ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data & data) {

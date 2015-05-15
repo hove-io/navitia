@@ -307,10 +307,8 @@ struct StopPoint : public Header, Nameable, hasProperties{
 };
 
 struct ObjectCode {
-    nt::Type_e object_type = nt::Type_e::Unknown;
     std::string key;
     std::string value;
-    ObjectCode(){}
 };
 
 struct StopTime : public Nameable {

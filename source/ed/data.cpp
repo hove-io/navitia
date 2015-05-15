@@ -483,10 +483,9 @@ static void affect_shape(nt::LineString& to, const nt::MultiLineString& from) {
 
 void Data::add_object_code(const nt::Header* header,const nt::Type_e type, const std::string& value, const std::string& key){
     ed::types::ObjectCode object_code;
-    object_code.object_type = type;
     object_code.key = key;
     object_code.value = value;
-    object_codes[header].push_back(object_code);
+    object_codes[{header, type}].push_back(object_code);
 }
 
 // TODO : For now we construct one route per journey pattern

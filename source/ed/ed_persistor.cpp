@@ -1107,17 +1107,17 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
 
 }
 
-void EdPersistor::insert_object_codes(const std::map<const nt::Header*, std::vector<ed::types::ObjectCode>>& object_codes){
+void EdPersistor::insert_object_codes(const std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>>& object_codes){
     size_t count = 0;
     this->lotus.prepare_bulk_insert("navitia.object_code", {"object_id", "object_type_id", "key", "value"});
     for(const auto& object_code_map: object_codes){
         for(const auto& object_code: object_code_map.second){
-            if (object_code_map.first->idx == nt::invalid_idx){
+            if (object_code_map.first.first->idx == nt::invalid_idx) {
                 ++count;
-            }else{
+            } else {
                 std::vector<std::string> values {
-                    std::to_string(object_code_map.first->idx),
-                    std::to_string(static_cast<int>(object_code.object_type)),
+                    std::to_string(object_code_map.first.first->idx),
+                    std::to_string(static_cast<int>(object_code_map.first.second)),
                     object_code.key,
                     object_code.value
 
@@ -1127,8 +1127,8 @@ void EdPersistor::insert_object_codes(const std::map<const nt::Header*, std::vec
         }
     }
     this->lotus.finish_bulk_insert();
-    if (count > 0){
-        LOG4CPLUS_INFO(logger, count<<"/"<< object_codes.size()<<" object codes ignored.");
+    if (count > 0) {
+        LOG4CPLUS_INFO(logger, count << "/" << object_codes.size() << " object codes ignored.");
     }
 }
 

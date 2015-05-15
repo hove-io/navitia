@@ -99,7 +99,7 @@ private:
     void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs);
-    void insert_object_codes(const std::map<const nt::Header*, std::vector<ed::types::ObjectCode>>& object_codes);
+    void insert_object_codes(const std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>>& object_codes);
 
     void insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points);
 
