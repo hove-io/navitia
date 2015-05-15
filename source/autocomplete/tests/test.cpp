@@ -1372,3 +1372,29 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
 
 }
+
+BOOST_AUTO_TEST_CASE(regex_toknize_with_synonyms_having_ghostword_tests){
+    autocomplete_map synonyms;
+    synonyms["chr"]="hopital";
+    synonyms["bvd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bd"]="boulevard";
+    synonyms["de"]="";
+    synonyms["la"]="";
+
+    Autocomplete<unsigned int> ac;
+    std::set<std::string> vec;
+
+    vec = ac.tokenize("gare (Baune)", synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 2);
+    vec.clear();
+    vec = ac.tokenize("rue de la Garenne (Beaune)", synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 3);
+
+    vec.clear();
+    vec = ac.tokenize("gare de Baune", synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 2);
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("baune") != vec.end());
+    BOOST_CHECK(vec.find("de") == vec.end());
+}

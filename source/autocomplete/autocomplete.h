@@ -505,6 +505,18 @@ struct Autocomplete
             }
         }
 
+        //We discard the GhostWords like de, le, la configured in synonyms as below
+        //de,
+        //le,
+        //la,
+        //For each synonyms.key found in strTemp if synonyms.value is empty delete the substring
+        for(const auto & it : synonyms){
+            if  ((boost::regex_search(strTemp,boost::regex("\\<" + it.first + "\\>")))
+                && (it.second.empty())){
+                boost::algorithm::erase_all(strTemp, it.first);
+            }
+        }
+
         boost::tokenizer <> tokens(strTemp);
         for (auto token_it: tokens){
             if (!token_it.empty()){
