@@ -1222,7 +1222,7 @@ nt::Header* get_object(const C& map, const std::string& obj_id) {
 }
 
 
-void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
+void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(! has_col(object_id_c, row) || ! has_col(object_type_c, row) || ! has_col(comment_id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  impossible to find all needed fields");

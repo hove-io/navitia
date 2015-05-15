@@ -88,7 +88,6 @@ Route1
     vj3->journey_pattern = jp3;
 
     auto st1 = new ed::types::StopTime();
-    st1->name = "A1";
     st1->arrival_time = 10 * 3600 + 15 * 60;
     st1->departure_time = 10 * 3600 + 15 * 60;
     data.stops.push_back(st1);
@@ -97,7 +96,6 @@ Route1
     vj3->stop_time_list.push_back(st1);
 
     auto st2 = new ed::types::StopTime();
-    st2->name = "A2";
     st2->arrival_time = 11 * 3600 + 10 * 60;
     st2->departure_time = 11 * 3600 + 10 * 60;
     data.stops.push_back(st2);
@@ -106,7 +104,6 @@ Route1
     vj3->stop_time_list.push_back(st2);
 
     auto st3 = new ed::types::StopTime();
-    st3->name = "A3";
     st3->arrival_time = 11 * 3600 + 10 * 60;
     st3->departure_time = 11 * 3600 + 10 * 60;
     data.stops.push_back(st3);
@@ -115,41 +112,40 @@ Route1
     vj3->stop_time_list.push_back(st3);
 
     auto st4 = new ed::types::StopTime();
-    st4->name = "A4";
     st4->arrival_time = 12 * 3600 + 10 * 60;
     st4->departure_time = 12 * 3600 + 10 * 60;
     data.stops.push_back(st4);
     vj2->stop_time_list.push_back(st4);
 
     st1->tmp_stop_point = new ed::types::StopPoint();
-    st1->tmp_stop_point->name = st1->name;
+    st1->tmp_stop_point->name = "A1";
     data.stop_points.push_back(st1->tmp_stop_point);
     st1->tmp_stop_point->stop_area = new ed::types::StopArea();
-    st1->tmp_stop_point->stop_area->name = st1->name;
+    st1->tmp_stop_point->stop_area->name = st1->tmp_stop_point->name;
     st1->tmp_stop_point->stop_area->idx = 0;
     data.stop_areas.push_back(st1->tmp_stop_point->stop_area);
 
     st2->tmp_stop_point = new ed::types::StopPoint();
-    st2->tmp_stop_point->name = st2->name;
+    st2->tmp_stop_point->name = "A2";
     data.stop_points.push_back(st2->tmp_stop_point);
     st2->tmp_stop_point->stop_area = new ed::types::StopArea();
-    st2->tmp_stop_point->stop_area->name = st2->name;
+    st2->tmp_stop_point->stop_area->name = st2->tmp_stop_point->name;
     st2->tmp_stop_point->stop_area->idx = 1;
     data.stop_areas.push_back(st2->tmp_stop_point->stop_area);
 
     st3->tmp_stop_point = new ed::types::StopPoint();
-    st3->tmp_stop_point->name = st3->name;
+    st3->tmp_stop_point->name = "A3";
     data.stop_points.push_back(st3->tmp_stop_point);
     st3->tmp_stop_point->stop_area = new ed::types::StopArea();
-    st3->tmp_stop_point->stop_area->name = st3->name;
+    st3->tmp_stop_point->stop_area->name = st3->tmp_stop_point->name;
     st3->tmp_stop_point->stop_area->idx = 2;
     data.stop_areas.push_back(st3->tmp_stop_point->stop_area);
 
     st4->tmp_stop_point = new ed::types::StopPoint();
-    st4->tmp_stop_point->name = st4->name;
+    st4->tmp_stop_point->name = "A4";
     data.stop_points.push_back(st4->tmp_stop_point);
     st4->tmp_stop_point->stop_area = new ed::types::StopArea();
-    st4->tmp_stop_point->stop_area->name = st4->name;
+    st4->tmp_stop_point->stop_area->name = st4->tmp_stop_point->name;
     st4->tmp_stop_point->stop_area->idx = 3;
     data.stop_areas.push_back(st4->tmp_stop_point->stop_area);
 

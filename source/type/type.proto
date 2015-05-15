@@ -209,7 +209,7 @@ message Line {
 
     repeated Message messages = 14;
     repeated Disruption disruptions = 20;
-    repeated Comment comments = 21;
+    repeated Comment comments = 22;
     repeated Code codes = 16;
     optional MultiLineString geojson = 17;
     optional uint32 opening_time = 18;

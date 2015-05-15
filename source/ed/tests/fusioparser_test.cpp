@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     //7 objects have comments
     //the file contains wrongly formated comments, but they are skiped
-    BOOST_REQUIRE_EQUAL(data.comments.size(), 9);
+    BOOST_REQUIRE_EQUAL(data.comments.size(), 5);
     std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
         {{"route", data.routes[0]}, {"bob"}},
         {{"trip", data.vehicle_journeys[4]}, {"bobette"}},

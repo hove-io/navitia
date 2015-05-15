@@ -174,7 +174,7 @@ class TestPtRef(AbstractTestFixture):
 
         assert len(stops) == 2
 
-        s = stops[0]
+        s = next((s for s in stops if s['name'] == 'stop_area:stop2'))
         is_valid_stop_area(s, depth_check=1)
 
         com = get_not_null(s, 'comments')
