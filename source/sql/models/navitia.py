@@ -393,7 +393,6 @@ line = Table('line', metadata,*[
 
 calendar = Table('calendar', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".calendar_id_seq\'::regclass)')),
-    Column('external_code', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('week_pattern_id', BIGINT(), primary_key=False, nullable=False),
@@ -444,5 +443,14 @@ stop_area = Table('stop_area', metadata,*[
     Column('visible', BOOLEAN(), primary_key=False, nullable=False, default=text(u'true')),
     Column('timezone', TEXT(), primary_key=False),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_area_properties_id_fkey'),],
+    schema='navitia')
+
+
+object_code = Table('object_code', metadata,*[
+    Column('object_type_id', BIGINT(), nullable=False),
+    Column('object_id', BIGINT(), nullable=False),
+    Column('key', TEXT(), nullable=False),
+    Column('value', TEXT(), nullable=False),
+    ForeignKeyConstraint(['object_type_id'], [u'navitia.object_type.id'], name=u'object_type_id_fkey'),],
     schema='navitia')
 

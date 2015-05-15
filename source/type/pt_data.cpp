@@ -187,7 +187,6 @@ void PT_Data::build_uri() {
     fill_ext_code_map(ext_codes_map, routes, pbnavitia::PlaceCodeRequest::Route);
     fill_ext_code_map(ext_codes_map, vehicle_journeys, pbnavitia::PlaceCodeRequest::VehicleJourney);
     fill_ext_code_map(ext_codes_map, stop_points, pbnavitia::PlaceCodeRequest::StopPoint);
-    fill_ext_code_map(ext_codes_map, calendars, pbnavitia::PlaceCodeRequest::Calendar);
 }
 
 /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1

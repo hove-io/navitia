@@ -58,7 +58,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
     network->uri = row[id_c];
 
     if (is_valid(ext_code_c, row)) {
-        network->external_code = row[ext_code_c];
+        data.add_object_code(network, nt::Type_e::Network, row[ext_code_c]);
     }
 
     network->name = row[name_c];
@@ -131,15 +131,16 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
 }
 
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+
     auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
 
     if (is_valid(ext_code_c, row)) {
-        if ( return_wrapper.second != nullptr )
-            return_wrapper.second->external_code = row[ext_code_c];
-        else if ( return_wrapper.first != nullptr )
-                return_wrapper.first->external_code = row[ext_code_c];
+        if (return_wrapper.second) {
+            data.add_object_code(return_wrapper.second, nt::Type_e::StopArea, row[ext_code_c]);
+        } else if (return_wrapper.first) {
+            data.add_object_code(return_wrapper.first, nt::Type_e::StopPoint, row[ext_code_c]);
+        }
     }
-
     if (is_valid(property_id_c, row)) {
         auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
         if(it_property != gtfs_data.hasProperties_map.end()){
@@ -214,7 +215,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     ed_route->uri = row[route_id_c];
 
     if ( is_valid(ext_code_c, row) ){
-        ed_route->external_code = row[ext_code_c];
+        data.add_object_code(ed_route, nt::Type_e::Route, row[ext_code_c]);
     }
 
     ed_route->name = row[route_name_c];
@@ -371,7 +372,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     ed::types::Route* route = it->second;
 
     auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
-    if(empty(vp_range)) {
+    if (empty(vp_range)) {
         LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
@@ -413,9 +414,6 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         }
         vj->uri = vj_uri;
 
-        if(is_valid(ext_code_c, row)){
-            vj->external_code = row[ext_code_c];
-        }
         if(is_valid(headsign_c, row))
             vj->name = row[headsign_c];
         else
@@ -457,7 +455,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     //the vj might have been split over the dst,thus we loop over all split vj
     for (auto vj: split_vj) {
         if (is_valid(ext_code_c, row)) {
-            vj->external_code = row[ext_code_c];
+            data.add_object_code(vj, nt::Type_e::VehicleJourney, row[ext_code_c]);
         }
 
         //if a physical_mode is given we override the value
@@ -550,8 +548,8 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
 
 void LineFusioHandler::init(Data &){
     id_c = csv.get_pos_col("line_id");
-    name_c = csv.get_pos_col("line_name");
     external_code_c = csv.get_pos_col("external_code");
+    name_c = csv.get_pos_col("line_name");
     code_c =  csv.get_pos_col("line_code");
     forward_name_c =  csv.get_pos_col("forward_line_name");
     backward_name_c =  csv.get_pos_col("backward_line_name");
@@ -574,9 +572,6 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->uri = row[id_c];
     line->name = row[name_c];
 
-    if (is_valid(external_code_c, row)) {
-        line->external_code = row[external_code_c];
-    }
     if (is_valid(code_c, row)) {
         line->code = row[code_c];
     }
@@ -642,9 +637,13 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
         }
     }
 
+    if (is_valid(external_code_c, row)) {
+        data.add_object_code(line, nt::Type_e::Line, row[external_code_c]);
+        gtfs_data.line_map_by_external_code[row[external_code_c]] = line;
+    }
+
     data.lines.push_back(line);
     gtfs_data.line_map[line->uri] = line;
-    gtfs_data.line_map_by_external_code[line->external_code] = line;
 }
 
 void CompanyFusioHandler::init(Data&) {
@@ -998,7 +997,6 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
     calendar->uri = row[id_c];
-    calendar->external_code = row[id_c];
     calendar->name =  row[name_c];
     calendar->week_pattern[navitia::Monday] = is_active(monday_c, row);
     calendar->week_pattern[navitia::Tuesday] = is_active(tuesday_c, row);
@@ -1161,12 +1159,18 @@ void GridCalendarTripExceptionDatesFusioHandler::handle_line(Data&, const csv_ro
 }
 }
 
-void AdminStopAreaFusioHandler::init(Data&){
+void AdminStopAreaFusioHandler::init(Data& data){
     admin_c = csv.get_pos_col("admin_id");
     stop_area_c = csv.get_pos_col("station_id");
-
-    for (const auto& stop_area : gtfs_data.stop_area_map){
-        tmp_stop_area_map[stop_area.second->external_code] = stop_area.second;
+    for(const auto& object_code_map : data.object_codes){
+        for(auto& object_code: object_code_map.second){
+            if (object_code_map.first.second == nt::Type_e::StopArea && object_code.key == "external_code") {
+                const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first.first->uri);
+                if (stop_area != gtfs_data.stop_area_map.end()){
+                    tmp_stop_area_map[object_code.value] = stop_area->second;
+                }
+            }
+        }
     }
 }
 
@@ -1276,6 +1280,68 @@ void CommentLinksFusioHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
+void ObjectCodesFusioHandler::init(Data&){
+    object_uri_c = csv.get_pos_col("object_id");
+    object_type_c = csv.get_pos_col("object_type");
+    code_c = csv.get_pos_col("object_code");
+    object_system_c = csv.get_pos_col("object_system");
+}
+
+
+void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(! has_col(object_uri_c, row) || ! has_col(object_type_c, row) || ! has_col(code_c, row) || ! has_col(object_system_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  impossible to find all needed fields");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    std::string key = row[object_system_c];
+    std::string object_type = boost::algorithm::to_lower_copy(row[object_type_c]);
+
+    if (key == "navitia1") {
+        key = "external_code";
+    }
+
+    if (object_type == "line"){
+        const auto& it_object = gtfs_data.line_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.line_map.end()){
+            data.add_object_code(it_object->second, nt::Type_e::Line, row[code_c], key);
+            if (key == "external_code"){
+                gtfs_data.line_map_by_external_code[row[code_c]] = it_object->second;
+            }
+        }
+    } else if (object_type == "route"){
+        const auto& it_object = gtfs_data.route_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.route_map.end()){
+            data.add_object_code(it_object->second, nt::Type_e::Route, row[code_c], key);
+        }
+    } else if (object_type == "network"){
+        const auto& it_object = gtfs_data.network_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.network_map.end()){
+            data.add_object_code(it_object->second, nt::Type_e::Network, row[code_c], key);
+        }
+    } else if (object_type == "trip"){
+        const auto& it_object = data.meta_vj_map.find(row[object_uri_c]);
+        if(it_object != data.meta_vj_map.end()){
+            for(const auto& vj : it_object->second.theoric_vj){
+                data.add_object_code(vj, nt::Type_e::VehicleJourney, row[code_c], key);
+            }
+        }
+    } else if (object_type == "stop_area"){
+        const auto& it_object = gtfs_data.stop_area_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.stop_area_map.end()){
+            data.add_object_code(it_object->second, nt::Type_e::StopArea, row[code_c], key);
+        }
+    } else if (object_type == "stop_point"){
+        const auto& it_object = gtfs_data.stop_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.stop_map.end()){
+            data.add_object_code(it_object->second, nt::Type_e::StopPoint, row[code_c], key);
+        }
+        return;
+    }
+    LOG4CPLUS_DEBUG(logger, "unknown object type " << object_type << " skipping object code");
+}
+
 ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data & data) {
     if (! default_commercial_mode) {
         default_commercial_mode = new ed::types::CommercialMode();
@@ -1330,6 +1396,7 @@ void FusioParser::parse_files(Data& data) {
     parse<TripsFusioHandler>(data, "trips.txt", true);
     parse<StopTimeFusioHandler>(data, "stop_times.txt", true);
     parse<FrequenciesGtfsHandler>(data, "frequencies.txt");
+    parse<ObjectCodesFusioHandler>(data, "object_codes.txt");
     parse<grid_calendar::GridCalendarFusioHandler>(data, "grid_calendars.txt");
     parse<grid_calendar::PeriodFusioHandler>(data, "grid_periods.txt");
     parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");

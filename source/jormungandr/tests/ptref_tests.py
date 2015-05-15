@@ -99,6 +99,23 @@ class TestPtRef(AbstractTestFixture):
         geo = get_not_null(l, 'geojson')
         shape(geo)
 
+    def test_line_codes(self):
+        """test line formating"""
+        response = self.query_region("v1/lines/line:A?show_codes=true")
+
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 1
+
+        l = lines[0]
+
+        codes = get_not_null(l, 'codes')
+
+        assert len(codes) == 3
+
+        is_valid_codes(codes)
+
+
     def test_route(self):
         """test line formating"""
         response = self.query_region("v1/routes")

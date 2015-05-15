@@ -1444,7 +1444,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 
 void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
                     pbnavitia::Calendar* pb_cal, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes)
+                    const pt::ptime& now, const pt::time_period& action_period, const bool)
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
@@ -1470,12 +1470,6 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
 
     for (const auto& excep: cal->exceptions) {
         fill_pb_object(excep, data, pb_cal->add_exceptions(), max_depth, now, action_period);
-    }
-
-    if(show_codes) {
-        for(auto type_value : cal->codes) {
-            fill_codes(type_value.first, type_value.second, pb_cal->add_codes());
-        }
     }
 }
 

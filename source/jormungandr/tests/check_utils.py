@@ -577,6 +577,12 @@ def is_valid_line(line, depth_check=1):
     g is None or shape(g) #TODO check length
 
 
+def is_valid_codes(codes):
+    for code in codes:
+        get_not_null(code, "type")
+        get_not_null(code, "value")
+
+
 def is_valid_places(places, depth_check=1):
     for p in places:
         is_valid_place(p, depth_check)

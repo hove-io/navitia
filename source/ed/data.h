@@ -109,6 +109,8 @@ public:
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
 
+    std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>> object_codes;
+
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
 
@@ -117,6 +119,8 @@ public:
          *
          */
     void sort();
+
+    void add_object_code(const nt::Header* header, const nt::Type_e type, const std::string& value, const std::string& key="external_code");
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
@@ -140,7 +144,6 @@ public:
     void build_block_id();
 
     void normalize_uri();
-
     /**
      * Ajoute des objets
      */

@@ -56,8 +56,7 @@ struct AgencyFusioHandler : public AgencyGtfsHandler {
 
 struct StopsFusioHandler : public StopsGtfsHandler {
     StopsFusioHandler(GtfsData& gdata, CsvReader& reader) : StopsGtfsHandler(gdata, reader) {}
-    int ext_code_c,
-        property_id_c,
+    int property_id_c,
         comment_id_c,
         visible_c,
         geometry_id_c;
@@ -335,6 +334,15 @@ struct CommentLinksFusioHandler: public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "comment_id"}; }
+};
+
+struct ObjectCodesFusioHandler: public GenericHandler {
+    ObjectCodesFusioHandler(GtfsData& gdata, CsvReader& reader): GenericHandler(gdata, reader) {}
+    int object_uri_c, object_type_c, code_c, object_system_c;
+
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"object_id", "object_type", "object_code", "object_system"}; }
 };
 /**
  * custom parser
