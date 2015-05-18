@@ -58,7 +58,7 @@ class Lit(fields.Raw):
 
 
 places = {
-    "places": NonNullList(NonNullNested(place)),
+    "places": fields.List(NonNullNested(place)),
     "error": PbField(error, attribute='error'),
     "disruptions": DisruptionsField,
 }
