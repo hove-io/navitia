@@ -263,7 +263,7 @@ void Data::add_object_code(const T& obj, const std::string& value, const std::st
     auto& codes = object_codes[pt_object];
     if (codes.find(key) != codes.end()) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "code " << key << " already exists for object "
-                                                               /*<< pt_object*/ << " replacing the old one");
+                                                               << pt_object << " replacing the old one");
     }
     codes[key] = value;
 }
