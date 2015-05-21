@@ -1293,7 +1293,7 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
     std::string key = row[object_system_c];
     std::string object_type = boost::algorithm::to_lower_copy(row[object_type_c]);
 
-    if (key == "navitia1") {
+    if (boost::algorithm::to_lower_copy(key) == "navitia1") {
         key = "external_code";
     }
 
@@ -1332,9 +1332,9 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
         if(it_object != gtfs_data.stop_map.end()){
             data.add_object_code(it_object->second, row[code_c], key);
         }
-        return;
+    } else {
+        LOG4CPLUS_DEBUG(logger, "unknown object type " << object_type << " skipping object code");
     }
-    LOG4CPLUS_DEBUG(logger, "unknown object type " << object_type << " skipping object code");
 }
 
 ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data & data) {
