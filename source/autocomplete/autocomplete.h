@@ -483,7 +483,8 @@ struct Autocomplete
         return str;
     }
 
-    std::set<std::string> tokenize(std::string strFind, const std::set<std::string>& ghostwords, const autocomplete_map& synonyms = autocomplete_map()) const{
+    std::set<std::string> tokenize(std::string strFind, const std::set<std::string>& ghostwords,
+                                   const autocomplete_map& synonyms = autocomplete_map()) const{
         std::set<std::string> vec;
         boost::to_lower(strFind);
         strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
