@@ -226,7 +226,7 @@ pbnavitia::Response autocomplete(const std::string &q,
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
     //Compute number of words in the query:
-    std::set<std::string> query_word_vec = d.geo_ref->fl_admin.tokenize(q);
+    std::set<std::string> query_word_vec = d.geo_ref->fl_admin.tokenize(q, d.geo_ref->ghostwords);
 
     ///Find max(100, count) éléments for each pt_object
     for(nt::Type_e type : filter) {
@@ -235,85 +235,85 @@ pbnavitia::Response autocomplete(const std::string &q,
         case nt::Type_e::StopArea:
             if (search_type==0) {
                 result = d.pt_data->stop_area_autocomplete.find_complete(q,
-                        nbmax,valid_admin_ptr(d.pt_data->stop_areas, admin_ptr));
+                        nbmax,valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
-                        nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr));
+                        nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::StopPoint:
             if (search_type==0) {
                 result = d.pt_data->stop_point_autocomplete.find_complete(q,
-                        nbmax, valid_admin_ptr(d.pt_data->stop_points, admin_ptr));
+                        nbmax, valid_admin_ptr(d.pt_data->stop_points, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->stop_point_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight, nbmax,
-                        valid_admin_ptr(d.pt_data->stop_points, admin_ptr));
+                        valid_admin_ptr(d.pt_data->stop_points, admin_ptr), d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::Admin:
             if (search_type==0) {
                 result = d.geo_ref->fl_admin.find_complete(q,
-                        nbmax, valid_admin_ptr(d.geo_ref->admins, admin_ptr));
+                        nbmax, valid_admin_ptr(d.geo_ref->admins, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.geo_ref->fl_admin.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
-                        nbmax, valid_admin_ptr(d.geo_ref->admins, admin_ptr));
+                        nbmax, valid_admin_ptr(d.geo_ref->admins, admin_ptr), d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::Address:
             result = d.geo_ref->find_ways(q, nbmax, search_type,
-                    valid_admin_ptr(d.geo_ref->ways, admin_ptr));
+                    valid_admin_ptr(d.geo_ref->ways, admin_ptr), d.geo_ref->ghostwords);
             break;
         case nt::Type_e::POI:
             if (search_type==0) {
                 result = d.geo_ref->fl_poi.find_complete(q,
-                        nbmax, valid_admin_ptr(d.geo_ref->pois, admin_ptr));
+                        nbmax, valid_admin_ptr(d.geo_ref->pois, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.geo_ref->fl_poi.find_partial_with_pattern(q,
                         d.geo_ref->word_weight, nbmax,
-                        valid_admin_ptr(d.geo_ref->pois, admin_ptr));
+                        valid_admin_ptr(d.geo_ref->pois, admin_ptr), d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::Network:
             if (search_type==0) {
                 result = d.pt_data->network_autocomplete.find_complete(q,
-                         nbmax, [](type::idx_t){return true;});
+                         nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->network_autocomplete.find_partial_with_pattern(q,
                          d.geo_ref->word_weight, nbmax,
-                         [](type::idx_t){return true;});
+                         [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::CommercialMode:
             if (search_type==0) {
                 result = d.pt_data->mode_autocomplete.find_complete(q,
-                            nbmax, [](type::idx_t){return true;});
+                            nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->mode_autocomplete.find_partial_with_pattern(q,
                             d.geo_ref->word_weight, nbmax,
-                            [](type::idx_t){return true;});
+                            [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::Line:
             if (search_type==0) {
                 result = d.pt_data->line_autocomplete.find_complete(q,
-                        nbmax, [](type::idx_t){return true;});
+                        nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->line_autocomplete.find_partial_with_pattern(q,
                                             d.geo_ref->word_weight,
-                                            nbmax, [](type::idx_t){return true;});
+                                            nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             }
             break;
         case nt::Type_e::Route:
             if (search_type==0) {
                 result = d.pt_data->route_autocomplete.find_complete(q,
-                            nbmax, [](type::idx_t){return true;});
+                            nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->route_autocomplete.find_partial_with_pattern(q,
                             d.geo_ref->word_weight,
-                            nbmax, [](type::idx_t){return true;});
+                            nbmax, [](type::idx_t){return true;}, d.geo_ref->ghostwords);
             }
             break;
         default: break;
