@@ -46,6 +46,9 @@ www.navitia.io
   */
 namespace ed { namespace connectors {
 
+/** Return the type enum corresponding to the string*/
+nt::Type_e get_type_enum(const std::string&);
+
 /**
  * handle all tz specific stuff
  *

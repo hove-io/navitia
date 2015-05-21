@@ -362,7 +362,7 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
 
     LOG4CPLUS_INFO(logger, "Begin: insert comments");
-    this->insert_comments(data.comment_by_id, data.comments, data.stoptime_comments);
+    this->insert_comments(data);
     LOG4CPLUS_INFO(logger, "End: insert comments");
 
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
@@ -1104,19 +1104,19 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
 
 }
 
-void EdPersistor::insert_object_codes(const std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>>& object_codes){
+void EdPersistor::insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_codes){
     size_t count = 0;
     this->lotus.prepare_bulk_insert("navitia.object_code", {"object_id", "object_type_id", "key", "value"});
     for(const auto& object_code_map: object_codes){
         for(const auto& object_code: object_code_map.second){
-            if (object_code_map.first.first->idx == nt::invalid_idx) {
+            if (object_code_map.first.pt_object->idx == nt::invalid_idx) {
                 ++count;
             } else {
                 std::vector<std::string> values {
-                    std::to_string(object_code_map.first.first->idx),
-                    std::to_string(static_cast<int>(object_code_map.first.second)),
-                    object_code.key,
-                    object_code.value
+                    std::to_string(object_code_map.first.pt_object->idx),
+                    std::to_string(static_cast<int>(object_code_map.first.type)),
+                    object_code.first,
+                    object_code.second
 
                 };
                 this->lotus.insert(values);
@@ -1129,14 +1129,38 @@ void EdPersistor::insert_object_codes(const std::map<std::pair<const nt::Header*
     }
 }
 
-void EdPersistor::insert_object_properties(const std::vector<types::ObjectProperty>& object_properties) {
+//temporary, but for the moment we need to transform the enum back to a string in the db
+std::string to_gtfs_string(nt::Type_e enum_type) {
+    switch (enum_type) {
+        case nt::Type_e::StopArea:
+            return "stop_area";
+        case nt::Type_e::StopPoint:
+            return "stop_point";
+        case nt::Type_e::Line:
+            return "line";
+        case nt::Type_e::Route:
+            return "route";
+        case nt::Type_e::VehicleJourney:
+            return "trip";
+        case nt::Type_e::StopTime:
+            return "stop_time";
+        default:
+            throw navitia::exception("unhandled case");
+    }
+}
+
+void EdPersistor::insert_object_properties(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_properties) {
     this->lotus.prepare_bulk_insert("navitia.object_properties", {"object_id", "object_type" , "property_name", "property_value"});
-    for (const auto& property: object_properties) {
-        this->lotus.insert({std::to_string(property.object_with_idx->idx),
-                            property.object_type,
-                            property.property_name,
-                            property.property_value
-                           });
+    for (const auto& pt_property: object_properties) {
+        for (const auto& property: pt_property.second) {
+            this->lotus.insert(
+                    {
+                            std::to_string(pt_property.first.pt_object->idx),
+                            to_gtfs_string(pt_property.first.type),
+                            property.first,
+                            property.second
+                    });
+        }
     }
     this->lotus.finish_bulk_insert();
 }
@@ -1157,15 +1181,12 @@ void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_comments(const std::map<std::string, std::string>& comments,
-                                  const std::map<Data::comment_key, std::vector<std::string>>& comment_by_id,
-                                  const std::map<const ed::types::StopTime*, std::vector<std::string>>& st_comments) {
+void EdPersistor::insert_comments(const Data& data) {
     this->lotus.prepare_bulk_insert("navitia.comments", {"id", "comment"});
-
     //we store the db id's
     std::map<std::string, unsigned int> comment_bd_ids;
     unsigned int cpt = 0;
-    for (const auto& comment: comments) {
+    for (const auto& comment: data.comment_by_id) {
         lotus.insert({std::to_string(cpt), comment.second});
 
         comment_bd_ids[comment.first] = cpt++;
@@ -1176,17 +1197,17 @@ void EdPersistor::insert_comments(const std::map<std::string, std::string>& comm
 
     this->lotus.prepare_bulk_insert("navitia.ptobject_comments", {"object_type", "object_id", "comment_id"});
 
-    for (const auto& pt_obj_com: comment_by_id) {
+    for (const auto& pt_obj_com: data.comments) {
         for (const auto& comment: pt_obj_com.second) {
             lotus.insert({
-                             pt_obj_com.first.first,
-                             std::to_string(pt_obj_com.first.second->idx),
+                             to_gtfs_string(pt_obj_com.first.type),
+                             std::to_string(pt_obj_com.first.pt_object->idx),
                              std::to_string(comment_bd_ids[comment])
                          });
         }
     }
     // we then insert the stoptimes comments
-    for (const auto& st_com: st_comments) {
+    for (const auto& st_com: data.stoptime_comments) {
         for (const auto& comment: st_com.second) {
             lotus.insert({
                              "stop_time",

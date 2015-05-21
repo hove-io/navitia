@@ -46,6 +46,19 @@ using nt::idx_t;
 
 namespace ed{ namespace types{
 
+struct pt_object_header {
+    pt_object_header (const nt::Header* h, nt::Type_e t): pt_object(h), type(t) {}
+    pt_object_header() = default;
+    const nt::Header* pt_object = nullptr;
+    nt::Type_e type = nt::Type_e::Unknown;
+    bool operator<(const pt_object_header& other) const { return pt_object < other.pt_object; }
+    bool operator==(const pt_object_header& other) const { return pt_object == other.pt_object; }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const pt_object_header pt) {
+    return os << pt.pt_object->uri;
+}
+
 // On importe quelques éléments de Navitia::type pour éviter les redondances
 using nt::Nameable;
 using nt::Header;
@@ -299,11 +312,6 @@ struct StopPoint : public Header, Nameable, hasProperties{
     bool operator<(const StopPoint& other) const;
 };
 
-struct ObjectCode {
-    std::string key;
-    std::string value;
-};
-
 struct StopTime {
     size_t idx;
     int arrival_time; /// Number of seconds from midnight can be negative when
@@ -444,11 +452,17 @@ struct AdminStopArea{
     std::vector<const StopArea*> stop_area;
 };
 
-struct ObjectProperty{
-    Header* object_with_idx = nullptr;
-    std::string object_type;
-    std::string property_name;
-    std::string property_value;
-};
+#define ASSOCIATE_ED_TYPE(type_name, collection_name) \
+        inline nt::Type_e get_associated_enum(const ed::types::type_name&) { return nt::Type_e::type_name; } \
+        inline nt::Type_e get_associated_enum(const ed::types::type_name*) { return nt::Type_e::type_name; }
 
+ITERATE_NAVITIA_PT_TYPES(ASSOCIATE_ED_TYPE)
+inline nt::Type_e get_associated_enum(const ed::types::StopTime&) { return nt::Type_e::StopTime; }
+inline nt::Type_e get_associated_enum(const ed::types::StopTime*) { return nt::Type_e::StopTime; }
+
+
+template <typename T>
+pt_object_header make_pt_object(const T& h) {
+    return pt_object_header(h, get_associated_enum(h));
+}
 }}//end namespace ed::types
