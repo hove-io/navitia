@@ -64,7 +64,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             for( navitia::georef::Admin* admin : sa->admin_list){
                 if (admin->level ==8){key +=" " + admin->name;}
             }
-            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.synonyms);
+            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->stop_area_autocomplete.build();
@@ -77,7 +77,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             for(navitia::georef::Admin* admin : sp->admin_list){
                 if (admin->level == 8){key += key + " " + admin->name;}
             }
-            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.synonyms);
+            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->stop_point_autocomplete.build();
@@ -89,7 +89,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             if (line->network){key = line->network->name;}
             if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
             key += " " + line->code;
-            this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.synonyms);
+            this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->line_autocomplete.build();
@@ -97,7 +97,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->network_autocomplete.clear();
     for(const Network* network : this->networks){
         if (!network->name.empty()){
-            this->network_autocomplete.add_string(network->name, network->idx, georef.synonyms);
+            this->network_autocomplete.add_string(network->name, network->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->network_autocomplete.build();
@@ -105,7 +105,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->mode_autocomplete.clear();
     for(const CommercialMode* mode : this->commercial_modes){
         if (!mode->name.empty()){
-            this->mode_autocomplete.add_string(mode->name, mode->idx, georef.synonyms);
+            this->mode_autocomplete.add_string(mode->name, mode->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->mode_autocomplete.build();
@@ -119,7 +119,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
                 if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
                 key += " " + route->line->code;
             }
-            this->route_autocomplete.add_string(key + " " + route->name, route->idx, georef.synonyms);
+            this->route_autocomplete.add_string(key + " " + route->name, route->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->route_autocomplete.build();
