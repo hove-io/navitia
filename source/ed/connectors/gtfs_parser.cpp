@@ -45,17 +45,42 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 namespace ed{ namespace connectors {
 
+nt::Type_e get_type_enum(const std::string& str) {
+    if ("network" == str) {
+        return nt::Type_e::Network;
+    }
+    if ("stop_area" == str) {
+        return nt::Type_e::StopArea;
+    }
+    if ("stop_point" == str) {
+        return nt::Type_e::StopPoint;
+    }
+    if ("line" == str) {
+        return nt::Type_e::Line;
+    }
+    if ("route" == str) {
+        return nt::Type_e::Route;
+    }
+    if ("trip" == str) {
+        return nt::Type_e::VehicleJourney;
+    }
+    if ("stop_time" == str) {
+        return nt::Type_e::StopTime;
+    }
+    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unkown navitia type: " << str);
+    return nt::Type_e::Unknown;
+}
 /**
  * add a comment.
  * create an id for the comment if needed since the comments are handled by ID in fusio2ed
  */
-void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const Data::comment_key& key, const std::string& comment) {
+template <typename T>
+void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const T& obj, const std::string& comment) {
     std::string& comment_id = gtfs_data.comments_id_map[comment];
     if (comment_id.empty()) {
         comment_id = "comment__" + gtfs_data.comments_id_map.size();
     }
-
-    data.comments[key].push_back(comment_id);
+    data.add_pt_object_comment(obj, comment_id);
 
     data.comment_by_id[comment_id] = comment;
 }
@@ -458,7 +483,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             sa->time_zone_with_name = gtfs_data.tz.default_timezone;
         }
         if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, {"stop_area", sa}, row[desc_c]);
+            add_gtfs_comment(gtfs_data, data, sa, row[desc_c]);
         }
     }
     // C'est un StopPoint
@@ -489,7 +514,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         }
 
         if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, {"stop_point", sp}, row[desc_c]);
+            add_gtfs_comment(gtfs_data, data, sp, row[desc_c]);
         }
 
         //we save the tz in case the stop point is later promoted to stop area
@@ -520,7 +545,7 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     line->name = row[long_name_c];
     line->code = row[short_name_c];
     if (has_col(desc_c, row)) {
-        add_gtfs_comment(gtfs_data, data, {"line", line},row[desc_c]);
+        add_gtfs_comment(gtfs_data, data, line, row[desc_c]);
     }
 
     if(has_col(color_c, row)) {

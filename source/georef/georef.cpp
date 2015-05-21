@@ -387,7 +387,7 @@ void GeoRef::build_autocomplete_list(){
             // After this modification the result found with postal code in search string
             // should contain only this postal code but not others of the admin found.
             std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
-            fl_way.add_string(key, pos, this->synonyms);
+            fl_way.add_string(key, pos, this->ghostwords, this->synonyms);
 
         }
     }
@@ -401,13 +401,13 @@ void GeoRef::build_autocomplete_list(){
         if (auto admin = find_city_admin(poi->admin_list)) {
             key += " " + admin->name;
         }
-        fl_poi.add_string(key, poi->idx , this->synonyms);
+        fl_poi.add_string(key, poi->idx , this->ghostwords, this->synonyms);
     }
     fl_poi.build();
 
     fl_admin.clear();
     for(Admin* admin : admins){
-        fl_admin.add_string(admin->name + " " + admin->postal_codes_to_string(), admin->idx , this->synonyms);
+        fl_admin.add_string(admin->name + " " + admin->postal_codes_to_string(), admin->idx , this->ghostwords, this->synonyms);
     }
     fl_admin.build();
 }
@@ -452,7 +452,7 @@ void GeoRef::build_admin_map(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax, const int search_type, std::function<bool(nt::idx_t)> keep_element) const{
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax, const int search_type, std::function<bool(nt::idx_t)> keep_element, const std::set<std::string>& ghostwords) const{
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
 
@@ -473,9 +473,9 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
         search_str = str;
     }
     if (search_type == 0){
-        to_return = fl_way.find_complete(search_str, nbmax, keep_element);
+        to_return = fl_way.find_complete(search_str, nbmax, keep_element, ghostwords);
     }else{
-        to_return = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element);
+        to_return = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element, ghostwords);
     }
 
     /// récupération des coordonnées du numéro recherché pour chaque rue

@@ -33,7 +33,7 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
-#include <string>
+#include <map>
 #include <boost/range/algorithm.hpp>
 #include "conf.h"
 #include "ed/build_helper.h"
@@ -100,12 +100,13 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     //7 objects have comments
     //the file contains wrongly formated comments, but they are skiped
     BOOST_REQUIRE_EQUAL(data.comments.size(), 5);
-    std::map<Data::comment_key, std::vector<std::string>> expected_comments = {
-        {{"route", data.routes[0]}, {"bob"}},
-        {{"trip", data.vehicle_journeys[4]}, {"bobette"}},
-        {{"trip", data.vehicle_journeys[5]}, {"bobette"}}, //split too
-        {{"stop_area", data.stop_areas[2]}, {"bob"}},
-        {{"stop_point", data.stop_points[3]}, {"bobette"}}
+
+    std::map<ed::types::pt_object_header, std::vector<std::string>> expected_comments = {
+        {ed::types::make_pt_object(data.routes[0]), {"bob"}},
+        {ed::types::make_pt_object(data.vehicle_journeys[4]), {"bobette"}},
+        {ed::types::make_pt_object(data.vehicle_journeys[5]), {"bobette"}}, //split too
+        {ed::types::make_pt_object(data.stop_areas[2]), {"bob"}},
+        {ed::types::make_pt_object(data.stop_points[3]), {"bobette"}}
     };
 
     BOOST_CHECK_EQUAL_COLLECTIONS(data.comments.begin(), data.comments.end(),

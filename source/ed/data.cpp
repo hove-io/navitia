@@ -404,6 +404,7 @@ void Data::clean() {
     // We avoid resizing the vector until completition for performance reasons.
     size_t num_elements = stops.size();
     for(size_t to_erase : erasest) {
+        remove_reference_to_object(stops[to_erase]);
         delete stops[to_erase];
         stops[to_erase] = stops[num_elements - 1];
         num_elements--;
@@ -447,6 +448,8 @@ void Data::clean() {
             //we remove the meta vj
             meta_vj_map.erase(vj->meta_vj_name);
         }
+
+        remove_reference_to_object(vj);
         delete vj;
         vehicle_journeys[to_erase] = vehicle_journeys[num_elements - 1];
         num_elements--;
@@ -478,14 +481,6 @@ void Data::clean() {
 static void affect_shape(nt::LineString& to, const nt::MultiLineString& from) {
     if (from.empty()) return;
     if (to.size() < from.front().size()) { to = from.front(); }
-}
-
-
-void Data::add_object_code(const nt::Header* header,const nt::Type_e type, const std::string& value, const std::string& key){
-    ed::types::ObjectCode object_code;
-    object_code.key = key;
-    object_code.value = value;
-    object_codes[{header, type}].push_back(object_code);
 }
 
 // TODO : For now we construct one route per journey pattern

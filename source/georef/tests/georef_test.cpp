@@ -669,6 +669,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
         navitia::georef::Edge e1;
         std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
         int nbmax = 10;
+        std::set<std::string> ghostwords;
 
         navitia::georef::Way  way;
         way.name = "jeanne d'arc";
@@ -766,7 +767,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         geo_ref.build_autocomplete_list();
 
-        result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;});
+        result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
         if (result.empty())
             result.clear();
 

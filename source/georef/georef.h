@@ -39,7 +39,9 @@ www.navitia.io
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
+#include <boost/serialization/set.hpp>
 #include <map>
+#include <set>
 
 
 namespace nt = navitia::type;
@@ -252,13 +254,16 @@ struct GeoRef {
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode;
     navitia::autocomplete::autocomplete_map synonyms;
+    std::set<std::string> ghostwords;
+
+
     int word_weight = 5; //Pas serialisé : lu dans le fichier ini
 
     void init();
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
+                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & ghostwords & poi_proximity_list
                 & nb_vertex_by_mode;
     }
 
@@ -267,7 +272,7 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
+                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & ghostwords & poi_proximity_list
                 & nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -288,7 +293,7 @@ struct GeoRef {
     void build_pois_map();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element, const std::set<std::string>& ghostwords) const;
 
 
     const std::vector<Admin*> find_admins(const type::GeographicalCoord&) const;

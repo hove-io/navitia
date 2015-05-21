@@ -1426,7 +1426,14 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         const_it["key"].to(key);
         const_it["value"].to(value);
-        data.geo_ref->synonyms[key] = value;
+        boost::to_lower(key);
+        boost::to_lower(value);
+        if (!value.empty()){
+            data.geo_ref->synonyms[key] = value;
+        }
+        else{
+            data.geo_ref->ghostwords.insert(key);
+        }
     }
 }
 

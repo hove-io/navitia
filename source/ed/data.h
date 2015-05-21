@@ -73,7 +73,6 @@ create_shape(const nt::GeographicalCoord& from,
              const nt::GeographicalCoord& to,
              const nt::LineString& shape);
 
-
 /** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
       * Les vecteurs contiennent des pointeurs vers un objet TC.
@@ -99,7 +98,6 @@ public:
 
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
 
-    std::vector<ed::types::ObjectProperty> object_properties;
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
@@ -109,26 +107,31 @@ public:
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
 
-    std::map<std::pair<const nt::Header*, navitia::type::Type_e>, std::vector<ed::types::ObjectCode>> object_codes;
+    std::map<ed::types::pt_object_header, std::map<std::string, std::string>> object_properties;
 
-    size_t count_too_long_connections = 0,
-           count_empty_connections = 0;
+    std::map<ed::types::pt_object_header, std::map<std::string, std::string>> object_codes;
 
-    // list of comment ids by {objec_type, object}
-    using comment_key = std::pair<std::string, const nt::Header*>;
-    std::map<comment_key, std::vector<std::string>> comments;
+    // list of comment ids for pt_objects
+    std::map<ed::types::pt_object_header, std::vector<std::string>> comments;
     std::map<std::string, std::string> comment_by_id;
 
         //we don't want stoptime to derive from Header so we use a custom container
     std::map<const ed::types::StopTime*, std::vector<std::string>> stoptime_comments;
 
+    size_t count_too_long_connections = 0,
+           count_empty_connections = 0;
     /**
          * trie les différentes donnée et affecte l'idx
          *
          */
     void sort();
 
-    void add_object_code(const nt::Header* header, const nt::Type_e type, const std::string& value, const std::string& key="external_code");
+    template <typename T>
+    void add_object_code(const T& obj, const std::string& value, const std::string& key="external_code");
+
+    template <typename T>
+    void add_pt_object_comment(const T* obj, const std::string& comment);
+    void add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment);
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
@@ -170,6 +173,17 @@ public:
      */
     void finalize_frequency();
 
+    /**
+     * Remove the objects from the collections:
+     *  - comments
+     *  - ObjectProperty
+     *  - codes
+     *
+     *  Call this before delete of an object
+     */
+    template <typename T>
+    void remove_reference_to_object(const T*);
+    void remove_reference_to_object(const ed::types::StopTime*);
 
     types::ValidityPattern* get_or_create_validity_pattern(const types::ValidityPattern& vp);
 
@@ -231,5 +245,36 @@ struct Georef{
     std::unordered_map<std::string, types::Poi> pois;
     ~Georef();
 };
+
+template <typename T>
+void Data::remove_reference_to_object(const T* obj) {
+    const auto pt_object = ed::types::make_pt_object(obj);
+    object_codes.erase(pt_object);
+    object_properties.erase(pt_object);
+    comments.erase(pt_object);
+}
+inline void Data::remove_reference_to_object(const ed::types::StopTime* st) {
+    stoptime_comments.erase(st);
+}
+
+template <typename T>
+void Data::add_object_code(const T& obj, const std::string& value, const std::string& key) {
+    const auto pt_object = ed::types::make_pt_object(obj);
+    auto& codes = object_codes[pt_object];
+    if (codes.find(key) != codes.end()) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "code " << key << " already exists for object "
+                                                               << pt_object << " replacing the old one");
+    }
+    codes[key] = value;
+}
+
+template <typename T>
+void Data::add_pt_object_comment(const T* obj, const std::string& comment) {
+    const auto pt_object = ed::types::make_pt_object(obj);
+    comments[pt_object].push_back(comment);
+}
+inline void Data::add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment) {
+    stoptime_comments[st].push_back(comment);
+}
 
 }

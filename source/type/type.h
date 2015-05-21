@@ -103,7 +103,7 @@ enum class Type_e {
     Contributor                     = 16,
 
     // Objets spéciaux qui ne font pas partie du référentiel TC
-    eStopTime                       = 17,
+    StopTime                        = 17,
     Address                         = 18,
     Coord                           = 19,
     Unknown                         = 20,
