@@ -1027,7 +1027,7 @@ One traffic_report object is a complex object, made of a network, an array of li
 A typical traffic_report object will contain:
 
 * 1 network which is the grouping object
-    * it can contain links to its "global network disruptions"
+    * it can contain links to its disruptions. These disruptions are globals and might not be applied on lines or stop_areas.
 * 0..n lines 
     * each line contains at least a link to its disruptions
 * 0..n stop_areas
