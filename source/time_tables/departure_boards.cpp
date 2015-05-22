@@ -50,8 +50,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const bool show_codes,
           const type::Data& data) {
     pbnavitia::Response response;
-    auto current_time = pt::second_clock::local_time();
-    auto now = pt::second_clock::local_time();
+    auto current_time = pt::second_clock::universal_time();
     pt::time_period action_period(to_posix_time(datetime, data),
                                   to_posix_time(max_datetime, data));
 
@@ -80,7 +79,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
             fill_pb_object(dt_st.second, data, date_time, 0,
-                           now, action_period, dt_st.first, calendar_id);
+                           current_time, action_period, dt_st.first, calendar_id);
         }
         const auto& it = response_status.find(id_vec.first.second);
         if(it != response_status.end()){

@@ -48,7 +48,7 @@ static void create_pb(const std::vector<t_result>& result, uint32_t depth, const
     for(auto result_item : result){
         pbnavitia::PtObject* place = pb_response.add_places_nearby();
         //on récupére la date pour les impacts
-        auto current_date = boost::posix_time::second_clock::local_time();
+        auto current_date = boost::posix_time::second_clock::universal_time();
         auto idx = std::get<0>(result_item);
         auto coord_item = std::get<1>(result_item);
         auto type = std::get<2>(result_item);

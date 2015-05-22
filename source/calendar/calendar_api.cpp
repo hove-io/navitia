@@ -45,7 +45,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     const std::vector<std::string>& forbidden_uris) {
     pbnavitia::Response pb_response;
     std::vector<type::idx_t> calendar_list;
-    auto now = boost::posix_time::second_clock::local_time();
+    auto now = boost::posix_time::second_clock::universal_time();
     boost::gregorian::date start_period(boost::gregorian::not_a_date_time);
     boost::gregorian::date end_period(boost::gregorian::not_a_date_time);
     if((!start_date.empty()) && (!end_date.empty())) {
