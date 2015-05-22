@@ -661,7 +661,7 @@ links               link_              Links related to the journeys
 +---------------------+--------------------------+--------------------------------------------------------------+
 | from                | `place <place>`_         | The place from where the journey starts                      |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| to                  | `<place>`_               | The place from where the journey ends                        |
+| to                  | `place <place>`_         | The place from where the journey ends                        |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | links               | `link`_                  | Links related to this journey                                |
 +---------------------+--------------------------+--------------------------------------------------------------+
@@ -995,8 +995,11 @@ Arrivals are ordered chronologically in growing order.
 Traffic reports
 ***************
 
-This service provide the state of public transport traffic.
+This service provides the state of public transport traffic.
 It can be called for an overall coverage or for a specific object. 
+
+Parameters
+##########
 
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>`_
 
@@ -1010,52 +1013,179 @@ For example:
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports
 
 The response is made of an array of `traffic_reports`_, and another one of `disruptions`_.
-There ares inner links between this 2 arrays: see the `inner-reference`_ section to use them.
+There are inner links between this 2 arrays: see the `inner-reference`_ section to use them.
 
 Objects
 #######
 
 .. _traffic_reports:
 
-* traffic_reports object
+* traffic_reports objects
 
 Traffic_reports is an array of some traffic_report object. 
 One traffic_report object is a complex object, made of a network, an array of lines and an array of stop_areas.
 A typical traffic_report object will contain:
 
 * 1 network which is the grouping object
-    * it can contain links to "global network disruptions"
+    * it can contain links to its "global network disruptions"
 * 0..n lines 
-    * each line contain at least a link to a "line disruptions"
+    * each line contains at least a link to its disruptions
 * 0..n stop_areas
-    * each stop_area contain at least a link to a "line disruptions"
+    * each stop_area contains at least a link to its disruptions
 
 It means that if a stop_area is used by many networks, it will appear many times.
 
 Here is a typical response
 
+.. code-block:: json
+
+    {
+    "traffic_reports": [
+        "network": {"name": "bob", "links": [], "id": "network:bob"},
+        "lines": [
+            {
+            "code": "1",
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-green",
+                "rel": "disruptions",
+                "templated": false
+                } ]
+            },
+            {
+            "code": "12",
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-pink",
+                "rel": "disruptions",
+                "templated": false
+                }]
+            },
+        ],
+        "stop_areas": [
+            {
+            "name": "bobito", 
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-red",
+                "rel": "disruptions",
+                "templated": false
+                }]
+            },
+        ],
+     ],
+     [
+        "network": {
+            "name": "bobette", 
+            "id": "network:bobette",
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-blue",
+                "rel": "disruptions",
+                "templated": false
+                }]
+            },
+        "lines": [
+            {
+            "code": "A",
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-green",
+                "rel": "disruptions",
+                "templated": false
+                } ]
+            },
+            {
+            "code": "C",
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-yellow",
+                "rel": "disruptions",
+                "templated": false
+                }]
+            },
+        "stop_areas": [
+            {
+            "name": "bobito", 
+             ... ,
+            "links": [ {
+                "internal": true,
+                "type": "disruption",
+                "id": "link-to-red",
+                "rel": "disruptions",
+                "templated": false
+                }]
+            },
+        ],
+
+    ],
+    "disruptions": [ 
+        {
+            "status": "active", 
+            "severity": {"color": "", "priority": 4, "name": "Information", "effect": "UNKNOWN_EFFECT"},
+            "messages": [ { "text": "green, super green", ...} ],
+            "id": "link-to-green"},
+            ...
+        },{
+            "status": "futur",
+            "messages": [ { "text": "pink, floyd pink", ... } ],
+            "id": "link-to-pink"},
+            ...
+        },{
+            "status": "futur",
+            "messages": [ { "text": "red, mine", ... } ],
+            "id": "link-to-red"},
+            ...
+        },{
+            "status": "futur",
+            "messages": [ { "text": "blue, grass", ... } ],
+            "id": "link-to-blue"},
+            ...
+        },{
+            "status": "futur",
+            "messages": [ { "text": "yellow, submarine", ... } 
+            "id": "link-to-yellow"},
+            ...}
+        ],
+    "link": { ... },
+    "pagination": { ... }
+    }
+
+This typical response means:
+
 * traffic_reports
-    * network "1"
-        * line "1" > internal link to disruption "a"
-        * line "12" > internal link to disruption "b"
-        * stop_area "A" > internal link to disruption "c"
-    * network "2" > internal link to disruption "d"
-        * line "A" > internal link to disruption "a"
-        * line "C" > internal link to disruption "e"
-        * stop_area "A" > internal link to disruption "c"
-* disruptions (disruption targets)
-    * disruption "a"
-    * disruption "b"
-    * disruption "c"
-    * disruption "d"
-    * disruption "e"
+    * network "bob"
+        * line "1" > internal link to disruption "green"
+        * line "12" > internal link to disruption "pink"
+        * stop_area "bobito" > internal link to disruption "red"
+    * network "bobette" > internal link to disruption "blue"
+        * line "A" > internal link to disruption "green"
+        * line "C" > internal link to disruption "yellow"
+        * stop_area "bobito" > internal link to disruption "red"
+* disruptions (disruption target links)
+    * disruption "green"
+    * disruption "pink"
+    * disruption "red"
+    * disruption "blue"
+    * disruption "yellow"
     * Each disruption contains the messages to show.
 
 Here is the details of the disruption object:
 
 .. _disruptions:
 
-* disruption object
+* Disruption object
 
 ===================== ========================================== ===================================================
 Field                 Type                                       Description
@@ -1063,7 +1193,7 @@ Field                 Type                                       Description
 status                between: "past", "active" or "future"      state of the disruption         
 id                    string                                     Id of the disruption
 disruption_id         string                                     for traceability: Id of original input disruption
-severity              `severity`_                                give some categorization element
+severity              `severity`_                                gives some categorization element
 application_periods   array of `period`_                         dates where the current disruption is active
 messages              `message`_                                 text to provide to the traveler
 updated_at            `date-time`_                               date_time of last modifications 
@@ -1338,11 +1468,12 @@ disruptions objects
 Messages
 ########
 
-===================== ==================== ==============================================
+===================== ==================== ==========================================================
 Field                 Type                 Description
-===================== ==================== ==============================================
+===================== ==================== ==========================================================
 text                  string               a message to bring to a traveler
-===================== ==================== ==============================================
+channel               `channel`_           destination media. Be careful, no normalized enum for now
+===================== ==================== ==========================================================
 
 .. _severity:
 
@@ -1356,7 +1487,7 @@ Severity object can be used to make visual grouping.
 +====================+==================+=======================================================================+
 | color              |  string          | HTML color for classification                                         |
 +--------------------+------------------+-----------------------------------------------------------------------+
-| priority           |  integer         | given by the agency : 0 is fewest priority                            |
+| priority           |  integer         | given by the agency : 0 is strongest priority. it can be null         |
 +--------------------+------------------+-----------------------------------------------------------------------+
 | name               |  string          | name of severity                                                      |
 +--------------------+------------------+-----------------------------------------------------------------------+
@@ -1364,6 +1495,22 @@ Severity object can be used to make visual grouping.
 |                    |                  | See the GTFS RT documentation at                                      |
 |                    |                  | https://developers.google.com/transit/gtfs-realtime/reference#Effect  |
 +--------------------+------------------+-----------------------------------------------------------------------+
+
+.. _channel:
+
+Channel
+#######
+
++---------------------+------------------+-----------------------------------------------------------------------+
+| Field               | Type             | Description                                                           |
++=====================+==================+=======================================================================+
+| id                  | string           | Identifier of the address                                             |
++---------------------+------------------+-----------------------------------------------------------------------+
+| content_type        | string           | Like text/html, you know? Otherwise, take a look at                   |
+|                     |                  | http://www.w3.org/Protocols/rfc1341/4_Content-Type.html               |
++---------------------+------------------+-----------------------------------------------------------------------+
+| name                | string           | name of the Channel                                                   |
++---------------------+------------------+-----------------------------------------------------------------------+
 
 .. _period:
 
