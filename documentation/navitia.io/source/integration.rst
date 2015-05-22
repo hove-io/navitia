@@ -273,7 +273,7 @@ Once you have selected a region, you can explore the public transportation objec
 easily with these apis. You just need to add at the end of your url 
 a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
-The only arguments are the ones of `paging`_.
+The `paging`_ arguments may be used to paginate results.
 
 Collections
 ###########
@@ -292,7 +292,12 @@ Specific parameters
 
 There are other specific parameters.
 
-A least, there is one: *odt_level* which can be applied only on /lines collection...
+odt_level
+#####################
+
+- Type: `String`
+- Default value: `all`
+- Warning: works ONLY with /lines collection...
 
 It allows you to request navitia for specific pickup lines. It refers to the `odt`_ section.
 "odt_level" can take one of these values:
@@ -310,6 +315,15 @@ For example
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
 
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=scheduled
+
+distance
+#####################
+
+- Type: `Integer`
+- Default value: 200
+
+If you specify coords in your filter, you can modify the radius used for the proximity search.
+https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
 
 Examples
 ########
