@@ -1,10 +1,13 @@
 Navitia documentation: v1 interface 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. contents:: Index
+
 Overview
 ========
 
 This document describes how to call navitia via the v1 interface, and the returned resources.
+You can read our lexicon at https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md
 
 Endpoint
 ********
@@ -184,6 +187,8 @@ you will find a *links* section:
 You have to put one line id instead of "{lines.id}". For example:
 https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
 
+.. _inner_reference:
+
 Inner references
 ****************
 
@@ -266,8 +271,8 @@ Coverage
 You can easily navigate through regions covered by navitia.io, with the coverage api.
 The only arguments are the ones of `paging`_.
 
-Public transportation objects
-******************************
+Public transportation objects navigation
+****************************************
 
 Once you have selected a region, you can explore the public transportation objects 
 easily with these apis. You just need to add at the end of your url 
@@ -909,16 +914,16 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 Parameters
 ##########
 
-+----------+---------------------+-----------+------------------------------+---------------+
-| Required | Name                | Type      | Description                  | Default Value |
-+==========+=====================+===========+==============================+===============+
-| yep      | from_datetime       | date_time | The date_time from           |               |
-|          |                     |           | which you want the schedules |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
-|          |                     |           | between from_datetime        |               |
-|          |                     |           | and the retrieved datetimes. |               |
-+----------+---------------------+-----------+------------------------------+---------------+
++----------+---------------------+---------------------------------+------------------------------+---------------+
+| Required | Name                | Type                            | Description                  | Default Value |
++==========+=====================+=================================+==============================+===============+
+| yep      | from_datetime       | `date_time <date_time_object>`_ | The date_time from           |               |
+|          |                     |                                 | which you want the schedules |               |
++----------+---------------------+---------------------------------+------------------------------+---------------+
+| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
+|          |                     |                                 | between from_datetime        |               |
+|          |                     |                                 | and the retrieved datetimes. |               |
++----------+---------------------+---------------------------------+------------------------------+---------------+
 
 Objects
 #######
@@ -943,16 +948,16 @@ Departures are ordered chronologically in growing order.
 Parameters
 ##########
 
-+----------+---------------------+-----------+------------------------------+---------------+
-| Required | Name                | Type      | Description                  | Default Value |
-+==========+=====================+===========+==============================+===============+
-| yep      | from_datetime       | date_time | The date_time from           |               |
-|          |                     |           | which you want the schedules |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
-|          |                     |           | between from_datetime        |               |
-|          |                     |           | and the retrieved datetimes. |               |
-+----------+---------------------+-----------+------------------------------+---------------+
++----------+---------------------+---------------------------------+------------------------------+---------------+
+| Required | Name                | Type                            | Description                  | Default Value |
++==========+=====================+=================================+==============================+===============+
+| yep      | from_datetime       | `date_time <date_time_object>`_ | The date_time from           |               |
+|          |                     |                                 | which you want the schedules |               |
++----------+---------------------+---------------------------------+------------------------------+---------------+
+| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
+|          |                     |                                 | between from_datetime        |               |
+|          |                     |                                 | and the retrieved datetimes. |               |
++----------+---------------------+---------------------------------+------------------------------+---------------+
 
 Objects
 #######
@@ -969,6 +974,96 @@ stop_point            stop_point_               The stop point of the schedule
 
 Arrivals
 ********
+
+This api retrieves a list of arrivals from a datetime of a selected object.
+Arrivals are ordered chronologically in growing order.
+
+Traffic reports
+***************
+
+This service provide the state of public transport traffic.
+It can be called for an overall coverage or for a specific object. 
+
+You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>`_
+For example:
+* overall public transport traffic report on Ile de France coverage
+    * https://api.navitia.io/v1/coverage/fr-idf/traffic_reports
+* Is there any perturbations on the RER network ?
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports
+* Is there any perturbations on the "RER A" line ?
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports
+
+The response is made of an array of `traffic_reports`_, and another one of `disruptions`_.
+There ares inner links between this 2 arrays: see the `inner_reference`_ section to use them.
+
+Objects
+#######
+
+.. _traffic_reports:
+
+* traffic_reports object
+
+Traffic_reports is an array of some traffic_report object. 
+One traffic_report object is a complex object, made of a network, an array of lines and an array of stop_areas.
+A typical traffic_report object will contain:
+
+* 1 network which is the grouping object
+    * it can contain links to "global network disruptions"
+* 0..n lines 
+    * each line contain at least a link to a "line disruptions"
+* 0..n stop_areas
+    * each stop_area contain at least a link to a "line disruptions"
+
+It means that if a stop_area is used by many networks, it will appear many times.
+
+Here is a typical response
+
+* traffic_reports
+    * network "1"
+        * line "1" > internal link to disruption "a"
+        * line "12" > internal link to disruption "b"
+        * stop_area "A" > internal link to disruption "c"
+    * network "2" > internal link to disruption "d"
+        * line "A" > internal link to disruption "a"
+        * line "C" > internal link to disruption "e"
+        * stop_area "A" > internal link to disruption "c"
+* disruptions (disruption targets)
+    * disruption "a"
+    * disruption "b"
+    * disruption "c"
+    * disruption "d"
+    * disruption "e"
+    * Each disruption contains the messages to show.
+
+===================== ========================================== ===================================================
+Field                 Type                                       Description
+===================== ========================================== ===================================================
+status                between: "past", "active" or "future"      state of the disruption         
+id                    string                                     Id of the disruption
+disruption_id         string                                     for traceability: Id of original input disruption
+severity              `severity`_                                give some categorization element
+application_periods   array of `element`_                        dates where the current disruption is active
+messages              `message`_                                 text to provide to the traveler
+updated_at            `date_time <date_time_object>`_            date_time of last modifications 
+cause                 string                                     why is there such a disruption?
+===================== ========================================== ===================================================
+
+.. _disruptions:
+
+* disruption object
+
+===================== ========================================== ===================================================
+Field                 Type                                       Description
+===================== ========================================== ===================================================
+status                between: "past", "active" or "future"      state of the disruption         
+id                    string                                     Id of the disruption
+disruption_id         string                                     for traceability: Id of original input disruption
+severity              `severity`_                                give some categorization element
+application_periods   array of `element`_                        dates where the current disruption is active
+messages              `message`_                                 text to provide to the traveler
+updated_at            `date_time <date_time_object>`_            date_time of last modifications 
+cause                 string                                     why is there such a disruption?
+===================== ========================================== ===================================================
 
 Objects
 =======
@@ -1229,6 +1324,54 @@ zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
 
 Cities are mainly on the 8 level, dependant on the country (http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative)
+
+disruptions objects
+*******************
+
+.. _message:
+
+Messages
+########
+
+===================== ==================== ==============================================
+Field                 Type                 Description
+===================== ==================== ==============================================
+text                  string               a message to bring to a traveler
+===================== ==================== ==============================================
+
+.. _severity:
+
+Severity
+########
+
+Severity object can be used to make visual grouping.
+
++--------------------+------------------+-----------------------------------------------------------------------+
+| Field              | Type             | Description                                                           |
++====================+==================+=======================================================================+
+| color              |  string          | HTML color for classification                                         |
++--------------------+------------------+-----------------------------------------------------------------------+
+| priority           |  integer         | given by the agency : 0 is fewest priority                            |
++--------------------+------------------+-----------------------------------------------------------------------+
+| name               |  string          | name of severity                                                      |
++--------------------+------------------+-----------------------------------------------------------------------+
+| effect             |  Enum            | Normalized value of the effect on the public transport object         |
+|                    |                  | See the GTFS RT documentation at                                      |
+|                    |                  | https://developers.google.com/transit/gtfs-realtime/reference#Effect  |
++--------------------+------------------+-----------------------------------------------------------------------+
+
+.. _period:
+
+Period
+######
+
+===================== =============================================== ==============================================
+Field                 Type                                            Description
+===================== =============================================== ==============================================
+begin                 `date_time <date_time_object>`_                 Beginning date and time of an activity period
+end                   `date_time <date_time_object>`_                 Closing date and time of an activity period
+===================== =============================================== ==============================================
+
 
 Other objects
 *************
