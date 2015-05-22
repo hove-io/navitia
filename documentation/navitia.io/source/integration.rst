@@ -651,13 +651,13 @@ links               link_              Links related to the journeys
 +---------------------+--------------------------+--------------------------------------------------------------+
 | nb_transfers        | int                      | Number of transfers in the journey                           |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| departure_date_time | `date_time <date-time>`_ | Departure date and time of the journey                       |
+| departure_date_time | `date-time`_             | Departure date and time of the journey                       |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| requested_date_time | `date_time <date-time>`_ | Requested date and time of the journey                       |
+| requested_date_time | `date-time`_ | Requested date and time of the journey                       |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| arrival_date_time   | `date_time <date-time>`_ | Arrival date and time of the journey                         |
+| arrival_date_time   | `date-time`_ | Arrival date and time of the journey                         |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| sections            | array `section`_         | All the sections of the journey                              |
+| sections            | array of `section`_      | All the sections of the journey                              |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | from                | `place <place>`_         | The place from where the journey starts                      |
 +---------------------+--------------------------+--------------------------------------------------------------+
@@ -761,9 +761,9 @@ links               link_              Links related to the journeys
 +-------------------------+------------------------------------+----------------------------------------------------+
 | stop_date_times         | Array of stop_date_time_           | List of the stop times of this section             |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| departure_date_time     | `date_time <date-time>`_           | Date and time of departure                         |
+| departure_date_time     | `date-time`_           | Date and time of departure                         |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| arrival_date_time       | `date_time <date-time>`_           | Date and time of arrival                           |
+| arrival_date_time       | `date-time`_           | Date and time of arrival                           |
 +-------------------------+------------------------------------+----------------------------------------------------+
 
 
@@ -911,7 +911,7 @@ Rows    Array of row_     A row of the schedule
 +------------+----------------------------------------------+---------------------------+
 | Field      | Type                                         | Description               |
 +============+==============================================+===========================+
-| date_times | Array of `date_time <date-time>`_            | Array of date_time        |
+| date_times | Array of `date-time`_            | Array of date_time        |
 +------------+----------------------------------------------+---------------------------+
 | stop_point | `stop_point`_                                | The stop point of the row |
 +------------+----------------------------------------------+---------------------------+
@@ -931,7 +931,7 @@ Parameters
 +----------+---------------------+---------------------------------+------------------------------+---------------+
 | Required | Name                | Type                            | Description                  | Default Value |
 +==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date_time <date-time>`_        | The date_time from           |               |
+| yep      | from_datetime       | `date-time`_        | The date_time from           |               |
 |          |                     |                                 | which you want the schedules |               |
 +----------+---------------------+---------------------------------+------------------------------+---------------+
 | nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
@@ -949,7 +949,7 @@ Field                 Type                                            Descriptio
 ===================== =============================================== ==============================================
 display_informations  display_informations_                           Usefull information about the route to display
 route                 route_                                          The route of the schedule
-date_times            Array of `date_time <date-time>`_               When does a bus stops at the stop point
+date_times            Array of `date-time`_               When does a bus stops at the stop point
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
@@ -965,7 +965,7 @@ Parameters
 +----------+---------------------+---------------------------------+------------------------------+---------------+
 | Required | Name                | Type                            | Description                  | Default Value |
 +==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date_time <date-time>`_        | The date_time from           |               |
+| yep      | from_datetime       | `date-time`_        | The date_time from           |               |
 |          |                     |                                 | which you want the schedules |               |
 +----------+---------------------+---------------------------------+------------------------------+---------------+
 | nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
@@ -1066,7 +1066,7 @@ disruption_id         string                                     for traceabilit
 severity              `severity`_                                give some categorization element
 application_periods   array of `period`_                         dates where the current disruption is active
 messages              `message`_                                 text to provide to the traveler
-updated_at            `date_time <date-time>`_                   date_time of last modifications 
+updated_at            `date-time`_                   date_time of last modifications 
 cause                 string                                     why is there such a disruption?
 ===================== ========================================== ===================================================
 
@@ -1373,8 +1373,8 @@ Period
 ===================== =============================================== ==============================================
 Field                 Type                                            Description
 ===================== =============================================== ==============================================
-begin                 `date_time <date-time>`_                        Beginning date and time of an activity period
-end                   `date_time <date-time>`_                        Closing date and time of an activity period
+begin                 `date-time`_                        Beginning date and time of an activity period
+end                   `date-time`_                        Closing date and time of an activity period
 ===================== =============================================== ==============================================
 
 
@@ -1416,7 +1416,7 @@ stop_date_time
 ========== ===================================== ============
 Field      Type                                  Description
 ========== ===================================== ============
-date_time  `date_time <date-time>`_              A date time
+date_time  `date-time`_              A date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============
 
