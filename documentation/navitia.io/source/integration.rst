@@ -273,7 +273,7 @@ Once you have selected a region, you can explore the public transportation objec
 easily with these apis. You just need to add at the end of your url 
 a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
-The arguments are the ones of `paging`_.
+The `paging`_ arguments may be used to paginate results.
 
 Collections
 ###########
