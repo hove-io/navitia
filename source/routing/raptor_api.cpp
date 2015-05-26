@@ -266,7 +266,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                        const bool show_codes) {
     pbnavitia::Response& pb_response = enhanced_response.response;
 
-    bt::ptime now = bt::second_clock::local_time();
+    bt::ptime now = bt::second_clock::universal_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     for(Path path : paths) {
@@ -620,7 +620,7 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    int max_duration,
                                    bool show_codes,
                                    bool show_stop_area) {
-    bt::ptime now = bt::second_clock::local_time();
+    bt::ptime now = bt::second_clock::universal_time();
     for(const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
