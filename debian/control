@@ -116,18 +116,3 @@ Priority: optional
 Description: small api for monitor kraken instances
     small api for monitoring kraken instances
 
-
-Package: navitia-stat-persistor
-Build-Depends:
-    dh-python
-    python
-    python-all
-X-Python-Version: >=2.7
-Architecture: all
-Maintainer: Krishna Adhikari <krishna.adhikari@canaltp.fr>
-Depends: python-protobuf
-Section: devel
-Priority: optional
-Description: Navitia-stat-persistor
-    This is the service persisting statistics
-
