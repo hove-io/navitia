@@ -1800,3 +1800,41 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     const auto& j = resp.journeys(0);
     BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR"); //we should have the network's disruption's effect
 }
+
+BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+    b.vj("B")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 10*3600 + 20 * 60 ,10*3600 + 21*60);
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
+    navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
+    navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
+
+    ng::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(0).pt_display_informations().uris().line(), "A");
+
+    forbidden.push_back("A");
+    resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(0).pt_display_informations().uris().line(), "B");
+
+
+}
