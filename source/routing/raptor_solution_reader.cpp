@@ -435,7 +435,7 @@ struct RaptorSolutionReader {
         const unsigned transfer_t =
             v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
-        for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
+        for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
                 jpp.idx, begin_dt, v.clockwise(), disruption_active,
@@ -474,7 +474,7 @@ struct RaptorSolutionReader {
                   const SpIdx begin_sp_idx,
                   const DateTime begin_dt) {
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
-        for (const auto jpp: raptor.data.dataRaptor->jpps_from_sp[begin_sp_idx]) {
+        for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
                 jpp.idx, begin_dt, v.clockwise(), disruption_active,
