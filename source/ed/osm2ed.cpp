@@ -151,14 +151,15 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
     if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
-    if (is_street) {
-        const auto name = name_it != tags.end() ? name_it->second : "";
-        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
-    } else if(is_used_by_relation) {
+
+    const auto name = name_it != tags.end() ? name_it->second : "";
+    if(is_used_by_relation) {
         it_way->set_properties(properties);
-        if (name_it != tags.end()) {
-            it_way->set_name(name_it->second);
+        if(!name.empty()){
+            it_way->set_name(name);
         }
+    }else if (is_street) {
+        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
     }
     for (auto osm_id : nodes_refs) {
         auto v = cache.nodes.insert(OSMNode(osm_id));
