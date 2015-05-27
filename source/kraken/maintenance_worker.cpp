@@ -149,10 +149,12 @@ void MaintenanceWorker::init_rabbitmq(){
 
     //creation of a tempory queue for this kraken
     this->queue_name_task = channel->DeclareQueue("", false, false, true, true);
+    LOG4CPLUS_INFO(logger, "queue for tasks: " << this->queue_name_task);
     //binding the queue to the exchange for all task for this instance
     channel->BindQueue(queue_name_task, exchange_name, instance_name+".task.*");
 
     this->queue_name_rt = channel->DeclareQueue("", false, false, true, true);
+    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
     //binding the queue to the exchange for all task for this instance
     LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
     for(auto topic: conf.rt_topics()){
