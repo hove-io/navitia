@@ -19,7 +19,7 @@ DISABLE_DATABASE = False
 PUBLIC = True
 
 #message returned on authentication request
-HTTP_BASIC_AUTH_REALM = 'Navitia.io'
+HTTP_BASIC_AUTH_REALM = 'Token Required'
 
 from jormungandr.logging_utils import IdFilter
 
