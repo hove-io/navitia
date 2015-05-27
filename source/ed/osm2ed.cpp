@@ -311,7 +311,8 @@ void OSMCache::insert_edges() {
             if (!node->is_defined()) {
                 continue;
             }
-            if (node->is_used_more_than_once() && prev_node != nodes.end()) {
+            if ((node->is_used_more_than_once() && prev_node != nodes.end())
+                    || (node == way.nodes.back() && prev_node != nodes.end())) {
                 // If a node is used more than once, it is an intersection,
                 // hence it's a node of the street network graph
                 geog << node->coord_to_string() << ")";
