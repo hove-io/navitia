@@ -113,7 +113,7 @@ void GeopalParser::fill_postal_codes(){
                 auto adm = this->data.admins.find(row[insee_c]);
                 if (adm != this->data.admins.end()){
                     if(reader.is_valid(code_post_c, row)){
-                        adm->second->postal_codes.push_back(row[code_post_c]);
+                        adm->second->postal_codes.insert(row[code_post_c]);
                     }
                 }
             }
