@@ -1,3 +1,9 @@
+navitia2 (1.18.2) unstable; urgency=low
+
+  * Ed: we want postal codes to be unique  <https://github.com/CanalTP/navitia/pull/1055> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Wed, 27 May 2015 18:05:42 +0100
+
 navitia2 (1.18.1) unstable; urgency=low
 
   * Autocomplete: Fix ghostword <https://github.com/CanalTP/navitia/pull/1046>
