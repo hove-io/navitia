@@ -315,6 +315,9 @@ void OSMCache::insert_edges() {
                     || (node == way.nodes.back() && prev_node != nodes.end())) {
                 // If a node is used more than once, it is an intersection,
                 // hence it's a node of the street network graph
+                // If a node is only used by one way we can simplify the and reduce the number of edges, we don't need
+                // to have the perfect representation of the way on the graph, but we have the correct representation
+                // in the linestring
                 geog << node->coord_to_string() << ")";
                 lotus.insert({std::to_string(prev_node->osm_id),
                         std::to_string(node->osm_id), std::to_string(ref_way_id),
