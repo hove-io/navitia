@@ -66,7 +66,8 @@ def valid_autocomplete_with_multi_object(response):
 def is_response_empty(response):
     """response is empty"""
     assert len(response['links']) == 0
-    assert 'places' not in response
+    assert 'places' in response
+    assert len(response['places']) == 0
 
 def is_valid_autocomplete(response, depth):
     links = get_not_null(response, 'links')
