@@ -33,7 +33,7 @@ from check_utils import *
 
 
 @dataset(["basic_routing_test"])
-class TestJourneys(AbstractTestFixture):
+class TestIsochrone(AbstractTestFixture):
     """
     Test the structure of the journeys response
     """
