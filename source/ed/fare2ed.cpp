@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << navitia::config::kraken_version << " "
+        std::cout << argv[0] << " " << navitia::config::project_version << " "
                   << navitia::config::navitia_build_type << std::endl;
         return 0;
     }

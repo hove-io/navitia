@@ -68,7 +68,7 @@ int main(int argn, char** argv){
     DataManager<navitia::type::Data> data_manager;
 
     auto logger = log4cplus::Logger::getInstance("startup");
-    LOG4CPLUS_INFO(logger, "starting kraken: " << navitia::config::kraken_version);
+    LOG4CPLUS_INFO(logger, "starting kraken: " << navitia::config::project_version);
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);

@@ -7,6 +7,6 @@ namespace navitia { namespace config {
 
 extern const char* fixtures_dir;
 extern const char* navitia_build_type;
-extern const char* kraken_version;
+extern const char* project_version;
 
 }}// namespace navitia::config
