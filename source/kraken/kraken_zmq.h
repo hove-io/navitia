@@ -67,7 +67,7 @@ void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_man
 
         pbnavitia::Request pb_req;
         pbnavitia::Response result;
-        pt::ptime start = pt::microsec_clock::local_time();
+        pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
         if(pb_req.ParseFromArray(request.data(), request.size())){
             api = pb_req.requested_api();
@@ -102,7 +102,7 @@ void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_man
 
         if(api != pbnavitia::METADATAS){
             LOG4CPLUS_DEBUG(logger, "processing time : "
-                            << (pt::microsec_clock::local_time() - start).total_milliseconds());
+                            << (pt::microsec_clock::universal_time() - start).total_milliseconds());
         }
     }
 }

@@ -1,3 +1,20 @@
+navitia2 (1.19.0) unstable; urgency=low
+
+  * Isochron missing results  <https://github.com/CanalTP/navitia/pull/1058>
+  * All: rename kraken_version in project_version  <https://github.com/CanalTP/navitia/pull/1057>
+  * kraken: log queue name used by kraken   <https://github.com/CanalTP/navitia/pull/1056>
+  * osm2ed: fix import of blind alley   <https://github.com/CanalTP/navitia/pull/1054>
+  * Change default realm for basic authentication   <https://github.com/CanalTP/navitia/pull/1053>
+  * osm2ed: fix a bug when a way was also a relation  <https://github.com/CanalTP/navitia/pull/1052>
+  * Raptor: the reader was not using the forbidden uris  <https://github.com/CanalTP/navitia/pull/1051>
+  * kraken: use UTC time for "now" in all API  <https://github.com/CanalTP/navitia/pull/1050>
+  * documentation: add traffic_reports API  <https://github.com/CanalTP/navitia/pull/1049>
+  * Add distance param to documentation  <https://github.com/CanalTP/navitia/pull/1047>
+  * doc: remove doc sncf, moved to: https://github.com/SNCFdevelopers/ApiSNCF <https://github.com/CanalTP/navitia/pull/1044>
+  * remove stat_persistor from this repository  <https://github.com/CanalTP/navitia/pull/1043>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 29 May 2015 15:05:42 +0100
+
 navitia2 (1.18.2) unstable; urgency=low
 
   * Ed: we want postal codes to be unique  <https://github.com/CanalTP/navitia/pull/1055> 

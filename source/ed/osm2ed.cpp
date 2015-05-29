@@ -151,14 +151,15 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
     if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
-    if (is_street) {
-        const auto name = name_it != tags.end() ? name_it->second : "";
-        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
-    } else if(is_used_by_relation) {
+
+    const auto name = name_it != tags.end() ? name_it->second : "";
+    if(is_used_by_relation) {
         it_way->set_properties(properties);
-        if (name_it != tags.end()) {
-            it_way->set_name(name_it->second);
+        if(!name.empty()){
+            it_way->set_name(name);
         }
+    }else if (is_street) {
+        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
     }
     for (auto osm_id : nodes_refs) {
         auto v = cache.nodes.insert(OSMNode(osm_id));
@@ -310,9 +311,13 @@ void OSMCache::insert_edges() {
             if (!node->is_defined()) {
                 continue;
             }
-            if (node->is_used_more_than_once() && prev_node != nodes.end()) {
+            if ((node->is_used_more_than_once() && prev_node != nodes.end())
+                    || (node == way.nodes.back() && prev_node != nodes.end())) {
                 // If a node is used more than once, it is an intersection,
                 // hence it's a node of the street network graph
+                // If a node is only used by one way we can simplify the and reduce the number of edges, we don't need
+                // to have the perfect representation of the way on the graph, but we have the correct representation
+                // in the linestring
                 geog << node->coord_to_string() << ")";
                 lotus.insert({std::to_string(prev_node->osm_id),
                         std::to_string(node->osm_id), std::to_string(ref_way_id),
@@ -906,7 +911,7 @@ int main(int argc, char** argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << navitia::config::kraken_version << " "
+        std::cout << argv[0] << " " << navitia::config::project_version << " "
                   << navitia::config::navitia_build_type << std::endl;
         return 0;
     }

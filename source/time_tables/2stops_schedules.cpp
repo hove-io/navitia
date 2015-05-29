@@ -96,7 +96,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         return pb_response;
     }
 
-    auto current_time = pt::second_clock::local_time();
+    auto current_time = pt::second_clock::universal_time();
     pt::time_period action_period(to_posix_time(dt, data), to_posix_time(max_dt, data));
 
     for(auto pair_dt_idx : board) {

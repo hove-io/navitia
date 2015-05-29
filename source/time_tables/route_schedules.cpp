@@ -242,7 +242,7 @@ route_schedule(const std::string& filter,
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
     }
-    auto now = pt::second_clock::local_time();
+    auto now = pt::second_clock::universal_time();
     auto pt_datetime = to_posix_time(handler.date_time, d);
     auto pt_max_datetime = to_posix_time(handler.max_datetime, d);
     pt::time_period action_period(pt_datetime, pt_max_datetime);

@@ -32,37 +32,52 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 
 
-@dataset(["main_routing_test"])
-class TestJourneys(AbstractTestFixture):
+@dataset(["basic_routing_test"])
+class TestIsochrone(AbstractTestFixture):
     """
     Test the structure of the journeys response
     """
 
     def test_from_isochrone_coord(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}"
+        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
         self.query(query, display=False)
 
+    def test_stop_point_isochrone_coord(self):
+        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
+        #not to use the jormungandr database
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=400&datetime=20120614T080000"
+        response = self.query(query, display=False)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["duration"] == 300
+        assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        response = self.query(query, display=False)
+        assert len(response["journeys"]) == 2
+        assert response["journeys"][0]["duration"] == 300
+        assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
+        assert response["journeys"][1]["duration"] == 25200
+        assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
 
     def test_to_isochrone_coord(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
+        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
         query = query.format(s_coord, "20120614T080000")
         self.query(query, display=False)
 
     def test_from_isochrone_sa(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}"
+        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format("stopA", "20120614T080000")
         self.query(query, display=False)
 
     def test_to_isochrone_sa(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
+        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
         query = query.format("stopA", "20120614T080000")
         self.query(query, display=False)
