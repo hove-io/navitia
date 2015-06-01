@@ -370,7 +370,7 @@ struct functor_add_vj {
 
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
+            nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "add") {}
 
     using apply_impacts_visitor::operator();
@@ -504,7 +504,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         std::set<nt::idx_t> jpp_to_erase;
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                         "Removing jpp from stop_points");
-        for (auto journey_pattern : impact->impacted_journey_patterns) {
+        std::vector<const nt::JourneyPattern*> jp_to_delete = impact->impacted_journey_patterns;
+        for (auto journey_pattern : jp_to_delete) {
             journey_pattern->for_each_vehicle_journey(
                         [&vehicle_journeys_to_erase](const type::VehicleJourney& vj) {
                 vehicle_journeys_to_erase.insert(vj.idx);
@@ -521,6 +522,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 jpp_to_erase.insert(journey_pattern_point->idx);
             }
         }
+        //we delete all impacted journey pattern, so there is no more impated journey pattern,
+        //if we don't do that we will try to delete them multiple times
+        impact->impacted_journey_patterns.clear();
 
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                         "Removing vehicle_journeys");
@@ -538,7 +542,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                         "Removing journey_patterns");
-        for (auto journey_pattern : impact->impacted_journey_patterns) {
+        for (auto journey_pattern : jp_to_delete) {
             // Now we can erase journey_patterns from the dataset
             pt_data.erase_obj(journey_pattern);
             pt_data.reindex_journey_patterns();
