@@ -113,8 +113,10 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
 
 BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     ed::builder b("20120614");
-    b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60)("stop_area:stop3", 8*3600 + 30 * 60 ,8*3600 + 31*60);
-    b.vj("A")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60 ,9*3600 + 21*60)("stop_area:stop3", 9*3600 + 30 * 60 ,9*3600 + 31*60);
+    b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60)
+            ("stop_area:stop3", 8*3600 + 30 * 60 ,8*3600 + 31*60)("stop_area:stop4", 8*3600 + 40 * 60 ,8*3600 + 41*60);
+    b.vj("A")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60 ,9*3600 + 21*60)
+            ("stop_area:stop3", 9*3600 + 30 * 60 ,9*3600 + 31*60)("stop_area:stop4", 9*3600 + 40 * 60 ,9*3600 + 41*60);
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
