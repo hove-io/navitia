@@ -308,6 +308,7 @@ It allows you to request navitia for specific pickup lines. It refers to the `od
 "odt_level" can take one of these values:
 
 *NEW! after 1.18 versions, this parameter is more accurate*
+
 * all (default value): no filter, provide all public transport lines, whatever its type
 * scheduled : provide only regular lines (see the `odt`_ section)
 * with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines. 
