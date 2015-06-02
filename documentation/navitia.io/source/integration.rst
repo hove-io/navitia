@@ -23,23 +23,33 @@ Some easy examples
 
 * Geographical coverage of the service > https://api.navitia.io/v1/coverage 
 * Where am I? (WGS 84 coordinates)
+
     * https://api.navitia.io/v1/coord/2.377310;48.847002
     * I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+
 * Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
+
     * https://api.navitia.io/v1/coverage/fr-idf
+
 * Networks available? (see what network_ is)
+
     * https://api.navitia.io/v1/coverage/fr-idf/networks
+
 * RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
 * Too much lines, let's use physical mode filtering
+
     * physical modes managed by RATP 
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
     * metro lines 
-    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines
+
 * By the way, what stuff are close to me?
+
     * https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
     * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
     * or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
     * or ...
+
 
 Resources
 *********
@@ -311,9 +321,11 @@ It allows you to request navitia for specific pickup lines. It refers to the `od
 
 * all (default value): no filter, provide all public transport lines, whatever its type
 * scheduled : provide only regular lines (see the `odt`_ section)
-* with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines. 
-  * You can easily request route_schedule and stop_schedule with these kind of lines.
-  * Be aware of "estimated" stop times
+* with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines.
+
+    * You can easily request route_schedule and stop_schedule with these kind of lines.
+    * Be aware of "estimated" stop times
+
 * zonal : to get "odt_with_zone" lines with non-detailed trips 
 
 For example
