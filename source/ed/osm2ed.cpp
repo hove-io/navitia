@@ -61,9 +61,12 @@ namespace ed { namespace connectors {
 void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tags &tags, const CanalTP::References &refs) {
     auto logger = log4cplus::Logger::getInstance("log");
     const auto tmp_admin_level = tags.find("admin_level");
+    const auto boundary = tags.find("boundary");
 
     std::string insee = "", postal_code = "", name = "";
-    if(tmp_admin_level != tags.end()) {
+    if (tmp_admin_level != tags.end()
+        && boundary != tags.end() && boundary->second == "administrative") {
+        // we consider only admin boundaries with level 8, 9 or 10
         std::vector<std::string> accepted_levels{"8", "9", "10"};
         const auto it_level = std::find(accepted_levels.begin(), accepted_levels.end(),
                 tmp_admin_level->second);
