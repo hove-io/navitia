@@ -38,11 +38,13 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include "boost/date_time/gregorian/gregorian.hpp"
 
 namespace navitia {
 
 namespace nt = navitia::type;
 namespace bt = boost::posix_time;
+namespace bg = boost::gregorian;
 
 static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
@@ -77,6 +79,21 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
     weak_cause = cause;
     return std::move(cause);
 
+}
+
+//return the period of activity for a day
+static boost::posix_time::time_period activity_period(const boost::gregorian::date& date,
+                                                          const boost::posix_time::time_period& period){
+    auto day_period = bt::time_period(bt::ptime(date, bt::hours(0)), bt::hours(24));
+    //we get the validity period of the imapct for this day
+    return day_period.intersection(period);
+}
+
+//return the time period of circulation of a vj for one day
+static boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
+                                                          const nt::VehicleJourney& vj){
+    return bt::time_period(bt::ptime(date, bt::seconds(vj.stop_time_list.front().departure_time)),
+            bt::ptime(date, bt::seconds(vj.stop_time_list.back().arrival_time)));
 }
 
 static boost::shared_ptr<nt::new_disruption::Severity>
@@ -298,13 +315,12 @@ struct functor_add_vj {
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         impact(impact), jp(jp), stop_point(stop_point), pt_data(pt_data), meta(meta) {}
 
-    void init_vj(nt::VehicleJourney* vj, const nt::VehicleJourney& vj_ref) const {
+    //return true only if the new vj circulate at least one day
+    bool init_vj(nt::VehicleJourney* vj, nt::VehicleJourney& vj_ref) const {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
         vj->uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
         vj->is_adapted = true;
-        pt_data.vehicle_journeys.push_back(vj);
-        pt_data.vehicle_journeys_map[vj->uri] = vj;
         vj->name = vj_ref.name;
         vj->company = vj_ref.company;
         vj->next_vj = vj_ref.next_vj;
@@ -313,17 +329,31 @@ struct functor_add_vj {
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
         nt::ValidityPattern tmp_vp;
+        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern);
         for (auto period : impact->application_periods) {
-            bt::time_iterator titr(period.begin(), bt::hours(24));
-            for(;titr<period.end(); ++titr) {
-                if (!meta.production_date.contains(titr->date())) {
+            bg::day_iterator titr(period.begin().date());
+            for(;titr<=period.end().date(); ++titr) {
+                if (!meta.production_date.contains(*titr)) {
                     continue;
                 }
-                const auto day = (titr->date() - meta.production_date.begin()).days();
-                tmp_vp.add(day);
+                const auto day = (*titr - meta.production_date.begin()).days();
+                //if the ref is active this day, we active the new one too
+                if(tmp_ref_vp.check(day) && execution_period(*titr, vj_ref).intersects(activity_period(*titr, period))){
+                    tmp_vp.add(day);
+                    tmp_ref_vp.remove(day);
+                }
             }
         }
+        if(tmp_vp.days.none()){
+            //this vehicle journey won't ever circulate
+            return false;
+        }
         vj->adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj_ref.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
+
+        pt_data.vehicle_journeys.push_back(vj);
+        pt_data.vehicle_journeys_map[vj->uri] = vj;
+
         // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
         vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
@@ -347,22 +377,25 @@ struct functor_add_vj {
         }
         // We need to link the newly created vj with this impact
         vj->impacted_by.push_back(impact);
-    }
-
-    bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
-        jp->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
-        auto vj = jp->discrete_vehicle_journey_list.back().get();
-        init_vj(vj, vj_ref);
         return true;
     }
 
-    bool operator()(nt::FrequencyVehicleJourney& vj_ref ) const {
-        jp->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
-        auto vj = jp->frequency_vehicle_journey_list.back().get();
+    bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
+        auto vj = std::make_unique<nt::DiscreteVehicleJourney>();
+        if(init_vj(vj.get(), vj_ref)){
+            jp->discrete_vehicle_journey_list.push_back(std::move(vj));
+        }
+        return true;
+    }
+
+    bool operator()(nt::FrequencyVehicleJourney& vj_ref) const {
+        auto vj = std::make_unique<nt::FrequencyVehicleJourney>();
         vj->start_time = vj_ref.start_time;
         vj->end_time = vj_ref.end_time;
-        vj->headway_secs= vj_ref.headway_secs;
-        init_vj(vj, vj_ref);
+        vj->headway_secs = vj_ref.headway_secs;
+        if(init_vj(vj.get(), vj_ref)){
+            jp->frequency_vehicle_journey_list.push_back(std::move(vj));
+        }
         return true;
     }
 };
@@ -381,13 +414,17 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             tmp_vp.days.set(i, vj.adapted_validity_pattern->days[i]);
         }
         for (auto period : impact->application_periods) {
-            bt::time_iterator titr(period.begin(), bt::hours(24));
-            for(;titr<period.end(); ++titr) {
-                if (!meta.production_date.contains(titr->date())) {
+            bg::day_iterator titr(period.begin().date());
+            for(;titr<=period.end().date(); ++titr) {
+                if (!meta.production_date.contains(*titr)) {
                     continue;
                 }
-                auto day = (titr->date() - meta.production_date.begin()).days();
-                if (tmp_vp.check(day)) {
+                auto day = (*titr - meta.production_date.begin()).days();
+                if (!tmp_vp.check(day)){
+                    continue;
+                }
+                //we get the validity period of the imapct for this day
+                if(activity_period(*titr, period).intersects(execution_period(*titr, vj))) {
                     tmp_vp.remove(day);
                 }
             }
@@ -399,10 +436,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     void operator()(const nt::StopPoint* stop_point) {
         this->log_start_action(stop_point->uri);
-        // We block all the journey pattern of the stop_point according to the impact
-        for (const auto jpp : stop_point->journey_pattern_point_list) {
-            apply_impacts_visitor::operator()(jpp->journey_pattern);
-        }
         if (stop_point->journey_pattern_point_list.empty()) {
             return;
         }
@@ -428,6 +461,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_jpp->idx = pt_data.journey_pattern_points.size();
                 new_jpp->uri = make_adapted_uri_fast(new_jpp->uri, pt_data.journey_pattern_points.size());
                 new_jp->journey_pattern_point_list.push_back(new_jpp);
+                new_jpp->stop_point->journey_pattern_point_list.push_back(new_jpp);
                 pt_data.journey_pattern_points.push_back(new_jpp);
                 pt_data.journey_pattern_points_map[new_jpp->uri] = new_jpp;
                 new_jpp->journey_pattern = new_jp;
