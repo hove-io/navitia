@@ -276,13 +276,13 @@ When your request is good but we are not able to find a journey
 Apis
 ====
 
-Coverage
-********
+Coverage (/coverage)
+********************
 You can easily navigate through regions covered by navitia.io, with the coverage api.
 The only arguments are the ones of `paging`_.
 
-Public transportation objects navigation
-****************************************
+Public transportation objects exploration (/networks or /lines or /routes...)
+*****************************************************************************
 
 Once you have selected a region, you can explore the public transportation objects 
 easily with these apis. You just need to add at the end of your url 
@@ -382,12 +382,118 @@ Other examples
   * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
-Places
-******
-
-This api search in public transport objects via their names.
+pt_objects (/pt_objects)
+************************
+This api search in public transport objects via their names. It's a kind of magical autocomplete on public transport data.
 It returns, in addition of classic objects, a collection of `place`_.
 
++------------------------------------------+
+| *Warning*                                |
+|                                          |
+|    There is no pagination for this api   |
++------------------------------------------+
+
+How does it works
+#################
+
+Differents kind of objects can be returned (sorted as):
+
+* network
+* commercial_mode
+* line
+* route
+* stop_area
+
+Here is a typical use case. A traveler has to find a line between the 1500 lines around Paris. 
+Without any filters:
+
+* traveler input: "bob"
+
+    * network : "bobby network"
+    * line : "bobby bus 1"
+    * line : "bobby bus 2"
+    * line : "bobby bus 1 direction green"
+    * line : "bobby bus 1 direction rose"
+    * line : "bobby bus 2 direction yellow"
+    * stop_area : "...
+
+* traveler input: "bobby met"
+
+    * line : "bobby metro 1"
+    * line : "bobby metro 11"
+    * line : "bobby metro 2"
+    * line : "bobby metro 3"
+    * route : "bobby metro 1 > square"
+    * route : "bobby metro 1 > triangle"
+    * route : "bobby metro 11 > circle"
+    * route : "bobby metro 11 > octagon"
+    * route : "...
+
+* traveler input: "bobby met 11" or "bobby metro 11"
+
+    * line : "bobby metro 11"
+    * route : "bobby metro 11 > circle"
+    * route : "bobby metro 11 > octagon"
+
+Parameters
+##########
+
++---------+---------------+----------------------------+------------------------------------+-----------------------------+
+| Required| Name          | Type                       | Description                        | Default value               |
++=========+===============+============================+====================================+=============================+
+| yep     | q             | string                     | The search term                    |                             |
++---------+---------------+----------------------------+------------------------------------+-----------------------------+
+| nop     | type\[\]      | array of string            | Type of objects you want to query  | \[``network``,              |
+|         |               |                            | It takes one the following values: | ``commercial_mode``,        |
+|         |               |                            | \[``network``,                     | ``line``,                   |
+|         |               |                            | ``commercial_mode``,               | ``route``,                  |
+|         |               |                            | ``line``,                          | ``stop_area``\]             |
+|         |               |                            | ``route``,                         |                             |
+|         |               |                            | ``stop_area``\]                    |                             |
++---------+---------------+----------------------------+------------------------------------+-----------------------------+
+
+
+Example
+#######
+
+Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bus%20ratp%20%39&type[]=line&type[]=route
+
+.. code-block:: json
+
+    {
+    "places": [
+        {
+            {
+
+                "embedded_type": "line",
+                "line": {
+                    ...
+                },
+                "id": "line:RTP:1258386",
+                "name": " RATP Bus 39 (Gare du Nord - Issy Frères Voisin)"
+
+            },
+                    },
+    "links" : [
+        ...
+     ],
+    }
+
+
+Places (/places)
+****************
+
+This api search in all geographical objects via their names.
+It returns, in addition of classic objects, a collection of `place`_.
+This api is very useful to make some autocomplete stuff.
+
+Differents kind of objects can be returned (sorted as):
+
+* administrative_region
+* stop_area
+* poi
+* address
+* stop_point (appears only if specified, using "&type[]=stop_point" filter)
 
 +------------------------------------------+
 | *Warning*                                |
@@ -398,17 +504,25 @@ It returns, in addition of classic objects, a collection of `place`_.
 Parameters
 ##########
 
-+---------+---------------+-----------------+----------------------------------------+--------------------------------------+
-| Required| Name          | Type            | Description                            | Default value                        |
-+=========+===============+=================+========================================+======================================+
-| yep     | q             | string          | The search term                        |                                      |
-+---------+---------------+-----------------+----------------------------------------+--------------------------------------+
-| nop     | type\[\]      | array of string | Type of objects you want to query      | \[``stop_area``, ``stop_point``,     |
-|         |               |                 |                                        | ``poi``, ``administrative_region``\] |
-+---------+---------------+-----------------+----------------------------------------+--------------------------------------+
-| nop     | admin_uri\[\] | array of string | If filled, will restrained the search  |                                      |
-|         |               |                 | within the given admin uris            | ""                                   |
-+---------+---------------+-----------------+----------------------------------------+--------------------------------------+
++---------+---------------+------------------+------------------------------------+-----------------------------+
+| Required| Name          | Type             | Description                        | Default value               |
++=========+===============+==================+====================================+=============================+
+| yep     | q             | string           | The search term                    |                             |
++---------+---------------+------------------+------------------------------------+-----------------------------+
+| nop     | type\[\]      | array of string  | Type of objects you want to query  | \[``stop_area``,            |
+|         |               |                  | It takes one the following values: | ``address``,                |
+|         |               |                  | \[``stop_area``,                   | ``poi``,                    |
+|         |               |                  | ``address``,                       | ``administrative_region``\] |
+|         |               |                  | ``administrative_region``,         |                             |
+|         |               |                  | ``poi``,                           |                             |
+|         |               |                  | ``stop_point``\]                   |                             |
++---------+---------------+------------------+------------------------------------+-----------------------------+
+| nop     | admin_uri\[\] | array of string  | If filled, will restrained the     |                             |
+|         |               |                  | search within the given admin uris |                             |
++---------+---------------+------------------+------------------------------------+-----------------------------+
+
+How does it works
+#################
 
 Example
 #######
@@ -436,8 +550,8 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
      ],
     }
 
-Places Nearby
-*************
+Places Nearby (/places_nearby)
+******************************
 
 This api search for public transport object near another object, or near coordinates.
 It returns, in addition of classic objects, a collection of `place`_.
@@ -508,8 +622,8 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
     }
 
 
-Journeys
-********
+Journeys (/journeys)
+********************
 
 This api compute journeys.
 
@@ -866,8 +980,8 @@ links                 array of link_              Link to the section_ using thi
 ===================== =========================== ========================================
 
 
-Route Schedules
-***************
+Route Schedules and time tables (/route_schedules)
+***************************************************
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of `note`_.
@@ -945,10 +1059,10 @@ Rows    Array of row_     A row of the schedule
 
 
 
-Stop Schedules
-**************
+Stop Schedules and other kind of time tables (/stop_schedules)
+**************************************************************
 
-This api give you access to schedules of stops.
+This api give you access to schedules of stops going through a stop point.
 The response is made of an array of stop_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
@@ -980,8 +1094,8 @@ date_times            Array of `date-time`_                           When does 
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
-Departures
-**********
+Departures (/departures)
+************************
 
 This api retrieves a list of departures from a datetime of a selected object.
 Departures are ordered chronologically in growing order.
@@ -1013,14 +1127,14 @@ stop_date_time        Array of stop_date_time_  When does a bus stops at the sto
 stop_point            stop_point_               The stop point of the schedule
 ===================== ========================= ========================================
 
-Arrivals
-********
+Arrivals (/arrivals)
+********************
 
 This api retrieves a list of arrivals from a datetime of a selected object.
 Arrivals are ordered chronologically in growing order.
 
-Traffic reports
-***************
+Traffic reports and disruptions (/traffic_reports)
+**************************************************
 
 This service provides the state of public transport traffic.
 It can be called for an overall coverage or for a specific object. 
@@ -1394,6 +1508,7 @@ name                 string                             Name of the company
 
 Place
 #####
+
 A container containing either a `stop_point`_, `stop_area`_, `address`_, `poi`_, `admin`_
 
 ===================== ============================= =================================
@@ -1402,12 +1517,29 @@ Field                 Type                          Description
 name                  string                        The name of the embedded object
 id                    string                        The id of the embedded object
 embedded_type         `embedded_type_place`_        The type of the embedded object
-stop_point            *optional* `stop_point`_      Embedded Stop point
-stop_area             *optional* `stop_area`_       Embedded Stop area
-address               *optional* `address`_         Embedded address
-poi                   *optional* `poi`_             Embedded poi
 administrative_region *optional* `admin`_           Embedded administrative region
+stop_area             *optional* `stop_area`_       Embedded Stop area
+poi                   *optional* `poi`_             Embedded poi
+address               *optional* `address`_         Embedded address
+stop_point            *optional* `stop_point`_      Embedded Stop point
+network               *optional* `network`_         Embedded network
+commercial_mode       *optional* `commercial_mode`_ Embedded commercial_mode
+stop_area             *optional* `stop_area`_       Embedded Stop area
+line                  *optional* `line`_            Embedded line
+route                 *optional* `route`_           Embedded route
 ===================== ============================= =================================
+
++------------------------------------------------------------------------+
+| *Note*                                                                 |
+|                                                                        |
+|    Using /places API, navitia would returned objects of                |
+|    administrative_region, stop_area, poi, address and stop_point types |
+|                                                                        |
+|    Using /pt_objects API, navitia would returned objects of            |
+|    network, commercial_mode, stop_area, line and route types           |
+|                                                                        |
++------------------------------------------------------------------------+
+
 
 .. _embedded_type_place:
 
