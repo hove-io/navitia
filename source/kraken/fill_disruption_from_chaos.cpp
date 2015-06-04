@@ -413,10 +413,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     using apply_impacts_visitor::operator();
 
     bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern tmp_vp;
-        for (size_t i = 0; i < vj.adapted_validity_pattern->days.size(); ++i) {
-            tmp_vp.days.set(i, vj.adapted_validity_pattern->days[i]);
-        }
+        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern);
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));
