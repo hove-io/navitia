@@ -91,6 +91,9 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
+    //we delete the line A for three day, the first two vj start too early for being impacted on the first day
+    //the third vj start too late for being impacted the last day
+
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
@@ -124,6 +127,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "001100"), vj->adapted_validity_pattern->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "001101"), vj->validity_pattern->days);
 
+    //we delete the disruption, all must be as before!
     navitia::delete_disruption("test01", *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
@@ -143,8 +147,8 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
 
 BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
     ed::builder b("20120614");
-    b.vj("A", "000111")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-    b.vj("A", "000111")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60 ,9*3600 + 21*60);
+    b.vj("A", "000111")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60, 8*3600 + 21*60);
+    b.vj("A", "000111")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60, 9*3600 + 21*60);
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
@@ -153,6 +157,8 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
+    //we delete the stop_area 1, two vj are impacted, we create a new journey pattern without this stop_area
+    //and two new vj are enable on this journey pattern, of course the theorical vj are disabled
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
@@ -204,6 +210,9 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
+    //mostly like the previous test, but we disable the stop_area 1 and 2
+    //some useless journey pattern and vj are created but won't circulate
+    //then we update the disruption (without any change) this way we check all the process (previously there was some segfault)
 
     chaos::Disruption disruption;
     {
@@ -314,6 +323,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
+    //same as before but with a vehicle_journey that span on two day
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
@@ -349,6 +359,9 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
+    //again a vehicle_journey than span on two day, but this time the disruption only start the second day,
+    //and there is no vj with a starting circulation date for that day.
+    //But the vehicle journey of the first day is impacted since is also circulate on the second day!
 
     chaos::Disruption disruption;
     disruption.set_id("test01");

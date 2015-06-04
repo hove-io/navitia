@@ -326,8 +326,9 @@ struct functor_add_vj {
         vj->is_adapted = true;
         vj->name = vj_ref.name;
         vj->company = vj_ref.company;
-        vj->next_vj = vj_ref.next_vj;
-        vj->prev_vj = vj_ref.prev_vj;
+        //TODO: we loose stay_in on impacted vj, we will need to work on this.
+        vj->next_vj = nullptr;
+        vj->prev_vj = nullptr;
         vj->meta_vj = vj_ref.meta_vj;
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
