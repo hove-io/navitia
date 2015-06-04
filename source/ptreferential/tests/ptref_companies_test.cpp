@@ -57,8 +57,9 @@ class Params{
 public:
     navitia::type::Data data;
     navitia::type::Company* current_company;
-    navitia::type::Line* current_line;
     navitia::type::Network* current_network;
+    navitia::type::Line* current_line;
+    navitia::type::Route* current_route;
 
     void add_network(const std::string& network_name){
         current_network = new navitia::type::Network();
@@ -83,6 +84,13 @@ public:
         data.pt_data->lines.push_back(current_line);
     }
 
+    void add_route(const std::string& route_name){
+        current_route = new navitia::type::Route();
+        current_route->uri = route_name;
+        current_route->name = route_name;
+        current_route->idx = data.pt_data->routes.size();
+        data.pt_data->routes.push_back(current_route);
+    }
 
     Params(){
         add_network("N1");
@@ -92,6 +100,8 @@ public:
         current_line->company_list.push_back(current_company);
         current_line->network = current_network;
         current_network->line_list.push_back(current_line);
+        current_route->line = current_line;
+        current_line->route_list.push_back(current_route);
 
         add_line("C1-L2");
         current_company->line_list.push_back(current_line);
@@ -102,15 +112,22 @@ public:
         add_network("N2");
         add_company("C2");
         add_line("C2-L1");
+        add_route("C2-L1-R1");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
         current_line->network = current_network;
         current_network->line_list.push_back(current_line);
+        current_line->route_list.push_back(current_route);
+        current_route->line = current_line;
+
         add_line("C2-L2");
+        add_route("C2-L1-R2");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
         current_line->network = current_network;
         current_network->line_list.push_back(current_line);
+        current_line->route_list.push_back(current_route);
+        current_route->line = current_line;
 
         add_line("C2-L3");
         current_company->line_list.push_back(current_line);
@@ -122,29 +139,40 @@ public:
         data.pt_data->build_uri();
         }
 };
+
 BOOST_FIXTURE_TEST_SUITE(companies_test, Params)
 
 BOOST_AUTO_TEST_CASE(comanies_list) {
     auto indexes = make_query(navitia::type::Type_e::Company, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[1]]->uri, "C2");
 }
+
 
 BOOST_AUTO_TEST_CASE(comany_by_uri) {
     auto indexes = make_query(navitia::type::Type_e::Company, "company.uri=C1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
 }
 
 BOOST_AUTO_TEST_CASE(lines_by_company) {
     auto indexes = make_query(navitia::type::Type_e::Line, "company.uri=C1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[0]]->uri, "C1-L1");
+    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[1]]->uri, "C1-L2");
 
     indexes = make_query(navitia::type::Type_e::Line, "company.uri=C2", data);
     BOOST_CHECK_EQUAL(indexes.size(), 3);
+    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[0]]->uri, "C2-L1");
+    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[1]]->uri, "C2-L2");
+    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[2]]->uri, "C2-L3");
 }
 
-BOOST_AUTO_TEST_CASE(comany_by_line) {
+BOOST_AUTO_TEST_CASE(comanies_by_line) {
     auto indexes = make_query(navitia::type::Type_e::Company, "line.uri=C1-L1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
 }
 
 BOOST_AUTO_TEST_CASE(networks_by_company) {
@@ -157,14 +185,35 @@ BOOST_AUTO_TEST_CASE(networks_by_company) {
     BOOST_CHECK_EQUAL(data.pt_data->networks[indexes.front()]->uri, "N2");
 }
 
-BOOST_AUTO_TEST_CASE(company_by_network) {
+BOOST_AUTO_TEST_CASE(companies_by_network) {
     auto indexes = make_query(navitia::type::Type_e::Company, "network.uri=N1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
 
-    indexes = make_query(navitia::type::Type_e::Company, "network.uri=N1", data);
+    indexes = make_query(navitia::type::Type_e::Company, "network.uri=N2", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
 
     BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Company, "network.uri=N3", data), ptref_error);
+}
+
+BOOST_AUTO_TEST_CASE(routes_by_company) {
+    BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Route, "company.uri=C1", data), ptref_error);
+
+    auto indexes = make_query(navitia::type::Type_e::Route, "company.uri=C2", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(data.pt_data->routes[indexes[0]]->uri, "C2-L1-R1");
+    BOOST_CHECK_EQUAL(data.pt_data->routes[indexes[1]]->uri, "C2-L1-R2");
+}
+
+BOOST_AUTO_TEST_CASE(companies_by_route) {
+    auto indexes = make_query(navitia::type::Type_e::Company, "route.uri=C2-L1-R1", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
+
+    indexes = make_query(navitia::type::Type_e::Company, "route.uri=C2-L1-R2", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
