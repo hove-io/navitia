@@ -486,6 +486,20 @@ std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
+    case Type_e::Network:{
+        std::set<idx_t> tmp_result;
+        for(const auto& ln : this->line_list){
+            if(ln->network){
+                tmp_result.insert(ln->network->idx);
+            }
+        }
+        if(tmp_result.size() > 0){
+            for(const idx_t idx: tmp_result){
+                result.push_back(idx);
+            }
+        }
+    }
+        break;
     default: break;
     }
     return result;
