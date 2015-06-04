@@ -81,19 +81,22 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
 
 }
 
-//return the period of activity for a day
-static boost::posix_time::time_period activity_period(const boost::gregorian::date& date,
-                                                          const boost::posix_time::time_period& period){
-    auto day_period = bt::time_period(bt::ptime(date, bt::hours(0)), bt::hours(24));
-    //we get the validity period of the imapct for this day
-    return day_period.intersection(period);
-}
 
 //return the time period of circulation of a vj for one day
 static boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
                                                           const nt::VehicleJourney& vj){
-    return bt::time_period(bt::ptime(date, bt::seconds(vj.stop_time_list.front().departure_time)),
-            bt::ptime(date, bt::seconds(vj.stop_time_list.back().arrival_time)));
+    uint32_t first_departure = std::numeric_limits<uint32_t>::max();
+    uint32_t last_arrival = 0;
+    for(const auto& st: vj.stop_time_list){
+        if(st.pick_up_allowed() && first_departure > st.departure_time){
+            first_departure = st.departure_time;
+        }
+        if(st.drop_off_allowed() && last_arrival < st.arrival_time){
+            last_arrival = st.arrival_time;
+        }
+    }
+    return bt::time_period(bt::ptime(date, bt::seconds(first_departure)),
+            bt::ptime(date, bt::seconds(last_arrival)));
 }
 
 static boost::shared_ptr<nt::new_disruption::Severity>
@@ -331,14 +334,15 @@ struct functor_add_vj {
         nt::ValidityPattern tmp_vp;
         nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern);
         for (auto period : impact->application_periods) {
-            bg::day_iterator titr(period.begin().date());
+            //we can impact a vj with a departure the day before who past midnight
+            bg::day_iterator titr(period.begin().date() - bg::days(1));
             for(;titr<=period.end().date(); ++titr) {
                 if (!meta.production_date.contains(*titr)) {
                     continue;
                 }
                 const auto day = (*titr - meta.production_date.begin()).days();
                 //if the ref is active this day, we active the new one too
-                if(tmp_ref_vp.check(day) && execution_period(*titr, vj_ref).intersects(activity_period(*titr, period))){
+                if(tmp_ref_vp.check(day) && execution_period(*titr, vj_ref).intersects(period)){
                     tmp_vp.add(day);
                     tmp_ref_vp.remove(day);
                 }
@@ -414,7 +418,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             tmp_vp.days.set(i, vj.adapted_validity_pattern->days[i]);
         }
         for (auto period : impact->application_periods) {
-            bg::day_iterator titr(period.begin().date());
+            //we can impact a vj with a departure the day before who past midnight
+            bg::day_iterator titr(period.begin().date() - bg::days(1));
             for(;titr<=period.end().date(); ++titr) {
                 if (!meta.production_date.contains(*titr)) {
                     continue;
@@ -423,8 +428,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (!tmp_vp.check(day)){
                     continue;
                 }
-                //we get the validity period of the imapct for this day
-                if(activity_period(*titr, period).intersects(execution_period(*titr, vj))) {
+                if(period.intersects(execution_period(*titr, vj))) {
                     tmp_vp.remove(day);
                 }
             }

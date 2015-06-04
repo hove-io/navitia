@@ -301,3 +301,75 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     }
 
 }
+
+
+
+BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
+    ed::builder b("20120614");
+    b.vj("A", "010101", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+
+
+    chaos::Disruption disruption;
+    disruption.set_id("test01");
+    auto* impact = disruption.add_impacts();
+    impact->set_id("impact_id");
+    auto* severity = impact->mutable_severity();
+    severity->set_id("severity");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto* object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_line);
+    object->set_uri("A");
+    auto* app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120616T173200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120618T123200"));
+
+
+    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "010001"), dump_vj(*vj));
+}
+
+BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
+    ed::builder b("20120614");
+    b.vj("A", "010111", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+
+
+    chaos::Disruption disruption;
+    disruption.set_id("test01");
+    auto* impact = disruption.add_impacts();
+    impact->set_id("impact_id");
+    auto* severity = impact->mutable_severity();
+    severity->set_id("severity");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto* object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_line);
+    object->set_uri("A");
+    auto* app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120615T000000"));
+    app_period->set_end(ntest::to_posix_timestamp("20120615T120000"));
+
+
+    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "010110"), dump_vj(*vj));
+}
