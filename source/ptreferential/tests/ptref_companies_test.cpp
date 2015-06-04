@@ -58,6 +58,16 @@ public:
     navitia::type::Data data;
     navitia::type::Company* current_company;
     navitia::type::Line* current_line;
+    navitia::type::Network* current_network;
+
+    void add_network(const std::string& network_name){
+        current_network = new navitia::type::Network();
+        current_network->uri = network_name;
+        current_network->name = network_name;
+        current_network->idx = data.pt_data->networks.size();
+        data.pt_data->networks.push_back(current_network);
+    }
+
     void add_company(const std::string& company_name){
         current_company = new navitia::type::Company();
         current_company->uri = company_name;
@@ -65,37 +75,50 @@ public:
         current_company->idx = data.pt_data->companies.size();
         data.pt_data->companies.push_back(current_company);
     }
-    void add_line(const std::string& ln_name){
+    void add_line(const std::string& line_name){
         current_line = new navitia::type::Line();
-        current_line->uri = ln_name;
-        current_line->name = ln_name;
+        current_line->uri = line_name;
+        current_line->name = line_name;
         current_line->idx = data.pt_data->lines.size();
         data.pt_data->lines.push_back(current_line);
     }
 
 
     Params(){
+        add_network("N1");
         add_company("C1");
         add_line("C1-L1");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
+        current_line->network = current_network;
+        current_network->line_list.push_back(current_line);
+
         add_line("C1-L2");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
+        current_line->network = current_network;
+        current_network->line_list.push_back(current_line);
 
-
+        add_network("N2");
         add_company("C2");
         add_line("C2-L1");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
+        current_line->network = current_network;
+        current_network->line_list.push_back(current_line);
         add_line("C2-L2");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
+        current_line->network = current_network;
+        current_network->line_list.push_back(current_line);
 
         add_line("C2-L3");
         current_company->line_list.push_back(current_line);
         current_line->company_list.push_back(current_company);
+        current_line->network = current_network;
+        current_network->line_list.push_back(current_line);
 
+        add_network("N3");
         data.pt_data->build_uri();
         }
 };
@@ -112,18 +135,36 @@ BOOST_AUTO_TEST_CASE(comany_by_uri) {
 }
 
 BOOST_AUTO_TEST_CASE(lines_by_company) {
-    auto indexes = make_query(navitia::type::Type_e::Line, "company.uri=C1", std::vector<std::string>(), navitia::type::OdtLevel_e::all, data);
+    auto indexes = make_query(navitia::type::Type_e::Line, "company.uri=C1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-    indexes = make_query(navitia::type::Type_e::Line, "company.uri=C2", std::vector<std::string>(), navitia::type::OdtLevel_e::all, data);
+    indexes = make_query(navitia::type::Type_e::Line, "company.uri=C2", data);
     BOOST_CHECK_EQUAL(indexes.size(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(comany_line) {
+BOOST_AUTO_TEST_CASE(comany_by_line) {
     auto indexes = make_query(navitia::type::Type_e::Company, "line.uri=C1-L1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(networks_by_company) {
+    auto indexes = make_query(navitia::type::Type_e::Network, "company.uri=C1", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->networks[indexes.front()]->uri, "N1");
 
+    indexes = make_query(navitia::type::Type_e::Network, "company.uri=C2", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->networks[indexes.front()]->uri, "N2");
+}
+
+BOOST_AUTO_TEST_CASE(company_by_network) {
+    auto indexes = make_query(navitia::type::Type_e::Company, "network.uri=N1", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+
+    indexes = make_query(navitia::type::Type_e::Company, "network.uri=N1", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+
+    BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Company, "network.uri=N3", data), ptref_error);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
