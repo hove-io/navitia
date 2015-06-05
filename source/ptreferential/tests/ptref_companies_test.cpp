@@ -42,10 +42,6 @@ www.navitia.io
 #include "type/pt_data.h"
 
 
-namespace navitia{namespace ptref {
-template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
-}}
-
 using namespace navitia::ptref;
 
 struct logger_initialized {
@@ -100,8 +96,6 @@ public:
         current_line->company_list.push_back(current_company);
         current_line->network = current_network;
         current_network->line_list.push_back(current_line);
-        current_route->line = current_line;
-        current_line->route_list.push_back(current_route);
 
         add_line("C1-L2");
         current_company->line_list.push_back(current_line);
