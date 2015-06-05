@@ -392,8 +392,9 @@ Other examples
     * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
 
-pt_objects (/pt_objects)
-************************
+Public Transport objects autocomplete (/pt_objects)
+***************************************************
+
 This api search in public transport objects via their names. It's a kind of magical autocomplete on public transport data.
 It returns, in addition of classic objects, a collection of places_ .
 
@@ -490,8 +491,8 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bu
     }
 
 
-Places (/places)
-****************
+Places autocomplete (/places)
+*****************************
 
 This api search in all geographical objects via their names.
 It returns, in addition of classic objects, a collection of places_ .
@@ -1578,10 +1579,10 @@ route                 *optional* `route`_           Embedded route
 +------------------------------------------------------------------------+
 | *Note*                                                                 |
 |                                                                        |
-|    Using /places API, navitia would returned objects of                |
+|    Using /places API, navitia would returned objects among             |
 |    administrative_region, stop_area, poi, address and stop_point types |
 |                                                                        |
-|    Using /pt_objects API, navitia would returned objects of            |
+|    Using /pt_objects API, navitia would returned objects among         |
 |    network, commercial_mode, stop_area, line and route types           |
 |                                                                        |
 +------------------------------------------------------------------------+
