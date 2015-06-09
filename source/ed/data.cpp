@@ -58,6 +58,7 @@ void Data::normalize_uri(){
     ::ed::normalize_uri(companies);
     ::ed::normalize_uri(commercial_modes);
     ::ed::normalize_uri(lines);
+    ::ed::normalize_uri(line_groups);
     ::ed::normalize_uri(physical_modes);
     ::ed::normalize_uri(stop_areas);
     ::ed::normalize_uri(stop_points);

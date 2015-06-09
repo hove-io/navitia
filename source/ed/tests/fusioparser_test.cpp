@@ -130,5 +130,40 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->local_traffic_zone, 2);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
 
+    /* Line groups.
+     * 3 groups in the file, 3 use cases :
+     *   - The first one has 2 lines, both linked to the group in line_group_links.txt,
+     *   - The second one has only one line, linked only via the main_line_id field of line_groups.txt,
+     *   - The first one has an unknown main_line_id and should be ignored
+     *
+     * At the start of the vector data.line_group_links we are going to have each main_line, since
+     * those links are created in LineGroupFusioHandler, to allow use case number 2 where the line is not
+     * in line_group_links.txt.
+     */
+
+    // Check group, only 2 must be created since the last one in line_groups.txt reference an unknown main_line_id
+    BOOST_REQUIRE_EQUAL(data.line_groups.size(), 2);
+    BOOST_REQUIRE_EQUAL(data.line_group_links.size(), 3);
+
+    // First group
+    BOOST_REQUIRE(data.line_groups[0]->main_line != nullptr);
+
+    BOOST_CHECK_EQUAL(data.line_groups[0]->main_line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line_group->uri, "lg1");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line_group->uri, "lg1");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].is_main_line, true);
+    BOOST_CHECK_EQUAL(data.line_group_links[2].is_main_line, false);
+
+    // Second group, only one line, only defined as the main_line
+    BOOST_REQUIRE(data.line_groups[1]->main_line != nullptr);
+
+    BOOST_CHECK_EQUAL(data.line_groups[1]->main_line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
+    BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[1].is_main_line, true);
 }
 

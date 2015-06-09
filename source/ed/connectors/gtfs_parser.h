@@ -87,6 +87,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
+    std::unordered_map<std::string, ed::types::LineGroup*> line_group_map;
     std::unordered_map<std::string, ed::types::Route*> route_map;
     std::unordered_map<std::string, ed::types::MetaVehicleJourney*> metavj_by_external_code;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;

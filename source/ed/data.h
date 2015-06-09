@@ -98,6 +98,7 @@ public:
 
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
 
+    std::vector<ed::types::LineGroupLink> line_group_links;
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 

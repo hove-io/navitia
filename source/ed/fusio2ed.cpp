@@ -160,6 +160,7 @@ int main(int argc, char * argv[])
     }
 
     LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
+    LOG4CPLUS_INFO(logger, "line_group: " << data.line_groups.size());
     LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
     LOG4CPLUS_INFO(logger, "journey_pattern: " << data.journey_patterns.size());
     LOG4CPLUS_INFO(logger, "stoparea: " << data.stop_areas.size());

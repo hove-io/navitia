@@ -93,6 +93,7 @@ private:
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);
+    void insert_line_groups(const std::vector<types::LineGroup*>& groups, const std::vector<types::LineGroupLink>& group_links);
     void insert_routes(const std::vector<types::Route*>& routes);
     void insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_pattern);
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);
