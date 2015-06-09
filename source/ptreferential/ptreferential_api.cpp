@@ -55,6 +55,10 @@ static pbnavitia::Response extract_data(const type::Data & data,
             fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
                            depth, current_time, action_period, show_codes);
             break;
+        case Type_e::LineGroup:
+            fill_pb_object(data.pt_data->line_groups[idx], data, result.add_line_groups(),
+                           depth, current_time, action_period, show_codes);
+            break;
         case Type_e::JourneyPattern:
             fill_pb_object(data.pt_data->journey_patterns[idx], data,
                            result.add_journey_patterns(), depth, current_time, action_period);

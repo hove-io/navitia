@@ -56,6 +56,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::STOP_AREA: return nt::Type_e::StopArea;
     case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint;
     case pbnavitia::LINE: return nt::Type_e::Line;
+    case pbnavitia::LINE_GROUP: return nt::Type_e::LineGroup;
     case pbnavitia::ROUTE: return nt::Type_e::Route;
     case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern;
     case pbnavitia::NETWORK: return nt::Type_e::Network;
