@@ -35,7 +35,7 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/range/algorithm/find.hpp>
 namespace ed{
 
 namespace bg = boost::gregorian;
@@ -778,14 +778,13 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
         assert (vj->company);
         assert (vj->journey_pattern);
+
         if (vj->journey_pattern->route && vj->journey_pattern->route->line){
-            if(std::find(vj->journey_pattern->route->line->company_list.begin(),
-                         vj->journey_pattern->route->line->company_list.end(),
+            if(boost::range::find(vj->journey_pattern->route->line->company_list,
                          vj->company) == vj->journey_pattern->route->line->company_list.end()){
                 vj->journey_pattern->route->line->company_list.push_back(vj->company);
             }
-            if(std::find(vj->company->line_list.begin(),
-                         vj->company->line_list.end(),
+            if(boost::range::find(vj->company->line_list,
                          vj->journey_pattern->route->line) == vj->company->line_list.end()){
                 vj->company->line_list.push_back(vj->journey_pattern->route->line);
             }
