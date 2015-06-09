@@ -512,7 +512,19 @@ stop_time = {
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
 }
 
+line_group = deepcopy(generic_type)
 line = deepcopy(generic_type)
+
+group_link = {
+    "is_main_line": fields.Boolean(),
+    "group": PbField(line_group)
+}
+
+line_link = {
+    "is_main_line": fields.Boolean(),
+    "line": PbField(line)
+}
+
 line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
@@ -524,6 +536,10 @@ line["geojson"] = MultiLineString(attribute="geojson")
 line["opening_time"] = SplitDateTime(date=None, time="opening_time")
 line["closing_time"] = SplitDateTime(date=None, time="closing_time")
 line["properties"] = NonNullList(NonNullNested(prop))
+line["groups"] = NonNullList(NonNullNested(group_link))
+
+line_group["lines"] = NonNullList(NonNullNested(line_link))
+line_group["comments"] = NonNullList(NonNullNested(comment))
 
 route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()

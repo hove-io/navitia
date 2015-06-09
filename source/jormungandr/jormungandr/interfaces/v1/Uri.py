@@ -34,8 +34,8 @@ from flask.ext.restful import fields, marshal_with, reqparse, abort
 from flask.globals import g
 from jormungandr import i_manager, authentication
 from converters_collection_type import collections_to_resource_type
-from fields import stop_point, stop_area, route, line, physical_mode, \
-    commercial_mode, company, network, pagination,\
+from fields import stop_point, stop_area, route, line, line_group, \
+    physical_mode, commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
     journey_pattern, connection, error, PbField
 from VehicleJourney import vehicle_journey
@@ -381,6 +381,29 @@ def routes(is_collection):
                             description="original uri of the object you"
                                     "want to query")
     return Routes
+
+
+def line_groups(is_collection):
+    class LineGroups(Uri):
+        """ Retrieves line_groups"""
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "line_groups")
+            self.collections = [
+                ("line_groups",
+                 NonNullList(fields.Nested(line_group,
+                                           display_null=False))),
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
+    return LineGroups
 
 
 def lines(is_collection):

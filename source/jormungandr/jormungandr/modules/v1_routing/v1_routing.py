@@ -147,7 +147,7 @@ class V1Routing(AModule):
                 collection + '.redirect',
                 Uri.Redirect)
 
-        collecs = ["routes", "lines", "networks", "stop_areas", "stop_points",
+        collecs = ["routes", "lines", "line_groups", "networks", "stop_areas", "stop_points",
                    "vehicle_journeys"]
         for collection in collecs:
             self.add_resource(getattr(Uri, collection)(True),
