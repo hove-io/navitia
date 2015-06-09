@@ -146,7 +146,8 @@ void fill_disruption_from_database(const std::string& connection_string,
         }
 
         offset += result.size();
-    }while(result.size() > 0);
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
+    }while(result.size() > 0);    
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),"Loading " << offset << " disruptions");
     reader.finalize();
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),offset << " disruptions loaded");
