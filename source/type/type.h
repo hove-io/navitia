@@ -71,6 +71,7 @@ struct Impact;
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\
+    FUN(LineGroup, line_groups)\
     FUN(JourneyPattern, journey_patterns)\
     FUN(VehicleJourney, vehicle_journeys)\
     FUN(StopPoint, stop_points)\
@@ -110,7 +111,8 @@ enum class Type_e {
     Way                             = 21,
     Admin                           = 22,
     POIType                         = 23,
-    Calendar                        = 24
+    Calendar                        = 24,
+    LineGroup                       = 25
 };
 
 enum class Mode_e {
@@ -593,6 +595,8 @@ struct hasOdtProperties {
     }
 };
 
+struct LineGroup;
+
 struct Line : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Line;
     std::string code;
@@ -616,12 +620,15 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 
     std::map<std::string,std::string> properties;
 
+    //The bool part of the pair stand for "is_main_line"
+    std::vector<std::pair<LineGroup*, bool>> group_list;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & codes & shape & closing_time
-                & opening_time & properties;
+                & opening_time & properties & group_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -641,6 +648,20 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         return this < &other;
     }
     type::hasOdtProperties get_odt_properties() const;
+};
+
+struct LineGroup : public Header, Nameable{
+    const static Type_e type = Type_e::LineGroup;
+    std::string name;
+
+    Line* main_line;
+    std::vector<Line*> line_list;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & idx & name & uri & main_line & line_list;
+    }
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    bool operator<(const LineGroup & other) const { return this < &other; }
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{

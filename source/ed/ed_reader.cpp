@@ -60,6 +60,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_points(data, work);
 
     this->fill_lines(data, work);
+    this->fill_line_groups(data, work);
     this->fill_routes(data, work);
 
     this->fill_journey_patterns(data, work);
@@ -549,6 +550,35 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         }
     }
 }
+
+void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
+    std::string request = "SELECT id, uri, name FROM navitia.line_group";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::LineGroup* line_group = new nt::LineGroup();
+        const_it["uri"].to(line_group->uri);
+        const_it["name"].to(line_group->name);
+        this->line_group_map[const_it["id"].as<idx_t>()] = line_group;
+        data.pt_data->line_groups.push_back(line_group);
+    }
+
+    pqxx::result line_group_result = work.exec("SELECT group_id, line_id, is_main_line FROM navitia.line_group_link");
+    for(auto const_it = line_group_result.begin(); const_it != line_group_result.end(); ++const_it){
+        bool isMainLine(const_it["is_main_line"].as<bool>());
+        auto group_it = this->line_group_map.find(const_it["group_id"].as<idx_t>());
+        if(group_it !=  this->line_group_map.end()) {
+            auto line_it = this->line_map.find(const_it["line_id"].as<idx_t>());
+            if(line_it != this->line_map.end()) {
+                if(isMainLine)
+                    group_it->second->main_line = line_it->second;
+                group_it->second->line_list.push_back(line_it->second);
+                line_it->second->group_list.push_back(std::pair<nt::LineGroup*,bool>(group_it->second, isMainLine));
+            }
+        }
+    }
+}
+
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
@@ -1063,6 +1093,8 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             cpt_not_found += add_comment(data, obj_id, route_map, comment);
         } else if (type_str == "line") {
             cpt_not_found += add_comment(data, obj_id, line_map, comment);
+        } else if (type_str == "line_group") {
+            cpt_not_found += add_comment(data, obj_id, line_group_map, comment);
         } else if (type_str == "stop_area") {
             cpt_not_found += add_comment(data, obj_id, stop_area_map, comment);
         } else if (type_str == "stop_point") {

@@ -329,6 +329,7 @@ static_data * static_data::get() {
         boost::assign::insert(temp->types_string)
                 (Type_e::ValidityPattern, "validity_pattern")
                 (Type_e::Line, "line")
+                (Type_e::LineGroup, "line_group")
                 (Type_e::JourneyPattern, "journey_pattern")
                 (Type_e::VehicleJourney, "vehicle_journey")
                 (Type_e::StopPoint, "stop_point")
@@ -554,6 +555,15 @@ type::hasOdtProperties Line::get_odt_properties() const{
         for (const auto route : this->route_list) {
             result |= route->get_odt_properties();
         }
+    }
+    return result;
+}
+
+std::vector<idx_t> LineGroup::get(Type_e type, const PT_Data&) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::Line: return indexes(line_list);
+    default: break;
     }
     return result;
 }
