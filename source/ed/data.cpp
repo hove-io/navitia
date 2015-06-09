@@ -468,11 +468,12 @@ void Data::clean() {
     }
     vehicle_journeys.resize(num_elements);
 
-    LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
-                   << erase_emptiness << " because they do not contain any clean stop_times, "
-                   << erase_no_circulation << " because they are never valid "
-                   << " and " << erase_invalid_stoptimes << " because the stop times were negatives");
-
+    if (erase_overlap){
+        LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
+                       << erase_emptiness << " because they do not contain any clean stop_times, "
+                       << erase_no_circulation << " because they are never valid "
+                       << " and " << erase_invalid_stoptimes << " because the stop times were negatives");
+    }
     // Delete duplicate connections
     // Connections are sorted by departure,destination
     auto sort_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri < spc2->uri
