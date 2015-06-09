@@ -776,7 +776,9 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
-        if (vj->company && vj->journey_pattern && vj->journey_pattern->route && vj->journey_pattern->route->line){
+        assert (vj->company);
+        assert (vj->journey_pattern);
+        if (vj->journey_pattern->route && vj->journey_pattern->route->line){
             if(std::find(vj->journey_pattern->route->line->company_list.begin(),
                          vj->journey_pattern->route->line->company_list.end(),
                          vj->company) == vj->journey_pattern->route->line->company_list.end()){
