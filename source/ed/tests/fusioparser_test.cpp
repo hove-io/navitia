@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
                             return sp->is_zonal && sp->name == "Beleymas" && sp->area;
                         }), 1);
 
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
     BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
 
     //chekc comments

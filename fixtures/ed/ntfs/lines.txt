@@ -1,2 +1,4 @@
 line_id,line_code,line_name,forward_line_name,forward_direction,backward_line_name,backward_direction,line_color,line_sort,network_id,commercial_mode_id,contributor_id,geometry_id,line_opening_time,line_closing_time
 l1,"A","ligne A Flexible",,,,,,,ligneflexible,BUS,,,00:00:00,23:59:00
+l2,"B","ligne B Journée",,,,,,,ligneflexible,BUS,,,00:05:00,21:00:00
+l3,"Bs","ligne B Soirée",,,,,,,ligneflexible,BUS,,,00:21:00,01:00:00
