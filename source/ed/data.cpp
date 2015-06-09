@@ -343,6 +343,18 @@ void Data::clean() {
                     }
 
                     using ed::types::StopTime;
+
+                    const bool same_itl = boost::equal((*vj1)->stop_time_list, (*vj2)->stop_time_list,
+                                                         [](const StopTime* st1, const StopTime* st2) {
+                                                             return st1->local_traffic_zone == st2->local_traffic_zone;
+                                                         });
+                    if (!same_itl){
+                        LOG4CPLUS_WARN(logger, "Data::clean(): are equal with different local trafic zone: "
+                                       << (*vj1)->uri << " and " << (*vj2)->uri);
+                        continue;
+
+                    }
+
                     const bool are_equal =
                         (*vj1)->validity_pattern->days != (*vj2)->validity_pattern->days
                         && boost::equal((*vj1)->stop_time_list, (*vj2)->stop_time_list,
