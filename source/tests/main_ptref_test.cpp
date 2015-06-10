@@ -111,6 +111,16 @@ struct data_set {
         comments.add(b.data->pt_data->vehicle_journeys[0], "hello");
         comments.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(),
                                       "stop time is blocked");
+       // Company added
+        navitia::type::Company* cmp = new navitia::type::Company();
+        cmp->line_list.push_back(b.lines["line:A"]);
+        vj->company = cmp;
+        b.data->pt_data->companies.push_back(cmp);
+        cmp->idx = b.data->pt_data->companies.size();
+        cmp->name = "CMP1";
+        cmp->uri = "CMP1";
+        b.lines["line:A"]->company_list.push_back(cmp);
+
     }
 
     ed::builder b;

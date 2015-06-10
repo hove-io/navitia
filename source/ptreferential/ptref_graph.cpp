@@ -56,6 +56,9 @@ Jointures::Jointures() {
     // À partir d'un network on peut avoir ses lignes
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Network), g);
 
+    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::Network), g);
+    boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Company), g);
+
     // À partir d'une company, on peut avoir ses lignes
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Company), g);
 

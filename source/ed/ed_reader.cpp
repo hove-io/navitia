@@ -35,7 +35,7 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/range/algorithm/find.hpp>
 namespace ed{
 
 namespace bg = boost::gregorian;
@@ -722,7 +722,6 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
     }
 }
 
-
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
         "vj.company_id as company_id, "
@@ -775,8 +774,21 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->journey_pattern = journey_pattern;
 
-        vj->company = company_map[const_it["company_id"].as<idx_t>()];
 
+        vj->company = company_map[const_it["company_id"].as<idx_t>()];
+        assert (vj->company);
+        assert (vj->journey_pattern);
+
+        if (vj->journey_pattern->route && vj->journey_pattern->route->line){
+            if(boost::range::find(vj->journey_pattern->route->line->company_list,
+                         vj->company) == vj->journey_pattern->route->line->company_list.end()){
+                vj->journey_pattern->route->line->company_list.push_back(vj->company);
+            }
+            if(boost::range::find(vj->company->line_list,
+                         vj->journey_pattern->route->line) == vj->company->line_list.end()){
+                vj->company->line_list.push_back(vj->journey_pattern->route->line);
+            }
+        }
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
 
         if(!const_it["validity_pattern_id"].is_null()){

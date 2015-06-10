@@ -531,7 +531,7 @@ struct Company : public Header, Nameable, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number &
-        address_type_name & phone_number & mail & website & fax & codes;
+        address_type_name & phone_number & mail & website & fax & codes & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Company & other) const { return this < &other; }
