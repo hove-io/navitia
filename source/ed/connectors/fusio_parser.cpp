@@ -317,10 +317,6 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
                 stop_time->local_traffic_zone = local_traffic_zone;
             }
         }
-        else {
-            stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
-        }
-
     }
 }
 
