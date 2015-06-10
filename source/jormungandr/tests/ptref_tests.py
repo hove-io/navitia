@@ -119,6 +119,29 @@ class TestPtRef(AbstractTestFixture):
         assert physical_modes[0]['id'] == 'physical_mode:Car'
         assert physical_modes[0]['name'] == 'name physical_mode:Car'
 
+        group = get_not_null(l, 'groups')
+        assert len(group) == 1
+        assert group[0]['is_main_line'] == True
+        assert group[0]['group']['name'] == 'A group'
+        assert group[0]['group']['id'] == 'group:A'
+
+    def test_line_groups(self):
+        """test line group formating"""
+        response = self.query_region("v1/line_groups")
+
+        line_groups = get_not_null(response, 'line_groups')
+
+        assert len(line_groups) == 1
+
+        lg = line_groups[0]
+
+        is_valid_line_group(lg, depth_check=1)
+
+        com = get_not_null(lg, 'comments')
+        assert len(com) == 1
+        assert com[0]['type'] == 'standard'
+        assert com[0]['value'] == "I'm a happy comment"
+
     def test_line_codes(self):
         """test line formating"""
         response = self.query_region("v1/lines/line:A?show_codes=true")

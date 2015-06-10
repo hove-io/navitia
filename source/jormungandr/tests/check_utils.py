@@ -598,6 +598,13 @@ def is_valid_line(line, depth_check=1):
     g = line.get('geojson')
     g is None or shape(g) #TODO check length
 
+def is_valid_line_group(line_group, depth_check=1):
+    get_not_null(line_group, "name")
+    get_not_null(line_group, "id")
+
+    for l in line_group.get('lines', []):
+        get_not_null(l, "is_main_line")
+        is_valid_line(l.get('line'), 0)
 
 def is_valid_codes(codes):
     for code in codes:

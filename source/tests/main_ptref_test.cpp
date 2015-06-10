@@ -120,6 +120,15 @@ struct data_set {
         cmp->uri = "CMP1";
         b.lines["line:A"]->company_list.push_back(cmp);
 
+        // LineGroup added
+        navitia::type::LineGroup* lg = new navitia::type::LineGroup();
+        lg->name = "A group";
+        lg->uri = "group:A";
+        lg->main_line = b.lines["line:A"];
+        lg->line_list.push_back(b.lines["line:A"]);
+        b.lines["line:A"]->group_list.push_back(std::make_pair(lg, true));
+        comments.add(lg, "I'm a happy comment");
+        b.data->pt_data->line_groups.push_back(lg);
     }
 
     ed::builder b;
