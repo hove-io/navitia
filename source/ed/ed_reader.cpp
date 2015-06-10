@@ -983,9 +983,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 
         const_it["arrival_time"].to(stop.arrival_time);
         const_it["departure_time"].to(stop.departure_time);
-        if (const_it["local_traffic_zone"].is_null()){
-            stop.local_traffic_zone = std::numeric_limits<uint16_t>::max();
-        }else{
+        if (!const_it["local_traffic_zone"].is_null()){
             const_it["local_traffic_zone"].to(stop.local_traffic_zone);
         }
         stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());

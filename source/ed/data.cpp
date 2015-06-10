@@ -468,7 +468,7 @@ void Data::clean() {
     }
     vehicle_journeys.resize(num_elements);
 
-    if (erase_overlap){
+    if (erase_overlap || erase_emptiness || erase_no_circulation || erase_invalid_stoptimes){
         LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
                        << erase_emptiness << " because they do not contain any clean stop_times, "
                        << erase_no_circulation << " because they are never valid "
