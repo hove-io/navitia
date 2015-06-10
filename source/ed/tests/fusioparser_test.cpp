@@ -122,6 +122,13 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     BOOST_CHECK_EQUAL_COLLECTIONS(data.stoptime_comments.begin(), data.stoptime_comments.end(),
                                   expected_st_comments.begin(), expected_st_comments.end());
+    // manage itl
+    const types::VehicleJourney* vj = data.vehicle_journeys.front();
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[1]->local_traffic_zone, 1);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2]->local_traffic_zone, 1);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->local_traffic_zone, 2);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
 
 }
 
