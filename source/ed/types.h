@@ -327,11 +327,10 @@ struct StopTime {
     bool wheelchair_boarding;
     bool date_time_estimated;
 
-    uint16_t local_traffic_zone;
+    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
-                local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false) {}
 
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {

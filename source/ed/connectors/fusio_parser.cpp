@@ -280,7 +280,7 @@ void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConne
 
 void StopTimeFusioHandler::init(Data& data) {
     StopTimeGtfsHandler::init(data);
-    itl_c = csv.get_pos_col("stop_times_itl");
+    itl_c = csv.get_pos_col("local_zone_id");
     desc_c = csv.get_pos_col("stop_desc");
     date_time_estimated_c = csv.get_pos_col("date_time_estimated");
     id_c = csv.get_pos_col("stop_time_id");
@@ -317,10 +317,6 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
                 stop_time->local_traffic_zone = local_traffic_zone;
             }
         }
-        else {
-            stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
-        }
-
     }
 }
 
