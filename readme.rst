@@ -63,8 +63,6 @@ Tools
 
 #. Python for the api
 
-#. Doxygen and swagger for the automated documentation
-
 Installation
 ============
 For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
