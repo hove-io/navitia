@@ -244,15 +244,15 @@ class Scenario(simple.Scenario):
             self.delete_journeys(resp, request, final_filter=False)
 
             if not request['debug']:
-                self._delete_non_optimal_journey(resp.journeys)
+                self._delete_non_optimal_journey(resp)
 
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
         if not request['debug']:
-            self._remove_not_long_enough_fallback(resp.journeys, instance)
-            self._remove_not_long_enough_tc_with_fallback(resp.journeys, instance)
-            self._delete_too_long_journey(resp.journeys, instance, request['clockwise'])
+            self._remove_not_long_enough_fallback(resp, instance)
+            self._remove_not_long_enough_tc_with_fallback(resp, instance)
+            self._delete_too_long_journey(resp, instance, request['clockwise'])
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
@@ -264,21 +264,20 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    def _delete_too_long_journey(self, journeys, instance, clockwise):
+    def _delete_too_long_journey(self, resp, instance, clockwise):
         """
         remove journey a lot longer than the asap journey
         """
         logger = logging.getLogger(__name__)
-        max_duration = self._find_max_duration(journeys, instance, clockwise)
+        max_duration = self._find_max_duration(resp.journeys, instance, clockwise)
         if not max_duration:
             return
         to_delete = set()
-        for idx, journey in enumerate(journeys):
+        for idx, journey in enumerate(resp.journeys):
             if journey.duration > max_duration:
                 to_delete.add(idx)
                 logger.debug('delete journey %s because it is longer than %s', journey.type, max_duration)
-        for idx in sorted(list(to_delete), reverse=True):
-            del journeys[idx]
+        self.erase_journeys(resp, to_delete)
 
 
     def _find_max_duration(self, journeys, instance, clockwise):
@@ -294,7 +293,7 @@ class Scenario(simple.Scenario):
             return None
         return (asap_journey.duration * instance.factor_too_long_journey) + instance.min_duration_too_long_journey
 
-    def _delete_non_optimal_journey(self, journeys):
+    def _delete_non_optimal_journey(self, resp):
         """
         remove all journeys with a greater fallback duration with a specific mode than the corresponding non_pt journey
         """
@@ -302,10 +301,10 @@ class Scenario(simple.Scenario):
         reference_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
         type_func = {'non_pt_bss': bss_duration, 'non_pt_bike': bike_duration, 'non_pt_walk': walking_duration}
         to_delete = []
-        for journey in journeys:
+        for journey in resp.journeys:
             if journey.type in reference_journeys:
                 reference_journeys[journey.type] = journey
-        for idx, journey in enumerate(journeys):
+        for idx, journey in enumerate(resp.journeys):
             for type, func in type_func.iteritems():
                 if not reference_journeys[type] or reference_journeys[type] == journey:
                     continue
@@ -313,9 +312,7 @@ class Scenario(simple.Scenario):
                     to_delete.append(idx)
                     logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
                     break
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
+        self.erase_journeys(resp, to_delete)
 
 
     def choose_best(self, resp):
@@ -356,6 +353,23 @@ class Scenario(simple.Scenario):
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
         initial_response.tickets.extend([t for t in new_response.tickets if t.id in tickets_to_add])
+
+    def erase_journeys(self, resp, to_delete):
+        """
+        remove a list of journeys from a response and delete all referenced objects like by example the tickets
+        """
+        deleted_sections = set()
+        for idx in sorted(to_delete, reverse=True):
+            for section in resp.journeys[idx].sections:
+                deleted_sections.add(section.id)
+            del resp.journeys[idx]
+
+        ticket_to_delete = set()
+        for idx, t in enumerate(resp.tickets):
+            if len(set(t.section_id) - deleted_sections) == 0:
+                ticket_to_delete.add(idx)
+        for idx in sorted(ticket_to_delete, reverse=True):
+            del resp.tickets[idx]
 
     def delete_journeys(self, resp, request, final_filter):
         """
@@ -406,9 +420,7 @@ class Scenario(simple.Scenario):
                     found_direct = True
 
         # list comprehension does not work with repeated field, so we have to delete them manually
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del resp.journeys[idx]
+        self.erase_journeys(resp, to_delete)
 
         if final_filter:
             #after all filters, we filter not to give too many results
@@ -454,9 +466,9 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    def _remove_not_long_enough_fallback(self, journeys, instance):
+    def _remove_not_long_enough_fallback(self, resp, instance):
         to_delete = []
-        for idx, journey in enumerate(journeys):
+        for idx, journey in enumerate(resp.journeys):
             if journey.type in non_pt_types:
                 continue
             bike_dur = bike_duration(journey)
@@ -471,15 +483,12 @@ class Scenario(simple.Scenario):
 
         logger = logging.getLogger(__name__)
         logger.debug('remove %s journey with not enough fallback duration: %s',
-                len(to_delete), [journeys[i].type for i in to_delete])
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
+                len(to_delete), [resp.journeys[i].type for i in to_delete])
+        self.erase_journeys(resp, to_delete)
 
-
-    def _remove_not_long_enough_tc_with_fallback(self, journeys, instance):
+    def _remove_not_long_enough_tc_with_fallback(self, resp, instance):
         to_delete = []
-        for idx, journey in enumerate(journeys):
+        for idx, journey in enumerate(resp.journeys):
             if journey.type in non_pt_types:
                 continue
             bike_dur = bike_duration(journey)
@@ -495,7 +504,5 @@ class Scenario(simple.Scenario):
 
         logger = logging.getLogger(__name__)
         logger.debug('remove %s journey with not enough tc duration: %s',
-                len(to_delete), [journeys[i].type for i in to_delete])
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
+                len(to_delete), [resp.journeys[i].type for i in to_delete])
+        self.erase_journeys(resp, to_delete)

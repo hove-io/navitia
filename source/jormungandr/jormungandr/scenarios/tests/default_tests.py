@@ -67,7 +67,7 @@ def delete_non_optimal_journey_no_action_test():
     journey2.duration = sum([section.duration for section in journey2.sections])
 
     scenario = default.Scenario()
-    scenario._delete_non_optimal_journey(response.journeys)
+    scenario._delete_non_optimal_journey(response)
     eq_(len(response.journeys), 2)
 
 def delete_non_optimal_journey_simple_test():
@@ -112,7 +112,7 @@ def delete_non_optimal_journey_simple_test():
     journey3.duration = sum([section.duration for section in journey3.sections])
 
     scenario = default.Scenario()
-    scenario._delete_non_optimal_journey(response.journeys)
+    scenario._delete_non_optimal_journey(response)
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey1)
     eq_(response.journeys[1], journey3)
@@ -182,7 +182,7 @@ def delete_non_optimal_journey_bike_test():
     journey5.duration = sum([section.duration for section in journey5.sections])
 
     scenario = default.Scenario()
-    scenario._delete_non_optimal_journey(response.journeys)
+    scenario._delete_non_optimal_journey(response)
     eq_(len(response.journeys), 3)
     eq_(response.journeys[0], journey2)
     eq_(response.journeys[1], journey3)
@@ -244,7 +244,7 @@ def find_max_duration_clockwise_test():
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), True), 580)
-    scenario._delete_too_long_journey(response.journeys, Instance(), True)
+    scenario._delete_too_long_journey(response, Instance(), True)
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey2)
     eq_(response.journeys[1], journey3)
@@ -298,7 +298,7 @@ def find_max_duration__counterclockwise_test():
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), False), 580)
-    scenario._delete_too_long_journey(response.journeys, Instance(), False)
+    scenario._delete_too_long_journey(response, Instance(), False)
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey2)
     eq_(response.journeys[1], journey3)
@@ -346,7 +346,7 @@ def find_max_duration_clockwise_test():
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), True), None)
-    scenario._delete_too_long_journey(response.journeys, Instance(), True)
+    scenario._delete_too_long_journey(response, Instance(), True)
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey1)
     eq_(response.journeys[1], journey2)
