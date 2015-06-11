@@ -572,6 +572,11 @@ def is_valid_company(company, depth_check=1):
     get_not_null(company, "id")
 
 
+def is_valid_physical_mode(physical_mode, depth_check=1):
+    get_not_null(physical_mode, "name")
+    get_not_null(physical_mode, "id")
+
+
 def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
