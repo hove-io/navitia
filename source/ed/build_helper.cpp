@@ -107,21 +107,15 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         }
     }
     if(!jp->physical_mode){
-        if(!physical_mode.empty()){
+        if (physical_mode.empty() && b.data->pt_data->physical_modes.size()){
+            jp->physical_mode = b.data->pt_data->physical_modes.front();
+        } else {
+            const auto name = physical_mode.empty() ? "physical_mode:0" : physical_mode;
             jp->physical_mode = new navitia::type::PhysicalMode();
             jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
-            jp->physical_mode->uri = physical_mode;
-            jp->physical_mode->name = "name " + physical_mode;
+            jp->physical_mode->uri = name;
+            jp->physical_mode->name = "name " + name;
             b.data->pt_data->physical_modes.push_back(jp->physical_mode);
-        }else{
-            if (b.data->pt_data->physical_modes.size()){
-                jp->physical_mode = b.data->pt_data->physical_modes.front();
-            }else{
-                jp->physical_mode = new navitia::type::PhysicalMode();
-                jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
-                jp->physical_mode->uri = "physical_mode:0";
-                b.data->pt_data->physical_modes.push_back(jp->physical_mode);
-            }
         }
     }
 
