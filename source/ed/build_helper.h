@@ -55,7 +55,7 @@ struct VJ {
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        const std::string & block_id, bool is_adapted = true, const std::string& uri="",
-       std::string meta_vj_name = "", std::string jp_uri = "");
+       std::string meta_vj_name = "", std::string jp_uri = "", const std::string& physical_mode = "");
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -108,7 +108,8 @@ struct builder{
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string& jp_uri = "");
+          const std::string& jp_uri = "",
+          const std::string& physical_mode = "");
 
     VJ vj_with_network(const std::string& network_name,
           const std::string& line_name,
@@ -118,6 +119,7 @@ struct builder{
           const std::string& uri="",
           const std::string& meta_vj="",
           const std::string &jp_uri="",
+          const std::string& physical_mode = "",
           bool is_frequency=false);
 
     VJ frequency_vj(const std::string& line_name,
@@ -130,7 +132,8 @@ struct builder{
                     const bool wheelchair_boarding = true,
                     const std::string& uri="",
                     const std::string& meta_vj="",
-                    const std::string &jp_uri="");
+                    const std::string &jp_uri="",
+                    const std::string& physical_mode = "");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);

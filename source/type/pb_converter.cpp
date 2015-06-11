@@ -381,12 +381,11 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     if (depth > 0) {
         fill_pb_object(l->shape, line->mutable_geojson());
 
-        std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
             fill_pb_object(route, data, line->add_routes(), depth-1, now, action_period, show_codes);
         }
         for(auto physical_mode : l->physical_mode_list){
-            fill_pb_object(physical_mode, data, line->add_physical_mode(),
+            fill_pb_object(physical_mode, data, line->add_physical_modes(),
                     depth-1, now, action_period, show_codes);
         }
 
@@ -406,7 +405,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     }
 
     for(auto property : l->properties) {
-	fill_property(property.first, property.second, line->add_properties());
+        fill_property(property.first, property.second, line->add_properties());
     }
 }
 

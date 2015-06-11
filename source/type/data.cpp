@@ -40,6 +40,7 @@ www.navitia.io
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/range/algorithm/find.hpp>
 #include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
@@ -313,6 +314,8 @@ void Data::complete(){
 
     aggregate_odt();
 
+    build_relations();
+
     compute_labels();
 
     start = pt::microsec_clock::local_time();
@@ -422,6 +425,17 @@ void Data::build_associated_calendar() {
     LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
     if (nb_not_matched_vj) {
         LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+    }
+}
+
+void Data::build_relations(){
+    // physical_mode_list of line
+    for(JourneyPattern* jp : this->pt_data->journey_patterns){
+        if((jp->physical_mode && jp->route && jp->route->line)
+            && (boost::range::find(jp->route->line->physical_mode_list,
+                                  jp->physical_mode) == jp->route->line->physical_mode_list.end())){
+            jp->route->line->physical_mode_list.push_back(jp->physical_mode);
+        }
     }
 }
 

@@ -68,9 +68,8 @@ struct data_set {
             monday_cal->exceptions.push_back(exd);
         }
         b.data->pt_data->calendars.push_back(monday_cal);
-
         //add lines
-        b.vj("line:A", "", "", true, "vj1")
+        b.vj("line:A", "", "", true, "vj1", "", "", "physical_mode:Car")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
