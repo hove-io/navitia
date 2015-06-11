@@ -175,6 +175,7 @@ public:
     void build_associated_calendar();
 
     void aggregate_odt();
+    void build_relations();
 
     void build_grid_validity_pattern();
 
