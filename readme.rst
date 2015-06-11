@@ -25,7 +25,12 @@ Navitia is a service providing:
 
 The API can be found at http://api.navitia.io/
 
-For more information see http://www.navitia.io/ or twitter @navitia or google groups navitia or Freenode IRC, channel #navitia
+For more information see
+
+* main web site http://www.navitia.io
+* twitter @navitia https://twitter.com/navitia
+* google groups navitia https://groups.google.com/d/forum/navitia
+* Freenode IRC, channel #navitia on "barjavel.freenode.net" server
 
 Organisation
 ============
