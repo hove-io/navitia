@@ -743,7 +743,7 @@ void EdPersistor::insert_line_groups(const std::vector<types::LineGroup*>& group
 
     this->lotus.prepare_bulk_insert("navitia.line_group_link", {"group_id","line_id","is_main_line"});
     for(const auto& group_link: group_links) {
-        const auto& line_group = std::find(groups.begin(),groups.end(),group_link.line_group);
+        const auto& line_group = std::find(groups.begin(), groups.end(), group_link.line_group);
         if(line_group == groups.end())
         {
             LOG4CPLUS_ERROR(logger, "Group " << group_link.line_group->idx << " not found when trying to insert line_group_link");

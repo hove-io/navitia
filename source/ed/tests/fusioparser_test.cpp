@@ -132,9 +132,10 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     /* Line groups.
      * 3 groups in the file, 3 use cases :
-     *   - The first one has 2 lines, both linked to the group in line_group_links.txt,
+     *   - The first one has 2 lines, both linked to the group in line_group_links.txt.
+     *     One link is twice in the file and one of the entry should be ignored,
      *   - The second one has only one line, linked only via the main_line_id field of line_groups.txt,
-     *   - The first one has an unknown main_line_id and should be ignored
+     *   - The third one has an unknown main_line_id and should be ignored
      *
      * At the start of the vector data.line_group_links we are going to have each main_line, since
      * those links are created in LineGroupFusioHandler, to allow use case number 2 where the line is not

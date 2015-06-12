@@ -107,6 +107,9 @@ struct GtfsData {
     //for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
     std::unordered_map<std::string, std::string> comments_id_map;
 
+    // Store lines linked for each group to avoid duplicates
+    std::unordered_map<std::string, std::vector<std::string>> linked_lines_by_line_group_uri;
+
     // timezone management
     TzHandler tz;
 

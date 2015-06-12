@@ -684,7 +684,7 @@ void LineGroupFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     line_group_link.line = line->second;
     line_group_link.is_main_line = true;
 
-    line_group->linkedLinesURI.insert(line->second->uri);
+    gtfs_data.linked_lines_by_line_group_uri[line_group->uri].push_back(line->second->uri);
 
     data.line_groups.push_back(line_group);
     data.line_group_links.push_back(line_group_link);
@@ -713,7 +713,8 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
         return;
     }
 
-    if(line_group->second->linkedLinesURI.find(line->second->uri) != line_group->second->linkedLinesURI.end()) {
+    std::vector<std::string> linked_lines = gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri];
+    if(std::find(linked_lines.begin(), linked_lines.end(), line->second->uri) != linked_lines.end()) {
         // Don't insert duplicates
         return;
     }
@@ -723,7 +724,7 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
     line_group_link.line = line->second;
     // To know if the line is the main line of the group, we compare URI
     line_group_link.is_main_line = (line_group->second->main_line->uri == line->second->uri);
-    line_group->second->linkedLinesURI.insert(line->second->uri);
+    gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri].push_back(line->second->uri);
     data.line_group_links.push_back(line_group_link);
 }
 
