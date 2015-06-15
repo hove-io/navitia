@@ -394,9 +394,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
 
         for(const auto& group_pair : l->group_list) {
-            pbnavitia::GroupLink* group_link = line->add_groups();
-            group_link->set_is_main_line(group_pair.second);
-            fill_pb_object(group_pair.first, data, group_link->mutable_group(), depth-1, now, action_period, show_codes);
+            fill_pb_object(group_pair.first, data, line->add_groups(), depth-1, now, action_period, show_codes);
         }
     }
 
@@ -433,10 +431,9 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 
     if(depth > 0) {
         for(const auto& line : lg->line_list) {
-            pbnavitia::LineLink* line_link = line_group->add_lines();
-            line_link->set_is_main_line(line->idx == lg->main_line->idx);
-            fill_pb_object(line, data, line_link->mutable_line(), depth-1, now, action_period, show_codes);
+            fill_pb_object(line, data, line_group->add_lines(), depth-1, now, action_period, show_codes);
         }
+        fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), depth-1, now, action_period, show_codes);
     }
 }
 

@@ -121,9 +121,8 @@ class TestPtRef(AbstractTestFixture):
 
         group = get_not_null(l, 'groups')
         assert len(group) == 1
-        assert group[0]['is_main_line'] == True
-        assert group[0]['group']['name'] == 'A group'
-        assert group[0]['group']['id'] == 'group:A'
+        assert group[0]['name'] == 'A group'
+        assert group[0]['id'] == 'group:A'
 
     def test_line_groups(self):
         """test line group formating"""
