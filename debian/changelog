@@ -1,3 +1,19 @@
+navitia2 (1.20.0) unstable; urgency=low
+
+  * Ptref: Manage physical modes in pt ref filters <https://github.com/CanalTP/navitia/pull/1072>
+  * Jormun: we didn't delete the tickets of deleted journeys  <https://github.com/CanalTP/navitia/pull/1070>
+  * Doc: update outdated dependancies in documentation  <https://github.com/CanalTP/navitia/pull/1069>
+  * Ed: Manage itl  <https://github.com/CanalTP/navitia/pull/1068>
+  * kraken: correction in load disruptions from database  <https://github.com/CanalTP/navitia/pull/1066>
+  * Ptref: add companies  <https://github.com/CanalTP/navitia/pull/1065>
+  * kraken: improvement of disruptions application  <https://github.com/CanalTP/navitia/pull/1064>
+  * All: New pt_objects API  <https://github.com/CanalTP/navitia/pull/1063>
+  * Doc: Update integration.rst with some line breaks. Usefull.  <https://github.com/CanalTP/navitia/pull/1062>
+  * Osm: filter osm admin on boundary=administrative  <https://github.com/CanalTP/navitia/pull/1061>
+  * Doc: Update integration.rst  <https://github.com/CanalTP/navitia/pull/1060>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 15 Jun 2015 11:06:22 +0100
+
 navitia2 (1.19.1) unstable; urgency=low
 
   * segfault when updating a disruption on two stop_areas <https://github.com/CanalTP/navitia/pull/1059>
