@@ -30,7 +30,7 @@ For more information see
 * main web site http://www.navitia.io
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia
-* Freenode IRC, channel #navitia on "barjavel.freenode.net" server
+* channel #navitia on irc.freenode.net
 
 Organisation
 ============
