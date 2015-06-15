@@ -343,6 +343,18 @@ void Data::clean() {
                     }
 
                     using ed::types::StopTime;
+
+                    const bool same_itl = boost::equal((*vj1)->stop_time_list, (*vj2)->stop_time_list,
+                                                         [](const StopTime* st1, const StopTime* st2) {
+                                                             return st1->local_traffic_zone == st2->local_traffic_zone;
+                                                         });
+                    if (!same_itl){
+                        LOG4CPLUS_WARN(logger, "Data::clean(): are equal with different local trafic zone: "
+                                       << (*vj1)->uri << " and " << (*vj2)->uri);
+                        continue;
+
+                    }
+
                     const bool are_equal =
                         (*vj1)->validity_pattern->days != (*vj2)->validity_pattern->days
                         && boost::equal((*vj1)->stop_time_list, (*vj2)->stop_time_list,
@@ -456,11 +468,12 @@ void Data::clean() {
     }
     vehicle_journeys.resize(num_elements);
 
-    LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
-                   << erase_emptiness << " because they do not contain any clean stop_times, "
-                   << erase_no_circulation << " because they are never valid "
-                   << " and " << erase_invalid_stoptimes << " because the stop times were negatives");
-
+    if (erase_overlap || erase_emptiness || erase_no_circulation || erase_invalid_stoptimes){
+        LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
+                       << erase_emptiness << " because they do not contain any clean stop_times, "
+                       << erase_no_circulation << " because they are never valid "
+                       << " and " << erase_invalid_stoptimes << " because the stop times were negatives");
+    }
     // Delete duplicate connections
     // Connections are sorted by departure,destination
     auto sort_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri < spc2->uri

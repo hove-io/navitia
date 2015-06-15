@@ -111,6 +111,14 @@ class TestPtRef(AbstractTestFixture):
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == "I'm a happy comment"
 
+        physical_modes = get_not_null(l, 'physical_modes')
+        assert len(physical_modes) == 1
+
+        is_valid_physical_mode(physical_modes[0], depth_check=1)
+
+        assert physical_modes[0]['id'] == 'physical_mode:Car'
+        assert physical_modes[0]['name'] == 'name physical_mode:Car'
+
     def test_line_codes(self):
         """test line formating"""
         response = self.query_region("v1/lines/line:A?show_codes=true")
@@ -181,6 +189,21 @@ class TestPtRef(AbstractTestFixture):
         assert len(com) == 1
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == "hello bob"
+
+    def test_company_default_depth(self):
+        """default depth is 1"""
+        response = self.query_region("v1/companies")
+
+        companies = get_not_null(response, 'companies')
+
+        for company in companies:
+            is_valid_company(company, depth_check=1)
+
+        #we check afterward that we have the right data
+        #we know there is only one vj in the dataset
+        assert len(companies) == 1
+        company = companies[0]
+        assert company['id'] == 'CMP1'
 
 @dataset(["main_routing_test"])
 class TestPtRefPlace(AbstractTestFixture):

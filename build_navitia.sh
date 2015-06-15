@@ -69,7 +69,7 @@ OPTIONS:
    -p                  kraken database password
    -g                  gtfs directory 
    -o                  osm file
-   -n                  don't install dependencies
+   -n                  do not install dependencies
    -c                  if OS is Debian, clean the APT configuration (repository)
 EOF
 }

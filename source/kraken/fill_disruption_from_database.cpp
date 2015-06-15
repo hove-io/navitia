@@ -132,21 +132,22 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LEFT JOIN pt_object AS ls_end ON line_section.end_object_id = ls_end.id"
                "     LEFT JOIN message AS m ON m.impact_id = i.id"
                "     LEFT JOIN channel AS ch ON m.channel_id = ch.id"
-               "     WHERE d.start_publication_date >= '%s' AND "
-               "     (d.end_publication_date = NULL OR d.end_publication_date <= '%s')"
+               "     WHERE NOT (d.start_publication_date >= '%s' OR d.end_publication_date <= '%s')"
+               "     OR (d.start_publication_date<='%s' and d.end_publication_date IS NULL)"
                "     AND co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty"
                "     AND d.status = 'published'"
                "     AND i.status = 'published'"
                "     ORDER BY d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id"
                "     LIMIT %i OFFSET %i"
-               " ;") % meta.production_date.begin() %meta.production_date.end()  % contributors_array % items_per_request % offset).str();
+               " ;") %meta.production_date.end() % meta.production_date.begin() %meta.production_date.end()  % contributors_array % items_per_request % offset).str();
         result = work.exec(request);
         for (auto res : result) {
             reader(res);
         }
 
         offset += result.size();
-    }while(result.size() > 0);
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
+    }while(result.size() > 0);    
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),"Loading " << offset << " disruptions");
     reader.finalize();
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),offset << " disruptions loaded");

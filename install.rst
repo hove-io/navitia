@@ -12,27 +12,25 @@ Dependencies
    * log4cplus
    * osmpbf (https://github.com/scrosby/OSM-binary)
    * boost (test, chrono, regex, system, serialization, date-time, thread, filesystem, iostreams, program-options)
-   * popt
    * zeromq 2.2
    * libpqxx 3
    * libgoogle-perftools-dev (tcmalloc)
    * protobuf
    * proj
-   * xmlto
 
 #. Python
 
    Each python module have a pip requirements.txt file that list it's dependendies.
 
-   To install the dependencies for a module use `pip`:
+   To install the dependencies for a module use `pip` (you can also wrap that in a virtualenv):
 
    ``pip install -r {path_to_navitia_source}/jormungandr/requirement.txt``
 
 
 #. Other
 
-   * RabbitMQ
-   * PostgreSQL (9.1+)
+   * RabbitMQ server
+   * PostgreSQL (9.1+) and Postgis (2.0+)
    * Redis server
 
 Build instruction

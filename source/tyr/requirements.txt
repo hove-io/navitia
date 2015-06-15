@@ -3,11 +3,11 @@ Flask-Migrate==1.1.1
 -e git+https://github.com/l-vincent-l/flask-restful.git@b20d61f88b41f41a85f2cae4d6a831ab327ebaf7#egg=Flask_RESTful-master
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.6
-GeoAlchemy2==0.2.3
+GeoAlchemy2==0.2.4
 Jinja2==2.7.2
 Mako==0.9.1
 MarkupSafe==0.18
-SQLAlchemy==0.9.1
+SQLAlchemy==1.0.4
 Shapely==1.3.0
 Werkzeug==0.9.4
 alembic==0.6.2

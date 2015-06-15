@@ -69,7 +69,7 @@ static nt::JourneyPattern* get_or_create_journey_pattern(builder& b, const std::
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri,
-       std::string meta_vj_name, std::string jp_uri): b(b) {
+       std::string meta_vj_name, std::string jp_uri, const std::string& physical_mode): b(b) {
     // the vj is owned by the jp, so we need to have the jp before everything else
     auto it = b.lines.find(line_name);
     nt::Route* route = nullptr;
@@ -100,16 +100,25 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     jp->route = route;
 
     //add physical mode
-    if (! b.data->pt_data->physical_modes.empty()) {
-        auto mode = b.data->pt_data->physical_modes.front();
-        jp->physical_mode = mode;
+    if (!physical_mode.empty()){
+        auto it = b.data->pt_data->physical_modes_map.find(physical_mode);
+        if (it != b.data->pt_data->physical_modes_map.end()){
+            jp->physical_mode = it->second;
+        }
     }
-    else {
-        jp->physical_mode = new navitia::type::PhysicalMode();
-        jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
-        jp->physical_mode->uri = "physical_mode:0";
-        b.data->pt_data->physical_modes.push_back(jp->physical_mode);
+    if(!jp->physical_mode){
+        if (physical_mode.empty() && b.data->pt_data->physical_modes.size()){
+            jp->physical_mode = b.data->pt_data->physical_modes.front();
+        } else {
+            const auto name = physical_mode.empty() ? "physical_mode:0" : physical_mode;
+            jp->physical_mode = new navitia::type::PhysicalMode();
+            jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
+            jp->physical_mode->uri = name;
+            jp->physical_mode->name = "name " + name;
+            b.data->pt_data->physical_modes.push_back(jp->physical_mode);
+        }
     }
+
     jp->physical_mode->journey_pattern_list.push_back(jp);
 
     if (is_frequency) {
@@ -154,14 +163,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     b.vps[validity_pattern] = vj->validity_pattern;
     vj->adapted_validity_pattern = vj->validity_pattern;
 
-
-        if(wheelchair_boarding){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
-        }
+    if(wheelchair_boarding){
+        vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    }
     vj->uri = uri;
-    if(!b.data->pt_data->physical_modes.empty())
-        if (vj->journey_pattern != NULL)
-            vj->journey_pattern->physical_mode = b.data->pt_data->physical_modes.front();
 
     if(!b.data->pt_data->companies.empty())
         vj->company = b.data->pt_data->companies.front();
@@ -311,8 +316,9 @@ VJ builder::vj(const std::string& line_name,
                const bool wheelchair_boarding,
                const std::string& uri,
                const std::string& meta_vj,
-               const std::string& jp_uri){
-    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
+               const std::string& jp_uri,
+               const std::string& physical_mode){
+    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, physical_mode);
 }
 
 VJ builder::vj_with_network(const std::string& network_name,
@@ -323,8 +329,9 @@ VJ builder::vj_with_network(const std::string& network_name,
                const std::string& uri,
                const std::string& meta_vj,
                const std::string& jp_uri,
+               const std::string& physical_mode,
                bool is_frequency) {
-    auto res = VJ(*this, line_name, validity_pattern, is_frequency, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
+    auto res = VJ(*this, line_name, validity_pattern, is_frequency, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, physical_mode);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){
@@ -362,8 +369,9 @@ VJ builder::frequency_vj(const std::string& line_name,
                 const bool wheelchair_boarding,
                 const std::string& uri,
                 const std::string& meta_vj,
-                const std::string &jp_uri){
-    auto res = vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, true);
+                const std::string &jp_uri,
+                const std::string& physical_mode){
+    auto res = vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri, physical_mode, true);
     auto vj = static_cast<nt::FrequencyVehicleJourney*>(this->data->pt_data->vehicle_journeys.back());
 
     //we get the last frequency vj of the jp, it's the one we just created
@@ -482,6 +490,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
             mode->co2_emission = co2_emission;
         }
         this->data->pt_data->physical_modes.push_back(mode);
+        this->data->pt_data->physical_modes_map[mode->uri] = mode;
     }
  }
 

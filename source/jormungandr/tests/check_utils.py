@@ -567,6 +567,16 @@ def is_valid_route(route, depth_check=1):
     g is None or shape(g) #TODO check length
 
 
+def is_valid_company(company, depth_check=1):
+    get_not_null(company, "name")
+    get_not_null(company, "id")
+
+
+def is_valid_physical_mode(physical_mode, depth_check=1):
+    get_not_null(physical_mode, "name")
+    get_not_null(physical_mode, "id")
+
+
 def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
