@@ -80,6 +80,7 @@ struct EdPersistor{
     void compute_bounding_shape();
 
 private:
+    void insert_feed_info(const std::map<std::string, std::string>& feed_infos);
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_metadata_georef();
     void insert_sa_sp_properties(const ed::Data& data);

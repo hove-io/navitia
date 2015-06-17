@@ -280,7 +280,7 @@ void FeedInfoGtfsHandler::init(Data&) {
     feed_publisher_url_c = csv.get_pos_col("feed_publisher_url");
 }
 
-void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     if(has_col(feed_publisher_name_c, row)) {
         data.feed_infos["feed_publisher_name"] = row[feed_publisher_name_c];
