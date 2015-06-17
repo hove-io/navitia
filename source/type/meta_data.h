@@ -51,7 +51,7 @@ struct MetaData{
 
     /// default dataset timezone
     std::string timezone;
-
+    std::map<std::string, std::string> feed_infos;
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
@@ -59,7 +59,7 @@ struct MetaData{
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & data_sources & shape & timezone;
+        ar & production_date & publication_date & data_sources & shape & timezone & feed_infos;
     }
 
     friend class boost::serialization::access;
