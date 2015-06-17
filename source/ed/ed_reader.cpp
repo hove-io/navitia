@@ -49,7 +49,8 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_vector_to_ignore(data, work, min_non_connected_graph_ratio);
     this->fill_meta(data, work);
-
+    // TODO merge fill_feed_infos, fill_meta
+    this->fill_feed_infos(data, work);
     this->fill_networks(data, work);
     this->fill_commercial_modes(data, work);
     this->fill_physical_modes(data, work);
@@ -286,6 +287,15 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     nav_data.meta->timezone = const_it["timezone"].as<std::string>();
 
     const_it["bounding_shape"].to(nav_data.meta->shape);
+}
+
+void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
+    std::string request = "SELECT key, value FROM navitia.feed_info";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        data.meta->feed_infos[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+    }
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
