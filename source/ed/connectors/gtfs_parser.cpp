@@ -275,6 +275,22 @@ int time_to_int(const std::string & time) {
     return result;
 }
 
+void FeedInfoGtfsHandler::init(Data&) {
+    feed_publisher_name_c = csv.get_pos_col("feed_publisher_name");
+    feed_publisher_url_c = csv.get_pos_col("feed_publisher_url");
+}
+
+void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+
+    if(has_col(feed_publisher_name_c, row)) {
+        data.feed_infos["feed_publisher_name"] = row[feed_publisher_name_c];
+    }
+
+    if(has_col(feed_publisher_url_c, row)) {
+        data.feed_infos["feed_publisher_url"] = row[feed_publisher_url_c];
+    }
+}
+
 void AgencyGtfsHandler::init(Data&) {
     id_c = csv.get_pos_col("agency_id");
     name_c = csv.get_pos_col("agency_name");
@@ -1348,6 +1364,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 void GtfsParser::parse_files(Data& data) {
     fill_default_modes(data);
 
+    parse<FeedInfoGtfsHandler>(data, "feed_info.txt");
     parse<ShapesGtfsHandler>(data, "shapes.txt");
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);
