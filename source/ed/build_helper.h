@@ -99,6 +99,10 @@ struct builder{
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
         data->meta->timezone = "UTC"; //default timezone is UTC
 		data->loaded = true;
+        data->meta->feed_infos["instance_name"] = "builder";
+        data->meta->feed_infos["feed_publisher_name"] = "canal tp";
+        data->meta->feed_infos["feed_publisher_url"] = "www.canaltp.fr";
+        data->meta->feed_infos["feed_license"] = "ODBL";
     }
 
     /// Create a discrete vehicle journey (no frequency, explicit stop times)
