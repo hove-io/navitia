@@ -62,6 +62,8 @@ class TestPtRef(AbstractTestFixture):
         assert len(com) == 1
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == 'hello'
+        assert "feed_publishers" in response
+        is_valid_feed_publisher(response["feed_publishers"][0])
 
 
     def test_vj_depth_0(self):
