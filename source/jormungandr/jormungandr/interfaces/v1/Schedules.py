@@ -37,7 +37,7 @@ from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, UrisToLinks, error, \
-    enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum
+    enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum, feed_publisher
 from ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -186,6 +186,7 @@ route_schedules = {
     "route_schedules": fields.List(fields.Nested(route_schedule_fields)),
     "pagination": fields.Nested(pagination),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
 
@@ -215,6 +216,7 @@ stop_schedules = {
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
 
@@ -246,6 +248,7 @@ departures = {
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
 arrivals = {
@@ -253,6 +256,7 @@ arrivals = {
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
 class add_passages_links:

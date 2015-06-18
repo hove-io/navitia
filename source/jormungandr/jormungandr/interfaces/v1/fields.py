@@ -472,6 +472,13 @@ comment = {
     'type': fields.String()
 }
 
+feed_publisher = {
+    "id": fields.String(),
+    "name": fields.String(),
+    "url": fields.String(),
+    "license": fields.String()
+}
+
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
