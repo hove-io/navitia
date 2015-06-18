@@ -165,6 +165,22 @@ void Worker::metadatas(pbnavitia::Response& response) {
     metadatas->set_status(get_string_status(d));
 }
 
+void Worker::feed_publisher(pbnavitia::Response& response){
+    const auto d = data_manager.get_data();
+    auto pb_feed_publisher = response.add_feed_publishers();
+    // instance_name is required
+    pb_feed_publisher->set_id(d->meta->feed_infos.at("instance_name"));
+    if (d->meta->feed_infos.find("feed_publisher_name") != d->meta->feed_infos.end()){
+        pb_feed_publisher->set_name(d->meta->feed_infos.at("feed_publisher_name"));
+    }
+    if (d->meta->feed_infos.find("feed_publisher_url") != d->meta->feed_infos.end()){
+        pb_feed_publisher->set_url(d->meta->feed_infos.at("feed_publisher_url"));
+    }
+    if (d->meta->feed_infos.find("feed_license") != d->meta->feed_infos.end()){
+        pb_feed_publisher->set_license(d->meta->feed_infos.at("feed_license"));
+    }
+}
+
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(data->data_identifier != this->last_data_identifier || !planner){
@@ -630,6 +646,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
             break;
     }
     metadatas(response);//we add the metadatas for each response
+    feed_publisher(response);
     return response;
 }
 
