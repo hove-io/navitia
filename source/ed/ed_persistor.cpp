@@ -731,17 +731,18 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 }
 
 void EdPersistor::insert_line_groups(const std::vector<types::LineGroup*>& groups, const std::vector<types::LineGroupLink>& group_links){
-    this->lotus.prepare_bulk_insert("navitia.line_group", {"id","uri","name"});
+    this->lotus.prepare_bulk_insert("navitia.line_group", {"id","uri","name", "main_line_id"});
     for(const auto& line_group: groups) {
         this->lotus.insert({
             std::to_string(line_group->idx),
             navitia::encode_uri(line_group->uri),
-            line_group->name
+            line_group->name,
+            std::to_string(line_group->main_line->idx)
         });
     }
     this->lotus.finish_bulk_insert();
 
-    this->lotus.prepare_bulk_insert("navitia.line_group_link", {"group_id","line_id","is_main_line"});
+    this->lotus.prepare_bulk_insert("navitia.line_group_link", {"group_id","line_id"});
     for(const auto& group_link: group_links) {
         const auto& line_group = std::find(groups.begin(), groups.end(), group_link.line_group);
         if(line_group == groups.end())
@@ -749,11 +750,9 @@ void EdPersistor::insert_line_groups(const std::vector<types::LineGroup*>& group
             LOG4CPLUS_ERROR(logger, "Group " << group_link.line_group->idx << " not found when trying to insert line_group_link");
             break;
         }
-        bool is_main_line = ((*line_group)->main_line->idx == group_link.line->idx);
         this->lotus.insert({
             std::to_string(group_link.line_group->idx),
-            std::to_string(group_link.line->idx),
-            std::to_string(is_main_line)
+            std::to_string(group_link.line->idx)
         });
     }
     this->lotus.finish_bulk_insert();

@@ -667,6 +667,7 @@ void LineGroupFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(!(has_col(id_c, row) && has_col(name_c, row) && has_col(main_line_id_c, row))) {
         LOG4CPLUS_WARN(logger, "LineGroupFusioHandler: Line ignored in " << csv.filename <<
             " missing line_group_id, line_group_name or main_line_id column");
+        throw InvalidHeaders(csv.filename);
     }
     auto line = gtfs_data.line_map.find(row[main_line_id_c]);
     if (line == gtfs_data.line_map.end()) {
@@ -682,9 +683,8 @@ void LineGroupFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     ed::types::LineGroupLink line_group_link;
     line_group_link.line_group = line_group;
     line_group_link.line = line->second;
-    line_group_link.is_main_line = true;
 
-    gtfs_data.linked_lines_by_line_group_uri[line_group->uri].push_back(line->second->uri);
+    gtfs_data.linked_lines_by_line_group_uri[line_group->uri].insert(line->second->uri);
 
     data.line_groups.push_back(line_group);
     data.line_group_links.push_back(line_group_link);
@@ -700,6 +700,7 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
     if(!(has_col(line_group_id_c, row) && has_col(line_id_c, row))) {
         LOG4CPLUS_WARN(logger, "LineGroupLinksFusioHandler: Line ignored in " << csv.filename <<
         " missing line_group_id or line_id column");
+        throw InvalidHeaders(csv.filename);
     }
     auto line_group = gtfs_data.line_group_map.find(row[line_group_id_c]);
     if (line_group == gtfs_data.line_group_map.end()) {
@@ -713,8 +714,8 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
         return;
     }
 
-    std::vector<std::string> linked_lines = gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri];
-    if(std::find(linked_lines.begin(), linked_lines.end(), line->second->uri) != linked_lines.end()) {
+    auto linked_lines = gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri];
+    if(linked_lines.find(line->second->uri) != linked_lines.end()) {
         // Don't insert duplicates
         return;
     }
@@ -722,9 +723,7 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
     ed::types::LineGroupLink line_group_link;
     line_group_link.line_group = line_group->second;
     line_group_link.line = line->second;
-    // To know if the line is the main line of the group, we compare URI
-    line_group_link.is_main_line = (line_group->second->main_line->uri == line->second->uri);
-    gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri].push_back(line->second->uri);
+    gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri].insert(line->second->uri);
     data.line_group_links.push_back(line_group_link);
 }
 

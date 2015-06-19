@@ -385,13 +385,14 @@ line = Table('line', metadata,*[
 line_group = Table('line_group', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False),],
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('main_line_id', BIGINT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['main_line_id'], [u'navitia.line.id'], name=u'line_group_line_id_fkey'),],
     schema='navitia')
 
 line_group_link = Table('line_group_link', metadata,*[
-    Column('group_id', BIGINT(), primary_key=False, nullable=False),
-    Column('line_id', BIGINT(), primary_key=False, nullable=False),
-    Column('is_main_line', BOOLEAN(), primary_key=False),
+    Column('group_id', BIGINT(), primary_key=True, nullable=False),
+    Column('line_id', BIGINT(), primary_key=True, nullable=False),
     ForeignKeyConstraint(['group_id'], [u'navitia.line_group.id'], name=u'line_group_link_group_id_fkey'),
     ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'line_group_link_line_id_fkey'),],
     schema='navitia')

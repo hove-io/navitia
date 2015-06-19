@@ -235,7 +235,6 @@ struct LineGroup : public Header, Nameable {
 struct LineGroupLink {
     LineGroup* line_group;
     Line* line;
-    bool is_main_line;
 };
 
 struct Route : public Header, Nameable{

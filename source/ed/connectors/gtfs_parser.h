@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/csv.h"
 #include "utils/logger.h"
 #include "utils/functions.h"
+#include <boost/container/flat_set.hpp>
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include "tz_db_wrapper.h"
@@ -108,7 +109,7 @@ struct GtfsData {
     std::unordered_map<std::string, std::string> comments_id_map;
 
     // Store lines linked for each group to avoid duplicates
-    std::unordered_map<std::string, std::vector<std::string>> linked_lines_by_line_group_uri;
+    std::unordered_map<std::string, boost::container::flat_set<std::string>> linked_lines_by_line_group_uri;
 
     // timezone management
     TzHandler tz;

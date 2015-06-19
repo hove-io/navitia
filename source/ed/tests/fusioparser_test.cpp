@@ -156,8 +156,6 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
     BOOST_CHECK_EQUAL(data.line_group_links[0].line->uri, "l2");
     BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
-    BOOST_CHECK_EQUAL(data.line_group_links[0].is_main_line, true);
-    BOOST_CHECK_EQUAL(data.line_group_links[2].is_main_line, false);
 
     // Second group, only one line, only defined as the main_line
     BOOST_REQUIRE(data.line_groups[1]->main_line != nullptr);
@@ -165,6 +163,5 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_groups[1]->main_line->uri, "l3");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
-    BOOST_CHECK_EQUAL(data.line_group_links[1].is_main_line, true);
 }
 

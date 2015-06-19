@@ -115,7 +115,10 @@ bool Line::operator<(const Line& other) const {
 }
 
 bool LineGroup::operator<(const LineGroup& other) const {
-    return this->name < other.name || (this->name == other.name && this < &other);
+    if (this->name != other.name) {
+        return this->name < other.name;
+    }
+    return this->idx < other.idx;
 }
 
 bool Route::operator<(const Route& other) const {
