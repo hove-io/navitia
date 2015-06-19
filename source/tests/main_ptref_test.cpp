@@ -126,7 +126,7 @@ struct data_set {
         lg->uri = "group:A";
         lg->main_line = b.lines["line:A"];
         lg->line_list.push_back(b.lines["line:A"]);
-        b.lines["line:A"]->group_list.push_back(std::make_pair(lg, true));
+        b.lines["line:A"]->line_group_list.push_back(lg);
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
     }

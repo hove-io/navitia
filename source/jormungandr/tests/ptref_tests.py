@@ -119,7 +119,7 @@ class TestPtRef(AbstractTestFixture):
         assert physical_modes[0]['id'] == 'physical_mode:Car'
         assert physical_modes[0]['name'] == 'name physical_mode:Car'
 
-        group = get_not_null(l, 'groups')
+        group = get_not_null(l, 'line_groups')
         assert len(group) == 1
         assert group[0]['name'] == 'A group'
         assert group[0]['id'] == 'group:A'

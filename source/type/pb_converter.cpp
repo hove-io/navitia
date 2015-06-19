@@ -393,8 +393,8 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
                 line->mutable_commercial_mode(), depth-1, now, action_period, show_codes);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
 
-        for(const auto& group_pair : l->group_list) {
-            fill_pb_object(group_pair.first, data, line->add_groups(), depth-1, now, action_period, show_codes);
+        for(const auto& line_group : l->line_group_list) {
+            fill_pb_object(line_group, data, line->add_line_groups(), depth-1, now, action_period, show_codes);
         }
     }
 
@@ -433,7 +433,7 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
         for(const auto& line : lg->line_list) {
             fill_pb_object(line, data, line_group->add_lines(), depth-1, now, action_period, show_codes);
         }
-        fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), depth-1, now, action_period, show_codes);
+        fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), 0, now, action_period, show_codes);
     }
 }
 

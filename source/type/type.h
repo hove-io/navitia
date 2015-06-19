@@ -621,14 +621,14 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     std::map<std::string,std::string> properties;
 
     //The bool part of the pair stand for "is_main_line"
-    std::vector<std::pair<LineGroup*, bool>> group_list;
+    std::vector<LineGroup*> line_group_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & codes & shape & closing_time
-                & opening_time & properties & group_list;
+                & opening_time & properties & line_group_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
