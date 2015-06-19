@@ -174,7 +174,8 @@ PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref) {}
 
 void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
-    // we look for the nearest edge from the start coorinate in the right transport mode (walk, bike, car, ...) (ie offset)
+    // we look for the nearest edge from the start coordinate
+    // in the right transport mode (walk, bike, car, ...) (ie offset)
     this->mode = mode;
     this->speed_factor = speed_factor; //the speed factor is the factor we have to multiply the edge cost with
     nt::idx_t offset = this->geo_ref.offsets[mode];
@@ -236,17 +237,35 @@ void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
 
 }
 
+std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
+PathFinder::crow_fly_find_nearest_stop_points(navitia::time_duration radius,
+                                              const proximitylist::ProximityList<type::idx_t>& pl) {
+    // Searching for all the elements that are less than radius meters awyway in crow fly
+    float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
+
+    return pl.find_within(start_coord, crow_fly_dist);
+}
+
 std::vector<std::pair<type::idx_t, navitia::time_duration>>
-PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
+PathFinder::find_nearest_stop_points(navitia::time_duration radius,
+                                     const proximitylist::ProximityList<type::idx_t>& pl) {
+    auto elements = crow_fly_find_nearest_stop_points(radius, pl);
     if (! starting_edge.found){
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
-        return {};
+        // if no street network, return stop_points that are within
+        // radius distance (with sqrt(2) security factor)
+        std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
+        for (auto element: elements) {
+            navitia::time_duration duration =
+                    crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
+            if (duration < radius) {
+                result.push_back({element.first, duration});
+                distance_to_entry_point[routing::SpIdx(element.first)] = duration;
+            }
+        }
+        return result;
     }
 
-    // On trouve tous les élements à moins radius mètres en vol d'oiseau
-    float crow_flies_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
-
-    std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, crow_flies_dist);
     if(elements.empty())
         return {};
 

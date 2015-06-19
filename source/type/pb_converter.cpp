@@ -1071,7 +1071,7 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
 }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
-                          type::Mode_e mode,
+                          const time_duration& crow_fly_duration, type::Mode_e mode,
                           boost::posix_time::ptime time, const type::Data& data, EnhancedResponse& response,
                           pbnavitia::Journey* pb_journey, const pt::ptime& now,
                           const pt::time_period& action_period) {
@@ -1080,7 +1080,7 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     fill_pb_placemark(origin, data, section->mutable_origin(), 2, now, action_period);
     fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
     section->set_begin_date_time(navitia::to_posix_timestamp(time));
-    section->set_duration(0);
+    section->set_duration(crow_fly_duration.total_seconds());
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
