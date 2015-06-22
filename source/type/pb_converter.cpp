@@ -1081,7 +1081,17 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
     section->set_begin_date_time(navitia::to_posix_timestamp(time));
     section->set_duration(crow_fly_duration.total_seconds());
-    section->set_length(0);
+    if(crow_fly_duration.total_seconds() > 0){
+        section->set_length(origin.coordinates.distance_to(destination.coordinates));
+        auto* new_coord = section->add_shape();
+        new_coord->set_lon(origin.coordinates.lon());
+        new_coord->set_lat(origin.coordinates.lat());
+        new_coord = section->add_shape();
+        new_coord->set_lon(destination.coordinates.lon());
+        new_coord->set_lat(destination.coordinates.lat());
+    }else{
+        section->set_length(0);
+    }
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
 

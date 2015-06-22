@@ -314,6 +314,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             if (use_crow_fly(origin, path.items.front().stop_points.front(), sn_departure_path, d)){
                 const auto& sp_dest = path.items.front().stop_points.front();
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
+                destination_tmp.coordinates = sp_dest->coord;
                 bt::time_period action_period(path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::minutes(1));
                 const time_duration& crow_fly_duration = find_or_default(
@@ -526,6 +527,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             if (use_crow_fly(destination, path.items.back().stop_points.back(), sn_arrival_path, d)) {
                 const auto sp_orig = path.items.back().stop_points.back();
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
+                origin_tmp.coordinates = sp_orig->coord;
                 bt::time_period action_period(path.items.back().departures.back(),
                                               path.items.back().departures.back()+bt::minutes(1));
                 const time_duration& crow_fly_duration = find_or_default(
