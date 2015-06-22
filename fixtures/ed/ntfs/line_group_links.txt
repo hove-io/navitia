@@ -1,0 +1,4 @@
+line_group_id,line_id
+lg1,l2
+lg1,l3
+lg1,l3

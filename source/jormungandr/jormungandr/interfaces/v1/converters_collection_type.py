@@ -31,7 +31,7 @@ collections_to_resource_type = {
     "stop_points": "stop_point", "routes": "route",
     "networks": "network", "commercial_modes": "commercial_mode",
     "physical_modes": "physical_mode", "companies": "company",
-    "stop_areas": "stop_area", "lines": "line",
+    "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
     "addresses": "address", "coords": "coord",
     "journey_pattern_points": "journey_pattern_point",
     "journey_patterns": "journey_pattern",

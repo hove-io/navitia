@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/csv.h"
 #include "utils/logger.h"
 #include "utils/functions.h"
+#include <boost/container/flat_set.hpp>
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include "tz_db_wrapper.h"
@@ -87,6 +88,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
+    std::unordered_map<std::string, ed::types::LineGroup*> line_group_map;
     std::unordered_map<std::string, ed::types::Route*> route_map;
     std::unordered_map<std::string, ed::types::MetaVehicleJourney*> metavj_by_external_code;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
@@ -105,6 +107,9 @@ struct GtfsData {
 
     //for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
     std::unordered_map<std::string, std::string> comments_id_map;
+
+    // Store lines linked for each group to avoid duplicates
+    std::unordered_map<std::string, boost::container::flat_set<std::string>> linked_lines_by_line_group_uri;
 
     // timezone management
     TzHandler tz;

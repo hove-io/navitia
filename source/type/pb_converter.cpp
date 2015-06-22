@@ -392,6 +392,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1, now, action_period, show_codes);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
+
+        for(const auto& line_group : l->line_group_list) {
+            fill_pb_object(line_group, data, line->add_line_groups(), depth-1, now, action_period, show_codes);
+        }
     }
 
     for(const auto message : l->get_applicable_messages(now, action_period)){
@@ -406,6 +410,30 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
     for(auto property : l->properties) {
         fill_property(property.first, property.second, line->add_properties());
+    }
+}
+
+void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
+        pbnavitia::LineGroup* line_group, int max_depth,
+        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
+    if(lg == nullptr)
+        return ;
+    int depth = (max_depth <= 3) ? max_depth : 3;
+
+    line_group->set_name(lg->name);
+    line_group->set_uri(lg->uri);
+
+    if(depth > 0) {
+        for(const auto& line : lg->line_list) {
+            fill_pb_object(line, data, line_group->add_lines(), depth-1, now, action_period, show_codes);
+        }
+        fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), 0, now, action_period, show_codes);
+
+        for (const auto& comment: data.pt_data->comments.get(lg)) {
+            auto com = line_group->add_comments();
+            com->set_value(comment);
+            com->set_type("standard");
+        }
     }
 }
 

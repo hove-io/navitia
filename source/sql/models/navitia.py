@@ -382,6 +382,20 @@ line = Table('line', metadata,*[
     ForeignKeyConstraint(['network_id'], [u'navitia.network.id'], name=u'line_network_id_fkey'),],
     schema='navitia')
 
+line_group = Table('line_group', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('uri', TEXT(), primary_key=False, nullable=False),
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('main_line_id', BIGINT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['main_line_id'], [u'navitia.line.id'], name=u'line_group_line_id_fkey'),],
+    schema='navitia')
+
+line_group_link = Table('line_group_link', metadata,*[
+    Column('group_id', BIGINT(), primary_key=True, nullable=False),
+    Column('line_id', BIGINT(), primary_key=True, nullable=False),
+    ForeignKeyConstraint(['group_id'], [u'navitia.line_group.id'], name=u'line_group_link_group_id_fkey'),
+    ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'line_group_link_line_id_fkey'),],
+    schema='navitia')
 
 calendar = Table('calendar', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".calendar_id_seq\'::regclass)')),

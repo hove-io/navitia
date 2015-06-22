@@ -121,6 +121,7 @@ private:
             fusion_pair_comment_map<navitia::type::Line>,
             fusion_pair_comment_map<navitia::type::Route>,
             fusion_pair_comment_map<navitia::type::VehicleJourney>,
+            fusion_pair_comment_map<navitia::type::LineGroup>,
             boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>
     > comment_map_type;
 

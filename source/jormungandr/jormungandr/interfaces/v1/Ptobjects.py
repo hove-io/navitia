@@ -49,7 +49,7 @@ pt_objects = {
     "error": PbField(error, attribute='error'),
 }
 
-pt_object_type_values = ["network", "commercial_mode", "line", "route", "stop_area"]
+pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]
 
 
 class Ptobjects(ResourceUri):

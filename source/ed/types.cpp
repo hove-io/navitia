@@ -114,6 +114,13 @@ bool Line::operator<(const Line& other) const {
     }
 }
 
+bool LineGroup::operator<(const LineGroup& other) const {
+    if (this->name != other.name) {
+        return this->name < other.name;
+    }
+    return this->idx < other.idx;
+}
+
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
         BOOST_ASSERT(this->uri != other.uri);

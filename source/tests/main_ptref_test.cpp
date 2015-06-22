@@ -98,8 +98,6 @@ struct data_set {
         vj->validity_pattern->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
-        b.data->complete();
-
         //we add some comments
         auto& comments = b.data->pt_data->comments;
         comments.add(b.data->pt_data->routes_map["line:A:0"], "I'm a happy comment");
@@ -120,6 +118,17 @@ struct data_set {
         cmp->uri = "CMP1";
         b.lines["line:A"]->company_list.push_back(cmp);
 
+        // LineGroup added
+        navitia::type::LineGroup* lg = new navitia::type::LineGroup();
+        lg->name = "A group";
+        lg->uri = "group:A";
+        lg->main_line = b.lines["line:A"];
+        lg->line_list.push_back(b.lines["line:A"]);
+        b.lines["line:A"]->line_group_list.push_back(lg);
+        comments.add(lg, "I'm a happy comment");
+        b.data->pt_data->line_groups.push_back(lg);
+
+        b.data->complete();
     }
 
     ed::builder b;
