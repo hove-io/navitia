@@ -255,12 +255,16 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
         std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
-        for (auto element: elements) {
-            navitia::time_duration duration =
-                    crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
-            if (duration < radius) {
-                result.push_back({element.first, duration});
-                distance_to_entry_point[routing::SpIdx(element.first)] = duration;
+        // if we are not dealing with 0,0 coordinates (incorrect data), allow crow fly
+        if(start_coord != type::GeographicalCoord(0, 0)) {
+            for (auto element: elements) {
+                navitia::time_duration duration =
+                        crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
+                // if the radius is still ok with sqrt(2) factor
+                if (duration < radius) {
+                    result.push_back({element.first, duration});
+                    distance_to_entry_point[routing::SpIdx(element.first)] = duration;
+                }
             }
         }
         return result;
