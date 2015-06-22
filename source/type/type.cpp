@@ -544,6 +544,7 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     case Type_e::Network: result.push_back(network->idx); break;
     case Type_e::Route: return indexes(route_list);
     case Type_e::Calendar: return indexes(calendar_list);
+    case Type_e::LineGroup: return indexes(line_group_list);
     default: break;
     }
     return result;

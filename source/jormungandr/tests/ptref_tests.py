@@ -119,27 +119,38 @@ class TestPtRef(AbstractTestFixture):
         assert physical_modes[0]['id'] == 'physical_mode:Car'
         assert physical_modes[0]['name'] == 'name physical_mode:Car'
 
-        group = get_not_null(l, 'line_groups')
-        assert len(group) == 1
-        assert group[0]['name'] == 'A group'
-        assert group[0]['id'] == 'group:A'
+        line_group = get_not_null(l, 'line_groups')
+        assert len(line_group) == 1
+        is_valid_line_group(line_group[0], depth_check=0)
+        assert line_group[0]['name'] == 'A group'
+        assert line_group[0]['id'] == 'group:A'
 
     def test_line_groups(self):
         """test line group formating"""
-        response = self.query_region("v1/line_groups")
+        # Test for each possible range to ensure main_line is always at a depth of 0
+        for depth in range(0,3):
+            response = self.query_region("line_groups?depth={0}".format(depth))
 
+            line_groups = get_not_null(response, 'line_groups')
+
+            assert len(line_groups) == 1
+
+            lg = line_groups[0]
+
+            is_valid_line_group(lg, depth_check=depth)
+
+            if depth > 0:
+                com = get_not_null(lg, 'comments')
+                assert len(com) == 1
+                assert com[0]['type'] == 'standard'
+                assert com[0]['value'] == "I'm a happy comment"
+
+        # test if line_groups are accessible through the ptref graph
+        response = self.query_region("routes/line:A:0/line_groups")
         line_groups = get_not_null(response, 'line_groups')
-
         assert len(line_groups) == 1
-
         lg = line_groups[0]
-
-        is_valid_line_group(lg, depth_check=1)
-
-        com = get_not_null(lg, 'comments')
-        assert len(com) == 1
-        assert com[0]['type'] == 'standard'
-        assert com[0]['value'] == "I'm a happy comment"
+        is_valid_line_group(lg)
 
     def test_line_codes(self):
         """test line formating"""

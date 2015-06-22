@@ -98,8 +98,6 @@ struct data_set {
         vj->validity_pattern->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
-        b.data->complete();
-
         //we add some comments
         auto& comments = b.data->pt_data->comments;
         comments.add(b.data->pt_data->routes_map["line:A:0"], "I'm a happy comment");
@@ -129,6 +127,8 @@ struct data_set {
         b.lines["line:A"]->line_group_list.push_back(lg);
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
+
+        b.data->complete();
     }
 
     ed::builder b;

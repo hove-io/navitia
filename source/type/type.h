@@ -620,7 +620,6 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 
     std::map<std::string,std::string> properties;
 
-    //The bool part of the pair stand for "is_main_line"
     std::vector<LineGroup*> line_group_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -652,7 +651,6 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 
 struct LineGroup : public Header, Nameable{
     const static Type_e type = Type_e::LineGroup;
-    std::string name;
 
     Line* main_line;
     std::vector<Line*> line_list;

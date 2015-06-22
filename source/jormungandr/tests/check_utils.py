@@ -603,7 +603,8 @@ def is_valid_line_group(line_group, depth_check=1):
     get_not_null(line_group, "id")
 
     if depth_check > 0:
-        is_valid_line(get_not_null(line_group, "main_line"), depth_check - 1)
+        # the main_line is always displayed with a depth of 0 to reduce duplicated informations
+        is_valid_line(get_not_null(line_group, "main_line"), 0)
         for l in line_group.get('lines', []):
             is_valid_line(l, depth_check - 1)
 

@@ -420,12 +420,6 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    for (const auto& comment: data.pt_data->comments.get(lg)) {
-        auto com = line_group->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
-
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
 
@@ -434,6 +428,12 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
             fill_pb_object(line, data, line_group->add_lines(), depth-1, now, action_period, show_codes);
         }
         fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), 0, now, action_period, show_codes);
+
+        for (const auto& comment: data.pt_data->comments.get(lg)) {
+            auto com = line_group->add_comments();
+            com->set_value(comment);
+            com->set_type("standard");
+        }
     }
 }
 
