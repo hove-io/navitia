@@ -155,21 +155,6 @@ departure_board(const std::string& request,
             if(jpp->journey_pattern->route != route) {
                 continue;
             }
-            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx) { // for terminus
-                auto it = response_status.find(route->idx);
-                if (it == response_status.end()) {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
-                } else {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
-                }
-            } else {
-                auto it = response_status.find(route->idx);
-                if (it != response_status.end() && it->second == pbnavitia::ResponseStatus::terminus) {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
-                } else {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::none;
-                }
-            }
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {
                 tmp = get_stop_times({jpp->idx}, handler.date_time,
@@ -181,6 +166,14 @@ departure_board(const std::string& request,
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
+            } else {
+                if (stop_point == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point){
+                    if(jpp->stop_point->stop_area == route->destination){
+                        response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                    }else{
+                        response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
+                    }
+                }
             }
         }
         if ( ! calendar_id) {
@@ -203,17 +196,11 @@ departure_board(const std::string& request,
                 stop_times.resize(max_date_times);
             }
         }
-        auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
-        map_route_stop_point.insert(to_insert);
-    }
-
-    //we check if we have at least one departure for each route (and no other error)
-    for(auto sp_route : sps_routes) {
-        const type::Route* route = data.pt_data->routes[sp_route.second];
-        if (map_route_stop_point[sp_route].empty() &&
-                response_status[route->idx] == pbnavitia::ResponseStatus::none) {
+        if(stop_times.empty() && (response_status.find(route->idx) == response_status.end())){
             response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
         }
+        auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
+        map_route_stop_point.insert(to_insert);
     }
 
     if(interface_version == 1) {
