@@ -278,16 +278,25 @@ int time_to_int(const std::string & time) {
 void FeedInfoGtfsHandler::init(Data&) {
     feed_publisher_name_c = csv.get_pos_col("feed_publisher_name");
     feed_publisher_url_c = csv.get_pos_col("feed_publisher_url");
+    feed_start_date_c = csv.get_pos_col("feed_start_date");
+    feed_end_date_c = csv.get_pos_col("feed_end_date");
 }
 
 void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(has_col(feed_end_date_c, row)) {
+        data.add_feed_info("feed_end_date", row[feed_end_date_c]);
+    }
+
+    if(has_col(feed_start_date_c, row)) {
+        data.add_feed_info("feed_start_date", row[feed_start_date_c]);
+    }
 
     if(has_col(feed_publisher_name_c, row)) {
-        data.feed_infos["feed_publisher_name"] = row[feed_publisher_name_c];
+        data.add_feed_info("feed_publisher_name", row[feed_publisher_name_c]);
     }
 
     if(has_col(feed_publisher_url_c, row)) {
-        data.feed_infos["feed_publisher_url"] = row[feed_publisher_url_c];
+        data.add_feed_info("feed_publisher_url", row[feed_publisher_url_c]);
     }
 }
 

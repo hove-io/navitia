@@ -52,7 +52,7 @@ void FeedInfoFusioHandler::init(Data&) {
 
 void FeedInfoFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(is_valid(feed_info_param_c, row) && has_col(feed_info_value_c, row)) {
-        data.feed_infos[row[feed_info_param_c]] = row[feed_info_value_c];
+        data.add_feed_info(row[feed_info_param_c], row[feed_info_value_c]);
     }
 }
 

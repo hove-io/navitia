@@ -98,7 +98,13 @@ public:
 
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
     std::vector<ed::types::LineGroupLink> line_group_links;
-    std::map<std::string, std::string> feed_infos;
+    std::map<std::string, std::string> feed_infos = {
+        {"feed_start_date",""},
+        {"feed_end_date",""},
+        {"feed_publisher_name",""},
+        {"feed_publisher_url",""},
+        {"feed_license",""}
+    };
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
@@ -134,6 +140,7 @@ public:
     void add_pt_object_comment(const T* obj, const std::string& comment);
     void add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment);
 
+    void add_feed_info(const std::string&, const std::string&);
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
 
