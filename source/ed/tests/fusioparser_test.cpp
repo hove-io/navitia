@@ -132,16 +132,11 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     // feed_info
     std::map<std::string, std::string> feed_info_test ={
-        {"ntfs_version","0.3"},
         {"feed_start_date","20150325"},
         {"feed_end_date","20150826"},
-        {"feed_creation_date","20150415"},
-        {"feed_creation_time","15:32:34"},
         {"feed_publisher_name","Ile de France open data"},
         {"feed_publisher_url","http://www.canaltp.fr"},
-        {"feed_license","ODBL"},
-        {"fusio_url",""},
-        {"fusio_version",""}
+        {"feed_license","ODBL"}
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
