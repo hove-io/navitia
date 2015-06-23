@@ -63,7 +63,13 @@ class TestPtRef(AbstractTestFixture):
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == 'hello'
         assert "feed_publishers" in response
-        is_valid_feed_publisher(response["feed_publishers"][0])
+        
+        feed_publisher = response["feed_publishers"][0]
+        is_valid_feed_publisher(feed_publisher)
+        assert (feed_publisher["id"] == "builder")
+        assert (feed_publisher["name"] == "canal tp")
+        assert (feed_publisher["license"] == "ODBL")
+        assert (feed_publisher["url"] == "www.canaltp.fr")
 
 
     def test_vj_depth_0(self):
