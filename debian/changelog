@@ -1,3 +1,9 @@
+navitia2 (1.20.2) unstable; urgency=low
+
+ * same as 1.20.1 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Tue, 23 Jun 2015 20:06:46 +0100
+
 navitia2 (1.20.1) unstable; urgency=low
 
   * Chaos: fix db query not to load everything  <https://github.com/CanalTP/navitia/pull/1076> 
