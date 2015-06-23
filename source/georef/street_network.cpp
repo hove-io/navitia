@@ -182,6 +182,7 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     this->start_coord = start_coord;
     starting_edge = ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
 
+    distance_to_entry_point.clear();
     //we initialize the distances to the maximum value
     size_t n = boost::num_vertices(geo_ref.graph);
     distances.assign(n, bt::pos_infin);
@@ -261,9 +262,10 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 navitia::time_duration duration =
                         crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
                 // if the radius is still ok with sqrt(2) factor
-                if (duration < radius) {
+                auto sp_idx = routing::SpIdx(element.first);
+                if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
                     result.push_back({element.first, duration});
-                    distance_to_entry_point[routing::SpIdx(element.first)] = duration;
+                    distance_to_entry_point[sp_idx] = duration;
                 }
             }
         }

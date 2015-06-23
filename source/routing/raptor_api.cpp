@@ -721,12 +721,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::POI) {
         std::set<SpIdx> stop_points;
 
+        georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
+                                                                worker.departure_path_finder;
+
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
                 for (auto stop_point : it->second->stop_point_list) {
                     const SpIdx sp_idx = SpIdx(*stop_point);
                     if (stop_points.find(sp_idx) == stop_points.end()) {
+                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                         result.push_back({sp_idx, {}});
                         stop_points.insert(sp_idx);
                     }
@@ -741,6 +745,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
                 if (stop_points.find(sp_idx) == stop_points.end()) {
+                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                     result.push_back({sp_idx, {}});
                     stop_points.insert(sp_idx);
                 }
@@ -752,6 +757,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         for (const auto* sp: zonal_sps) {
             const SpIdx sp_idx = SpIdx(*sp);
             if (stop_points.find(sp_idx) == stop_points.end()) {
+                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result.push_back({sp_idx, {}});
                 stop_points.insert(sp_idx);
             }
