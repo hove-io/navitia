@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_CHECK(stop_schedule.date_times_size() == 2);
-    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().destination().destination(), "stop3");
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().destination().destination(), "stop2");
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj1");
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).dt_status(), pbnavitia::ResponseStatus::partial_terminus);
 

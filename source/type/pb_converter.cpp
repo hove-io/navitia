@@ -1272,11 +1272,12 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
             && (stop_time->vehicle_journey->journey_pattern->route)
             && (stop_time->vehicle_journey->journey_pattern->route->destination)){
         if (stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area
-                != stop_time->vehicle_journey->journey_pattern->route->destination){
+                != stop_time->vehicle_journey->journey_pattern->route->destination){            
+            auto sa = stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area;
             pbnavitia::Destination* destination = hn->mutable_destination();
             std::hash<std::string> hash_fn;
-            destination->set_uri("destination:"+std::to_string(hash_fn(stop_time->vehicle_journey->journey_pattern->route->destination->name)));
-            destination->set_destination(stop_time->vehicle_journey->journey_pattern->route->destination->name);
+            destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
+            destination->set_destination(sa->name);
             rs_date_time->set_dt_status(pbnavitia::ResponseStatus::partial_terminus);
         }
     }
