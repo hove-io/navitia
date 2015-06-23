@@ -142,19 +142,23 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_partial_terminus(self):
         """
-        departure board for a given date
+        Partial Terminus
         """
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
         check_departure_board(response["stop_schedules"], self.tester, only_time=False)
+
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
         assert response["stop_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["stop_schedules"][0]["date_times"]) == 2
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "notes"
-        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["id"] == "destination:14728641514959836662"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["id"] == "destination:16710925402715739122"
+        assert len(response["notes"]) == 1
+        assert response["notes"][0]["type"] == "notes"
+        assert response["notes"][0]["value"] == "Tstop2"
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["type"] == "vehicle_journey"
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["value"] == "vj1"
         assert response["stop_schedules"][0]["date_times"][1]["links"][0]["type"] == "vehicle_journey"
@@ -162,7 +166,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_real_terminus(self):
         """
-        departure board for a given date
+        Real Terminus
         """
         response = self.query_region("stop_areas/Tstop3/stop_schedules?"
                                      "from_datetime=20120615T080000")
@@ -173,7 +177,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_no_departure_this_day(self):
         """
-        departure board for a given date
+        no departure for this day : 20120620T080000
         """
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120620T080000")
