@@ -294,7 +294,15 @@ void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        data.meta->feed_infos[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
+        if (const_it["key"].as<std::string>() == "feed_publisher_name"){
+            data.meta->publisher_name = const_it["value"].as<std::string>();
+        }
+        if (const_it["key"].as<std::string>() == "feed_publisher_url"){
+            data.meta->publisher_url = const_it["value"].as<std::string>();
+        }
+        if (const_it["key"].as<std::string>() == "feed_license"){
+            data.meta->license = const_it["value"].as<std::string>();
+        }
     }
 }
 
