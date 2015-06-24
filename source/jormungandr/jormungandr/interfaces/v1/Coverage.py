@@ -42,6 +42,8 @@ region_fields = {
     "id": fields.String(attribute="region_id"),
     "start_production_date": fields.String,
     "end_production_date": fields.String,
+    "last_load_at": fields.String,
+    "name": fields.String,
     "status": fields.String,
     "shape": fields.String,
     "error": NonNullNested({

@@ -31,6 +31,8 @@ from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import instance_status_with_parameters
+from jormungandr import app
+from navitiacommon import models
 
 status = {
     "status": fields.Nested(instance_status_with_parameters)
@@ -42,5 +44,9 @@ class Status(Resource):
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
+        if app.config['DISABLE_DATABASE']:
+            response['status']["is_open_data"] = False
+        else:
+            response['status']["is_open_data"] = models.Instance.get_by_name(instance)
         response['status']['parameters'] = instance
         return response, 200
