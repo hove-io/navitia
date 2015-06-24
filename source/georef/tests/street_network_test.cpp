@@ -80,8 +80,7 @@ static std::string get_name(int i, int j) {
 BOOST_AUTO_TEST_CASE(idempotence) {
     //graph creation
     type::Data data;
-    GeoRef geo_ref;
-    GraphBuilder b(geo_ref);
+    GraphBuilder b;
     size_t square_size(10);
 
     //we build a dumb square graph
@@ -101,7 +100,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         }
     }
 
-    PathFinder worker(geo_ref);
+    PathFinder worker(b.geo_ref);
 
     //we project 2 stations
     type::GeographicalCoord start;
@@ -111,15 +110,15 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
     data.pt_data->stop_points.push_back(sp);
-    geo_ref.init();
-    geo_ref.project_stop_points(data.pt_data->stop_points);
+    b.geo_ref.init();
+    b.geo_ref.project_stop_points(data.pt_data->stop_points);
 
-    const GeoRef::ProjectionByMode& projections = geo_ref.projected_stop_points[sp->idx];
+    const GeoRef::ProjectionByMode& projections = b.geo_ref.projected_stop_points[sp->idx];
     const ProjectionData proj = projections[type::Mode_e::Walking];
 
     BOOST_REQUIRE(proj.found); //we have to be able to project this point (on the walking graph)
 
-    geo_ref.build_proximity_list();
+    b.geo_ref.build_proximity_list();
 
     type::idx_t target_idx(sp->idx);
 
