@@ -311,15 +311,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-            if (use_crow_fly(origin, path.items.front().stop_points.front(), sn_departure_path, d)){
-                const auto& sp_dest = path.items.front().stop_points.front();
-                type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
-                destination_tmp.coordinates = sp_dest->coord;
+            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, d)){
+                type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
+                destination_tmp.coordinates = departure_stop_point->coord;
                 bt::time_period action_period(path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::minutes(1));
-                const time_duration& crow_fly_duration = find_or_default(
-                        SpIdx(*path.items.front().stop_points.front()),
-                        worker.departure_path_finder.distance_to_entry_point);
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
+                                            worker.departure_path_finder.distance_to_entry_point);
                 fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
                                      get_crowfly_mode(sn_departure_path),
                                      path.items.front().departures.front(), d, enhanced_response,
@@ -521,18 +519,16 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
             // but we have to updated the end of the journey
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
-            const auto& arrival_stop_point = path.items.back().stop_points.back();
+            const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-            if (use_crow_fly(destination, path.items.back().stop_points.back(), sn_arrival_path, d)) {
-                const auto sp_orig = path.items.back().stop_points.back();
-                type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
-                origin_tmp.coordinates = sp_orig->coord;
+            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, d)) {
+                type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
+                origin_tmp.coordinates = arrival_stop_point->coord;
                 bt::time_period action_period(path.items.back().departures.back(),
                                               path.items.back().departures.back()+bt::minutes(1));
-                const time_duration& crow_fly_duration = find_or_default(
-                        SpIdx(*path.items.front().stop_points.front()),
-                        worker.arrival_path_finder.distance_to_entry_point);
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
+                                                worker.arrival_path_finder.distance_to_entry_point);
                 fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
                                      get_crowfly_mode(sn_arrival_path),
                                      path.items.back().departures.back(), d, enhanced_response,
