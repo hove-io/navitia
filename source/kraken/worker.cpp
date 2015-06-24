@@ -169,15 +169,15 @@ void Worker::feed_publisher(pbnavitia::Response& response){
     const auto d = data_manager.get_data();
     auto pb_feed_publisher = response.add_feed_publishers();
     // instance_name is required
-    pb_feed_publisher->set_id(d->meta->feed_infos.at("instance_name"));
-    if (d->meta->feed_infos.find("feed_publisher_name") != d->meta->feed_infos.end()){
-        pb_feed_publisher->set_name(d->meta->feed_infos.at("feed_publisher_name"));
+    pb_feed_publisher->set_id(d->meta->instance_name);
+    if (!d->meta->publisher_name.empty()){
+        pb_feed_publisher->set_name(d->meta->publisher_name);
     }
-    if (d->meta->feed_infos.find("feed_publisher_url") != d->meta->feed_infos.end()){
-        pb_feed_publisher->set_url(d->meta->feed_infos.at("feed_publisher_url"));
+    if (!d->meta->publisher_url.empty()){
+        pb_feed_publisher->set_url(d->meta->publisher_url);
     }
-    if (d->meta->feed_infos.find("feed_license") != d->meta->feed_infos.end()){
-        pb_feed_publisher->set_license(d->meta->feed_infos.at("feed_license"));
+    if (!d->meta->license.empty()){
+        pb_feed_publisher->set_license(d->meta->license);
     }
 }
 
