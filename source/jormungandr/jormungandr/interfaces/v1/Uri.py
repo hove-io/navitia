@@ -45,7 +45,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, date_time_format
 from errors import ManageError
 from Coord import Coord
-from jormungandr.interfaces.v1.fields import DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField, feed_publisher
 from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
@@ -158,6 +158,8 @@ def journey_pattern_points(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -179,6 +181,8 @@ def commercial_modes(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -200,6 +204,8 @@ def journey_patterns(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -221,6 +227,8 @@ def vehicle_journeys(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -242,6 +250,8 @@ def physical_modes(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -262,6 +272,8 @@ def stop_points(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -286,6 +298,8 @@ def stop_areas(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False))),
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -310,6 +324,8 @@ def connections(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -331,6 +347,8 @@ def companies(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -352,6 +370,8 @@ def poi_types(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -373,6 +393,8 @@ def routes(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -420,6 +442,8 @@ def lines(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -444,6 +468,8 @@ def pois(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -468,6 +494,8 @@ def networks(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)

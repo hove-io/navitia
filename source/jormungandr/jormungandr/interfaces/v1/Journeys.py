@@ -42,7 +42,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, error,\
-    SectionGeoJson, Co2Emission, PbEnum
+    SectionGeoJson, Co2Emission, PbEnum, feed_publisher
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
@@ -219,11 +219,13 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
+
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
     "tickets": fields.List(NonNullNested(ticket)),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
 }
 
 

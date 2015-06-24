@@ -45,6 +45,17 @@ typename C::mapped_type get_object(const C& map, const std::string& obj_id, cons
     return o;
 }
 
+void FeedInfoFusioHandler::init(Data&) {
+    feed_info_param_c = csv.get_pos_col("feed_info_param");
+    feed_info_value_c = csv.get_pos_col("feed_info_value");
+}
+
+void FeedInfoFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(is_valid(feed_info_param_c, row) && has_col(feed_info_value_c, row)) {
+        data.add_feed_info(row[feed_info_param_c], row[feed_info_value_c]);
+    }
+}
+
 void AgencyFusioHandler::init(Data& data) {
     AgencyGtfsHandler::init(data);
     if (id_c == -1) { id_c = csv.get_pos_col("network_id"); }
@@ -1430,6 +1441,7 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 }
 
 void FusioParser::parse_files(Data& data) {
+    parse<FeedInfoFusioHandler>(data, "feed_infos.txt");
     parse<GeometriesFusioHandler>(data, "geometries.txt");
 
     if (! parse<AgencyFusioHandler>(data, "networks.txt")) {

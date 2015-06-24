@@ -35,7 +35,7 @@ from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import DisruptionsField
 from make_links import add_id_links
-from fields import NonNullList, NonNullNested, PbField, error, pt_object
+from fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -47,6 +47,7 @@ pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
     "disruptions": DisruptionsField,
     "error": PbField(error, attribute='error'),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]

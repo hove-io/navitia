@@ -558,3 +558,14 @@ BOOST_AUTO_TEST_CASE(get_dst_periods) {
         BOOST_CHECK_EQUAL(nb_found, 1);
     }
 }
+
+BOOST_AUTO_TEST_CASE(parse_with_feed_info) {
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_with_feed_info");
+    parser.fill(data);
+
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_publisher_name"], "ratp");
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_publisher_url"], "http://ratp.fr");
+
+}

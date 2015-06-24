@@ -228,7 +228,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare->fare_map.size());
     LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare->nb_transitions());
     LOG4CPLUS_INFO(logger, "fare od: " << data.fare->od_tickets.size());
-
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();

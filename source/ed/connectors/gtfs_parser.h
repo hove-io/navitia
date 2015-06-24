@@ -211,6 +211,13 @@ struct GenericHandler {
     void finish(Data&) {}
 };
 
+struct FeedInfoGtfsHandler : public GenericHandler {
+    FeedInfoGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int feed_publisher_name_c, feed_publisher_url_c, feed_start_date_c, feed_end_date_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+};
+
 struct AgencyGtfsHandler : public GenericHandler {
     AgencyGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, time_zone_c;

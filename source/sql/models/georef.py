@@ -100,7 +100,6 @@ admin = Table('admin', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('comment', TEXT(), primary_key=False),
-    Column('post_code', TEXT(), primary_key=False),
     Column('insee', TEXT(), primary_key=False),
     Column('level', INTEGER(), primary_key=False, nullable=False),
     Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
@@ -109,7 +108,7 @@ admin = Table('admin', metadata,*[
     schema='georef')
 
 
-admin = Table('postal_codes', metadata,*[
+postal_codes = Table('postal_codes', metadata,*[
     Column('admin_id', TEXT(), primary_key=False, nullable=False),
     Column('postal_code', TEXT(), primary_key=False, nullable=False),
     ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'postal_codes_admin_id_fkey')

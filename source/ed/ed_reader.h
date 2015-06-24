@@ -97,6 +97,7 @@ private:
     std::set<uint64_t> node_to_ignore;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
+    void fill_feed_infos(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
     void fill_commercial_modes(navitia::type::Data& data, pqxx::work& work);
     void fill_physical_modes(navitia::type::Data& data, pqxx::work& work);

@@ -77,6 +77,7 @@ class Worker {
         void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);
 
         void metadatas(pbnavitia::Response& response);
+        void feed_publisher(pbnavitia::Response& response);
         pbnavitia::Response status();
         pbnavitia::Response autocomplete(const pbnavitia::PlacesRequest &request);
         pbnavitia::Response place_uri(const pbnavitia::PlaceUriRequest &request);

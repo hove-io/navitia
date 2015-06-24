@@ -304,6 +304,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert metadata");
     this->insert_metadata(data.meta);
     LOG4CPLUS_INFO(logger, "End: insert metadata");
+    LOG4CPLUS_INFO(logger, "Begin: insert feed_infos");
+    this->insert_feed_info(data.feed_infos);
+    LOG4CPLUS_INFO(logger, "End: insert feed_info");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
     LOG4CPLUS_INFO(logger, "End: insert networks");
@@ -473,14 +476,26 @@ void EdPersistor::clean_db(){
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code, "
-        "navitia.comments, navitia.ptobject_comments, "
-        "navitia.line_group, navitia.line_group_link"
+        "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
+		"navitia.line_group, navitia.line_group_link"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
                      " beginning_date = null"
                      ", end_date = null"
                      ", timezone = '';");
+}
+
+void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& feed_infos){
+    this->lotus.prepare_bulk_insert("navitia.feed_info",
+            {"key", "value"});
+    for(const auto& feed_info : feed_infos){
+        std::vector<std::string> values;
+        values.push_back(feed_info.first);
+        values.push_back(feed_info.second);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){

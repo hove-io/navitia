@@ -354,6 +354,11 @@ class Scenario(simple.Scenario):
         # if at least one journey has the ticket we add it
         initial_response.tickets.extend([t for t in new_response.tickets if t.id in tickets_to_add])
 
+        initial_feed_publishers = {}
+        for fp in initial_response.feed_publishers:
+            initial_feed_publishers[fp.id] = fp
+        initial_response.feed_publishers.extend([fp for fp in new_response.feed_publishers if fp.id not in initial_feed_publishers])
+
     def erase_journeys(self, resp, to_delete):
         """
         remove a list of journeys from a response and delete all referenced objects like by example the tickets

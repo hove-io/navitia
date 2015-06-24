@@ -130,6 +130,16 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->local_traffic_zone, 2);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
 
+    // feed_info
+    std::map<std::string, std::string> feed_info_test ={
+        {"feed_start_date","20150325"},
+        {"feed_end_date","20150826"},
+        {"feed_publisher_name","Ile de France open data"},
+        {"feed_publisher_url","http://www.canaltp.fr"},
+        {"feed_license","ODBL"}
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
+                                  feed_info_test.begin(), feed_info_test.end());
     /* Line groups.
      * 3 groups in the file, 3 use cases :
      *   - The first one has 2 lines, both linked to the group in line_group_links.txt.
@@ -163,5 +173,6 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_groups[1]->main_line->uri, "l3");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
+
 }
 

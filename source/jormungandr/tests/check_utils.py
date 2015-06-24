@@ -386,6 +386,13 @@ def query_from_str(str):
     return query
 
 
+def is_valid_feed_publisher(feed_publisher):
+    get_not_null(feed_publisher, 'id')
+    get_not_null(feed_publisher, 'name')
+    get_not_null(feed_publisher, 'license')
+    get_not_null(feed_publisher, 'url')
+
+
 def is_valid_journey_response(response, tester, query_str):
     query_dict = query_from_str(query_str)
     journeys = get_not_null(response, "journeys")
@@ -438,6 +445,14 @@ def is_valid_journey_response(response, tester, query_str):
                 continue
 
             assert query_dict[k] == v, "we must have the same query"
+
+    feed_publishers = get_not_null(response, "feed_publishers")
+    feed_publisher = feed_publishers[0]
+    is_valid_feed_publisher(feed_publisher)
+    assert (feed_publisher["id"] == "builder")
+    assert (feed_publisher["name"] == "canal tp")
+    assert (feed_publisher["license"] == "ODBL")
+    assert (feed_publisher["url"] == "www.canaltp.fr")
 
 
 def is_valid_journey(journey, tester, query):
