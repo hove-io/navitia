@@ -63,7 +63,7 @@ struct MetaData{
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & data_sources & shape & timezone & publisher_name &
+        ar & production_date & publication_date & data_sources & shape & timezone &
                 publisher_name & publisher_url & license & instance_name;
     }
 
