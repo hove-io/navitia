@@ -159,13 +159,12 @@ void Worker::metadatas(pbnavitia::Response& response) {
         if (!d->meta->publisher_name.empty()){
             metadatas->set_name(d->meta->publisher_name);
         }
-        metadatas->set_last_load_at(pt::to_iso_string(d->last_load_at));
+        metadatas->set_last_load_at(navitia::to_posix_timestamp(d->last_load_at));
     } else {
         metadatas->set_start_production_date("");
         metadatas->set_end_production_date("");
         metadatas->set_shape("");
         metadatas->set_timezone("");
-        metadatas->set_last_load_at("");
     }
     metadatas->set_status(get_string_status(d));
 }
