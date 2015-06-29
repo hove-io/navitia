@@ -1072,14 +1072,14 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
-                          boost::posix_time::ptime time, const type::Data& data, EnhancedResponse& response,
-                          pbnavitia::Journey* pb_journey, const pt::ptime& now,
-                          const pt::time_period& action_period) {
+                          boost::posix_time::ptime origin_time, const type::Data& data,
+                          EnhancedResponse& response, pbnavitia::Journey* pb_journey,
+                          const pt::ptime& now, const pt::time_period& action_period) {
     pbnavitia::Section* section = pb_journey->add_sections();
     section->set_id(response.register_section());
     fill_pb_placemark(origin, data, section->mutable_origin(), 2, now, action_period);
     fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
-    section->set_begin_date_time(navitia::to_posix_timestamp(time));
+    section->set_begin_date_time(navitia::to_posix_timestamp(origin_time));
     section->set_duration(crow_fly_duration.total_seconds());
     if(crow_fly_duration.total_seconds() > 0){
         section->set_length(origin.coordinates.distance_to(destination.coordinates));
@@ -1092,7 +1092,7 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     }else{
         section->set_length(0);
     }
-    section->set_end_date_time(navitia::to_posix_timestamp(time));
+    section->set_end_date_time(navitia::to_posix_timestamp(origin_time + crow_fly_duration.to_posix()));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
 
     //we want to store the transportation mode used

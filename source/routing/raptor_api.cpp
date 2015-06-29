@@ -318,9 +318,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                                               path.items.front().departures.front() + bt::minutes(1));
                 const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
                                             worker.departure_path_finder.distance_to_entry_point);
+                departure_time = path.items.front().departures.front()- crow_fly_duration.to_posix();
                 fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
                                      get_crowfly_mode(sn_departure_path),
-                                     path.items.front().departures.front(), d, enhanced_response,
+                                     departure_time, d, enhanced_response,
                                      pb_journey, now, action_period);
 
             } else if (!sn_departure_path.path_items.empty()) {
@@ -529,6 +530,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                                               path.items.back().departures.back()+bt::minutes(1));
                 const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
                                                 worker.arrival_path_finder.distance_to_entry_point);
+                arrival_time = arrival_time + crow_fly_duration.to_posix();
                 fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
                                      get_crowfly_mode(sn_arrival_path),
                                      path.items.back().departures.back(), d, enhanced_response,
