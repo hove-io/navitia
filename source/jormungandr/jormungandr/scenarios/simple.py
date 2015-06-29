@@ -254,6 +254,9 @@ class Scenario(object):
     def lines(self, request, instance):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
+    def line_groups(self, request, instance):
+        return self.__on_ptref("line_groups", type_pb2.LINE_GROUP, request, instance)
+
     def routes(self, request, instance):
         return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
 

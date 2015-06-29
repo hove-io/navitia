@@ -80,6 +80,7 @@ struct EdPersistor{
     void compute_bounding_shape();
 
 private:
+    void insert_feed_info(const std::map<std::string, std::string>& feed_infos);
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_metadata_georef();
     void insert_sa_sp_properties(const ed::Data& data);
@@ -93,6 +94,7 @@ private:
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);
+    void insert_line_groups(const std::vector<types::LineGroup*>& groups, const std::vector<types::LineGroupLink>& group_links);
     void insert_routes(const std::vector<types::Route*>& routes);
     void insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_pattern);
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);

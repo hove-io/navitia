@@ -72,6 +72,7 @@ private:
     std::unordered_map<idx_t, navitia::type::StopArea*> stop_area_map;
     std::unordered_map<idx_t, navitia::type::StopPoint*> stop_point_map;
     std::unordered_map<idx_t, navitia::type::Line*> line_map;
+    std::unordered_map<idx_t, navitia::type::LineGroup*> line_group_map;
     std::unordered_map<idx_t, navitia::type::Route*> route_map;
     std::unordered_map<idx_t, navitia::type::JourneyPattern*> journey_pattern_map;
     std::unordered_map<idx_t, navitia::type::ValidityPattern*> validity_pattern_map;
@@ -96,6 +97,7 @@ private:
     std::set<uint64_t> node_to_ignore;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
+    void fill_feed_infos(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
     void fill_commercial_modes(navitia::type::Data& data, pqxx::work& work);
     void fill_physical_modes(navitia::type::Data& data, pqxx::work& work);
@@ -105,6 +107,8 @@ private:
     void fill_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_points(navitia::type::Data& data, pqxx::work& work);
     void fill_lines(navitia::type::Data& data, pqxx::work& work);
+    void fill_line_groups(navitia::type::Data& data, pqxx::work& work);
+
     void fill_routes(navitia::type::Data& data, pqxx::work& work);
     void fill_journey_patterns(navitia::type::Data& data, pqxx::work& work);
     void fill_validity_patterns(navitia::type::Data& data, pqxx::work& work);

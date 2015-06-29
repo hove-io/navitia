@@ -212,6 +212,7 @@ int main(int argc, char * argv[])
     data.meta->publication_date = pt::microsec_clock::local_time();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
+    LOG4CPLUS_INFO(logger, "line_groups: " << data.pt_data->line_groups.size());
     LOG4CPLUS_INFO(logger, "route: " << data.pt_data->routes.size());
     LOG4CPLUS_INFO(logger, "journey_pattern: " << data.pt_data->journey_patterns.size());
     LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data->stop_areas.size());
@@ -227,7 +228,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare->fare_map.size());
     LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare->nb_transitions());
     LOG4CPLUS_INFO(logger, "fare od: " << data.fare->od_tickets.size());
-
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();

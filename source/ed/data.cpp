@@ -53,11 +53,22 @@ void Data::sort(){
     std::sort(stops.begin(), stops.end(), Less());
 }
 
+void Data::add_feed_info(const std::string& key, const std::string& value){
+    auto logger = log4cplus::Logger::getInstance("log");
+    std::string lower_key = boost::algorithm::to_lower_copy(key);
+    if (this->feed_infos.find(lower_key) != this->feed_infos.end()){
+        this->feed_infos[lower_key] = value;
+    } else {
+        LOG4CPLUS_INFO(logger, "add_feed_info, Key :"<<key<<" Value :"<<value<<" not imported.");
+    }
+}
+
 void Data::normalize_uri(){
     ::ed::normalize_uri(networks);
     ::ed::normalize_uri(companies);
     ::ed::normalize_uri(commercial_modes);
     ::ed::normalize_uri(lines);
+    ::ed::normalize_uri(line_groups);
     ::ed::normalize_uri(physical_modes);
     ::ed::normalize_uri(stop_areas);
     ::ed::normalize_uri(stop_points);

@@ -392,6 +392,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1, now, action_period, show_codes);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
+
+        for(const auto& line_group : l->line_group_list) {
+            fill_pb_object(line_group, data, line->add_line_groups(), depth-1, now, action_period, show_codes);
+        }
     }
 
     for(const auto message : l->get_applicable_messages(now, action_period)){
@@ -406,6 +410,30 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
     for(auto property : l->properties) {
         fill_property(property.first, property.second, line->add_properties());
+    }
+}
+
+void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
+        pbnavitia::LineGroup* line_group, int max_depth,
+        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
+    if(lg == nullptr)
+        return ;
+    int depth = (max_depth <= 3) ? max_depth : 3;
+
+    line_group->set_name(lg->name);
+    line_group->set_uri(lg->uri);
+
+    if(depth > 0) {
+        for(const auto& line : lg->line_list) {
+            fill_pb_object(line, data, line_group->add_lines(), depth-1, now, action_period, show_codes);
+        }
+        fill_pb_object(lg->main_line, data, line_group->mutable_main_line(), 0, now, action_period, show_codes);
+
+        for (const auto& comment: data.pt_data->comments.get(lg)) {
+            auto com = line_group->add_comments();
+            com->set_value(comment);
+            com->set_type("standard");
+        }
     }
 }
 
@@ -1214,6 +1242,18 @@ get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exceptio
     }
 }
 
+static bool is_partial_terminus(const navitia::type::StopTime* stop_time){
+    return stop_time->vehicle_journey
+            && stop_time->vehicle_journey->journey_pattern
+            && stop_time->vehicle_journey->journey_pattern->route
+            && stop_time->vehicle_journey->journey_pattern->route->destination
+            && (!stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.empty())
+            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point
+            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area
+            && (stop_time->vehicle_journey->journey_pattern->route->destination
+                != stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area);
+}
+
 void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const nt::Data& data,
                     pbnavitia::ScheduleStopTime* rs_date_time, int max_depth,
@@ -1238,14 +1278,14 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
-    if ((stop_time->vehicle_journey)
-            && (stop_time->vehicle_journey->journey_pattern)
-            && (stop_time->vehicle_journey->journey_pattern->route)
-            && (stop_time->vehicle_journey->journey_pattern->route->destination)){
+    // partial terminus
+    if (is_partial_terminus(stop_time)) {
+        auto sa = stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area;
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
-        destination->set_uri("destination:"+std::to_string(hash_fn(stop_time->vehicle_journey->journey_pattern->route->destination->name)));
-        destination->set_destination(stop_time->vehicle_journey->journey_pattern->route->destination->name);
+        destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
+        destination->set_destination(sa->name);
+        rs_date_time->set_dt_status(pbnavitia::ResponseStatus::partial_terminus);
     }
     for (const auto& comment: data.pt_data->comments.get(*stop_time)) {
         fill_pb_object(comment, data, hn->add_notes(), max_depth, now, action_period);

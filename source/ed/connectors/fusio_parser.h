@@ -43,6 +43,13 @@ www.navitia.io
   */
 namespace ed { namespace connectors {
 
+struct FeedInfoFusioHandler : public GenericHandler {
+    FeedInfoFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int feed_info_param_c, feed_info_value_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+};
+
 struct AgencyFusioHandler : public AgencyGtfsHandler {
     AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : AgencyGtfsHandler(gdata, reader) {}
     int ext_code_c,
@@ -164,6 +171,25 @@ struct LineFusioHandler : public GenericHandler{
     void init(Data &);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_id"}; }
+};
+
+struct LineGroupFusioHandler : public GenericHandler{
+    LineGroupFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c,
+    name_c,
+    main_line_id_c;
+    void init(Data &);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"line_group_id", "line_group_name", "main_line_id"}; }
+};
+
+struct LineGroupLinksFusioHandler : public GenericHandler{
+    LineGroupLinksFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int line_group_id_c,
+    line_id_c;
+    void init(Data &);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"line_group_id", "line_id"}; }
 };
 
 struct CompanyFusioHandler : public GenericHandler {

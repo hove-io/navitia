@@ -56,6 +56,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::STOP_AREA: return nt::Type_e::StopArea;
     case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint;
     case pbnavitia::LINE: return nt::Type_e::Line;
+    case pbnavitia::LINE_GROUP: return nt::Type_e::LineGroup;
     case pbnavitia::ROUTE: return nt::Type_e::Route;
     case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern;
     case pbnavitia::NETWORK: return nt::Type_e::Network;
@@ -162,6 +163,22 @@ void Worker::metadatas(pbnavitia::Response& response) {
         metadatas->set_timezone("");
     }
     metadatas->set_status(get_string_status(d));
+}
+
+void Worker::feed_publisher(pbnavitia::Response& response){
+    const auto d = data_manager.get_data();
+    auto pb_feed_publisher = response.add_feed_publishers();
+    // instance_name is required
+    pb_feed_publisher->set_id(d->meta->instance_name);
+    if (!d->meta->publisher_name.empty()){
+        pb_feed_publisher->set_name(d->meta->publisher_name);
+    }
+    if (!d->meta->publisher_url.empty()){
+        pb_feed_publisher->set_url(d->meta->publisher_url);
+    }
+    if (!d->meta->license.empty()){
+        pb_feed_publisher->set_license(d->meta->license);
+    }
 }
 
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
@@ -629,6 +646,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
             break;
     }
     metadatas(response);//we add the metadatas for each response
+    feed_publisher(response);
     return response;
 }
 

@@ -304,6 +304,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert metadata");
     this->insert_metadata(data.meta);
     LOG4CPLUS_INFO(logger, "End: insert metadata");
+    LOG4CPLUS_INFO(logger, "Begin: insert feed_infos");
+    this->insert_feed_info(data.feed_infos);
+    LOG4CPLUS_INFO(logger, "End: insert feed_info");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
     LOG4CPLUS_INFO(logger, "End: insert networks");
@@ -331,6 +334,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert lines");
     this->insert_lines(data.lines);
     LOG4CPLUS_INFO(logger, "End: insert lines");
+    LOG4CPLUS_INFO(logger, "Begin: insert line groups");
+    this->insert_line_groups(data.line_groups, data.line_group_links);
+    LOG4CPLUS_INFO(logger, "End: insert line groups");
     LOG4CPLUS_INFO(logger, "Begin: insert routes");
     this->insert_routes(data.routes);
     LOG4CPLUS_INFO(logger, "End: insert routes");
@@ -470,13 +476,26 @@ void EdPersistor::clean_db(){
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code, "
-        "navitia.comments, navitia.ptobject_comments"
+        "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
+		"navitia.line_group, navitia.line_group_link"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
                      " beginning_date = null"
                      ", end_date = null"
                      ", timezone = '';");
+}
+
+void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& feed_infos){
+    this->lotus.prepare_bulk_insert("navitia.feed_info",
+            {"key", "value"});
+    for(const auto& feed_info : feed_infos){
+        std::vector<std::string> values;
+        values.push_back(feed_info.first);
+        values.push_back(feed_info.second);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -724,6 +743,34 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
     this->lotus.finish_bulk_insert();
 
+}
+
+void EdPersistor::insert_line_groups(const std::vector<types::LineGroup*>& groups, const std::vector<types::LineGroupLink>& group_links){
+    this->lotus.prepare_bulk_insert("navitia.line_group", {"id","uri","name", "main_line_id"});
+    for(const auto& line_group: groups) {
+        this->lotus.insert({
+            std::to_string(line_group->idx),
+            navitia::encode_uri(line_group->uri),
+            line_group->name,
+            std::to_string(line_group->main_line->idx)
+        });
+    }
+    this->lotus.finish_bulk_insert();
+
+    this->lotus.prepare_bulk_insert("navitia.line_group_link", {"group_id","line_id"});
+    for(const auto& group_link: group_links) {
+        const auto& line_group = std::find(groups.begin(), groups.end(), group_link.line_group);
+        if(line_group == groups.end())
+        {
+            LOG4CPLUS_ERROR(logger, "Group " << group_link.line_group->idx << " not found when trying to insert line_group_link");
+            break;
+        }
+        this->lotus.insert({
+            std::to_string(group_link.line_group->idx),
+            std::to_string(group_link.line->idx)
+        });
+    }
+    this->lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections){

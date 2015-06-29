@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
                             return sp->is_zonal && sp->name == "Beleymas" && sp->area;
                         }), 1);
 
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
     BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
 
     //chekc comments
@@ -129,6 +129,50 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2]->local_traffic_zone, 1);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->local_traffic_zone, 2);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
+
+    // feed_info
+    std::map<std::string, std::string> feed_info_test ={
+        {"feed_start_date","20150325"},
+        {"feed_end_date","20150826"},
+        {"feed_publisher_name","Ile de France open data"},
+        {"feed_publisher_url","http://www.canaltp.fr"},
+        {"feed_license","ODBL"}
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
+                                  feed_info_test.begin(), feed_info_test.end());
+    /* Line groups.
+     * 3 groups in the file, 3 use cases :
+     *   - The first one has 2 lines, both linked to the group in line_group_links.txt.
+     *     One link is twice in the file and one of the entry should be ignored,
+     *   - The second one has only one line, linked only via the main_line_id field of line_groups.txt,
+     *   - The third one has an unknown main_line_id and should be ignored
+     *
+     * At the start of the vector data.line_group_links we are going to have each main_line, since
+     * those links are created in LineGroupFusioHandler, to allow use case number 2 where the line is not
+     * in line_group_links.txt.
+     */
+
+    // Check group, only 2 must be created since the last one in line_groups.txt reference an unknown main_line_id
+    BOOST_REQUIRE_EQUAL(data.line_groups.size(), 2);
+    BOOST_REQUIRE_EQUAL(data.line_group_links.size(), 3);
+
+    // First group
+    BOOST_REQUIRE(data.line_groups[0]->main_line != nullptr);
+
+    BOOST_CHECK_EQUAL(data.line_groups[0]->main_line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line_group->uri, "lg1");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line_group->uri, "lg1");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[0].line->uri, "l2");
+    BOOST_CHECK_EQUAL(data.line_group_links[2].line->uri, "l3");
+
+    // Second group, only one line, only defined as the main_line
+    BOOST_REQUIRE(data.line_groups[1]->main_line != nullptr);
+
+    BOOST_CHECK_EQUAL(data.line_groups[1]->main_line->uri, "l3");
+    BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
+    BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
 
 }
 

@@ -49,7 +49,8 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_vector_to_ignore(data, work, min_non_connected_graph_ratio);
     this->fill_meta(data, work);
-
+    // TODO merge fill_feed_infos, fill_meta
+    this->fill_feed_infos(data, work);
     this->fill_networks(data, work);
     this->fill_commercial_modes(data, work);
     this->fill_physical_modes(data, work);
@@ -60,6 +61,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_points(data, work);
 
     this->fill_lines(data, work);
+    this->fill_line_groups(data, work);
     this->fill_routes(data, work);
 
     this->fill_journey_patterns(data, work);
@@ -285,6 +287,23 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     nav_data.meta->timezone = const_it["timezone"].as<std::string>();
 
     const_it["bounding_shape"].to(nav_data.meta->shape);
+}
+
+void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
+    std::string request = "SELECT key, value FROM navitia.feed_info";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        if (const_it["key"].as<std::string>() == "feed_publisher_name"){
+            data.meta->publisher_name = const_it["value"].as<std::string>();
+        }
+        if (const_it["key"].as<std::string>() == "feed_publisher_url"){
+            data.meta->publisher_url = const_it["value"].as<std::string>();
+        }
+        if (const_it["key"].as<std::string>() == "feed_license"){
+            data.meta->license = const_it["value"].as<std::string>();
+        }
+    }
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
@@ -549,6 +568,33 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         }
     }
 }
+
+void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
+    std::string request = "SELECT id, uri, name, main_line_id FROM navitia.line_group";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::LineGroup* line_group = new nt::LineGroup();
+        const_it["uri"].to(line_group->uri);
+        const_it["name"].to(line_group->name);
+        line_group->main_line = this->line_map[const_it["main_line_id"].as<idx_t>()];
+        this->line_group_map[const_it["id"].as<idx_t>()] = line_group;
+        data.pt_data->line_groups.push_back(line_group);
+    }
+
+    pqxx::result line_group_result = work.exec("SELECT group_id, line_id FROM navitia.line_group_link");
+    for(auto const_it = line_group_result.begin(); const_it != line_group_result.end(); ++const_it){
+        auto group_it = this->line_group_map.find(const_it["group_id"].as<idx_t>());
+        if(group_it !=  this->line_group_map.end()) {
+            auto line_it = this->line_map.find(const_it["line_id"].as<idx_t>());
+            if(line_it != this->line_map.end()) {
+                group_it->second->line_list.push_back(line_it->second);
+                line_it->second->line_group_list.push_back(group_it->second);
+            }
+        }
+    }
+}
+
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
@@ -1063,6 +1109,8 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             cpt_not_found += add_comment(data, obj_id, route_map, comment);
         } else if (type_str == "line") {
             cpt_not_found += add_comment(data, obj_id, line_map, comment);
+        } else if (type_str == "line_group") {
+            cpt_not_found += add_comment(data, obj_id, line_group_map, comment);
         } else if (type_str == "stop_area") {
             cpt_not_found += add_comment(data, obj_id, stop_area_map, comment);
         } else if (type_str == "stop_point") {

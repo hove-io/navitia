@@ -201,6 +201,11 @@ def merge_responses(responses):
         tickets_to_add = set(t for j in r.journeys for t in j.fare.ticket_id)
         merged_response.tickets.extend([t for t in r.tickets if t.id in tickets_to_add])
 
+        initial_feed_publishers = {}
+        for fp in merged_response.feed_publishers:
+            initial_feed_publishers[fp.id] = fp
+        merged_response.feed_publishers.extend([fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers])
+
     if not merged_response.journeys:
         # we aggregate the errors found
 

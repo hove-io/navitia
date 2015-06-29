@@ -45,6 +45,17 @@ typename C::mapped_type get_object(const C& map, const std::string& obj_id, cons
     return o;
 }
 
+void FeedInfoFusioHandler::init(Data&) {
+    feed_info_param_c = csv.get_pos_col("feed_info_param");
+    feed_info_value_c = csv.get_pos_col("feed_info_value");
+}
+
+void FeedInfoFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(is_valid(feed_info_param_c, row) && has_col(feed_info_value_c, row)) {
+        data.add_feed_info(row[feed_info_param_c], row[feed_info_value_c]);
+    }
+}
+
 void AgencyFusioHandler::init(Data& data) {
     AgencyGtfsHandler::init(data);
     if (id_c == -1) { id_c = csv.get_pos_col("network_id"); }
@@ -657,6 +668,76 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     gtfs_data.line_map[line->uri] = line;
 }
 
+void LineGroupFusioHandler::init(Data&) {
+    id_c = csv.get_pos_col("line_group_id");
+    name_c = csv.get_pos_col("line_group_name");
+    main_line_id_c = csv.get_pos_col("main_line_id");
+}
+
+void LineGroupFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(!(has_col(id_c, row) && has_col(name_c, row) && has_col(main_line_id_c, row))) {
+        LOG4CPLUS_WARN(logger, "LineGroupFusioHandler: Line ignored in " << csv.filename <<
+            " missing line_group_id, line_group_name or main_line_id column");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto line = gtfs_data.line_map.find(row[main_line_id_c]);
+    if (line == gtfs_data.line_map.end()) {
+        LOG4CPLUS_WARN(logger, "LineGroupFusioHandler: Impossible to find the line " << row[main_line_id_c]);
+        return;
+    }
+    ed::types::LineGroup* line_group = new ed::types::LineGroup();
+    line_group->uri = row[id_c];
+    line_group->name = row[name_c];
+    line_group->main_line = line->second;
+
+    // Link main_line to line_group
+    ed::types::LineGroupLink line_group_link;
+    line_group_link.line_group = line_group;
+    line_group_link.line = line->second;
+
+    gtfs_data.linked_lines_by_line_group_uri[line_group->uri].insert(line->second->uri);
+
+    data.line_groups.push_back(line_group);
+    data.line_group_links.push_back(line_group_link);
+    gtfs_data.line_group_map[line_group->uri] = line_group;
+}
+
+void LineGroupLinksFusioHandler::init(Data&) {
+    line_group_id_c = csv.get_pos_col("line_group_id");
+    line_id_c = csv.get_pos_col("line_id");
+}
+
+void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    if(!(has_col(line_group_id_c, row) && has_col(line_id_c, row))) {
+        LOG4CPLUS_WARN(logger, "LineGroupLinksFusioHandler: Line ignored in " << csv.filename <<
+        " missing line_group_id or line_id column");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto line_group = gtfs_data.line_group_map.find(row[line_group_id_c]);
+    if (line_group == gtfs_data.line_group_map.end()) {
+        LOG4CPLUS_WARN(logger, "LineGroupLinksFusioHandler: Impossible to find the line_group " << row[line_group_id_c]);
+        return;
+    }
+
+    auto line = gtfs_data.line_map.find(row[line_id_c]);
+    if (line == gtfs_data.line_map.end()) {
+        LOG4CPLUS_WARN(logger, "LineGroupLinksFusioHandler: Impossible to find the line " << row[line_id_c]);
+        return;
+    }
+
+    auto linked_lines = gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri];
+    if(linked_lines.find(line->second->uri) != linked_lines.end()) {
+        // Don't insert duplicates
+        return;
+    }
+
+    ed::types::LineGroupLink line_group_link;
+    line_group_link.line_group = line_group->second;
+    line_group_link.line = line->second;
+    gtfs_data.linked_lines_by_line_group_uri[line_group->second->uri].insert(line->second->uri);
+    data.line_group_links.push_back(line_group_link);
+}
+
 void CompanyFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("company_id"), name_c = csv.get_pos_col("company_name"),
             company_address_name_c = csv.get_pos_col("company_address_name"),
@@ -1237,6 +1318,10 @@ void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool)
         const auto object = get_object(gtfs_data.line_map, object_id, "comment");
         if (! object) { return; }
         data.add_pt_object_comment(object, comment_id);
+    } else if (navitia_type == nt::Type_e::LineGroup) {
+        const auto object = get_object(gtfs_data.line_group_map, object_id, "comment");
+        if (! object) { return; }
+        data.add_pt_object_comment(object, comment_id);
     } else if (navitia_type == nt::Type_e::Route) {
         const auto object = get_object(gtfs_data.route_map, object_id, "comment");
         if (! object) { return; }
@@ -1356,6 +1441,7 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 }
 
 void FusioParser::parse_files(Data& data) {
+    parse<FeedInfoFusioHandler>(data, "feed_infos.txt");
     parse<GeometriesFusioHandler>(data, "geometries.txt");
 
     if (! parse<AgencyFusioHandler>(data, "networks.txt")) {
@@ -1372,6 +1458,8 @@ void FusioParser::parse_files(Data& data) {
     parse<CommercialModeFusioHandler>(data, "commercial_modes.txt");
     parse<CommentFusioHandler>(data, "comments.txt");
     parse<LineFusioHandler>(data, "lines.txt");
+    parse<LineGroupFusioHandler>(data, "line_groups.txt");
+    parse<LineGroupLinksFusioHandler>(data, "line_group_links.txt");
     parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
     parse<StopsFusioHandler>(data, "stops.txt", true);
     parse<RouteFusioHandler>(data, "routes.txt", true);

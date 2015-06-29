@@ -472,6 +472,13 @@ comment = {
     'type': fields.String()
 }
 
+feed_publisher = {
+    "id": fields.String(),
+    "name": fields.String(),
+    "url": fields.String(),
+    "license": fields.String()
+}
+
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
@@ -513,6 +520,8 @@ stop_time = {
 }
 
 line = deepcopy(generic_type)
+line_group = deepcopy(generic_type)
+
 line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
@@ -524,6 +533,11 @@ line["geojson"] = MultiLineString(attribute="geojson")
 line["opening_time"] = SplitDateTime(date=None, time="opening_time")
 line["closing_time"] = SplitDateTime(date=None, time="closing_time")
 line["properties"] = NonNullList(NonNullNested(prop))
+line["line_groups"] = NonNullList(NonNullNested(line_group))
+
+line_group["lines"] = NonNullList(NonNullNested(line))
+line_group["main_line"] = PbField(line)
+line_group["comments"] = NonNullList(NonNullNested(comment))
 
 route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()

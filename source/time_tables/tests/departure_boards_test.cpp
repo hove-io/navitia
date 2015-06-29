@@ -59,35 +59,68 @@ static pt::ptime d(std::string str) {
 }
 
 BOOST_AUTO_TEST_CASE(departureboard_test1) {
-    ed::builder b("20120614");
-    b.vj("A")("stop1", 36000, 36100)("stop2", 36150,362000);
-    b.vj("B")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
+    ed::builder b("20150615");
+    b.vj("A", "110011000001", "", true, "vj1", "", "jp1")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
+    b.vj("B", "110000001111", "", true, "vj2", "", "jp2")("stop1", 10*3600 + 10*60, 10*3600 + 10*60)("stop2", 10*3600 + 40*60,10*3600 + 40*60)("stop3", 10*3600 + 50*60,10*3600 + 50*60);
+
+    const auto it1 = b.sas.find("stop2");
+    b.data->pt_data->routes.front()->destination= it1->second; // Route A
+    const auto it2 = b.sas.find("stop3");
+    b.data->pt_data->routes.back()->destination= it2->second; // Route B
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 
-    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
-    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
 
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
-
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    // normal departure board
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
-    pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(),0);
-    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
-    stop_schedule = resp.stop_schedules(1);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
 
-    resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120615T094500"), 800, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
-
+    // no departure for route "A"
+    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150616T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
-    stop_schedule = resp.stop_schedules(0);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(),0);
-    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
-    stop_schedule = resp.stop_schedules(1);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(),0);
-    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
+
+    // no departure for all routes
+    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150619T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),0);
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+
+    // no departure for route "B"
+    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150621T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+
+    // Terminus for route "A"
+    resp = departure_board("stop_point.uri=stop2", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
+
+    // Terminus for route "B"
+    resp = departure_board("stop_point.uri=stop3", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "B");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
 
     resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120701T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
     BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
@@ -102,29 +135,32 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
      *
      * stop schedule for B must say it is a partial_terminus and stop_schedule on C must say it is a real terminus
      * */
-    ed::builder b("20120614");
-    b.vj("A", "11111111", "", true, "vj1", "", "jp1")("stop1", 36000, 36100)("stop2", 36150,362000);
-    b.vj("A", "11111111", "", true, "vj2", "", "jp2")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
+    ed::builder b("20150615");
+    b.vj("A", "11111111", "", true, "vj1", "", "jp1")("stop1", 10*3600, 10*3600)
+                                                     ("stop2", 10*3600 + 30*60, 10*3600 + 30*60);
+    b.vj("A", "10111111", "", true, "vj2", "", "jp2")("stop1", 10*3600 + 30*60, 10*3600 + 30*60)
+                                                     ("stop2", 11*3600,11*3600)
+                                                     ("stop3", 11*3600 + 30*60,36300 + 30*60);
+    const auto it = b.sas.find("stop3");
+    b.data->pt_data->routes.front()->destination= it->second;
+
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 
-    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
-    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
 
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
-    BOOST_CHECK(stop_schedule.date_times_size() != 0);
-    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::partial_terminus);
+    BOOST_CHECK(stop_schedule.date_times_size() == 2);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().destination().destination(), "stop2");
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj1");
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).dt_status(), pbnavitia::ResponseStatus::partial_terminus);
 
-    resp = departure_board("stop_point.uri=stop3", {}, {}, d("20120615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
-    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
-    stop_schedule = resp.stop_schedules(0);
-    BOOST_CHECK(stop_schedule.date_times_size() == 0);
-    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
 }
 
 
@@ -338,8 +374,8 @@ struct small_cal_fixture {
 
 BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"), 
-                                                86400, 0, std::numeric_limits<int>::max(), 
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"),
+                                                86400, 0, std::numeric_limits<int>::max(),
                                                 1, 10, 0, *(b.data), false);
 
     //we should get a nice schedule, first stop at 08:10, last at 07:10
@@ -405,7 +441,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period, small_cal_fixture) {
 }
 
 /**
- * test that when asked for a schedule from a given *period* in a day, 
+ * test that when asked for a schedule from a given *period* in a day,
  * it works even if the period extend to the next day
  * we have the schedule from this time and finishing at the end of the period
  */
@@ -414,8 +450,8 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period_before, small_cal_fixtur
     //we ask for a schedule from 20:00 to 04:00
     size_t nb_hour = 8;
     auto duration = nb_hour*60*60;
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T200000"), 
-                                               duration, 0, std::numeric_limits<int>::max(), 
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T200000"),
+                                               duration, 0, std::numeric_limits<int>::max(),
                                                1, 10, 0, *(b.data), false);
 
     //we should get a nice schedule, first stop at 20:10, last at 04:10

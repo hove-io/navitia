@@ -386,6 +386,13 @@ def query_from_str(str):
     return query
 
 
+def is_valid_feed_publisher(feed_publisher):
+    get_not_null(feed_publisher, 'id')
+    get_not_null(feed_publisher, 'name')
+    get_not_null(feed_publisher, 'license')
+    get_not_null(feed_publisher, 'url')
+
+
 def is_valid_journey_response(response, tester, query_str):
     query_dict = query_from_str(query_str)
     journeys = get_not_null(response, "journeys")
@@ -438,6 +445,14 @@ def is_valid_journey_response(response, tester, query_str):
                 continue
 
             assert query_dict[k] == v, "we must have the same query"
+
+    feed_publishers = get_not_null(response, "feed_publishers")
+    feed_publisher = feed_publishers[0]
+    is_valid_feed_publisher(feed_publisher)
+    assert (feed_publisher["id"] == "builder")
+    assert (feed_publisher["name"] == "canal tp")
+    assert (feed_publisher["license"] == "ODBL")
+    assert (feed_publisher["url"] == "www.canaltp.fr")
 
 
 def is_valid_journey(journey, tester, query):
@@ -598,6 +613,15 @@ def is_valid_line(line, depth_check=1):
     g = line.get('geojson')
     g is None or shape(g) #TODO check length
 
+def is_valid_line_group(line_group, depth_check=1):
+    get_not_null(line_group, "name")
+    get_not_null(line_group, "id")
+
+    if depth_check > 0:
+        # the main_line is always displayed with a depth of 0 to reduce duplicated informations
+        is_valid_line(get_not_null(line_group, "main_line"), 0)
+        for l in line_group.get('lines', []):
+            is_valid_line(l, depth_check - 1)
 
 def is_valid_codes(codes):
     for code in codes:
