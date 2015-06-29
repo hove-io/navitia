@@ -1,3 +1,12 @@
+navitia2 (1.21.0) unstable; urgency=low
+
+  * All: Partial terminus handling for stop schedule  <https://github.com/CanalTP/navitia/pull/1075>
+  * All: add feed publisher in response  <https://github.com/CanalTP/navitia/pull/1074>
+  * Add line groups to navitia  <https://github.com/CanalTP/navitia/pull/1071>
+  * Doc: Update readme.rst  <https://github.com/CanalTP/navitia/pull/1067>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 29 Jun 2015 10:06:50 +0100
+
 navitia2 (1.20.1) unstable; urgency=low
 
   * Chaos: fix db query not to load everything  <https://github.com/CanalTP/navitia/pull/1076> 
