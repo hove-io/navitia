@@ -46,6 +46,9 @@ class TestNullStatus(AbstractTestFixture):
         assert 'regions' in response
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'main_routing_test'
+        assert 'last_load_at' in response['regions'][0]
+        assert 'name' in response['regions'][0]
+        assert response['regions'][0]['name'] == 'canal tp'
 
     def test_null_status(self):
         """
