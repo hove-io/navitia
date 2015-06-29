@@ -88,6 +88,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.data->pt_data->routes.push_back(route);
         line->route_list.push_back(route);
         route->line = line;
+        b.data->pt_data->routes_map[route->uri] = route;
     } else {
         route = it->second->route_list.front();
     }

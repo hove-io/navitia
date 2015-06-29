@@ -31,6 +31,14 @@ struct calendar_fixture {
         // and wednesday that will not be matched to any cal
         b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
+        // Check partial terminus tag
+        b.vj("A", "10111111", "", true, "vj1", "", "jp1")("Tstop1", 10*3600, 10*3600)
+                                                         ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+        b.vj("A", "10111111", "", true, "vj2", "", "jp2")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
+                                                         ("Tstop2", 11*3600,11*3600)
+                                                         ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
+
+
         b.finish();
         b.data->build_uri();
         beg = b.data->meta->production_date.begin();
@@ -72,6 +80,11 @@ struct calendar_fixture {
         for(auto r: b.data->pt_data->routes){
             r->destination = b.sas.find("stop2")->second;
         }
+
+        auto it_sa = b.sas.find("Tstop3");
+        auto it_rt = b.data->pt_data->routes_map.find("A:1");
+        it_rt->second->destination = it_sa->second;
+
         // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
         navitia::type::AssociatedCalendar* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
         navitia::type::AssociatedCalendar* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();

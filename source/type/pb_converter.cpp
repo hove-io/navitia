@@ -1242,6 +1242,18 @@ get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exceptio
     }
 }
 
+static bool is_partial_terminus(const navitia::type::StopTime* stop_time){
+    return stop_time->vehicle_journey
+            && stop_time->vehicle_journey->journey_pattern
+            && stop_time->vehicle_journey->journey_pattern->route
+            && stop_time->vehicle_journey->journey_pattern->route->destination
+            && (!stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.empty())
+            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point
+            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area
+            && (stop_time->vehicle_journey->journey_pattern->route->destination
+                != stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area);
+}
+
 void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const nt::Data& data,
                     pbnavitia::ScheduleStopTime* rs_date_time, int max_depth,
@@ -1266,14 +1278,14 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
-    if ((stop_time->vehicle_journey)
-            && (stop_time->vehicle_journey->journey_pattern)
-            && (stop_time->vehicle_journey->journey_pattern->route)
-            && (stop_time->vehicle_journey->journey_pattern->route->destination)){
+    // partial terminus
+    if (is_partial_terminus(stop_time)) {
+        auto sa = stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area;
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
-        destination->set_uri("destination:"+std::to_string(hash_fn(stop_time->vehicle_journey->journey_pattern->route->destination->name)));
-        destination->set_destination(stop_time->vehicle_journey->journey_pattern->route->destination->name);
+        destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
+        destination->set_destination(sa->name);
+        rs_date_time->set_dt_status(pbnavitia::ResponseStatus::partial_terminus);
     }
     for (const auto& comment: data.pt_data->comments.get(*stop_time)) {
         fill_pb_object(comment, data, hn->add_notes(), max_depth, now, action_period);
