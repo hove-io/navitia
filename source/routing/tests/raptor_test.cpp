@@ -1984,3 +1984,77 @@ BOOST_AUTO_TEST_CASE(accessible_on_first_sp) {
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items.back().arrival, time_from_string("2015-01-01 10:00:00"));
 }
+
+// If the direct path duration is better than everything, no journey is returned
+//
+// Here, we have a 10s walk + 1 min pt + 10s walk. We ask with a 15s
+// direct path, thus we must not have any solution. With a 25s direct
+// path, we have the journey.
+BOOST_AUTO_TEST_CASE(direct_path_filter) {
+    ed::builder b("20150101");
+
+    b.vj("1")("A", "8:01"_t)("B", "8:02"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 10_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front()), 10_s}
+    };
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "08:00"_t),
+                                  false,
+                                  DateTimeUtils::inf,
+                                  10,
+                                  {},
+                                  {},
+                                  true,
+                                  15_s); // 15s direct path
+    BOOST_CHECK_EQUAL(res.size(), 0);
+
+    res = raptor.compute_all(departures,
+                             arrivals,
+                             DateTimeUtils::set(2, "08:03"_t),
+                             false,
+                             DateTimeUtils::inf,
+                             10,
+                             {},
+                             {},
+                             true,
+                             25_s); // 25s direct path
+    BOOST_CHECK_EQUAL(res.size(), 1);
+
+    // reverse clockwise
+    res = raptor.compute_all(departures,
+                             arrivals,
+                             DateTimeUtils::set(2, "08:03"_t),
+                             false,
+                             0,
+                             10,
+                             {},
+                             {},
+                             false,
+                             15_s); // 15s direct path
+    BOOST_CHECK_EQUAL(res.size(), 0);
+
+    res = raptor.compute_all(departures,
+                             arrivals,
+                             DateTimeUtils::set(2, "08:03"_t),
+                             false,
+                             0,
+                             10,
+                             {},
+                             {},
+                             false,
+                             25_s); // 25s direct path
+    BOOST_CHECK_EQUAL(res.size(), 1);
+}

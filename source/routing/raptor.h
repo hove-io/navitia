@@ -118,12 +118,17 @@ struct RAPTOR
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path>
-    compute(const type::StopArea* departure, const type::StopArea* destination,
-            int departure_hour, int departure_day, DateTime bound, bool disruption_active,
+    compute(const type::StopArea *departure,
+            const type::StopArea *destination,
+            int departure_hour,
+            int departure_day,
+            DateTime bound,
+            bool disruption_active,
             bool clockwise = true,
-            const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
-            max_transfers=std::numeric_limits<uint32_t>::max(),
-            const std::vector<std::string>& forbidden_uris = {});
+            const type::AccessibiliteParams &accessibilite_params = type::AccessibiliteParams(),
+            uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+            const std::vector<std::string> &forbidden_uris = {},
+            const boost::optional<navitia::time_duration> &direct_path_dur = boost::none);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
@@ -133,11 +138,14 @@ struct RAPTOR
     std::vector<Path>
     compute_all(const vec_stop_point_duration &departs,
                 const vec_stop_point_duration &destinations,
-                const DateTime &departure_datetime, bool disruption_active,
-                const DateTime &bound=DateTimeUtils::inf,
+                const DateTime &departure_datetime,
+                bool disruption_active,
+                const DateTime &bound = DateTimeUtils::inf,
                 const uint32_t max_transfers = 10,
-                const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
-                const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
+                const type::AccessibiliteParams &accessibilite_params = type::AccessibiliteParams(),
+                const std::vector<std::string> &forbidden = std::vector<std::string>(),
+                bool clockwise = true,
+                const boost::optional<navitia::time_duration> &direct_path_dur = boost::none);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
