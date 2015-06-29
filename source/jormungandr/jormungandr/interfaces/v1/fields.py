@@ -703,7 +703,7 @@ instance_status = {
     "publication_date": fields.String(),
     "start_production_date": fields.String(),
     "status": fields.String(),
-    "is_open_data": fields.String()
+    "is_open_data": fields.Boolean()
 }
 
 instance_parameters = {
