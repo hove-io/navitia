@@ -44,7 +44,7 @@ class Status(Resource):
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
-        is_open_data = False
+        is_open_data = True
         if not app.config['DISABLE_DATABASE']:
             if instance and instance.name:
                 instance_db = models.Instance.get_by_name(instance.name)
