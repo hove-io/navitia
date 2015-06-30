@@ -47,6 +47,7 @@ class TestNullStatus(AbstractTestFixture):
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'main_routing_test'
         assert 'last_load_at' in response['regions'][0]
+        assert get_valid_datetime(response['regions'][0]["last_load_at"])
         assert 'name' in response['regions'][0]
         assert response['regions'][0]['name'] == 'canal tp'
 
