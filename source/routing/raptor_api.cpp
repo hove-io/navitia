@@ -198,27 +198,32 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     }
 }
 
+static georef::Path get_direct_path(georef::StreetNetwork& worker,
+                            const type::EntryPoint& origin,
+                            const type::EntryPoint& destination) {
+    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
+        || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
+        // we don't want direct path for admin to admin (it has no meaning)
+        // and we do not compute direct path for car because:
+        //  * our car pathes are not very realistic
+        //  * we do not want to promote car solution
+        return georef::Path();
+    }
+
+    return worker.get_direct_path(origin, destination);
+}
+
 static void add_direct_path(EnhancedResponse& enhanced_response,
                        const nt::Data& d,
-                       georef::StreetNetwork& worker,
+                       const georef::Path& path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
                        const bool clockwise) {
     pbnavitia::Response& pb_response = enhanced_response.response;
-
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
-            || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
-        // we don't want direct path for admin to admin (it has no meaning)
-        // and we do not compute direct path for car because:
-        //  * our car pathes are not very realistic
-        //  * we do not want to promote car solution
-        return;
-    }
 
-    auto temp = worker.get_direct_path(origin, destination);
-    if(!temp.path_items.empty()) {
+    if (! path.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
         LOG4CPLUS_DEBUG(logger, "direct path found!");
 
@@ -231,11 +236,11 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
             if (clockwise) {
                 departure = datetime;
             } else {
-                const auto duration = bt::seconds(temp.duration.total_seconds()
+                const auto duration = bt::seconds(path.duration.total_seconds()
                                                   / origin.streetnetwork_params.speed_factor);
                 departure = datetime - duration;
             }
-            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
+            fill_street_sections(enhanced_response, origin, path, d, pb_journey, departure);
 
             const auto ts_departure = pb_journey->sections(0).begin_date_time();
             const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
@@ -590,7 +595,8 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         co2_emission_aggregator(pb_journey);
     }
 
-    add_direct_path(enhanced_response, d, worker, origin, destination, datetimes, clockwise);
+    const auto direct_path = get_direct_path(worker, origin, destination);
+    add_direct_path(enhanced_response, d, direct_path, origin, destination, datetimes, clockwise);
 }
 
 static pbnavitia::Response
