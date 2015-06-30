@@ -65,4 +65,7 @@ class Coverage(StatedResource):
     @add_collection_links(collections)
     @marshal_with(regions_fields)
     def get(self, region=None, lon=None, lat=None):
-        return i_manager.regions(region, lon, lat), 200
+        resp = i_manager.regions(region, lon, lat)
+        if resp.has_key("regions"):
+            resp["regions"] = sorted(resp["regions"], cmp=lambda reg1, reg2: cmp(reg1['name'], reg2['name']))
+        return resp, 200
