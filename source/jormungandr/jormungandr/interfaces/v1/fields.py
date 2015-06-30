@@ -374,7 +374,7 @@ class DisruptionLinks(fields.Raw):
 
 class FieldDateTime(fields.Raw):
     """
-    DateTime
+    DateTime in timezone of region
     """
     def output(self, key, region):
         if region.has_key("timezone") and region.has_key(key):
