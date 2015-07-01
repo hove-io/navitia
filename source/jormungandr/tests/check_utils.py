@@ -824,3 +824,8 @@ def get_all_disruptions(elem, response):
 
     return disruption_by_obj
 
+
+def is_valid_stop_date_time(stop_date_time):
+    get_not_null(stop_date_time, 'arrival_date_time')
+    get_not_null(stop_date_time, 'departure_date_time')
+

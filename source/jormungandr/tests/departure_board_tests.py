@@ -83,6 +83,27 @@ def is_valid_route_schedule(schedules):
 
         is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
 
+
+def is_valid_departure(departure):
+    d = get_not_null(departure, 'display_informations')
+
+    get_not_null(d, 'direction')
+    get_not_null(d, 'label')
+    get_not_null(d, 'network')
+    get_not_null(d, 'physical_mode')
+    get_not_null(d, 'headsign')
+
+
+    route = get_not_null(departure, 'route')
+    is_valid_route(route)
+
+    stop_point = get_not_null(departure, 'stop_point')
+    is_valid_stop_point(stop_point)
+
+    stop_date_time = get_not_null(departure, 'stop_date_time')
+    is_valid_stop_date_time(stop_date_time)
+
+
 @dataset(["departure_board_test"])
 class TestDepartureBoard(AbstractTestFixture):
     """
@@ -203,3 +224,21 @@ class TestDepartureBoard(AbstractTestFixture):
                                      "from_datetime=20120615T080000", check=False)
         eq_(code, 400)
         eq_(response['message'], 'unknown type: stop_areass')
+
+    def test_departures(self):
+        """
+        departure board for a given date
+        """
+        response = self.query_region("stop_points/ODTstop1/departures?from_datetime=20120615T080000")
+
+        assert "departures" in response
+        assert len(response["departures"]) == 2
+
+        for departure in response["departures"]:
+            is_valid_departure(departure)
+
+        assert len(response["departures"][0]["stop_date_time"]["additional_informations"]) == 1
+        assert response["departures"][0]["stop_date_time"]["additional_informations"][0] == "date_time_estimated"
+
+        assert len(response["departures"][1]["stop_date_time"]["additional_informations"]) == 1
+        assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"

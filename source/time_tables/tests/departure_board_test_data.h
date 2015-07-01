@@ -37,12 +37,23 @@ struct calendar_fixture {
         b.vj("A", "10111111", "", true, "vj2", "", "jp2")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
                                                          ("Tstop2", 11*3600,11*3600)
                                                          ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
-
+        // Check on_demand_transport at stoptime
+        b.vj("B", "10111111", "", true, "on_demand_transport", "", "on_demand_transport")("ODTstop1", 10*3600, 10*3600)
+                                                         ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+        // Check date_time_estimated at stoptime
+        b.vj("B", "10111111", "", true, "date_time_estimated", "", "date_time_estimated")("ODTstop1", 10*3600, 10*3600)
+                                                         ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
 
         b.finish();
         b.data->build_uri();
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
+
+        navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["on_demand_transport"];
+        vj->stop_time_list[0].set_odt(true);
+
+        vj = b.data->pt_data->vehicle_journeys_map["date_time_estimated"];
+        vj->stop_time_list[0].set_date_time_estimated(true);
 
         vj_week = b.data->pt_data->vehicle_journeys_map["week"];
         vj_week->validity_pattern->add(beg, end_of_year, std::bitset<7>{"1111100"});
