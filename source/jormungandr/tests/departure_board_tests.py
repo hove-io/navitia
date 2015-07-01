@@ -53,9 +53,11 @@ def check_departure_board(schedules, tester, only_time=False):
             get_valid_time(dt)
         else:
             get_valid_datetime(dt)
+        #TODO remove href_mandatory=False after link refactor, they should always be there :)
+        check_links(dt_wrapper, tester, href_mandatory=False)
 
-    #TODO uncomment after link refactor
-    #check_links(schedule, tester)
+    #TODO remove href_mandatory=False after link refactor, they should always be there :)
+    check_links(schedule, tester, href_mandatory=False)
 
 
 def is_valid_route_schedule(schedules):
