@@ -77,6 +77,9 @@ next_passages(const std::string &request,
         auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
+
+        fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(), 0, current_datetime, action_period);
+
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(),
                 depth, current_datetime, action_period);
