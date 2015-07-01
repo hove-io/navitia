@@ -71,7 +71,6 @@ class TestPtRef(AbstractTestFixture):
         assert (feed_publisher["license"] == "ODBL")
         assert (feed_publisher["url"] == "www.canaltp.fr")
 
-
     def test_vj_depth_0(self):
         """default depth is 1"""
         response = self.query_region("v1/vehicle_journeys?depth=0")
@@ -176,7 +175,6 @@ class TestPtRef(AbstractTestFixture):
 
         is_valid_codes(codes)
 
-
     def test_route(self):
         """test line formating"""
         response = self.query_region("v1/routes")
@@ -252,6 +250,32 @@ class TestPtRef(AbstractTestFixture):
 
         #the response must be still valid (this test the kraken data reloading)
         is_valid_journey_response(response, self.tester, journey_basic_query)
+
+    def test_forbidden_uris_on_line(self):
+        """test forbidden uri for lines"""
+        response = self.query_region("v1/lines")
+
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+
+        assert len(lines[0]['physical_modes']) == 1
+        assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
+
+        #there is only one line, so when we forbid it's physical mode, we find nothing
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_uris[]=physical_mode:Car")
+        assert code == 404
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_id[]=physical_mode:Car")
+        assert code == 404
+
+        # when we forbid another physical_mode, we find again our line
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_uris[]=physical_mode:Bus")
+        assert code == 200
+
 
 @dataset(["main_routing_test"])
 class TestPtRefPlace(AbstractTestFixture):
