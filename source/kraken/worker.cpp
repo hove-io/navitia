@@ -524,18 +524,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 
     std::vector<type::EntryPoint> destinations;
-    if(api != pbnavitia::ISOCHRONE) {
-        for (int i = 0; i < request.destination().size(); i++) {
-            Type_e destination_type = data->get_type_of_id(request.destination(i).place());
-            type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
+    for (int i = 0; i < request.destination().size(); i++) {
+        Type_e destination_type = data->get_type_of_id(request.destination(i).place());
+        type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
 
-            if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
-                    || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
-                    || destination.type == type::Type_e::POI) {
-                destination.coordinates = this->coord_of_entry_point(destination, data);
-            }
-            destinations.push_back(destination);
+        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
+                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
+                || destination.type == type::Type_e::POI) {
+            destination.coordinates = this->coord_of_entry_point(destination, data);
         }
+        destinations.push_back(destination);
     }
 
     std::vector<std::string> forbidden;
@@ -567,12 +565,19 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     type::AccessibiliteParams accessibilite_params;
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     switch(api) {
-        case pbnavitia::ISOCHRONE:
-            return navitia::routing::make_isochrone(*planner, origins[0], request.datetimes(0),
+        case pbnavitia::ISOCHRONE:{
+            type::EntryPoint ep;
+            if (origins.empty() && (!request.clockwise())){
+                ep = destinations[0];
+            }else{
+                ep = origins[0];
+            }
+            return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
+    }
         case pbnavitia::NMPLANNER:
             return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
