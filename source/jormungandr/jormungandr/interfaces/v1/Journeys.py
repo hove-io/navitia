@@ -626,10 +626,6 @@ class Journeys(ResourceUri, ResourceUtc):
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
 
-        if not args["origin"]:  #@vlara really ? I though we could do reverse isochrone ?
-            #shoudl be in my opinion if not args["origin"] and not args["destination"]:
-            abort(400, message="from argument is required")
-
         #we transform the origin/destination url to add information
         if args['origin']:
             args['origin'] = transform_id(args['origin'])
@@ -647,7 +643,7 @@ class Journeys(ResourceUri, ResourceUtc):
             possible_regions = [region]
 
         api = None
-        if args['destination']:
+        if args['destination'] and args['origin']:
             api = 'journeys'
         else:
             api = 'isochrone'
