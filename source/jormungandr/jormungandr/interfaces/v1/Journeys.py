@@ -626,6 +626,9 @@ class Journeys(ResourceUri, ResourceUtc):
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
 
+        if not (args['destination'] or args['origin']):
+            abort(400, message="you should at least provide either a 'from' or a 'to' argument")
+
         #we transform the origin/destination url to add information
         if args['origin']:
             args['origin'] = transform_id(args['origin'])
@@ -642,7 +645,6 @@ class Journeys(ResourceUri, ResourceUtc):
         else:
             possible_regions = [region]
 
-        api = None
         if args['destination'] and args['origin']:
             api = 'journeys'
         else:
