@@ -69,6 +69,8 @@ struct data_set {
         }
         b.data->pt_data->calendars.push_back(monday_cal);
         //add lines
+        b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
+        b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
         b.vj("line:A", "", "", true, "vj1", "", "", "physical_mode:Car")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
@@ -129,6 +131,7 @@ struct data_set {
         b.data->pt_data->line_groups.push_back(lg);
 
         b.data->complete();
+        b.data->build_raptor();
     }
 
     ed::builder b;

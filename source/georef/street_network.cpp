@@ -258,7 +258,10 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
         std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
         // if we are not dealing with 0,0 coordinates (incorrect data), allow crow fly
         if(start_coord != type::GeographicalCoord(0, 0)) {
-            for (auto element: elements) {
+            for (const auto& element: elements) {
+                if (element.second == type::GeographicalCoord(0, 0)) {
+                    continue;
+                }
                 navitia::time_duration duration =
                         crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
                 // if the radius is still ok with sqrt(2) factor

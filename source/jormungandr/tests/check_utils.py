@@ -462,6 +462,7 @@ def is_valid_journey(journey, tester, query):
     request = get_valid_datetime(journey['requested_date_time'])
 
     assert arrival >= departure
+    assert (arrival - departure).seconds - journey['duration'] <= len(journey['sections']) - 1
 
     if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
         #for 'departure after' query, the departure must be... after \o/
@@ -482,6 +483,7 @@ def is_valid_journey(journey, tester, query):
         g = s.get('geojson')
         g is None or shape(g)
 
+    assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 

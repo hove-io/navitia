@@ -75,7 +75,8 @@ struct SA {
     navitia::type::StopArea* sa;
 
     /// Construit un nouveau stopArea
-    SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted = true);
+    SA(builder & b, const std::string & sa_name, double x, double y,
+       bool create_sp = true, bool is_adapted = true);
 
     /// Construit un stopPoint appartenant au stopArea courant
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool is_adapted = true);
@@ -140,8 +141,12 @@ struct builder{
                     const std::string& physical_mode = "");
 
     /// Crée un nouveau stop area
-    SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);
-    SA sa(const std::string & name, navitia::type::GeographicalCoord geo, bool is_adapted = true ){return sa(name,geo.lon(), geo.lat(), is_adapted);}
+    SA sa(const std::string & name, double x = 0, double y = 0,
+          const bool create_sp = true, const bool is_adapted = true);
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo,
+          const bool create_sp = true, bool is_adapted = true) {
+        return sa(name, geo.lon(), geo.lat(), create_sp, is_adapted);
+    }
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
