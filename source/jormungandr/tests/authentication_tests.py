@@ -362,6 +362,16 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             _, status = self.query_no_assert('v1/places?q=toto')
             assert status == 500
 
+    def test_sort_coverage(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('v1/coverage')
+
+            regions = get_not_null(response, 'regions')
+            assert len(regions) == 3
+            assert regions[0]["name"] == 'departure board'
+            assert regions[1]["name"] == 'empty routing'
+            assert regions[2]["name"] == 'routing api data'
+
     #TODO add more tests on:
     # * coords
     # * disruptions
