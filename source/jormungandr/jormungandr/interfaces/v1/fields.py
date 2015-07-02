@@ -372,6 +372,23 @@ class DisruptionLinks(fields.Raw):
                 for d in obj.disruptions]
 
 
+class FieldDateTime(fields.Raw):
+    """
+    DateTime in timezone of region
+    """
+    def output(self, key, region):
+        if region.has_key("timezone") and region.has_key(key):
+            dt = datetime.datetime.utcfromtimestamp(region[key])
+            tz = pytz.timezone(region["timezone"])
+            if tz:
+                dt = pytz.utc.localize(dt)
+                dt = dt.astimezone(tz)
+                return dt.strftime("%Y%m%dT%H%M%S")
+            else:
+                return None
+        else:
+            return None
+
 validity_pattern = {
     'beginning_date': fields.String(),
     'days': fields.String(),
@@ -703,6 +720,7 @@ instance_status = {
     "publication_date": fields.String(),
     "start_production_date": fields.String(),
     "status": fields.String(),
+    "is_open_data": fields.Boolean()
 }
 
 instance_parameters = {

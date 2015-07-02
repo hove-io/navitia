@@ -95,12 +95,12 @@ struct builder{
     navitia::georef::GeoRef street_network;
 
     /// Il faut préciser là date de début des différents validity patterns
-    builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
+    builder(const std::string & date, const std::string& publisher_name = "canal tp") : begin(boost::gregorian::date_from_iso_string(date)){
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
         data->meta->timezone = "UTC"; //default timezone is UTC
 		data->loaded = true;
         data->meta->instance_name = "builder";
-        data->meta->publisher_name = "canal tp";
+        data->meta->publisher_name = publisher_name;
         data->meta->publisher_url = "www.canaltp.fr";
         data->meta->license = "ODBL";
     }

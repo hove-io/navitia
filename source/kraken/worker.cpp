@@ -156,6 +156,10 @@ void Worker::metadatas(pbnavitia::Response& response) {
         for(const type::Contributor* contributor : d->pt_data->contributors) {
             metadatas->add_contributors(contributor->uri);
         }
+        if (!d->meta->publisher_name.empty()){
+            metadatas->set_name(d->meta->publisher_name);
+        }
+        metadatas->set_last_load_at(navitia::to_posix_timestamp(d->last_load_at));
     } else {
         metadatas->set_start_production_date("");
         metadatas->set_end_production_date("");

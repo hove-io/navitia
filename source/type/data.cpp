@@ -90,7 +90,7 @@ bool Data::load(const std::string& filename,
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
-        last_load_at = pt::microsec_clock::local_time();
+        last_load_at = pt::microsec_clock::universal_time();
         last_load = true;
         loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
