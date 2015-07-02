@@ -381,7 +381,7 @@ RAPTOR::isochrone(const vec_stop_point_duration& departures,
     clear(clockwise, bound);
     init(departures, departure_datetime, true, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 }
 
 
@@ -610,7 +610,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
 void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
                           bool clockwise,
                           bool disruption_active,
-                          uint32_t max_transfers){
+                          uint32_t max_transfers) {
     if(clockwise) {
         raptor_loop(raptor_visitor(), accessibilite_params, disruption_active, max_transfers);
     } else {

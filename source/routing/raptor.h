@@ -180,7 +180,7 @@ struct RAPTOR
     void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
                       bool clockwise,
                       bool disruption_active,
-                      const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+                      const uint32_t max_transfers);
 
     /// Apply foot pathes to labels
     /// Return true if it improves at least one label, false otherwise
