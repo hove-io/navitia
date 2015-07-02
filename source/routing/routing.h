@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 
+#include "georef/street_network.h"
 #include "type/pt_data.h"
 #include "type/datetime.h"
 
@@ -127,12 +128,18 @@ struct Path {
 bool operator==(const PathItem & a, const PathItem & b);
 
 /**
- * Choose if we must use a crowfly or a streetnework for a section. This function is call for the first and last section of a journey
+ * Choose if we must use a crowfly or a streetnework for a section.
+ * This function is called for the first and last section of a journey.
  *
- * @param point: the object where we are going/coming: the requested origin for the first section or the destination for the last section
- * @param stop_point: for the first section, the stop point where we are going, or for the last section the stop point from where we come
+ * @param point: the object where we are going/from where we are coming:
+ *               the requested origin for the first section or the destination for the last section
+ * @param stop_point: for the first section, the stop point where we are going,
+ *                    or for the last section the stop point from where we come
+ * @param street_network_path: the street network path between point and stop_point
+ * @param data: reference datas of the instance
  */
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point, const type::Data& data);
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point,
+                  const georef::Path& street_network_path, const type::Data& data);
 
 
 }}

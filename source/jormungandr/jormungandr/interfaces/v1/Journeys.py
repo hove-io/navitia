@@ -592,7 +592,7 @@ class Journeys(ResourceUri, ResourceUtc):
             profile = travelers_profile[args['traveler_type']]
             profile.override_params(args)
 
-        if args['max_duration_to_pt']:
+        if args['max_duration_to_pt'] is not None:
             #retrocompatibility: max_duration_to_pt override all individual value by mode
             args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
             args['max_bike_duration_to_pt'] = args['max_duration_to_pt']

@@ -448,12 +448,8 @@ def is_valid_journey_response(response, tester, query_str):
             assert query_dict[k] == v, "we must have the same query"
 
     feed_publishers = get_not_null(response, "feed_publishers")
-    feed_publisher = feed_publishers[0]
-    is_valid_feed_publisher(feed_publisher)
-    assert (feed_publisher["id"] == "builder")
-    assert (feed_publisher["name"] == 'routing api data')
-    assert (feed_publisher["license"] == "ODBL")
-    assert (feed_publisher["url"] == "www.canaltp.fr")
+    for feed_publisher in feed_publishers:
+        is_valid_feed_publisher(feed_publisher)
 
 
 def is_valid_journey(journey, tester, query):
@@ -462,6 +458,9 @@ def is_valid_journey(journey, tester, query):
     request = get_valid_datetime(journey['requested_date_time'])
 
     assert arrival >= departure
+    # test if duration time is consistent with arrival and departure
+    # as we sometimes loose a second in rounding section duration, tolerance is added
+    assert (arrival - departure).seconds - journey['duration'] <= len(journey['sections']) - 1
 
     if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
         #for 'departure after' query, the departure must be... after \o/
@@ -482,6 +481,7 @@ def is_valid_journey(journey, tester, query):
         g = s.get('geojson')
         g is None or shape(g)
 
+    assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 

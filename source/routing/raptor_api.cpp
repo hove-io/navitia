@@ -305,48 +305,51 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             path.items.back().stop_points.back()->is_zonal;
 
         if (journey_begin_with_address_odt) {
-            // nor crow fly section, but we'll have to update the start of the journey
+            // no crow fly section, but we'll have to update the start of the journey
             //first is zonal ODT, we do nothing, there is no walking
-        }
-        else if (!path.items.front().stop_points.empty()
-                && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
-            const auto sp_dest = path.items.front().stop_points.front();
-            type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
-            bt::time_period action_period(path.items.front().departures.front(),
-                                          path.items.front().departures.front()+bt::minutes(1));
+        } else if (!path.items.empty() && !path.items.front().stop_points.empty()) {
             const auto& departure_stop_point = path.items.front().stop_points.front();
-            auto temp = worker.get_path(departure_stop_point->idx);
-            fill_crowfly_section(origin, destination_tmp, get_crowfly_mode(temp), path.items.front().departures.front(),
-                                 d, enhanced_response, pb_journey, now, action_period);
+            georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-        } else {
-            if(!path.items.front().stop_points.empty()) {
-                const auto& departure_stop_point = path.items.front().stop_points.front();
-                auto temp = worker.get_path(departure_stop_point->idx);
-                if(temp.path_items.size() > 0) {
-                    //because of projection problem, the walking path might not join
-                    //exactly the routing one
-                    nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
-                    if (temp.path_items.back().coordinates.back() != routing_first_coord) {
-                        //if it's the case, we artificialy add the missing segment
-                        temp.path_items.back().coordinates.push_back(routing_first_coord);
-                    }
+            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, d)){
+                type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
+                destination_tmp.coordinates = departure_stop_point->coord;
+                bt::time_period action_period(path.items.front().departures.front(),
+                                              path.items.front().departures.front() + bt::minutes(1));
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
+                                            worker.departure_path_finder.distance_to_entry_point);
+                departure_time = path.items.front().departures.front()- crow_fly_duration.to_posix();
+                fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
+                                     get_crowfly_mode(sn_departure_path),
+                                     departure_time, d, enhanced_response,
+                                     pb_journey, now, action_period);
 
-                    const auto walking_time = temp.duration;
-                    departure_time = path.items.front().departure - walking_time.to_posix();
-                    fill_street_sections(enhanced_response, origin, temp, d, pb_journey,
-                        departure_time);
-                    if(pb_journey->sections_size() > 0){
-                        auto first_section = pb_journey->mutable_sections(0);
-                        auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
-                        bt::time_period action_period(navitia::from_posix_timestamp(first_section->begin_date_time()),
-                                                      navitia::from_posix_timestamp(last_section->end_date_time()));
-                        // We add coherence with the origin of the request
-                        fill_pb_placemark(origin, d, first_section->mutable_origin(), 2, now, action_period, show_codes);
-                        // We add coherence with the first pt section
-                        last_section->mutable_destination()->Clear();
-                        fill_pb_placemark(departure_stop_point, d, last_section->mutable_destination(), 2, now, action_period, show_codes);
-                    }
+            } else if (!sn_departure_path.path_items.empty()) {
+                //because of projection problem, the walking path might not join
+                //exactly the routing one
+                nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
+                if (sn_departure_path.path_items.back().coordinates.back() != routing_first_coord) {
+                    //if it's the case, we artificially add the missing segment
+                    sn_departure_path.path_items.back().coordinates.push_back(routing_first_coord);
+                }
+
+                const auto walking_time = sn_departure_path.duration;
+                departure_time = path.items.front().departure - walking_time.to_posix();
+                fill_street_sections(enhanced_response, origin, sn_departure_path, d, pb_journey,
+                    departure_time);
+                if (pb_journey->sections_size() > 0) {
+                    auto first_section = pb_journey->mutable_sections(0);
+                    auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
+                    bt::time_period action_period(
+                                    navitia::from_posix_timestamp(first_section->begin_date_time()),
+                                    navitia::from_posix_timestamp(last_section->end_date_time()));
+                    // We add coherence with the origin of the request
+                    fill_pb_placemark(origin, d, first_section->mutable_origin(), 2, now,
+                                      action_period, show_codes);
+                    // We add coherence with the first pt section
+                    last_section->mutable_destination()->Clear();
+                    fill_pb_placemark(departure_stop_point, d, last_section->mutable_destination(),
+                                      2, now, action_period, show_codes);
                 }
             }
         }
@@ -516,52 +519,55 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         if (journey_end_with_address_odt) {
             // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
             // but we have to updated the end of the journey
-        }
-        else if (!path.items.back().stop_points.empty()
-                && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
-            const auto sp_orig = path.items.back().stop_points.back();
-            type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
-            bt::time_period action_period(path.items.back().departures.back(),
-                                          path.items.back().departures.back()+bt::minutes(1));
-            const auto& arrival_stop_point = path.items.back().stop_points.back();
-            auto temp = worker.get_path(arrival_stop_point->idx, true);
-            fill_crowfly_section(origin_tmp, destination, get_crowfly_mode(temp),
-                                 path.items.back().departures.back(),
-                                 d, enhanced_response, pb_journey, now, action_period);
+        } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
+            const auto arrival_stop_point = path.items.back().stop_points.back();
+            georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-        } else {
-            if(!path.items.empty() && !path.items.back().stop_points.empty()) {
-                const auto& arrival_stop_point = path.items.back().stop_points.back();
-                // for stop areas, we don't want to display the fallback section if start
-                // from one of the stop area's stop point
-                auto temp = worker.get_path(arrival_stop_point->idx, true);
-                if(temp.path_items.size() > 0) {
-                   //add a junction between the routing path and the walking one if needed
-                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
-                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                        temp.path_items.front().coordinates.push_front(routing_last_coord);
-                    }
-
-                    auto begin_section_time = arrival_time;
-                    int nb_section = pb_journey->mutable_sections()->size();
-                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                            begin_section_time);
-                    arrival_time = arrival_time + temp.duration.to_posix();
-                    if(pb_journey->mutable_sections()->size() > nb_section){
-                        //We add coherence between the destination of the PT part of the journey
-                        //and the origin of the street network part
-                        auto section = pb_journey->mutable_sections(nb_section);
-                        bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
-                        fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    }
-
-                    //We add coherence with the destination object of the request
-                    auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
-                    bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
-                    fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
+            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, d)) {
+                type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
+                origin_tmp.coordinates = arrival_stop_point->coord;
+                bt::time_period action_period(path.items.back().departures.back(),
+                                              path.items.back().departures.back()+bt::minutes(1));
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
+                                                worker.arrival_path_finder.distance_to_entry_point);
+                arrival_time = arrival_time + crow_fly_duration.to_posix();
+                fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
+                                     get_crowfly_mode(sn_arrival_path),
+                                     path.items.back().departures.back(), d, enhanced_response,
+                                     pb_journey, now, action_period);
+            }
+            // for stop areas, we don't want to display the fallback section if start
+            // from one of the stop area's stop point
+            else if (!sn_arrival_path.path_items.empty()) {
+               //add a junction between the routing path and the walking one if needed
+                nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                if (sn_arrival_path.path_items.front().coordinates.front() != routing_last_coord) {
+                    sn_arrival_path.path_items.front().coordinates.push_front(routing_last_coord);
                 }
+
+                auto begin_section_time = arrival_time;
+                int nb_section = pb_journey->mutable_sections()->size();
+                fill_street_sections(enhanced_response, destination, sn_arrival_path, d, pb_journey,
+                        begin_section_time);
+                arrival_time = arrival_time + sn_arrival_path.duration.to_posix();
+                if (pb_journey->mutable_sections()->size() > nb_section) {
+                    //We add coherence between the destination of the PT part of the journey
+                    //and the origin of the street network part
+                    auto section = pb_journey->mutable_sections(nb_section);
+                    bt::time_period action_period(
+                                       navitia::from_posix_timestamp(section->begin_date_time()),
+                                       navitia::from_posix_timestamp(section->end_date_time() + 1));
+                    fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now,
+                                      action_period, show_codes);
+                }
+
+                //We add coherence with the destination object of the request
+                auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
+                bt::time_period action_period(
+                                       navitia::from_posix_timestamp(section->begin_date_time()),
+                                       navitia::from_posix_timestamp(section->end_date_time() + 1));
+                fill_pb_placemark(destination, d, section->mutable_destination(), 2, now,
+                                  action_period, show_codes);
             }
         }
 
@@ -713,12 +719,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::POI) {
         std::set<SpIdx> stop_points;
 
+        georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
+                                                                worker.departure_path_finder;
+
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
                 for (auto stop_point : it->second->stop_point_list) {
                     const SpIdx sp_idx = SpIdx(*stop_point);
                     if (stop_points.find(sp_idx) == stop_points.end()) {
+                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                         result.push_back({sp_idx, {}});
                         stop_points.insert(sp_idx);
                     }
@@ -733,6 +743,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
                 if (stop_points.find(sp_idx) == stop_points.end()) {
+                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                     result.push_back({sp_idx, {}});
                     stop_points.insert(sp_idx);
                 }
@@ -744,6 +755,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         for (const auto* sp: zonal_sps) {
             const SpIdx sp_idx = SpIdx(*sp);
             if (stop_points.find(sp_idx) == stop_points.end()) {
+                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result.push_back({sp_idx, {}});
                 stop_points.insert(sp_idx);
             }

@@ -627,6 +627,8 @@ Type_e Data::get_type_of_id(const std::string & id) const {
         return Type_e::Address;
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
+    if(id.size()>10 && id.substr(0,10) == "stop_area:")
+        return Type_e::StopArea;
     #define GET_TYPE(type_name, collection_name) \
     const auto &collection_name##_map = pt_data->collection_name##_map;\
     if(collection_name##_map.count(id) != 0 )\

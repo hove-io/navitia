@@ -246,6 +246,13 @@ class TestPtRef(AbstractTestFixture):
         company = companies[0]
         assert company['id'] == 'CMP1'
 
+    def test_simple_crow_fly(self):
+        journey_basic_query = "journeys?from=9;9.001&to=stop_area%3Astop2&datetime=20140105T000000"
+        response = self.query_region(journey_basic_query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
 @dataset(["main_routing_test"])
 class TestPtRefPlace(AbstractTestFixture):
 

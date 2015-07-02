@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "georef.h"
+#include "routing/raptor_utils.h"
 #include "type/time_duration.h"
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/two_bit_color_map.hpp>
@@ -108,6 +109,9 @@ struct PathFinder {
     nt::Mode_e mode;
     float speed_factor = 0.;
 
+    /// Distance map between entry point and stop point
+    std::map<routing::SpIdx, navitia::time_duration> distance_to_entry_point;
+
     /// Distance array for the Dijkstra
     std::vector<navitia::time_duration> distances;
 
@@ -180,6 +184,11 @@ private:
 
     /// Build a path with a destination and the predecessors list
     Path build_path(vertex_t best_destination) const;
+
+    /// compute the reachable stop points within the radius with a simple crow fly
+    std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
+    crow_fly_find_nearest_stop_points(navitia::time_duration radius,
+                                      const proximitylist::ProximityList<type::idx_t>& pl);
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     void dump_dijkstra_for_quantum(const ProjectionData& target);
