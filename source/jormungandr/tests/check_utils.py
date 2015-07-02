@@ -451,7 +451,7 @@ def is_valid_journey_response(response, tester, query_str):
     feed_publisher = feed_publishers[0]
     is_valid_feed_publisher(feed_publisher)
     assert (feed_publisher["id"] == "builder")
-    assert (feed_publisher["name"] == "canal tp")
+    assert (feed_publisher["name"] == 'routing api data')
     assert (feed_publisher["license"] == "ODBL")
     assert (feed_publisher["url"] == "www.canaltp.fr")
 

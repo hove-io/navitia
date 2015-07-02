@@ -49,7 +49,7 @@ class TestNullStatus(AbstractTestFixture):
         assert 'last_load_at' in response['regions'][0]
         assert get_valid_datetime(response['regions'][0]["last_load_at"])
         assert 'name' in response['regions'][0]
-        assert response['regions'][0]['name'] == 'canal tp'
+        assert response['regions'][0]['name'] == 'routing api data'
 
     def test_null_status(self):
         """
