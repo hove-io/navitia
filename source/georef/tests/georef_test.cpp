@@ -72,24 +72,22 @@ static void print_coord(const std::vector<navitia::type::GeographicalCoord>& coo
 
 BOOST_AUTO_TEST_CASE(init_test) {
     using namespace navitia::type;
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
+    GraphBuilder b;
     Way w;
-    w.name = "Jaures"; sn.add_way(w);
-    w.name = "Hugo"; sn.add_way(w);
+    w.name = "Jaures"; b.geo_ref.add_way(w);
+    w.name = "Hugo"; b.geo_ref.add_way(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
     b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
-    sn.graph[b.get("a","b")].way_idx = 0;
-    sn.graph[b.get("b","c")].way_idx = 0;
-    sn.graph[b.get("c","d")].way_idx = 1;
-    sn.graph[b.get("d","e")].way_idx = 1;
-    sn.graph[b.get("e","d")].way_idx = 1;
+    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b","c")].way_idx = 0;
+    b.geo_ref.graph[b.get("c","d")].way_idx = 1;
+    b.geo_ref.graph[b.get("d","e")].way_idx = 1;
+    b.geo_ref.graph[b.get("e","d")].way_idx = 1;
 
     BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 5);
 
-    sn.init();
+    b.geo_ref.init();
 
     BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15); //one graph for each transportation mode save VLS
 
@@ -100,10 +98,8 @@ BOOST_AUTO_TEST_CASE(init_test) {
 }
 
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder builder(sn);
-    Graph & g = sn.graph;
+    GraphBuilder builder;
+    Graph & g = builder.geo_ref.graph;
 
     BOOST_CHECK_EQUAL(num_vertices(g), 0);
     BOOST_CHECK_EQUAL(num_edges(g), 0);
@@ -137,9 +133,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
 }
 
 BOOST_AUTO_TEST_CASE(nearest_segment){
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
+    GraphBuilder b;
 
     /*               a           e
                      |
@@ -151,22 +145,21 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     b("o", "a")("o","b")("o","c")("o","d")("b","o");
 
     navitia::type::GeographicalCoord c(1,2, false);
-    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "a"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "a"));
     c.set_xy(2, 1);
-    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "c"));
     c.set_xy(2, -1);
-    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "c"));
     c.set_xy(2, -3);
-    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "d"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "d"));
     c.set_xy(-10, 1);
-    BOOST_CHECK(sn.nearest_edge(c) == b.get("b", "o"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("b", "o"));
     c.set_xy(50, 10);
-    BOOST_CHECK_EQUAL(sn.nearest_edge(c), b.get("o", "c"));
+    BOOST_CHECK_EQUAL(b.geo_ref.nearest_edge(c), b.get("o", "c"));
 }
 
 BOOST_AUTO_TEST_CASE(real_nearest_edge){
-    GeoRef gr;
-    GraphBuilder b(gr);
+    GraphBuilder b;
 
     /*        s
        a---------------b
@@ -175,7 +168,7 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge){
     b("a", 0, -100)("b", 0, 100)("c", 10, 0)("d", 10, 10);
     b("a", "b")("c", "d");
     navitia::type::GeographicalCoord s(-10, 0, false);
-    BOOST_CHECK(gr.nearest_edge(s) == b.get("a", "b"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(s) == b.get("a", "b"));
 }
 
 /// Compute the path from the starting point to the the target geographical coord
@@ -265,24 +258,22 @@ static Path compute_path(PathFinder& finder, const navitia::type::GeographicalCo
 // Est-ce que les indications retournées sont bonnes
 BOOST_AUTO_TEST_CASE(compute_directions_test) {
     using namespace navitia::type;
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
+    GraphBuilder b;
     Way w;
-    w.name = "Jaures"; sn.add_way(w);
-    w.name = "Hugo"; sn.add_way(w);
+    w.name = "Jaures"; b.geo_ref.add_way(w);
+    w.name = "Hugo"; b.geo_ref.add_way(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
     b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
-    sn.graph[b.get("a","b")].way_idx = 0;
-    sn.graph[b.get("b","c")].way_idx = 0;
-    sn.graph[b.get("c","d")].way_idx = 1;
-    sn.graph[b.get("d","e")].way_idx = 1;
-    sn.graph[b.get("e","d")].way_idx = 1;
+    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b","c")].way_idx = 0;
+    b.geo_ref.graph[b.get("c","d")].way_idx = 1;
+    b.geo_ref.graph[b.get("d","e")].way_idx = 1;
+    b.geo_ref.graph[b.get("e","d")].way_idx = 1;
 
-    sn.init();
+    b.geo_ref.init();
 
-    PathFinder path_finder(sn);
+    PathFinder path_finder(b.geo_ref);
     path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
     Path p = compute_path(path_finder, {4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
@@ -302,10 +293,8 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 // On teste le calcul d'itinéraire de coordonnées à coordonnées
 BOOST_AUTO_TEST_CASE(compute_coord){
     using namespace navitia::type;
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
-    PathFinder path_finder(sn);
+    GraphBuilder b;
+    PathFinder path_finder(b.geo_ref);
 
     /*           a+------+b
      *            |      |
@@ -317,24 +306,24 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     b("a","b", 10_s)("b","a",10_s)("a","c",10_s)("c","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
 
     Way w;
-    w.name = "BobAB"; sn.add_way(w);
-    w.name = "BobAC"; sn.add_way(w);
-    w.name = "BobCD"; sn.add_way(w);
-    w.name = "BobDB"; sn.add_way(w);
-    sn.graph[b.get("a","b")].way_idx = 0;
-    sn.graph[b.get("b","a")].way_idx = 0;
-    sn.graph[b.get("a","c")].way_idx = 1;
-    sn.graph[b.get("c","a")].way_idx = 1;
-    sn.graph[b.get("c","d")].way_idx = 2;
-    sn.graph[b.get("d","c")].way_idx = 2;
-    sn.graph[b.get("d","b")].way_idx = 3;
-    sn.graph[b.get("b","d")].way_idx = 3;
+    w.name = "BobAB"; b.geo_ref.add_way(w);
+    w.name = "BobAC"; b.geo_ref.add_way(w);
+    w.name = "BobCD"; b.geo_ref.add_way(w);
+    w.name = "BobDB"; b.geo_ref.add_way(w);
+    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b","a")].way_idx = 0;
+    b.geo_ref.graph[b.get("a","c")].way_idx = 1;
+    b.geo_ref.graph[b.get("c","a")].way_idx = 1;
+    b.geo_ref.graph[b.get("c","d")].way_idx = 2;
+    b.geo_ref.graph[b.get("d","c")].way_idx = 2;
+    b.geo_ref.graph[b.get("d","b")].way_idx = 3;
+    b.geo_ref.graph[b.get("b","d")].way_idx = 3;
 
     GeographicalCoord start;
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
-    sn.init();
+    b.geo_ref.init();
     path_finder.init(start, Mode_e::Walking, 1);
     Path p = compute_path(path_finder, destination);
     auto coords = get_coords_from_path(p);
@@ -368,8 +357,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
 
-    GeoRef sn;
-    GraphBuilder b(sn);
+    GraphBuilder b;
 
     /*       1                    2
      *       +                    +
@@ -386,7 +374,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
-    sn.init();
+    b.geo_ref.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -395,11 +383,11 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
     stop_points.push_back(sp2);
-    sn.project_stop_points(stop_points);
+    b.geo_ref.project_stop_points(stop_points);
 
     GeographicalCoord o(0,0);
 
-    StreetNetwork w(sn);
+    StreetNetwork w(b.geo_ref);
     EntryPoint starting_point;
     starting_point.coordinates = o;
     starting_point.streetnetwork_params.mode = Mode_e::Walking;
@@ -776,8 +764,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 BOOST_AUTO_TEST_CASE(two_scc) {
     using namespace navitia::type;
 
-    GeoRef sn;
-    GraphBuilder b(sn);
+    GraphBuilder b;
 
     /*       1             2
      *       +             +
@@ -794,7 +781,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
-    sn.init();
+    b.geo_ref.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -803,9 +790,9 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
     stop_points.push_back(sp2);
-    sn.project_stop_points(stop_points);
+    b.geo_ref.project_stop_points(stop_points);
 
-    StreetNetwork w(sn);
+    StreetNetwork w(b.geo_ref);
 
     EntryPoint starting_point;
     starting_point.coordinates = c1;
