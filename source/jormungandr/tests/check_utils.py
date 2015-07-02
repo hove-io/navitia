@@ -827,5 +827,7 @@ def get_all_disruptions(elem, response):
 
 def is_valid_stop_date_time(stop_date_time):
     get_not_null(stop_date_time, 'arrival_date_time')
+    assert get_valid_datetime(stop_date_time['arrival_date_time'])
     get_not_null(stop_date_time, 'departure_date_time')
+    assert get_valid_datetime(stop_date_time['departure_date_time'])
 
