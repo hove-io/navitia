@@ -154,7 +154,7 @@ inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::P
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
                           boost::posix_time::ptime origin_time, const type::Data& data,
-                          EnhancedResponse &response,  pbnavitia::Journey* pb_journey,
+                          EnhancedResponse& response,  pbnavitia::Journey* pb_journey,
                           const pt::ptime& now, const pt::time_period& action_period);
 
 void fill_fare_section(EnhancedResponse& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);

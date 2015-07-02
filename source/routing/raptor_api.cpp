@@ -329,7 +329,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 //exactly the routing one
                 nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
                 if (sn_departure_path.path_items.back().coordinates.back() != routing_first_coord) {
-                    //if it's the case, we artificialy add the missing segment
+                    //if it's the case, we artificially add the missing segment
                     sn_departure_path.path_items.back().coordinates.push_back(routing_first_coord);
                 }
 
