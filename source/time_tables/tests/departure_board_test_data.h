@@ -16,7 +16,7 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* vj_weekend;
     navitia::type::VehicleJourney* vj_all;
     navitia::type::VehicleJourney* vj_wednesday;
-    calendar_fixture() : b("20120614") {
+    calendar_fixture() : b("20120614", "departure board") {
         //2 vj during the week
         b.vj("line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
         b.vj("line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
