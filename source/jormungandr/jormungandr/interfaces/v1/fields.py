@@ -235,23 +235,39 @@ class notes(fields.Raw):
             r.append({"id": note_.uri, "value": note_.note})
         return r
 
+
 class stop_time_properties_links(fields.Raw):
 
     def output(self, key, obj):
         properties = obj.properties
         r = []
+        #Note: all those links should be created with crete_{internal|external}_links,
+        # but for retrocompatibility purpose we cannot do that :( Change it for the v2!
         for note_ in properties.notes:
-            r.append({"id": note_.uri, "type": "notes", "value": note_.note,
+            r.append({"id": note_.uri,
+                      "type": "notes",  # type should be 'note' but retrocompatibility...
+                      "rel": "notes",
+                      "value": note_.note,
                       "internal": True})
         for exception in properties.exceptions:
-            r.append({"type": "exceptions", "id": exception.uri, "date": exception.date,
-                      "except_type": exception.type})
+            r.append({"type": "exceptions",  # type should be 'exception' but retrocompatibility...
+                      "rel": "exceptions",
+                      "id": exception.uri,
+                      "date": exception.date,
+                      "except_type": exception.type,
+                      "internal": True})
         if properties.destination and properties.destination.uri:
-            r.append({"type": "notes", "id": properties.destination.uri,
-                      "value": properties.destination.destination})
+            r.append({"type": "notes",
+                      "rel": "notes",
+                      "id": properties.destination.uri,
+                      "value": properties.destination.destination,
+                      "internal": True})
         if properties.vehicle_journey_id:
-            r.append({"type": "vehicle_journey", "rel": "vehicle_journey",
-                      "value": properties.vehicle_journey_id})
+            r.append({"type": "vehicle_journey",
+                      "rel": "vehicle_journeys",
+                      # the value has nothing to do here (it's the 'id' field), refactor for the v2
+                      "value": properties.vehicle_journey_id,
+                      "id": properties.vehicle_journey_id})
         return r
 
 

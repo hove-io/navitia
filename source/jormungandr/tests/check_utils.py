@@ -259,7 +259,7 @@ def get_links_dict(response):
     return links
 
 
-def check_links(object, tester):
+def check_links(object, tester, href_mandatory=True):
     """
     get the links as dict ordered by 'rel' and check:
      - all links must have the attributes:
@@ -283,13 +283,14 @@ def check_links(object, tester):
         internal = get_bool('internal')
         templated = get_bool('templated')
 
-        if not internal:
-            assert 'href' in link, "no href in link"
+        if href_mandatory:
+            if not internal:
+                assert 'href' in link, "no href in link"
 
-        if not templated and not internal:
-            #we check that the url is valid
-            assert check_url(tester, link['href'].replace('http://localhost', ''),
-                             might_have_additional_args=False), "href's link must be a valid url"
+            if not templated and not internal:
+                #we check that the url is valid
+                assert check_url(tester, link['href'].replace('http://localhost', ''),
+                                 might_have_additional_args=False), "href's link must be a valid url"
 
         if internal:
             assert 'rel' in link
