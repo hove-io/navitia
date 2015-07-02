@@ -48,6 +48,14 @@ class TestJourneys(AbstractTestFixture):
 
         is_valid_journey_response(response, self.tester, journey_basic_query)
 
+        feed_publishers = get_not_null(response, "feed_publishers")
+        assert (len(feed_publishers) == 1)
+        feed_publisher = feed_publishers[0]
+        assert (feed_publisher["id"] == "builder")
+        assert (feed_publisher["name"] == 'routing api data')
+        assert (feed_publisher["license"] == "ODBL")
+        assert (feed_publisher["url"] == "www.canaltp.fr")
+
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
 
