@@ -448,7 +448,7 @@ struct routing_api_data {
 
         //add bike sharing edges
         b.data->geo_ref->default_time_bss_pickup = 30_s;
-        b.data->geo_ref->default_time_bss_putback = 45_s;
+        b.data->geo_ref->default_time_bss_putback = 40_s;
         b.data->geo_ref->add_bss_edges(B);
         b.data->geo_ref->add_bss_edges(G);
 

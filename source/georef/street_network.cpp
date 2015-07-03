@@ -52,7 +52,8 @@ navitia::time_duration PathFinder::crow_fly_duration(const double distance) cons
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
     geo_ref(geo_ref),
     departure_path_finder(geo_ref),
-    arrival_path_finder(geo_ref)
+    arrival_path_finder(geo_ref),
+    direct_path_finder(geo_ref)
 {}
 
 void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const type::EntryPoint&> end) {
@@ -129,45 +130,23 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     return result;
 }
 
-Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
-        const type::EntryPoint& destination) {
-    if (!departure_launched()) {
-        departure_path_finder.init(origin.coordinates, origin.streetnetwork_params.mode,
-                                   origin.streetnetwork_params.speed_factor);
-        departure_path_finder.start_distance_dijkstra(origin.streetnetwork_params.max_duration);
-    }
-    if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
-        arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
-                                 origin.streetnetwork_params.speed_factor);
-        //@TODO: use the max_duration of the origin?
-        arrival_path_finder.start_distance_dijkstra(destination.streetnetwork_params.max_duration);
-    }
-
-    size_t num_vertices = boost::num_vertices(geo_ref.graph);
-
-    navitia::time_duration min_dist = bt::pos_infin;
-    vertex_t target = std::numeric_limits<size_t>::max();
-    for(vertex_t u = 0; u != num_vertices; ++u) {
-        if((departure_path_finder.distances[u] <= origin.streetnetwork_params.max_duration)
-                && (arrival_path_finder.distances[u] != destination.streetnetwork_params.max_duration)
-                && ((departure_path_finder.distances[u] + arrival_path_finder.distances[u]) < min_dist)) {
-            target = u;
-
-            min_dist = departure_path_finder.distances[u] + arrival_path_finder.distances[u];
-        }
-    }
-
-    //Construit l'itinéraire
-    if (min_dist == bt::pos_infin)
-        return {};
-
-    Path result = combine_path(target, departure_path_finder.predecessors, arrival_path_finder.predecessors);
-    departure_path_finder.add_projections_to_path(result, true);
-    arrival_path_finder.add_projections_to_path(result, false);
-
-    result.path_items.front().angle = 0;
-
-    return result;
+Path
+StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination) {
+    const auto dest_edge = ProjectionData(destination.coordinates,
+                                          geo_ref,
+                                          geo_ref.offsets[origin.streetnetwork_params.mode],
+                                          geo_ref.pl);
+    if (! dest_edge.found) { return Path(); }
+    const auto max_dur = origin.streetnetwork_params.max_duration
+        + destination.streetnetwork_params.max_duration;
+    direct_path_finder.init(origin.coordinates,
+                            origin.streetnetwork_params.mode,
+                            origin.streetnetwork_params.speed_factor);
+    direct_path_finder.start_distance_dijkstra(max_dur);
+    const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
+    const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
+    if (res.duration > max_dur) { return Path(); }
+    return res;
 }
 
 PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref) {}
@@ -317,13 +296,22 @@ navitia::time_duration PathFinder::get_distance(type::idx_t target_idx) {
     return nearest_edge.first;
 }
 
-std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
+std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target, bool handle_on_node) const {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
         return {max, source_e};
 
     if (distances[target[source_e]] == max) //if one distance has not been reached, both have not been reached
         return {max, source_e};
+
+    if (handle_on_node) {
+        //handle if the projection is done on a node
+        if (target.distances[source_e] < 0.01) {
+            return {distances[target[source_e]], source_e};
+        } else if (target.distances[target_e] < 0.01) {
+            return {distances[target[target_e]], target_e};
+        }
+    }
 
     auto source_dist = distances[target[source_e]] + crow_fly_duration(target.distances[source_e]);
     auto target_dist = distances[target[target_e]] + crow_fly_duration(target.distances[target_e]);

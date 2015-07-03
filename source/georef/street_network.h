@@ -173,10 +173,10 @@ struct PathFinder {
      */
     std::pair<navitia::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
 
-private:
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
+    std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target, bool handle_on_node = false) const;
 
+private:
     ///return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
 
@@ -221,6 +221,7 @@ struct StreetNetwork {
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;
     PathFinder arrival_path_finder;
+    PathFinder direct_path_finder;
 
 private:
     /// Combine 2 pathes

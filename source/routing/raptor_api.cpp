@@ -225,7 +225,7 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
 
     if (! path.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        LOG4CPLUS_DEBUG(logger, "direct path found!");
+        LOG4CPLUS_DEBUG(logger, "direct path of " << path.duration << "s found!");
 
         //for each date time we add a direct street journey
         for(bt::ptime datetime : datetimes) {
