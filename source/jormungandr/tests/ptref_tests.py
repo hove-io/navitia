@@ -246,6 +246,17 @@ class TestPtRef(AbstractTestFixture):
         company = companies[0]
         assert company['id'] == 'CMP1'
 
+    def test_simple_pt_objects(self):
+        response = self.query_region('pt_objects?q=stop2')
+
+        is_valid_pt_objects_response(response)
+
+        pt_objs = get_not_null(response, 'pt_objects')
+        assert len(pt_objs) == 1
+
+        assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
+
+
 @dataset(["main_routing_test"])
 class TestPtRefPlace(AbstractTestFixture):
 
