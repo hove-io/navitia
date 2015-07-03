@@ -61,6 +61,17 @@ class TestIsochrone(AbstractTestFixture):
         assert response["journeys"][1]["duration"] == 25200
         assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
 
+    def test_stop_point_isochrone_coord_no_transfers(self):
+        #same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
+        #we should be able to touch only 'B'
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?" \
+                "max_duration=25500&datetime=20120614T080000" \
+                "&max_nb_transfers=0"
+        response = self.query(query)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["duration"] == 300
+        assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
+
     def test_to_isochrone_coord(self):
         #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
