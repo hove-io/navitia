@@ -1348,7 +1348,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     //check bss station placemark, it must be a poi
     const auto& first_vls_station = section.destination(); //the last place of the walking section must be the vls station
     BOOST_CHECK_EQUAL(first_vls_station.embedded_type(), pbnavitia::POI);
-    BOOST_CHECK_EQUAL(first_vls_station.name(), "first station");
+    BOOST_CHECK_EQUAL(first_vls_station.name(), "first station (Condom)");
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::BSS_RENT);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
@@ -1401,7 +1401,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
     const auto& last_vls_section = section.origin(); //the last place of the walking section must be the vls station
     BOOST_CHECK_EQUAL(last_vls_section.embedded_type(), pbnavitia::POI);
-    BOOST_CHECK_EQUAL(last_vls_section.name(), "second station");
+    BOOST_CHECK_EQUAL(last_vls_section.name(), "second station (Condom)");
 
     prev_section = section;
     //walking
