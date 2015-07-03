@@ -35,6 +35,7 @@ from datetime import datetime
 import logging
 import re
 from shapely.geometry import shape
+import sys
 
 
 """
@@ -623,6 +624,35 @@ def is_valid_line_group(line_group, depth_check=1):
         for l in line_group.get('lines', []):
             is_valid_line(l, depth_check - 1)
 
+
+def is_valid_poi(poi, depth_check=1):
+    get_not_null(poi, 'name')
+    poi_type = get_not_null(poi, 'poi_type')
+    get_not_null(poi_type, 'id')
+    get_not_null(poi_type, 'name')
+    get_not_null(poi, 'label')
+    get_not_null(poi, 'id')
+    is_valid_coord(get_not_null(poi, 'coord'))
+    for admin in get_not_null(poi, 'administrative_regions'):
+        is_valid_admin(admin, depth_check-1)
+    is_valid_address(get_not_null(poi, 'address'), depth_check - 1)
+
+
+def is_valid_admin(admin, depth_check=1):
+    if depth_check < 0:
+        return
+    get_not_null(admin, 'insee')
+    name = get_not_null(admin, 'name')
+    zip_code = get_not_null(admin, 'zip_code')
+    lbl = get_not_null(admin, 'label')
+    is_valid_label(lbl)
+    assert name in lbl and zip_code in lbl  # so name of the admin and it's zip code must be in the label
+
+    get_not_null(admin, 'id')
+    get_valid_int(get_not_null(admin, 'level'))
+    is_valid_coord(get_not_null(admin, 'coord'))
+
+
 def is_valid_codes(codes):
     for code in codes:
         get_not_null(code, "type")
@@ -657,22 +687,89 @@ def is_valid_place(place, depth_check=1):
         is_valid_label(n)
         assert stop_point['label'] == n
     elif type == "poi":
-        poi = get_not_null(place, "poi")
-        # TODO
-        #is_valid_poi(poi, depth_check)
+        is_valid_poi(get_not_null(place, "poi"), depth_check)
     else:
         assert(False, "invalid type")
 
 
+def is_valid_pt_objects_response(response, depth_check=1):
+    for pt_obj in get_not_null(response, 'pt_objects'):
+        is_valid_pt_object(pt_obj, depth_check)
+
+
+def is_valid_pt_object(pt_object, depth_check=1):
+    n = get_not_null(pt_object, "name")
+    get_not_null(pt_object, "id")
+    get_not_null(pt_object, "quality")
+    pt_obj_type = get_not_null(pt_object, "embedded_type")
+
+    assert pt_obj_type in ('line',
+                           'route',
+                           'network',
+                           'commercial_mode',
+                           'admin',
+                           'vehicle_journey',
+                           'calendar',
+                           'company',
+                           "stop_area",
+                           "stop_point",
+                           "poi",
+                           "address")
+
+    # if it's a line, it should pass the 'is_valid_line' test,
+    # if it's a stop_area, it should pass the 'is_valid_stop_area' test ...
+    check_method_to_call = getattr(sys.modules[__name__], 'is_valid_' + pt_obj_type)
+    check_method_to_call(get_not_null(pt_object, pt_obj_type), depth_check)
+
+    # check the pt_object label
+    if pt_obj_type in ('stop_area', 'stop_point'):
+        #for stops name should be the label
+        assert get_not_null(pt_object, pt_obj_type)['label'] == n
+    if pt_obj_type == 'line':
+        # the line network, commercial_mode, code and name should be in the label
+        check_embedded_line_label(n, pt_obj_type['line'], depth_check)
+    if pt_obj_type == 'route':
+        # the line network, commercial_mode, code and name should be in the label
+        check_embedded_route_label(n, pt_obj_type['route'], depth_check)
+
+
+def check_embedded_line_label(label, line, depth_check):
+    is_valid_label(label)
+    #the label must contains
+    # the network name, the commercial mode name, the line id, and the line name
+    if depth_check > 0:
+        assert get_not_null(line, 'commercial_mode')['name'] in label
+        assert get_not_null(line, 'network')['name'] in label
+    assert get_not_null(line, 'code') in label
+    assert get_not_null(line, 'name') in label
+
+
+def check_embedded_route_label(label, route, depth_check):
+    is_valid_label(label)
+    #the label must contains
+    # the line's network name, the commercial mode name, the line id, and the route name
+    assert get_not_null(route, 'name') in label
+    if depth_check > 0:
+        line = get_not_null(route, 'line')
+        assert get_not_null(line, 'code') in label
+
+        if depth_check > 1:
+            assert get_not_null(line, 'commercial_mode')['name'] in label
+            assert get_not_null(line, 'network')['name'] in label
+
 
 def is_valid_address(address, depth_check=1):
+    if depth_check < 0:
+        return
     id = get_not_null(address, "id")
     lon, lat = id.split(';')
     is_valid_lon(lon)
     is_valid_lat(lat)
     get_not_null(address, "house_number")
     get_not_null(address, "name")
-    get_not_null(address, "administrative_regions") # TODO test
+    if depth_check >= 1:
+        for admin in get_not_null(address, "administrative_regions"):
+            is_valid_admin(admin, depth_check)
     coord = get_not_null(address, "coord")
     is_valid_coord(coord)
 

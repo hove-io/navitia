@@ -100,7 +100,7 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
             //LineName = NetworkName + ModeName + LineCode + (LineName)
             std::string key = "";
             const auto* line = data.pt_data->lines[result_item.idx];
-            if (line->network) {key += " " + line->network->name;}
+            if (line->network) {key += line->network->name;}
             if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
             key += " " + line->code;
             fill_pb_pt_object(line,place, place->mutable_line(), data, pbnavitia::LINE, depth, key);
@@ -111,7 +111,7 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
             std::string key = "";
             const auto* route = data.pt_data->routes[result_item.idx];
             if (route->line) {
-                if (route->line->network) {key += " " + route->line->network->name;}
+                if (route->line->network) {key += route->line->network->name;}
                 if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
                 key += " " + route->line->code;
             }
