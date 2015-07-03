@@ -369,24 +369,28 @@ struct routing_api_data {
         poi_1->coord = B;
         poi_1->poitype_idx = 0;
         poi_1->idx = 0;
+        poi_1->admin_list.push_back(admin);
         navitia::georef::POI* poi_2 = new navitia::georef::POI();
         poi_2->uri = "station_2";
         poi_2->name = "second station";
         poi_2->coord = G;
         poi_2->poitype_idx = 0;
         poi_2->idx = 1;
+        poi_2->admin_list.push_back(admin);
         navitia::georef::POI* poi_3 = new navitia::georef::POI();
         poi_3->uri = "parking_1";
         poi_3->name = "first parking";
         poi_3->coord = D;
         poi_3->poitype_idx = 1;
         poi_3->idx = 2;
+        poi_3->admin_list.push_back(admin);
         navitia::georef::POI* poi_4 = new navitia::georef::POI();
         poi_4->uri = "parking_2";
         poi_4->name = "second parking";
         poi_4->coord = E;
         poi_4->poitype_idx = 1;
         poi_4->idx = 3;
+        poi_4->admin_list.push_back(admin);
 
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
