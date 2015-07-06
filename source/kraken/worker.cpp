@@ -566,10 +566,12 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
             destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data, false);
         }
     }
-    /// Accessibilité, il faut initialiser ce paramètre
-    //HOT FIX degueulasse
+
+    /// Accessibility params
     type::AccessibiliteParams accessibilite_params;
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
+    accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
+
     switch(api) {
         case pbnavitia::ISOCHRONE:
             return navitia::routing::make_isochrone(*planner, origins[0], request.datetimes(0),

@@ -1947,8 +1947,6 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(1).pt_display_informations().uris().line(), "B");
-
-
 }
 
 // We want to go from S to R, but we can only take the bus from A to
