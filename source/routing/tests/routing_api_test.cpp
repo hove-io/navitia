@@ -1950,3 +1950,31 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
 
 
 }
+
+// We want to go from S to R, but we can only take the bus from A to
+// B.  As doing S->A->B->R is worst that just S->R (more walking, more
+// pt, worst arrival), we want that the direct path filter the pt
+// solution.
+BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<test_speed_provider>) {
+    datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
+
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    origin.streetnetwork_params.offset = 0;
+    origin.streetnetwork_params.max_duration = navitia::seconds(15*60);
+    origin.streetnetwork_params.speed_factor = 1;
+
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    destination.streetnetwork_params.offset = 0;
+    destination.streetnetwork_params.speed_factor = 1;
+    destination.streetnetwork_params.max_duration = navitia::seconds(15*60);
+
+    forbidden = {"A", "B", "D"};
+
+    pbnavitia::Response resp = make_response();
+    dump_response(resp, "direct_path_filtering", true);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+}

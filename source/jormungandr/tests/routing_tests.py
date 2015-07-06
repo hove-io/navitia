@@ -386,7 +386,7 @@ class TestOneDeadRegion(AbstractTestFixture):
         response = self.query("v1/journeys?from=stop_point:stopA&"
             "to=stop_point:stopB&datetime=20120614T080000&debug=true",
                               display=False)
-        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys']), 1)
         eq_(len(response['journeys'][0]['sections']), 1)
         eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
         eq_(len(response['debug']['regions_called']), 1)

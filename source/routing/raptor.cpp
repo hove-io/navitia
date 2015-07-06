@@ -150,7 +150,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 void RAPTOR::init(const vec_stop_point_duration& dep,
                   const DateTime bound,
                   const bool clockwise,
-                  const type::Properties &properties) {
+                  const type::Properties& properties) {
     for (const auto& sp_dt: dep) {
         if (! get_sp(sp_dt.first)->accessible(properties)) { continue; }
 
@@ -264,9 +264,22 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     const uint32_t max_transfers,
                     const type::AccessibiliteParams& accessibilite_params,
                     const std::vector<std::string>& forbidden_uri,
-                    bool clockwise) {
+                    bool clockwise,
+                    const boost::optional<navitia::time_duration>& direct_path_dur) {
 
     auto solutions = Solutions(Dominates(clockwise));
+    if (direct_path_dur) {
+        Journey j;
+        j.sn_dur = *direct_path_dur;
+        if (clockwise) {
+            j.departure_dt = departure_datetime;
+            j.arrival_dt = j.departure_dt + j.sn_dur;
+        } else {
+            j.arrival_dt = departure_datetime;
+            j.departure_dt = j.arrival_dt - j.sn_dur;
+        }
+        solutions.add(j);
+    }
 
     const auto& calc_dep = clockwise ? departures_ : destinations;
     const auto& calc_dest = clockwise ? destinations : departures_;
@@ -308,7 +321,10 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     }
 
     std::vector<Path> result;
-    for (const auto& s: solutions) { result.push_back(make_path(s, data)); }
+    for (const auto& s: solutions) {
+        if (s.sections.empty()) { continue; }
+        result.push_back(make_path(s, data));
+    }
     return result;
 }
 
@@ -387,8 +403,8 @@ RAPTOR::isochrone(const vec_stop_point_duration& departures,
 
 void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
-    const type::AccessibiliteParams & accessibilite_params,
-    const std::vector<std::string> & forbidden,
+    const type::AccessibiliteParams& accessibilite_params,
+    const std::vector<std::string>& forbidden,
     bool disruption_active)
 {
 
@@ -620,10 +636,16 @@ void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
 
 
 std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
-        const type::StopArea* destination, int departure_hour,
-        int departure_day, DateTime borne, bool disruption_active, bool clockwise,
-        const type::AccessibiliteParams & accessibilite_params,
-        uint32_t max_transfers, const std::vector<std::string>& forbidden_uri) {
+                                  const type::StopArea* destination,
+                                  int departure_hour,
+                                  int departure_day,
+                                  DateTime borne,
+                                  bool disruption_active,
+                                  bool clockwise,
+                                  const type::AccessibiliteParams& accessibilite_params,
+                                  uint32_t max_transfers,
+                                  const std::vector<std::string>& forbidden_uri,
+                                  const boost::optional<navitia::time_duration>& direct_path_dur) {
     vec_stop_point_duration departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
@@ -634,8 +656,16 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
         destinations.push_back({SpIdx(*sp), {}});
     }
 
-    return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour),
-                       disruption_active, borne, max_transfers, accessibilite_params, forbidden_uri, clockwise);
+    return compute_all(departures,
+                       destinations,
+                       DateTimeUtils::set(departure_day, departure_hour),
+                       disruption_active,
+                       borne,
+                       max_transfers,
+                       accessibilite_params,
+                       forbidden_uri,
+                       clockwise,
+                       direct_path_dur);
 }
 
 

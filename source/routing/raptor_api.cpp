@@ -198,29 +198,34 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     }
 }
 
+static georef::Path get_direct_path(georef::StreetNetwork& worker,
+                            const type::EntryPoint& origin,
+                            const type::EntryPoint& destination) {
+    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
+        || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
+        // we don't want direct path for admin to admin (it has no meaning)
+        // and we do not compute direct path for car because:
+        //  * our car pathes are not very realistic
+        //  * we do not want to promote car solution
+        return georef::Path();
+    }
+
+    return worker.get_direct_path(origin, destination);
+}
+
 static void add_direct_path(EnhancedResponse& enhanced_response,
                        const nt::Data& d,
-                       georef::StreetNetwork& worker,
+                       const georef::Path& path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
                        const bool clockwise) {
     pbnavitia::Response& pb_response = enhanced_response.response;
-
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
-            || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
-        // we don't want direct path for admin to admin (it has no meaning)
-        // and we do not compute direct path for car because:
-        //  * our car pathes are not very realistic
-        //  * we do not want to promote car solution
-        return;
-    }
 
-    auto temp = worker.get_direct_path(origin, destination);
-    if(!temp.path_items.empty()) {
+    if (! path.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        LOG4CPLUS_DEBUG(logger, "direct path found!");
+        LOG4CPLUS_DEBUG(logger, "direct path of " << path.duration << "s found!");
 
         //for each date time we add a direct street journey
         for(bt::ptime datetime : datetimes) {
@@ -231,11 +236,11 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
             if (clockwise) {
                 departure = datetime;
             } else {
-                const auto duration = bt::seconds(temp.duration.total_seconds()
+                const auto duration = bt::seconds(path.duration.total_seconds()
                                                   / origin.streetnetwork_params.speed_factor);
                 departure = datetime - duration;
             }
-            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
+            fill_street_sections(enhanced_response, origin, path, d, pb_journey, departure);
 
             const auto ts_departure = pb_journey->sections(0).begin_date_time();
             const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
@@ -259,6 +264,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                        const std::vector<navitia::routing::Path>& paths,
                        const nt::Data& d,
                        georef::StreetNetwork& worker,
+                       const georef::Path& direct_path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
@@ -590,13 +596,14 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         co2_emission_aggregator(pb_journey);
     }
 
-    add_direct_path(enhanced_response, d, worker, origin, destination, datetimes, clockwise);
+    add_direct_path(enhanced_response, d, direct_path, origin, destination, datetimes, clockwise);
 }
 
 static pbnavitia::Response
 make_pathes(const std::vector<navitia::routing::Path>& paths,
             const nt::Data& d,
             georef::StreetNetwork& worker,
+            const georef::Path& direct_path,
             const type::EntryPoint& origin,
             const type::EntryPoint& destination,
             const std::vector<bt::ptime>& datetimes,
@@ -607,7 +614,8 @@ make_pathes(const std::vector<navitia::routing::Path>& paths,
 
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 
-    add_pathes(enhanced_response, paths, d, worker, origin, destination, datetimes, clockwise, show_codes);
+    add_pathes(enhanced_response, paths, d, worker, direct_path,
+               origin, destination, datetimes, clockwise, show_codes);
 
     if (pb_response.journeys().size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
@@ -857,8 +865,10 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    const auto direct_path = get_direct_path(worker, origin, destination);
+
     if(departures.size() == 0 && destinations.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination,
+        response = make_pathes(pathes, raptor.data, worker, direct_path, origin, destination,
                                datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point", response.mutable_error());
@@ -868,7 +878,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     }
 
     if(departures.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+        response = make_pathes(pathes, raptor.data, worker, direct_path,
+                               origin, destination, datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_origin, "no origin point", response.mutable_error());
             response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
@@ -877,7 +888,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     }
 
     if(destinations.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+        response = make_pathes(pathes, raptor.data, worker, direct_path,
+                               origin, destination, datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_destination, "no destination point", response.mutable_error());
             response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
@@ -888,6 +900,10 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
 
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+    typedef boost::optional<navitia::time_duration> OptTimeDur;
+    const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
+        OptTimeDur() :
+        OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
 
     for(bt::ptime datetime : datetimes) {
         int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
@@ -897,8 +913,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         if(max_duration!=std::numeric_limits<uint32_t>::max()) {
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
-
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(
+            departures, destinations, init_dt, disruption_active, bound, max_transfers,
+            accessibilite_params, forbidden, clockwise, direct_path_dur);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
@@ -919,7 +936,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     if(clockwise)
         std::reverse(pathes.begin(), pathes.end());
 
-    return make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+    return make_pathes(pathes, raptor.data, worker, direct_path,
+                       origin, destination, datetimes, clockwise, show_codes);
 }
 
 pbnavitia::Response

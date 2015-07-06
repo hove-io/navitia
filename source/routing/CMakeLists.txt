@@ -5,10 +5,10 @@ SET(BOOST_LIBS ${Boost_THREAD_LIBRARY}
 SET(ROUTING_SRC routing.cpp raptor_solution_reader.cpp raptor.cpp raptor_api.cpp next_stop_time.cpp dataraptor.cpp)
 
 add_library(routing ${ROUTING_SRC})
+target_link_libraries(routing types fare georef utils autocomplete ${BOOST_LIBS})
 
 add_executable(benchmark benchmark.cpp)
-target_link_libraries(benchmark routing  boost_program_options data fare routing
-    georef utils autocomplete ${BOOST_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(benchmark routing  boost_program_options data routing)
 
 add_library(routing_cli_utils routing_cli_utils.cpp)
 add_executable(standalone single_run.cpp)
