@@ -150,7 +150,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 void RAPTOR::init(const vec_stop_point_duration& dep,
                   const DateTime bound,
                   const bool clockwise,
-                  const type::Properties &properties) {
+                  const type::Properties& properties) {
     for (const auto& sp_dt: dep) {
         if (! get_sp(sp_dt.first)->accessible(properties)) { continue; }
 
@@ -265,7 +265,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
                     const type::AccessibiliteParams& accessibilite_params,
                     const std::vector<std::string>& forbidden_uri,
                     bool clockwise,
-                    const boost::optional<navitia::time_duration> &direct_path_dur) {
+                    const boost::optional<navitia::time_duration>& direct_path_dur) {
 
     auto solutions = Solutions(Dominates(clockwise));
     if (direct_path_dur) {
@@ -403,8 +403,8 @@ RAPTOR::isochrone(const vec_stop_point_duration& departures,
 
 void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
-    const type::AccessibiliteParams & accessibilite_params,
-    const std::vector<std::string> & forbidden,
+    const type::AccessibiliteParams& accessibilite_params,
+    const std::vector<std::string>& forbidden,
     bool disruption_active)
 {
 
@@ -635,17 +635,17 @@ void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
 }
 
 
-std::vector<Path> RAPTOR::compute(const type::StopArea *departure,
-                                  const type::StopArea *destination,
+std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
+                                  const type::StopArea* destination,
                                   int departure_hour,
                                   int departure_day,
                                   DateTime borne,
                                   bool disruption_active,
                                   bool clockwise,
-                                  const type::AccessibiliteParams &accessibilite_params,
+                                  const type::AccessibiliteParams& accessibilite_params,
                                   uint32_t max_transfers,
-                                  const std::vector<std::string> &forbidden_uri,
-                                  const boost::optional<navitia::time_duration> &direct_path_dur) {
+                                  const std::vector<std::string>& forbidden_uri,
+                                  const boost::optional<navitia::time_duration>& direct_path_dur) {
     vec_stop_point_duration departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
