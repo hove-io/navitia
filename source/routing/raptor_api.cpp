@@ -638,11 +638,21 @@ static void add_isochrone_response(RAPTOR& raptor,
                 continue;
             }
             auto pb_journey = response.add_journeys();
-            const auto str_departure = to_posix_timestamp(best_lbl, raptor.data);
-            const auto str_arrival = to_posix_timestamp(best_lbl, raptor.data);
+
+            uint64_t departure;
+            uint64_t arrival;
+            // Note: since there is no 2nd pass for the isochrone, the departure dt
+            // is the requested dt (or the arrival dt for non clockwise)
+            if (clockwise) {
+                departure = to_posix_timestamp(init_dt, raptor.data);
+                arrival = to_posix_timestamp(best_lbl, raptor.data);
+            } else {
+                departure = to_posix_timestamp(best_lbl, raptor.data);
+                arrival = to_posix_timestamp(init_dt, raptor.data);
+            }
             const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-            pb_journey->set_arrival_date_time(str_arrival);
-            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(arrival);
+            pb_journey->set_departure_date_time(departure);
             pb_journey->set_requested_date_time(str_requested);
             pb_journey->set_duration(duration);
             pb_journey->set_nb_transfers(round - 1);

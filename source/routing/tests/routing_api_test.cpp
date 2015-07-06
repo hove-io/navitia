@@ -50,6 +50,7 @@ namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ng = navitia::georef;
 
+
 static void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
@@ -1577,29 +1578,106 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
     BOOST_CHECK(nr::use_crow_fly(ep, &sp2, data));
 }
 
+struct isochrone_fixture {
+    isochrone_fixture(): b("20150614") {
+        b.vj("l1")("A", "8:25"_t)("B", "8:35"_t);
+        b.vj("l3")("A", "8:26"_t)("B", "8:45"_t);
+        b.vj("l4")("A", "8:27"_t)("C", "9:35"_t);
+        b.vj("l5")("A", "8:28"_t)("C", "9:50"_t);
+        b.vj("l6")("C", "8:29"_t)("B", "10:50"_t);
 
+        b.data->pt_data->index();
+        b.data->build_uri();
+        b.data->build_raptor();
+    }
 
-BOOST_AUTO_TEST_CASE(isochrone) {
-    ed::builder b("20120614");
-    b.vj("l1")("A1", 8*3600 + 25 * 60)("B", 8*3600 + 35 * 60);
-    b.vj("l2")("A1", 8*3600 + 25 * 60)("C", 8*3600 + 35 * 60);
+    ed::builder b;
+};
 
-    b.data->pt_data->index();
-    b.data->build_uri();
-    b.data->build_raptor();
+/**
+ * classic isochrone from A, we should find 2 journeys
+ */
+BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     nr::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
 
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
 
-    navitia::type::EntryPoint ep;
-    ep.type = navitia::type::Type_e::StopPoint;
-    ep.uri = "A1";
-
-    auto result = nr::make_isochrone(raptor, ep,
-            navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {},
-            sn_worker, false);
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T082000"_pts,
+                                     true,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     3 * 60 * 60);
 
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+
+    std::cout << "1/ dep " << navitia::from_posix_timestamp(result.journeys(0).departure_date_time()) << std::endl;
+    std::cout << "1/ arr " << navitia::from_posix_timestamp(result.journeys(0).arrival_date_time()) << std::endl;
+    std::cout << "2/ dep " << navitia::from_posix_timestamp(result.journeys(1).departure_date_time()) << std::endl;
+    std::cout << "2/ arr " << navitia::from_posix_timestamp(result.journeys(1).arrival_date_time()) << std::endl;
+
+    // Note: since there is no 2nd pass for the isochrone, the departure dt is the requested dt
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T093500"_pts);
+}
+
+/**
+ * reverse isochrone test, we want to arrive in B before 11:00,
+ * we should find 2 journeys
+ */
+BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
+    nr::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "B"};
+
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T110000"_pts,
+                                     false,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     3 * 60 * 60);
+
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082900"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T110000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082600"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T110000"_pts);
+}
+
+/**
+ * only one hour from A, we cannot go to C
+ */
+BOOST_FIXTURE_TEST_CASE(isochrone_duration_limit, isochrone_fixture) {
+    nr::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
+
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T082000"_pts,
+                                     true,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     1 * 60 * 60);
+
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 1);
+
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
 }
 
 

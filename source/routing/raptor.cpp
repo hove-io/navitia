@@ -379,7 +379,7 @@ RAPTOR::isochrone(const vec_stop_point_duration& departures,
                          forbidden,
                          disruption_active);
     clear(clockwise, bound);
-    init(departures, departure_datetime, true, accessibilite_params.properties);
+    init(departures, departure_datetime, clockwise, accessibilite_params.properties);
 
     boucleRAPTOR(accessibilite_params, clockwise, max_transfers);
 }

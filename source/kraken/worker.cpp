@@ -580,8 +580,22 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     case pbnavitia::ISOCHRONE: {
         type::EntryPoint ep;
         if (! origins.empty()) {
+            if (! request.clockwise()) {
+                // isochrone works only on clockwise
+                pbnavitia::Response response;
+                fill_pb_error(pbnavitia::Error::bad_format, "isochrone works only for clockwise request", response.mutable_error());
+                response.set_response_type(pbnavitia::NO_SOLUTION);
+                return response;
+            }
             ep = origins[0];
         } else {
+            if (request.clockwise()) {
+                // isochrone works only on clockwise
+                pbnavitia::Response response;
+                fill_pb_error(pbnavitia::Error::bad_format, "reverse isochrone works only for anti-clockwise request", response.mutable_error());
+                response.set_response_type(pbnavitia::NO_SOLUTION);
+                return response;
+            }
             ep = destinations[0];
         }
         return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
