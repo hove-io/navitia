@@ -2023,7 +2023,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
 
     res = raptor.compute_all(departures,
                              arrivals,
-                             DateTimeUtils::set(2, "08:03"_t),
+                             DateTimeUtils::set(2, "08:00"_t),
                              false,
                              DateTimeUtils::inf,
                              10,
