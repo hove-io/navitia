@@ -1077,6 +1077,34 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
 }
 
+// for an admin, when no main stop area is set
+// we should output a fall back section, as it is used for computation
+BOOST_FIXTURE_TEST_CASE(admin_explicit_fall_back, streetnetworkmode_fixture<test_speed_provider>) {
+
+    origin.uri = "admin:74435";
+    origin.type = b.data->get_type_of_id(origin.uri);
+    origin.streetnetwork_params.max_duration = navitia::seconds(100);
+    destination.streetnetwork_params.max_duration = navitia::seconds(100);
+
+    auto resp = make_response();
+    dump_response(resp, "admin_explicit_fall_back", true);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    auto section = journey.sections(0);
+
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+    BOOST_CHECK_GT(section.duration(), 0);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+
+    auto pathitem = section.street_network().path_items(0);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
+    BOOST_CHECK_EQUAL(pathitem.direction(), 0); //first direction is always 0°
+}
+
 // direct journey using only car
 BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provider>) {
     auto total_distance = S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
@@ -1669,7 +1697,7 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
     BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(!nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
     ep.uri = "sa:foo";

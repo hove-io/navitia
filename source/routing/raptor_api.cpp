@@ -795,20 +795,19 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         }
         const auto admin = data.geo_ref->admins[it_admin->second];
 
+        //we add the center of the admin, and look for the stop points around
+        auto nearest = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.max_duration,
+                    data.pt_data->stop_point_proximity_list,
+                    use_second);
+        for (const auto& elt: nearest) {
+            result.push_back({SpIdx(elt.first), elt.second});
+        }
         if (! admin->main_stop_areas.empty()) {
             for (auto stop_area: admin->main_stop_areas) {
                 for(auto stop_point : stop_area->stop_point_list) {
                     result.push_back({SpIdx(*stop_point), {}});
                 }
-            }
-        } else {
-            //we only add the center of the admin, and look for the stop points around
-            auto nearest = worker.find_nearest_stop_points(
-                        ep.streetnetwork_params.max_duration,
-                        data.pt_data->stop_point_proximity_list,
-                        use_second);
-            for (const auto& elt: nearest) {
-                result.push_back({SpIdx(elt.first), elt.second});
             }
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");

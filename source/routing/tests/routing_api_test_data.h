@@ -160,6 +160,8 @@ struct routing_api_data {
         admin->insee = "32107";
         admin->level = 8;
         admin->postal_codes.push_back("32100");
+        admin->coord = nt::GeographicalCoord(D.lon(), D.lat());
+        admin->idx = 0;
 
         navitia::georef::Way* way;
         way = new navitia::georef::Way();
@@ -437,6 +439,8 @@ struct routing_api_data {
             }
         }
 
+        b.data->complete();
+        b.manage_admin();
         b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
