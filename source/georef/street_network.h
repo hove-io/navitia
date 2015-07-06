@@ -222,10 +222,6 @@ struct StreetNetwork {
     PathFinder departure_path_finder;
     PathFinder arrival_path_finder;
     PathFinder direct_path_finder;
-
-private:
-    /// Combine 2 pathes
-    Path combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
 };
 
 /// Build a path from a reverse path list

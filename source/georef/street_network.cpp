@@ -519,14 +519,7 @@ Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool
         auto edge_pair = boost::edge(u, v, geo_ref.graph);
         //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
         if (! edge_pair.second) {
-            //for one way way, the reverse path obviously cannot work
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge between "
-                           << u << " -> " << v << ", we try the reverse one");
-            //if it still not work we cannot do anything
-            edge_pair = boost::edge(v, u, geo_ref.graph);
-            if (! edge_pair.second) {
-                throw navitia::exception("impossible to find reverse edge");
-            }
+            throw navitia::exception("impossible to find an edge");
         }
         edge_t e = edge_pair.first;
 
@@ -559,32 +552,6 @@ Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool
     return p;
 }
 
-
-Path StreetNetwork::combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
-    //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
-    //to get the path
-    std::vector<vertex_t> reverse_path;
-
-    vertex_t current = best_destination;
-    while (current != successors[current]) {
-        reverse_path.push_back(current);
-        current = successors[current];
-    }
-    reverse_path.push_back(current);
-    std::reverse(reverse_path.begin(), reverse_path.end());
-
-    if (best_destination == preds[best_destination])
-        return create_path(geo_ref, reverse_path, false);
-
-    current = preds[best_destination]; //we skip the middle point since it has already been added
-    while (current != preds[current]) {
-        reverse_path.push_back(current);
-        current = preds[current];
-    }
-    reverse_path.push_back(current);
-
-    return create_path(geo_ref, reverse_path, false);
-}
 
 /**
   * Compute the angle between the last segment of the path and the next point
