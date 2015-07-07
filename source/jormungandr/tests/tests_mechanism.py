@@ -200,7 +200,6 @@ class AbstractTestFixture:
             return self.query(real_url, display)
         return self.query_no_assert(real_url, display)
 
-
     def query_no_assert(self, url, display=False):
         """
         query url without checking the status code

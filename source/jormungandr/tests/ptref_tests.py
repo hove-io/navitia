@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -47,7 +48,7 @@ class TestPtRef(AbstractTestFixture):
 
         #we check afterward that we have the right data
         #we know there is only one vj in the dataset
-        assert len(vjs) == 1
+        assert len(vjs) == 2
         vj = vjs[0]
         assert vj['id'] == 'vj1'
 
@@ -104,7 +105,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 1
+        assert len(lines) == 2
 
         l = lines[0]
 
@@ -181,7 +182,7 @@ class TestPtRef(AbstractTestFixture):
 
         routes = get_not_null(response, 'routes')
 
-        assert len(routes) == 1
+        assert len(routes) == 2
 
         r = routes[0]
         is_valid_route(r, depth_check=1)
@@ -201,7 +202,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_areas')
 
-        assert len(stops) == 2
+        assert len(stops) == 3
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop1'))
         is_valid_stop_area(s, depth_check=1)
@@ -219,7 +220,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_points')
 
-        assert len(stops) == 2
+        assert len(stops) == 3
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop2'))
         is_valid_stop_area(s, depth_check=1)
@@ -256,7 +257,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("v1/lines")
 
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
+        assert len(lines) == 2
 
         assert len(lines[0]['physical_modes']) == 1
         assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
@@ -285,6 +286,23 @@ class TestPtRef(AbstractTestFixture):
         assert len(pt_objs) == 1
 
         assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
+
+    def test_query_with_strange_char(self):
+        response = self.query_region('stop_points/stop_point:stop_with name é')
+
+        stops = get_not_null(response, 'stop_points')
+
+        assert len(stops) == 1
+
+        is_valid_stop_point(stops[0], depth_check=1)
+        assert stops[0]["id"] == u'stop_point:stop_with name é'
+
+    def test_journey_with_strange_char(self):
+        #we use an encoded url to be able to check the links
+        query = 'journeys?from=stop_with name é&to=stop_area:stop1&datetime=20140105T070000'
+        response = self.query_region(query, display=True)
+
+        is_valid_journey_response(response, self.tester, query)
 
 
 @dataset(["main_routing_test"])

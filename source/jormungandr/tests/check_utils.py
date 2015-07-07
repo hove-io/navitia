@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from collections import deque, defaultdict
+import urllib
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -51,7 +52,6 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
     else
         we don't want an error on the url
     """
-    #tester = app.test_client(tester)
     response = tester.get(url, **kwargs)
 
     assert response, "response for url {} is null".format(url)
@@ -60,7 +60,7 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
             .format(json.dumps(json.loads(response.data), indent=2))
     else:
         eq_(response.status_code, 200, "invalid return code, response : {}"
-            .format(json.dumps(json.loads(response.data), indent=2)))
+            .format(json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)))
     return response
 
 
@@ -376,14 +376,17 @@ def query_from_str(str):
     last_elt = str.split("?")[-1]
     for s in last_elt.split("&"):
         k, v = s.split("=")
+
+        # if the url is already encoded, we do not encode it
+        value = v if '%' in v else urllib.quote_plus(v)
         if k in query:
             old_val = query[k]
             if isinstance(old_val, list):
-                old_val.append(v)
+                old_val.append(value)
             else:
-                query[k] = [old_val, v]
+                query[k] = [old_val, value]
         else:
-            query[k] = v
+            query[k] = value
 
     return query
 
@@ -397,6 +400,8 @@ def is_valid_feed_publisher(feed_publisher):
 
 def is_valid_journey_response(response, tester, query_str):
     query_dict = query_from_str(query_str)
+
+
     journeys = get_not_null(response, "journeys")
 
     all_sections = unique_dict('id')
@@ -446,7 +451,7 @@ def is_valid_journey_response(response, tester, query_str):
 
                 continue
 
-            assert query_dict[k] == v, "we must have the same query"
+            eq_(query_dict[k], v)
 
     feed_publishers = get_not_null(response, "feed_publishers")
     for feed_publisher in feed_publishers:

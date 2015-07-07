@@ -77,6 +77,11 @@ struct data_set {
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);
 
+        // we add a stop area with a strange name (with space and special char)
+        b.sa("stop_with name é", 20, 20);
+        b.vj("line:B", "", "", true, "vj_b", "", "", "physical_mode:Car")
+                ("stop_point:stop_with name é", "8:00"_t)("stop_area:stop1", "9:00"_t);
+
         //add a mock shape
         b.lines["line:A"]->shape = {
                                     {{1,2}, {2,2}, {4,5}},

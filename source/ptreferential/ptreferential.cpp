@@ -75,9 +75,9 @@ namespace qi = boost::spirit::qi;
         word = qi::lexeme[+(qi::alnum|qi::char_("_:\x7c-"))];
         text = qi::lexeme[+(qi::alnum|qi::char_("_:=.<>\x7c ")|qi::char_("-"))];
 
-        escaped_string =  '"'
-                >>  *((qi::char_ - qi::char_('\\') - qi::char_('"')) | ('\\' >> qi::char_))
-                 >> '"';
+        escaped_string = '"'
+                        >>  *((qi::char_ - qi::char_('\\') - qi::char_('"')) | ('\\' >> qi::char_))
+                        >> '"';
 
         bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-")|qi::char_(","))] >> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
