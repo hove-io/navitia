@@ -40,7 +40,7 @@ from fields import stop_point, stop_area, route, line, line_group, \
     journey_pattern, connection, error, PbField
 from VehicleJourney import vehicle_journey
 from collections import OrderedDict
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, date_time_format
 from errors import ManageError
@@ -139,7 +139,7 @@ class Uri(ResourceUri):
             return {"error": "No region"}, 404
         if collection and id:
             args["filter"] = collections_to_resource_type[collection] + ".uri="
-            args["filter"] += '"' + id + '"'
+            args["filter"] += protect(id)
         elif uri:
             if uri[-1] == "/":
                 uri = uri[:-1]

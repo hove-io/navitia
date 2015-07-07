@@ -28,7 +28,6 @@
 # www.navitia.io
 
 from collections import deque, defaultdict
-import urllib
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -371,22 +370,23 @@ def query_from_str(str):
     {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
     >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
     {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
+
+    Note: the query can be encoded, so the split it either on the encoded or the decoded value
     """
     query = {}
-    last_elt = str.split("?")[-1]
-    for s in last_elt.split("&"):
-        k, v = s.split("=")
+    last_elt = str.split('?' if '?' in str else '%3F')[-1]
 
-        # if the url is already encoded, we do not encode it
-        value = v if '%' in v else urllib.quote_plus(v)
+    for s in last_elt.split('&' if '&' in last_elt else '%26'):
+        k, v = s.split("=" if '=' in s else '%3D')
+
         if k in query:
             old_val = query[k]
             if isinstance(old_val, list):
-                old_val.append(value)
+                old_val.append(v)
             else:
-                query[k] = [old_val, value]
+                query[k] = [old_val, v]
         else:
-            query[k] = value
+            query[k] = v
 
     return query
 
@@ -399,8 +399,10 @@ def is_valid_feed_publisher(feed_publisher):
 
 
 def is_valid_journey_response(response, tester, query_str):
-    query_dict = query_from_str(query_str)
-
+    if isinstance(query_str, basestring):
+        query_dict = query_from_str(query_str)
+    else:
+        query_dict = query_str
 
     journeys = get_not_null(response, "journeys")
 

@@ -27,9 +27,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import urllib
 from tests.check_utils import journey_basic_query
 from tests.tests_mechanism import dataset, AbstractTestFixture
 from check_utils import *
+
 
 @dataset(["main_ptref_test"])
 class TestPtRef(AbstractTestFixture):
@@ -288,21 +290,32 @@ class TestPtRef(AbstractTestFixture):
         assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
 
     def test_query_with_strange_char(self):
-        response = self.query_region('stop_points/stop_point:stop_with name é')
+        q = 'stop_points/stop_point:stop_with name bob \" , é'
+        encoded_q = urllib.quote(q)
+        response = self.query_region(encoded_q)
 
         stops = get_not_null(response, 'stop_points')
 
         assert len(stops) == 1
 
         is_valid_stop_point(stops[0], depth_check=1)
-        assert stops[0]["id"] == u'stop_point:stop_with name é'
+        assert stops[0]["id"] == u'stop_point:stop_with name bob \" , é'
+
+    def test_filter_query_with_strange_char(self):
+        """test that the ptref mechanism works an object with a weird id"""
+        response = self.query_region('stop_points/stop_point:stop_with name bob \" , é/lines')
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 1
+        for l in lines:
+            is_valid_line(l)
 
     def test_journey_with_strange_char(self):
         #we use an encoded url to be able to check the links
-        query = 'journeys?from=stop_with name é&to=stop_area:stop1&datetime=20140105T070000'
+        query = 'journeys?from=stop_with name bob \" , é&to=stop_area:stop1&datetime=20140105T070000'
         response = self.query_region(query, display=True)
 
-        is_valid_journey_response(response, self.tester, query)
+        is_valid_journey_response(response, self.tester, urllib.quote_plus(query))
 
 
 @dataset(["main_routing_test"])

@@ -149,11 +149,20 @@ BOOST_AUTO_TEST_CASE(parser_escaped_string_with_particular_char_quote) {
 
 
 BOOST_AUTO_TEST_CASE(parser_escaped_string_with_nested_quote) {
-    std::vector<Filter> filters = parse("stop_areas.uri=\"bob the \\\"coolést\\\"\"");
+    std::vector<Filter> filters = parse(R"(stop_areas.uri="bob the \"coolést\"")");
     BOOST_REQUIRE_EQUAL(filters.size(), 1);
     BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
     BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
     BOOST_CHECK_EQUAL(filters[0].value, "bob the \"coolést\"");
+    BOOST_CHECK_EQUAL(filters[0].op, EQ);
+}
+
+BOOST_AUTO_TEST_CASE(parser_escaped_string_with_slash) {
+    std::vector<Filter> filters = parse(R"(stop_areas.uri="bob the \\ er")");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
+    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
+    BOOST_CHECK_EQUAL(filters[0].value, R"(bob the \ er)");
     BOOST_CHECK_EQUAL(filters[0].op, EQ);
 }
 

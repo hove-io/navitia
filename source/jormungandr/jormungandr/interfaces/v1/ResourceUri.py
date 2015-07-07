@@ -46,7 +46,7 @@ def protect(uri):
     """
     we protect the uri so there can be special character in them
     """
-    return '"' + uri + '"'
+    return '"' + uri.replace('"', '\\"') + '"'
 
 class ResourceUri(StatedResource):
 
