@@ -270,7 +270,8 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
         if(projection.found){
             navitia::time_duration best_dist = max;
             if (distances[projection[source_e]] < max) {
-                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]); }
+                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
+            }
             if (distances[projection[target_e]] < max) {
                 best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
             }
@@ -414,7 +415,7 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
-    auto result = this->build_path(target[nearest_edge.second]);
+    auto result = this->build_path(target[nearest_edge.second], nearest_edge.second);
 
     add_projections_to_path(result, true);
 
@@ -490,7 +491,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
     return find_nearest_vertex(target);
 }
 
-Path PathFinder::build_path(vertex_t best_destination) const {
+Path PathFinder::build_path(vertex_t best_destination, ProjectionData::Direction direction) const {
     std::vector<vertex_t> reverse_path;
     while (best_destination != predecessors[best_destination]){
         reverse_path.push_back(best_destination);
@@ -498,11 +499,15 @@ Path PathFinder::build_path(vertex_t best_destination) const {
     }
     reverse_path.push_back(best_destination);
 
-    return create_path(geo_ref, reverse_path, true);
+    return create_path(geo_ref, reverse_path, true, distances, crow_fly_duration(starting_edge.distances[direction]));
 }
 
 
-Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool add_one_elt) {
+Path create_path(const GeoRef& geo_ref,
+                 std::vector<vertex_t> reverse_path,
+                 bool add_one_elt,
+                 const std::vector<navitia::time_duration>& distances,
+                 const navitia::time_duration& projection_time) {
     Path p;
 
     // On reparcourt tout dans le bon ordre
@@ -546,8 +551,16 @@ Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool
     }
     //in some case we want to add even if we have only one vertex (which means there is no valid edge)
     size_t min_nb_elt_to_add = add_one_elt ? 1 : 2;
-    if (reverse_path.size() >= min_nb_elt_to_add)
+    if (reverse_path.size() >= min_nb_elt_to_add){
+        if(reverse_path.size() == 1 && distances[reverse_path.front()] < bt::pos_infin){
+            //we had calculated a duration for going to this vertex, so we use it
+            //the duration of the projection is already included, so we have to remove it
+            path_item.duration = distances[reverse_path.front()] - projection_time;
+            p.duration += path_item.duration;
+        }
         p.path_items.push_back(path_item);
+    }
+
 
     return p;
 }
