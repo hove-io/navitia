@@ -2058,3 +2058,88 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              25_s); // 25s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 }
+
+// A1 and A2 are in the stop area A. We don't want to take pt to go
+// from a stop area to the same stop area. Related to
+// http://jira.canaltp.fr/browse/NAVITIAII-1708
+BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
+    using navitia::type::hasProperties;
+    using boost::posix_time::time_from_string;
+
+    ed::builder b("20150101");
+
+    b.sa("A")("A1")("A2");
+    b.sa("B")("B1");
+    b.vj("1")("A1", "8:00"_t)("B1", "8:10"_t);
+    b.vj("2")("B1", "8:20"_t)("A2", "8:30"_t);
+    b.connection("B1", "B1", "00:01"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_points_map.at("A1")), 0_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_points_map.at("A2")), 0_s}
+    };
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "07:50"_t),
+                                  false);
+    BOOST_CHECK_EQUAL(res.size(), 0);
+}
+
+// A---1->--B1---1->--C
+// A--<-2---B2
+//          x me
+//
+// We don't want B1-2->A-1->C even if there is less walking as we pass
+// by the starting stop area B. See
+// http://jira.canaltp.fr/browse/NAVITIAII-1685
+BOOST_AUTO_TEST_CASE(no_going_backward) {
+    using navitia::type::hasProperties;
+    using boost::posix_time::time_from_string;
+
+    ed::builder b("20150101");
+
+    b.sa("B")("B1")("B2");
+    b.vj("1")("A", "8:09"_t)("B1", "8:10"_t)("C", "8:20"_t);
+    b.vj("2")("B2", "8:07"_t)("A", "8:08"_t);
+    b.connection("A", "A", "00:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_points_map.at("B1")), 5_s},
+        {SpIdx(*d.stop_points_map.at("B2")), 0_s}
+    };
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_points_map.at("C")), 0_s}
+    };
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(0, "08:30"_t),
+                                  false,
+                                  0,
+                                  10,
+                                  {},
+                                  {},
+                                  false);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:10:00"));
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 08:20:00"));
+}
