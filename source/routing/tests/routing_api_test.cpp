@@ -1087,7 +1087,7 @@ BOOST_FIXTURE_TEST_CASE(admin_explicit_fall_back, streetnetworkmode_fixture<test
     destination.streetnetwork_params.max_duration = navitia::seconds(100);
 
     auto resp = make_response();
-    dump_response(resp, "admin_explicit_fall_back", true);
+    dump_response(resp, "admin_explicit_fall_back");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -1997,7 +1997,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<te
     forbidden = {"A", "B", "D"};
 
     pbnavitia::Response resp = make_response();
-    dump_response(resp, "direct_path_filtering", true);
+    dump_response(resp, "direct_path_filtering");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
