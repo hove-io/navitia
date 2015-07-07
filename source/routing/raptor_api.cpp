@@ -1072,6 +1072,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 return journey1.destination().uri() < journey2.destination().uri();
                 });
 
+     if (response.journeys().size() == 0) {
+         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this isochrone",
+         response.mutable_error());
+         response.set_response_type(pbnavitia::NO_SOLUTION);
+     }
+
 
     return response;
 }
