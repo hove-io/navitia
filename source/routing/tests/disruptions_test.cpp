@@ -36,6 +36,11 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include "kraken/worker.h"
 
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
+
 
 BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     routing_api_data<normal_speed_provider> data;
@@ -54,11 +59,15 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     j->set_wheelchair(false);
     j->set_disruption_active(true);
     j->add_datetimes(navitia::test::to_posix_timestamp("20120614T080000"));
+    j->mutable_streetnetwork_params()->set_origin_mode("walking");
+    j->mutable_streetnetwork_params()->set_destination_mode("walking");
+    j->mutable_streetnetwork_params()->set_walking_speed(1.14);
+    j->mutable_streetnetwork_params()->set_max_walking_duration_to_pt(15*60);
     pbnavitia::LocationContext* from = j->add_origin();
-    from->set_place("0.0000898312;0.0000898312");// coord of S
+    from->set_place("coord:0.0000898312;0.0000898312");// coord of S
     from->set_access_duration(0);
     pbnavitia::LocationContext* to = j->add_destination();
-    to->set_place("0.00188646;0.00071865");// coord of R
+    to->set_place("coord:0.00188646;0.00071865");// coord of R
     to->set_access_duration(0);
 
     // we ask for a journey
@@ -66,7 +75,9 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     BOOST_REQUIRE(resp.journeys_size() != 0);
 
     // a clone and set
-    data_manager.set_data(data_manager.get_data_clone());
+    auto data_cloned = data_manager.get_data_clone();
+    data_cloned->build_raptor();
+    data_manager.set_data(data_cloned);
 
     // we ask for a journey, we should have the same thing
     resp = w.dispatch(req);

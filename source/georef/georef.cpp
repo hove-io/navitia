@@ -317,6 +317,7 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
     distances[Direction::Source] = projected.distance_to(vertex1_coord);
     distances[Direction::Target] = projected.distance_to(vertex2_coord);
+    this->real_coord = coord;
 }
 
 /**

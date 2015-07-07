@@ -49,6 +49,18 @@ navitia::time_duration PathFinder::crow_fly_duration(const double distance) cons
     return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
 }
 
+static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
+    return (p1[source_e] == p2[source_e] && p1[target_e] == p2[target_e])
+                || (p1[source_e] == p2[target_e] && p1[target_e] == p2[source_e]);
+}
+
+navitia::time_duration PathFinder::path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
+    return crow_fly_duration(p1.real_coord.distance_to(p1.projected)
+                             + p1.projected.distance_to(p2.projected)
+                             + p2.projected.distance_to(p2.real_coord));
+}
+
+
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
     geo_ref(geo_ref),
     departure_path_finder(geo_ref),
@@ -266,16 +278,28 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
     const auto max = bt::pos_infin;
     for (auto element: elements) {
         ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
-        // Est-ce que le stop point a pu être raccroché au street network
+        // the stop point has been projected on the graph?
         if(projection.found){
-            navitia::time_duration best_dist = max;
-            if (distances[projection[source_e]] < max) {
-                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]); }
-            if (distances[projection[target_e]] < max) {
-                best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
-            }
-            if (best_dist <= radius) {
-                result.push_back(std::make_pair(element.first, best_dist));
+            //if our two points are projected on the same edge the Dijkstra won't give us the correct value
+            // we need to handle this case separately
+            if(is_projected_on_same_edge(starting_edge, projection)){
+                //We calculate the duration for going to the edge, then to the projected destination on the edge
+                //and finally to the destination
+                auto duration = path_duration_on_same_edge(starting_edge, projection);
+                if(duration <= radius){
+                    result.push_back(std::make_pair(element.first, duration));
+                }
+            }else{
+                navitia::time_duration best_dist = max;
+                if (distances[projection[source_e]] < max) {
+                    best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
+                }
+                if (distances[projection[target_e]] < max) {
+                    best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
+                }
+                if (best_dist <= radius) {
+                    result.push_back(std::make_pair(element.first, best_dist));
+                }
             }
         }
     }
@@ -414,12 +438,30 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
-    auto result = this->build_path(target[nearest_edge.second]);
+    Path result;
+    if(is_projected_on_same_edge(starting_edge, target)){
+        PathItem item;
+        item.duration = path_duration_on_same_edge(starting_edge, target);
+        item.coordinates.push_back(starting_edge.projected);
+        item.coordinates.push_back(target.projected);
 
-    add_projections_to_path(result, true);
+        auto edge_pair = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph);
+        if (! edge_pair.second) {
+            throw navitia::exception("impossible to find an edge");
+        }
+        Edge edge = geo_ref.graph[edge_pair.first];
+        item.way_idx = edge.way_idx;
+        item.transportation = geo_ref.get_caracteristic(edge_pair.first);
+        result.path_items.push_back(item);
+        result.duration += item.duration;
+    }else{
+        result = this->build_path(target[nearest_edge.second]);
+        add_projections_to_path(result, true);
 
-    //we need to put the end projections too
-    add_custom_projections_to_path(result, false, target, nearest_edge.second);
+        //we need to put the end projections too
+        add_custom_projections_to_path(result, false, target, nearest_edge.second);
+    }
+
 
     return result;
 }
@@ -427,12 +469,12 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
 void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     //we need to find out which side of the projection has been used to compute the right length
 
-    //we check if the we already are the the arrival
+    //we check if we already are at the arrival
     if (predecessors[starting_edge[source_e]] == starting_edge[source_e] ||
             predecessors[starting_edge[target_e]] == starting_edge[target_e]) {
         //and we add the closer starting edge
         ProjectionData::Direction direction = starting_edge.distances[source_e] < starting_edge.distances[target_e]
-                ? source_e : target_e;
+            ? source_e : target_e;
         add_custom_projections_to_path(p, append_to_begin, starting_edge, direction);
         return;
     }
@@ -502,7 +544,9 @@ Path PathFinder::build_path(vertex_t best_destination) const {
 }
 
 
-Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool add_one_elt) {
+Path create_path(const GeoRef& geo_ref,
+                 std::vector<vertex_t> reverse_path,
+                 bool add_one_elt) {
     Path p;
 
     // On reparcourt tout dans le bon ordre
@@ -546,9 +590,9 @@ Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool
     }
     //in some case we want to add even if we have only one vertex (which means there is no valid edge)
     size_t min_nb_elt_to_add = add_one_elt ? 1 : 2;
-    if (reverse_path.size() >= min_nb_elt_to_add)
+    if (reverse_path.size() >= min_nb_elt_to_add){
         p.path_items.push_back(path_item);
-
+    }
     return p;
 }
 

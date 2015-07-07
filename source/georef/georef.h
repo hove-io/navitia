@@ -366,6 +366,9 @@ struct ProjectionData {
     /// The coordinate projected on the edge
     type::GeographicalCoord projected;
 
+    //the original coordinate before projection
+    type::GeographicalCoord real_coord;
+
     /// Distance between the projected point and the ends
     flat_enum_map<Direction, double> distances {{{-1, -1}}};
 
@@ -376,7 +379,7 @@ struct ProjectionData {
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vertices & projected & distances & found;
+        ar & vertices & projected & distances & found & real_coord;
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);
