@@ -183,7 +183,7 @@ private:
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const;
 
     /// Build a path with a destination and the predecessors list
-    Path build_path(vertex_t best_destination) const;
+    Path build_path(vertex_t best_destination, ProjectionData::Direction) const;
 
     /// compute the reachable stop points within the radius with a simple crow fly
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
@@ -225,7 +225,11 @@ struct StreetNetwork {
 };
 
 /// Build a path from a reverse path list
-Path create_path(const GeoRef& georef, std::vector<vertex_t> reverse_path, bool add_one_elt);
+Path create_path(const GeoRef& georef,
+                 std::vector<vertex_t> reverse_path,
+                 bool add_one_elt,
+                 const std::vector<navitia::time_duration>& distances,
+                 const navitia::time_duration& projection_time);
 
 /// Compute the angle between the last segment of the path and the next point
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);
