@@ -301,7 +301,8 @@ class TestPtRefPlace(AbstractTestFixture):
 
         #the default is the search for all stops within 200m, so we should have A and C
         eq_(len(stops), 2)
-        assert ["stopA", "stopC"] == [s['name'] for s in stops]
+
+        assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
     def test_with_coord_distance_different(self):
         """same as test_with_coord, but with 300m radius. so we find all stops"""
@@ -313,7 +314,7 @@ class TestPtRefPlace(AbstractTestFixture):
             is_valid_stop_area(s)
 
         eq_(len(stops), 3)
-        assert ["stopA", "stopB", "stopC"] == [s['name'] for s in stops]
+        assert set(["stopA", "stopB", "stopC"]) == set([s['name'] for s in stops])
 
     def test_with_coord_and_filter(self):
         """
@@ -332,4 +333,4 @@ class TestPtRefPlace(AbstractTestFixture):
         #the default is the search for all stops within 200m, so we should have all 3 stops
         #we should have 3 stops
         eq_(len(stops), 2)
-        assert ["stopA", "stopC"] == [s['name'] for s in stops]
+        assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
