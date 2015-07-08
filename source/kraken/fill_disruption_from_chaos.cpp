@@ -253,7 +253,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         impact(impact), pt_data(pt_data), meta(meta), action(action) {}
 
     virtual ~apply_impacts_visitor() {}
-    apply_impacts_visitor(const apply_impacts_visitor& other) = default;
+    apply_impacts_visitor(const apply_impacts_visitor&) = default;
 
     virtual bool func_on_vj(nt::VehicleJourney&) = 0;
 
@@ -417,7 +417,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         apply_impacts_visitor(impact, pt_data, meta, "add") {}
 
     ~add_impacts_visitor() {}
-    add_impacts_visitor(const add_impacts_visitor& other) = default;
+    add_impacts_visitor(const add_impacts_visitor&) = default;
 
     using apply_impacts_visitor::operator();
 
