@@ -42,6 +42,12 @@ from jormungandr.authentication import authentication_required
 import navitiacommon.type_pb2 as type_pb2
 
 
+def protect(uri):
+    """
+    we protect the uri so there can be special character in them
+    """
+    return '"' + uri.replace('"', '\\"') + '"'
+
 class ResourceUri(StatedResource):
 
     def __init__(self, authentication=True, links=True, *args, **kwargs):
@@ -87,11 +93,11 @@ class ResourceUri(StatedResource):
                             obj=object_type, lon=lon, lat=lat, distance=args.get('distance', 200))
                         filter_list.append(filter_)
                     else:
-                        filter_list.append(type_ + ".uri=" + item)
+                        filter_list.append(type_ + ".uri=" + protect(item))
                 elif type_ == 'poi':
-                    filter_list.append(type_ + '.uri=' + item.split(":")[-1])
+                    filter_list.append(type_ + '.uri=' + protect(item.split(":")[-1]))
                 else:
-                    filter_list.append(type_ + ".uri=" + item)
+                    filter_list.append(type_ + ".uri=" + protect(item))
                 type_ = None
         return " and ".join(filter_list)
 

@@ -64,18 +64,22 @@ namespace qi = boost::spirit::qi;
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> word, text; // Match un mot simple, une chaine échappée par des "" et entourée de ()
+    qi::rule<Iterator, std::string(), qi::space_type> word, text; // Match a simple word, a string escaped by "" or enclosed by ()
     qi::rule<Iterator, std::string()> escaped_string, bracket_string;
-    qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
-    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète a parser
-    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause; // La string complète à parser
+    qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match a binary operator like <, =...
+    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // the complete string to parse
+    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause;
 
     select_r() : select_r::base_type(filter) {
-        // Attention, le - dans un qi::char_ *peut* avoir une signification particulière telle que a-z
+        // Warning, the '-' in a qi::char_ can have a particular meaning as 'a-z'
         word = qi::lexeme[+(qi::alnum|qi::char_("_:\x7c-"))];
         text = qi::lexeme[+(qi::alnum|qi::char_("_:=.<>\x7c ")|qi::char_("-"))];
-        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.\x7c")|qi::char_("-"))] >> '"';
-        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-")|qi::char_(","))] /*qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] */>> ')';
+
+        escaped_string = '"'
+                        >>  *((qi::char_ - qi::char_('\\') - qi::char_('"')) | ('\\' >> qi::char_))
+                        >> '"';
+
+        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-")|qi::char_(","))] >> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -93,7 +97,7 @@ namespace qi = boost::spirit::qi;
 };
 
 
-// vérification d'une clause WHERE
+// WHERE condition check
 template<class T>
 WhereWrapper<T> build_clause(std::vector<Filter> filters) {
     WhereWrapper<T> wh(new BaseWhere<T>());

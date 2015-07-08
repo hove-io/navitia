@@ -51,7 +51,6 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
     else
         we don't want an error on the url
     """
-    #tester = app.test_client(tester)
     response = tester.get(url, **kwargs)
 
     assert response, "response for url {} is null".format(url)
@@ -60,7 +59,7 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
             .format(json.dumps(json.loads(response.data), indent=2))
     else:
         eq_(response.status_code, 200, "invalid return code, response : {}"
-            .format(json.dumps(json.loads(response.data), indent=2)))
+            .format(json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)))
     return response
 
 
@@ -371,11 +370,15 @@ def query_from_str(str):
     {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
     >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
     {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
+
+    Note: the query can be encoded, so the split it either on the encoded or the decoded value
     """
     query = {}
-    last_elt = str.split("?")[-1]
-    for s in last_elt.split("&"):
-        k, v = s.split("=")
+    last_elt = str.split('?' if '?' in str else '%3F')[-1]
+
+    for s in last_elt.split('&' if '&' in last_elt else '%26'):
+        k, v = s.split("=" if '=' in s else '%3D')
+
         if k in query:
             old_val = query[k]
             if isinstance(old_val, list):
@@ -396,7 +399,11 @@ def is_valid_feed_publisher(feed_publisher):
 
 
 def is_valid_journey_response(response, tester, query_str):
-    query_dict = query_from_str(query_str)
+    if isinstance(query_str, basestring):
+        query_dict = query_from_str(query_str)
+    else:
+        query_dict = query_str
+
     journeys = get_not_null(response, "journeys")
 
     all_sections = unique_dict('id')
@@ -446,7 +453,7 @@ def is_valid_journey_response(response, tester, query_str):
 
                 continue
 
-            assert query_dict[k] == v, "we must have the same query"
+            eq_(query_dict[k], v)
 
     feed_publishers = get_not_null(response, "feed_publishers")
     for feed_publisher in feed_publishers:
