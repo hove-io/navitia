@@ -49,7 +49,7 @@ namespace po = boost::program_options;
  */
 struct mock_kraken {
 
-    mock_kraken(ed::builder& d, const std::string& name, int argc, const char* const argv[]) {
+    inline mock_kraken(ed::builder& d, const std::string& name, int argc, const char* const argv[]) {
         DataManager<navitia::type::Data> data_manager;
         data_manager.set_data(d.data.release());
 

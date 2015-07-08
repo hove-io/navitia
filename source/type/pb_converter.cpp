@@ -102,7 +102,9 @@ void fill_address(const T* obj, const nt::Data& data,
     }
 }
 
-void fill_property(const std::string& name, const std::string& value, pbnavitia::Property* property) {
+static void fill_property(const std::string& name,
+                          const std::string& value,
+                          pbnavitia::Property* property) {
     property->set_name(name);
     property->set_value(value);
 }
@@ -972,7 +974,7 @@ static void finalize_section(pbnavitia::Section* section,
 }
 
 
-pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object) {
+static pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object) {
     switch(pt_object.embedded_type()) {
     case pbnavitia::NavitiaType::STOP_AREA: return pt_object.stop_area().coord();
     case pbnavitia::NavitiaType::STOP_POINT: return pt_object.stop_point().coord();

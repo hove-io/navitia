@@ -66,7 +66,7 @@ struct stop_area_finder{
 
 };
 
-std::string dump_vj(const nt::VehicleJourney& vj){
+static std::string dump_vj(const nt::VehicleJourney& vj){
     std::stringstream ss;
     ss << vj.uri << std::endl;
     for(const auto& st: vj.stop_time_list){

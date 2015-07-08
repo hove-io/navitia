@@ -1177,7 +1177,7 @@ void EdPersistor::insert_object_codes(const std::map<ed::types::pt_object_header
 }
 
 //temporary, but for the moment we need to transform the enum back to a string in the db
-std::string to_gtfs_string(nt::Type_e enum_type) {
+static std::string to_gtfs_string(nt::Type_e enum_type) {
     switch (enum_type) {
         case nt::Type_e::StopArea:
             return "stop_area";

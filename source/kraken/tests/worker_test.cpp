@@ -46,7 +46,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 
-pbnavitia::Request create_request(bool wheelchair, std::string destination) {
+static pbnavitia::Request create_request(bool wheelchair, std::string destination) {
     pbnavitia::Request req;
     req.set_requested_api(pbnavitia::PLANNER);
     pbnavitia::JourneysRequest* j = req.mutable_journeys();

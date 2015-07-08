@@ -646,7 +646,8 @@ static void add_isochrone_response(RAPTOR& raptor,
                 continue;
             }
 
-            int duration = ::abs(best_lbl - init_dt);
+            // get absolute value
+            int duration = best_lbl > init_dt ? best_lbl - init_dt : init_dt - best_lbl;
 
             if(duration > max_duration) {
                 continue;

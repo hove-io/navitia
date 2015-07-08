@@ -53,7 +53,6 @@ namespace ed{ namespace connectors{
         Projection origin;
         Projection destination;
         ConvCoord(Projection origin, Projection destination = Projection()): origin(std::move(origin)), destination(std::move(destination)){}
-        ConvCoord(const ConvCoord& conv_coord):origin(conv_coord.origin), destination(conv_coord.destination){}
         navitia::type::GeographicalCoord convert_to(navitia::type::GeographicalCoord coord) const;
     };
 
