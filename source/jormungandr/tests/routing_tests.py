@@ -74,6 +74,15 @@ class TestJourneys(AbstractTestFixture):
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
 
+    def test_missing_params(self):
+        """we should at least provide a from or a to on the /journeys api"""
+        query = "journeys?datetime=20120614T080000"
+
+        response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert status == 400
+        get_not_null(response, 'message')
+
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
         query = "{query}&type=best".format(query=journey_basic_query)

@@ -183,7 +183,7 @@ class TestBasicAuthentication(AbstractTestAuthentication):
         the authentication process must not mess if the region is not found
         """
         with user_set(app, 'bob'):
-            r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas', display=True)
+            r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas')
 
             assert status == 404
             assert 'error' in r
