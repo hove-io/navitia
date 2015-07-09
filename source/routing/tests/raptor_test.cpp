@@ -2095,9 +2095,9 @@ BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     BOOST_CHECK_EQUAL(res.size(), 0);
 }
 
-// A---1->--B1---1->--C
-// A--<-2---B2
-//          x me
+// l1: A--->--B1--->--C
+// l2: A--<---B2
+//            x me
 //
 // We don't want B1-2->A-1->C even if there is less walking as we pass
 // by the starting stop area B. See
@@ -2109,8 +2109,8 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     ed::builder b("20150101");
 
     b.sa("B")("B1")("B2");
-    b.vj("1")("A", "8:09"_t)("B1", "8:10"_t)("C", "8:20"_t);
-    b.vj("2")("B2", "8:07"_t)("A", "8:08"_t);
+    b.vj("l1")("A", "8:09"_t)("B1", "8:10"_t)("C", "8:20"_t);
+    b.vj("l2")("B2", "8:07"_t)("A", "8:08"_t);
     b.connection("A", "A", "00:00"_t);
 
     b.data->pt_data->index();
