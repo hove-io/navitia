@@ -757,6 +757,16 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
+    switch (mode) {
+    case Mode_e::Walking: return os << "walking";
+    case Mode_e::Bike: return os << "bike";
+    case Mode_e::Car: return os << "car";
+    case Mode_e::Bss: return os << "bss";
+    default: return os << "[unknown mode]";
+    }
+}
+
 }} //namespace navitia::type
 
 BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")

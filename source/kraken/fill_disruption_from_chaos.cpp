@@ -247,7 +247,6 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     const nt::MetaData& meta;
     std::string action;
 
-
     apply_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action) :
         impact(impact), pt_data(pt_data), meta(meta), action(action) {}
