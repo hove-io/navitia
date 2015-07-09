@@ -28,11 +28,12 @@
 # www.navitia.io
 
 import zipfile
+import os
 
 
 def type_of_data(filename, only_one_file=True):
     """
-    return the type of data contains in a file
+    return the type of data contains in a file + the path to load it
 
     this type can be one in:
      - 'gtfs'
@@ -47,32 +48,64 @@ def type_of_data(filename, only_one_file=True):
 
      if only_one_file is True, so consider only a zip for all pt data
      else we consider also them for multi files
+
+    for 'fusio', 'gtfs', 'fares' and 'poi', we return the directory since there are several file to load
     """
     def pt_types(files):
         #first we try fusio, because it can load fares too
-        if "contributors.txt" in files:
+        if any(f for f in files if f.endswith("contributors.txt")):
             return 'fusio'
-        if 'fares.csv' in files:
+        if any(f for f in files if f.endswith("fares.csv")):
             return 'fare'
-        if 'stops.txt' in files:
+        if any(f for f in files if f.endswith("stops.txt")):
             return 'gtfs'
         return None
 
-    if filename.endswith('.pbf'):
-        return 'osm'
-    if filename.endswith('.zip'):
-        zipf = zipfile.ZipFile(filename)
-        return pt_types(zipf.namelist())
-    if filename.endswith('.geopal'):
-        return 'geopal'
-    if filename.endswith('.poi'):
-        return 'poi'
-    if filename.endswith("synonyms.txt"):
-        return 'synonym'
-    if filename.endswith(".poly") or filename.endswith(".wkt"):
-        return 'shape'
+    if not isinstance(filename, list):
+        files = [filename]
+    else:
+        files = filename
 
     if not only_one_file:
-        return pt_types([filename])
+        t = pt_types(files)
+        if t:  # the path to load pt data is the directory since there are several files
+            return t, os.path.dirname(files[0])
+
+    for filename in files:
+        if filename.endswith('.pbf'):
+            return 'osm', filename
+        if filename.endswith('.zip'):
+            zipf = zipfile.ZipFile(filename)
+            pt_type = pt_types(zipf.namelist())
+            if not pt_type:
+                return None, None
+            return pt_type, filename
+        if filename.endswith('.geopal'):
+            return 'geopal', filename
+        if filename.endswith('.poi'):
+            return 'poi', os.path.dirname(filename)
+        if filename.endswith("synonyms.txt"):
+            return 'synonym', filename
+        if filename.endswith(".poly") or filename.endswith(".wkt"):
+            return 'shape', filename
 
     return None
+
+
+def family_of_data(type):
+    """
+    return the family type of a data type
+    by example "geopal" and "osm" are in the "streetnework" family
+    """
+    mapping = {
+        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
+        'synonym': 'synonym',
+        'poi': 'poi',
+        'fusio': 'pt', 'gtfs': 'pt',
+        'fare': 'fare',
+        'shape': 'shape'
+    }
+    if type in mapping:
+        return mapping[type]
+    else:
+        return None

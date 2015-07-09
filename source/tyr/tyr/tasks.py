@@ -46,25 +46,6 @@ from tyr.helper import load_instance_config, get_instance_logger
 from navitiacommon.launch_exec import launch_exec
 
 
-def family_of_data(type):
-    """
-    return the family type of a data type
-    by example "geopal" and "osm" are in the "streetnework" family
-    """
-    mapping = {
-        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
-        'synonym': 'synonym',
-        'poi': 'poi',
-        'fusio': 'pt', 'gtfs': 'pt',
-        'fare': 'fare',
-        'shape': 'shape'
-    }
-    if type in mapping:
-        return mapping[type]
-    else:
-        return None
-
-
 @celery.task()
 def finish_job(job_id):
     """
@@ -112,8 +93,10 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         filename = None
 
         dataset = models.DataSet()
-        dataset.type = utils.type_of_data(_file)
-        dataset.family_type = family_of_data(dataset.type)
+        # NOTE: for the moment we do not use the path to load the data here
+        # but we'll need to refactor this to take it into account
+        dataset.type, _ = utils.type_of_data(_file)
+        dataset.family_type = utils.family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file,

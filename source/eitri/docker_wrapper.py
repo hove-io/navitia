@@ -29,7 +29,7 @@
 
 import docker
 import logging
-import retrying
+from retrying import retry
 import psycopg2
 
 # postgres/postgis image
@@ -49,6 +49,18 @@ class DbParams(object):
                                                             u=self.user,
                                                             dbname=self.dbname,
                                                             pwd=self.password)
+
+    def old_school_cnx_string(self):
+        """
+        old C++ component does not support the classic postgres://...
+
+         refactor when moving to debian 8 as the classic cnx string will be recognized
+        """
+        return "host={h} user={u} dbname={dbname} password={pwd}".\
+            format(h=self.host,
+                   u=self.user,
+                   dbname=self.dbname,
+                   pwd=self.password)
 
 
 class PostgresDocker(object):
@@ -75,12 +87,7 @@ class PostgresDocker(object):
             exit(1)
 
         # we poll to ensure that the db is ready
-        def db_cnx():
-            psycopg2.connect(self.get_db_params().cnx_string())
-
-        retrying.Retrying(stop_max_delay=10000,
-                          wait_fixed=100,
-                          retry_on_exception=lambda e: isinstance(e, Exception)).call(db_cnx)
+        self.test_db_cnx()
 
     def __enter__(self):
         return self
@@ -102,6 +109,11 @@ class PostgresDocker(object):
     def get_db_params(self):
         """
         cnx param to the database
-        default user and pawword are 'docker' and default db is postgres
+        default user and password are 'docker' and default db is postgres
         """
         return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
+
+    @retry(stop_max_delay=10000, wait_fixed=100,
+           retry_on_exception=lambda e: isinstance(e, Exception))
+    def test_db_cnx(self):
+        psycopg2.connect(self.get_db_params().cnx_string())

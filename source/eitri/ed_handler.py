@@ -54,7 +54,7 @@ def binarize(db_params, output):
     logging.getLogger(__name__).info('creating data.nav')
     launch_exec('ed2nav',
                 ["-o", output,
-                 "--connection-string", db_params.cnx_string()], logging.getLogger(__name__))
+                 "--connection-string", db_params.old_school_cnx_string()], logging.getLogger(__name__))
 
 
 def import_data(data_dir, db_params):
@@ -63,30 +63,29 @@ def import_data(data_dir, db_params):
 
     we loop through all files until we recognize one on them
     """
-    for f in glob.glob(data_dir + "/*"):
-        data_type = utils.type_of_data(f, only_one_file=False)
-        if not data_type:
-            logging.getLogger(__name__).info('unknown data type for file {}, skipping'.format(f))
-            continue
+    log = logging.getLogger(__name__)
+    files = glob.glob(data_dir + "/*")
+    data_type, file_to_load = utils.type_of_data(files, only_one_file=False)
+    if not data_type:
+        log.info('unknown data type for dir {}, skipping'.format(data_dir))
+        return
 
-        # Note, we consider that we only have to load one kind of data per directory
-        import_component = data_type + '2ed'
+    # Note, we consider that we only have to load one kind of data per directory
+    import_component = data_type + '2ed'
 
-        if f.endswith('.zip'):
-            # if it's a zip, we unzip it
-            zip_file = zipfile.ZipFile(f)
-            zip_file.extractall(path=data_dir)
+    if file_to_load.endswith('.zip') or file_to_load.endswith('.geopal'):
+        #TODO: handle geopal as non zip
+        # if it's a zip, we unzip it
+        zip_file = zipfile.ZipFile(file_to_load)
+        zip_file.extractall(path=data_dir)
+        file_to_load = data_dir
 
-        if data_type in ('fusio', 'gtfs', 'fare'):
-            # for those the whole dir is necessary
-            input = data_dir
-        else:
-            input = f
-
-        launch_exec(import_component,
-                    ["-i", input,
-                     "--connection-string", db_params.cnx_string()],
-                    logging.getLogger(__name__))
+    if launch_exec(import_component,
+                ["-i", file_to_load,
+                 "--connection-string", db_params.old_school_cnx_string()],
+                log):
+        log.error('problem with running {}, stoping'.format(import_component))
+        exit(1)
 
 
 def load_data(data_dirs, db_params):
