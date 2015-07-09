@@ -162,7 +162,10 @@ class Instance(flask_restful.Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('scenario', type=str,  case_sensitive=False,
-                help='the name of the scenario used by jormungandr', choices=['default', 'keolis', 'destineo'],
+                help='the name of the scenario used by jormungandr', choices=['default',
+                                                                              'keolis',
+                                                                              'destineo',
+                                                                              'new_default'],
                 location=('json', 'values'), default=instance.scenario)
         parser.add_argument('journey_order', type=str, case_sensitive=False,
                 help='the sort order of the journeys in jormungandr', choices=['arrival_time', 'departure_time'],
