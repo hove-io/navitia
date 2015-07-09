@@ -43,7 +43,7 @@ from shapely.geometry import MultiPolygon
 from shapely import wkt
 import sqlalchemy
 
-from tyr.launch_exec import launch_exec
+from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
 from navitiacommon import models

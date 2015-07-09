@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -39,10 +40,14 @@ from an input dir create a data.nav.lz4 with the data needed by kraken
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 @clingon.clize()
 def eitri(data_dir, output_file='./data.nav.lz4'):
+    """
+    Generate a data.nav.lz4 file
+
+    :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
+    :param output_file: output data.nav.lz4 file path
+    """
     with PostgresDocker() as docker:
         generate_nav(data_dir, docker.get_db_params(), output_file)
-
-
-

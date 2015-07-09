@@ -30,11 +30,12 @@
 import docker
 import logging
 import retrying
+import psycopg2
 
+# postgres/postgis image
 POSTGIS_IMAGE = 'github.com/helmi03/docker-postgis.git'
 POSTGIS_CONTAINER_NAME = 'postgis:2.1'
 
-import psycopg2
 
 class DbParams(object):
     def __init__(self, host, dbname, user, password):
@@ -55,21 +56,22 @@ class PostgresDocker(object):
     launch a temporary docker with a postgresql db
     """
     def __init__(self):
-        self.docker_client = docker.Client(base_url='unix://var/run/docker.sock')
+        log = logging.getLogger(__name__)
+        self.docker = docker.Client(base_url='unix://var/run/docker.sock')
 
-        logging.getLogger(__name__).info("building the temporary docker image")
-        self.docker_client.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True)
+        log.info("building the temporary docker image")
+        self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True)
 
-        self.docker_container = self.docker_client.create_container(POSTGIS_CONTAINER_NAME).get('Id')
+        self.container_id = self.docker.create_container(POSTGIS_CONTAINER_NAME).get('Id')
 
-        logging.getLogger(__name__).info("docker id is {}".format(self.docker_container))
+        log.info("docker id is {}".format(self.container_id))
 
-        logging.getLogger(__name__).info("starting the temporary docker")
-        self.docker_client.start(self.docker_container)
-        self.ip_addr = self.docker_client.inspect_container(self.docker_container).get('NetworkSettings', {}).get('IPAddress')
+        log.info("starting the temporary docker")
+        self.docker.start(self.container_id)
+        self.ip_addr = self.docker.inspect_container(self.container_id).get('NetworkSettings', {}).get('IPAddress')
 
         if not self.ip_addr:
-            logging.getLogger(__name__).error("temporary docker {} not started".format(self.docker_container))
+            log.error("temporary docker {} not started".format(self.container_id))
             exit(1)
 
         # we poll to ensure that the db is ready
@@ -85,17 +87,21 @@ class PostgresDocker(object):
 
     def __exit__(self, *args, **kwargs):
         logging.getLogger(__name__).info("stoping the temporary docker")
-        self.docker_client.stop(container=self.docker_container)
+        self.docker.stop(container=self.container_id)
 
         logging.getLogger(__name__).info("removing the temporary docker")
-        self.docker_client.remove_container(container=self.docker_container)
+        self.docker.remove_container(container=self.container_id)
 
         # test to be sure the docker is removed at the end
-        for cont in self.docker_client.containers(all=True):
+        for cont in self.docker.containers(all=True):
             if cont['Image'].split(':')[0] == POSTGIS_IMAGE:
-                if self.docker_container in (name[1:] for name in cont['Names']):
+                if self.container_id in (name[1:] for name in cont['Names']):
                     logging.getLogger(__name__).error("something is strange, the container is still there ...")
                     exit(1)
 
     def get_db_params(self):
+        """
+        cnx param to the database
+        default user and pawword are 'docker' and default db is postgres
+        """
         return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
