@@ -6,9 +6,6 @@ find_package(log4cplus)
 find_package(GoogleTcmalloc)
 find_package(Protoc)
 
-# add custom target to build docker tests not to have a strong docker dependendy
-add_custom_target(docker_test COMMAND ${CMAKE_CTEST_COMMAND})
-
 if(Boost_VERSION)
     # be silent if already found
     set(Boost_FIND_QUIETLY TRUE)
