@@ -25,6 +25,6 @@ psycopg2==2.5.2
 pydns==2.3.6
 pytz==2013.9
 redis==2.9.0
-six==1.5.2
+six>=1.7.0
 validate-email==1.1
 wsgiref==0.1.2
