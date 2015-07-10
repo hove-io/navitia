@@ -2018,7 +2018,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                                   {},
                                   {},
                                   true,
-                                  15_s); // 15s direct path
+                                  75_s); // 75s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures,
@@ -2030,7 +2030,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              true,
-                             25_s); // 25s direct path
+                             85_s); // 85s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 
     // reverse clockwise
@@ -2043,7 +2043,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              false,
-                             15_s); // 15s direct path
+                             75_s); // 75s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures,
@@ -2055,7 +2055,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              false,
-                             25_s); // 25s direct path
+                             85_s); // 85s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 }
 
