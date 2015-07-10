@@ -27,72 +27,23 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from celery import chain, group
+import glob
+import logging
+import os
+import shutil
+
+from celery import chain
 from celery.signals import task_postrun
+from flask import current_app
+import kombu
+
 from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, shape2ed, \
     load_bounding_shape
 from tyr.binarisation import reload_data, move_to_backupdirectory
-from flask import current_app
-import glob
 from tyr import celery
-from navitiacommon import models, task_pb2
-import logging
-import os
-import zipfile
+from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
-import shutil
-from tyr.launch_exec import launch_exec
-import kombu
-from shapely.geometry import MultiPolygon, Polygon
-
-def type_of_data(filename):
-    """
-    return the type of data contains in a file
-    this type can be one  in:
-     - 'gtfs'
-     - 'fusio'
-     - 'osm'
-    """
-    if filename.endswith('.pbf'):
-        return 'osm'
-    if filename.endswith('.zip'):
-        zipf = zipfile.ZipFile(filename)
-
-        #first we try fusio, because it can load fares too
-        if "contributors.txt" in zipf.namelist():
-            return 'fusio'
-
-        if 'fares.csv' in zipf.namelist():
-            return 'fare'
-        else:
-            return 'gtfs'
-    if filename.endswith('.geopal'):
-        return 'geopal'
-    if filename.endswith('.poi'):
-        return 'poi'
-    if filename.endswith("synonyms.txt"):
-        return 'synonym'
-    if filename.endswith(".poly") or filename.endswith(".wkt"):
-        return 'shape'
-    return None
-
-def family_of_data(type):
-    """
-    return the family type of a data type
-    by example "geopal" and "osm" are in the "streetnework" family
-    """
-    mapping = {
-        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
-        'synonym': 'synonym',
-        'poi': 'poi',
-        'fusio': 'pt', 'gtfs': 'pt',
-        'fare': 'fare',
-        'shape': 'shape'
-    }
-    if type in mapping:
-        return mapping[type]
-    else:
-        return None
+from navitiacommon.launch_exec import launch_exec
 
 
 @celery.task()
@@ -142,8 +93,10 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         filename = None
 
         dataset = models.DataSet()
-        dataset.type = type_of_data(_file)
-        dataset.family_type = family_of_data(dataset.type)
+        # NOTE: for the moment we do not use the path to load the data here
+        # but we'll need to refactor this to take it into account
+        dataset.type, _ = utils.type_of_data(_file)
+        dataset.family_type = utils.family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file,

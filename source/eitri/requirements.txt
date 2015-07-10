@@ -1,0 +1,4 @@
+docker-py==0.4.0
+retrying==1.2.3
+psycopg2==2.4.5
+clingon==0.1.4
