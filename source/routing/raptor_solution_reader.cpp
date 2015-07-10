@@ -88,81 +88,13 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     return {nullptr, 0};
 }
 
-// Function used to filter crappy solution that are valid.
-//
-// We don't want to pass to the sa of the begin or the end during the journey.
-template<typename Visitor>
-bool pass_several_times_same_sa(const RaptorSolutionReader<Visitor>& reader, const Journey& j) {
-    if (j.sections.empty()) { return false; }
-
-    using navitia::type::StopArea;
-    using navitia::type::StopPoint;
-    using navitia::type::StopTime;
-    using boost::find_if;
-
-    auto sa = [](const StopTime& st) { return st.journey_pattern_point->stop_point->stop_area; };
-    const StopTime* st_begin = j.sections.front().get_in_st;
-    const StopArea* sa_begin = sa(*st_begin);
-    const StopTime* st_end = j.sections.back().get_out_st;
-    const StopArea* sa_end = sa(*st_end);
-    std::set<const StopArea*> sas;
-
-    // Handle the special case "same sa at the begin and the end" as
-    // pick up and drop off are not relevant in this case.
-    if (sa_begin == sa_end) { return true; }
-
-    for (const auto& s: j.sections) {
-        // we save the sa seen during this section to forbid passing
-        // at them during the sections after.
-        std::set<const StopArea*> section_sas;
-
-        // iterating on the successive vj (stay in)
-        for (const auto* vj = s.get_in_st->vehicle_journey; vj; vj = vj->next_vj) {
-            auto it = vj == s.get_in_st->vehicle_journey ?
-                find_if(vj->stop_time_list,[&](const StopTime& st) { return &st == s.get_in_st; }) :
-                vj->stop_time_list.begin();
-            for (; it != vj->stop_time_list.end(); ++it) {
-                const StopPoint* sp = it->journey_pattern_point->stop_point;
-                const bool is_accessible = sp->accessible(reader.accessibilite_params.properties);
-                if (is_accessible) {
-                    if (&*it != s.get_in_st && sas.count(sa(*it)) && it->pick_up_allowed()) {
-                        // we can pick_up here and we already passed at this stop area
-                        return true;
-                    }
-                    if (&*it != st_end && sa(*it) == sa_end && it->drop_off_allowed()) {
-                        // not the last stop time, same sa as the last
-                        // stop time and we can drop off
-                        return true;
-                    }
-                }
-                // we are at the get out stop time of the section =>
-                // the section ends
-                if (&*it == s.get_out_st) { break; }
-                if ((is_accessible && it->drop_off_allowed()) || &*it == s.get_in_st) {
-                    // we didn't drop off, but we could, so we remember the sa
-                    section_sas.insert(sa(*it));
-                }
-            }
-            // we break just above => the section ends
-            if (it != vj->stop_time_list.end()) {
-                sas.insert(section_sas.begin(), section_sas.end());
-                break;
-            }
-        }
-    }
-    return false;
-}
-
-template<typename Visitor>
-bool is_valid(const RaptorSolutionReader<Visitor>& reader, const Journey& j) {
+bool is_valid(const Journey& j) {
     // We don't want journeys with a transfert between 2 estimated stop times.
     for (auto it = j.sections.begin(), it_prev = it++; it != j.sections.end(); it_prev = it++) {
         if (it_prev->get_out_st->date_time_estimated() && it->get_in_st->date_time_estimated()) {
             return false;
         }
     }
-    // We don't want to pass to a sa several times during the journey.
-    //if (pass_several_times_same_sa(reader, j)) { return false; }
     return true;
 }
 
@@ -401,7 +333,7 @@ struct RaptorSolutionReader {
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j = make_journey(path, *this);
-        if (! is_valid(*this, j)) { return; }
+        if (! is_valid(j)) { return; }
         ++nb_sol_added;
         solutions.add(std::move(j));
         if (nb_sol_added > 1000) {
