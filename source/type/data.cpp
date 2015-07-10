@@ -336,7 +336,7 @@ void Data::complete(){
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
-ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
+static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
     ValidityPattern validity;
 
     for (auto* vj: meta_vj->theoric_vj) {

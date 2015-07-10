@@ -47,11 +47,6 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 const std::string ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/ntfs";
 
-
-std::ostream& operator<<(std::ostream& os, const nt::Header* h) {
-    return os << h->uri;
-}
-
 BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     using namespace ed;
 

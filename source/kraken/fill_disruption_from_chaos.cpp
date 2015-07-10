@@ -239,6 +239,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
 }
 
 
+namespace {
 
 struct apply_impacts_visitor : public boost::static_visitor<> {
     boost::shared_ptr<nt::new_disruption::Impact> impact;
@@ -249,6 +250,9 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     apply_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action) :
         impact(impact), pt_data(pt_data), meta(meta), action(action) {}
+
+    virtual ~apply_impacts_visitor() {}
+    apply_impacts_visitor(const apply_impacts_visitor&) = default;
 
     virtual bool func_on_vj(nt::VehicleJourney&) = 0;
 
@@ -313,7 +317,7 @@ struct functor_add_vj {
     nt::PT_Data& pt_data;
     const nt::MetaData& meta;
 
-    functor_add_vj(const boost::shared_ptr<nt::new_disruption::Impact> impact,
+    functor_add_vj(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
             nt::JourneyPattern* jp, const nt::StopPoint* stop_point,
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         impact(impact), jp(jp), stop_point(stop_point), pt_data(pt_data), meta(meta) {}
@@ -411,6 +415,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "add") {}
 
+    ~add_impacts_visitor() {}
+    add_impacts_visitor(const add_impacts_visitor&) = default;
+
     using apply_impacts_visitor::operator();
 
     bool func_on_vj(nt::VehicleJourney& vj) {
@@ -490,7 +497,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 };
 
 void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+                         nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
@@ -504,10 +511,14 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
 
 
 struct delete_impacts_visitor : public apply_impacts_visitor {
+    size_t nb_vj_reassigned = 0;
+
     delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "delete") {}
-    size_t nb_vj_reassigned = 0;
+
+    ~delete_impacts_visitor() {}
+
     using apply_impacts_visitor::operator();
 
     // We set all the validity pattern to the theorical one, we will re-apply
@@ -599,7 +610,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 };
 
 void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
@@ -610,6 +621,8 @@ void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     impact.get()->uri << " deleted");
 }
+
+} // anonymous namespace
 
 void delete_disruption(const std::string& disruption_id,
                        nt::PT_Data& pt_data,

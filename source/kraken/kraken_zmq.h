@@ -38,7 +38,7 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include "type/meta_data.h"
 
-pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e) {
+inline pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e) {
     pbnavitia::Response response;
 
     response.mutable_error()->set_id(pbnavitia::Error::internal_error);
@@ -48,7 +48,9 @@ pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e)
 }
 
 namespace pt = boost::posix_time;
-void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_manager, navitia::kraken::Configuration conf) {
+inline void doWork(zmq::context_t& context,
+                   DataManager<navitia::type::Data>& data_manager,
+                   navitia::kraken::Configuration conf) {
     auto logger = log4cplus::Logger::getInstance("worker");
 
     zmq::socket_t socket (context, ZMQ_REP);

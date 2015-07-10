@@ -675,7 +675,7 @@ void Data::build_journey_pattern_points(){
                    << " for " << nb_stop_time << " stop times");
 }
 
-types::ValidityPattern get_union_validity_pattern(const types::MetaVehicleJourney* meta_vj) {
+static types::ValidityPattern get_union_validity_pattern(const types::MetaVehicleJourney* meta_vj) {
     types::ValidityPattern validity;
 
     for (auto* vj: meta_vj->theoric_vj) {

@@ -130,6 +130,8 @@ enum class OdtLevel_e {
     all = 3
 };
 
+std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
+
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}

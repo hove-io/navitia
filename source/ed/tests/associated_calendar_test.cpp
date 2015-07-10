@@ -44,11 +44,11 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 //helper for lazyness
-boost::gregorian::date date(std::string str) {
+static boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 
-boost::gregorian::date_period period(std::string beg, std::string end) {
+static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
     boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
     return {start_date, end_date};
