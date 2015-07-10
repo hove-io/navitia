@@ -1993,7 +1993,7 @@ BOOST_AUTO_TEST_CASE(accessible_on_first_sp) {
 BOOST_AUTO_TEST_CASE(direct_path_filter) {
     ed::builder b("20150101");
 
-    b.vj("1")("A", "8:01"_t)("B", "8:02"_t);
+    b.vj("1")("A", "8:02"_t)("B", "8:03"_t);
 
     b.data->pt_data->index();
     b.finish();
@@ -2018,7 +2018,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                                   {},
                                   {},
                                   true,
-                                  15_s); // 15s direct path
+                                  135_s); // 135s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures,
@@ -2030,7 +2030,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              true,
-                             25_s); // 25s direct path
+                             145_s); // 145s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 
     // reverse clockwise
@@ -2043,7 +2043,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              false,
-                             15_s); // 15s direct path
+                             135_s); // 135s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures,
@@ -2055,13 +2055,13 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
                              {},
                              {},
                              false,
-                             25_s); // 25s direct path
+                             145_s); // 145s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 }
 
 // A1 and A2 are in the stop area A. We don't want to take pt to go
-// from a stop area to the same stop area. Related to
-// http://jira.canaltp.fr/browse/NAVITIAII-1708
+// from a stop area to the same stop area to win 2 walking
+// seconds. Related to http://jira.canaltp.fr/browse/NAVITIAII-1708
 BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     using navitia::type::hasProperties;
     using boost::posix_time::time_from_string;
@@ -2082,16 +2082,22 @@ BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     const type::PT_Data& d = *b.data->pt_data;
 
     std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_points_map.at("A1")), 0_s}
+        {SpIdx(*d.stop_points_map.at("A1")), 4_s}
     };
     std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_points_map.at("A2")), 0_s}
+        {SpIdx(*d.stop_points_map.at("A2")), 4_s}
     };
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
                                   DateTimeUtils::set(2, "07:50"_t),
-                                  false);
+                                  false,
+                                  0,
+                                  10,
+                                  {},
+                                  {},
+                                  false,
+                                  10_s);
     BOOST_CHECK_EQUAL(res.size(), 0);
 }
 
