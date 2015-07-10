@@ -162,7 +162,7 @@ bool is_valid(const RaptorSolutionReader<Visitor>& reader, const Journey& j) {
         }
     }
     // We don't want to pass to a sa several times during the journey.
-    if (pass_several_times_same_sa(reader, j)) { return false; }
+    //if (pass_several_times_same_sa(reader, j)) { return false; }
     return true;
 }
 
@@ -280,7 +280,7 @@ Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& r
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
-    j.transfer_dur = navitia::seconds(60 * j.sections.size());
+    j.transfer_dur = navitia::seconds(2 * 60 * j.sections.size());
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
         const auto first_transfer_waiting = get_transfer_waiting(data, j.sections[0], j.sections[1]);
