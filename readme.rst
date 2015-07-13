@@ -72,6 +72,8 @@ Installation
 ============
 For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
 
+Want to use Docker? Try this documentation https://github.com/CanalTP/navitia/wiki/Navitia-in-Docker-containers
+
 You can also refer to the `automated build script <https://github.com/canaltp/navitia/blob/dev/build_navitia.sh>`_ to have a step by step setup guide for ubuntu 14.04
 
 
