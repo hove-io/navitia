@@ -2149,3 +2149,48 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:10:00"));
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 08:20:00"));
 }
+
+// VJ1: A--->B
+// VJ2:       B---->C
+//
+// Journey from A to C. We can walk to B, but then we arrive to late
+// for VJ2 and no solution is possible.  So we want
+// A--VJ1-->B--VJ2-->C
+//
+// Related to http://jira.canaltp.fr/browse/NAVITIAII-1776
+BOOST_AUTO_TEST_CASE(walking_doesnt_break_connection) {
+    ed::builder b("20150101");
+
+    b.vj("1", "1")("A", "8:00"_t)("B", "8:10"_t);
+    b.vj("2", "1")("B", "8:11"_t)("C", "9:00"_t);
+    b.connection("B", "B", "00:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    const std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
+        {SpIdx(*d.stop_points_map.at("A")), 0_s},
+        {SpIdx(*d.stop_points_map.at("B")), 15_min}
+    };
+    const std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
+        {SpIdx(*d.stop_points_map.at("C")), 0_s}
+    };
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(0, "08:00"_t),
+                                  false);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 3);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 08:10:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].departure, time_from_string("2015-01-01 08:10:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival, time_from_string("2015-01-01 08:11:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].departure, time_from_string("2015-01-01 08:11:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival, time_from_string("2015-01-01 09:00:00"));
+}
