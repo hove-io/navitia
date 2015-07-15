@@ -33,7 +33,7 @@ www.navitia.io
 #include "mock_kraken.h"
 #include "type/type.h"
 
-boost::gregorian::date_period period(std::string beg, std::string end) {
+static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
     boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
     return {start_date, end_date};
@@ -69,11 +69,18 @@ struct data_set {
         }
         b.data->pt_data->calendars.push_back(monday_cal);
         //add lines
+        b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
+        b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
         b.vj("line:A", "", "", true, "vj1", "", "", "physical_mode:Car")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);
+
+        // we add a stop area with a strange name (with space and special char)
+        b.sa("stop_with name bob \" , é", 20, 20);
+        b.vj("line:B", "", "", true, "vj_b", "", "", "physical_mode:Car")
+                ("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1", "9:00"_t);
 
         //add a mock shape
         b.lines["line:A"]->shape = {
@@ -87,6 +94,9 @@ struct data_set {
                 {{10,20}, {20,20}, {40,50}}
             };
             r->destination = b.sas.find("stop_area:stop2")->second;
+        }
+        for (auto r: b.lines["line:B"]->route_list) {
+            r->destination = b.sas.find("stop_area:stop1")->second;
         }
         b.lines["line:A"]->codes["external_code"] = "A";
         b.lines["line:A"]->codes["codeB"] = "B";
@@ -129,6 +139,7 @@ struct data_set {
         b.data->pt_data->line_groups.push_back(lg);
 
         b.data->complete();
+        b.data->build_raptor();
     }
 
     ed::builder b;

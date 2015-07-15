@@ -41,7 +41,7 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
-const std::string& get_vj(const pbnavitia::RouteSchedule& r, int i) {
+static const std::string& get_vj(const pbnavitia::RouteSchedule& r, int i) {
     return r.table().headers(i).pt_display_informations().uris().vehicle_journey();
 }
 

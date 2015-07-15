@@ -152,3 +152,4 @@ class TestEndPoint(AbstractTestFixture):
         json_response = self.query("/v1/coverage/main_routing_test/status")
 
         is_valid_region_status(get_not_null(json_response, "status"))
+        assert json_response["status"]["is_open_data"] == True

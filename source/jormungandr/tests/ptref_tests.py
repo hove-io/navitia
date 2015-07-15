@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -26,9 +27,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import urllib
 from tests.check_utils import journey_basic_query
 from tests.tests_mechanism import dataset, AbstractTestFixture
 from check_utils import *
+
 
 @dataset(["main_ptref_test"])
 class TestPtRef(AbstractTestFixture):
@@ -47,7 +50,7 @@ class TestPtRef(AbstractTestFixture):
 
         #we check afterward that we have the right data
         #we know there is only one vj in the dataset
-        assert len(vjs) == 1
+        assert len(vjs) == 2
         vj = vjs[0]
         assert vj['id'] == 'vj1'
 
@@ -70,7 +73,6 @@ class TestPtRef(AbstractTestFixture):
         assert (feed_publisher["name"] == "canal tp")
         assert (feed_publisher["license"] == "ODBL")
         assert (feed_publisher["url"] == "www.canaltp.fr")
-
 
     def test_vj_depth_0(self):
         """default depth is 1"""
@@ -105,7 +107,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 1
+        assert len(lines) == 2
 
         l = lines[0]
 
@@ -176,14 +178,13 @@ class TestPtRef(AbstractTestFixture):
 
         is_valid_codes(codes)
 
-
     def test_route(self):
         """test line formating"""
         response = self.query_region("v1/routes")
 
         routes = get_not_null(response, 'routes')
 
-        assert len(routes) == 1
+        assert len(routes) == 2
 
         r = routes[0]
         is_valid_route(r, depth_check=1)
@@ -203,7 +204,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_areas')
 
-        assert len(stops) == 2
+        assert len(stops) == 3
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop1'))
         is_valid_stop_area(s, depth_check=1)
@@ -221,7 +222,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_points')
 
-        assert len(stops) == 2
+        assert len(stops) == 3
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop2'))
         is_valid_stop_area(s, depth_check=1)
@@ -246,6 +247,38 @@ class TestPtRef(AbstractTestFixture):
         company = companies[0]
         assert company['id'] == 'CMP1'
 
+    def test_simple_crow_fly(self):
+        journey_basic_query = "journeys?from=9;9.001&to=stop_area%3Astop2&datetime=20140105T000000"
+        response = self.query_region(journey_basic_query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
+    def test_forbidden_uris_on_line(self):
+        """test forbidden uri for lines"""
+        response = self.query_region("v1/lines")
+
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 2
+
+        assert len(lines[0]['physical_modes']) == 1
+        assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
+
+        #there is only one line, so when we forbid it's physical mode, we find nothing
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_uris[]=physical_mode:Car")
+        assert code == 404
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_id[]=physical_mode:Car")
+        assert code == 404
+
+        # when we forbid another physical_mode, we find again our line
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines"
+                                        "?forbidden_uris[]=physical_mode:Bus")
+        assert code == 200
+
     def test_simple_pt_objects(self):
         response = self.query_region('pt_objects?q=stop2')
 
@@ -255,6 +288,34 @@ class TestPtRef(AbstractTestFixture):
         assert len(pt_objs) == 1
 
         assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
+
+    def test_query_with_strange_char(self):
+        q = 'stop_points/stop_point:stop_with name bob \" , é'
+        encoded_q = urllib.quote(q)
+        response = self.query_region(encoded_q)
+
+        stops = get_not_null(response, 'stop_points')
+
+        assert len(stops) == 1
+
+        is_valid_stop_point(stops[0], depth_check=1)
+        assert stops[0]["id"] == u'stop_point:stop_with name bob \" , é'
+
+    def test_filter_query_with_strange_char(self):
+        """test that the ptref mechanism works an object with a weird id"""
+        response = self.query_region('stop_points/stop_point:stop_with name bob \" , é/lines')
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 1
+        for l in lines:
+            is_valid_line(l)
+
+    def test_journey_with_strange_char(self):
+        #we use an encoded url to be able to check the links
+        query = 'journeys?from=stop_with name bob \" , é&to=stop_area:stop1&datetime=20140105T070000'
+        response = self.query_region(query, display=True)
+
+        is_valid_journey_response(response, self.tester, urllib.quote_plus(query))
 
 
 @dataset(["main_routing_test"])
@@ -271,7 +332,8 @@ class TestPtRefPlace(AbstractTestFixture):
 
         #the default is the search for all stops within 200m, so we should have A and C
         eq_(len(stops), 2)
-        assert ["stopA", "stopC"] == [s['name'] for s in stops]
+
+        assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
     def test_with_coord_distance_different(self):
         """same as test_with_coord, but with 300m radius. so we find all stops"""
@@ -283,7 +345,7 @@ class TestPtRefPlace(AbstractTestFixture):
             is_valid_stop_area(s)
 
         eq_(len(stops), 3)
-        assert ["stopA", "stopB", "stopC"] == [s['name'] for s in stops]
+        assert set(["stopA", "stopB", "stopC"]) == set([s['name'] for s in stops])
 
     def test_with_coord_and_filter(self):
         """
@@ -302,4 +364,4 @@ class TestPtRefPlace(AbstractTestFixture):
         #the default is the search for all stops within 200m, so we should have all 3 stops
         #we should have 3 stops
         eq_(len(stops), 2)
-        assert ["stopA", "stopC"] == [s['name'] for s in stops]
+        assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])

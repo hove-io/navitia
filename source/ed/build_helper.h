@@ -54,7 +54,7 @@ struct VJ {
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
-       const std::string & block_id, bool is_adapted = true, const std::string& uri="",
+       const std::string & block_id, bool wheelchair_boarding = true, const std::string& uri="",
        std::string meta_vj_name = "", std::string jp_uri = "", const std::string& physical_mode = "");
 
     /// Ajout un nouveau stopTime
@@ -75,14 +75,15 @@ struct SA {
     navitia::type::StopArea* sa;
 
     /// Construit un nouveau stopArea
-    SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted = true);
+    SA(builder & b, const std::string & sa_name, double x, double y,
+       bool create_sp = true, bool wheelchair_boarding = true);
 
     /// Construit un stopPoint appartenant au stopArea courant
-    SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool is_adapted = true);
+    SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
 };
 
 
-struct builder{
+struct builder {
     std::map<std::string, navitia::type::Line *> lines;
     std::map<std::string, navitia::type::ValidityPattern *> vps;
     std::map<std::string, navitia::type::StopArea *> sas;
@@ -95,12 +96,12 @@ struct builder{
     navitia::georef::GeoRef street_network;
 
     /// Il faut préciser là date de début des différents validity patterns
-    builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
+    builder(const std::string & date, const std::string& publisher_name = "canal tp") : begin(boost::gregorian::date_from_iso_string(date)){
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
         data->meta->timezone = "UTC"; //default timezone is UTC
 		data->loaded = true;
         data->meta->instance_name = "builder";
-        data->meta->publisher_name = "canal tp";
+        data->meta->publisher_name = publisher_name;
         data->meta->publisher_url = "www.canaltp.fr";
         data->meta->license = "ODBL";
     }
@@ -140,8 +141,12 @@ struct builder{
                     const std::string& physical_mode = "");
 
     /// Crée un nouveau stop area
-    SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);
-    SA sa(const std::string & name, navitia::type::GeographicalCoord geo, bool is_adapted = true ){return sa(name,geo.lon(), geo.lat(), is_adapted);}
+    SA sa(const std::string & name, double x = 0, double y = 0,
+          const bool create_sp = true, const bool wheelchair_boarding = true);
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo,
+          const bool create_sp = true, bool wheelchair_boarding = true) {
+        return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
+    }
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

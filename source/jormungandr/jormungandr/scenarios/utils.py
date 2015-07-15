@@ -222,31 +222,31 @@ def get_or_default(request, val, default):
     return default
 
 def updated_request_with_default(request, instance):
-    if not request['max_walking_duration_to_pt']:
+    if request['max_walking_duration_to_pt'] is None:
         request['max_walking_duration_to_pt'] = instance.max_walking_duration_to_pt
 
-    if not request['max_bike_duration_to_pt']:
+    if request['max_bike_duration_to_pt'] is None:
         request['max_bike_duration_to_pt'] = instance.max_bike_duration_to_pt
 
-    if not request['max_bss_duration_to_pt']:
+    if request['max_bss_duration_to_pt'] is None:
         request['max_bss_duration_to_pt'] = instance.max_bss_duration_to_pt
 
-    if not request['max_car_duration_to_pt']:
+    if request['max_car_duration_to_pt'] is None:
         request['max_car_duration_to_pt'] = instance.max_car_duration_to_pt
 
-    if not request['max_transfers']:
+    if request['max_transfers'] is None:
         request['max_transfers'] = instance.max_nb_transfers
 
-    if not request['walking_speed']:
+    if request['walking_speed'] is None:
         request['walking_speed'] = instance.walking_speed
 
-    if not request['bike_speed']:
+    if request['bike_speed'] is None:
         request['bike_speed'] = instance.bike_speed
 
-    if not request['bss_speed']:
+    if request['bss_speed'] is None:
         request['bss_speed'] = instance.bss_speed
 
-    if not request['car_speed']:
+    if request['car_speed'] is None:
         request['car_speed'] = instance.car_speed
 
 def change_ids(new_journeys, journey_count):

@@ -30,23 +30,24 @@
 """
 Functions to launch the binaratisations
 """
-from tyr.launch_exec import launch_exec
 import logging
 import os
-import navitiacommon.task_pb2
 import zipfile
-from tyr import celery, redis
 import datetime
+import shutil
+from functools import wraps
+
 from flask import current_app
 import kombu
-from navitiacommon import models
-import shutil
-from tyr.helper import get_instance_logger
-from functools import wraps
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import MultiPolygon
 from shapely import wkt
 import sqlalchemy
 
+from navitiacommon.launch_exec import launch_exec
+import navitiacommon.task_pb2
+from tyr import celery, redis
+from navitiacommon import models
+from tyr.helper import get_instance_logger
 
 
 def move_to_backupdirectory(filename, working_directory):

@@ -160,6 +160,8 @@ struct routing_api_data {
         admin->insee = "32107";
         admin->level = 8;
         admin->postal_codes.push_back("32100");
+        admin->coord = nt::GeographicalCoord(D.lon(), D.lat());
+        admin->idx = 0;
 
         navitia::georef::Way* way;
         way = new navitia::georef::Way();
@@ -437,6 +439,8 @@ struct routing_api_data {
             }
         }
 
+        b.data->complete();
+        b.manage_admin();
         b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
@@ -448,7 +452,7 @@ struct routing_api_data {
 
         //add bike sharing edges
         b.data->geo_ref->default_time_bss_pickup = 30_s;
-        b.data->geo_ref->default_time_bss_putback = 45_s;
+        b.data->geo_ref->default_time_bss_putback = 40_s;
         b.data->geo_ref->add_bss_edges(B);
         b.data->geo_ref->add_bss_edges(G);
 
@@ -770,7 +774,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord S = {10, 10, false};
     navitia::type::GeographicalCoord D = {0, 30, false};
 
-    ed::builder b = {"20120614"};
+    ed::builder b = {"20120614", "routing api data"};
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
     std::vector<uint64_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};

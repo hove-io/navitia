@@ -243,9 +243,6 @@ class Scenario(simple.Scenario):
             #we delete after the merge, else we will have duplicate non_pt journey in the count
             self.delete_journeys(resp, request, final_filter=False)
 
-            if not request['debug']:
-                self._delete_non_optimal_journey(resp)
-
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
@@ -292,27 +289,6 @@ class Scenario(simple.Scenario):
         if not asap_journey:
             return None
         return (asap_journey.duration * instance.factor_too_long_journey) + instance.min_duration_too_long_journey
-
-    def _delete_non_optimal_journey(self, resp):
-        """
-        remove all journeys with a greater fallback duration with a specific mode than the corresponding non_pt journey
-        """
-        logger = logging.getLogger(__name__)
-        reference_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
-        type_func = {'non_pt_bss': bss_duration, 'non_pt_bike': bike_duration, 'non_pt_walk': walking_duration}
-        to_delete = []
-        for journey in resp.journeys:
-            if journey.type in reference_journeys:
-                reference_journeys[journey.type] = journey
-        for idx, journey in enumerate(resp.journeys):
-            for type, func in type_func.iteritems():
-                if not reference_journeys[type] or reference_journeys[type] == journey:
-                    continue
-                if func(journey) >= func(reference_journeys[type]):
-                    to_delete.append(idx)
-                    logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
-                    break
-        self.erase_journeys(resp, to_delete)
 
 
     def choose_best(self, resp):

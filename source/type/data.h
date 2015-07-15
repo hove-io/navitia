@@ -122,6 +122,7 @@ public:
 
 
     bool last_load = true;
+    // UTC
     boost::posix_time::ptime last_load_at;
 
     boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data

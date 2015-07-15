@@ -43,41 +43,67 @@ class TestIsochrone(AbstractTestFixture):
         #not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        self.query(query, display=False)
+        self.query(query)
 
     def test_stop_point_isochrone_coord(self):
         #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=400&datetime=20120614T080000"
-        response = self.query(query, display=False)
+        response = self.query(query)
         assert len(response["journeys"]) == 1
         assert response["journeys"][0]["duration"] == 300
         assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
         query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
-        response = self.query(query, display=False)
+        response = self.query(query)
         assert len(response["journeys"]) == 2
         assert response["journeys"][0]["duration"] == 300
         assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
         assert response["journeys"][1]["duration"] == 25200
         assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
 
+    def test_stop_point_isochrone_coord_no_transfers(self):
+        #same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
+        #we should be able to touch only 'B'
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?" \
+                "max_duration=25500&datetime=20120614T080000" \
+                "&max_nb_transfers=0"
+        response = self.query(query)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["duration"] == 300
+        assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
+
     def test_to_isochrone_coord(self):
-        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
-        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
+        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        self.query(query, display=False)
+        self.query(query)
 
     def test_from_isochrone_sa(self):
-        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format("stopA", "20120614T080000")
-        self.query(query, display=False)
+        self.query(query)
 
     def test_to_isochrone_sa(self):
-        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
-        query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
+        query = "v1/coverage/basic_routing_test/journeys?to={}&datetime={}&datetime_represents=arrival"
         query = query.format("stopA", "20120614T080000")
-        self.query(query, display=False)
+        self.query(query)
+
+    def test_reverse_isochrone_coord(self):
+        q = "v1/coverage/basic_routing_test/journeys?max_duration=100000" \
+            "&datetime=20120615T200000&datetime_represents=arrival&to=D"
+        normal_response = self.query(q, display=True)
+        assert len(normal_response["journeys"]) == 2
+
+    def test_reverse_isochrone_coord_clockwise(self):
+        q = "v1/coverage/basic_routing_test/journeys?datetime=20120614T080000&to=A"
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 404
+        assert normal_response['error']['message'] == 'reverse isochrone works only for anti-clockwise request'
+
+
+    def test_isochrone_non_clockwise(self):
+        q = "v1/coverage/basic_routing_test/journeys?datetime=20120614T080000&from=A&datetime_represents=arrival"
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 404
+        assert normal_response['error']['message'] == 'isochrone works only for clockwise request'

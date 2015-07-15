@@ -95,7 +95,6 @@ bool is_valid(const Journey& j) {
             return false;
         }
     }
-
     return true;
 }
 
@@ -213,10 +212,11 @@ Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& r
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
+    j.transfer_dur = navitia::seconds(2 * 60 * j.sections.size());
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
         const auto first_transfer_waiting = get_transfer_waiting(data, j.sections[0], j.sections[1]);
-        j.transfer_dur = first_transfer_waiting.first;
+        j.transfer_dur += first_transfer_waiting.first;
         j.min_waiting_dur = first_transfer_waiting.second;
         const auto* prev = &j.sections[1];
         for (auto it = j.sections.begin() + 2; it != j.sections.end(); prev = &*it, ++it) {

@@ -51,7 +51,6 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
     else
         we don't want an error on the url
     """
-    #tester = app.test_client(tester)
     response = tester.get(url, **kwargs)
 
     assert response, "response for url {} is null".format(url)
@@ -60,7 +59,7 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
             .format(json.dumps(json.loads(response.data), indent=2))
     else:
         eq_(response.status_code, 200, "invalid return code, response : {}"
-            .format(json.dumps(json.loads(response.data), indent=2)))
+            .format(json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)))
     return response
 
 
@@ -260,7 +259,7 @@ def get_links_dict(response):
     return links
 
 
-def check_links(object, tester):
+def check_links(object, tester, href_mandatory=True):
     """
     get the links as dict ordered by 'rel' and check:
      - all links must have the attributes:
@@ -284,13 +283,14 @@ def check_links(object, tester):
         internal = get_bool('internal')
         templated = get_bool('templated')
 
-        if not internal:
-            assert 'href' in link, "no href in link"
+        if href_mandatory:
+            if not internal:
+                assert 'href' in link, "no href in link"
 
-        if not templated and not internal:
-            #we check that the url is valid
-            assert check_url(tester, link['href'].replace('http://localhost', ''),
-                             might_have_additional_args=False), "href's link must be a valid url"
+            if not templated and not internal:
+                #we check that the url is valid
+                assert check_url(tester, link['href'].replace('http://localhost', ''),
+                                 might_have_additional_args=False), "href's link must be a valid url"
 
         if internal:
             assert 'rel' in link
@@ -370,11 +370,15 @@ def query_from_str(str):
     {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
     >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
     {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
+
+    Note: the query can be encoded, so the split it either on the encoded or the decoded value
     """
     query = {}
-    last_elt = str.split("?")[-1]
-    for s in last_elt.split("&"):
-        k, v = s.split("=")
+    last_elt = str.split('?' if '?' in str else '%3F')[-1]
+
+    for s in last_elt.split('&' if '&' in last_elt else '%26'):
+        k, v = s.split("=" if '=' in s else '%3D')
+
         if k in query:
             old_val = query[k]
             if isinstance(old_val, list):
@@ -395,7 +399,11 @@ def is_valid_feed_publisher(feed_publisher):
 
 
 def is_valid_journey_response(response, tester, query_str):
-    query_dict = query_from_str(query_str)
+    if isinstance(query_str, basestring):
+        query_dict = query_from_str(query_str)
+    else:
+        query_dict = query_str
+
     journeys = get_not_null(response, "journeys")
 
     all_sections = unique_dict('id')
@@ -445,15 +453,11 @@ def is_valid_journey_response(response, tester, query_str):
 
                 continue
 
-            assert query_dict[k] == v, "we must have the same query"
+            eq_(query_dict[k], v)
 
     feed_publishers = get_not_null(response, "feed_publishers")
-    feed_publisher = feed_publishers[0]
-    is_valid_feed_publisher(feed_publisher)
-    assert (feed_publisher["id"] == "builder")
-    assert (feed_publisher["name"] == "canal tp")
-    assert (feed_publisher["license"] == "ODBL")
-    assert (feed_publisher["url"] == "www.canaltp.fr")
+    for feed_publisher in feed_publishers:
+        is_valid_feed_publisher(feed_publisher)
 
 
 def is_valid_journey(journey, tester, query):
@@ -462,6 +466,9 @@ def is_valid_journey(journey, tester, query):
     request = get_valid_datetime(journey['requested_date_time'])
 
     assert arrival >= departure
+    # test if duration time is consistent with arrival and departure
+    # as we sometimes loose a second in rounding section duration, tolerance is added
+    assert (arrival - departure).seconds - journey['duration'] <= len(journey['sections']) - 1
 
     if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
         #for 'departure after' query, the departure must be... after \o/
@@ -482,6 +489,7 @@ def is_valid_journey(journey, tester, query):
         g = s.get('geojson')
         g is None or shape(g)
 
+    assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 
@@ -920,4 +928,11 @@ def get_all_disruptions(elem, response):
     utils.walk_dict(elem, disruptions_filler)
 
     return disruption_by_obj
+
+
+def is_valid_stop_date_time(stop_date_time):
+    get_not_null(stop_date_time, 'arrival_date_time')
+    assert get_valid_datetime(stop_date_time['arrival_date_time'])
+    get_not_null(stop_date_time, 'departure_date_time')
+    assert get_valid_datetime(stop_date_time['departure_date_time'])
 

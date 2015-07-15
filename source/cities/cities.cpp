@@ -300,10 +300,15 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         }
         const auto front = tmp_polygon.outer().front();
         const auto back = tmp_polygon.outer().back();
-        // This should not happen, but does some time
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+        // This should not happen, but does some time :
+        // coordinate values must be exactly equal for the shape
         if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
             tmp_polygon.outer().push_back(tmp_polygon.outer().front());
         }
+#pragma GCC diagnostic pop
         polygon.push_back(tmp_polygon);
     }
     if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {

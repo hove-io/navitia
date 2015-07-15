@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
-    pbnavitia::Section section = resp.journeys(0).sections(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    pbnavitia::Section section = resp.journeys(0).sections(1);
     pbnavitia::Co2Emission co2_emission = section.co2_emission();
     int32_t distance = dep->coord.distance_to(arr->coord);
     BOOST_REQUIRE_EQUAL(co2_emission.unit(), "gEC");
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
-    pbnavitia::Section section = resp.journeys(0).sections(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    pbnavitia::Section section = resp.journeys(0).sections(1);
     pbnavitia::Co2Emission co2_emission = section.co2_emission();
     BOOST_REQUIRE_EQUAL(co2_emission.unit(), "gEC");
     BOOST_REQUIRE_EQUAL(co2_emission.value(), 0.);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
-    pbnavitia::Section section = resp.journeys(0).sections(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    pbnavitia::Section section = resp.journeys(0).sections(1);
     BOOST_REQUIRE_EQUAL(section.has_co2_emission(), false);
 }

@@ -151,8 +151,10 @@ inline pbnavitia::StopArea* get_sub_object(const type::StopArea*, pbnavitia::PtO
 inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
 
 
-void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, type::Mode_e mode, boost::posix_time::ptime time,
-                          const type::Data& data, EnhancedResponse &response,  pbnavitia::Journey* pb_journey,
+void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+                          const time_duration& crow_fly_duration, type::Mode_e mode,
+                          boost::posix_time::ptime origin_time, const type::Data& data,
+                          EnhancedResponse& response,  pbnavitia::Journey* pb_journey,
                           const pt::ptime& now, const pt::time_period& action_period);
 
 void fill_fare_section(EnhancedResponse& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);

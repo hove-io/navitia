@@ -273,14 +273,14 @@ template<class T> bool compare(const T& a, const T& b, Comp_e comp) {
 }
 
 int SectionKey::duration_at_begin(int ticket_start_time) const {
-    if (ticket_start_time < start_time)
+    if (ticket_start_time < boost::lexical_cast<int>(start_time))
         return start_time - ticket_start_time;
     else // Passe-minuit
         return (start_time + 24*3600) - ticket_start_time;
 }
 
 int SectionKey::duration_at_end(int ticket_start_time) const {
-    if (ticket_start_time < dest_time)
+    if (ticket_start_time < boost::lexical_cast<int>(dest_time))
         return dest_time - ticket_start_time;
     else // Passe-minuit
         return (dest_time + 24*3600) - ticket_start_time;

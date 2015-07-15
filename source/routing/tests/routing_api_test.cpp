@@ -50,6 +50,7 @@ namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ng = navitia::georef;
 
+
 static void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
@@ -114,8 +115,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     pbnavitia::Journey journey = resp.journeys(0);
 
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(1);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
@@ -125,6 +126,105 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), ntest::to_posix_timestamp("20120614T082000"));
+}
+
+/*
+  0___________________
+           4min       \
+  1____________________2
+           1h9min
+
+  stop0 and stop 1 are only 300m away
+
+  Testing that crow fly feature with no street network works
+  for origin and destination, and with coordinates and stop areas.
+ */
+BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.sa("stop_area:stop0", 10, 30.003);
+    b.sa("stop_area:stop1", 10, 30);
+    b.sa("stop_area:stop2", 120, 80);
+    b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)
+             ("stop_area:stop2", 9*3600 + 20 * 60 ,9*3600 + 21*60);
+    b.vj("B")("stop_area:stop0", 8*3600 +10*60, 8*3600 + 11 * 60)
+             ("stop_area:stop2", 8*3600 + 15 * 60 ,8*3600 + 16*60);
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->build_proximity_list();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14),
+                                                                  boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+
+    // - stop1 coordinates to stop area stop2 : using 0->2
+
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
+    navitia::type::EntryPoint origin(navitia::type::Type_e::Coord, "coord:10:30");
+    navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
+    destination.coordinates = b.data->pt_data->stop_areas_map["stop_area:stop2"]->coord;
+    origin.streetnetwork_params.max_duration = 15_min;
+    destination.streetnetwork_params.max_duration = 15_min;
+
+    ng::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination,
+                                             {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/,
+                                             forbidden, sn_worker, false);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(1);
+
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
+    auto stA = section.stop_date_times(0);
+    auto stB = section.stop_date_times(1);
+    BOOST_CHECK_EQUAL(stA.stop_point().uri(), "stop_area:stop0");
+    BOOST_CHECK_EQUAL(stB.stop_point().uri(), "stop_area:stop2");
+    BOOST_CHECK_EQUAL(stA.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(stB.arrival_date_time(), ntest::to_posix_timestamp("20120614T081500"));
+    BOOST_CHECK_EQUAL(journey.sections(2).duration(), 0);
+
+
+    // - stop area stop1 to stop2 coordinates : using 0->2
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
+    origin = {origin_type, "stop_area:stop1"};
+    origin.coordinates = b.data->pt_data->stop_areas_map["stop_area:stop1"]->coord;
+    destination = {navitia::type::Type_e::Coord, "coord:120:80.002"};
+    origin.streetnetwork_params.max_duration = 15_min;
+    destination.streetnetwork_params.max_duration = 15_min;
+
+    resp = make_response(raptor, origin, destination,
+                         {ntest::to_posix_timestamp("20120614T021000")},
+                         true, navitia::type::AccessibiliteParams()/*false*/,
+                         forbidden, sn_worker, false);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
+    BOOST_CHECK_EQUAL(boost::count(section.additional_informations(), pbnavitia::STAY_IN), 0);
+    stA = section.stop_date_times(0);
+    stB = section.stop_date_times(1);
+    BOOST_CHECK_EQUAL(stA.stop_point().uri(), "stop_area:stop0");
+    BOOST_CHECK_EQUAL(stB.stop_point().uri(), "stop_area:stop2");
+    BOOST_CHECK_EQUAL(stA.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(stB.arrival_date_time(), ntest::to_posix_timestamp("20120614T081500"));
+    BOOST_CHECK_EQUAL(journey.sections(0).duration(), 297);
+
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in) {
@@ -642,8 +742,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
 
     pbnavitia::Journey journey = resp.journeys(0);
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(1);
@@ -653,8 +753,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T082000"));
 
     journey = resp.journeys(1);
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     st1 = section.stop_date_times(0);
     st2 = section.stop_date_times(1);
@@ -897,8 +997,8 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     dump_response(resp, "biking");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
-    auto journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
@@ -976,6 +1076,34 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
+}
+
+// for an admin, when no main stop area is set
+// we should output a fall back section, as it is used for computation
+BOOST_FIXTURE_TEST_CASE(admin_explicit_fall_back, streetnetworkmode_fixture<test_speed_provider>) {
+
+    origin.uri = "admin:74435";
+    origin.type = b.data->get_type_of_id(origin.uri);
+    origin.streetnetwork_params.max_duration = navitia::seconds(100);
+    destination.streetnetwork_params.max_duration = navitia::seconds(100);
+
+    auto resp = make_response();
+    dump_response(resp, "admin_explicit_fall_back");
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    auto section = journey.sections(0);
+
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+    BOOST_CHECK_GT(section.duration(), 0);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+
+    auto pathitem = section.street_network().path_items(0);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
+    BOOST_CHECK_EQUAL(pathitem.direction(), 0); //first direction is always 0°
 }
 
 // direct journey using only car
@@ -1538,68 +1666,158 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
 
     sa.uri = "sa:foo";
     admin->uri = "admin";
-    ep.uri = "foo";
-    ep.type = navitia::type::Type_e::Address;
     navitia::type::Data data;
     data.geo_ref->admins.push_back(admin);
     data.geo_ref->admin_map[admin->uri] = 0;
 
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
+    navitia::georef::Path empty_sn_path;
+    navitia::georef::Path filled_sn_path;
+    filled_sn_path.path_items.push_back({});
+
+    ep.type = navitia::type::Type_e::Address;
+    ep.uri = "foo";
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::POI;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Coord;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(!nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
     ep.uri = "sa:foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
     navitia::type::StopPoint sp2;
     navitia::type::StopArea sa2;
     sp2.stop_area = &sa2;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp2, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
 
     admin->main_stop_areas.push_back(&sa2);
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
 }
 
+struct isochrone_fixture {
+    isochrone_fixture(): b("20150614") {
+        b.vj("l1")("A", "8:25"_t)("B", "8:35"_t);
+        b.vj("l3")("A", "8:26"_t)("B", "8:45"_t);
+        b.vj("l4")("A", "8:27"_t)("C", "9:35"_t);
+        b.vj("l5")("A", "8:28"_t)("C", "9:50"_t);
+        b.vj("l6")("C", "8:29"_t)("B", "10:50"_t);
 
+        b.data->pt_data->index();
+        b.data->build_uri();
+        b.data->build_raptor();
+    }
 
-BOOST_AUTO_TEST_CASE(isochrone) {
-    ed::builder b("20120614");
-    b.vj("l1")("A1", 8*3600 + 25 * 60)("B", 8*3600 + 35 * 60);
-    b.vj("l2")("A1", 8*3600 + 25 * 60)("C", 8*3600 + 35 * 60);
+    ed::builder b;
+};
 
-    b.data->pt_data->index();
-    b.data->build_uri();
-    b.data->build_raptor();
+/**
+ * classic isochrone from A, we should find 2 journeys
+ */
+BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     nr::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
 
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
 
-    navitia::type::EntryPoint ep;
-    ep.type = navitia::type::Type_e::StopPoint;
-    ep.uri = "A1";
-
-    auto result = nr::make_isochrone(raptor, ep,
-            navitia::test::to_posix_timestamp("20120615T082000"), true, {}, {},
-            sn_worker, false);
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T082000"_pts,
+                                     true,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     3 * 60 * 60);
 
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+
+    std::cout << "1/ dep " << navitia::from_posix_timestamp(result.journeys(0).departure_date_time()) << std::endl;
+    std::cout << "1/ arr " << navitia::from_posix_timestamp(result.journeys(0).arrival_date_time()) << std::endl;
+    std::cout << "2/ dep " << navitia::from_posix_timestamp(result.journeys(1).departure_date_time()) << std::endl;
+    std::cout << "2/ arr " << navitia::from_posix_timestamp(result.journeys(1).arrival_date_time()) << std::endl;
+
+    // Note: since there is no 2nd pass for the isochrone, the departure dt is the requested dt
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T093500"_pts);
+}
+
+/**
+ * reverse isochrone test, we want to arrive in B before 11:00,
+ * we should find 2 journeys
+ */
+BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
+    nr::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "B"};
+
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T110000"_pts,
+                                     false,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     3 * 60 * 60);
+
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082900"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T110000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082600"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T110000"_pts);
+}
+
+/**
+ * only one hour from A, we cannot go to C
+ */
+BOOST_FIXTURE_TEST_CASE(isochrone_duration_limit, isochrone_fixture) {
+    nr::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
+
+    auto result = nr::make_isochrone(raptor,
+                                     ep,
+                                     "20150615T082000"_pts,
+                                     true,
+                                     {},
+                                     {},
+                                     sn_worker,
+                                     false,
+                                     1 * 60 * 60);
+
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 1);
+
+    BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
 }
 
 
@@ -1825,16 +2043,42 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(0).pt_display_informations().uris().line(), "A");
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(1).pt_display_informations().uris().line(), "A");
 
     forbidden.push_back("A");
     resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(1).pt_display_informations().uris().line(), "B");
+}
+
+// We want to go from S to R, but we can only take the bus from A to
+// B.  As doing S->A->B->R is worst that just S->R (more walking, more
+// pt, worst arrival), we want that the direct path filter the pt
+// solution.
+BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<test_speed_provider>) {
+    datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
+
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    origin.streetnetwork_params.offset = 0;
+    origin.streetnetwork_params.max_duration = navitia::seconds(15*60);
+    origin.streetnetwork_params.speed_factor = 1;
+
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    destination.streetnetwork_params.offset = 0;
+    destination.streetnetwork_params.speed_factor = 1;
+    destination.streetnetwork_params.max_duration = navitia::seconds(15*60);
+
+    forbidden = {"A", "B", "D"};
+
+    pbnavitia::Response resp = make_response();
+    dump_response(resp, "direct_path_filtering");
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(0).pt_display_informations().uris().line(), "B");
-
-
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
 }

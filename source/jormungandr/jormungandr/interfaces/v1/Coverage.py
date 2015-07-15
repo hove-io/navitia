@@ -35,13 +35,15 @@ from jormungandr.interfaces.v1.StatedResource import StatedResource
 from make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
 from converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
-from fields import NonNullNested
+from fields import NonNullNested, FieldDateTime
 
 
 region_fields = {
     "id": fields.String(attribute="region_id"),
     "start_production_date": fields.String,
     "end_production_date": fields.String,
+    "last_load_at": FieldDateTime(),
+    "name": fields.String,
     "status": fields.String,
     "shape": fields.String,
     "error": NonNullNested({
@@ -63,4 +65,7 @@ class Coverage(StatedResource):
     @add_collection_links(collections)
     @marshal_with(regions_fields)
     def get(self, region=None, lon=None, lat=None):
-        return i_manager.regions(region, lon, lat), 200
+        resp = i_manager.regions(region, lon, lat)
+        if resp.has_key("regions"):
+            resp["regions"] = sorted(resp["regions"], cmp=lambda reg1, reg2: cmp(reg1['name'], reg2['name']))
+        return resp, 200

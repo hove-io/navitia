@@ -230,9 +230,10 @@ class Scenario(default.Scenario):
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
 
-        self._remove_extra_journeys(response_tc.journeys, max_nb_journeys,
-                                    request['clockwise'],
-                                    timezone=instance.timezone)
+        if not request['debug']:
+            self._remove_extra_journeys(response_tc.journeys, max_nb_journeys,
+                                        request['clockwise'],
+                                        timezone=instance.timezone)
 
         max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
         if max_duration:

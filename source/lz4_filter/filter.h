@@ -76,7 +76,7 @@ public:
         uint32_t output_size;
         output_size = LZ4_compress(src, output_buffer, size);
         if(output_size > 0){
-            boost::iostreams::write(dest, (char*)&output_size, sizeof(uint32_t));
+            boost::iostreams::write(dest, reinterpret_cast<char*>(&output_size), sizeof(uint32_t));
             boost::iostreams::write(dest, output_buffer, output_size);
         }else{
             throw LZ4Exception();
@@ -123,7 +123,7 @@ public:
         std::streamsize output_size=0, read_size=0;
         uint32_t chunk_size=0;
 
-        boost::iostreams::read(src, (char*)&chunk_size, sizeof(uint32_t));
+        boost::iostreams::read(src, reinterpret_cast<char*>(&chunk_size), sizeof(uint32_t));
         read_size = boost::iostreams::read(src, input_buffer, chunk_size);
         if(read_size == chunk_size){
             output_size = LZ4_uncompress_unknownOutputSize(input_buffer, dest, chunk_size, size);

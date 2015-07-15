@@ -266,7 +266,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     return *this;
 }
 
-SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelchair_boarding) : b(b) {
+SA::SA(builder & b, const std::string & sa_name, double x, double y,
+       bool create_sp, bool wheelchair_boarding)
+       : b(b) {
     sa = new navitia::type::StopArea();
     sa->idx = b.data->pt_data->stop_areas.size();
     b.data->pt_data->stop_areas.push_back(sa);
@@ -278,19 +280,21 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelc
         sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
     b.sas[sa_name] = sa;
 
-    auto sp = new navitia::type::StopPoint();
-    sp->idx = b.data->pt_data->stop_points.size();
-    b.data->pt_data->stop_points.push_back(sp);
-    sp->name = "stop_point:"+ sa_name;
-    sp->uri = sp->name;
-    if(wheelchair_boarding)
-        sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-    sp->coord.set_lon(x);
-    sp->coord.set_lat(y);
+    if (create_sp) {
+        auto sp = new navitia::type::StopPoint();
+        sp->idx = b.data->pt_data->stop_points.size();
+        b.data->pt_data->stop_points.push_back(sp);
+        sp->name = "stop_point:"+ sa_name;
+        sp->uri = sp->name;
+        if(wheelchair_boarding)
+            sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        sp->coord.set_lon(x);
+        sp->coord.set_lat(y);
 
-    sp->stop_area = sa;
-    b.sps[sp->name] = sp;
-    sa->stop_point_list.push_back(sp);
+        sp->stop_area = sa;
+        b.sps[sp->name] = sp;
+        sa->stop_point_list.push_back(sp);
+    }
 }
 
 SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding){
@@ -386,8 +390,9 @@ VJ builder::frequency_vj(const std::string& line_name,
 }
 
 
-SA builder::sa(const std::string &name, double x, double y, const bool wheelchair_boarding){
-    return SA(*this, name, x, y, wheelchair_boarding);
+SA builder::sa(const std::string &name, double x, double y,
+               const bool create_sp, const bool wheelchair_boarding) {
+    return SA(*this, name, x, y, create_sp, wheelchair_boarding);
 }
 
 

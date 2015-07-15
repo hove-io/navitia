@@ -183,7 +183,7 @@ class TestBasicAuthentication(AbstractTestAuthentication):
         the authentication process must not mess if the region is not found
         """
         with user_set(app, 'bob'):
-            r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas', display=True)
+            r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas')
 
             assert status == 404
             assert 'error' in r
@@ -361,6 +361,16 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             # this test suppose no elasticsearch is lanched at localhost
             _, status = self.query_no_assert('v1/places?q=toto')
             assert status == 500
+
+    def test_sort_coverage(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('v1/coverage')
+
+            regions = get_not_null(response, 'regions')
+            assert len(regions) == 3
+            assert regions[0]["name"] == 'departure board'
+            assert regions[1]["name"] == 'empty routing'
+            assert regions[2]["name"] == 'routing api data'
 
     #TODO add more tests on:
     # * coords

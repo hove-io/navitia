@@ -102,7 +102,7 @@ struct RAPTOR
     void init(const vec_stop_point_duration& dep,
               const DateTime bound,
               const bool clockwise,
-              const type::Properties &properties);
+              const type::Properties& properties);
 
     // pt_data object getters by typed idx
     const type::JourneyPattern* get_jp(JpIdx idx) const {
@@ -118,12 +118,17 @@ struct RAPTOR
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path>
-    compute(const type::StopArea* departure, const type::StopArea* destination,
-            int departure_hour, int departure_day, DateTime bound, bool disruption_active,
+    compute(const type::StopArea* departure,
+            const type::StopArea* destination,
+            int departure_hour,
+            int departure_day,
+            DateTime bound,
+            bool disruption_active,
             bool clockwise = true,
-            const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
-            max_transfers=std::numeric_limits<uint32_t>::max(),
-            const std::vector<std::string>& forbidden_uris = {});
+            const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
+            uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+            const std::vector<std::string>& forbidden_uris = {},
+            const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
@@ -131,13 +136,16 @@ struct RAPTOR
     * à une heure donnée.
     */
     std::vector<Path>
-    compute_all(const vec_stop_point_duration &departs,
-                const vec_stop_point_duration &destinations,
-                const DateTime &departure_datetime, bool disruption_active,
-                const DateTime &bound=DateTimeUtils::inf,
+    compute_all(const vec_stop_point_duration& departs,
+                const vec_stop_point_duration& destinations,
+                const DateTime& departure_datetime,
+                bool disruption_active,
+                const DateTime& bound = DateTimeUtils::inf,
                 const uint32_t max_transfers = 10,
-                const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
-                const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
+                const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
+                const std::vector<std::string>& forbidden = std::vector<std::string>(),
+                bool clockwise = true,
+                const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
@@ -145,14 +153,14 @@ struct RAPTOR
      * à une heure donnée.
      */
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-    compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration > > &departures,
-                   const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration > > &arrivals,
-                   const DateTime &departure_datetime,
+    compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& departures,
+                   const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& arrivals,
+                   const DateTime& departure_datetime,
                    bool disruption_active, 
-                   const DateTime &bound,
+                   const DateTime& bound,
                    const uint32_t max_transfers,
-                   const type::AccessibiliteParams & accessibilite_params,
-                   const std::vector<std::string> & forbidden_uri,
+                   const type::AccessibiliteParams& accessibilite_params,
+                   const std::vector<std::string>& forbidden_uri,
                    bool clockwise);
 
 
@@ -161,30 +169,32 @@ struct RAPTOR
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
     void
-    isochrone(const vec_stop_point_duration &departures_,
-              const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min,
+    isochrone(const vec_stop_point_duration& departures_,
+              const DateTime& departure_datetime,
+              const DateTime& bound = DateTimeUtils::min,
               uint32_t max_transfers = 10,
-              const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
+              const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
-              bool clockwise = true, bool disruption_active = false);
+              bool clockwise = true,
+              bool disruption_active = false);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
     void set_valid_jp_and_jpp(uint32_t date,
-                              const type::AccessibiliteParams & accessibilite_params,
-                              const std::vector<std::string> & forbidden,
+                              const type::AccessibiliteParams& accessibilite_params,
+                              const std::vector<std::string>& forbidden,
                               bool disruption_active);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
                       bool clockwise,
                       bool disruption_active,
-                      const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+                      const uint32_t max_transfers);
 
     /// Apply foot pathes to labels
     /// Return true if it improves at least one label, false otherwise
-    template<typename Visitor> bool foot_path(const Visitor & v);
+    template<typename Visitor> bool foot_path(const Visitor& v);
 
     /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>

@@ -69,7 +69,8 @@ struct Result {
     Result(pbnavitia::Journey journey) : duration(journey.duration()), time(-1), arrival(journey.arrival_date_time()), nb_changes(journey.nb_transfers()) {}
 };
 
-type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point, const navitia::type::Data& data) {
+static type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point,
+                                                    const navitia::type::Data& data) {
     type::GeographicalCoord result;
     switch (entry_point.type) {
     case type::Type_e::Address: {
@@ -96,7 +97,6 @@ type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point
         break;
     case type::Type_e::Coord:
         return entry_point.coordinates;
-        break;
     case type::Type_e::Admin: {
             auto it_admin = data.geo_ref->admin_map.find(entry_point.uri);
             if (it_admin != data.geo_ref->admin_map.end()) {

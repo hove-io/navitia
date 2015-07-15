@@ -404,17 +404,12 @@ void Calendar::build_validity_pattern(boost::gregorian::date_period production_p
 }
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
-    if (this->journey_pattern->uri != other.journey_pattern->uri)
-        return this->journey_pattern->uri < other.journey_pattern->uri;
-    return this->uri < other.uri;
-
-    if (this == &other) return false;
-    if(this->journey_pattern == other.journey_pattern){
-        return this->stop_time_list.front() < other.stop_time_list.front();
-    }else{
+    if (this->journey_pattern->uri != other.journey_pattern->uri) {
         return this->journey_pattern->uri < other.journey_pattern->uri;
     }
+    return this->uri < other.uri;
 }
+
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     std::vector<idx_t> result;
     switch(type) {
@@ -759,6 +754,16 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
     else {
         uri_filter = param_uri;
         type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
+    switch (mode) {
+    case Mode_e::Walking: return os << "walking";
+    case Mode_e::Bike: return os << "bike";
+    case Mode_e::Car: return os << "car";
+    case Mode_e::Bss: return os << "bss";
+    default: return os << "[unknown mode]";
     }
 }
 

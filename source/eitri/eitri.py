@@ -1,4 +1,5 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#!/usr/bin/python
+# Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,29 +28,26 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource, fields, marshal_with
-from jormungandr import i_manager
-from jormungandr.protobuf_to_dict import protobuf_to_dict
-from fields import instance_status_with_parameters
-from jormungandr import app
-from navitiacommon import models
+from docker_wrapper import PostgresDocker
+from clingon import clingon
+from ed_handler import generate_nav
+import logging
+"""
+Nav generator
 
-status = {
-    "status": fields.Nested(instance_status_with_parameters)
-}
+from an input dir create a data.nav.lz4 with the data needed by kraken
+"""
+
+logging.basicConfig(level=logging.DEBUG)
 
 
-class Status(Resource):
-    @marshal_with(status)
-    def get(self, region):
-        response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
-        instance = i_manager.instances[region]
-        is_open_data = True
-        if not app.config['DISABLE_DATABASE']:
-            if instance and instance.name:
-                instance_db = models.Instance.get_by_name(instance.name)
-                if instance_db:
-                    is_open_data = instance_db.is_free
-        response['status']["is_open_data"] = is_open_data
-        response['status']['parameters'] = instance
-        return response, 200
+@clingon.clize()
+def eitri(data_dir, output_file='./data.nav.lz4'):
+    """
+    Generate a data.nav.lz4 file
+
+    :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
+    :param output_file: output data.nav.lz4 file path
+    """
+    with PostgresDocker() as docker:
+        generate_nav(data_dir, docker.get_db_params(), output_file)

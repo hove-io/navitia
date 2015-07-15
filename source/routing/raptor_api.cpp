@@ -198,29 +198,34 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     }
 }
 
+static georef::Path get_direct_path(georef::StreetNetwork& worker,
+                            const type::EntryPoint& origin,
+                            const type::EntryPoint& destination) {
+    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
+        || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
+        // we don't want direct path for admin to admin (it has no meaning)
+        // and we do not compute direct path for car because:
+        //  * our car pathes are not very realistic
+        //  * we do not want to promote car solution
+        return georef::Path();
+    }
+
+    return worker.get_direct_path(origin, destination);
+}
+
 static void add_direct_path(EnhancedResponse& enhanced_response,
                        const nt::Data& d,
-                       georef::StreetNetwork& worker,
+                       const georef::Path& path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
                        const bool clockwise) {
     pbnavitia::Response& pb_response = enhanced_response.response;
-
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
-            || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
-        // we don't want direct path for admin to admin (it has no meaning)
-        // and we do not compute direct path for car because:
-        //  * our car pathes are not very realistic
-        //  * we do not want to promote car solution
-        return;
-    }
 
-    auto temp = worker.get_direct_path(origin, destination);
-    if(!temp.path_items.empty()) {
+    if (! path.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        LOG4CPLUS_DEBUG(logger, "direct path found!");
+        LOG4CPLUS_DEBUG(logger, "direct path of " << path.duration << "s found!");
 
         //for each date time we add a direct street journey
         for(bt::ptime datetime : datetimes) {
@@ -231,11 +236,11 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
             if (clockwise) {
                 departure = datetime;
             } else {
-                const auto duration = bt::seconds(temp.duration.total_seconds()
+                const auto duration = bt::seconds(path.duration.total_seconds()
                                                   / origin.streetnetwork_params.speed_factor);
                 departure = datetime - duration;
             }
-            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
+            fill_street_sections(enhanced_response, origin, path, d, pb_journey, departure);
 
             const auto ts_departure = pb_journey->sections(0).begin_date_time();
             const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
@@ -259,6 +264,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                        const std::vector<navitia::routing::Path>& paths,
                        const nt::Data& d,
                        georef::StreetNetwork& worker,
+                       const georef::Path& direct_path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
@@ -305,48 +311,51 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             path.items.back().stop_points.back()->is_zonal;
 
         if (journey_begin_with_address_odt) {
-            // nor crow fly section, but we'll have to update the start of the journey
+            // no crow fly section, but we'll have to update the start of the journey
             //first is zonal ODT, we do nothing, there is no walking
-        }
-        else if (!path.items.front().stop_points.empty()
-                && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
-            const auto sp_dest = path.items.front().stop_points.front();
-            type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
-            bt::time_period action_period(path.items.front().departures.front(),
-                                          path.items.front().departures.front()+bt::minutes(1));
+        } else if (!path.items.empty() && !path.items.front().stop_points.empty()) {
             const auto& departure_stop_point = path.items.front().stop_points.front();
-            auto temp = worker.get_path(departure_stop_point->idx);
-            fill_crowfly_section(origin, destination_tmp, get_crowfly_mode(temp), path.items.front().departures.front(),
-                                 d, enhanced_response, pb_journey, now, action_period);
+            georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-        } else {
-            if(!path.items.front().stop_points.empty()) {
-                const auto& departure_stop_point = path.items.front().stop_points.front();
-                auto temp = worker.get_path(departure_stop_point->idx);
-                if(temp.path_items.size() > 0) {
-                    //because of projection problem, the walking path might not join
-                    //exactly the routing one
-                    nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
-                    if (temp.path_items.back().coordinates.back() != routing_first_coord) {
-                        //if it's the case, we artificialy add the missing segment
-                        temp.path_items.back().coordinates.push_back(routing_first_coord);
-                    }
+            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, d)){
+                type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
+                destination_tmp.coordinates = departure_stop_point->coord;
+                bt::time_period action_period(path.items.front().departures.front(),
+                                              path.items.front().departures.front() + bt::minutes(1));
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
+                                            worker.departure_path_finder.distance_to_entry_point);
+                departure_time = path.items.front().departures.front()- crow_fly_duration.to_posix();
+                fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
+                                     get_crowfly_mode(sn_departure_path),
+                                     departure_time, d, enhanced_response,
+                                     pb_journey, now, action_period);
 
-                    const auto walking_time = temp.duration;
-                    departure_time = path.items.front().departure - walking_time.to_posix();
-                    fill_street_sections(enhanced_response, origin, temp, d, pb_journey,
-                        departure_time);
-                    if(pb_journey->sections_size() > 0){
-                        auto first_section = pb_journey->mutable_sections(0);
-                        auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
-                        bt::time_period action_period(navitia::from_posix_timestamp(first_section->begin_date_time()),
-                                                      navitia::from_posix_timestamp(last_section->end_date_time()));
-                        // We add coherence with the origin of the request
-                        fill_pb_placemark(origin, d, first_section->mutable_origin(), 2, now, action_period, show_codes);
-                        // We add coherence with the first pt section
-                        last_section->mutable_destination()->Clear();
-                        fill_pb_placemark(departure_stop_point, d, last_section->mutable_destination(), 2, now, action_period, show_codes);
-                    }
+            } else if (!sn_departure_path.path_items.empty()) {
+                //because of projection problem, the walking path might not join
+                //exactly the routing one
+                nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
+                if (sn_departure_path.path_items.back().coordinates.back() != routing_first_coord) {
+                    //if it's the case, we artificially add the missing segment
+                    sn_departure_path.path_items.back().coordinates.push_back(routing_first_coord);
+                }
+
+                const auto walking_time = sn_departure_path.duration;
+                departure_time = path.items.front().departure - walking_time.to_posix();
+                fill_street_sections(enhanced_response, origin, sn_departure_path, d, pb_journey,
+                    departure_time);
+                if (pb_journey->sections_size() > 0) {
+                    auto first_section = pb_journey->mutable_sections(0);
+                    auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
+                    bt::time_period action_period(
+                                    navitia::from_posix_timestamp(first_section->begin_date_time()),
+                                    navitia::from_posix_timestamp(last_section->end_date_time()));
+                    // We add coherence with the origin of the request
+                    fill_pb_placemark(origin, d, first_section->mutable_origin(), 2, now,
+                                      action_period, show_codes);
+                    // We add coherence with the first pt section
+                    last_section->mutable_destination()->Clear();
+                    fill_pb_placemark(departure_stop_point, d, last_section->mutable_destination(),
+                                      2, now, action_period, show_codes);
                 }
             }
         }
@@ -516,52 +525,55 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         if (journey_end_with_address_odt) {
             // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
             // but we have to updated the end of the journey
-        }
-        else if (!path.items.back().stop_points.empty()
-                && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
-            const auto sp_orig = path.items.back().stop_points.back();
-            type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
-            bt::time_period action_period(path.items.back().departures.back(),
-                                          path.items.back().departures.back()+bt::minutes(1));
-            const auto& arrival_stop_point = path.items.back().stop_points.back();
-            auto temp = worker.get_path(arrival_stop_point->idx, true);
-            fill_crowfly_section(origin_tmp, destination, get_crowfly_mode(temp),
-                                 path.items.back().departures.back(),
-                                 d, enhanced_response, pb_journey, now, action_period);
+        } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
+            const auto arrival_stop_point = path.items.back().stop_points.back();
+            georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-        } else {
-            if(!path.items.empty() && !path.items.back().stop_points.empty()) {
-                const auto& arrival_stop_point = path.items.back().stop_points.back();
-                // for stop areas, we don't want to display the fallback section if start
-                // from one of the stop area's stop point
-                auto temp = worker.get_path(arrival_stop_point->idx, true);
-                if(temp.path_items.size() > 0) {
-                   //add a junction between the routing path and the walking one if needed
-                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
-                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                        temp.path_items.front().coordinates.push_front(routing_last_coord);
-                    }
-
-                    auto begin_section_time = arrival_time;
-                    int nb_section = pb_journey->mutable_sections()->size();
-                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                            begin_section_time);
-                    arrival_time = arrival_time + temp.duration.to_posix();
-                    if(pb_journey->mutable_sections()->size() > nb_section){
-                        //We add coherence between the destination of the PT part of the journey
-                        //and the origin of the street network part
-                        auto section = pb_journey->mutable_sections(nb_section);
-                        bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
-                        fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    }
-
-                    //We add coherence with the destination object of the request
-                    auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
-                    bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                              navitia::from_posix_timestamp(section->end_date_time() + 1));
-                    fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
+            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, d)) {
+                type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
+                origin_tmp.coordinates = arrival_stop_point->coord;
+                bt::time_period action_period(path.items.back().departures.back(),
+                                              path.items.back().departures.back()+bt::minutes(1));
+                const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
+                                                worker.arrival_path_finder.distance_to_entry_point);
+                arrival_time = arrival_time + crow_fly_duration.to_posix();
+                fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
+                                     get_crowfly_mode(sn_arrival_path),
+                                     path.items.back().departures.back(), d, enhanced_response,
+                                     pb_journey, now, action_period);
+            }
+            // for stop areas, we don't want to display the fallback section if start
+            // from one of the stop area's stop point
+            else if (!sn_arrival_path.path_items.empty()) {
+               //add a junction between the routing path and the walking one if needed
+                nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                if (sn_arrival_path.path_items.front().coordinates.front() != routing_last_coord) {
+                    sn_arrival_path.path_items.front().coordinates.push_front(routing_last_coord);
                 }
+
+                auto begin_section_time = arrival_time;
+                int nb_section = pb_journey->mutable_sections()->size();
+                fill_street_sections(enhanced_response, destination, sn_arrival_path, d, pb_journey,
+                        begin_section_time);
+                arrival_time = arrival_time + sn_arrival_path.duration.to_posix();
+                if (pb_journey->mutable_sections()->size() > nb_section) {
+                    //We add coherence between the destination of the PT part of the journey
+                    //and the origin of the street network part
+                    auto section = pb_journey->mutable_sections(nb_section);
+                    bt::time_period action_period(
+                                       navitia::from_posix_timestamp(section->begin_date_time()),
+                                       navitia::from_posix_timestamp(section->end_date_time() + 1));
+                    fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now,
+                                      action_period, show_codes);
+                }
+
+                //We add coherence with the destination object of the request
+                auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
+                bt::time_period action_period(
+                                       navitia::from_posix_timestamp(section->begin_date_time()),
+                                       navitia::from_posix_timestamp(section->end_date_time() + 1));
+                fill_pb_placemark(destination, d, section->mutable_destination(), 2, now,
+                                  action_period, show_codes);
             }
         }
 
@@ -584,13 +596,14 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         co2_emission_aggregator(pb_journey);
     }
 
-    add_direct_path(enhanced_response, d, worker, origin, destination, datetimes, clockwise);
+    add_direct_path(enhanced_response, d, direct_path, origin, destination, datetimes, clockwise);
 }
 
 static pbnavitia::Response
 make_pathes(const std::vector<navitia::routing::Path>& paths,
             const nt::Data& d,
             georef::StreetNetwork& worker,
+            const georef::Path& direct_path,
             const type::EntryPoint& origin,
             const type::EntryPoint& destination,
             const std::vector<bt::ptime>& datetimes,
@@ -601,7 +614,8 @@ make_pathes(const std::vector<navitia::routing::Path>& paths,
 
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 
-    add_pathes(enhanced_response, paths, d, worker, origin, destination, datetimes, clockwise, show_codes);
+    add_pathes(enhanced_response, paths, d, worker, direct_path,
+               origin, destination, datetimes, clockwise, show_codes);
 
     if (pb_response.journeys().size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
@@ -632,17 +646,28 @@ static void add_isochrone_response(RAPTOR& raptor,
                 continue;
             }
 
-            int duration = ::abs(best_lbl - init_dt);
+            // get absolute value
+            int duration = best_lbl > init_dt ? best_lbl - init_dt : init_dt - best_lbl;
 
             if(duration > max_duration) {
                 continue;
             }
             auto pb_journey = response.add_journeys();
-            const auto str_departure = to_posix_timestamp(best_lbl, raptor.data);
-            const auto str_arrival = to_posix_timestamp(best_lbl, raptor.data);
+
+            uint64_t departure;
+            uint64_t arrival;
+            // Note: since there is no 2nd pass for the isochrone, the departure dt
+            // is the requested dt (or the arrival dt for non clockwise)
+            if (clockwise) {
+                departure = to_posix_timestamp(init_dt, raptor.data);
+                arrival = to_posix_timestamp(best_lbl, raptor.data);
+            } else {
+                departure = to_posix_timestamp(best_lbl, raptor.data);
+                arrival = to_posix_timestamp(init_dt, raptor.data);
+            }
             const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-            pb_journey->set_arrival_date_time(str_arrival);
-            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(arrival);
+            pb_journey->set_departure_date_time(departure);
             pb_journey->set_requested_date_time(str_requested);
             pb_journey->set_duration(duration);
             pb_journey->set_nb_transfers(round - 1);
@@ -713,12 +738,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::POI) {
         std::set<SpIdx> stop_points;
 
+        georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
+                                                                worker.departure_path_finder;
+
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
                 for (auto stop_point : it->second->stop_point_list) {
                     const SpIdx sp_idx = SpIdx(*stop_point);
                     if (stop_points.find(sp_idx) == stop_points.end()) {
+                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                         result.push_back({sp_idx, {}});
                         stop_points.insert(sp_idx);
                     }
@@ -733,6 +762,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
                 if (stop_points.find(sp_idx) == stop_points.end()) {
+                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                     result.push_back({sp_idx, {}});
                     stop_points.insert(sp_idx);
                 }
@@ -744,6 +774,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         for (const auto* sp: zonal_sps) {
             const SpIdx sp_idx = SpIdx(*sp);
             if (stop_points.find(sp_idx) == stop_points.end()) {
+                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result.push_back({sp_idx, {}});
                 stop_points.insert(sp_idx);
             }
@@ -775,20 +806,19 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         }
         const auto admin = data.geo_ref->admins[it_admin->second];
 
+        //we add the center of the admin, and look for the stop points around
+        auto nearest = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.max_duration,
+                    data.pt_data->stop_point_proximity_list,
+                    use_second);
+        for (const auto& elt: nearest) {
+            result.push_back({SpIdx(elt.first), elt.second});
+        }
         if (! admin->main_stop_areas.empty()) {
             for (auto stop_area: admin->main_stop_areas) {
                 for(auto stop_point : stop_area->stop_point_list) {
                     result.push_back({SpIdx(*stop_point), {}});
                 }
-            }
-        } else {
-            //we only add the center of the admin, and look for the stop points around
-            auto nearest = worker.find_nearest_stop_points(
-                        ep.streetnetwork_params.max_duration,
-                        data.pt_data->stop_point_proximity_list,
-                        use_second);
-            for (const auto& elt: nearest) {
-                result.push_back({SpIdx(elt.first), elt.second});
             }
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
@@ -845,8 +875,10 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    const auto direct_path = get_direct_path(worker, origin, destination);
+
     if(departures.size() == 0 && destinations.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination,
+        response = make_pathes(pathes, raptor.data, worker, direct_path, origin, destination,
                                datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point", response.mutable_error());
@@ -856,7 +888,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     }
 
     if(departures.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+        response = make_pathes(pathes, raptor.data, worker, direct_path,
+                               origin, destination, datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_origin, "no origin point", response.mutable_error());
             response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
@@ -865,7 +898,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     }
 
     if(destinations.size() == 0){
-        response = make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+        response = make_pathes(pathes, raptor.data, worker, direct_path,
+                               origin, destination, datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
             fill_pb_error(pbnavitia::Error::no_destination, "no destination point", response.mutable_error());
             response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
@@ -876,6 +910,10 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
 
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+    typedef boost::optional<navitia::time_duration> OptTimeDur;
+    const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
+        OptTimeDur() :
+        OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
 
     for(bt::ptime datetime : datetimes) {
         int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
@@ -885,8 +923,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         if(max_duration!=std::numeric_limits<uint32_t>::max()) {
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
-
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(
+            departures, destinations, init_dt, disruption_active, bound, max_transfers,
+            accessibilite_params, forbidden, clockwise, direct_path_dur);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
@@ -907,7 +946,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
     if(clockwise)
         std::reverse(pathes.begin(), pathes.end());
 
-    return make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+    return make_pathes(pathes, raptor.data, worker, direct_path,
+                       origin, destination, datetimes, clockwise, show_codes);
 }
 
 pbnavitia::Response
@@ -1061,6 +1101,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 }
                 return journey1.destination().uri() < journey2.destination().uri();
                 });
+
+     if (response.journeys().size() == 0) {
+         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this isochrone",
+         response.mutable_error());
+         response.set_response_type(pbnavitia::NO_SOLUTION);
+     }
 
 
     return response;

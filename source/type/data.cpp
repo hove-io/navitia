@@ -90,7 +90,7 @@ bool Data::load(const std::string& filename,
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
-        last_load_at = pt::microsec_clock::local_time();
+        last_load_at = pt::microsec_clock::universal_time();
         last_load = true;
         loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
@@ -336,7 +336,7 @@ void Data::complete(){
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
-ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
+static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
     ValidityPattern validity;
 
     for (auto* vj: meta_vj->theoric_vj) {
@@ -627,6 +627,8 @@ Type_e Data::get_type_of_id(const std::string & id) const {
         return Type_e::Address;
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
+    if(id.size()>10 && id.substr(0,10) == "stop_area:")
+        return Type_e::StopArea;
     #define GET_TYPE(type_name, collection_name) \
     const auto &collection_name##_map = pt_data->collection_name##_map;\
     if(collection_name##_map.count(id) != 0 )\

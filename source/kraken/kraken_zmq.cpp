@@ -98,7 +98,5 @@ int main(int argn, char** argv){
             zmq::device(ZMQ_QUEUE, clients, workers);
         }catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
     }while(true);
-
-    return 0;
 }
 

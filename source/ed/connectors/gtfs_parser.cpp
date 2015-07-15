@@ -78,7 +78,7 @@ template <typename T>
 void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const T& obj, const std::string& comment) {
     std::string& comment_id = gtfs_data.comments_id_map[comment];
     if (comment_id.empty()) {
-        comment_id = "comment__" + gtfs_data.comments_id_map.size();
+        comment_id = "comment__" + boost::lexical_cast<std::string>(gtfs_data.comments_id_map.size());
     }
     data.add_pt_object_comment(obj, comment_id);
 
@@ -656,7 +656,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
             ++data.count_too_long_connections;
             return;
         }
-    } catch (boost::bad_lexical_cast& e) {
+    } catch (boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(logger, "Invalid connection time: " + row[time_c]);
         return;
     }

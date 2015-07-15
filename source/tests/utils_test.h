@@ -16,8 +16,12 @@ inline uint64_t to_posix_timestamp(const std::string& str) {
 }
 }
 
-u_int32_t operator"" _t(const char* str, size_t s) {
+inline u_int32_t operator"" _t(const char* str, size_t s) {
     return boost::posix_time::duration_from_string(std::string(str, s)).total_seconds();
+}
+
+inline u_int64_t operator"" _pts(const char* str, size_t s) {
+    return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(std::string(str, s)));
 }
 
 namespace std {
