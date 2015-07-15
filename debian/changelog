@@ -1,3 +1,44 @@
+navitia2 (1.22.3) unstable; urgency=low
+
+  * change version of flask restful 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 15 Jul 2015 10:07:47 +0100
+
+navitia2 (1.22.2) unstable; urgency=low
+
+  * fix six version 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 15 Jul 2015 09:07:33 +0100
+
+navitia2 (1.22.1) unstable; urgency=low
+
+  * change required version of flask-restful <https://github.com/CanalTP/navitia/pull/1102>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 15 Jul 2015 09:07:59 +0100
+
+navitia2 (1.22.0) unstable; urgency=low
+
+  * Documentation: link to docker wiki  <https://github.com/CanalTP/navitia/pull/1100>
+  * raptor: penalize transfer in walking time and desactivate same sa in journey  <https://github.com/CanalTP/navitia/pull/1098>
+  * jormungandr: one destineo filter wasn't disabled on debug  <https://github.com/CanalTP/navitia/pull/1097>
+  * Tyr: add the new scenario in the possible scenario  <https://github.com/CanalTP/navitia/pull/1095>
+  * Eitri: new module to ease data.nav.lz4 creation  <https://github.com/CanalTP/navitia/pull/1094>
+  * Jormungandr: add more check to a test  <https://github.com/CanalTP/navitia/pull/1093>
+  * All: compile with clang and remove warning  <https://github.com/CanalTP/navitia/pull/1092>
+  * Jormungandr: handle special char in uris  <https://github.com/CanalTP/navitia/pull/1089>
+  * Raptor api: explicit fall back when used for admin  <https://github.com/CanalTP/navitia/pull/1088>
+  * time_tables: changes the times of a vj to have a canonical order  <https://github.com/CanalTP/navitia/pull/1087>
+  * raptor: direct path filtering  <https://github.com/CanalTP/navitia/pull/1086>
+  * Kraken: fix accessible path  <https://github.com/CanalTP/navitia/pull/1085>
+  * Raptor: fix nb_transfers for isochrone  <https://github.com/CanalTP/navitia/pull/1083>
+  * Jormungandr: fix reverse isochrons  <https://github.com/CanalTP/navitia/pull/1082>
+  * Jormungandr: tag TAD StopDateTime on /departures  <https://github.com/CanalTP/navitia/pull/1081>
+  * Jormungandr: add coherence to some schedule links  <https://github.com/CanalTP/navitia/pull/1080>
+  * Jormungandr: add fordidden_uris[] for coherence  <https://github.com/CanalTP/navitia/pull/1079>
+  * Jormungandr: add info to /status and /coverage  <https://github.com/CanalTP/navitia/pull/1078>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 15 Jul 2015 09:07:48 +0100
+
 navitia2 (1.21.1) unstable; urgency=low
 
   * Jormungandr: fix pt_objects API <https://github.com/CanalTP/navitia/pull/1084> 
