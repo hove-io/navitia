@@ -89,7 +89,7 @@ def type_of_data(filename, only_one_file=True):
         if filename.endswith(".poly") or filename.endswith(".wkt"):
             return 'shape', filename
 
-    return None
+    return None, None
 
 
 def family_of_data(type):
