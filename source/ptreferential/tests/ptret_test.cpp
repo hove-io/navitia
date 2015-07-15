@@ -348,11 +348,11 @@ BOOST_AUTO_TEST_CASE(line_code) {
 
     //find line by code
     auto indexes = make_query(navitia::type::Type_e::Line, "line.code=line_A", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line_A");
 
     indexes = make_query(navitia::type::Type_e::Line, "line.code=\"line C\"", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
 
     //no line B
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(line_code) {
 
     //find route by line code
     indexes = make_query(navitia::type::Type_e::Route, "line.code=line_A", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
 
     //route has no code attribute, no filter can be used
