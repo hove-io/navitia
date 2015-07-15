@@ -1,6 +1,6 @@
 Flask==0.10.1
 Flask-Migrate==1.1.1
--e git+https://github.com/CanalTP/flask-restful.git@850324a33fa376c2fc5ccfa946a8aa678026aeba#egg=Flask_RESTful-master
+-e git+https://github.com/CanalTP/flask-restful.git@d9a91d5a8aafd14b8ed4cf66bab3d922953b3db6#egg=Flask_RESTful-master
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.7
 GeoAlchemy2==0.2.4
