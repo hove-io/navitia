@@ -1,3 +1,9 @@
+navitia2 (1.22.3) unstable; urgency=low
+
+  * change version of flask restful 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 15 Jul 2015 10:07:47 +0100
+
 navitia2 (1.22.2) unstable; urgency=low
 
   * fix six version 
