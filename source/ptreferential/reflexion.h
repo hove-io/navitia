@@ -70,5 +70,6 @@ DECL_HAS_MEMBER(id)
 DECL_HAS_MEMBER(idx)
 DECL_HAS_MEMBER(name)
 DECL_HAS_MEMBER(validity_pattern)
+DECL_HAS_MEMBER(code)
 
 }}

@@ -365,3 +365,47 @@ class TestPtRefPlace(AbstractTestFixture):
         #we should have 3 stops
         eq_(len(stops), 2)
         assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
+
+
+@dataset(["main_routing_test"])
+class TestPtRefLineCode(AbstractTestFixture):
+
+    def test_all_lines(self):
+        """test with all lines in the pt call"""
+        response = self.query('v1/coverage/main_routing_test/lines')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 4)
+        assert {"1A", "1B", "1C", "1D"} == {l['code'] for l in lines}
+
+    def test_line_filter_line_code(self):
+        """test filtering lines from line code 1A in the pt call"""
+        response = self.query('v1/coverage/main_routing_test/lines?filter=line.code=1A')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 1)
+        assert "1A" == lines[0]['code']
+
+    def test_line_filter_line_code_no_line(self):
+        """test filtering lines from line code bob (no line coded "bob") in the pt call"""
+        url = 'v1/coverage/main_routing_test/lines?filter=line.code=bob'
+        response, status = self.query_no_assert(url)
+        assert status == 400
+        assert 'error' in response
+        assert 'bad_filter' in response['error']['id']
+
+    def test_line_filter_route_code_impossible(self):
+        """test filtering lines from route code (no code attribute for route) bob in the pt call"""
+        response = self.query('v1/coverage/main_routing_test/lines?filter=route.code=bob')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 4)
+        assert {"1A", "1B", "1C", "1D"} == {l['code'] for l in lines}
+
+    def test_route_filter_line_code(self):
+        """test filtering routes from line code 1B in the pt call"""
+        response = self.query('v1/coverage/main_routing_test/routes?filter=line.code=1B')
+        assert 'error' not in response
+        routes = get_not_null(response, 'routes')
+        eq_(len(routes), 1)
+        assert "1B" == routes[0]['line']['code']

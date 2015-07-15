@@ -409,17 +409,20 @@ struct routing_api_data {
                 ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
                 ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
                 .st_shape({B, I, A});
+            b.lines["A"]->code = "1A";
 
             //add another bus, much later. we'll use that one for disruptions
             b.vj("B")
                 ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
                 ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
                 .st_shape({B, I, A});
+            b.lines["B"]->code = "1B";
 
             b.vj("C")
                 ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
                 ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
                 .st_shape({A, I, B});
+            b.lines["C"]->code = "1C";
 
             //we add another stop not used in the routing tests, but used for ptref tests
 
@@ -429,6 +432,7 @@ struct routing_api_data {
                 ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
                 ("stop_point:stopC", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
                 .st_shape({A, K, J});
+            b.lines["D"]->code = "1D";
             auto jp_d = builder_vj.vj->journey_pattern;
             jp_d->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
             assert (jp_d->physical_mode->name == "Metro");
