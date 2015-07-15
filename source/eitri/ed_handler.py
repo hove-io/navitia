@@ -34,7 +34,12 @@ from navitiacommon.launch_exec import launch_exec
 import psycopg2
 import zipfile
 import logging
-import time
+
+
+ALEMBIC_PATH = os.environ.get('ALEMBIC_PATH', '../sql')
+
+# optional env var to give the path to the ed component
+ED_COMPONENT_PATH = os.environ.get('ED_COMPONENT_PATH')
 
 
 @contextmanager
@@ -52,7 +57,10 @@ def cd(new_dir):
 
 def binarize(db_params, output):
     logging.getLogger(__name__).info('creating data.nav')
-    launch_exec('ed2nav',
+    ed2nav = 'ed2nav'
+    if ED_COMPONENT_PATH:
+        ed2nav = os.path.join(ED_COMPONENT_PATH, ed2nav)
+    launch_exec(ed2nav,
                 ["-o", output,
                  "--connection-string", db_params.old_school_cnx_string()], logging.getLogger(__name__))
 
@@ -72,6 +80,8 @@ def import_data(data_dir, db_params):
 
     # Note, we consider that we only have to load one kind of data per directory
     import_component = data_type + '2ed'
+    if ED_COMPONENT_PATH:
+        import_component = os.path.join(ED_COMPONENT_PATH, import_component)
 
     if file_to_load.endswith('.zip') or file_to_load.endswith('.geopal'):
         #TODO: handle geopal as non zip
@@ -93,9 +103,6 @@ def load_data(data_dirs, db_params):
 
     for d in data_dirs:
         import_data(d, db_params)
-
-
-ALEMBIC_PATH = os.environ.get('ALEMBIC_PATH', '../sql')
 
 
 def update_db(db_params):
