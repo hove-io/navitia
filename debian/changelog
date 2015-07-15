@@ -1,3 +1,12 @@
+navitia2 (1.22.4) unstable; urgency=low
+
+  * Jormungandr: fix regions sort for dead region
+    <https://github.com/CanalTP/navitia/pull/1106> 
+  * Tyr: fix bug on file type  <https://github.com/CanalTP/navitia/pull/1105> 
+  * Pip: don't force any version for psycopg2 <https://github.com/CanalTP/navitia/pull/1106> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Wed, 15 Jul 2015 15:07:26 +0100
+
 navitia2 (1.22.3) unstable; urgency=low
 
   * change version of flask restful 

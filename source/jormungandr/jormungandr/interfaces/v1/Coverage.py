@@ -67,5 +67,5 @@ class Coverage(StatedResource):
     def get(self, region=None, lon=None, lat=None):
         resp = i_manager.regions(region, lon, lat)
         if resp.has_key("regions"):
-            resp["regions"] = sorted(resp["regions"], cmp=lambda reg1, reg2: cmp(reg1['name'], reg2['name']))
+            resp["regions"] = sorted(resp["regions"], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
         return resp, 200
