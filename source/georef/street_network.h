@@ -229,7 +229,7 @@ struct StreetNetwork {
 
 /// Build a path from a reverse path list
 Path create_path(const GeoRef& georef,
-                 std::vector<vertex_t> reverse_path,
+                 const std::vector<vertex_t>& reverse_path,
                  bool add_one_elt);
 
 /// Compute the angle between the last segment of the path and the next point

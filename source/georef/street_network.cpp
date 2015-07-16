@@ -545,7 +545,7 @@ Path PathFinder::build_path(vertex_t best_destination) const {
 
 
 Path create_path(const GeoRef& geo_ref,
-                 std::vector<vertex_t> reverse_path,
+                 const std::vector<vertex_t>& reverse_path,
                  bool add_one_elt) {
     Path p;
 
