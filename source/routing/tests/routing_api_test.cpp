@@ -882,6 +882,7 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     // from the stop times.
     journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.most_serious_disruption_effect(), ""); //no disruption should be found
+    BOOST_CHECK_EQUAL(journey.duration(), 112);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
@@ -964,7 +965,9 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
 
     // Walk mode
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).co2_emission().value(), 0.);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.58);
