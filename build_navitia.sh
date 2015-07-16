@@ -148,7 +148,7 @@ git submodule update --init
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq3-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
@@ -178,6 +178,8 @@ then
 
     sudo pip install -r "$navitia_dir"/source/jormungandr/requirements.txt
     sudo pip install -r "$navitia_dir"/source/tyr/requirements.txt
+    #we want a custom protobuff version
+    sudo pip install -U protobuf==2.5.0
 fi
 
 #the build procedure is explained is the install documentation
