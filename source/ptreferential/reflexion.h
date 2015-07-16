@@ -34,7 +34,7 @@ www.navitia.io
 
 namespace navitia{ namespace ptref {
 
-/// Exception thrown when an unknown memner is asked for
+/// Exception thrown when an unknown member is asked for
 struct unknown_member{};
 
 /*
