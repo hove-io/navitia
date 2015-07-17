@@ -277,7 +277,7 @@ class add_journey_href(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            if not "journeys" in objects[0]:
+            if "journeys" not in objects[0]:
                 return objects
             if "region" in kwargs:
                 del kwargs["region"]

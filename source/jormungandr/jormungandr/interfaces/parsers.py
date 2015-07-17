@@ -74,5 +74,4 @@ def date_time_format(value):
     try:
         return parse_input_date(value)
     except ValueError as e:
-        # e.args[0] is portable, while e.message is not
-        raise ValueError("Unable to parse datetime, {}".format(e.args[0]))
+        raise ValueError("Unable to parse datetime, {}".format(e.message))

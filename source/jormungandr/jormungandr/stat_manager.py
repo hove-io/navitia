@@ -201,7 +201,7 @@ class StatManager(object):
             stat_request.client = request.headers.getlist("X-Forwarded-For")[0]
         stat_request.path = request.path
 
-        stat_request.response_size = 4242
+        stat_request.response_size = sys.getsizeof(call_result[0])
 
     def register_interpreted_parameters(self, args):
         """

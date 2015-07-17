@@ -35,7 +35,7 @@ from flask import request, make_response
 from jormungandr import rest_api
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
-import simplejson
+import ujson
 
 
 @rest_api.representation("text/jsonp")
@@ -51,7 +51,7 @@ def output_jsonp(data, code, headers=None):
 @rest_api.representation("text/json")
 @rest_api.representation("application/json")
 def output_json(data, code, headers=None):
-    resp = make_response(simplejson.dumps(data), code)
+    resp = make_response(ujson.dumps(data), code)
     resp.headers.extend(headers or {})
     return resp
 
