@@ -248,9 +248,11 @@ static void init_best_pts_snd_pass(const RAPTOR::vec_stop_point_duration& depart
                                    IdxMap<type::StopPoint, DateTime>& best_labels) {
     for (const auto& d: departures) {
         if (clockwise) {
-            best_labels[d.first] = departure_datetime + d.second.total_seconds() - 1;
+            best_labels[d.first] = std::min(best_labels[d.first],
+                                            departure_datetime + d.second.total_seconds() - 1);
         } else {
-            best_labels[d.first] = departure_datetime - d.second.total_seconds() + 1;
+            best_labels[d.first] = std::max(best_labels[d.first],
+                                            departure_datetime - d.second.total_seconds() + 1);
         }
     }
 }
@@ -315,8 +317,13 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
         boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
-        const auto reader_results = read_solutions(*this, !clockwise, departures_, destinations,
-                                                   disruption_active, accessibilite_params);
+        const auto reader_results = read_solutions(*this,
+                                                   !clockwise,
+                                                   departure_datetime,
+                                                   departures_,
+                                                   destinations,
+                                                   disruption_active,
+                                                   accessibilite_params);
         for (const auto& s: reader_results) { solutions.add(s); }
     }
 

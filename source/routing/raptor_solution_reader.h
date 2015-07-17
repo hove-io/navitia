@@ -83,6 +83,7 @@ typedef ParetoFront<Journey, Dominates> Solutions;
 Solutions
 read_solutions(const RAPTOR& raptor,
                const bool clockwise,
+               const DateTime& departure_datetime,
                const RAPTOR::vec_stop_point_duration& deps,
                const RAPTOR::vec_stop_point_duration& arrs,
                const bool disruption_active,
