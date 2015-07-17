@@ -38,9 +38,6 @@ import logging
 
 ALEMBIC_PATH = os.environ.get('ALEMBIC_PATH', '../sql')
 
-# optional env var to give the path to the ed component
-ED_COMPONENT_PATH = os.environ.get('ED_COMPONENT_PATH')
-
 
 @contextmanager
 def cd(new_dir):
@@ -55,17 +52,17 @@ def cd(new_dir):
         os.chdir(prev_dir)
 
 
-def binarize(db_params, output):
+def binarize(db_params, output, ed_component_path):
     logging.getLogger(__name__).info('creating data.nav')
     ed2nav = 'ed2nav'
-    if ED_COMPONENT_PATH:
-        ed2nav = os.path.join(ED_COMPONENT_PATH, ed2nav)
+    if ed_component_path:
+        ed2nav = os.path.join(ed_component_path, ed2nav)
     launch_exec(ed2nav,
                 ["-o", output,
                  "--connection-string", db_params.old_school_cnx_string()], logging.getLogger(__name__))
 
 
-def import_data(data_dir, db_params):
+def import_data(data_dir, db_params, ed_component_path):
     """
     call the right component to import the data in the directory
 
@@ -80,8 +77,8 @@ def import_data(data_dir, db_params):
 
     # Note, we consider that we only have to load one kind of data per directory
     import_component = data_type + '2ed'
-    if ED_COMPONENT_PATH:
-        import_component = os.path.join(ED_COMPONENT_PATH, import_component)
+    if ed_component_path:
+        import_component = os.path.join(ed_component_path, import_component)
 
     if file_to_load.endswith('.zip') or file_to_load.endswith('.geopal'):
         #TODO: handle geopal as non zip
@@ -98,11 +95,11 @@ def import_data(data_dir, db_params):
         exit(1)
 
 
-def load_data(data_dirs, db_params):
+def load_data(data_dirs, db_params, ed_component_path):
     logging.getLogger(__name__).info('loading {}'.format(data_dirs))
 
     for d in data_dirs:
-        import_data(d, db_params)
+        import_data(d, db_params, ed_component_path)
 
 
 def update_db(db_params):
@@ -128,7 +125,7 @@ def update_db(db_params):
             raise Exception('problem with db update')
 
 
-def generate_nav(data_dir, db_params, output_file):
+def generate_nav(data_dir, db_params, output_file, ed_component_path):
     """
     load all data either directly in data_dir if there is no sub dir, or all data in the subdir
     """
@@ -145,6 +142,6 @@ def generate_nav(data_dir, db_params, output_file):
 
     update_db(db_params)
 
-    load_data(data_dirs, db_params)
+    load_data(data_dirs, db_params, ed_component_path)
 
-    binarize(db_params, output_file)
+    binarize(db_params, output_file, ed_component_path)
