@@ -214,7 +214,7 @@ class InstanceManager(object):
         return instances
 
     def region_exists(self, region_str):
-        if region_str in self.instances:
+        if region_str in self.instances.keys():
             return True
         else:
             raise RegionNotFound(region=region_str)
