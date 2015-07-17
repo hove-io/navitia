@@ -166,7 +166,7 @@ class Scenario(object):
             st.interface_version = 0
         else:
             st.interface_version = request["interface_version"]
-        st.count = 10 if not "count" in request.keys() else request["count"]
+        st.count = 10 if "count" not in request else request["count"]
         if not "start_page" in request:
             st.start_page = 0
         else:
