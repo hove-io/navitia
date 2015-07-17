@@ -32,6 +32,8 @@ www.navitia.io
 #define BOOST_TEST_MODULE associated_calendar_test
 #include <boost/test/unit_test.hpp>
 #include "utils/logger.h"
+#include "type/data.h"
+#include "type/pt_data.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -40,5 +42,14 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 
 BOOST_AUTO_TEST_CASE(fusio_test) {
+    const auto input_file = std::getenv("INPUT_FILE_PATH");
+    navitia::type::Data data;
 
+    const auto res = data.load(input_file);
+
+    BOOST_REQUIRE(res);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
+    BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
 }
