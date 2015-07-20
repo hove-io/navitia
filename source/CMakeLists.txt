@@ -7,7 +7,7 @@ find_package(GoogleTcmalloc)
 find_package(Protoc)
 
 # add custom target to build docker tests not to have a strong docker dependendy
-add_custom_target(docker_test COMMAND ${CMAKE_CTEST_COMMAND})
+add_custom_target(docker_test)
 
 if(Boost_VERSION)
     # be silent if already found
