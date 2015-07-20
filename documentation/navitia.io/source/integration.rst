@@ -134,17 +134,9 @@ Authentication
 
 You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
-There is two ways for authentication, you can use a `Basic HTTP authentication`_, where the username is the key, and without password.
-
-The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
-
-.. code-block:: none
-
-    Authorization: mysecretkey
+You must use the `Basic HTTP authentication`_, where the username is the key, and without password.
 
 .. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
-
-.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
 
