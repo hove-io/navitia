@@ -102,12 +102,20 @@ template<class T>
 WhereWrapper<T> build_clause(std::vector<Filter> filters) {
     WhereWrapper<T> wh(new BaseWhere<T>());
     for(const Filter & filter : filters) {
-        if(filter.attribute == "uri") {
-            wh = wh && WHERE(ptr_uri<T>(), filter.op, filter.value);
-        } else if(filter.attribute == "name") {
-            wh = wh && WHERE(ptr_name<T>(), filter.op, filter.value);
-        } else {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unhandled filter type: " << filter.attribute << " the filter is ignored");
+        try {
+            if(filter.attribute == "uri") {
+                wh = wh && WHERE(ptr_uri<T>(), filter.op, filter.value);
+            } else if(filter.attribute == "name") {
+                wh = wh && WHERE(ptr_name<T>(), filter.op, filter.value);
+            } else if(filter.attribute == "code") {
+                wh = wh && WHERE(ptr_code<T>(), filter.op, filter.value);
+            } else {
+                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                        "unhandled filter type: " << filter.attribute << ". The filter is ignored");
+            }
+        } catch (unknown_member) {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                    "given object has no member: " << filter.attribute << ". The filter is ignored");
         }
     }
     return wh;

@@ -346,6 +346,26 @@ ________
 If you specify coords in your filter, you can modify the radius used for the proximity search.
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
 
+
+Filter
+######
+
+It is possible to apply a filter to the returned collection, using "filter" parameter.
+If no object matches the filter, a "bad_filter" error is sent.
+If filter can not be parsed, an "unable_to_parse" error is sent.
+If object or attribute provided is not handled, the filter is ignored.
+
+line.code
+_________
+
+It allows you to request navitia objects referencing a line whose code is the one provided,
+especially lines themselves and routes.
+
+Examples :
+https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4
+https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code="métro 347"
+
+
 Examples
 ########
 
