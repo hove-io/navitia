@@ -181,14 +181,14 @@ class complete_links(object):
             if isinstance(elem, (list, tuple)):
                 queue.extend(elem)
             elif hasattr(elem, 'iterkeys'):
-                if elem.get('type', None) == collect_type:
+                if elem.get('type') == collect_type:
                     if collect_type == "notes":
                         result.append({"id": elem['id'], "value": elem['value'], "type": collect_type})
                     elif collect_type == "exceptions":
-                        type_ = "Add" if not elem['except_type'] else "Remove"
-                        result.append({"id": elem['id'], "date": elem['date'], "type" : type_})
+                        type_ = "Add" if elem['except_type'] == 0 else "Remove"
+                        result.append({"id": elem['id'], "date": elem['date'], "type": type_})
 
-                    [elem.pop(del_) for del_ in del_types]
+                    map(elem.pop, del_types)
                 else:
                     queue.extend(elem.itervalues())
         return result
