@@ -147,7 +147,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     boost::fill(best_labels_transfers.values(), bound);
 }
 
-void RAPTOR::init(const vec_stop_point_duration& dep,
+void RAPTOR::init(const map_stop_point_duration& dep,
                   const DateTime bound,
                   const bool clockwise,
                   const type::Properties& properties) {
@@ -167,7 +167,7 @@ void RAPTOR::init(const vec_stop_point_duration& dep,
     }
 }
 
-void RAPTOR::first_raptor_loop(const vec_stop_point_duration& dep,
+void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
                                const DateTime& departure_datetime,
                                bool disruption_active,
                                const DateTime& bound,
@@ -206,7 +206,7 @@ struct Dom {
 };
 ParetoFront<StartingPointSndPhase, Dom>
 make_starting_points_snd_phase(const RAPTOR& raptor,
-                               const RAPTOR::vec_stop_point_duration& arrs,
+                               const routing::map_stop_point_duration& arrs,
                                const type::AccessibiliteParams& accessibilite_params,
                                const bool clockwise)
 {
@@ -242,7 +242,7 @@ snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> bes
     return std::move(best_labels);
 }
 // Set the departure bounds on best_labels_pts for the second pass.
-static void init_best_pts_snd_pass(const RAPTOR::vec_stop_point_duration& departures,
+static void init_best_pts_snd_pass(const routing::map_stop_point_duration& departures,
                                    const DateTime& departure_datetime,
                                    const bool clockwise,
                                    IdxMap<type::StopPoint, DateTime>& best_labels) {
@@ -258,8 +258,8 @@ static void init_best_pts_snd_pass(const RAPTOR::vec_stop_point_duration& depart
 }
 
 std::vector<Path>
-RAPTOR::compute_all(const vec_stop_point_duration& departures_,
-                    const vec_stop_point_duration& destinations,
+RAPTOR::compute_all(const map_stop_point_duration& departures_,
+                    const map_stop_point_duration& destinations,
                     const DateTime& departure_datetime,
                     bool disruption_active,
                     const DateTime& bound,
@@ -312,7 +312,9 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         const auto& working_labels = first_pass_labels[start.count];
 
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
-        init({{start.sp_idx, 0_s}}, working_labels.dt_pt(start.sp_idx),
+        map_stop_point_duration init_map;
+        init_map.insert(stop_point_duration(start.sp_idx, 0_s));
+        init(init_map, working_labels.dt_pt(start.sp_idx),
              !clockwise, accessibilite_params.properties);
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
@@ -336,8 +338,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& departures,
-                       const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& arrivals,
+RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
+                       const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
                        const DateTime& departure_datetime,
                        bool disruption_active,
                        const DateTime& bound,
@@ -351,21 +353,17 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
                          forbidden_uri,
                          disruption_active);
 
-    const auto& n_points = clockwise ? departures : arrivals;
-
-    std::vector<std::pair<SpIdx, navitia::time_duration> > calc_dep;
-    for(const auto& n_point : n_points)
-        for (const auto& n_stop_point : n_point.second)
-            calc_dep.push_back(n_stop_point);
+    map_stop_point_duration calc_dep_map;
+    for (const auto& n_point : (clockwise ? departures : arrivals)) {
+        calc_dep_map.insert(n_point.second.begin(), n_point.second.end());
+    }
 
     clear(clockwise, bound);
-    init(calc_dep, departure_datetime, clockwise, accessibilite_params.properties);
+    init(calc_dep_map, departure_datetime, clockwise, accessibilite_params.properties);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
 
-    const auto& m_points = clockwise ? arrivals : departures;
-
-    for(const auto& m_point : m_points) {
+    for(const auto& m_point : (clockwise ? arrivals : departures)) {
         const type::EntryPoint& m_entry_point = m_point.first;
 
         std::vector<Path> paths;
@@ -389,7 +387,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
 }
 
 void
-RAPTOR::isochrone(const vec_stop_point_duration& departures,
+RAPTOR::isochrone(const map_stop_point_duration& departures,
                   const DateTime& departure_datetime,
                   const DateTime& bound,
                   uint32_t max_transfers,
@@ -653,14 +651,14 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                                   uint32_t max_transfers,
                                   const std::vector<std::string>& forbidden_uri,
                                   const boost::optional<navitia::time_duration>& direct_path_dur) {
-    vec_stop_point_duration departures, destinations;
+    map_stop_point_duration departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
-        departures.push_back({SpIdx(*sp), {}});
+        departures.insert(stop_point_duration(SpIdx(*sp), {}));
     }
 
     for(const type::StopPoint* sp : destination->stop_point_list) {
-        destinations.push_back({SpIdx(*sp), {}});
+        destinations.insert(stop_point_duration(SpIdx(*sp), {}));
     }
 
     return compute_all(departures,

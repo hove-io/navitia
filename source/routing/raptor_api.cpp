@@ -725,10 +725,12 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
 }
 
 static
-std::vector<std::pair<SpIdx, navitia::time_duration> >
+routing::map_stop_point_duration
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false){
-    std::vector<std::pair<SpIdx, navitia::time_duration> > result;
+    routing::map_stop_point_duration result;
+    georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
+                                                            worker.departure_path_finder;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
@@ -738,9 +740,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::POI) {
         std::set<SpIdx> stop_points;
 
-        georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
-                                                                worker.departure_path_finder;
-
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
@@ -748,7 +747,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     const SpIdx sp_idx = SpIdx(*stop_point);
                     if (stop_points.find(sp_idx) == stop_points.end()) {
                         concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                        result.push_back({sp_idx, {}});
+                        result.insert(routing::stop_point_duration(sp_idx, {}));
                         stop_points.insert(sp_idx);
                     }
                 }
@@ -763,7 +762,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
                 if (stop_points.find(sp_idx) == stop_points.end()) {
                     concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    result.push_back({sp_idx, {}});
+                    result.insert(routing::stop_point_duration(sp_idx, {}));
                     stop_points.insert(sp_idx);
                 }
             }
@@ -775,7 +774,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             const SpIdx sp_idx = SpIdx(*sp);
             if (stop_points.find(sp_idx) == stop_points.end()) {
                 concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result.push_back({sp_idx, {}});
+                result.insert(routing::stop_point_duration(sp_idx, {}));
                 stop_points.insert(sp_idx);
             }
         }
@@ -789,13 +788,13 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             auto sp_idx = SpIdx(idx_duration.first);
             if(stop_points.find(sp_idx) == stop_points.end()) {
                 stop_points.insert(sp_idx);
-                result.push_back({sp_idx, idx_duration.second});
+                result.insert(routing::stop_point_duration(sp_idx, idx_duration.second));
             }
         }
     } else if (ep.type == type::Type_e::StopPoint) {
         auto it = data.pt_data->stop_points_map.find(ep.uri);
         if (it != data.pt_data->stop_points_map.end()){
-            result.push_back({SpIdx(*it->second), {}});
+            result.insert(routing::stop_point_duration(SpIdx(*it->second), {}));
         }
     } else if(ep.type == type::Type_e::Admin) {
         //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
@@ -806,20 +805,22 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         }
         const auto admin = data.geo_ref->admins[it_admin->second];
 
+        if (! admin->main_stop_areas.empty()) {
+            for (auto stop_area: admin->main_stop_areas) {
+                for(auto sp : stop_area->stop_point_list) {
+                    const SpIdx sp_idx = SpIdx(*sp);
+                    result.insert(routing::stop_point_duration(sp_idx, {}));
+                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
+                }
+            }
+        }
         //we add the center of the admin, and look for the stop points around
         auto nearest = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
         for (const auto& elt: nearest) {
-            result.push_back({SpIdx(elt.first), elt.second});
-        }
-        if (! admin->main_stop_areas.empty()) {
-            for (auto stop_area: admin->main_stop_areas) {
-                for(auto stop_point : stop_area->stop_point_list) {
-                    result.push_back({SpIdx(*stop_point), {}});
-                }
-            }
+            result.insert(routing::stop_point_duration(SpIdx(elt.first), elt.second));
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
     }
@@ -972,8 +973,8 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         return pb_response;
     }
 
-    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > departures;
-    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > arrivals;
+    std::vector<std::pair<type::EntryPoint, routing::map_stop_point_duration > > departures;
+    std::vector<std::pair<type::EntryPoint, routing::map_stop_point_duration > > arrivals;
 
     for(const type::EntryPoint& org : origins) {
         worker.init(org);
