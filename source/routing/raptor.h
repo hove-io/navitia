@@ -83,6 +83,9 @@ struct RAPTOR
     /// Order of the first journey_pattern point of each journey_pattern
     IdxMap<type::JourneyPattern, int> Q;
 
+    // set to store if the stop_point is valid
+    boost::dynamic_bitset<> valid_stop_points;
+
     explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
         next_st(data),
@@ -90,7 +93,8 @@ struct RAPTOR
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
-        Q(data.pt_data->journey_patterns)
+        Q(data.pt_data->journey_patterns),
+        valid_stop_points(data.pt_data->stop_points.size())
     {
         labels.assign(10, data.dataRaptor->labels_const);
         first_pass_labels.assign(10, data.dataRaptor->labels_const);
