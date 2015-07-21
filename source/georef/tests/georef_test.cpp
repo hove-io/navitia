@@ -1059,9 +1059,6 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
 
     w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
     res = w.find_nearest_stop_points(180_s, pl, false);
-    for (auto& elt: res) {
-        elt.second = w.get_path(elt.first.val, false).duration;
-    }
 
     //if you give the coord of the stop_point, you have to go to the street then go back to the stop_point, too bad!
     navitia::routing::map_stop_point_duration tested_map;
@@ -1070,4 +1067,7 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
     tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(200 / default_speed[Mode_e::Walking]);
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
+    for (auto& elt: res) {
+        BOOST_CHECK_EQUAL(elt.second, w.get_path(elt.first.val, false).duration);
+    }
 }
