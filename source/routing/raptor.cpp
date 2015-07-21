@@ -498,9 +498,11 @@ void RAPTOR::set_valid_jp_and_jpp(
     }
 
     // filter accessibility
+    valid_stop_points.set();
     if (accessibilite_params.properties.any()) {
         for (const auto* sp: data.pt_data->stop_points) {
             if (sp->accessible(accessibilite_params.properties)) { continue; }
+            valid_stop_points.set(sp->idx, false);
             for (const auto* jpp: sp->journey_pattern_point_list) {
                 valid_journey_pattern_points.set(jpp->idx, false);
             }
@@ -573,7 +575,8 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         if (st.valid_end(visitor.clockwise())
                             && (l_zone == std::numeric_limits<uint16_t>::max() ||
                                 l_zone != st.local_traffic_zone)
-                            && visitor.comp(workingDt, best_labels_pts[jpp.sp_idx]))
+                            && visitor.comp(workingDt, best_labels_pts[jpp.sp_idx])
+                            && valid_stop_points[jpp.sp_idx.val]) // we need to check the accessibility
                         {
                             working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                             best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
