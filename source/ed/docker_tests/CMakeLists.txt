@@ -38,10 +38,6 @@ add_custom_command(TARGET ed_integration_test
                     ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no --ntfs_file=${DATA_NAV_TO_CREATE})
 
 
-#set_target_properties(ed_integration_test PROPERTIES EXCLUDE_FROM_ALL TRUE)
-
 add_dependencies(ed_integration_test datanav_files)
-
-
 add_dependencies(docker_test ed_integration_test)
 

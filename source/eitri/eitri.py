@@ -48,6 +48,9 @@ def eitri(data_dir, output_file='./data.nav.lz4', ed_component_path='', add_pyth
     :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
     :param output_file: output data.nav.lz4 file path
     """
+
+    # there is some problems with environment variables and cmake, so all args
+    # can be given through cli
     for p in add_pythonpath:
         sys.path.append(p)
 

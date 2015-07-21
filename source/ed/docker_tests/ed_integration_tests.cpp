@@ -77,4 +77,6 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
+
+    //TODO, have fun ! :)
 }
