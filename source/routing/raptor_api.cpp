@@ -738,17 +738,15 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::Coord
                 || ep.type == type::Type_e::StopArea
                 || ep.type == type::Type_e::POI) {
-        std::set<SpIdx> stop_points;
 
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
                 for (auto stop_point : it->second->stop_point_list) {
                     const SpIdx sp_idx = SpIdx(*stop_point);
-                    if (stop_points.find(sp_idx) == stop_points.end()) {
+                    if (result.find(sp_idx) == result.end()) {
                         concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                         result[sp_idx] = {};
-                        stop_points.insert(sp_idx);
                     }
                 }
             }
@@ -760,10 +758,9 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         for (const auto* admin: admins) {
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
-                if (stop_points.find(sp_idx) == stop_points.end()) {
+                if (result.find(sp_idx) == result.end()) {
                     concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                     result[sp_idx] = {};
-                    stop_points.insert(sp_idx);
                 }
             }
         }
@@ -772,10 +769,9 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
         for (const auto* sp: zonal_sps) {
             const SpIdx sp_idx = SpIdx(*sp);
-            if (stop_points.find(sp_idx) == stop_points.end()) {
+            if (result.find(sp_idx) == result.end()) {
                 concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result[sp_idx] = {};
-                stop_points.insert(sp_idx);
             }
         }
 
@@ -786,8 +782,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         LOG4CPLUS_TRACE(logger, "find " << tmp_sn.size() << " stop_points");
         for(auto idx_duration : tmp_sn) {
             auto sp_idx = SpIdx(idx_duration.first);
-            if(stop_points.find(sp_idx) == stop_points.end()) {
-                stop_points.insert(sp_idx);
+            if(result.find(sp_idx) == result.end()) {
                 result[sp_idx] = idx_duration.second;
             }
         }

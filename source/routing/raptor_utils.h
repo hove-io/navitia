@@ -49,8 +49,7 @@ typedef Idx<type::JourneyPatternPoint> JppIdx;
 typedef Idx<type::JourneyPattern> JpIdx;
 typedef Idx<type::StopPoint> SpIdx;
 
-typedef boost::container::flat_map<SpIdx, navitia::time_duration> map_stop_point_duration;
-typedef map_stop_point_duration::value_type stop_point_duration;
+using map_stop_point_duration = boost::container::flat_map<SpIdx, navitia::time_duration>;
 
 inline bool is_dt_initialized(const DateTime dt) {
     return dt != DateTimeUtils::inf && dt != DateTimeUtils::min;

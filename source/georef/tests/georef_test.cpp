@@ -377,8 +377,10 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     b.geo_ref.init();
 
     StopPoint* sp1 = new StopPoint();
+    sp1->idx = 0;
     sp1->coord = c1;
     StopPoint* sp2 = new StopPoint();
+    sp2->idx = 1;
     sp2->coord = c2;
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
@@ -401,15 +403,15 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     //the projection is done with the same mean of transport, at the same speed
     navitia::routing::map_stop_point_duration tested_map;
     float_t walk_speed = default_speed[Mode_e::Walking] * 2;
-    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(60 / walk_speed);
+    tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
     //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
     tested_map.clear();
-    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(60 / walk_speed);
-    tested_map[navitia::routing::SpIdx(1)] = navitia::seconds(50 / walk_speed) + 150_s;
+    tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
+    tested_map[navitia::routing::SpIdx(*sp2)] = navitia::seconds(50 / walk_speed) + 150_s;
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 }
 
