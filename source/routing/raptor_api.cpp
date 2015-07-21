@@ -747,7 +747,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     const SpIdx sp_idx = SpIdx(*stop_point);
                     if (stop_points.find(sp_idx) == stop_points.end()) {
                         concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                        result.insert(routing::stop_point_duration(sp_idx, {}));
+                        result[sp_idx] = {};
                         stop_points.insert(sp_idx);
                     }
                 }
@@ -762,7 +762,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
                 if (stop_points.find(sp_idx) == stop_points.end()) {
                     concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    result.insert(routing::stop_point_duration(sp_idx, {}));
+                    result[sp_idx] = {};
                     stop_points.insert(sp_idx);
                 }
             }
@@ -774,7 +774,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             const SpIdx sp_idx = SpIdx(*sp);
             if (stop_points.find(sp_idx) == stop_points.end()) {
                 concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result.insert(routing::stop_point_duration(sp_idx, {}));
+                result[sp_idx] = {};
                 stop_points.insert(sp_idx);
             }
         }
@@ -788,13 +788,13 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             auto sp_idx = SpIdx(idx_duration.first);
             if(stop_points.find(sp_idx) == stop_points.end()) {
                 stop_points.insert(sp_idx);
-                result.insert(routing::stop_point_duration(sp_idx, idx_duration.second));
+                result[sp_idx] = idx_duration.second;
             }
         }
     } else if (ep.type == type::Type_e::StopPoint) {
         auto it = data.pt_data->stop_points_map.find(ep.uri);
         if (it != data.pt_data->stop_points_map.end()){
-            result.insert(routing::stop_point_duration(SpIdx(*it->second), {}));
+            result[SpIdx(*it->second)] = {};
         }
     } else if(ep.type == type::Type_e::Admin) {
         //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
@@ -809,7 +809,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             for (auto stop_area: admin->main_stop_areas) {
                 for(auto sp : stop_area->stop_point_list) {
                     const SpIdx sp_idx = SpIdx(*sp);
-                    result.insert(routing::stop_point_duration(sp_idx, {}));
+                    result[sp_idx] = {};
                     concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 }
             }
@@ -820,7 +820,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
         for (const auto& elt: nearest) {
-            result.insert(routing::stop_point_duration(SpIdx(elt.first), elt.second));
+            result[SpIdx(elt.first)] = elt.second;
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
     }

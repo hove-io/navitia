@@ -260,7 +260,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
                 if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
-                    result.insert(routing::stop_point_duration(sp_idx, duration));
+                    result[sp_idx] = duration;
                     distance_to_entry_point[sp_idx] = duration;
                 }
             }
@@ -289,7 +289,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 //and finally to the destination
                 auto duration = path_duration_on_same_edge(starting_edge, projection);
                 if(duration <= radius){
-                    result.insert(routing::stop_point_duration(routing::SpIdx(element.first), duration));
+                    result[routing::SpIdx(element.first)] = duration;
                 }
             }else{
                 navitia::time_duration best_dist = max;
@@ -300,7 +300,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                     best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
                 }
                 if (best_dist <= radius) {
-                    result.insert(routing::stop_point_duration(routing::SpIdx(element.first), best_dist));
+                    result[routing::SpIdx(element.first)] = best_dist;
                 }
             }
         }

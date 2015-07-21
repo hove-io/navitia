@@ -800,9 +800,8 @@ BOOST_FIXTURE_TEST_CASE(direct_path_under_the_limit, direct_path_routing_api_dat
     auto sp = worker.find_nearest_stop_points(a_s_dur - navitia::seconds(1), b.data->pt_data->stop_point_proximity_list, false);
 
     navitia::routing::map_stop_point_duration tested_map;
-    tested_map.insert(navitia::routing::stop_point_duration(
-                        navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"])),
-                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking)));
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
     BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
 }
 
@@ -815,12 +814,10 @@ BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_d
                                               b.data->pt_data->stop_point_proximity_list, false);
 
     navitia::routing::map_stop_point_duration tested_map;
-    tested_map.insert(navitia::routing::stop_point_duration(
-                        navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"])),
-                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking)));
-    tested_map.insert(navitia::routing::stop_point_duration(
-                        navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"])),
-                        a_s_dur));
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
+                        a_s_dur;
     BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
 }
 
@@ -833,12 +830,10 @@ BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data
                                               b.data->pt_data->stop_point_proximity_list, false);
 
     navitia::routing::map_stop_point_duration tested_map;
-    tested_map.insert(navitia::routing::stop_point_duration(
-                        navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"])),
-                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking)));
-    tested_map.insert(navitia::routing::stop_point_duration(
-                        navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"])),
-                        a_s_dur));
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
+                        a_s_dur;
     BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
 }
 

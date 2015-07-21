@@ -400,18 +400,16 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     res = w.find_nearest_stop_points(100_s, pl, false);
     //the projection is done with the same mean of transport, at the same speed
     navitia::routing::map_stop_point_duration tested_map;
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(0),
-                            navitia::seconds(60 / (default_speed[Mode_e::Walking] * 2))));
+    float_t walk_speed = default_speed[Mode_e::Walking] * 2;
+    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(60 / walk_speed);
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
     //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
     tested_map.clear();
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(0),
-                            navitia::seconds(60 / (default_speed[Mode_e::Walking] * 2))));
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(1),
-                            navitia::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 150_s));
+    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(60 / walk_speed);
+    tested_map[navitia::routing::SpIdx(1)] = navitia::seconds(50 / walk_speed) + 150_s;
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 }
 
@@ -1065,12 +1063,9 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
 
     //if you give the coord of the stop_point, you have to go to the street then go back to the stop_point, too bad!
     navitia::routing::map_stop_point_duration tested_map;
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(3),
-                                            navitia::seconds(60 / default_speed[Mode_e::Walking])));
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(1),
-                                            navitia::seconds(80 / default_speed[Mode_e::Walking])));
-    tested_map.insert(navitia::routing::stop_point_duration(navitia::routing::SpIdx(0),
-                                            navitia::seconds(200 / default_speed[Mode_e::Walking])));
+    tested_map[navitia::routing::SpIdx(3)] = navitia::seconds(60 / default_speed[Mode_e::Walking]);
+    tested_map[navitia::routing::SpIdx(1)] = navitia::seconds(80 / default_speed[Mode_e::Walking]);
+    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(200 / default_speed[Mode_e::Walking]);
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
 }

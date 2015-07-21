@@ -313,7 +313,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures_,
 
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
         map_stop_point_duration init_map;
-        init_map.insert(stop_point_duration(start.sp_idx, 0_s));
+        init_map[start.sp_idx] = 0_s;
         init(init_map, working_labels.dt_pt(start.sp_idx),
              !clockwise, accessibilite_params.properties);
         best_labels_pts = best_labels_pts_for_snd_pass;
@@ -654,11 +654,11 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
     map_stop_point_duration departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
-        departures.insert(stop_point_duration(SpIdx(*sp), {}));
+        departures[SpIdx(*sp)] = {};
     }
 
     for(const type::StopPoint* sp : destination->stop_point_list) {
-        destinations.insert(stop_point_duration(SpIdx(*sp), {}));
+        destinations[SpIdx(*sp)] = {};
     }
 
     return compute_all(departures,

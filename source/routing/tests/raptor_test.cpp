@@ -744,8 +744,8 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     b.vj("B","11111111", "", true)("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
     routing::map_stop_point_duration departs, destinations;
-    departs.insert(routing::stop_point_duration(SpIdx(0), 10_min));
-    destinations.insert(routing::stop_point_duration(SpIdx(1), 0_s));
+    departs[SpIdx(0)] = 10_min;
+    destinations[SpIdx(1)] = 0_s;
 
     b.data->pt_data->index();
     b.finish();
@@ -1250,8 +1250,8 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     RAPTOR raptor(*(b.data));
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(SpIdx(*b.sps["stop1"]), 1500_s));
-    arrivals.insert(routing::stop_point_duration(SpIdx(*b.sps["stop5"]), 0_s));
+    departures[SpIdx(*b.sps["stop1"])] = 1500_s;
+    arrivals[SpIdx(*b.sps["stop5"])] = 0_s;
 
     auto results = raptor.compute_all(departures, arrivals, 6000, false);
 
@@ -1289,14 +1289,10 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
     type::PT_Data & d = *b.data->pt_data;
 
     routing::map_stop_point_duration departs, destinations;
-    departs.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s));
-    destinations.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 560_s));
-    destinations.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 320_s));
-    destinations.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s));
+    departs[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 0_s;
+    destinations[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 560_s;
+    destinations[SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front())] = 320_s;
+    destinations[SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front())] = 0_s;
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1346,13 +1342,10 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
     type::PT_Data & d = *b.data->pt_data;
 
     routing::map_stop_point_duration departs, destinations;
-    departs.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s));
+    departs[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 0_s;
     // We are going to J point, so we add the walking times
-    destinations.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 15_min));
-    destinations.insert(routing::stop_point_duration(
-                    SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s));
+    destinations[SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front())] = 15_min;
+    destinations[SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front())] = 0_s;
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1571,8 +1564,7 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departs;
-    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
-    departs.insert(routing::stop_point_duration(dep, {}));
+    departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
     raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), false, DateTimeUtils::inf,
                              std::numeric_limits<uint32_t>::max(), {}, {}, true);
@@ -1608,8 +1600,7 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departs;
-    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
-    departs.insert(routing::stop_point_duration(dep, {}));
+    departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
     raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), false, DateTimeUtils::inf,
                              std::numeric_limits<uint32_t>::max(), {}, {}, true);
@@ -1823,12 +1814,9 @@ BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 1000_s));
-    departures.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front()), 3000_s));
-    arrivals.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front()), 0_s));
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 1000_s;
+    departures[SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front())] = 3000_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 0_s;
     auto res = raptor.compute_all(departures, arrivals, 1000, false);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
@@ -1883,12 +1871,9 @@ BOOST_AUTO_TEST_CASE(second_pass) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("VG")->stop_point_list.front()), 0_s));
-    arrivals.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("GM1")->stop_point_list.front()), 0_s));
-    arrivals.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front()), 0_s));
+    departures[SpIdx(*d.stop_areas_map.at("VG")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("GM1")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front())] = 0_s;
 
     auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false,
                                   DateTimeUtils::inf, 10, {}, {}, true);
@@ -2006,10 +1991,8 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 10_s));
-    arrivals.insert(routing::stop_point_duration(
-                        SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front()), 10_s));
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 10_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 10_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2084,8 +2067,8 @@ BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("A1")), 4_s));
-    arrivals.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("A2")), 4_s));
+    departures[SpIdx(*d.stop_points_map.at("A1"))] = 4_s;
+    arrivals[SpIdx(*d.stop_points_map.at("A2"))] = 4_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2126,9 +2109,9 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("B1")), 5_s));
-    departures.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("B2")), 0_s));
-    arrivals.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("C")), 0_s));
+    departures[SpIdx(*d.stop_points_map.at("B1"))] = 5_s;
+    departures[SpIdx(*d.stop_points_map.at("B2"))] = 0_s;
+    arrivals[SpIdx(*d.stop_points_map.at("C"))] = 0_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2169,9 +2152,9 @@ BOOST_AUTO_TEST_CASE(walking_doesnt_break_connection) {
     const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
-    departures.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("A")), 0_s));
-    departures.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("B")), 15_min));
-    arrivals.insert(routing::stop_point_duration(SpIdx(*d.stop_points_map.at("C")), 0_s));
+    departures[SpIdx(*d.stop_points_map.at("A"))] = 0_s;
+    departures[SpIdx(*d.stop_points_map.at("B"))] = 15_min;
+    arrivals[SpIdx(*d.stop_points_map.at("C"))] = 0_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
