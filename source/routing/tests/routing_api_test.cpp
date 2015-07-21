@@ -802,7 +802,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_under_the_limit, direct_path_routing_api_dat
     navitia::routing::map_stop_point_duration tested_map;
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
                         to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
-    BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_data) {
@@ -818,7 +818,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_d
                         to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
                         a_s_dur;
-    BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data) {
@@ -834,7 +834,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data
                         to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
                         a_s_dur;
-    BOOST_CHECK_EQUAL_COLLECTIONS(sp.begin(), sp.end(), tested_map.begin(), tested_map.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 // Walking

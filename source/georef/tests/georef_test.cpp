@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     navitia::routing::map_stop_point_duration tested_map;
     float_t walk_speed = default_speed[Mode_e::Walking] * 2;
     tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
-    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.cbegin(), res.cend(), tested_map.cbegin(), tested_map.cend());
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     tested_map.clear();
     tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
     tested_map[navitia::routing::SpIdx(*sp2)] = navitia::seconds(50 / walk_speed) + 150_s;
-    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.cbegin(), res.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 // Récupérer les cordonnées d'un numéro impair :
