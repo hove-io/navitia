@@ -416,6 +416,9 @@ void RAPTOR::set_valid_jp_and_jpp(
     boost::dynamic_bitset<> valid_journey_pattern_points(data.pt_data->journey_pattern_points.size());
     valid_journey_pattern_points.set();
 
+
+    valid_stop_points.set();
+
     // We will forbiden every object designated in forbidden
     for (const auto& uri : forbidden) {
         const auto it_line = data.pt_data->lines_map.find(uri);
@@ -474,6 +477,7 @@ void RAPTOR::set_valid_jp_and_jpp(
         }
         const auto it_sp = data.pt_data->stop_points_map.find(uri);
         if (it_sp !=  data.pt_data->stop_points_map.end()) {
+            valid_stop_points.set(it_sp->second->idx, false);
             for (const auto jpp : it_sp->second->journey_pattern_point_list) {
                 valid_journey_pattern_points.set(jpp->idx, false);
             }
@@ -482,6 +486,7 @@ void RAPTOR::set_valid_jp_and_jpp(
         const auto it_sa = data.pt_data->stop_areas_map.find(uri);
         if (it_sa !=  data.pt_data->stop_areas_map.end()) {
             for (const auto sp : it_sa->second->stop_point_list) {
+                valid_stop_points.set(sp->idx, false);
                 for (const auto jpp : sp->journey_pattern_point_list) {
                     valid_journey_pattern_points.set(jpp->idx, false);
                 }
@@ -491,7 +496,6 @@ void RAPTOR::set_valid_jp_and_jpp(
     }
 
     // filter accessibility
-    valid_stop_points.set();
     if (accessibilite_params.properties.any()) {
         for (const auto* sp: data.pt_data->stop_points) {
             if (sp->accessible(accessibilite_params.properties)) { continue; }
