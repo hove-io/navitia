@@ -70,10 +70,8 @@ class MockWrapper:
         epsilon = 1e-5
         #Verify elements of request.parameters
         assert len(stat.parameters) == 3
-        assert stat.parameters[0].key == "to"
-        assert stat.parameters[0].value == "0.00188646;0.00071865"
-        assert stat.parameters[1].key == "from"
-        assert stat.parameters[1].value == "0.0000898312;0.0000898312"
+        assert {(param.key, param.value) for param in stat.parameters} >\
+               {("to", "0.00188646;0.00071865"), ("from", "0.0000898312;0.0000898312")}
 
         #Verify elements of request.coverages
         assert len(stat.coverages) == 1
