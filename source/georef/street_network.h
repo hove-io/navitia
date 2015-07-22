@@ -129,8 +129,9 @@ struct PathFinder {
     void start_distance_dijkstra(navitia::time_duration radius);
 
     /// compute the reachable stop points within the radius
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
-                                                                         const proximitylist::ProximityList<type::idx_t>& pl);
+    routing::map_stop_point_duration
+    find_nearest_stop_points(navitia::time_duration radius,
+                             const proximitylist::ProximityList<type::idx_t>& pl);
 
     /// compute the distance from the starting point to the target stop point
     navitia::time_duration get_distance(type::idx_t target_idx);
@@ -206,10 +207,10 @@ struct StreetNetwork {
 
     bool departure_launched() const;
     bool arrival_launched() const;
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(
-                                                    navitia::time_duration radius,
-                                                    const proximitylist::ProximityList<type::idx_t>& pl,
-                                                    bool use_second);
+
+    routing::map_stop_point_duration
+    find_nearest_stop_points(navitia::time_duration radius,
+                             const proximitylist::ProximityList<type::idx_t>& pl, bool use_second);
 
     navitia::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
 

@@ -79,8 +79,10 @@ void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const ty
 bool StreetNetwork::departure_launched() const {return departure_path_finder.computation_launch;}
 bool StreetNetwork::arrival_launched() const {return arrival_path_finder.computation_launch;}
 
-std::vector<std::pair<type::idx_t, navitia::time_duration>>
-StreetNetwork::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl, bool use_second) {
+routing::map_stop_point_duration
+StreetNetwork::find_nearest_stop_points(navitia::time_duration radius,
+                                        const proximitylist::ProximityList<type::idx_t>& pl,
+                                        bool use_second) {
     // delegate to the arrival or departure pathfinder
     // results are store to build the routing path after the transportation routing computation
     return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl);
@@ -238,15 +240,15 @@ PathFinder::crow_fly_find_nearest_stop_points(navitia::time_duration radius,
     return pl.find_within(start_coord, crow_fly_dist);
 }
 
-std::vector<std::pair<type::idx_t, navitia::time_duration>>
+routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
+    routing::map_stop_point_duration result;
     if (! starting_edge.found){
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
-        std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
         // if we are not dealing with 0,0 coordinates (incorrect data), allow crow fly
         if(start_coord != type::GeographicalCoord(0, 0)) {
             for (const auto& element: elements) {
@@ -258,7 +260,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
                 if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
-                    result.push_back({element.first, duration});
+                    result[sp_idx] = duration;
                     distance_to_entry_point[sp_idx] = duration;
                 }
             }
@@ -266,15 +268,15 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
         return result;
     }
 
-    if(elements.empty())
-        return {};
+    if (elements.empty()) {
+        return result;
+    }
 
     start_distance_dijkstra(radius);
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     dump_dijkstra_for_quantum(starting_edge);
 #endif
 
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
     const auto max = bt::pos_infin;
     for (auto element: elements) {
         ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
@@ -287,7 +289,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 //and finally to the destination
                 auto duration = path_duration_on_same_edge(starting_edge, projection);
                 if(duration <= radius){
-                    result.push_back(std::make_pair(element.first, duration));
+                    result[routing::SpIdx(element.first)] = duration;
                 }
             }else{
                 navitia::time_duration best_dist = max;
@@ -298,7 +300,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                     best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
                 }
                 if (best_dist <= radius) {
-                    result.push_back(std::make_pair(element.first, best_dist));
+                    result[routing::SpIdx(element.first)] = best_dist;
                 }
             }
         }

@@ -377,8 +377,10 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     b.geo_ref.init();
 
     StopPoint* sp1 = new StopPoint();
+    sp1->idx = 0;
     sp1->coord = c1;
     StopPoint* sp2 = new StopPoint();
+    sp2->idx = 1;
     sp2->coord = c2;
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
@@ -398,19 +400,19 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 
     w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
     res = w.find_nearest_stop_points(100_s, pl, false);
-    BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, navitia::seconds(60 / (default_speed[Mode_e::Walking] * 2))); //the projection is done with the same mean of transport, at the same speed
+    //the projection is done with the same mean of transport, at the same speed
+    navitia::routing::map_stop_point_duration tested_map;
+    float_t walk_speed = default_speed[Mode_e::Walking] * 2;
+    tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.cbegin(), res.cend(), tested_map.cbegin(), tested_map.cend());
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
-    std::sort(res.begin(), res.end());
-    BOOST_REQUIRE_EQUAL(res.size(), 2);
-    BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, navitia::seconds(60 / (default_speed[Mode_e::Walking] * 2)));
-    BOOST_CHECK_EQUAL(res[1].first , 1);
     //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
-    BOOST_CHECK_EQUAL(res[1].second, navitia::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 150_s);
+    tested_map.clear();
+    tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
+    tested_map[navitia::routing::SpIdx(*sp2)] = navitia::seconds(50 / walk_speed) + 150_s;
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.cbegin(), res.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 // Récupérer les cordonnées d'un numéro impair :
@@ -1057,19 +1059,15 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
 
     w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
     res = w.find_nearest_stop_points(180_s, pl, false);
-    BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     //if you give the coord of the stop_point, you have to go to the street then go back to the stop_point, too bad!
-    BOOST_CHECK_EQUAL(res[0].first , 3);
-    BOOST_CHECK_EQUAL(res[0].second, navitia::seconds(60 / default_speed[Mode_e::Walking]));
-    BOOST_CHECK_EQUAL(w.get_path(res[0].first, false).duration, navitia::seconds(60 / default_speed[Mode_e::Walking]));
+    navitia::routing::map_stop_point_duration tested_map;
+    tested_map[navitia::routing::SpIdx(3)] = navitia::seconds(60 / default_speed[Mode_e::Walking]);
+    tested_map[navitia::routing::SpIdx(1)] = navitia::seconds(80 / default_speed[Mode_e::Walking]);
+    tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(200 / default_speed[Mode_e::Walking]);
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
-    BOOST_CHECK_EQUAL(res[1].first , 1);
-    BOOST_CHECK_EQUAL(res[1].second, navitia::seconds(80 / default_speed[Mode_e::Walking]));
-    BOOST_CHECK_EQUAL(w.get_path(res[1].first, false).duration, navitia::seconds(80 / default_speed[Mode_e::Walking]));
-
-    BOOST_CHECK_EQUAL(res[2].first , 0);
-    BOOST_CHECK_EQUAL(res[2].second, navitia::seconds(200 / default_speed[Mode_e::Walking]));
-    BOOST_CHECK_EQUAL(w.get_path(res[2].first, false).duration, navitia::seconds(200 / default_speed[Mode_e::Walking]));
-
+    for (auto& elt: res) {
+        BOOST_CHECK_EQUAL(elt.second, w.get_path(elt.first.val, false).duration);
+    }
 }
