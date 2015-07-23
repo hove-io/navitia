@@ -2400,3 +2400,130 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_cnx) {
     BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "C1");
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "C2");
 }
+
+/**
+  *
+  * l1:  A ----> B1-----> C1*
+  *              |        |
+  *              |        |
+  * l2:          B2 -----> C2 -----> D2
+  *
+  *
+  * C1 is forbidden, we should do the cnx on B1-B2 even if it is less interresting
+  **/
+BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_2) {
+    ed::builder b("20150101");
+
+    b.sa("A", 0, 0, false)("A1", 0, 0, true);
+    b.sa("B", 0, 0, false)("B1", 0, 0, true)("B2", 0, 0, true);
+    b.sa("C", 0, 0, false)("C1", 0, 0, false)("C2", 0, 0, true);
+    b.sa("D", 0, 0, false)("D2", 0, 0, true);
+
+    b.vj("l1", "11111", "", true)
+            ("A1", "8:00"_t)("B1", "11:00"_t)("C1", "11:30"_t);
+    b.vj("l2", "11111", "", true)
+            ("B2", "12:01"_t)("C2", "12:31"_t)("D2", "13:00"_t);
+
+    b.connection("B1", "B2", "01:00"_t);
+    b.connection("C1", "C2", "00:00"_t);
+
+    type::AccessibiliteParams params;
+    params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
+    params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
+                              "8:00"_t, 0, DateTimeUtils::inf, false, true, params);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    const auto j = res[0];
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2015-01-01 13:00:00"));
+
+    // we should have 2 pt section + 1 transfer and one waiting
+    BOOST_REQUIRE_EQUAL(j.items.size(), 4);
+
+    BOOST_REQUIRE(! j.items[0].stop_times.empty());
+    // we should do the cnx on D1
+    BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "B1");
+
+    // the 2th path item should be the transfer
+    BOOST_CHECK(j.items[1].stop_times.empty());
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "B1");
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "B2");
+}
+
+
+/**
+  *
+  * l1:  A ----> E3-----> D2*
+  *               \      /
+  *                \    /
+  * l2:              E1 -----> O -----> Arr
+  *
+  *
+  * D2 is not accessible, we should do the cnx on E3-E1
+  **/
+BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_3) {
+    ed::builder b("20150101");
+
+    b.sa("A", 0, 0, false)("A1", 0, 0, true);
+    b.sa("commerce", 0, 0, false)
+            ("E3", 0, 0, true)
+            ("D2", 0, 0, false)
+            ("E1", 0, 0, true);
+    b.sa("0")("01", 0, 0, true);
+
+    b.vj("l1", "11111", "", true)
+            ("A1", "8:00"_t)("E3", "11:34"_t)("D2", "11:34"_t);
+    b.vj("l2", "11111", "", true)
+            ("E1", "11:37"_t)("O", "12:31"_t);
+    b.vj("l3", "11111", "", true)
+            ("E1", "12:37"_t)("O", "13:31"_t);
+    // we add 2 lines on E1 -> O to have some concurency
+    b.vj("l4", "11111", "", true)
+            ("O", "13:31"_t)("Arr", "14:31"_t);
+
+    b.connection("E3", "E1", "00:04:41"_t);
+    b.connection("D2", "E1", "00:01:49"_t);
+    b.connection("O", "O", "00:00"_t);
+
+    type::AccessibiliteParams params;
+    params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
+    params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("Arr"),
+                              "8:00"_t, 0, DateTimeUtils::inf, false, true, params);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    const auto j = res[0];
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2015-01-01 14:31:00"));
+
+    // we should have 2 pt section + 1 transfer and one waiting
+    BOOST_REQUIRE_EQUAL(j.items.size(), 6);
+
+    BOOST_REQUIRE(! j.items[0].stop_times.empty());
+    // we should do the cnx on D1
+    BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "E3");
+
+    // the 2th path item should be the transfer
+    BOOST_CHECK(j.items[1].stop_times.empty());
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "E3");
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "E1");
+}
