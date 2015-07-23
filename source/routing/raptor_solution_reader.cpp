@@ -395,6 +395,7 @@ struct RaptorSolutionReader {
             const SpIdx end_sp_idx = SpIdx(*end_st.journey_pattern_point->stop_point);
             const DateTime end_limit = raptor.labels[count - 1].dt_transfer(end_sp_idx);
             if (v.comp(end_limit, cur_dt)) { continue; }
+            if (! raptor.valid_stop_points[end_sp_idx.val]) { continue; }
 
             // great, we can end
             if (count == 1) {
