@@ -125,6 +125,13 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->local_traffic_zone, 2);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->local_traffic_zone, std::numeric_limits<uint16_t>::max());
 
+    // stop_headsign
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0]->headsign, "N1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[1]->headsign, "N1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2]->headsign, "N1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->headsign, "N2");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->headsign, "N2");
+
     // feed_info
     std::map<std::string, std::string> feed_info_test ={
         {"feed_start_date","20150325"},
@@ -135,6 +142,8 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
+
+
     /* Line groups.
      * 3 groups in the file, 3 use cases :
      *   - The first one has 2 lines, both linked to the group in line_group_links.txt.
