@@ -138,7 +138,7 @@ struct TripsFusioHandler : public GenericHandler {
 
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     StopTimeFusioHandler(GtfsData& gdata, CsvReader& reader) : StopTimeGtfsHandler(gdata, reader) {}
-    int desc_c, itl_c, date_time_estimated_c, id_c;
+    int desc_c, itl_c, date_time_estimated_c, id_c, headsign_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
