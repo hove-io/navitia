@@ -54,6 +54,15 @@ BOOST_AUTO_TEST_CASE(parser){
     BOOST_CHECK_EQUAL(filters[0].op, EQ);
 }
 
+BOOST_AUTO_TEST_CASE(parse_code){
+    std::vector<Filter> filters = parse("line.code=42");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].object, "line");
+    BOOST_CHECK_EQUAL(filters[0].attribute, "code");
+    BOOST_CHECK_EQUAL(filters[0].value, "42");
+    BOOST_CHECK_EQUAL(filters[0].op, EQ);
+}
+
 BOOST_AUTO_TEST_CASE(whitespaces){
     std::vector<Filter> filters = parse("  stop_areas.uri    =  42    ");
     BOOST_REQUIRE_EQUAL(filters.size(), 1);
@@ -324,6 +333,40 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
     indexes = make_query(navitia::type::Type_e::Route, "route.uri=A:0", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(line_code) {
+
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000, 8050);
+    b.lines["A"]->code = "line_A";
+    b.vj("C")("stop2", 8000, 8050);
+    b.lines["C"]->code = "line C";
+    b.data->build_relations();
+    b.finish();
+
+    //find line by code
+    auto indexes = make_query(navitia::type::Type_e::Line, "line.code=line_A", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line_A");
+
+    indexes = make_query(navitia::type::Type_e::Line, "line.code=\"line C\"", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
+
+    //no line B
+    BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Line, "line.code=\"line B\"", *(b.data)),
+                      ptref_error);
+
+    //find route by line code
+    indexes = make_query(navitia::type::Type_e::Route, "line.code=line_A", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
+
+    //route has no code attribute, no filter can be used
+    indexes = make_query(navitia::type::Type_e::Line, "route.code=test", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(forbidden_uri) {

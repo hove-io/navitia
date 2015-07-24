@@ -129,8 +129,9 @@ struct PathFinder {
     void start_distance_dijkstra(navitia::time_duration radius);
 
     /// compute the reachable stop points within the radius
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
-                                                                         const proximitylist::ProximityList<type::idx_t>& pl);
+    routing::map_stop_point_duration
+    find_nearest_stop_points(navitia::time_duration radius,
+                             const proximitylist::ProximityList<type::idx_t>& pl);
 
     /// compute the distance from the starting point to the target stop point
     navitia::time_duration get_distance(type::idx_t target_idx);
@@ -176,6 +177,9 @@ struct PathFinder {
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
     std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target, bool handle_on_node = false) const;
 
+    //return the duration between two projection on the same edge
+    navitia::time_duration path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2);
+
 private:
     ///return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
@@ -203,10 +207,10 @@ struct StreetNetwork {
 
     bool departure_launched() const;
     bool arrival_launched() const;
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(
-                                                    navitia::time_duration radius,
-                                                    const proximitylist::ProximityList<type::idx_t>& pl,
-                                                    bool use_second);
+
+    routing::map_stop_point_duration
+    find_nearest_stop_points(navitia::time_duration radius,
+                             const proximitylist::ProximityList<type::idx_t>& pl, bool use_second);
 
     navitia::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
 
@@ -225,7 +229,9 @@ struct StreetNetwork {
 };
 
 /// Build a path from a reverse path list
-Path create_path(const GeoRef& georef, std::vector<vertex_t> reverse_path, bool add_one_elt);
+Path create_path(const GeoRef& georef,
+                 const std::vector<vertex_t>& reverse_path,
+                 bool add_one_elt);
 
 /// Compute the angle between the last segment of the path and the next point
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);

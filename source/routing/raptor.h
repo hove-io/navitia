@@ -60,9 +60,6 @@ struct RoutingState {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
-    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
-    typedef std::vector<stop_point_duration> vec_stop_point_duration;
-
     const navitia::type::Data& data;
 
     NextStopTime next_st;
@@ -103,7 +100,7 @@ struct RAPTOR
     void clear(bool clockwise, DateTime bound);
 
     ///Initialize starting points
-    void init(const vec_stop_point_duration& dep,
+    void init(const map_stop_point_duration& dep,
               const DateTime bound,
               const bool clockwise,
               const type::Properties& properties);
@@ -140,8 +137,8 @@ struct RAPTOR
     * à une heure donnée.
     */
     std::vector<Path>
-    compute_all(const vec_stop_point_duration& departs,
-                const vec_stop_point_duration& destinations,
+    compute_all(const map_stop_point_duration& departs,
+                const map_stop_point_duration& destinations,
                 const DateTime& departure_datetime,
                 bool disruption_active,
                 const DateTime& bound = DateTimeUtils::inf,
@@ -157,8 +154,8 @@ struct RAPTOR
      * à une heure donnée.
      */
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-    compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& departures,
-                   const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& arrivals,
+    compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
+                   const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
                    const DateTime& departure_datetime,
                    bool disruption_active, 
                    const DateTime& bound,
@@ -173,7 +170,7 @@ struct RAPTOR
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
     void
-    isochrone(const vec_stop_point_duration& departures_,
+    isochrone(const map_stop_point_duration& departures_,
               const DateTime& departure_datetime,
               const DateTime& bound = DateTimeUtils::min,
               uint32_t max_transfers = 10,
@@ -219,7 +216,7 @@ struct RAPTOR
 
     /// First raptor loop
     /// externalized for testing purposes
-    void first_raptor_loop(const vec_stop_point_duration& dep,
+    void first_raptor_loop(const map_stop_point_duration& dep,
                            const DateTime& departure_datetime,
                            bool disruption_active,
                            const DateTime& bound,

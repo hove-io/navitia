@@ -134,17 +134,9 @@ Authentication
 
 You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
-There is two ways for authentication, you can use a `Basic HTTP authentication`_, where the username is the key, and without password.
-
-The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
-
-.. code-block:: none
-
-    Authorization: mysecretkey
+You must use the `Basic HTTP authentication`_, where the username is the key, and without password.
 
 .. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
-
-.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
 
@@ -345,6 +337,26 @@ ________
 
 If you specify coords in your filter, you can modify the radius used for the proximity search.
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
+
+
+Filter
+######
+
+It is possible to apply a filter to the returned collection, using "filter" parameter.
+If no object matches the filter, a "bad_filter" error is sent.
+If filter can not be parsed, an "unable_to_parse" error is sent.
+If object or attribute provided is not handled, the filter is ignored.
+
+line.code
+_________
+
+It allows you to request navitia objects referencing a line whose code is the one provided,
+especially lines themselves and routes.
+
+Examples :
+https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4
+https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code="métro 347"
+
 
 Examples
 ########

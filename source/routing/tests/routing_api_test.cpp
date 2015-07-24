@@ -799,10 +799,10 @@ BOOST_FIXTURE_TEST_CASE(direct_path_under_the_limit, direct_path_routing_api_dat
 
     auto sp = worker.find_nearest_stop_points(a_s_dur - navitia::seconds(1), b.data->pt_data->stop_point_proximity_list, false);
 
-    BOOST_REQUIRE_EQUAL(sp.size(), 1);
-    auto res_sp = sp[0];
-    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
+    navitia::routing::map_stop_point_duration tested_map;
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_data) {
@@ -810,17 +810,15 @@ BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_d
     auto a_s_distance = B.distance_to(S) + distance_ab;
     auto a_s_dur = to_duration(a_s_distance, navitia::type::Mode_e::Walking);
 
-    auto sp = worker.find_nearest_stop_points(a_s_dur, b.data->pt_data->stop_point_proximity_list, false);
+    auto sp = worker.find_nearest_stop_points(a_s_dur,
+                                              b.data->pt_data->stop_point_proximity_list, false);
 
-    BOOST_REQUIRE_EQUAL(sp.size(), 2);
-
-    auto res_sp = sp[0];
-    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
-
-    res_sp = sp[1];
-    BOOST_CHECK_EQUAL(res_sp.second, a_s_dur);
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopA");
+    navitia::routing::map_stop_point_duration tested_map;
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
+                        a_s_dur;
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data) {
@@ -828,17 +826,15 @@ BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data
     auto a_s_distance = B.distance_to(S) + distance_ab;
     auto a_s_dur = to_duration(a_s_distance, navitia::type::Mode_e::Walking);
 
-    auto sp = worker.find_nearest_stop_points(a_s_dur + navitia::seconds(1), b.data->pt_data->stop_point_proximity_list, false);
+    auto sp = worker.find_nearest_stop_points(a_s_dur + navitia::seconds(1),
+                                              b.data->pt_data->stop_point_proximity_list, false);
 
-    BOOST_REQUIRE_EQUAL(sp.size(), 2);
-
-    auto res_sp = sp[0];
-    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
-
-    res_sp = sp[1];
-    BOOST_CHECK_EQUAL(res_sp.second, a_s_dur);
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopA");
+    navitia::routing::map_stop_point_duration tested_map;
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
+                        to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
+                        a_s_dur;
+    BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
 // Walking
@@ -882,6 +878,7 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     // from the stop times.
     journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.most_serious_disruption_effect(), ""); //no disruption should be found
+    BOOST_CHECK_EQUAL(journey.duration(), 112);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
@@ -964,7 +961,9 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
 
     // Walk mode
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), true);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).co2_emission().value(), 0.);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.58);

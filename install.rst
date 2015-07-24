@@ -52,7 +52,7 @@ We hope you got the source code from git.
 #. Run cmake
 
    ``cmake ../source``
-   Note: il will build in debug mode. If you want to compile it as a release run
+   Note: it will build in debug mode. If you want to compile it as a release run
    ``cmake -DCMAKE_BUILD_TYPE=Release ../source``
 
 #. Compile

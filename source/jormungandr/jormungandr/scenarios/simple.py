@@ -158,16 +158,16 @@ class Scenario(object):
         st.duration = request["duration"]
         st.depth = request["depth"]
         st.show_codes = request["show_codes"]
-        if not "nb_stoptimes" in request:
+        if "nb_stoptimes" not in request:
             st.nb_stoptimes = 0
         else:
             st.nb_stoptimes = request["nb_stoptimes"]
-        if not "interface_version" in request:
+        if "interface_version" not in request:
             st.interface_version = 0
         else:
             st.interface_version = request["interface_version"]
-        st.count = 10 if not "count" in request.keys() else request["count"]
-        if not "start_page" in request:
+        st.count = request.get("count", 10)
+        if "start_page" not in request:
             st.start_page = 0
         else:
             st.start_page = request["start_page"]
@@ -176,7 +176,7 @@ class Scenario(object):
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 st.forbidden_uri.append(forbidden_uri)
-        if "calendar" in request and request["calendar"]:
+        if request.get("calendar"):
             st.calendar = request["calendar"]
         st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = instance.send_and_receive(req)

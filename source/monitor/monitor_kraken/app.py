@@ -60,6 +60,8 @@ def monitor():
 
     uri = uri.replace('*', 'localhost')
     sock = context.socket(zmq.REQ)
+    # discard messages when socket closed
+    sock.setsockopt(zmq.LINGER, 0)
     try:
         sock.connect(uri)
         req = request_pb2.Request()

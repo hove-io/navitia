@@ -27,10 +27,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import sys
 
-from docker_wrapper import PostgresDocker
 from clingon import clingon
-from ed_handler import generate_nav
 import logging
 """
 Nav generator
@@ -42,12 +41,21 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @clingon.clize()
-def eitri(data_dir, output_file='./data.nav.lz4'):
+def eitri(data_dir, output_file='./data.nav.lz4', ed_component_path='', add_pythonpath=[]):
     """
     Generate a data.nav.lz4 file
 
     :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
     :param output_file: output data.nav.lz4 file path
     """
+
+    # there is some problems with environment variables and cmake, so all args
+    # can be given through cli
+    for p in add_pythonpath:
+        sys.path.append(p)
+
+    from ed_handler import generate_nav
+    from docker_wrapper import PostgresDocker
+
     with PostgresDocker() as docker:
-        generate_nav(data_dir, docker.get_db_params(), output_file)
+        generate_nav(data_dir, docker.get_db_params(), output_file, ed_component_path=ed_component_path)

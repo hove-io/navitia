@@ -88,7 +88,14 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     return {nullptr, 0};
 }
 
-bool is_valid(const Journey& j) {
+template<typename Visitor>
+bool is_valid(const RaptorSolutionReader<Visitor>& reader, const Journey& j) {
+    // We don't want journeys that begins before (resp. after) the requested datetime
+    if (reader.v.clockwise()) {
+        if (j.departure_dt < reader.departure_datetime) { return false; }
+    } else {
+        if (j.arrival_dt > reader.departure_datetime) { return false; }
+    }
     // We don't want journeys with a transfert between 2 estimated stop times.
     for (auto it = j.sections.begin(), it_prev = it++; it != j.sections.end(); it_prev = it++) {
         if (it_prev->get_out_st->date_time_estimated() && it->get_in_st->date_time_estimated()) {
@@ -194,7 +201,7 @@ Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& r
 
     // is_sp_idx(sp_idx)(sp_dur) returns true if sp_idx == sp_dur.first
     const auto is_sp_idx = [](const SpIdx idx) {
-        return [idx](RAPTOR::vec_stop_point_duration::const_reference sp_dur) {
+        return [idx](routing::map_stop_point_duration::const_reference sp_dur) {
             return sp_dur.first == idx;
         };
     };
@@ -308,13 +315,15 @@ struct RaptorSolutionReader {
     typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
 
     RaptorSolutionReader(const RAPTOR& r,
-                         const Visitor& vis,// 2nd pass visitor
-                         const RAPTOR::vec_stop_point_duration& deps,
-                         const RAPTOR::vec_stop_point_duration& arrs,
+                         const Visitor& vis,// 3rd pass visitor
+                         const DateTime& departure_dt,
+                         const routing::map_stop_point_duration& deps,
+                         const routing::map_stop_point_duration& arrs,
                          const bool disruption,
                          const type::AccessibiliteParams& access):
         raptor(r),
         v(vis),
+        departure_datetime(departure_dt),
         sp_dur_deps(deps),
         sp_dur_arrs(arrs),
         disruption_active(disruption),
@@ -324,8 +333,9 @@ struct RaptorSolutionReader {
     {}
     const RAPTOR& raptor;
     const Visitor& v;
-    const RAPTOR::vec_stop_point_duration& sp_dur_deps;// departures (not clockwise dependent)
-    const RAPTOR::vec_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
+    const DateTime departure_datetime;
+    const routing::map_stop_point_duration& sp_dur_deps;// departures (not clockwise dependent)
+    const routing::map_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
     const bool disruption_active;
     const type::AccessibiliteParams& accessibilite_params;
     Solutions solutions;
@@ -333,7 +343,7 @@ struct RaptorSolutionReader {
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
         Journey j = make_journey(path, *this);
-        if (! is_valid(j)) { return; }
+        if (! is_valid(*this, j)) { return; }
         ++nb_sol_added;
         solutions.add(std::move(j));
         if (nb_sol_added > 1000) {
@@ -385,6 +395,7 @@ struct RaptorSolutionReader {
             const SpIdx end_sp_idx = SpIdx(*end_st.journey_pattern_point->stop_point);
             const DateTime end_limit = raptor.labels[count - 1].dt_transfer(end_sp_idx);
             if (v.comp(end_limit, cur_dt)) { continue; }
+            if (! raptor.valid_stop_points[end_sp_idx.val]) { continue; }
 
             // great, we can end
             if (count == 1) {
@@ -491,13 +502,14 @@ struct RaptorSolutionReader {
 template <typename Visitor>
 Solutions read_solutions(const RAPTOR& raptor,
                          const Visitor& v,
-                         const RAPTOR::vec_stop_point_duration& deps,
-                         const RAPTOR::vec_stop_point_duration& arrs,
+                         const DateTime& departure_datetime,
+                         const routing::map_stop_point_duration& deps,
+                         const routing::map_stop_point_duration& arrs,
                          const bool disruption_active,
                          const type::AccessibiliteParams& accessibilite_params)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, v, deps, arrs, disruption_active, accessibilite_params);
+        raptor, v, departure_datetime, deps, arrs, disruption_active, accessibilite_params);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -560,16 +572,17 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
 
 Solutions read_solutions(const RAPTOR& raptor,
                          const bool clockwise,
-                         const RAPTOR::vec_stop_point_duration& deps,
-                         const RAPTOR::vec_stop_point_duration& arrs,
+                         const DateTime& departure_datetime,
+                         const routing::map_stop_point_duration& deps,
+                         const routing::map_stop_point_duration& arrs,
                          const bool disruption_active,
                          const type::AccessibiliteParams& accessibilite_params)
 {
     if (clockwise) {
-        return read_solutions(raptor, raptor_reverse_visitor(), deps, arrs,
+        return read_solutions(raptor, raptor_reverse_visitor(), departure_datetime, deps, arrs,
                               disruption_active, accessibilite_params);
     } else {
-        return read_solutions(raptor, raptor_visitor(), deps, arrs,
+        return read_solutions(raptor, raptor_visitor(), departure_datetime, deps, arrs,
                               disruption_active, accessibilite_params);
     }
 }

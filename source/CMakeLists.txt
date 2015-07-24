@@ -6,6 +6,10 @@ find_package(log4cplus)
 find_package(GoogleTcmalloc)
 find_package(Protoc)
 
+# add custom target to build docker tests not to have a strong docker dependendy
+# obviously to run this target you should have docker installed (and the right to run it)
+add_custom_target(docker_test)
+
 if(Boost_VERSION)
     # be silent if already found
     set(Boost_FIND_QUIETLY TRUE)

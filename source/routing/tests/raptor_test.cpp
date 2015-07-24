@@ -743,9 +743,9 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     b.vj("A","11111111", "", true)("stop1", 8*3600)("stop2", 8*3600 + 20*60);
     b.vj("B","11111111", "", true)("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departs, destinations;
-    departs.push_back(std::make_pair(SpIdx(0), 10_min));
-    destinations.push_back(std::make_pair(SpIdx(1), 0_s));
+    routing::map_stop_point_duration departs, destinations;
+    departs[SpIdx(0)] = 10_min;
+    destinations[SpIdx(1)] = 0_s;
 
     b.data->pt_data->index();
     b.finish();
@@ -1249,10 +1249,9 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures =
-        {{SpIdx(*b.sps["stop1"]), 1500_s}};
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals =
-        {{SpIdx(*b.sps["stop5"]), 0_s}};
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*b.sps["stop1"])] = 1500_s;
+    arrivals[SpIdx(*b.sps["stop5"])] = 0_s;
 
     auto results = raptor.compute_all(departures, arrivals, 6000, false);
 
@@ -1289,14 +1288,11 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departs = {
-        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> destinations = {
-        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 560_s},
-        {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 320_s},
-        {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
-    };
+    routing::map_stop_point_duration departs, destinations;
+    departs[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 0_s;
+    destinations[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 560_s;
+    destinations[SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front())] = 320_s;
+    destinations[SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front())] = 0_s;
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1345,14 +1341,11 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departs = {
-        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s}
-    };
+    routing::map_stop_point_duration departs, destinations;
+    departs[SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front())] = 0_s;
     // We are going to J point, so we add the walking times
-    std::vector<std::pair<SpIdx, navitia::time_duration>> destinations = {
-        {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 15_min},
-        {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
-    };
+    destinations[SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front())] = 15_min;
+    destinations[SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front())] = 0_s;
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1570,11 +1563,11 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
-    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
+    routing::map_stop_point_duration departs;
+    departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
-    raptor.first_raptor_loop({{dep, {}}},
-                             DateTimeUtils::set(0, 7900), false,
-                             DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
+    raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), false, DateTimeUtils::inf,
+                             std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
@@ -1606,11 +1599,11 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
-    const auto dep = routing::SpIdx(*d.stop_points_map["A"]);
+    routing::map_stop_point_duration departs;
+    departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
-    raptor.first_raptor_loop({{dep, {}}},
-                             DateTimeUtils::set(0, 7900), false,
-                             DateTimeUtils::inf, std::numeric_limits<uint32_t>::max(), {}, {}, true);
+    raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), false, DateTimeUtils::inf,
+                             std::numeric_limits<uint32_t>::max(), {}, {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
@@ -1820,13 +1813,10 @@ BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 1000_s},
-        {SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front()), 3000_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front()), 0_s}
-    };
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 1000_s;
+    departures[SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front())] = 3000_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 0_s;
     auto res = raptor.compute_all(departures, arrivals, 1000, false);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
@@ -1880,15 +1870,13 @@ BOOST_AUTO_TEST_CASE(second_pass) {
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_areas_map.at("VG")->stop_point_list.front()), 0_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_areas_map.at("GM1")->stop_point_list.front()), 0_s},
-        {SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front()), 0_s}
-    };
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("VG")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("GM1")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("GM2")->stop_point_list.front())] = 0_s;
 
-    auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false, DateTimeUtils::inf, 10, {}, {}, true);
+    auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:30"_t), false,
+                                  DateTimeUtils::inf, 10, {}, {}, true);
 
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res[0].items.size(), 4);
@@ -2002,12 +1990,9 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front()), 10_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front()), 10_s}
-    };
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 10_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 10_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2081,12 +2066,9 @@ BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_points_map.at("A1")), 4_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_points_map.at("A2")), 4_s}
-    };
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_points_map.at("A1"))] = 4_s;
+    arrivals[SpIdx(*d.stop_points_map.at("A2"))] = 4_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2126,13 +2108,10 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     RAPTOR raptor(*(b.data));
     const type::PT_Data& d = *b.data->pt_data;
 
-    std::vector<std::pair<SpIdx, navitia::time_duration>> departures = {
-        {SpIdx(*d.stop_points_map.at("B1")), 5_s},
-        {SpIdx(*d.stop_points_map.at("B2")), 0_s}
-    };
-    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals = {
-        {SpIdx(*d.stop_points_map.at("C")), 0_s}
-    };
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_points_map.at("B1"))] = 5_s;
+    departures[SpIdx(*d.stop_points_map.at("B2"))] = 0_s;
+    arrivals[SpIdx(*d.stop_points_map.at("C"))] = 0_s;
 
     auto res = raptor.compute_all(departures,
                                   arrivals,
@@ -2149,6 +2128,49 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:10:00"));
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 08:20:00"));
 }
+
+// VJ1: A--->B
+// VJ2:       B---->C
+//
+// Journey from A to C. We can walk to B, but then we arrive to late
+// for VJ2 and no solution is possible.  So we want
+// A--VJ1-->B--VJ2-->C
+//
+// Related to http://jira.canaltp.fr/browse/NAVITIAII-1776
+BOOST_AUTO_TEST_CASE(walking_doesnt_break_connection) {
+    ed::builder b("20150101");
+
+    b.vj("1", "1")("A", "8:00"_t)("B", "8:10"_t);
+    b.vj("2", "1")("B", "8:11"_t)("C", "9:00"_t);
+    b.connection("B", "B", "00:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_points_map.at("A"))] = 0_s;
+    departures[SpIdx(*d.stop_points_map.at("B"))] = 15_min;
+    arrivals[SpIdx(*d.stop_points_map.at("C"))] = 0_s;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(0, "08:00"_t),
+                                  false);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 3);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res[0].items[0].departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, time_from_string("2015-01-01 08:10:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].departure, time_from_string("2015-01-01 08:10:00"));
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival, time_from_string("2015-01-01 08:11:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].departure, time_from_string("2015-01-01 08:11:00"));
+    BOOST_CHECK_EQUAL(res[0].items[2].arrival, time_from_string("2015-01-01 09:00:00"));
+}
+
 
 /**
   *
@@ -2377,4 +2399,131 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_cnx) {
     BOOST_CHECK(j.items[1].stop_times.empty());
     BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "C1");
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "C2");
+}
+
+/**
+  *
+  * l1:  A ----> B1-----> C1*
+  *              |        |
+  *              |        |
+  * l2:          B2 -----> C2 -----> D2
+  *
+  *
+  * C1 is forbidden, we should do the cnx on B1-B2 even if it is less interresting
+  **/
+BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_2) {
+    ed::builder b("20150101");
+
+    b.sa("A", 0, 0, false)("A1", 0, 0, true);
+    b.sa("B", 0, 0, false)("B1", 0, 0, true)("B2", 0, 0, true);
+    b.sa("C", 0, 0, false)("C1", 0, 0, false)("C2", 0, 0, true);
+    b.sa("D", 0, 0, false)("D2", 0, 0, true);
+
+    b.vj("l1", "11111", "", true)
+            ("A1", "8:00"_t)("B1", "11:00"_t)("C1", "11:30"_t);
+    b.vj("l2", "11111", "", true)
+            ("B2", "12:01"_t)("C2", "12:31"_t)("D2", "13:00"_t);
+
+    b.connection("B1", "B2", "01:00"_t);
+    b.connection("C1", "C2", "00:00"_t);
+
+    type::AccessibiliteParams params;
+    params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
+    params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("D"),
+                              "8:00"_t, 0, DateTimeUtils::inf, false, true, params);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    const auto j = res[0];
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2015-01-01 13:00:00"));
+
+    // we should have 2 pt section + 1 transfer and one waiting
+    BOOST_REQUIRE_EQUAL(j.items.size(), 4);
+
+    BOOST_REQUIRE(! j.items[0].stop_times.empty());
+    // we should do the cnx on D1
+    BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "B1");
+
+    // the 2th path item should be the transfer
+    BOOST_CHECK(j.items[1].stop_times.empty());
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "B1");
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "B2");
+}
+
+
+/**
+  *
+  * l1:  A ----> E3-----> D2*
+  *               \      /
+  *                \    /
+  * l2:              E1 -----> O -----> Arr
+  *
+  *
+  * D2 is not accessible, we should do the cnx on E3-E1
+  **/
+BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_3) {
+    ed::builder b("20150101");
+
+    b.sa("A", 0, 0, false)("A1", 0, 0, true);
+    b.sa("commerce", 0, 0, false)
+            ("E3", 0, 0, true)
+            ("D2", 0, 0, false)
+            ("E1", 0, 0, true);
+    b.sa("0")("01", 0, 0, true);
+
+    b.vj("l1", "11111", "", true)
+            ("A1", "8:00"_t)("E3", "11:34"_t)("D2", "11:34"_t);
+    b.vj("l2", "11111", "", true)
+            ("E1", "11:37"_t)("O", "12:31"_t);
+    b.vj("l3", "11111", "", true)
+            ("E1", "12:37"_t)("O", "13:31"_t);
+    // we add 2 lines on E1 -> O to have some concurency
+    b.vj("l4", "11111", "", true)
+            ("O", "13:31"_t)("Arr", "14:31"_t);
+
+    b.connection("E3", "E1", "00:04:41"_t);
+    b.connection("D2", "E1", "00:01:49"_t);
+    b.connection("O", "O", "00:00"_t);
+
+    type::AccessibiliteParams params;
+    params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
+    params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("Arr"),
+                              "8:00"_t, 0, DateTimeUtils::inf, false, true, params);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    const auto j = res[0];
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2015-01-01 08:00:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2015-01-01 14:31:00"));
+
+    // we should have 2 pt section + 1 transfer and one waiting
+    BOOST_REQUIRE_EQUAL(j.items.size(), 6);
+
+    BOOST_REQUIRE(! j.items[0].stop_times.empty());
+    // we should do the cnx on D1
+    BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "E3");
+
+    // the 2th path item should be the transfer
+    BOOST_CHECK(j.items[1].stop_times.empty());
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "E3");
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "E1");
 }

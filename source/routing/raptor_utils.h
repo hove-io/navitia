@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
 #include "type/datetime.h"
 #include "utils/idx_map.h"
 
@@ -47,6 +48,8 @@ namespace routing {
 typedef Idx<type::JourneyPatternPoint> JppIdx;
 typedef Idx<type::JourneyPattern> JpIdx;
 typedef Idx<type::StopPoint> SpIdx;
+
+using map_stop_point_duration = boost::container::flat_map<SpIdx, navitia::time_duration>;
 
 inline bool is_dt_initialized(const DateTime dt) {
     return dt != DateTimeUtils::inf && dt != DateTimeUtils::min;
