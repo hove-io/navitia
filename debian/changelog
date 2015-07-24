@@ -1,3 +1,23 @@
+navitia2 (1.23.0) unstable; urgency=low
+
+  * jormun: add a log of the request with the request id  <https://github.com/CanalTP/navitia/pull/1123>
+  * Raptor: fix reader accessibility check on sp  <https://github.com/CanalTP/navitia/pull/1122>
+  * Raptor: bug on cost of main_stop_area  <https://github.com/CanalTP/navitia/pull/1121>
+  * Ed: integration tests  <https://github.com/CanalTP/navitia/pull/1120>
+  * Raptor: check accessibility on drop_off  <https://github.com/CanalTP/navitia/pull/1119>
+  * All: [monitor-kraken] Set 0mq linger to 0 to discard messages when closing socket  <https://github.com/CanalTP/navitia/pull/1118>
+  * Raptor: bug on main_stop_areas cost  <https://github.com/CanalTP/navitia/pull/1117>
+  * doc: remove documentation of the old authentication way  <https://github.com/CanalTP/navitia/pull/1116>
+  * All: Update Findlog4cplus.cmake, typo  <https://github.com/CanalTP/navitia/pull/1112>
+  * Jormun: Refactor jormungandr  <https://github.com/CanalTP/navitia/pull/1111>
+  * Doc: Update install.rst  <https://github.com/CanalTP/navitia/pull/1109>
+  * ptref: activate filtering on code attribute  <https://github.com/CanalTP/navitia/pull/1107>
+  * raptor: fix a bug when we can walk somewhere but go faster to it using pt  <https://github.com/CanalTP/navitia/pull/1101>
+  * Documentation: link to docker wiki  <https://github.com/CanalTP/navitia/pull/1100>
+  * streetnetwork: fix a bug when the origin and the destination where projected on the same edge  <https://github.com/CanalTP/navitia/pull/1096>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 24 Jul 2015 11:07:23 +0100
+
 navitia2 (1.22.5) unstable; urgency=low
 
   * Raptor: check accessibility on drop_off <https://github.com/CanalTP/navitia/pull/1119>
