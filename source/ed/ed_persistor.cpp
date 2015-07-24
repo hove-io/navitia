@@ -875,7 +875,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
              "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
-             "date_time_estimated"});
+             "date_time_estimated", "headsign"});
     size_t inserted_count = 0;
     size_t size_st = stop_times.size();
     for(types::StopTime* stop : stop_times){
@@ -904,6 +904,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             values.push_back(lotus.null_value);
         }
         values.push_back(std::to_string(stop->date_time_estimated));
+        values.push_back(stop->headsign);
 
         this->lotus.insert(values);
         ++inserted_count;
@@ -912,7 +913,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             LOG4CPLUS_INFO(logger, inserted_count<<"/"<< size_st <<" inserted stop times");
             this->lotus.prepare_bulk_insert("navitia.stop_time",
             {"id", "arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
-             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated"});
+             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "date_time_estimated", "headsign"});
         }
     }
     this->lotus.finish_bulk_insert();

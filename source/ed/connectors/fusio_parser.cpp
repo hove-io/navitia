@@ -295,7 +295,7 @@ void StopTimeFusioHandler::init(Data& data) {
     desc_c = csv.get_pos_col("stop_desc");
     date_time_estimated_c = csv.get_pos_col("date_time_estimated");
     id_c = csv.get_pos_col("stop_time_id");
-    headsign_c = csv.get_pos_col("headsign");
+    headsign_c = csv.get_pos_col("stop_headsign");
 }
 
 void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
