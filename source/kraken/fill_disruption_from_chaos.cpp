@@ -38,7 +38,7 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace navitia {
 
@@ -200,6 +200,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
         case chaos::PtObject_Type_route:
             res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data, impact));
             break;
+        case chaos::PtObject_Type_stop_point:
+            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data, impact));
+            break;
         case chaos::PtObject_Type_unkown_type:
             res.push_back(UnknownPtObj());
             break;
@@ -269,6 +272,9 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
 
+    virtual void operator()(const nt::StopPoint*) = 0;
+    virtual void operator()(const nt::StopArea*) = 0;
+
     void operator()(const nt::Network* network) {
         this->log_start_action(network->uri);
         for(auto line : network->line_list) {
@@ -277,7 +283,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         this->log_end_action(network->uri);
     }
 
-    void operator()(nt::new_disruption::LineSection & ls) {
+    void operator()(const nt::new_disruption::LineSection& ls) {
         std::string uri = "line section (" +  ls.line->uri  + ")";
         this->log_start_action(uri);
         this->operator()(ls.line);
@@ -313,14 +319,9 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 struct functor_add_vj {
     const boost::shared_ptr<nt::new_disruption::Impact>& impact;
     nt::JourneyPattern* jp;
-    const nt::StopPoint* stop_point;
+    const std::set<const nt::StopPoint*>& impacted_stop_points;
     nt::PT_Data& pt_data;
     const nt::MetaData& meta;
-
-    functor_add_vj(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
-            nt::JourneyPattern* jp, const nt::StopPoint* stop_point,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        impact(impact), jp(jp), stop_point(stop_point), pt_data(pt_data), meta(meta) {}
 
     //return true only if the new vj circulate at least one day
     bool init_vj(nt::VehicleJourney* vj, nt::VehicleJourney& vj_ref) const {
@@ -337,10 +338,10 @@ struct functor_add_vj {
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
         nt::ValidityPattern tmp_vp;
-        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern);
+        nt::ValidityPattern tmp_ref_vp{*vj_ref.adapted_validity_pattern};
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
-            bg::day_iterator titr(period.begin().date() - bg::days(1));
+            auto titr = bg::day_iterator{period.begin().date() - bg::days{1}};
             for(;titr<=period.end().date(); ++titr) {
                 if (!meta.production_date.contains(*titr)) {
                     continue;
@@ -366,13 +367,13 @@ struct functor_add_vj {
         // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
         vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
-        size_t order = 0;
+        auto order = size_t{0};
         // We skip the stop_time linked to impacted stop_point
         for (const auto& st_ref : vj_ref.stop_time_list) {
-            if (st_ref.journey_pattern_point->stop_point == stop_point) {
+            if (contains(impacted_stop_points,st_ref.journey_pattern_point->stop_point)) {
                 continue;
             }
-            vj->stop_time_list.emplace_back(st_ref);
+            vj->stop_time_list.push_back(st_ref);
             auto& st = vj->stop_time_list.back();
             // We link the journey_pattern_point to the stop_time
             st.journey_pattern_point = jp->journey_pattern_point_list[order];
@@ -443,60 +444,67 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         return true;
     }
 
-    void operator()(const nt::StopPoint* stop_point) {
-        this->log_start_action(stop_point->uri);
-        if (stop_point->journey_pattern_point_list.empty()) {
-            return;
-        }
-        // We copy this journey_pattern
-        for (const auto jpp_ref : stop_point->journey_pattern_point_list) {
-            const auto jp_ref = jpp_ref->journey_pattern;
-            auto new_jp = new nt::JourneyPattern(*jp_ref);
-            new_jp->uri = make_adapted_uri_fast(new_jp->uri, pt_data.journey_patterns.size());
-            new_jp->idx = pt_data.journey_patterns.size();
-            pt_data.journey_patterns.push_back(new_jp);
-            pt_data.journey_patterns_map[new_jp->uri] = new_jp;
-            new_jp->journey_pattern_point_list.clear();
-            new_jp->discrete_vehicle_journey_list.clear();
-            new_jp->frequency_vehicle_journey_list.clear();
-            // We copy each journey_pattern_point but the ones which are linked
-            // to the impacted stop_area
-            size_t order = 0;
-            for (const auto jpp_to_copy : jp_ref->journey_pattern_point_list) {
-                if (jpp_to_copy->stop_point == stop_point) {
-                    continue;
-                }
-                auto new_jpp = new nt::JourneyPatternPoint(*jpp_to_copy);
-                new_jpp->idx = pt_data.journey_pattern_points.size();
-                new_jpp->uri = make_adapted_uri_fast(new_jpp->uri, pt_data.journey_pattern_points.size());
-                new_jp->journey_pattern_point_list.push_back(new_jpp);
-                new_jpp->stop_point->journey_pattern_point_list.push_back(new_jpp);
-                pt_data.journey_pattern_points.push_back(new_jpp);
-                pt_data.journey_pattern_points_map[new_jpp->uri] = new_jpp;
-                new_jpp->journey_pattern = new_jp;
-                new_jpp->order = order;
-                ++ order;
-            }
+    // add new journey pattern for impacted stop point
+    void add_new_jp_for_impacted_sp(const nt::JourneyPattern& jp,
+            const std::set<const nt::StopPoint*>& impacted_stop_points) {
 
-            // We copy the vehicle_journeys of the journey_pattern_points
-            functor_add_vj v(impact, new_jp, stop_point, pt_data, meta);
-            jp_ref->for_each_vehicle_journey(v);
-            // The new journey_pattern is linked to the impact
-            impact->impacted_journey_patterns.push_back(new_jp);
+        auto new_jp = new nt::JourneyPattern{jp};
+        new_jp->uri = make_adapted_uri_fast(jp.uri, pt_data.journey_patterns.size());
+        new_jp->idx = pt_data.journey_patterns.size();
+        new_jp->journey_pattern_point_list.clear();
+        new_jp->discrete_vehicle_journey_list.clear();
+        new_jp->frequency_vehicle_journey_list.clear();
+        pt_data.journey_patterns.push_back(new_jp);
+        pt_data.journey_patterns_map[new_jp->uri] = new_jp;
+
+        auto order = std::size_t{0};
+        for (const auto* jp_point: jp.journey_pattern_point_list) {
+            if(contains(impacted_stop_points, jp_point->stop_point)) {
+                continue;
+            }
+            auto new_jp_point = new nt::JourneyPatternPoint{*jp_point};
+            new_jp_point->idx = pt_data.journey_pattern_points.size();
+            new_jp_point->uri = make_adapted_uri_fast(jp.uri, pt_data.journey_pattern_points.size());
+            new_jp_point->stop_point->journey_pattern_point_list.push_back(new_jp_point);
+            new_jp_point->journey_pattern = new_jp;
+            new_jp_point->order = order++;
+            pt_data.journey_pattern_points.push_back(new_jp_point);
+            pt_data.journey_pattern_points_map[new_jp_point->uri] = new_jp_point;
+            new_jp->journey_pattern_point_list.push_back(new_jp_point);
+        }
+        // We copy the vehicle_journeys of the journey_pattern_points
+        auto v = functor_add_vj{impact, new_jp, impacted_stop_points, pt_data, meta};
+        jp.for_each_vehicle_journey(v);
+        // The new journey_pattern is linked to the impact
+        impact->impacted_journey_patterns.push_back(new_jp);
+    }
+
+    void operator()(const nt::StopPoint* stop_point) override{
+        this->log_start_action(stop_point->uri);
+        for (const auto* jp_point : stop_point->journey_pattern_point_list) {
+            add_new_jp_for_impacted_sp(*jp_point->journey_pattern, {stop_point});
         }
         this->log_end_action(stop_point->uri);
     }
 
-    void operator()(const nt::StopArea* stop_area) {
+    void operator()(const nt::StopArea* stop_area) override{
         this->log_start_action(stop_area->uri);
-        for (const auto stop_point : stop_area->stop_point_list) {
-            this->operator()(stop_point);
+        auto impacted_stop_points = std::set<const nt::StopPoint*>{std::begin(stop_area->stop_point_list), std::end(stop_area->stop_point_list)};
+        auto jp_in_this_stop_area = std::set<const nt::JourneyPattern*>{};
+        // We first find out all journey patterns that pass by this stop area
+        for (const auto* stop_point : impacted_stop_points) {
+            for (const auto* jp_point:  stop_point->journey_pattern_point_list) {
+                jp_in_this_stop_area.insert(jp_point->journey_pattern);
+            }
+        }
+        for (const auto* jp: jp_in_this_stop_area) {
+            add_new_jp_for_impacted_sp(*jp, impacted_stop_points);
         }
         this->log_end_action(stop_area->uri);
     }
 };
 
-void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>  impact,
                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
@@ -540,8 +548,10 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         }
         return true;
     }
+    // To be implemented!!	
+    void operator()(const nt::StopPoint* stop_point) override{}
 
-    void operator()(const nt::StopArea* stop_area) {
+    void operator()(const nt::StopArea* stop_area) override{
         this->log_start_action(stop_area->uri);
         // We need to erase vehicle journeys from the collections and the map
         // We do not remove the link journey_pattern->vj, because we will

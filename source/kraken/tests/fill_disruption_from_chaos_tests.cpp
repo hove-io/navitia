@@ -386,3 +386,40 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "010110"), dump_vj(*vj));
 }
+
+BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
+
+    ed::builder b = {"20150722"};
+    b.sa("B", 0, 0, false)("B1")("B2");
+    b.vj("l1")("A", "08:00"_t)("B1", "09:00"_t)("B2", "10:00"_t)("C", "11:00"_t);
+    b.vj("l2")("D", "08:11"_t)("B1", "09:00"_t)("E", "11:15"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2015,7,22), boost::gregorian::days(7));
+
+    chaos::Disruption disruption;
+    disruption.set_id("test01");
+    auto* impact = disruption.add_impacts();
+    impact->set_id("impact_id");
+    auto* severity = impact->mutable_severity();
+    severity->set_id("severity");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto* object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_area);
+    object->set_uri("B");
+    auto* app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20150722T000000"));
+    app_period->set_end(ntest::to_posix_timestamp("20150722T230000"));
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 2);
+
+    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 4);
+
+
+}

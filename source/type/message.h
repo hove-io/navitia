@@ -145,7 +145,8 @@ typedef boost::variant<
     const StopArea *,
     LineSection,
     const Line *,
-    const Route *
+    const Route *,
+    const StopPoint *
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,
