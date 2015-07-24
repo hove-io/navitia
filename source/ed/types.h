@@ -339,6 +339,7 @@ struct StopTime {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
+    std::string headsign = "";
 
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
 
