@@ -32,10 +32,11 @@
 import importlib
 from flask_restful.representations import json
 from flask import request, make_response
-from jormungandr import rest_api
+from jormungandr import rest_api, app
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
 import ujson
+import logging
 
 
 @rest_api.representation("text/jsonp")
@@ -54,6 +55,14 @@ def output_json(data, code, headers=None):
     resp = make_response(ujson.dumps(data), code)
     resp.headers.extend(headers or {})
     return resp
+
+
+@app.after_request
+def access_log(response, *args, **kwargs):
+    logger = logging.getLogger('jormungandr.access')
+    logger.info('"%s %s" %s', request.method, request.full_path, response.status_code)
+    return response
+
 
 # If modules are configured, then load and run them
 if 'MODULES' in rest_api.app.config:
