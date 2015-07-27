@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2015,7,22), boost::gregorian::days(7));
+    b.data->meta->production_date = boost::gregorian::date_period("20150722"_d, 7_days);
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
@@ -412,8 +412,8 @@ BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
     object->set_pt_object_type(chaos::PtObject_Type_stop_area);
     object->set_uri("B");
     auto* app_period = impact->add_application_periods();
-    app_period->set_start(ntest::to_posix_timestamp("20150722T000000"));
-    app_period->set_end(ntest::to_posix_timestamp("20150722T230000"));
+    app_period->set_start("20150722T000000"_pts);
+    app_period->set_end("20150722T230000"_pts);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 2);
 
