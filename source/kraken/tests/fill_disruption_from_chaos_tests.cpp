@@ -387,6 +387,15 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "010110"), dump_vj(*vj));
 }
 
+/*
+ * In this test, we just test if new journey parttens will be created correctly when disruptions happen in the
+ * stop area.
+ *
+ * Expected behaviors:
+ *
+ * 2 VJs are created at the begging of the test. When disruptions take place in the stop area B,
+ * we should find 4 VJs in all.
+ * */
 BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
 
     ed::builder b = {"20150722"};
@@ -401,7 +410,7 @@ BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period("20150722"_d, 7_days);
 
-    chaos::Disruption disruption;
+    chaos::Disruption disruption{};
     disruption.set_id("test01");
     auto* impact = disruption.add_impacts();
     impact->set_id("impact_id");
@@ -421,5 +430,50 @@ BOOST_AUTO_TEST_CASE(add_impact_multi_stop_points_on_stop_area) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 4);
 
+}
+
+/*
+ * In this test, we just test if new journey parttens will be created correctly when disruptions happen on the
+ * stop point.
+ *
+ * Expected behaviors:
+ *
+ * 3 VJs are created at the begging of the test. When disruptions take place in the stop point B1,
+ * we should find 5 VJs in all, because only 2 VJs are impacted by the disruption thus 2 new VJs are created.
+ * */
+BOOST_AUTO_TEST_CASE(add_impact_on_stop_point) {
+
+    ed::builder b = {"20150722"};
+    b.sa("B", 0, 0, false)("B1")("B2");
+    b.vj("l1")("A", "08:00"_t)("B1", "09:00"_t)("B2", "10:00"_t)("C", "11:00"_t);
+    b.vj("l2")("D", "08:11"_t)("B1", "09:00"_t)                 ("E", "11:15"_t);
+    b.vj("l3")("F", "08:11"_t)                 ("B2", "10:00"_t)("G", "12:15"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period("20150722"_d, 7_days);
+
+    chaos::Disruption disruption{};
+    disruption.set_id("test01");
+    auto* impact = disruption.add_impacts();
+    impact->set_id("impact_id");
+    auto* severity = impact->mutable_severity();
+    severity->set_id("severity");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto* object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_point);
+    object->set_uri("B1");
+    auto* app_period = impact->add_application_periods();
+    app_period->set_start("20150722T000000"_pts);
+    app_period->set_end("20150722T230000"_pts);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 3);
+
+    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 5);
 
 }
