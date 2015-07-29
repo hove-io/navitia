@@ -615,7 +615,7 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
 
 void fill_pb_object(const nt::VehicleJourney* vj,
                     const nt::Data& data,
-                    pbnavitia::VehicleJourney * vehicle_journey,
+                    pbnavitia::VehicleJourney* vehicle_journey,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
@@ -648,7 +648,14 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                            vehicle_journey->mutable_journey_pattern(), depth-1,
                            now, action_period, show_codes);
         }
-        for(const auto& stop_time : vj->stop_time_list) {
+        for(type::StopTime stop_time : vj->stop_time_list) {
+            //we copy the stoptime since we need to convert it to local time
+            if(stop_time.departure_time != std::numeric_limits<uint32_t>::max()){
+                stop_time.departure_time += vj->utc_to_local_offset;
+            }
+            if(stop_time.arrival_time != std::numeric_limits<uint32_t>::max()){
+                stop_time.arrival_time += vj->utc_to_local_offset;
+            }
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period);
         }
