@@ -1474,8 +1474,8 @@ Stop Point
 ======================= ===================== =====================================================================
 Field                   Type                  Description
 ======================= ===================== =====================================================================
-id                      string                Identifier of the line
-name                    string                Name of the line
+id                      string                Identifier of the stop point
+name                    string                Name of the stop point
 coord                   `coord`_              Coordinates of the stop point
 administrative_regions  array of `admin`_     Administrative regions of the stop point in which is the stop point
 equipments              array of string       list of `equipment`_ of the stop point
@@ -1491,8 +1491,8 @@ Stop Area
 ====================== =========================== ==================================================================
 Field                  Type                        Description
 ====================== =========================== ==================================================================
-id                     string                      Identifier of the line
-name                   string                      Name of the line
+id                     string                      Identifier of the stop area
+name                   string                      Name of the stop area
 coord                  `coord`_                    Coordinates of the stop area
 administrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
 stop_points            array of `stop_point`_      Stop points contained in this stop area
