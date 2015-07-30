@@ -295,6 +295,7 @@ void StopTimeFusioHandler::init(Data& data) {
     desc_c = csv.get_pos_col("stop_desc");
     date_time_estimated_c = csv.get_pos_col("date_time_estimated");
     id_c = csv.get_pos_col("stop_time_id");
+    headsign_c = csv.get_pos_col("stop_headsign");
 }
 
 void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -327,6 +328,10 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             if (local_traffic_zone > 0) {
                 stop_time->local_traffic_zone = local_traffic_zone;
             }
+        }
+
+        if (is_valid(headsign_c, row)) {
+            stop_time->headsign = row[headsign_c];
         }
     }
 }

@@ -303,6 +303,7 @@ stop_time = Table('stop_time', metadata,*[
     Column('is_frequency', BOOLEAN(), primary_key=False, nullable=False),
     Column('date_time_estimated', BOOLEAN(), primary_key=False, nullable=False, default=text(u'false')),
     Column('properties_id', BIGINT(), primary_key=False),
+    Column('headsign', TEXT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'stop_time_vehicle_journey_id_fkey'),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_time_properties_id_fkey'),
     ForeignKeyConstraint(['journey_pattern_point_id'], [u'navitia.journey_pattern_point.id'], name=u'stop_time_journey_pattern_point_id_fkey'),],
