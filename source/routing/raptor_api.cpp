@@ -283,6 +283,12 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         pb_journey->set_nb_transfers(path.nb_changes);
         pb_journey->set_requested_date_time(navitia::to_posix_timestamp(path.request_time));
 
+        pb_journey->set_sn_dur(path.sn_dur.total_seconds());
+        pb_journey->set_transfer_dur(path.transfer_dur.total_seconds());
+        pb_journey->set_min_waiting_dur(path.min_waiting_dur.total_seconds());
+        pb_journey->set_nb_vj_extentions(path.nb_vj_extentions);
+        pb_journey->set_nb_sections(path.nb_sections);
+
         if (path.items.empty()) {
             continue;
         }
