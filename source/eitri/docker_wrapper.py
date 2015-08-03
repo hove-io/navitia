@@ -33,7 +33,7 @@ from retrying import retry
 import psycopg2
 
 # postgres/postgis image
-POSTGIS_IMAGE = 'github.com/helmi03/docker-postgis.git'
+POSTGIS_IMAGE = 'github.com/CanalTP/docker-postgis.git'
 POSTGIS_CONTAINER_NAME = 'postgis:2.1'
 
 

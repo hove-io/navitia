@@ -10,8 +10,8 @@ SET(DATA_DIR_TO_LOAD ${FIXTURES_DIR}/ed/ntfs/)
 SET(DATA_NAV_TO_CREATE ${CMAKE_CURRENT_BINARY_DIR}/ntfs_${DATA_NAV_NAME})
 
 add_custom_command(OUTPUT ${DATA_NAV_TO_CREATE}
-    COMMAND ${EITRI}
-    ARGS "${FIXTURES_DIR}/ed/ntfs/" --output-file ${DATA_NAV_TO_CREATE} --ed-component-path "${CMAKE_BINARY_DIR}/ed" --add-pythonpath "${CMAKE_SOURCE_DIR}/navitiacommon"
+    COMMAND python
+    ARGS ${EITRI} "${FIXTURES_DIR}/ed/ntfs/" --output-file ${DATA_NAV_TO_CREATE} --ed-component-path "${CMAKE_BINARY_DIR}/ed" --add-pythonpath "${CMAKE_SOURCE_DIR}/navitiacommon"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM
 )
 set_source_files_properties(${DATA_NAV_TO_CREATE} PROPERTIES GENERATED TRUE)
