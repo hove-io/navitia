@@ -49,6 +49,8 @@ pbnavitia::Response query_pb(type::Type_e requested_type,
                              const bool show_codes,
                              const int startPage,
                              const int count,
+                             boost::optional<boost::posix_time::ptime> since,
+                             boost::optional<boost::posix_time::ptime> until,
                              const type::Data& data,
                              boost::posix_time::ptime current_time);
 }}

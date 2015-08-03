@@ -275,9 +275,19 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
     return final_indexes;
 }
 
+std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& final_indexes,
+                                    const navitia::type::Type_e requested_type,
+                                    boost::optional<boost::posix_time::ptime> since,
+                                    boost::optional<boost::posix_time::ptime> until,
+                                    const type::Data & data) {
+    return final_indexes;
+}
+
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                               const std::vector<std::string>& forbidden_uris,
                               const type::OdtLevel_e odt_level,
+                              boost::optional<boost::posix_time::ptime> since,
+                              boost::optional<boost::posix_time::ptime> until,
                               const Data & data) {
     std::vector<Filter> filters;
 
@@ -349,8 +359,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         }
         final_indexes = get_difference(final_indexes, forbidden_idx);
     }
-       // Manage OdtLevel
+    // Manage OdtLevel
     final_indexes = manage_odt_level(final_indexes, requested_type, odt_level, data);
+
+    // filter on validity periods
+    if (since || until) {
+        final_indexes = filter_on_period(final_indexes, requested_type, since, until, data);
+    }
+
     // When the filters have emptied the results
     if(final_indexes.empty()){
         throw ptref_error("Filters: Unable to find object");
@@ -385,7 +401,7 @@ std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::Data &data) {
-    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, data);
+    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, boost::none, boost::none, data);
 }
 
 std::vector<type::idx_t> make_query(type::Type_e requested_type,

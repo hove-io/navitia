@@ -99,6 +99,8 @@ std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::OdtLevel_e odt_level,
+                                    boost::optional<boost::posix_time::ptime> since,
+                                    boost::optional<boost::posix_time::ptime> until,
                                     const type::Data &data);
 
 std::vector<type::idx_t> make_query(type::Type_e requested_type,

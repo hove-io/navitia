@@ -626,7 +626,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 }
 
-
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uri;
@@ -637,7 +636,12 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
                                     get_odt_level(request.odt_level()),
                                     request.depth(), request.show_codes(),
                                     request.start_page(),
-                                    request.count(), *data,
+                                    request.count(),
+                                    (request.has_since_datetime() ?
+                                         boost::make_optional(bt::from_time_t(request.since_datetime())) : boost::none),
+                                    (request.has_until_datetime() ?
+                                         boost::make_optional(bt::from_time_t(request.until_datetime())) : boost::none),
+                                    *data,
                                     //no check on this datetime, it's not important
                                     //for it to be in the production period, it's used to filter the disruptions
                                     bt::from_time_t(request.datetime()));

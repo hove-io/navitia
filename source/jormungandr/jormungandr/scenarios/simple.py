@@ -240,6 +240,10 @@ class Scenario(object):
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
+        if request['since']:
+            req.ptref.since = request['since']
+        if request['until']:
+            req.ptref.until = request['until']
 
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)

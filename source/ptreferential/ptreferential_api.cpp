@@ -130,13 +130,15 @@ pbnavitia::Response query_pb(type::Type_e requested_type,
                              const bool show_codes,
                              const int startPage,
                              const int count,
+                             boost::optional<boost::posix_time::ptime> since,
+                             boost::optional<boost::posix_time::ptime> until,
                              const type::Data& data,
-                             boost::posix_time::ptime current_time){
+                             boost::posix_time::ptime current_time) {
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
     int total_result;
     try {
-        final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, data);
+        final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, since, until, data);
     } catch(const parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more, pb_response.mutable_error());
         return pb_response;
