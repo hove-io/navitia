@@ -78,5 +78,55 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
 
-    //TODO, have fun ! :)
+    // check stop_time headsigns
+    const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    auto& vj_vec = data.pt_data->vehicle_journeys;
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[0]->stop_time_list[0]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[0]->stop_time_list[1]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[0]->stop_time_list[2]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[0]->stop_time_list[3]), "N2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[0]->stop_time_list[4]), "N2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[1]->stop_time_list[0]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[1]->stop_time_list[1]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[1]->stop_time_list[2]), "N1");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[1]->stop_time_list[3]), "N2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[1]->stop_time_list[4]), "N2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[2]->stop_time_list[0]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[2]->stop_time_list[1]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[2]->stop_time_list[2]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[2]->stop_time_list[3]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[2]->stop_time_list[4]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[3]->stop_time_list[0]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[3]->stop_time_list[1]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[3]->stop_time_list[2]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[3]->stop_time_list[3]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[3]->stop_time_list[4]), "vehiclejourney2");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[0]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[1]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[2]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[3]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[4]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[4]->stop_time_list[5]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[0]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[1]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[2]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[3]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[4]), "vehiclejourney3");
+    BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[5]->stop_time_list[5]), "vehiclejourney3");
+    // check vj from headsign
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N1").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N2").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
 }

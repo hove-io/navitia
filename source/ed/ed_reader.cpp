@@ -73,6 +73,10 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     //the comments are loaded before the stop time to reduce the memory foot print
     this->fill_comments(data, work);
 
+    /// meta vj associated calendars
+    this->fill_associated_calendar(data, work);
+    this->fill_meta_vehicle_journeys(data, work);
+
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
@@ -113,10 +117,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_periods(data, work);
     this->fill_exception_dates(data, work);
     this->fill_rel_calendars_lines(data, work);
-
-    /// meta vj associated calendars
-    this->fill_associated_calendar(data, work);
-    this->fill_meta_vehicle_journeys(data, work);
 
     check_coherence(data);
 }
@@ -974,6 +974,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
         }
         vj->meta_vj = meta_vj;
+        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
     }
 
     //then we fill the links between a metavj and its associated calendars
@@ -1007,9 +1008,9 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
-    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, "
-        "local_traffic_zone, odt, pick_up_allowed, "
-        "drop_off_allowed, is_frequency, date_time_estimated, id "
+    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, "
+        "departure_time, local_traffic_zone, odt, pick_up_allowed, drop_off_allowed, is_frequency, "
+        "date_time_estimated, id, headsign "
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
@@ -1040,6 +1041,13 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 
         stop.journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
         stop.vehicle_journey = vj;
+
+        if (!const_it["headsign"].is_null()){
+            std::string headsign = const_it["headsign"].as<std::string>();
+            if (!headsign.empty()) {
+                data.pt_data->headsign_handler.affect_headsign_to_stop_time(stop, headsign);
+            }
+        }
 
         // we check if we have some comments
         const auto& it_comments = stop_time_comments.find(const_it["id"].as<nt::idx_t>());
