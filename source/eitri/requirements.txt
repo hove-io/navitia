@@ -4,3 +4,4 @@ psycopg2==2.4.5
 clingon==0.1.4
 GeoAlchemy2==0.2.4
 SQLAlchemy==1.0.4
+alembic==0.6.7
