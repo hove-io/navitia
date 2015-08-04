@@ -58,7 +58,7 @@ struct HeadsignHandler {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & map_vj_map_stop_time_headsign_change & headsign_mvj;
+        ar & headsign_changes & headsign_mvj;
     }
 
 protected:
@@ -69,8 +69,12 @@ protected:
     // for each VJ, map containing index of stop time and the new headsign (until next change)
     // as new stop_time might be added in the future, if map_vj_map_stop_time_headsign_change[vj]
     // exists, last change is always vj.name (and might happen after last stop_time)
+    // This gives following structure (vj.name = A) :
+    // stop times       : 1 2 3 4 5 6 7 8 (potential 9)
+    // headsigns        : A A A B B C B B
+    // headsign_changes :       B   C B   A
     std::unordered_map<const VehicleJourney*, boost::container::flat_map<uint16_t, std::string>>
-        map_vj_map_stop_time_headsign_change;
+        headsign_changes;
     // headsign to meta-vj map
     std::unordered_map<std::string, std::unordered_set<const MetaVehicleJourney*>> headsign_mvj;
 };
