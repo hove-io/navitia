@@ -33,11 +33,11 @@ target_link_libraries(ed_integration_test data georef types utils ${BOOST_LIBS} 
 
 # the test is not added with 'add_test', because we don't want 'make test' to handle it
 # it is added as a post build command to 'make docker_test', called after all the build
-add_custom_command(TARGET ed_integration_test
-                    POST_BUILD COMMAND ed_integration_test
-                    ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no --ntfs_file=${DATA_NAV_TO_CREATE})
+add_custom_target(run_test DEPENDS datanav_files ed_integration_test)
+add_custom_command(TARGET run_test
+                   COMMAND ed_integration_test
+                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no --ntfs_file=${DATA_NAV_TO_CREATE})
 
 
 add_dependencies(ed_integration_test datanav_files)
-add_dependencies(docker_test ed_integration_test)
-
+add_dependencies(docker_test run_test)
