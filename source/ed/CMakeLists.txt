@@ -48,7 +48,8 @@ target_link_libraries(poi2ed transportation_data_import connectors)
 add_executable(synonym2ed synonym2ed.cpp)
 target_link_libraries(synonym2ed transportation_data_import connectors)
 
-INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav fusio2ed fare2ed geopal2ed poi2ed synonym2ed)
+SET(ED_TARGETS_TO_INSTALL gtfs2ed osm2ed ed2nav fusio2ed fare2ed geopal2ed poi2ed synonym2ed)
+INSTALL_TARGETS(/usr/bin/ ${ED_TARGETS_TO_INSTALL})
 
 # Ed integration tests with docker, build with the docker_test target 
 # and not with the default target not to have a strong docker dependency
