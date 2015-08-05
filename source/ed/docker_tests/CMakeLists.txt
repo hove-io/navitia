@@ -18,7 +18,8 @@ set_source_files_properties(${DATA_NAV_TO_CREATE} PROPERTIES GENERATED TRUE)
 
 
 # == create a target with all generated files ==
-add_custom_target(datanav_files DEPENDS ${DATA_NAV_TO_CREATE})
+# we add dependencies to all data import components used during nav file creation
+add_custom_target(datanav_files DEPENDS ${DATA_NAV_TO_CREATE} ${ED_TARGETS_TO_INSTALL})
 
 # ==
 # add all the tests
