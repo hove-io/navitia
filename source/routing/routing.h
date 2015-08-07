@@ -118,6 +118,13 @@ struct Path {
     std::vector<PathItem> items;
     type::EntryPoint origin;
 
+    // for debug purpose, we store the reader's computed values
+    navitia::time_duration sn_dur = 0_s;// street network duration
+    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
+    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
+    uint8_t nb_vj_extentions = 0;// number of vehicle journey extentions (I love useless comments!)
+    uint8_t nb_sections = 0;
+
     void print() const {
         for(auto item : items)
             std::cout << item.print() << std::endl;
