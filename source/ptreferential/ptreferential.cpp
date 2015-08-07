@@ -73,7 +73,7 @@ namespace qi = boost::spirit::qi;
     qi::rule<Iterator, std::string()> escaped_string, bracket_string;
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match a binary operator like <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // the complete string to parse
-    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause;
+    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause, method_clause;
 
     select_r() : select_r::base_type(filter) {
         // Warning, the '-' in a qi::char_ can have a particular meaning as 'a-z'
@@ -96,7 +96,8 @@ namespace qi = boost::spirit::qi;
         single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         having_clause = (word >> "HAVING" >> bracket_string /*'(' >> (word|escaped_string|bracket_string) >> ')'*/)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
-        filter %= (single_clause | having_clause | after_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
+        method_clause = (word >> "." >> word >> "(" >> (word|escaped_string|bracket_string) >> ")")[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter %= (single_clause | having_clause | after_clause | method_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };
@@ -187,6 +188,13 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
                 }
             }
         }
+    } else if(! filter.method.empty()) {
+        if (filter.object == "vehicle_journey" && filter.method == "has_headsign") {
+            for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.value)) {
+                indexes.push_back(vj->idx);
+            }
+        }
+        return indexes;
     }
     else {
         indexes = filtered_indexes(data, build_clause<T>({filter}));
