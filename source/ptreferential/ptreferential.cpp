@@ -46,8 +46,13 @@ www.navitia.io
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
+#include <boost/date_time/time_duration.hpp>
 #include "type/pt_data.h"
+#include "type/meta_data.h"
+#include <boost/date_time.hpp>
 
+
+namespace bt = boost::posix_time;
 
 namespace navitia{ namespace ptref{
 using namespace navitia::type;
@@ -275,12 +280,78 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
     return final_indexes;
 }
 
-std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& final_indexes,
+bool keep_vj(const nt::VehicleJourney* vj,
+             const bt::time_period& period) {
+    if (vj->stop_time_list.empty()) {
+        return false; //no stop time, so it cannot be valid
+    }
+    const auto first_departure_dt = vj->stop_time_list.front().departure_time;
+
+    for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
+        if (! vj->validity_pattern->check(*it)) { continue; }
+        bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
+        if (period.contains(vj_dt)) { return true; }
+    }
+
+    return false;
+}
+
+std::vector<idx_t> filter_vj_on_period(const std::vector<type::idx_t>& indexes,
+             boost::optional<bt::ptime> since,
+             boost::optional<bt::ptime> until,
+             const type::Data & data) {
+
+    // we create the right period using since, until and the production period
+    if (since && until && until < since) {
+        throw ptref_error("invalid filtering period");
+    }
+    auto start = bt::ptime(data.meta->production_date.begin());
+    auto end = bt::ptime(data.meta->production_date.last(), bt::seconds(24*3600 - 1));
+
+    if (since) {
+        if (data.meta->production_date.is_before(since->date())) {
+            throw ptref_error("invalid filtering period, not in production period");
+        }
+        if (since->date() >= data.meta->production_date.begin()) {
+            start = *since;
+        }
+    }
+    if (until) {
+        if (data.meta->production_date.is_after(until->date())) {
+            throw ptref_error("invalid filtering period, not in production period");
+        }
+        if (until->date() <= data.meta->production_date.last()) {
+            end = *until;
+        }
+    }
+    bt::time_period period {start, end + bt::seconds(1)}; //the end is not in the period, so we add one second
+
+    std::vector<idx_t> res;
+    for (const idx_t idx: indexes) {
+        const auto vj = data.pt_data->vehicle_journeys[idx];
+        if (! keep_vj(vj, period)) { continue; }
+        res.push_back(idx);
+    }
+    return res;
+}
+
+std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& indexes,
                                     const navitia::type::Type_e requested_type,
                                     boost::optional<boost::posix_time::ptime> since,
                                     boost::optional<boost::posix_time::ptime> until,
                                     const type::Data & data) {
-    return final_indexes;
+
+    switch(requested_type) {
+        case nt::Type_e::VehicleJourney: {
+            return filter_vj_on_period(indexes, since, until, data);
+        }
+    default:
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                       "cannot filter on validity period for this type");
+        break;
+    }
+
+    return indexes;
 }
 
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
