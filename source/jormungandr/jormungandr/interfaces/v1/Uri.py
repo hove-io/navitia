@@ -50,15 +50,18 @@ from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
+from jormungandr.utils import date_to_timestamp, ResourceUtc
 import navitiacommon.type_pb2 as type_pb2
 from datetime import datetime
 
-class Uri(ResourceUri):
+
+class Uri(ResourceUri, ResourceUtc):
     parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
         kwargs['authentication'] = False
         ResourceUri.__init__(self, *args, **kwargs)
+        ResourceUtc.__init__(self)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser = self.parsers["get"]
@@ -138,6 +141,14 @@ class Uri(ResourceUri):
 
         #we store the region in the 'g' object, which is local to a request
         set_request_timezone(self.region)
+
+        # change dt to utc
+        if args['since']:
+            args['_original_since'] = args['since']
+            args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
+        if args['until']:
+            args['_original_until'] = args['until']
+            args['until'] = date_to_timestamp(self.convert_to_utc(args['until']))
 
         if not self.region:
             return {"error": "No region"}, 404
