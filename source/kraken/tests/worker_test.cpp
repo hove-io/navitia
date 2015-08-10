@@ -59,6 +59,10 @@ static pbnavitia::Request create_request(bool wheelchair, std::string destinatio
     auto sn_params = j->mutable_streetnetwork_params();
     sn_params->set_origin_mode("walking");
     sn_params->set_destination_mode("walking");
+    sn_params->set_walking_speed(1);
+    sn_params->set_bike_speed(1);
+    sn_params->set_car_speed(1);
+    sn_params->set_bss_speed(1);
     pbnavitia::LocationContext* from = j->add_origin();
     from->set_place("A");
     from->set_access_duration(0);

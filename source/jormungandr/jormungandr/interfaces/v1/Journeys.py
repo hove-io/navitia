@@ -54,7 +54,7 @@ from jormungandr.timezone import set_request_timezone
 from make_links import add_id_links, clean_links, create_external_link, create_internal_link
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.interfaces.parsers import depth_argument, float_gt_0
 from operator import itemgetter
 from datetime import datetime, timedelta
 import sys
@@ -559,10 +559,10 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("max_car_duration_to_pt", type=int,
                                 description="maximal duration of car on public transport in second")
 
-        parser_get.add_argument("walking_speed", type=float)
-        parser_get.add_argument("bike_speed", type=float)
-        parser_get.add_argument("bss_speed", type=float)
-        parser_get.add_argument("car_speed", type=float)
+        parser_get.add_argument("walking_speed", type=float_gt_0)
+        parser_get.add_argument("bike_speed", type=float_gt_0)
+        parser_get.add_argument("bss_speed", type=float_gt_0)
+        parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
