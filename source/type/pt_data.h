@@ -88,6 +88,9 @@ struct PT_Data : boost::noncopyable{
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
 
+    // JourneyPattern Pool
+    std::unordered_map<JourneyPatternKey, JourneyPattern*, boost::hash<JourneyPatternKey>> journey_patterns_pool;
+
     // First letter
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopArea);
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopPoint);
@@ -189,7 +192,8 @@ struct PT_Data : boost::noncopyable{
 
     const StopPointConnection*
     get_stop_point_connection(const StopPoint& from, const StopPoint& to) const;
-
+    nt::JourneyPattern* get_or_create_journey_pattern (const JourneyPatternKey& key);
+    void remove_journey_pattern_from_jp_pool(const JourneyPattern& jp);
     ~PT_Data();
 
 };

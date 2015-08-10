@@ -814,6 +814,13 @@ struct JourneyPattern : public Header, Nameable {
         for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) {return;} }
     }
 
+    template <typename T>
+    void for_each_vehicle_journey_ptr(T& func) {
+
+        for (auto& vj: discrete_vehicle_journey_list) { if (! func(vj)) {return;} }
+        for (auto& vj: frequency_vehicle_journey_list) { if (! func(vj)) {return;} }
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & discrete_vehicle_journey_list
@@ -1129,6 +1136,23 @@ std::string get_admin_name(const T* v) {
     }
     return admin_name;
 }
+
+struct JourneyPatternKey {
+    std::vector<StopPoint*> stop_points;
+    bool is_frequence = false;
+    Route* route = nullptr;
+    PhysicalMode* physical_mode = nullptr;
+    CommercialMode* commercial_mode = nullptr;
+    hasOdtProperties odt_properties;
+    std::string name;
+    std::string uri;
+
+    JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& stop_points);
+    bool operator==(const JourneyPatternKey&) const;
+    friend std::size_t hash_value(const JourneyPatternKey&);
+};
+
+
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

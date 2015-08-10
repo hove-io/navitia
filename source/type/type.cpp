@@ -767,6 +767,33 @@ std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
     }
 }
 
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& stop_points) :
+                                    stop_points(std::move(stop_points)),
+                                    is_frequence(jp.is_frequence),
+                                    route(jp.route),
+                                    physical_mode(jp.physical_mode),
+                                    commercial_mode(jp.commercial_mode),
+                                    odt_properties(jp.odt_properties),
+                                    name(jp.name),
+                                    uri(jp.uri){}
+
+bool JourneyPatternKey::operator==(const JourneyPatternKey& other) const{
+    return hash_value(*this) == hash_value(other);
+}
+
+std::size_t hash_value(const JourneyPatternKey& key){
+    std::size_t seed{0};
+    boost::hash_combine(seed, key.stop_points);
+    boost::hash_combine(seed, key.is_frequence);
+    boost::hash_combine(seed, key.route);
+    boost::hash_combine(seed, key.physical_mode);
+    boost::hash_combine(seed, key.commercial_mode);
+    boost::hash_combine(seed, key.odt_properties.odt_properties.to_string());
+    boost::hash_combine(seed, key.name);
+    boost::hash_combine(seed, key.uri);
+    return seed;
+}
+
 }} //namespace navitia::type
 
 BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
