@@ -1,3 +1,9 @@
+navitia2 (1.23.1) unstable; urgency=low
+
+  * jormungandr: check the {sn}_speed for correctness <https://github.com/CanalTP/navitia/pull/1136>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Mon, 10 Aug 2015 18:08:55 +0100
+
 navitia2 (1.23.0) unstable; urgency=low
 
   * jormun: add a log of the request with the request id  <https://github.com/CanalTP/navitia/pull/1123>
