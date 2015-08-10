@@ -226,6 +226,22 @@ class TestJourneys(AbstractTestFixture):
         assert 'message' in response
         assert response['message'] == "Unable to parse datetime, hour must be in 0..23"
 
+    def test_journeys_bad_speed(self):
+        """speed <= 0 is invalid"""
+
+        for speed in ["0", "-1"]:
+            for sn in ["walking", "bike", "bss", "car"]:
+                query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&{sn}_speed={speed}"\
+                    .format(from_coord=s_coord, to_coord=r_coord, d="20120614T133700", sn=sn, speed=speed)
+
+                response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+                assert not 'journeys' in response
+                assert 'message' in response
+                assert response['message'] == \
+                    "The {sn}_speed argument has to be > 0, you gave : {speed}"\
+                        .format(sn=sn, speed=speed)
+
     def test_journeys_date_valid_not_zeropadded(self):
         """giving the date with non zero padded month should be a problem"""
 

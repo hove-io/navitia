@@ -30,10 +30,19 @@ from dateutil import parser
 
 
 def depth_argument(value, name):
-    if int(value) > 3:
+    conv_value = int(value)
+    if conv_value > 3:
         raise ValueError("The {} argument has to be <= 3, you gave : {}"
                          .format(name, value))
-    return int(value)
+    return conv_value
+
+
+def float_gt_0(value, name):
+    conv_value = float(value)
+    if conv_value <= 0:
+        raise ValueError("The {} argument has to be > 0, you gave : {}"
+                         .format(name, value))
+    return conv_value
 
 
 def true_false(value, name):
