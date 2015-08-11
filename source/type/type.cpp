@@ -767,15 +767,24 @@ std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
     }
 }
 
-JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& stop_points) :
-                                    stop_points(std::move(stop_points)),
-                                    is_frequence(jp.is_frequence),
-                                    route(jp.route),
-                                    physical_mode(jp.physical_mode),
-                                    commercial_mode(jp.commercial_mode),
-                                    odt_properties(jp.odt_properties),
-                                    name(jp.name),
-                                    uri(jp.uri){}
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, const std::vector<StopPoint*>& sps):
+        JourneyPatternKey{jp} {
+            stop_points = sps;
+}
+
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& sps):
+        JourneyPatternKey{jp} {
+            stop_points = std::move(sps);
+}
+
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp):
+        is_frequence(jp.is_frequence),
+        route(jp.route),
+        physical_mode(jp.physical_mode),
+        commercial_mode(jp.commercial_mode),
+        odt_properties(jp.odt_properties),
+        name(jp.name),
+        uri(jp.uri){}
 
 bool JourneyPatternKey::operator==(const JourneyPatternKey& other) const{
     return hash_value(*this) == hash_value(other);

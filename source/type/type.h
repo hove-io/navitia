@@ -1138,18 +1138,22 @@ std::string get_admin_name(const T* v) {
 }
 
 struct JourneyPatternKey {
-    std::vector<StopPoint*> stop_points;
     bool is_frequence = false;
     Route* route = nullptr;
     PhysicalMode* physical_mode = nullptr;
     CommercialMode* commercial_mode = nullptr;
-    hasOdtProperties odt_properties;
-    std::string name;
-    std::string uri;
+    hasOdtProperties odt_properties{};
+    std::string name{};
+    std::string uri{};
+    std::vector<StopPoint*> stop_points{};
 
-    JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& stop_points);
+    explicit JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& sps);
+    explicit JourneyPatternKey(const JourneyPattern& jp, const std::vector<StopPoint*>& sps);
     bool operator==(const JourneyPatternKey&) const;
     friend std::size_t hash_value(const JourneyPatternKey&);
+private:
+    explicit JourneyPatternKey(const JourneyPattern& jp);
+
 };
 
 

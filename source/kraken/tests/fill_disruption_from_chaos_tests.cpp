@@ -199,10 +199,10 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
 
 BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     ed::builder b("20120614");
-    b.vj("A", "000111", "", true, "vj:1")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60)
-            ("stop_area:stop3", 8*3600 + 30 * 60 ,8*3600 + 31*60)("stop_area:stop4", 8*3600 + 40 * 60 ,8*3600 + 41*60);
-    b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60 ,9*3600 + 21*60)
-            ("stop_area:stop3", 9*3600 + 30 * 60 ,9*3600 + 31*60)("stop_area:stop4", 9*3600 + 40 * 60 ,9*3600 + 41*60);
+    b.vj("A", "000111", "", true, "vj:1")("stop_area:stop1", "8:10"_t, "8:11"_t)("stop_area:stop2", "8:20"_t,"8:21"_t)
+            ("stop_area:stop3", "8:30"_t ,"8:31"_t)("stop_area:stop4", "8:40"_t ,"8:41"_t);
+    b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", "9:10"_t, "9:11"_t)("stop_area:stop2", "9:20"_t, "9:21"_t)
+            ("stop_area:stop3", "9:30"_t, "9:31"_t)("stop_area:stop4", "9:40"_t, "9:41"_t);
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->index();
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     auto check = [](const nt::Data& data){
         BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 1);
         BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys.size(), 4);// Now We should have 4 VJ that circulate
-        BOOST_CHECK_EQUAL(data.pt_data->journey_patterns.size(), 2);// some of them aren't used
+        BOOST_CHECK_EQUAL(data.pt_data->journey_patterns.size(), 2);
         bool has_adapted_vj = false;
         for(const auto* vj: data.pt_data->vehicle_journeys){
             if(vj->adapted_validity_pattern->days.none() && vj->validity_pattern->days.none()){
@@ -485,14 +485,16 @@ BOOST_AUTO_TEST_CASE(add_and_delete_impact_on_stop_point) {
 
 /*
  * In this test, we just test if new journey parttens will be created correctly when disruptions happen on the
- * stop point.
+ * stop point THEN on the stop area
  *
  * Expected behaviors:
  *
  * 3 VJs are created at the begging of the test. When disruptions take place in the stop point B1,
  * we should find 5 VJs in all, because only 2 VJs are impacted by the disruption thus 2 new VJs are created.
  *
- * When disruptions is removed, 2 newly created VJs are also removed.
+ * When a new disruption is applied on the stop area, we should find 6 JPs in all.
+ *
+ * Then remove them in the reversed order, we should find the same thing.
  * */
 BOOST_AUTO_TEST_CASE(multi_impacts_on_stop_area_and_stop_point) {
 
@@ -535,10 +537,6 @@ BOOST_AUTO_TEST_CASE(multi_impacts_on_stop_area_and_stop_point) {
     navitia::add_disruption(disruption_stop_point, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 5);
-    std::cout << "after stop point dump jp ----------------------" << std::endl;
-    for (auto& jp: b.data->pt_data->journey_patterns) {
-        std::cout << jp->uri << std::endl;
-    }
 
     chaos::Disruption disruption_stop_area{};
     disruption_stop_area.set_id("test_stop_area");
@@ -555,15 +553,16 @@ BOOST_AUTO_TEST_CASE(multi_impacts_on_stop_area_and_stop_point) {
     app_period->set_end("20150722T230000"_pts);
 
     navitia::add_disruption(disruption_stop_area, *b.data->pt_data, *b.data->meta);
-    std::cout << "after stop area dump jp ----------------------" << std::endl;
 
-    for (auto& jp: b.data->pt_data->journey_patterns) {
-        std::cout << jp->uri << std::endl;
-    }
     BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 6);
 
     navitia::delete_disruption(disruption_stop_area.id(), *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 5);
+
+    navitia::delete_disruption(disruption_stop_point.id(), *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 3);
+
 
 }
