@@ -266,7 +266,7 @@ struct AssociateStreetRelation {
 
 
 typedef std::set<OSMWay>::const_iterator it_way;
-typedef std::map<const OSMRelation*, std::set<it_way>> rel_ways;
+typedef std::map<std::set<const OSMRelation*>, std::set<it_way>> rel_ways;
 typedef std::set<OSMRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
 

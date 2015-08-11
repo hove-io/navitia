@@ -112,9 +112,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
                     if (way_id == std::numeric_limits<uint64_t>::max()) {
                         way_id = ref.member_id;
                     } else {
-                        LOG4CPLUS_TRACE(logger, "Reference " << std::to_string(osm_id)
-                                << " has two ways with the role street, and that's WRONG");
-                        return;
+                        // The ways should be merged after, thus we just take the first one.
                     }
                 }
                 break;
@@ -412,14 +410,16 @@ void OSMCache::insert_rel_way_admins() {
                 if (!way->is_used()) {
                     continue;
                 }
-                lotus.insert({std::to_string(admin_ways.first->osm_id),
-                        std::to_string(way->osm_id)});
-                ++n_inserted;
-                if (n_inserted == max_n_inserted) {
-                    lotus.finish_bulk_insert();
-                    lotus.prepare_bulk_insert("georef.rel_way_admin",
-                            {"admin_id", "way_id"});
-                    n_inserted = 0;
+                for (const auto& admin: admin_ways.first) {
+                    lotus.insert({std::to_string(admin->osm_id),
+                                std::to_string(way->osm_id)});
+                    ++n_inserted;
+                    if (n_inserted == max_n_inserted) {
+                        lotus.finish_bulk_insert();
+                        lotus.prepare_bulk_insert("georef.rel_way_admin",
+                                                  {"admin_id", "way_id"});
+                        n_inserted = 0;
+                    }
                 }
             }
         }
@@ -445,11 +445,12 @@ void OSMCache::build_way_map() {
                max_lat = max_double,
                min_lon = max_double,
                min_lat = max_double;
+        std::set<const OSMRelation*> admins;
         for (auto node : way_it->nodes) {
             if (!node->admin) {
                 continue;
             }
-            way_admin_map[way_it->name][node->admin].insert(way_it);
+            admins.insert(node->admin);
             if (!node->is_defined()) {
                 continue;
             }
@@ -460,6 +461,7 @@ void OSMCache::build_way_map() {
             min_lon = std::min(min_lon, node->lon());
             min_lat = std::min(min_lat, node->lat());
         }
+        way_admin_map[way_it->name][admins].insert(way_it);
         bg::simplify(way_it->ls, way_it->ls, 0.5);
         if (max_lon >= max_double || max_lat >= max_double || min_lat >= max_double
             || min_lon >= max_double) {
@@ -478,7 +480,7 @@ static const OSMWay* get_way(const OSMWay* w) {
 }
 
 /*
- * We group together ways with the same name in the same admin
+ * We group together ways with the same name in the same admins
  */
 void OSMCache::fusion_ways() {
     for (auto name_admin_ways : way_admin_map) {
@@ -490,14 +492,12 @@ void OSMCache::fusion_ways() {
             if (admin_ways.second.empty()) {
                 continue;
             }
-            auto it_ref = std::find_if(admin_ways.second.begin(), admin_ways.second.end(),
-                    [](it_way w) { return w->way_ref != nullptr; });
-            if (it_ref == admin_ways.second.end()) {
-                it_ref = admin_ways.second.begin();
+            const OSMWay* way_ref = nullptr;
+            for (auto& w: admin_ways.second) {
+                assert(w->way_ref == nullptr);
+                if (way_ref == nullptr) { way_ref = &*w; }
+                w->way_ref = way_ref;
             }
-            auto way_ref = (*it_ref)->way_ref == nullptr ? &(**it_ref) : (*it_ref)->way_ref;
-            std::for_each(admin_ways.second.begin(), admin_ways.second.end(),
-                    [&](it_way w) { w->way_ref = way_ref; });
         }
     }
     for (auto& way : ways) {
@@ -772,11 +772,15 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
         if (it_ways == cache.way_admin_map.end()) {
             return nullptr;
         }
-        auto ways_it = std::find_if(it_ways->second.begin(), it_ways->second.end(),
-                [&](const std::pair<const OSMRelation*, std::set<it_way>> r) {
-                    return boost::algorithm::join(r.first->postal_codes, ";") == it_postcode->second;
+        auto ways_it = std::find_if(
+            it_ways->second.begin(), it_ways->second.end(),
+            [&](const std::pair<const std::set<const OSMRelation*>, std::set<it_way>> r) {
+                std::vector<std::string> postcodes;
+                for (const auto& admin: r.first) {
+                    postcodes.push_back(boost::algorithm::join(admin->postal_codes, ";"));
                 }
-        );
+                return boost::algorithm::join(postcodes, ";") == it_postcode->second;
+            });
         if (ways_it != it_ways->second.end()) {
             auto way_it = std::find_if(ways_it->second.begin(), ways_it->second.end(),
                     [](const it_way w) { return w->way_ref->osm_id == w->osm_id;});
@@ -788,7 +792,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
     // Otherwize we try to match coords with an admin
     const auto admin = cache.match_coord_admin(lon, lat);
     if (admin) {
-        auto it_admin = it_ways->second.find(admin);
+        auto it_admin = it_ways->second.find({admin});
         if (it_admin != it_ways->second.end()) {
             return &**it_admin->second.begin();
         }
