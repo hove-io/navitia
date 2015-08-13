@@ -484,18 +484,13 @@ static const OSMWay* get_way(const OSMWay* w) {
  */
 void OSMCache::fusion_ways() {
     for (auto name_admin_ways : way_admin_map) {
-        if (name_admin_ways.first == "") {
-            continue;
-        }
+        if (name_admin_ways.first == "") { continue; }
         for (auto admin_ways : name_admin_ways.second) {
             // This shouldn't happen, but... you know ...
-            if (admin_ways.second.empty()) {
-                continue;
-            }
-            const OSMWay* way_ref = nullptr;
+            if (admin_ways.second.empty()) { continue; }
+            const OSMWay* way_ref = &**admin_ways.second.begin();
             for (auto& w: admin_ways.second) {
                 assert(w->way_ref == nullptr);
-                if (way_ref == nullptr) { way_ref = &*w; }
                 w->way_ref = way_ref;
             }
         }
@@ -774,7 +769,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
         }
         auto ways_it = std::find_if(
             it_ways->second.begin(), it_ways->second.end(),
-            [&](const std::pair<const std::set<const OSMRelation*>, std::set<it_way>> r) {
+            [&](const std::pair<const std::set<const OSMRelation*>, std::set<it_way>>& r) {
                 std::vector<std::string> postcodes;
                 for (const auto& admin: r.first) {
                     postcodes.push_back(boost::algorithm::join(admin->postal_codes, ";"));
