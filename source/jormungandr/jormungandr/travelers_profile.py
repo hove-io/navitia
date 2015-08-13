@@ -146,7 +146,7 @@ travelers_profile = {
     'cyclist': TravelerProfile(walking_speed=1.39,
                                bike_speed=3.33,
                                max_duration_to_pt=12*60,
-                               first_section_mode=['walking', 'bss'],
+                               first_section_mode=['walking', 'bike'],
                                last_section_mode=['walking'],
                                keolis_type_map={'rapid': ['best'],
                                    'comfort': ['less_fallback_walk', 'less_fallback_bss', 'less_fallback_bike'],
