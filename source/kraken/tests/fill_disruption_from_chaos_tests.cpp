@@ -268,11 +268,9 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "000111"), vj->validity_pattern->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:1:adapted-2"];
-        std::cout << vj->adapted_validity_pattern->days.to_string();
         BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"), vj->adapted_validity_pattern->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:2:adapted-3"];
-        std::cout << vj->adapted_validity_pattern->days.to_string();
         BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"), vj->adapted_validity_pattern->days);
 
     };

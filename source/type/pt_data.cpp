@@ -31,6 +31,7 @@ www.navitia.io
 #include "pt_data.h"
 #include "utils/functions.h"
 
+#include <random>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 
@@ -235,14 +236,24 @@ nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatt
     new_jp->physical_mode = key.physical_mode;
     new_jp->odt_properties = key.odt_properties;
     new_jp->name = key.name;
-    new_jp->uri = key.uri + ":adapted-" + std::to_string(journey_patterns.size()) ;
+    auto new_uri = key.uri + ":adapted-" + std::to_string(journey_patterns.size()) ;
+
+    // the new_uri may be already existent, to guarantee its unicity,
+    // we add a random integer at the end of the uri.
+    // Can we find a more proper way to do that?
+    if (contains(journey_patterns_map, new_uri)) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(100, 999);
+        new_uri = new_uri + "-" + std::to_string(dis(gen));
+    }
+    new_jp->uri = new_uri;
     new_jp->idx = journey_patterns.size() - 1;
 
     journey_patterns.push_back(new_jp);
     journey_patterns_map[new_jp->uri] = new_jp;
     journey_patterns_pool[key] = new_jp;
 
-    auto order = std::size_t{0};
     for (auto* stop_point: key.stop_points) {
 
         auto new_jp_point = new nt::JourneyPatternPoint();
@@ -252,10 +263,10 @@ nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatt
         // TODO: copy LineString
 
         new_jp_point->idx = journey_pattern_points.size();
-        new_jp_point->uri = key.uri + ":" + boost::lexical_cast<std::string>(new_jp->journey_pattern_point_list.size());
+        new_jp_point->uri = key.uri + ":" + std::to_string(new_jp->journey_pattern_point_list.size());
         new_jp_point->stop_point->journey_pattern_point_list.push_back(new_jp_point);
 
-        new_jp_point->order = order++;
+        new_jp_point->order = new_jp->journey_pattern_point_list.size();
         journey_pattern_points.push_back(new_jp_point);
         journey_pattern_points_map[new_jp_point->uri] = new_jp_point;
         new_jp->journey_pattern_point_list.push_back(new_jp_point);

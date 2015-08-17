@@ -49,14 +49,6 @@ namespace bt = boost::posix_time;
 namespace bg = boost::gregorian;
 
 namespace {
-template<typename Container, typename Pred>
-void erase_remove_if_helper(Container& c, Pred p) {
-    c.erase(std::remove_if(std::begin(c), std::end(c), p), std::end(c));
-}
-template<typename Container, typename Pred>
-void erase_remove_helper(Container& c, Pred p) {
-    c.erase(std::remove(std::begin(c), std::end(c), p), std::end(c));
-}
 
 struct DiscreteVJTag{};
 struct FrequencyVJTag{};
@@ -85,7 +77,7 @@ auto get_vj_list_of_jp_helper(nt::JourneyPattern* jp, FrequencyVJTag)
 
 template<typename Container, typename Value>
 void push_back_unique(Container& c, const Value& v) {
-    if(! contains(c, v)) { c.push_back(v); }
+    if (! contains(c, v)) { c.push_back(v); }
 }
 
 }
@@ -316,9 +308,6 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
 
-    virtual void operator()(const nt::StopPoint*) = 0;
-    virtual void operator()(const nt::StopArea*) = 0;
-
     void operator()(const nt::Network* network) {
         this->log_start_action(network->uri);
         for(auto line : network->line_list) {
@@ -537,7 +526,7 @@ struct vehicle_journey_impactor {
           vj_ptr->journey_pattern = new_jp;
 
           // We should also remove the old jp form impact's impacted_journey_patterns
-          erase_remove_if_helper(impact->impacted_journey_patterns, [&](const nt::JourneyPattern* jp){
+          boost::remove_erase_if(impact->impacted_journey_patterns, [&](const nt::JourneyPattern* jp){
               return jp->uri == old_jp->uri;
           });
 
@@ -598,8 +587,8 @@ struct vehicle_journey_impactor {
           return contains(impacted_stop_points, jpp->stop_point);});
   }
 
-  template<typename T>
-  bool operator()(std::unique_ptr<T>& vj){
+  template<typename VJ>
+  bool operator()(std::unique_ptr<VJ>& vj){
       // If vj circulates in impact's period
       if (! is_impacted(*vj)) {
           return true;
@@ -634,7 +623,7 @@ struct vehicle_journey_impactor {
                       // vj is also impacted by this impact.
                       push_back_unique(impact->impacted_journey_patterns, adapted_vj->journey_pattern);
 
-                      auto has_no_impact = std::none_of(std::begin(adapted_vj->impacted_by),
+                      const bool has_no_impact = std::none_of(std::begin(adapted_vj->impacted_by),
                               std::end(adapted_vj->impacted_by),
                               [&](boost::weak_ptr<navitia::type::new_disruption::Impact>& weak_ptr ){
                           if(auto ptr = weak_ptr.lock()) {
@@ -681,9 +670,6 @@ public:
             });
         return true;
     }
-    const std::set<nt::new_disruption::Impact*>& get_jp_impacts() const &{ return jp_impacts;}
-    std::set<nt::new_disruption::Impact*>&& get_jp_impacts() && { return std::move(jp_impacts);}
-private:
     std::set<nt::new_disruption::Impact*> jp_impacts{};
 };
 
@@ -724,8 +710,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     void remove_jp_if_no_vj(nt::JourneyPattern* jp, const std::set<nt::new_disruption::Impact*>& jp_impacts) {
 
-        // test if there are any vj still attched to the jp
-        if(! jp->discrete_vehicle_journey_list.empty() ||
+        // test if there are any vj still attached to the jp
+        if (! jp->discrete_vehicle_journey_list.empty() ||
                 ! jp->frequency_vehicle_journey_list.empty()) {
             return;
         }
@@ -737,17 +723,22 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             // let's take advantage of RAII of unique_ptr
             auto jpp_unique_ptr = std::unique_ptr<nt::JourneyPatternPoint>{jpp};
 
-            erase_remove_helper(pt_data.journey_pattern_points, jpp);
+            boost::range::remove_erase(pt_data.journey_pattern_points, jpp);
 
             pt_data.journey_pattern_points_map.erase(jpp->uri);
 
-            erase_remove_helper(jpp->stop_point->journey_pattern_point_list, jpp);
+            boost::range::remove_erase(jpp->stop_point->journey_pattern_point_list, jpp);
         }
+
+        boost::range::remove_erase_if(pt_data.journey_pattern_points, [&](nt::JourneyPatternPoint* jpp){
+            return contains(jp->journey_pattern_point_list, jpp);
+        });
+
         // Once journey points are deleted from its list, we should re-compute their idx
         pt_data.reindex_journey_pattern_points();
 
         // Then we remove jp from pt_data
-        erase_remove_helper(pt_data.journey_patterns, jp);
+        boost::range::remove_erase(pt_data.journey_patterns, jp);
         pt_data.journey_patterns_map.erase(jp->uri);
 
         // reindex journey patterns
@@ -755,7 +746,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
         // remove jp from it's impacts
         boost::for_each(jp_impacts, [&](nt::new_disruption::Impact* impact){
-            erase_remove_helper(impact->impacted_journey_patterns, jp);
+            boost::range::remove_erase(impact->impacted_journey_patterns, jp);
         });
     }
 
@@ -777,11 +768,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         impactor.complete();
 
         // remove this jp if it doesn't contain any vj
-        remove_jp_if_no_vj(jp, impacts_collector.get_jp_impacts());
+        remove_jp_if_no_vj(jp, impacts_collector.jp_impacts);
 
     }
 
-    void operator()(const nt::StopPoint* stop_point) override{
+    void operator()(const nt::StopPoint* stop_point) {
         this->log_start_action(stop_point->uri);
         for (const auto* jp_point : stop_point->journey_pattern_point_list) {
             add_new_jp_for_impacted_sp(jp_point->journey_pattern, {stop_point});
@@ -789,7 +780,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         this->log_end_action(stop_point->uri);
     }
 
-    void operator()(const nt::StopArea* stop_area) override{
+    void operator()(const nt::StopArea* stop_area) {
         this->log_start_action(stop_area->uri);
         auto impacted_stop_points = std::set<const nt::StopPoint*>{std::begin(stop_area->stop_point_list),
             std::end(stop_area->stop_point_list)};
@@ -858,15 +849,14 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         std::set<nt::idx_t> jpp_to_erase;
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                 "Removing jpp from stop_points");
-        const std::vector<const nt::JourneyPattern*>& jp_to_delete = impact->impacted_journey_patterns;
+        const auto& jp_to_delete = impact->impacted_journey_patterns;
         for (auto* journey_pattern : jp_to_delete) {
-            journey_pattern->for_each_vehicle_journey(
-                    [&](const type::VehicleJourney& vj) {
+            journey_pattern->for_each_vehicle_journey([&](const type::VehicleJourney& vj) {
                 // We should save all the other impacts previously applied, so that
                 // we cab re-apply them later.
-                for(auto& impact_weak_ptr: vj.impacted_by) {
+                for (auto& impact_weak_ptr: vj.impacted_by) {
                     auto ptr = impact_weak_ptr.lock();
-                    if( ptr && ptr.get() != impact.get()) {
+                    if (ptr && ptr.get() != impact.get()) {
                         other_impacts.insert(ptr);
                     }
                 }
@@ -878,10 +868,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             // because we will remove the journey_pattern_point after.
             for (auto* journey_pattern_point : journey_pattern->journey_pattern_point_list) {
 
-                journey_pattern_point->stop_point->journey_pattern_point_list.erase(
-                        boost::remove_if(journey_pattern_point->stop_point->journey_pattern_point_list,
-                                [&](const nt::JourneyPatternPoint* jpp) {return journey_pattern_point->uri == jpp->uri;}),
-                                journey_pattern_point->stop_point->journey_pattern_point_list.end());
+                boost::range::remove_erase_if(journey_pattern_point->stop_point->journey_pattern_point_list,
+                        [&](const nt::JourneyPatternPoint* jpp) {return journey_pattern_point->uri == jpp->uri;});
+
                 jpp_to_erase.insert(journey_pattern_point->idx);
             }
         }
@@ -893,7 +882,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             auto* vj = pt_data.vehicle_journeys[*it];
 
             auto* meta_vj = pt_data.meta_vj[vj->theoric_vehicle_journey->uri];
-            erase_remove_helper(meta_vj->adapted_vj, vj);
+            boost::range::remove_erase(meta_vj->adapted_vj, vj);
             pt_data.remove_from_collections(*vj);
         }
         pt_data.reindex_vehicle_journeys();
@@ -915,7 +904,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
             // Now we can erase journey_patterns from the dataset
             pt_data.journey_patterns_map.erase(journey_pattern->uri);
-            erase_remove_if_helper(pt_data.journey_patterns, [&](nt::JourneyPattern* jp){
+            boost::range::remove_erase_if(pt_data.journey_patterns, [&](nt::JourneyPattern* jp){
                 return jp->uri == journey_pattern->uri;
             });
         }
@@ -930,7 +919,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         std::vector<nt::JourneyPatternKey> jp_to_remove_from_pool;
         boost::for_each(pt_data.journey_patterns_pool,
                 [&](const decltype(pt_data.journey_patterns_pool)::value_type& key_pair){
-            if(! contains(pt_data.journey_patterns_map, key_pair.second->uri)) {
+            if (! contains(pt_data.journey_patterns_map, key_pair.second->uri)) {
                 jp_to_remove_from_pool.push_back(key_pair.first);
             }
         });
@@ -945,7 +934,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 "Reassigning validity_pattern");
         for (const auto* stop_point : stop_points) {
             for (const auto* journey_pattern_point : stop_point->journey_pattern_point_list) {
-                apply_impacts_visitor::operator()(journey_pattern_point->journey_pattern);
+                (*this)(journey_pattern_point->journey_pattern);
             }
         }
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
@@ -953,7 +942,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     }
 
 
-    void operator()(const nt::StopPoint* stop_point) override {
+    void operator()(const nt::StopPoint* stop_point)  {
 
         this->log_start_action(stop_point->uri);
 
@@ -964,7 +953,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         this->log_end_action(stop_point->uri);
     }
 
-    void operator()(const nt::StopArea* stop_area) override{
+    void operator()(const nt::StopArea* stop_area) {
         this->log_start_action(stop_area->uri);
 
         delete_impacts_impl();
@@ -986,7 +975,7 @@ void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
 
     // We should re-apply all other impacts
-    boost::for_each(v.other_impacts, [&](const decltype(std::begin(v.other_impacts))::value_type& i){
+    boost::for_each(v.other_impacts, [&](decltype(v.other_impacts)::const_reference i){
         if (i) { apply_impact(i, pt_data, meta); }
     });
 
@@ -1024,7 +1013,6 @@ void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_d
     auto from_posix = navitia::from_posix_timestamp;
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
-    auto toto = chaos_disruption.id();
     //we delete the disruption before adding the new one
     delete_disruption(chaos_disruption.id(), pt_data, meta);
 
