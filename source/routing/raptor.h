@@ -49,12 +49,11 @@ namespace navitia { namespace routing {
  */
 struct RoutingState {
     const type::VehicleJourney* vj = nullptr;
-    JppIdx boarding_jpp_idx = JppIdx();
     uint16_t l_zone = std::numeric_limits<uint16_t>::max();
     DateTime workingDate = DateTimeUtils::inf;
 
-    RoutingState(const type::VehicleJourney* vj, JppIdx boarding_jpp_idx, uint16_t l_zone, DateTime workingDate) :
-        vj(vj), boarding_jpp_idx(boarding_jpp_idx), l_zone(l_zone), workingDate(workingDate) {}
+    RoutingState(const type::VehicleJourney* vj, uint16_t l_zone, DateTime workingDate) :
+        vj(vj), l_zone(l_zone), workingDate(workingDate) {}
 };
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
