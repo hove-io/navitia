@@ -2527,3 +2527,107 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_3) {
     BOOST_CHECK_EQUAL(j.items[1].stop_points.front()->uri, "E3");
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "E1");
 }
+
+// zone 1 | zone 2
+//   A----+---B-------C
+//
+// We can pickup at A and B, and we want to go to C. We want to find
+// only A->C as it's the only possible solution
+BOOST_AUTO_TEST_CASE(begin_different_zone1) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 2);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 0_s;
+    departures[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 0_s;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "08:00"_t),
+                                  false);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 08:00:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 08:20:00"));
+}
+
+// zone 1 | zone 2 | zone 1
+//   A----+---B----+---C
+//
+// We can pickup at A and B, and we want to go to C. We want to find
+// only B->C as it's the only possible solution
+BOOST_AUTO_TEST_CASE(begin_different_zone2) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 1);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 0_s;
+    departures[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 0_s;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "08:00"_t),
+                                  false);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 08:10:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 08:20:00"));
+}
+
+// zone 1 | zone 2
+//   A----+---B-------C
+//
+// We can pickup at A and B, and we want to go to C. We want to find
+// only A->C as it's the only possible solution
+BOOST_AUTO_TEST_CASE(begin_different_zone3) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 2);
+    b.vj("1")("A", "8:05"_t, "8:05"_t, 1)("B", "8:15"_t, "8:15"_t, 2)("C", "8:25"_t, "8:25"_t, 2);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    // we can't catch the first vj at A
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 2_min;
+    departures[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 0_s;
+    arrivals[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 0_s;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "08:00"_t),
+                                  false);
+
+    // We should find this solution, but...
+    /*
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 08:05:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 08:25:00"));
+    */
+    BOOST_CHECK_EQUAL(res.size(), 0);
+    // We don't find the solution because the first vj is better, but
+    // with a bad local zone. For the moment, we don't fix that as we
+    // don't have a good solution and this case should not happen
+    // often.
+}

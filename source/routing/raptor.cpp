@@ -556,7 +556,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
         for (auto q_elt: Q) {
             const JpIdx jp_idx = q_elt.first;
             if(q_elt.second != visitor.init_queue_item()) {
-                JppIdx boarding_idx; //< The boarding journey pattern point
+                bool is_onboard = false;
                 DateTime workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
                 uint16_t l_zone = std::numeric_limits<uint16_t>::max();
@@ -565,7 +565,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                                                                       q_elt.second);
 
                 for (const auto& jpp: jpps_to_explore) {
-                    if(boarding_idx.is_valid()) {
+                    if (is_onboard) {
                         ++it_st;
                         // We update workingDt with the new arrival time
                         // We need at each journey pattern point when we have a st
@@ -590,23 +590,33 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
-                    if(prec_labels.transfer_is_initialized(jpp.sp_idx) &&
-                       (!boarding_idx.is_valid() || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
+                    if (prec_labels.transfer_is_initialized(jpp.sp_idx) &&
+                        (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = next_st.next_stop_time(
                             jpp.idx, previous_dt, visitor.clockwise(), disruption_active,
                             accessibilite_params.vehicle_properties, jpp.has_freq);
 
                         if (tmp_st_dt.first != nullptr) {
-                            if (! boarding_idx.is_valid() || &*it_st != tmp_st_dt.first) {
+                            if (! is_onboard || &*it_st != tmp_st_dt.first) {
                                 // st_range is quite cache
                                 // unfriendly, so avoid using it if
                                 // not really needed.
                                 it_st = visitor.st_range(*tmp_st_dt.first).begin();
+                                is_onboard = true;
+                                l_zone = it_st->local_traffic_zone;
+                                // note that if we have found a better
+                                // pickup, and that this pickup does
+                                // not have the same local traffic
+                                // zone, we may miss some interesting
+                                // solutions.
+                            } else if (l_zone != it_st->local_traffic_zone) {
+                                // if we can pick up in this vj with 2
+                                // different zones, we can drop off
+                                // anywhere (we'll chose later at
+                                // which stop we pickup)
+                                l_zone = std::numeric_limits<uint16_t>::max();
                             }
-                            boarding_idx = jpp.idx;
                             workingDt = tmp_st_dt.second;
-                            l_zone = it_st->local_traffic_zone;
-                            continue_algorithm = true;
                             BOOST_ASSERT(! visitor.comp(workingDt, previous_dt));
 
                             if (tmp_st_dt.first->is_frequency()) {
@@ -617,10 +627,10 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         }
                     }
                 }
-                if(boarding_idx.is_valid()) {
+                if (is_onboard) {
                     const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
                     if (vj_stay_in) {
-                        states_stay_in.emplace_back(vj_stay_in, boarding_idx, l_zone, workingDt);
+                        states_stay_in.emplace_back(vj_stay_in, l_zone, workingDt);
                     }
                 }
             }
