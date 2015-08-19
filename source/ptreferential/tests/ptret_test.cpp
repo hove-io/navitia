@@ -176,6 +176,13 @@ BOOST_AUTO_TEST_CASE(parser_escaped_string_with_slash) {
     BOOST_CHECK_EQUAL(filters[0].op, EQ);
 }
 
+BOOST_AUTO_TEST_CASE(parser_method) {
+    std::vector<Filter> filters = parse(R"(vehicle_journey.has_headsign("john"))");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
+    BOOST_CHECK_EQUAL(filters[0].method, "has_headsign");
+    BOOST_CHECK_EQUAL(filters[0].value, "john");
+}
 
 struct Moo {
     int bli;
@@ -514,4 +521,20 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
 
     // we give a since > until, it's an error
     BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130316T1100"_dt}, {"20130311T0800"_dt}, true), ptref_error);
+}
+
+BOOST_AUTO_TEST_CASE(headsign_request) {
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::VehicleJourney,
+                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0), 1);
 }
