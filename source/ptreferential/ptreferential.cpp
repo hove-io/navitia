@@ -93,11 +93,15 @@ namespace qi = boost::spirit::qi;
                 | qi::string("=") [qi::_val = EQ]
                 | qi::string("DWITHIN") [qi::_val = DWITHIN];
 
-        single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
-        having_clause = (word >> "HAVING" >> bracket_string /*'(' >> (word|escaped_string|bracket_string) >> ')'*/)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
+        single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
+        having_clause = (word >> "HAVING" >> bracket_string)
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
-        method_clause = (word >> "." >> word >> "(" >> (word|escaped_string|bracket_string) >> ")")[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
-        filter %= (single_clause | having_clause | after_clause | method_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
+        method_clause = (word >> "." >> word >> "(" >> (word|escaped_string|bracket_string) >> ")")
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter %= (single_clause | having_clause | after_clause | method_clause)
+            % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };

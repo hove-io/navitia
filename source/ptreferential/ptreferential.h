@@ -56,14 +56,14 @@ www.navitia.io
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
 
-// Filter is something like stop_area.uri = "kikoolol" or vehicle_journey.has_headsign("john")
+// Filter is something like `stop_area.uri = "kikoolol"` or `vehicle_journey.has_headsign("john")`
 struct Filter {
     navitia::type::Type_e navitia_type; // parsed type
     std::string object; // concerned object ("stop_area", "vehicle_journey")
     std::string attribute; // Attribute ("uri")
     Operator_e op; // comparison operator ("=")
     std::string value; // right value compared ("kikoolol") or arg used in method ("john")
-    std::string method; // method called
+    std::string method; // method called (has_headsign)
 
     Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
     Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
