@@ -36,6 +36,8 @@ from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ARRAY
+
 from navitiacommon import default_values
 
 db = SQLAlchemy()
@@ -261,6 +263,47 @@ class Instance(db.Model):
 
     def __repr__(self):
         return '<Instance %r>' % self.name
+
+
+class TravelerProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+
+    coverage = db.Column(db.Text, db.ForeignKey('instance.name'), primary_key=True, nullable=True)
+    traveler_type = db.Column('traveler_type',
+                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage', 'wheelchair', name='traveler_type'),
+                              default='standard',
+                              primary_key=True, nullable=False)
+    __table_args__ = (db.UniqueConstraint('coverage', 'traveler_type'), )
+
+    walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
+
+    bike_speed = db.Column(db.Float, default=default_values.bike_speed, nullable=False)
+
+    bss_speed = db.Column(db.Float, default=default_values.bss_speed, nullable=False)
+
+    car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
+
+    wheelchair = db.Column(db.Boolean, default=False, nullable=False)
+
+    max_walking_duration_to_pt = db.Column(db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False)
+
+    max_bike_duration_to_pt = db.Column(db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False)
+
+    max_bss_duration_to_pt = db.Column(db.Integer, default=default_values.max_bss_duration_to_pt, nullable=False)
+
+    max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
+
+    fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', name='fallback_mode')
+
+    first_section_mode = db.Column(ARRAY(fallback_mode),
+                                   default=default_values.first_section_mode, nullable=False)
+
+    last_section_mode = db.Column(ARRAY(fallback_mode),
+                                  default=default_values.last_section_mode, nullable=False)
+
+    @classmethod
+    def get_by_coverage_and_type(cls, coverage, traveler_type):
+        return cls.query.filter(and_(cls.coverage == coverage, cls.traveler_type == traveler_type)).first()
 
 
 class Api(db.Model):

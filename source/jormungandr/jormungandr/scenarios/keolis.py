@@ -54,13 +54,6 @@ class Scenario(default.Scenario):
                 journey.tags.append(journey.type)
             journey.type = ''#we reset the type of all journeys
 
-        for name, types in profile.keolis_type_map.iteritems():
-            for type in types:
-                tmp = map_type_journey[type]
-                if tmp:
-                    tmp[0].type = name
-                    break
-
         self.delete_journeys(resp=response, request=request)
 
 

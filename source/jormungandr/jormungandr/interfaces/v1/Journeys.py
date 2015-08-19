@@ -64,7 +64,7 @@ from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
-from jormungandr.travelers_profile import travelers_profile
+from jormungandr.travelers_profile import acceptable_traveler_types, TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
 
@@ -583,7 +583,7 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
+        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
 
         self.method_decorators.append(complete_links(self))
@@ -607,9 +607,9 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        if args['traveler_type']:
-            profile = travelers_profile[args['traveler_type']]
-            profile.override_params(args)
+        if args.get('traveler_type') is not None :
+            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
 
         if args['max_duration_to_pt'] is not None:
             #retrocompatibility: max_duration_to_pt override all individual value by mode
@@ -743,8 +743,8 @@ class Journeys(ResourceUri, ResourceUtc):
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
         if args['traveler_type']:
-            profile = travelers_profile[args['traveler_type']]
-            profile.override_params(args)
+            traveler_profile = TravelerProfile.make_travelers_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
 
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
