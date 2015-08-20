@@ -91,9 +91,9 @@ def car_test():
         eq_(len(response.journeys), nb)
 
     tests = [('standard', '', 0), ('slow_walker', '', 0),
-             ('fast_walker', '', 0), ('motorist', '', 0),
+             ('fast_walker', '', 0),
              ('wheelchair', '', 0), ('luggage', '', 0),
-             ('cyclist', '', 0)
+             ('cyclist', '', 0), ('motorist', 'comfort', 1),
             ]
     for test in tests:
         yield (check, test[0], test[1], test[2])

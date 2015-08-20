@@ -195,10 +195,9 @@ default_traveler_profiles = {
                                is_from_db=False,
                                ),
 
-    'motorist': TravelerProfile(traveler_type='standard',
-                                walking_speed=1.39,
-                                bike_speed=3.33,
-                                bss_speed=3.33,
+    'motorist': TravelerProfile(traveler_type='motorist',
+                                walking_speed=1.11,
+                                car_speed=11.11,
                                 max_walking_duration_to_pt=15*60,
                                 max_car_duration_to_pt=35*60,
                                 first_section_mode=['walking', 'car'],
