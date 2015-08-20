@@ -77,7 +77,7 @@ class TravelerProfile(object):
 
         def override((arg, profile_attr)):
             # we use profile's attr only when it's not defined in args(aka: the request)
-            if not args.get(arg):
+            if args.get(arg) is None:
                 args[arg] = profile_attr
 
         map(override, arg_2_profile_attr)
@@ -87,12 +87,8 @@ class TravelerProfile(object):
     def make_traveler_profile(cls, coverage, traveler_type):
         """
         travelers_profile factory method,
-        Return a tuple of traveler_type and boolean
-        if traveler_type is from db, the boolean is set to True
+        Return a traveler_profile constructed with default params or params retrieved from db
         """
-        # some traveler_type will be redirected to another one
-        # ex: cyclist -> standard
-
         if app.config['DISABLE_DATABASE']:
             return default_traveler_profiles[traveler_type]
 

@@ -59,7 +59,7 @@ class Scenario(default.Scenario):
                         }
 
     def __on_journeys(self, requested_type, request, instance):
-        if request.get('traveler_type') is not None:
+        if request.get('traveler_type') is None:
             request['traveler_type'] = 'standard'
             profile = default_traveler_profiles[request['traveler_type']]
             profile.override_params(request)#we override the params here if there was no traveler_type set

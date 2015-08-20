@@ -607,7 +607,7 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        if args.get('traveler_type') is not None :
+        if args.get('traveler_type') is not None:
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
 
@@ -742,7 +742,7 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        if args['traveler_type']:
+        if args.get('traveler_type') is not None:
             traveler_profile = TravelerProfile.make_travelers_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
 

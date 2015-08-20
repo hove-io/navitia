@@ -27,20 +27,23 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.travelers_profile import travelers_profile
+from jormungandr.travelers_profile import TravelerProfile, default_traveler_profiles
+from jormungandr import cache
 
-
-def test_traveler_profile_override():
+def test_get_traveler_profile_and_override():
     """
      Test traveler profile's factory method make_traveler_profile and override_params
+
      when overriding args, only non-defined args will be overrided.
+
     """
+    region = 'default'
     traveler_type = 'standard'
-    profile = travelers_profile[traveler_type]
+    traveler_profile = TravelerProfile.make_traveler_profile(region, traveler_type)
 
     args = {'walking_speed': 42424242,
             'bike_speed':    42424242}
-    profile.override_params(args)
+    traveler_profile.override_params(args)
 
     assert(args['walking_speed'] == 42424242)
     assert(args['bike_speed'] == 42424242)
@@ -55,9 +58,20 @@ def test_traveler_profile_override():
                            ('destination_mode',           'last_section_mode'),
                            ('wheelchair',                 'wheelchair'))
 
-    standard_profile = travelers_profile[traveler_type]
+    standard_profile = default_traveler_profiles['standard']
 
     def check((arg, attr)):
         assert(args[arg] == getattr(standard_profile, attr))
 
     map(check, arg_vs_profile_attr)
+
+
+def test_make_profile_cache_decorator():
+    cache.delete_memoized(TravelerProfile.make_traveler_profile)
+
+    region = 'default'
+    traveler_type = 'standard'
+    traveler_profile_1 = TravelerProfile.make_traveler_profile(region, traveler_type)
+    traveler_profile_2 = TravelerProfile.make_traveler_profile(region, traveler_type)
+
+     assert(traveler_profile_1 is traveler_profile_2)
