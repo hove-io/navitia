@@ -39,7 +39,7 @@ Some easy examples
     * https://api.navitia.io/v1/coverage/fr-idf/networks
 
 * RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
-* Too much lines, let's use physical mode filtering
+* Too many lines, let's use physical mode filtering
 
     * physical modes managed by RATP 
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
@@ -653,7 +653,7 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
 Journeys (/journeys)
 ********************
 
-This api compute journeys.
+This api commutes journeys.
 
 If used within the coverage api, it will retrieve the next journeys from 
 the selected public transport object or coordinates.
@@ -836,7 +836,7 @@ ______________
 +---------------------+--------------------------+--------------------------------------------------------------+
 | links               | `link`_                  | Links related to this journey                                |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| type                | *enum* string            | Used to qualified a journey.                                 |
+| type                | *enum* string            | Used to qualify a journey.                                   |
 |                     |                          | See the `journey-qualif`_ section for more information       |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | fare                | fare_                    | Fare of the journey (tickets and price)                      |
@@ -1020,7 +1020,7 @@ links                 array of link_              Link to the section_ using thi
 Route Schedules and time tables (/route_schedules)
 ***************************************************
 
-This api give you access to schedules of routes.
+This api gives you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
@@ -1104,7 +1104,7 @@ __________
 Stop Schedules and other kind of time tables (/stop_schedules)
 **************************************************************
 
-This api give you access to schedules of stops going through a stop point.
+This api gives you access to schedules of stops going through a stop point.
 The response is made of an array of stop_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
@@ -1138,7 +1138,7 @@ Departures (/departures)
 ************************
 
 This api retrieves a list of departures from a datetime of a selected object.
-Departures are ordered chronologically in growing order.
+Departures are ordered chronologically in ascending order.
 
 Parameters
 ##########
@@ -1169,7 +1169,7 @@ Arrivals (/arrivals)
 ********************
 
 This api retrieves a list of arrivals from a datetime of a selected object.
-Arrivals are ordered chronologically in growing order.
+Arrivals are ordered chronologically in ascending order.
 
 Traffic reports and disruptions (/traffic_reports)
 **************************************************
@@ -1856,7 +1856,7 @@ Navitia can compute several kind of trips within a journey query.
 The `RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>`_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
 For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
 
-If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
+If the user asks for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
 but for the following journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
 
 Those journeys have the ``next`` (or ``previous``) value in their tags.
