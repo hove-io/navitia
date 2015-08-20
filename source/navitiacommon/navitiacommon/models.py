@@ -270,7 +270,8 @@ class TravelerProfile(db.Model):
 
     coverage = db.Column(db.Text, db.ForeignKey('instance.name'), primary_key=True, nullable=True)
     traveler_type = db.Column('traveler_type',
-                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage', 'wheelchair', name='traveler_type'),
+                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage',
+                                       'wheelchair', 'cyclist', 'motorist', name='traveler_type'),
                               default='standard',
                               primary_key=True, nullable=False)
     __table_args__ = (db.UniqueConstraint('coverage', 'traveler_type'), )
@@ -295,11 +296,9 @@ class TravelerProfile(db.Model):
 
     fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', name='fallback_mode')
 
-    first_section_mode = db.Column(ARRAY(fallback_mode),
-                                   default=default_values.first_section_mode, nullable=False)
+    first_section_mode = db.Column(ARRAY(fallback_mode), nullable=False)
 
-    last_section_mode = db.Column(ARRAY(fallback_mode),
-                                  default=default_values.last_section_mode, nullable=False)
+    last_section_mode = db.Column(ARRAY(fallback_mode), nullable=False)
 
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):

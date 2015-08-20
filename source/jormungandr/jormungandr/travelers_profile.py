@@ -33,7 +33,7 @@ class TravelerProfile(object):
     def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
                  first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
                  max_walking_duration_to_pt=15*60, max_bike_duration_to_pt=15*60, max_bss_duration_to_pt=15*60,
-                 max_car_duration_to_pt=15*60, traveler_type='', is_from_db=False, is_redirected_to=None):
+                 max_car_duration_to_pt=15*60, traveler_type='', is_from_db=False):
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
         self.bss_speed = bss_speed
@@ -42,8 +42,6 @@ class TravelerProfile(object):
         self.traveler_type = traveler_type
         # Only used in v1/coverage/region/status, for debug purpose
         self.is_from_db = is_from_db
-        # Only used in v1/coverage/region/status, for debug purpose
-        self.is_redirected_to = is_redirected_to
 
         if max_duration_to_pt:
             self.max_walking_duration_to_pt = max_duration_to_pt
@@ -94,25 +92,15 @@ class TravelerProfile(object):
         """
         # some traveler_type will be redirected to another one
         # ex: cyclist -> standard
-        redirected_type = redirection_map.get(traveler_type)
-        redirected_type = redirected_type if redirected_type else traveler_type
-
-        def redirect_profile(profile):
-            if traveler_type not in redirection_map:
-                return profile
-            else:
-                profile.traveler_type = traveler_type
-                profile.is_redirected_to = redirected_type
-                return profile
 
         if app.config['DISABLE_DATABASE']:
-            return redirect_profile(default_traveler_profiles[redirected_type])
+            return default_traveler_profiles[traveler_type]
 
-        # retrive TravelerProfile from db with coverage and traveler_type
+        # retrieve TravelerProfile from db with coverage and traveler_type
         # if the record doesn't exist, we use pre-defined default traveler profile
-        model = models.TravelerProfile.get_by_coverage_and_type(coverage, redirected_type)
+        model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
         if model is None:
-            return redirect_profile(default_traveler_profiles[redirected_type])
+            return default_traveler_profiles[traveler_type]
 
         def _reformat_fallback_mode(fb_mode_from_db):
             """
@@ -137,7 +125,6 @@ class TravelerProfile(object):
                    first_section_mode=_reformat_fallback_mode(model.first_section_mode),
                    last_section_mode=_reformat_fallback_mode(model. last_section_mode),
                    is_from_db=True,
-                   is_redirected_to=redirection_map.get(traveler_type),
                    )
 
     @classmethod
@@ -149,11 +136,9 @@ class TravelerProfile(object):
             traveler_profiles.append(profile)
         return traveler_profiles
 
-redirection_map = {'cyclist': 'standard'}
-
 default_traveler_profiles = {
     'standard': TravelerProfile(traveler_type='standard',
-                                walking_speed=1.39,
+                                walking_speed=1.11,
                                 bike_speed=3.33,
                                 bss_speed=3.33,
                                 max_duration_to_pt=20*60,
@@ -183,7 +168,7 @@ default_traveler_profiles = {
                                    ),
 
     'luggage': TravelerProfile(traveler_type='luggage',
-                               walking_speed=1.39,
+                               walking_speed=1.11,
                                max_duration_to_pt=20*60,
                                first_section_mode=['walking', 'car'],
                                last_section_mode=['walking'],
@@ -199,6 +184,28 @@ default_traveler_profiles = {
                                   wheelchair=True,
                                   is_from_db=False,
                                   ),
+
+    'cyclist': TravelerProfile(traveler_type='cyclist',
+                               walking_speed=1.39,
+                               bike_speed=3.33,
+                               bss_speed=3.33,
+                               max_duration_to_pt=12*60,
+                               first_section_mode=['walking', 'bss', 'bike'],
+                               last_section_mode=['walking'],
+                               is_from_db=False,
+                               ),
+
+    'motorist': TravelerProfile(traveler_type='standard',
+                                walking_speed=1.39,
+                                bike_speed=3.33,
+                                bss_speed=3.33,
+                                max_walking_duration_to_pt=15*60,
+                                max_car_duration_to_pt=35*60,
+                                first_section_mode=['walking', 'car'],
+                                last_section_mode=['walking'],
+                                is_from_db=False,
+                                ),
+
 }
 
-acceptable_traveler_types = redirection_map.keys() + default_traveler_profiles.keys()
+acceptable_traveler_types = default_traveler_profiles.keys()

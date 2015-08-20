@@ -30,7 +30,7 @@
 from nose.tools import eq_
 
 from jormungandr.scenarios import keolis
-from jormungandr.travelers_profile import travelers_profile
+from jormungandr.travelers_profile import default_traveler_profiles
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
 
@@ -42,12 +42,14 @@ def one_best_test():
         journey_direct = response.journeys.add()
 
         journey_direct.type = "best"
+        print 'journey_direct', journey_direct.type
+
         #we set the destination else the filter will not be applicated
         req = {'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response, travelers_profile[profile])
+        scenario._qualification(req, response, default_traveler_profiles[profile])
         eq_(type, journey_direct.type)
 
-    for profile in travelers_profile.keys():
+    for profile in default_traveler_profiles.keys():
         yield (check, profile, 'rapid')
 
 
@@ -65,13 +67,13 @@ def best_and_fallback_test():
         journey_fallback_bike.type = "less_fallback_bss"
         #we set the destination else the filter will not be applicated
         req = {'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response, travelers_profile[profile])
+        scenario._qualification(req, response, default_traveler_profiles[profile])
         eq_(type_direct, journey_direct.type)
         eq_(type_fallback_walking, journey_fallback_walking.type)
         eq_(type_fallback_bike, journey_fallback_bike.type)
         eq_(len(response.journeys), nb)
 
-    for profile in travelers_profile.keys():
+    for profile in default_traveler_profiles.keys():
         yield (check, profile, 'rapid', 'comfort', '', 2)
 
 def car_test():
@@ -84,15 +86,14 @@ def car_test():
         journey_car.type = "car"
         #we set the destination else the filter will not be applicated
         req = {'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response, travelers_profile[profile])
+        scenario._qualification(req, response, default_traveler_profiles[profile])
         eq_(type_car, journey_car.type)
         eq_(len(response.journeys), nb)
 
     tests = [('standard', '', 0), ('slow_walker', '', 0),
-             ('fast_walker', '', 0), ('stroller', '', 0),
+             ('fast_walker', '', 0), ('motorist', '', 0),
              ('wheelchair', '', 0), ('luggage', '', 0),
-             ('heels', '', 0), ('scooter', '', 0),
-             ('cyclist', '', 0), ('motorist', 'comfort', 1),
+             ('cyclist', '', 0)
             ]
     for test in tests:
         yield (check, test[0], test[1], test[2])
@@ -109,16 +110,15 @@ def best_and_bike_test():
         journey_fallback_bike.type = "less_fallback_bike"
         #we set the destination else the filter will not be applicated
         req = {'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response, travelers_profile[profile])
+        scenario._qualification(req, response, default_traveler_profiles[profile])
         eq_(type_direct, journey_direct.type)
         eq_(type_fallback_bike, journey_fallback_bike.type)
         eq_(len(response.journeys), nb)
 
     tests = [('standard', 'rapid', '', 1), ('slow_walker', 'rapid', '', 1),
-             ('fast_walker', 'rapid', '', 1), ('stroller', 'rapid', '', 1),
-             ('wheelchair', 'rapid', '', 1), ('luggage', 'rapid', '', 1),
-             ('heels', 'rapid', '', 1), ('scooter', 'rapid', '', 1),
-             ('cyclist', 'rapid', 'comfort', 2), ('motorist', 'rapid', '', 1),
-            ]
+             ('fast_walker', 'rapid', '', 1), ('wheelchair', 'rapid', '', 1),
+             ('luggage', 'rapid', '', 1), ('cyclist', 'rapid', 'comfort', 2),
+             ('motorist', 'rapid', '', 1),
+             ]
     for test in tests:
         yield (check, test[0], test[1], test[2], test[3])

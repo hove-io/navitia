@@ -766,7 +766,6 @@ instance_traveler_types = {
     'first_section_mode': fields.List(fields.String),
     'last_section_mode': fields.List(fields.String),
     'is_from_db': fields.Boolean(),
-    'is_redirected_to': fields.String(),
 }
 
 instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
