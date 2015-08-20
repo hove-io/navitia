@@ -538,3 +538,24 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0), 1);
 }
+
+BOOST_AUTO_TEST_CASE(headsign_sa_request) {
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::StopArea,
+                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    std::vector<std::string> sas;
+    for (const auto& idx: res) {
+        sas.push_back(b.data->pt_data->stop_areas.at(idx)->name);
+    }
+    std::sort(sas.begin(), sas.end());
+    BOOST_CHECK_EQUAL(sas, (std::vector<std::string>{"stop3", "stop4"}));
+}

@@ -197,8 +197,10 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.value)) {
                 indexes.push_back(vj->idx);
             }
+        } else {
+            throw parsing_error(parsing_error::partial_error,
+                                "Unknown method " + filter.object + ":" + filter.method);
         }
-        return indexes;
     }
     else {
         indexes = filtered_indexes(data, build_clause<T>({filter}));
