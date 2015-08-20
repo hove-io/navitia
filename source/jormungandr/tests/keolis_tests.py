@@ -49,7 +49,7 @@ def one_best_test():
         scenario._qualification(req, response, default_traveler_profiles[profile])
         eq_(type, journey_direct.type)
 
-    for profile in default_traveler_profiles.keys():
+    for profile in default_traveler_profiles:
         yield (check, profile, 'rapid')
 
 
@@ -73,7 +73,7 @@ def best_and_fallback_test():
         eq_(type_fallback_bike, journey_fallback_bike.type)
         eq_(len(response.journeys), nb)
 
-    for profile in default_traveler_profiles.keys():
+    for profile in default_traveler_profiles:
         yield (check, profile, 'rapid', 'comfort', '', 2)
 
 def car_test():

@@ -74,4 +74,4 @@ def test_make_profile_cache_decorator():
     traveler_profile_1 = TravelerProfile.make_traveler_profile(region, traveler_type)
     traveler_profile_2 = TravelerProfile.make_traveler_profile(region, traveler_type)
 
-     assert(traveler_profile_1 is traveler_profile_2)
+    assert(traveler_profile_1 is traveler_profile_2)
