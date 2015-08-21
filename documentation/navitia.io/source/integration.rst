@@ -338,6 +338,22 @@ ________
 If you specify coords in your filter, you can modify the radius used for the proximity search.
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
 
+headsign
+________
+
+- Type: `String`
+
+If given, add a filter on the vehicle journeys that has the given
+value as headsign.
+
+Examples:
+
+* http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE
+* http://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE
+
+Warning: this last request gives the stop areas used by the vehicle
+journeys containing the headsign `CANE`, *not* the stop areas where it
+exists a stop time with the headsign `CANE`.
 
 Filter
 ######
