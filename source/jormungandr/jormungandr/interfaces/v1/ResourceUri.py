@@ -65,7 +65,7 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(authentication_required)
 
     def get_filter(self, items, args):
-        filter_list = []
+        filter_list = [args["filter"]] if args.get("filter") else []
         if len(items) % 2 != 0:
             items = items[:-1]
         type_ = None

@@ -84,6 +84,8 @@ class Uri(ResourceUri, ResourceUtc):
                             action="append")
         parser.add_argument("external_code", type=unicode,
                             description="An external code to query")
+        parser.add_argument("headsign", type=unicode,
+                            description="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser.add_argument("odt_level", type=option_value(odt_levels),
@@ -112,6 +114,14 @@ class Uri(ResourceUri, ResourceUtc):
         collection = self.collection
 
         args = self.parsers["get"].parse_args()
+
+        # handle headsign
+        if args.get("headsign"):
+            f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))
+            if args.get("filter"):
+                args["filter"] += " and " + f
+            else:
+                args["filter"] = f
 
         # for retrocompatibility purpose
         for forbid_id in args.get('forbidden_ids[]', []):
