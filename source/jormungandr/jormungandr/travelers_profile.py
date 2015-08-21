@@ -64,20 +64,24 @@ class TravelerProfile(object):
         return self.bike_speed
 
     def override_params(self, args):
-        args['walking_speed'] = self.walking_speed
-        args['bike_speed'] = self.bike_speed
-        args['bss_speed'] = self.bss_speed
-        args['car_speed'] = self.car_speed
+        arg_2_profile_attr = (('walking_speed',              self.walking_speed),
+                              ('bike_speed',                 self.bike_speed),
+                              ('bss_speed',                  self.bss_speed),
+                              ('car_speed',                  self.car_speed),
+                              ('max_walking_duration_to_pt', self.max_walking_duration_to_pt),
+                              ('max_bike_duration_to_pt',    self.max_bike_duration_to_pt),
+                              ('max_bss_duration_to_pt',     self.max_bss_duration_to_pt),
+                              ('max_car_duration_to_pt',     self.max_car_duration_to_pt),
+                              ('origin_mode',                self.first_section_mode),
+                              ('destination_mode',           self.last_section_mode),
+                              ('wheelchair',                 self.wheelchair))
 
-        args['max_walking_duration_to_pt'] = self.max_walking_duration_to_pt
-        args['max_bike_duration_to_pt'] = self.max_bike_duration_to_pt
-        args['max_bss_duration_to_pt'] = self.max_bss_duration_to_pt
-        args['max_car_duration_to_pt'] = self.max_car_duration_to_pt
+        def override((arg, profile_attr)):
+            # we use profile's attr only when it's not defined in args(aka: the request)
+            if args.get(arg) is None:
+                args[arg] = profile_attr
 
-        args['origin_mode'] = self.first_section_mode
-        args['destination_mode'] = self.last_section_mode
-
-        args['wheelchair'] = self.wheelchair
+        map(override, arg_2_profile_attr)
 
 
 travelers_profile = {
