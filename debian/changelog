@@ -1,3 +1,21 @@
+navitia2 (1.24.0) unstable; urgency=low
+
+  * override profile's params by args in the request  <https://github.com/CanalTP/navitia/pull/1143>
+  * Fixed some typos in integration documentation  <https://github.com/CanalTP/navitia/pull/1142>
+  * raptor: fix local zone when you can pickup in 2 different zones  <https://github.com/CanalTP/navitia/pull/1140>
+  * jormungandr: tie break qualifier on car using nonTC_crit  <https://github.com/CanalTP/navitia/pull/1139>
+  * ed: fix a bug when a way overlap 2 admins  <https://github.com/CanalTP/navitia/pull/1137>
+  * Jormungandr: 'cyclist' use bike and not bss  <https://github.com/CanalTP/navitia/pull/1132>
+  * All: Kraken headsign structure + fill in Ed  <https://github.com/CanalTP/navitia/pull/1131>
+  * Eitri: fix integration tests  <https://github.com/CanalTP/navitia/pull/1130>
+  * Jormungandr: add some journey's debug indicators  <https://github.com/CanalTP/navitia/pull/1129>
+  * update integration.rst  <https://github.com/CanalTP/navitia/pull/1128>
+  * kraken: switch back to local time stoptime for /vehicle_journeys  <https://github.com/CanalTP/navitia/pull/1127>
+  * Ed: Headsign on stop time  <https://github.com/CanalTP/navitia/pull/1125>
+  * All: add requirement for script_release.py  <https://github.com/CanalTP/navitia/pull/1124>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 21 Aug 2015 10:08:29 +0100
+
 navitia2 (1.23.1) unstable; urgency=low
 
   * jormungandr: check the {sn}_speed for correctness <https://github.com/CanalTP/navitia/pull/1136>

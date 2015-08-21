@@ -65,6 +65,7 @@ SET(DATA_SRC
     data.cpp
     "${CMAKE_SOURCE_DIR}/third_party/lz4/lz4.c"
     pt_data.cpp
+    headsign_handler.cpp
 )
 
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
@@ -113,3 +114,7 @@ ADD_BOOST_TEST(aggregation_odt_test)
 add_executable(comments_test tests/comments_test.cpp)
 target_link_libraries(comments_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(comments_test)
+
+add_executable(headsign_test tests/headsign_test.cpp)
+target_link_libraries(headsign_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(headsign_test)

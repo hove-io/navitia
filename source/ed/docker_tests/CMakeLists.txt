@@ -10,15 +10,16 @@ SET(DATA_DIR_TO_LOAD ${FIXTURES_DIR}/ed/ntfs/)
 SET(DATA_NAV_TO_CREATE ${CMAKE_CURRENT_BINARY_DIR}/ntfs_${DATA_NAV_NAME})
 
 add_custom_command(OUTPUT ${DATA_NAV_TO_CREATE}
-    COMMAND ${EITRI}
-    ARGS "${FIXTURES_DIR}/ed/ntfs/" --output-file ${DATA_NAV_TO_CREATE} --ed-component-path "${CMAKE_BINARY_DIR}/ed" --add-pythonpath "${CMAKE_SOURCE_DIR}/navitiacommon"
+    COMMAND python
+    ARGS ${EITRI} "${FIXTURES_DIR}/ed/ntfs/" --output-file ${DATA_NAV_TO_CREATE} --ed-component-path "${CMAKE_BINARY_DIR}/ed" --add-pythonpath "${CMAKE_SOURCE_DIR}/navitiacommon"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM
 )
 set_source_files_properties(${DATA_NAV_TO_CREATE} PROPERTIES GENERATED TRUE)
 
 
 # == create a target with all generated files ==
-add_custom_target(datanav_files DEPENDS ${DATA_NAV_TO_CREATE})
+# we add dependencies to all data import components used during nav file creation
+add_custom_target(datanav_files DEPENDS ${DATA_NAV_TO_CREATE} ${ED_TARGETS_TO_INSTALL})
 
 # ==
 # add all the tests
@@ -33,11 +34,11 @@ target_link_libraries(ed_integration_test data georef types utils ${BOOST_LIBS} 
 
 # the test is not added with 'add_test', because we don't want 'make test' to handle it
 # it is added as a post build command to 'make docker_test', called after all the build
-add_custom_command(TARGET ed_integration_test
-                    POST_BUILD COMMAND ed_integration_test
-                    ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no --ntfs_file=${DATA_NAV_TO_CREATE})
+add_custom_target(run_test DEPENDS datanav_files ed_integration_test)
+add_custom_command(TARGET run_test
+                   COMMAND ed_integration_test
+                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no --ntfs_file=${DATA_NAV_TO_CREATE})
 
 
 add_dependencies(ed_integration_test datanav_files)
-add_dependencies(docker_test ed_integration_test)
-
+add_dependencies(docker_test run_test)

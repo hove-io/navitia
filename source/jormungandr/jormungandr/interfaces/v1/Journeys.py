@@ -159,6 +159,24 @@ class section_place(PbField):
             return super(PbField, self).output(key, obj)
 
 
+class JourneyDebugInfo(fields.Raw):
+    def output(self, key, obj):
+        if not hasattr(g, 'debug') or not g.debug:
+            return None
+
+        debug = {
+            'streetnetwork_duration': obj.sn_dur,
+            'transfer_duration': obj.transfer_dur,
+            'min_waiting_duration': obj.min_waiting_dur,
+            'nb_vj_extentions': obj.nb_vj_extentions,
+            'nb_sections': obj.nb_sections,
+        }
+        if hasattr(obj, 'internal_id'):
+            debug['internal_id'] = obj.internal_id
+
+        return debug
+
+
 section = {
     "type": section_type(),
     "id": fields.String(),
@@ -209,6 +227,7 @@ journey = {
     "status": fields.String(attribute="most_serious_disruption_effect"),
     "calendars": NonNullList(NonNullNested(calendar)),
     "co2_emission": Co2Emission(),
+    "debug": JourneyDebugInfo()
 }
 
 ticket = {
@@ -628,6 +647,9 @@ class Journeys(ResourceUri, ResourceUtc):
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should at least provide either a 'from' or a 'to' argument")
+
+        if args['debug']:
+            g.debug = True
 
         #we transform the origin/destination url to add information
         if args['origin']:

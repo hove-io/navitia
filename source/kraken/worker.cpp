@@ -404,6 +404,7 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             max_non_pt = request.max_walking_duration_to_pt();
             break;
     }
+    if (result.speed_factor <= 0) { throw navitia::recoverable_exception("invalid speed factor"); }
     result.max_duration = navitia::seconds(max_non_pt);
     return result;
 }

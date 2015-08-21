@@ -674,6 +674,12 @@ Path make_path(const Journey& journey, const type::Data& data) {
 
     path.duration = navitia::time_duration::from_boost_duration(path.items.back().arrival - path.items.front().departure);
 
+    path.sn_dur = journey.sn_dur;
+    path.transfer_dur = journey.transfer_dur;
+    path.min_waiting_dur = journey.min_waiting_dur;
+    path.nb_vj_extentions = journey.nb_vj_extentions;
+    path.nb_sections = journey.sections.size();
+
     return path;
 }
 

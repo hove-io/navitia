@@ -66,6 +66,23 @@ struct ArgsFixture {
    std::map<std::string, std::string> input_file_paths;
 };
 
+// check headsign value for stop times on given vjs
+static void check_headsigns(const navitia::type::Data& data, const std::string& headsign,
+                     size_t first_it_vj, size_t last_it_vj,
+                     size_t first_it_st = 0, size_t last_it_st = std::numeric_limits<size_t>::max()) {
+    const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    auto& vj_vec = data.pt_data->vehicle_journeys;
+    for (size_t it_vj = first_it_vj; it_vj <= last_it_vj; ++it_vj) {
+        size_t real_last_it_st = vj_vec[it_vj]->stop_time_list.size() - 1;
+        if (real_last_it_st > last_it_st) {
+            real_last_it_st = last_it_st;
+        }
+        for (size_t it_st = first_it_st; it_st <= real_last_it_st; ++it_st) {
+            BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[it_vj]->stop_time_list[it_st]), headsign);
+        }
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     const auto input_file = input_file_paths.at("ntfs_file");
     navitia::type::Data data;
@@ -78,5 +95,29 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
 
-    //TODO, have fun ! :)
+    // check stop_time headsigns
+    const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    auto& vj_vec = data.pt_data->vehicle_journeys;
+    // check that vj 0 & 1 have headsign N1 from first 3 stpop_time, then N2
+    check_headsigns(data, "N1", 0, 1, 0, 2);
+    check_headsigns(data, "N2", 0, 1, 3, 4);
+    // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4 & 5 are named vehiclejourney3
+    check_headsigns(data, "vehiclejourney2", 2, 3);
+    check_headsigns(data, "vehiclejourney3", 4, 5);
+    // check vj from headsign
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N1").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N2").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[1]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
 }

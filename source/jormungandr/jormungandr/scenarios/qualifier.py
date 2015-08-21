@@ -191,7 +191,8 @@ def compare_minus(field_1, field_2):
         return -1
 
 #criteria
-transfers_crit = lambda j_1, j_2: compare_minus(j_1.nb_transfers, j_2.nb_transfers)
+def transfers_crit(j_1, j_2):
+    return compare_minus(j_1.nb_transfers, j_2.nb_transfers)
 
 
 def arrival_crit(j_1, j_2):
@@ -293,7 +294,8 @@ def qualifier_one(journeys, request_type):
         ],
             [
                 best_crit,
-                transfers_crit
+                transfers_crit,
+                nonTC_crit
             ]
         )),
         # less_fallback tends to limit the fallback while walking

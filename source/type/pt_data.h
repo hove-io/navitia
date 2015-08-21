@@ -39,6 +39,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
 #include "comment_container.h"
+#include "headsign_handler.h"
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
@@ -108,6 +109,9 @@ struct PT_Data : boost::noncopyable{
     // Comments container
     Comments comments;
 
+    // Headsign handler
+    HeadsignHandler headsign_handler;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
@@ -119,7 +123,8 @@ struct PT_Data : boost::noncopyable{
                 & disruption_holder
                 & meta_vj
                 & stop_points_by_area
-                & comments;
+                & comments
+                & headsign_handler;
     }
 
     /** Initialise tous les indexes

@@ -459,6 +459,11 @@ def is_valid_journey_response(response, tester, query_str):
     for feed_publisher in feed_publishers:
         is_valid_feed_publisher(feed_publisher)
 
+    if query_dict.get('debug', False):
+        assert 'debug' in response
+    else:
+        assert 'debug' not in response
+
 
 def is_valid_journey(journey, tester, query):
     arrival = get_valid_datetime(journey['arrival_date_time'])
@@ -491,6 +496,11 @@ def is_valid_journey(journey, tester, query):
 
     assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
+
+    if query.get('debug', False):
+        assert 'debug' in journey
+    else:
+        assert 'debug' not in journey
 
 
 def is_valid_section(section, query):
