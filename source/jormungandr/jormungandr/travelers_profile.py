@@ -182,12 +182,12 @@ default_traveler_profiles = {
                                   ),
 
     'cyclist': TravelerProfile(traveler_type='cyclist',
-                               walking_speed=1.39,
+                               walking_speed=1.11,
                                bike_speed=3.33,
                                bss_speed=3.33,
                                max_duration_to_pt=12*60,
                                first_section_mode=['walking', 'bss', 'bike'],
-                               last_section_mode=['walking'],
+                               last_section_mode=['walking', 'bss'],
                                is_from_db=False,
                                ),
 
