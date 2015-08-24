@@ -653,7 +653,7 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
 Journeys (/journeys)
 ********************
 
-This api commutes journeys.
+This api computes journeys.
 
 If used within the coverage api, it will retrieve the next journeys from 
 the selected public transport object or coordinates.
