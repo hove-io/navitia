@@ -626,24 +626,29 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 }
 
-pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
+pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uri;
-    for(int i = 0; i < request.forbidden_uri_size(); ++i)
+    for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
+    }
     return navitia::ptref::query_pb(get_type(request.requested_type()),
-                                    request.filter(), forbidden_uri,
+                                    request.filter(),
+                                    forbidden_uri,
                                     get_odt_level(request.odt_level()),
-                                    request.depth(), request.show_codes(),
+                                    request.depth(),
+                                    request.show_codes(),
                                     request.start_page(),
                                     request.count(),
-                                    (request.has_since_datetime() ?
-                                         boost::make_optional(bt::from_time_t(request.since_datetime())) : boost::none),
-                                    (request.has_until_datetime() ?
-                                         boost::make_optional(bt::from_time_t(request.until_datetime())) : boost::none),
+                                    boost::make_optional(request.has_since_datetime(),
+                                                         bt::from_time_t(request.since_datetime())),
+                                    boost::make_optional(request.has_until_datetime(),
+                                                         bt::from_time_t(request.until_datetime())),
                                     *data,
-                                    //no check on this datetime, it's not important
-                                    //for it to be in the production period, it's used to filter the disruptions
+                                    //no check on this datetime, it's
+                                    //not important for it to be in
+                                    //the production period, it's used
+                                    //to filter the disruptions
                                     bt::from_time_t(request.datetime()));
 }
 

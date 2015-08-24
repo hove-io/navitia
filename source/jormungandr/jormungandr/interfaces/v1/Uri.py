@@ -98,9 +98,9 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
         parser.add_argument("since", type=date_time_format,
-                            description="filter objects not valid before this date")
+                            description="filters objects not valid before this date")
         parser.add_argument("until", type=date_time_format,
-                            description="filter objects not valid after this date")
+                            description="filters objects not valid after this date")
 
         if is_collection:
             parser.add_argument("filter", type=str, default="",

@@ -285,7 +285,7 @@ bool keep_vj(const nt::VehicleJourney* vj,
     if (vj->stop_time_list.empty()) {
         return false; //no stop time, so it cannot be valid
     }
-    const auto first_departure_dt = vj->stop_time_list.front().departure_time;
+    const auto& first_departure_dt = vj->stop_time_list.front().departure_time;
 
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
         if (! vj->validity_pattern->check(*it)) { continue; }
@@ -324,7 +324,7 @@ std::vector<idx_t> filter_vj_on_period(const std::vector<type::idx_t>& indexes,
             end = *until;
         }
     }
-    bt::time_period period {start, end + bt::seconds(1)}; //the end is not in the period, so we add one second
+    bt::time_period period {start, end};
 
     std::vector<idx_t> res;
     for (const idx_t idx: indexes) {
@@ -341,14 +341,12 @@ std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& indexes,
                                     boost::optional<boost::posix_time::ptime> until,
                                     const type::Data & data) {
 
-    switch(requested_type) {
-        case nt::Type_e::VehicleJourney: {
-            return filter_vj_on_period(indexes, since, until, data);
-        }
+    switch (requested_type) {
+    case nt::Type_e::VehicleJourney:
+        return filter_vj_on_period(indexes, since, until, data);
     default:
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                       "cannot filter on validity period for this type");
-        break;
+        throw parsing_error(parsing_error::error_type::global_error,
+                            "cannot filter on validity period for this type");
     }
 
     return indexes;

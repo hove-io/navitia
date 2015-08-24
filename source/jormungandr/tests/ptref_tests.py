@@ -332,7 +332,7 @@ class TestPtRef(AbstractTestFixture):
         vjs = get_not_null(response, 'vehicle_journeys')
         assert 'vj1' in (vj['id'] for vj in vjs)
 
-        # we the vj stop the 01/11, so the 01/12, we can't find it
+        # the vj stops the 01/11, so the 01/12, we can't find it
         response, code = self.query_no_assert("v1/coverage/main_ptref_test/vehicle_journeys?since=20140105T070000")
 
         assert code == 404
