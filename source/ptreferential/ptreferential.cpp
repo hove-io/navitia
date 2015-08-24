@@ -280,8 +280,8 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
     return final_indexes;
 }
 
-bool keep_vj(const nt::VehicleJourney* vj,
-             const bt::time_period& period) {
+static bool keep_vj(const nt::VehicleJourney* vj,
+                    const bt::time_period& period) {
     if (vj->stop_time_list.empty()) {
         return false; //no stop time, so it cannot be valid
     }
@@ -296,17 +296,18 @@ bool keep_vj(const nt::VehicleJourney* vj,
     return false;
 }
 
-std::vector<idx_t> filter_vj_on_period(const std::vector<type::idx_t>& indexes,
-             boost::optional<bt::ptime> since,
-             boost::optional<bt::ptime> until,
-             const type::Data & data) {
+static std::vector<idx_t>
+filter_vj_on_period(const std::vector<type::idx_t>& indexes,
+                    const boost::optional<bt::ptime>& since,
+                    const boost::optional<bt::ptime>& until,
+                    const type::Data& data) {
 
     // we create the right period using since, until and the production period
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
     }
     auto start = bt::ptime(data.meta->production_date.begin());
-    auto end = bt::ptime(data.meta->production_date.last(), bt::seconds(24*3600 - 1));
+    auto end = bt::ptime(data.meta->production_date.end());
 
     if (since) {
         if (data.meta->production_date.is_before(since->date())) {
@@ -328,18 +329,19 @@ std::vector<idx_t> filter_vj_on_period(const std::vector<type::idx_t>& indexes,
 
     std::vector<idx_t> res;
     for (const idx_t idx: indexes) {
-        const auto vj = data.pt_data->vehicle_journeys[idx];
+        const auto* vj = data.pt_data->vehicle_journeys[idx];
         if (! keep_vj(vj, period)) { continue; }
         res.push_back(idx);
     }
     return res;
 }
 
-std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& indexes,
-                                    const navitia::type::Type_e requested_type,
-                                    boost::optional<boost::posix_time::ptime> since,
-                                    boost::optional<boost::posix_time::ptime> until,
-                                    const type::Data & data) {
+static std::vector<idx_t>
+filter_on_period(const std::vector<type::idx_t>& indexes,
+                 const navitia::type::Type_e requested_type,
+                 const boost::optional<boost::posix_time::ptime>& since,
+                 const boost::optional<boost::posix_time::ptime>& until,
+                 const type::Data& data) {
 
     switch (requested_type) {
     case nt::Type_e::VehicleJourney:
@@ -352,12 +354,13 @@ std::vector<idx_t> filter_on_period(const std::vector<type::idx_t>& indexes,
     return indexes;
 }
 
-std::vector<idx_t> make_query(Type_e requested_type, std::string request,
+std::vector<idx_t> make_query(const Type_e requested_type,
+                              const std::string& request,
                               const std::vector<std::string>& forbidden_uris,
                               const type::OdtLevel_e odt_level,
-                              boost::optional<boost::posix_time::ptime> since,
-                              boost::optional<boost::posix_time::ptime> until,
-                              const Data & data) {
+                              const boost::optional<boost::posix_time::ptime>& since,
+                              const boost::optional<boost::posix_time::ptime>& until,
+                              const Data& data) {
     std::vector<Filter> filters;
 
     if(!request.empty()){
@@ -466,15 +469,21 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
     return final_indexes;
 }
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::Data &data) {
-    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, boost::none, boost::none, data);
+    return make_query(requested_type,
+                      request,
+                      forbidden_uris,
+                      type::OdtLevel_e::all,
+                      boost::none,
+                      boost::none,
+                      data);
 }
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const type::Data &data) {
     const std::vector<std::string> forbidden_uris;
     return make_query(requested_type, request, forbidden_uris, data);

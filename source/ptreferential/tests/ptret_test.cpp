@@ -465,39 +465,37 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
     nt::idx_t b = 1;
     nt::idx_t c = 2;
 
-    auto check = [](const std::vector<nt::idx_t>& col, std::initializer_list<nt::idx_t> ref) {
+    auto check = [](const std::vector<nt::idx_t>& col, std::set<nt::idx_t> s_ref) {
         std::set<nt::idx_t> s_col(std::begin(col), std::end(col));
-        std::set<nt::idx_t> s_ref(ref);
-        BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(s_col), std::end(s_col), std::begin(s_ref), std::end(s_ref));
-        return s_col == s_ref;
+        BOOST_CHECK_EQUAL(s_col, s_ref);
     };
 
     //not limited, we get 3 vj
     auto indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data));
-    BOOST_CHECK(check(indexes, {a, b, c}));
+    check(indexes, {a, b, c});
 
     // the second day A and B are activ
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130312T0700"_dt}, {"20130313T0000"_dt});
-    BOOST_CHECK(check(indexes, {a, b}));
+    check(indexes, {a, b});
 
     // but the third only A works
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130313T0700"_dt}, {"20130314T0000"_dt});
-    BOOST_CHECK(check(indexes, {a}));
+    check(indexes, {a});
 
     // on day 3 and 4, A, B and C are valid only one day, so it's ok
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130313T0700"_dt}, {"20130315T0000"_dt});
-    BOOST_CHECK(check(indexes, {a, b, c}));
+    check(indexes, {a, b, c});
 
     //with just a since, we check til the end of the period
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130313T0000"_dt}, {});
-    BOOST_CHECK(check(indexes, {a, b, c})); // all are valid from the 3rd day
+    check(indexes, {a, b, c}); // all are valid from the 3rd day
 
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130314T0000"_dt}, {});
-    BOOST_CHECK(check(indexes, {b, c})); // only B and C are valid from the 4th day
+    check(indexes, {b, c}); // only B and C are valid from the 4th day
 
     // with just an until, we check from the begining of the validity period
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {}, {"20130313T0000"_dt});
-    BOOST_CHECK(check(indexes, {a, b}));
+    check(indexes, {a, b});
 
     //tests with the time
     // we want the vj valid from 11pm only the first day, B is valid at 10, so not it the period
@@ -508,7 +506,7 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
 
     // we want the vj valid from 11pm the first day to 08::00 the second, we now have A in the results
     indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130311T1100"_dt}, {"20130312T080001"_dt});
-    BOOST_CHECK(check(indexes, {a}));
+    check(indexes, {a});
 
     // we give a period after or before the validitity period, it's KO
     BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20110311T1100"_dt}, {"20110312T0800"_dt}, true), ptref_error);

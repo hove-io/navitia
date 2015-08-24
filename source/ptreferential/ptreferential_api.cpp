@@ -38,11 +38,12 @@ namespace pt = boost::posix_time;
 
 namespace navitia{ namespace ptref{
 
-static pbnavitia::Response extract_data(const type::Data & data,
-                                        type::Type_e requested_type,
-                                        std::vector<type::idx_t> & rows,
-                                        const int depth, const bool show_codes,
-                                        boost::posix_time::ptime current_time) {
+static pbnavitia::Response extract_data(const type::Data& data,
+                                        const type::Type_e requested_type,
+                                        const std::vector<type::idx_t>& rows,
+                                        const int depth,
+                                        const bool show_codes,
+                                        const boost::posix_time::ptime& current_time) {
     pbnavitia::Response result;
     auto action_period = pt::time_period(current_time, pt::seconds(1));
     for(auto idx : rows){
@@ -122,7 +123,7 @@ static pbnavitia::Response extract_data(const type::Data & data,
 }
 
 
-pbnavitia::Response query_pb(type::Type_e requested_type,
+pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const std::string& request,
                              const std::vector<std::string>& forbidden_uris,
                              const type::OdtLevel_e odt_level,
@@ -130,10 +131,10 @@ pbnavitia::Response query_pb(type::Type_e requested_type,
                              const bool show_codes,
                              const int startPage,
                              const int count,
-                             boost::optional<boost::posix_time::ptime> since,
-                             boost::optional<boost::posix_time::ptime> until,
+                             const boost::optional<boost::posix_time::ptime>& since,
+                             const boost::optional<boost::posix_time::ptime>& until,
                              const type::Data& data,
-                             boost::posix_time::ptime current_time) {
+                             const boost::posix_time::ptime& current_time) {
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
     int total_result;

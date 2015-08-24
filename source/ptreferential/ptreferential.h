@@ -95,22 +95,22 @@ struct parsing_error : public ptref_error{
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::OdtLevel_e odt_level,
-                                    boost::optional<boost::posix_time::ptime> since,
-                                    boost::optional<boost::posix_time::ptime> until,
-                                    const type::Data &data);
+                                    const boost::optional<boost::posix_time::ptime>& since,
+                                    const boost::optional<boost::posix_time::ptime>& until,
+                                    const type::Data& data);
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
-                                    const type::Data &data);
+                                    const type::Data& data);
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
-                                    const type::Data &data);
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
+                                    const type::Data& data);
 
 
 /// Trouve le chemin d'un type de données à un autre
