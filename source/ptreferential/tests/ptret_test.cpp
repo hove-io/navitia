@@ -552,10 +552,9 @@ BOOST_AUTO_TEST_CASE(headsign_sa_request) {
                                 R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
                                 *(b.data));
     BOOST_REQUIRE_EQUAL(res.size(), 2);
-    std::vector<std::string> sas;
+    std::set<std::string> sas;
     for (const auto& idx: res) {
-        sas.push_back(b.data->pt_data->stop_areas.at(idx)->name);
+        sas.insert(b.data->pt_data->stop_areas.at(idx)->name);
     }
-    std::sort(sas.begin(), sas.end());
-    BOOST_CHECK_EQUAL(sas, (std::vector<std::string>{"stop3", "stop4"}));
+    BOOST_CHECK_EQUAL(sas, (std::set<std::string>{"stop3", "stop4"}));
 }
