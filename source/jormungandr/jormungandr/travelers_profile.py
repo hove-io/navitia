@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from collections import OrderedDict
+from jormungandr import app, cache
 
 class TravelerProfile(object):
     def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
