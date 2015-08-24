@@ -295,7 +295,8 @@ def qualifier_one(journeys, request_type):
             [
                 best_crit,
                 transfers_crit,
-                nonTC_crit
+                nonTC_crit,
+                duration_crit
             ]
         )),
         # less_fallback tends to limit the fallback while walking
