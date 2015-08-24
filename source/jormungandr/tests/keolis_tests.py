@@ -42,7 +42,6 @@ def one_best_test():
         journey_direct = response.journeys.add()
 
         journey_direct.type = "best"
-        print 'journey_direct', journey_direct.type
 
         #we set the destination else the filter will not be applicated
         req = {'debug': False, 'destination': 'foo'}
