@@ -1,4 +1,4 @@
-"""empty message
+"""Add traveler profile table
 
 Revision ID: 2e0ac7e0a7a7
 Revises: 1414da92b3ca
