@@ -50,30 +50,18 @@ namespace bg = boost::gregorian;
 
 namespace {
 
-struct DiscreteVJTag{};
-struct FrequencyVJTag{};
-
-template<typename VJ_T>
-struct VJTag_Traits{};
-
-template<>
-struct VJTag_Traits<nt::DiscreteVehicleJourney>{
-    typedef DiscreteVJTag Tag;
-};
-
-template<>
-struct VJTag_Traits<nt::FrequencyVehicleJourney>{
-    typedef FrequencyVJTag Tag;
-};
-
 template<typename T>
-using Tag_t = typename VJTag_Traits<T>::Tag;
+std::vector<std::unique_ptr<T>>& get_vj_list_of_jp_helper(nt::JourneyPattern* jp);
 
-auto get_vj_list_of_jp_helper(nt::JourneyPattern* jp, DiscreteVJTag)
--> decltype((jp->discrete_vehicle_journey_list)) { return jp->discrete_vehicle_journey_list;}
+template<>
+auto get_vj_list_of_jp_helper<nt::DiscreteVehicleJourney>(nt::JourneyPattern* jp)
+-> decltype((jp->discrete_vehicle_journey_list))
+{ return jp->discrete_vehicle_journey_list; }
 
-auto get_vj_list_of_jp_helper(nt::JourneyPattern* jp, FrequencyVJTag)
--> decltype((jp->frequency_vehicle_journey_list)) { return jp->frequency_vehicle_journey_list;}
+template<>
+auto get_vj_list_of_jp_helper<nt::FrequencyVehicleJourney>(nt::JourneyPattern* jp)
+-> decltype((jp->frequency_vehicle_journey_list))
+{ return jp->frequency_vehicle_journey_list; }
 
 template<typename Container, typename Value>
 void push_back_unique(Container& c, const Value& v) {
@@ -485,9 +473,9 @@ struct vehicle_journey_impactor {
   // - remove old jp from impact
   // - add the adapted into new jp
   template<typename VJ_T>
-  void complete_impl(const std::vector<std::pair<VJ_T*, nt::JourneyPattern*>>& vj_discrete_to_be_updated ) {
+  void complete_impl(const std::vector<std::pair<VJ_T*, nt::JourneyPattern*>>& vj_to_be_updated ) {
 
-      for (auto& vj_jp: vj_discrete_to_be_updated) {
+      for (auto& vj_jp: vj_to_be_updated) {
           auto& vj_ptr = vj_jp.first;
           auto* new_jp = vj_jp.second;
           auto* old_jp = vj_ptr->journey_pattern;
@@ -509,7 +497,7 @@ struct vehicle_journey_impactor {
           // calling the move constructor
           vj_ptr->stop_time_list = std::move(stop_times);
 
-          auto& vj_list = get_vj_list_of_jp_helper(old_jp, Tag_t<VJ_T>());
+          auto& vj_list = get_vj_list_of_jp_helper<VJ_T>(old_jp);
 
           auto it_old_vj = std::find_if(std::begin(vj_list), std::end(vj_list),
                   [&vj_ptr](const std::unique_ptr<VJ_T>& old_vj ){
@@ -531,7 +519,7 @@ struct vehicle_journey_impactor {
           });
 
           // Now we can attach the vj to the  new jp
-          get_vj_list_of_jp_helper(new_jp, Tag_t<VJ_T>()).push_back(std::move(old_vj_unique_ptr));
+          get_vj_list_of_jp_helper<VJ_T>(new_jp).push_back(std::move(old_vj_unique_ptr));
 
       }
 
