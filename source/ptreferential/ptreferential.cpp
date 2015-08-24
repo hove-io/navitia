@@ -364,8 +364,6 @@ filter_on_period(const std::vector<type::idx_t>& indexes,
         throw parsing_error(parsing_error::error_type::global_error,
                             "cannot filter on validity period for this type");
     }
-
-    return indexes;
 }
 
 std::vector<idx_t> make_query(const Type_e requested_type,
