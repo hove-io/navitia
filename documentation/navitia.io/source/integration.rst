@@ -344,7 +344,7 @@ ________
 - Type: `String`
 
 If given, add a filter on the vehicle journeys that has the given
-value as headsign.
+value as headsign (on vehicle journey itself or at a stop time).
 
 Examples:
 
