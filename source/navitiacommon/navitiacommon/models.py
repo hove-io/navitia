@@ -266,7 +266,6 @@ class Instance(db.Model):
 
 
 class TravelerProfile(db.Model):
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
 
     coverage = db.Column(db.Text, db.ForeignKey('instance.name'), primary_key=True, nullable=True)
     traveler_type = db.Column('traveler_type',
