@@ -440,8 +440,8 @@ BOOST_AUTO_TEST_CASE(find_path_test){
 //helper to get default values
 static std::vector<nt::idx_t> query(nt::Type_e requested_type, std::string request,
                                     const nt::Data& data,
-                                    boost::optional<boost::posix_time::ptime> since = boost::none,
-                                    boost::optional<boost::posix_time::ptime> until = boost::none,
+                                    const boost::optional<boost::posix_time::ptime>& since = boost::none,
+                                    const boost::optional<boost::posix_time::ptime>& until = boost::none,
                                     bool fail = false) {
     try {
        return navitia::ptref::make_query(
