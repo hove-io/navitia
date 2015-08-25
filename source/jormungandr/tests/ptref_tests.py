@@ -375,7 +375,8 @@ class TestPtRef(AbstractTestFixture):
         only A and C have a metro line
         Note: the metro is physical_mode:0x1
         """
-        response = self.query_region("physical_modes/physical_mode:0x1/coords/{coord}/stop_areas?distance=300".format(coord=r_coord), display=True)
+        response = self.query_region("physical_modes/physical_mode:0x1/coords/{coord}/stop_areas"
+                                     "?distance=300".format(coord=r_coord), display=True)
 
         stops = get_not_null(response, 'stop_areas')
 
@@ -389,7 +390,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_all_lines(self):
         """test with all lines in the pt call"""
-        response = self.query('v1/coverage/main_routing_test/lines')
+        response = self.query_region('lines')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
         eq_(len(lines), 4)
@@ -397,11 +398,19 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_filter_line_code(self):
         """test filtering lines from line code 1A in the pt call"""
-        response = self.query('v1/coverage/main_routing_test/lines?filter=line.code=1A')
+        response = self.query_region('lines?filter=line.code=1A')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
         eq_(len(lines), 1)
         assert "1A" == lines[0]['code']
+
+    def test_line_filter_line_code_with_resource_uri(self):
+        """test filtering lines from line code 1A in the pt call with a resource uri"""
+        response = self.query_region('physical_modes/physical_mode:0x1/lines?filter=line.code=1D')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 1)
+        assert "1D" == lines[0]['code']
 
     def test_line_filter_line_code_empty_response(self):
         """test filtering lines from line code bob in the pt call
@@ -415,7 +424,7 @@ class TestPtRef(AbstractTestFixture):
     def test_line_filter_route_code_ignored(self):
         """test filtering lines from route code bob in the pt call
         as there is no attribute "code" for route, filter is invalid and ignored"""
-        response_all_lines = self.query('v1/coverage/main_routing_test/lines')
+        response_all_lines = self.query_region('lines')
         all_lines = get_not_null(response_all_lines, 'lines')
         response = self.query('v1/coverage/main_routing_test/lines?filter=route.code=bob')
         assert 'error' not in response
@@ -425,8 +434,31 @@ class TestPtRef(AbstractTestFixture):
 
     def test_route_filter_line_code(self):
         """test filtering routes from line code 1B in the pt call"""
-        response = self.query('v1/coverage/main_routing_test/routes?filter=line.code=1B')
+        response = self.query_region('routes?filter=line.code=1B')
         assert 'error' not in response
         routes = get_not_null(response, 'routes')
         eq_(len(routes), 1)
         assert "1B" == routes[0]['line']['code']
+
+    def test_headsign(self):
+        """test basic usage of headsign"""
+        response = self.query_region('vehicle_journeys?headsign=vehicle_journey 0')
+        assert 'error' not in response
+        vjs = get_not_null(response, 'vehicle_journeys')
+        eq_(len(vjs), 1)
+
+    def test_headsign_with_resource_uri(self):
+        """test usage of headsign with resource uri"""
+        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys'
+                                     '?headsign=vehicle_journey 0')
+        assert 'error' not in response
+        vjs = get_not_null(response, 'vehicle_journeys')
+        eq_(len(vjs), 1)
+
+    def test_headsign_with_code_filter_and_resource_uri(self):
+        """test usage of headsign with code filter and resource uri"""
+        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys'
+                                     '?headsign=vehicle_journey 0&filter=line.code=1A')
+        assert 'error' not in response
+        vjs = get_not_null(response, 'vehicle_journeys')
+        eq_(len(vjs), 1)
