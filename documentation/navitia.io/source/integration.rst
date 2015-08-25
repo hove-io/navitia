@@ -885,12 +885,13 @@ ______________
 |                         |                                    | * ``waiting``: waiting section between transport   |
 |                         |                                    | * ``stay_in``: this "stay in the vehicle" section  |
 |                         |                                    |   occurs when the traveller has to stay in the     |
-|                         |                                    |   vehicle when the bus change its routing          |
+|                         |                                    |   vehicle when the bus change its routing.         |
 |                         |                                    |   Here is an exemple for a journey from A to B:    |
+|                         |                                    |   (lollipop line)                                  |
 |                         |                                    |                                                    |
 |                         |                                    |   .. image:: stay_in.png                           |
 |                         |                                    |                                                    |
-|                         |                                    | * ``transfer``: transfert section                  |      
+|                         |                                    | * ``transfer``: transfert section                  | 
 |                         |                                    | * ``crow_fly``: teleportation section.             |
 |                         |                                    |   Used when starting or arriving to a city or a    |
 |                         |                                    |   stoparea ("potato shaped" objects)               |
