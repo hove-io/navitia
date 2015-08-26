@@ -90,8 +90,8 @@ def car_test():
         eq_(len(response.journeys), nb)
 
     tests = [('standard', '', 0), ('slow_walker', '', 0),
-             ('fast_walker', '', 0),
-             ('wheelchair', '', 0), ('luggage', '', 0),
+             ('fast_walker', '', 0), ('wheelchair', '', 0), ('luggage', '', 0),
+             # Temporary profiles
              ('cyclist', '', 0), ('motorist', 'comfort', 1),
             ]
     for test in tests:
@@ -116,8 +116,9 @@ def best_and_bike_test():
 
     tests = [('standard', 'rapid', '', 1), ('slow_walker', 'rapid', '', 1),
              ('fast_walker', 'rapid', '', 1), ('wheelchair', 'rapid', '', 1),
-             ('luggage', 'rapid', '', 1), ('cyclist', 'rapid', 'comfort', 2),
-             ('motorist', 'rapid', '', 1),
+             ('luggage', 'rapid', '', 1),
+             # Temporary profiles
+             ('cyclist', 'rapid', 'comfort', 2), ('motorist', 'rapid', '', 1),
              ]
     for test in tests:
         yield (check, test[0], test[1], test[2], test[3])

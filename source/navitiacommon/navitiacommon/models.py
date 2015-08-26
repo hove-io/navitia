@@ -266,14 +266,17 @@ class Instance(db.Model):
 
 
 class TravelerProfile(db.Model):
-
-    coverage = db.Column(db.Text, db.ForeignKey('instance.name'), primary_key=True, nullable=True)
+    # http://stackoverflow.com/questions/24872541/could-not-assemble-any-primary-key-columns-for-mapped-table
+    __tablename__ = 'traveler_profile'
+    coverage_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
     traveler_type = db.Column('traveler_type',
-                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage',
-                                       'wheelchair', 'cyclist', 'motorist', name='traveler_type'),
-                              default='standard',
-                              primary_key=True, nullable=False)
-    __table_args__ = (db.UniqueConstraint('coverage', 'traveler_type'), )
+                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage', 'wheelchair',
+                                      # Temporary Profiles
+                                      'cyclist', 'motorist',
+                                      name='traveler_type'),
+                              default='standard', nullable=False)
+
+    __table_args__ = (db.PrimaryKeyConstraint('coverage_id', 'traveler_type'), )
 
     walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
 
@@ -301,8 +304,11 @@ class TravelerProfile(db.Model):
 
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):
-        return cls.query.filter(and_(cls.coverage == coverage, cls.traveler_type == traveler_type)).first()
-
+        model = cls.query.join(Instance).filter(
+            and_(Instance.name == coverage,
+                 cls.traveler_type == traveler_type)
+        ).first()
+        return model
 
 class Api(db.Model):
     id = db.Column(db.Integer, primary_key=True)
