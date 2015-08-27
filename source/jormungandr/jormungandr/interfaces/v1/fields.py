@@ -751,3 +751,22 @@ instance_parameters = {
 
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
+
+instance_traveler_types = {
+    'traveler_type': fields.String,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'wheelchair': fields.Boolean(),
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'first_section_mode': fields.List(fields.String),
+    'last_section_mode': fields.List(fields.String),
+    'is_from_db': fields.Boolean(),
+}
+
+instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
+                                                                                 allow_null=True))

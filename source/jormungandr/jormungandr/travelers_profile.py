@@ -28,15 +28,21 @@
 # www.navitia.io
 
 from collections import OrderedDict
-
+from jormungandr import app, cache
+from navitiacommon import models
 class TravelerProfile(object):
-    def __init__(self, walking_speed=1.12, bike_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
+    def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
                  first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
-                 keolis_type_map={}, max_walking_duration_to_pt=15*60, max_bike_duration_to_pt=15*60,
-                 max_bss_duration_to_pt=15*60, max_car_duration_to_pt=15*60):
+                 max_walking_duration_to_pt=15*60, max_bike_duration_to_pt=15*60, max_bss_duration_to_pt=15*60,
+                 max_car_duration_to_pt=15*60, traveler_type='', is_from_db=False):
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
+        self.bss_speed = bss_speed
         self.car_speed = car_speed
+        # Only used in v1/coverage/region/status, for debug purpose
+        self.traveler_type = traveler_type
+        # Only used in v1/coverage/region/status, for debug purpose
+        self.is_from_db = is_from_db
 
         if max_duration_to_pt:
             self.max_walking_duration_to_pt = max_duration_to_pt
@@ -56,12 +62,6 @@ class TravelerProfile(object):
             self.last_section_mode = last_section_mode
 
         self.wheelchair = wheelchair
-
-        self.keolis_type_map = keolis_type_map
-
-    @property
-    def bss_speed(self):
-        return self.bike_speed
 
     def override_params(self, args):
         arg_2_profile_attr = (('walking_speed',              self.walking_speed),
@@ -83,86 +83,125 @@ class TravelerProfile(object):
 
         map(override, arg_2_profile_attr)
 
+    @classmethod
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    def make_traveler_profile(cls, coverage, traveler_type):
+        """
+        travelers_profile factory method,
+        Return a traveler_profile constructed with default params or params retrieved from db
+        """
+        if app.config['DISABLE_DATABASE']:
+            return default_traveler_profiles[traveler_type]
 
-travelers_profile = {
-    'standard': TravelerProfile(walking_speed=1.39,
+        # retrieve TravelerProfile from db with coverage and traveler_type
+        # if the record doesn't exist, we use pre-defined default traveler profile
+        model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
+        if model is None:
+            return default_traveler_profiles[traveler_type]
+
+        def _reformat_fallback_mode(fb_mode_from_db):
+            """
+            RAW fallback_mode returned from db is formatted like this:
+            ['{', 'w', 'a', 'l', 'k', 'i', 'n', 'g', ',', 'b', 'i', 'k', 'e', '}']
+            which represents ['walking', 'bike']
+
+            this function will reformat the raw format to a beautiful list
+            """
+            return ''.join(fb_mode_from_db)[1:-1].split(',')
+
+        return cls(traveler_type=traveler_type,
+                   walking_speed=model.walking_speed,
+                   bike_speed=model.bike_speed,
+                   car_speed=model.car_speed,
+                   bss_speed=model.bss_speed,
+                   wheelchair=model.wheelchair,
+                   max_walking_duration_to_pt=model.max_walking_duration_to_pt,
+                   max_bss_duration_to_pt=model.max_bss_duration_to_pt,
+                   max_bike_duration_to_pt=model.max_bike_duration_to_pt,
+                   max_car_duration_to_pt=model.max_car_duration_to_pt,
+                   first_section_mode=_reformat_fallback_mode(model.first_section_mode),
+                   last_section_mode=_reformat_fallback_mode(model. last_section_mode),
+                   is_from_db=True,
+                   )
+
+    @classmethod
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    def get_profiles_by_coverage(cls, coverage):
+        traveler_profiles = []
+        for traveler_type in acceptable_traveler_types:
+            profile = cls.make_traveler_profile(coverage, traveler_type)
+            traveler_profiles.append(profile)
+        return traveler_profiles
+
+default_traveler_profiles = {
+    'standard': TravelerProfile(traveler_type='standard',
+                                walking_speed=1.11,
                                 bike_speed=3.33,
-                                max_duration_to_pt=12*60,
-                                first_and_last_section_mode=['walking'],
-                                keolis_type_map={'rapid': ['best'],
-                                    'comfort': ['less_fallback_walk', 'less_fallback_bss'],
-                                    'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
+                                bss_speed=3.33,
+                                max_duration_to_pt=20*60,
+                                first_section_mode=['walking', 'bss', 'bike', 'car'],
+                                last_section_mode=['walking', 'bss', 'bike'],
+                                is_from_db=False,
+                                ),
 
-    'slow_walker': TravelerProfile(walking_speed=0.83,
+    'slow_walker': TravelerProfile(traveler_type='slow_walker',
+                                   walking_speed=0.83,
+                                   bike_speed=2.77,
+                                   bss_speed=2.77,
                                    max_duration_to_pt=20*60,
-                                   first_and_last_section_mode=['walking'],
-                                   keolis_type_map={'rapid': ['best'],
-                                       'comfort': ['less_fallback_walk'],
-                                       'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
+                                   first_section_mode=['walking', 'bss', 'bike', 'car'],
+                                   last_section_mode=['walking', 'bss', 'bike'],
+                                   is_from_db=False,
+                                   ),
 
-    'fast_walker': TravelerProfile(walking_speed=1.67,
-                                   bike_speed=3.33,
+    'fast_walker': TravelerProfile(traveler_type='fast_walker',
+                                   walking_speed=1.67,
+                                   bike_speed=4.16,
+                                   bss_speed=4.16,
                                    max_duration_to_pt=20*60,
-                                   first_and_last_section_mode=['walking'],
-                                   keolis_type_map={'rapid': ['best'],
-                                       'comfort': ['less_fallback_walk', 'less_fallback_bss'],
-                                       'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
+                                   first_section_mode=['walking', 'bss', 'bike', 'car'],
+                                   last_section_mode=['walking', 'bss', 'bike'],
+                                   is_from_db=False,
+                                   ),
 
-    'stroller': TravelerProfile(walking_speed=1.11,
-                                max_duration_to_pt=15*60,
-                                first_and_last_section_mode=['walking'],
-                                wheelchair=True,
-                                keolis_type_map={'rapid': ['best'],
-                                    'comfort': ['less_fallback_walk'],
-                                    'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
-
-    'wheelchair': TravelerProfile(walking_speed=0.83,
-                                  max_duration_to_pt=20*60,
-                                  first_and_last_section_mode=['walking'],
-                                  wheelchair=True,
-                                  keolis_type_map={'rapid': ['best'],
-                                      'comfort': ['less_fallback_walk'],
-                                      'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
-
-    'luggage': TravelerProfile(walking_speed=1.11,
-                               max_duration_to_pt=15*60,
-                               first_and_last_section_mode=['walking', 'car'],
-                               wheelchair=True,
-                               keolis_type_map={'rapid': ['best'],
-                                   'comfort': ['less_fallback_walk'],
-                                   'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
-
-    'heels': TravelerProfile(walking_speed=1.11,
-                             bike_speed=3.33,
-                             max_duration_to_pt=15*60,
-                             first_and_last_section_mode=['walking'],
-                             keolis_type_map={'rapid': ['best'],
-                                 'comfort': ['less_fallback_walk', 'less_fallback_bss'],
-                                 'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
-
-    'scooter': TravelerProfile(walking_speed=2.22,
-                               max_duration_to_pt=15*60,
-                               first_and_last_section_mode=['walking'],
-                               keolis_type_map={'rapid': ['best'],
-                                   'comfort': ['less_fallback_walk'],
-                                   'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
-
-    'cyclist': TravelerProfile(walking_speed=1.39,
-                               bike_speed=3.33,
-                               max_duration_to_pt=12*60,
-                               first_section_mode=['walking', 'bike'],
+    'luggage': TravelerProfile(traveler_type='luggage',
+                               walking_speed=1.11,
+                               max_duration_to_pt=20*60,
+                               first_section_mode=['walking', 'car'],
                                last_section_mode=['walking'],
-                               keolis_type_map={'rapid': ['best'],
-                                   'comfort': ['less_fallback_walk', 'less_fallback_bss', 'less_fallback_bike'],
-                                   'healthy': ['non_pt_walk', 'non_pt_bss', 'non_pt_bike', 'comfort', 'fastest']}),
+                               wheelchair=True,
+                               is_from_db=False,
+                               ),
 
-    'motorist': TravelerProfile(walking_speed=1.11,
+    'wheelchair': TravelerProfile(traveler_type='wheelchair',
+                                  walking_speed=0.83,
+                                  max_duration_to_pt=20*60,
+                                  first_section_mode=['walking', 'car'],
+                                  last_section_mode=['walking'],
+                                  wheelchair=True,
+                                  is_from_db=False,
+                                  ),
+
+    'cyclist': TravelerProfile(traveler_type='cyclist',
+                               walking_speed=1.11,
+                               bike_speed=3.33,
+                               bss_speed=3.33,
+                               max_duration_to_pt=12*60,
+                               first_section_mode=['walking', 'bss', 'bike'],
+                               last_section_mode=['walking', 'bss'],
+                               is_from_db=False,
+                               ),
+
+    'motorist': TravelerProfile(traveler_type='motorist',
+                                walking_speed=1.11,
                                 car_speed=11.11,
                                 max_walking_duration_to_pt=15*60,
                                 max_car_duration_to_pt=35*60,
                                 first_section_mode=['walking', 'car'],
                                 last_section_mode=['walking'],
-                                keolis_type_map={'rapid': ['best'],
-                                    'comfort': ['car', 'less_fallback_walk'],
-                                    'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
+                                is_from_db=False,
+                                ),
+
 }
+
+acceptable_traveler_types = default_traveler_profiles.keys()
