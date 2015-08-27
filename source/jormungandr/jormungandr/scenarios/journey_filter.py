@@ -236,7 +236,7 @@ def _debug_journey(journey):
     sections = []
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            sections.append("{line} ({vj})".format(line=s.pt_display_informations.uris.line,
+            sections.append(u"{line} ({vj})".format(line=s.pt_display_informations.uris.line,
                                                    vj=s.pt_display_informations.uris.vehicle_journey))
         elif s.type == response_pb2.STREET_NETWORK:
             sections.append(shorten(response_pb2.StreetNetworkMode.Name(s.street_network.mode)))
@@ -248,7 +248,7 @@ def _debug_journey(journey):
         dt = datetime.datetime.utcfromtimestamp(ts)
         return dt.strftime("%dT%H:%M:%S")
 
-    logger.debug("journey {id}: {dep} -> {arr} - {duration} ({fallback} map) | ({sec})".format(
+    logger.debug(u"journey {id}: {dep} -> {arr} - {duration} ({fallback} map) | ({sec})".format(
         id=journey.internal_id,
         dep=_datetime_to_str(journey.departure_date_time),
         arr=_datetime_to_str(journey.arrival_date_time),

@@ -81,3 +81,24 @@ class TestJourneysNewDefault(AbstractTestFixture):
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
 
+
+@dataset(["main_ptref_test"])
+class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
+    """Test the new default scenario with ptref_test data"""
+
+    def setup(self):
+        logging.debug('setup for new default')
+        from jormungandr import i_manager
+        dest_instance = i_manager.instances['main_ptref_test']
+        self.old_scenario = dest_instance._scenario
+        dest_instance._scenario = jormungandr.scenarios.new_default.Scenario()
+
+    def teardown(self):
+        from jormungandr import i_manager
+        i_manager.instances['main_ptref_test']._scenario = self.old_scenario
+
+    def test_strange_line_name(self):
+        response = self.query("v1/coverage/main_ptref_test/journeys"
+                              "?from=stop_area:stop2&to=stop_area:stop1"
+                              "&datetime=20140107T100000", display=True)
+        eq_(len(response['journeys']), 1)
