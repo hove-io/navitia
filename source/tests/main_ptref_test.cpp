@@ -82,6 +82,11 @@ struct data_set {
         b.vj("line:B", "", "", true, "vj_b", "", "", "physical_mode:Car")
                 ("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1", "9:00"_t);
 
+        // add a line with a unicode name
+        b.vj("line:Ça roule")
+                ("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
+                ("stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
+
         //add a mock shape
         b.lines["line:A"]->shape = {
                                     {{1,2}, {2,2}, {4,5}},
