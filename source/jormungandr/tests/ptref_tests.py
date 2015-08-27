@@ -462,3 +462,36 @@ class TestPtRef(AbstractTestFixture):
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         eq_(len(vjs), 1)
+
+    def test_multiple_resource_uri_no_final_collection_uri(self):
+        """test usage of multiple resource uris with line and physical mode giving result,
+        then with multiple resource uris giving no result as nothing matches"""
+        response = self.query_region('physical_modes/physical_mode:0x0/lines/A')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 1)
+        response = self.query_region('lines/D')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 1)
+        response = self.query_region('physical_modes/physical_mode:0x1/lines/D')
+        assert 'error' not in response
+        lines = get_not_null(response, 'lines')
+        eq_(len(lines), 1)
+
+        response, status = self.query_region('physical_modes/physical_mode:0x0/lines/D', False)
+        assert status == 404
+        assert 'error' in response
+        assert 'unknown_object' in response['error']['id']
+
+    def test_multiple_resource_uri_with_final_collection_uri(self):
+        """test usage of multiple resource uris with line and physical mode giving result,
+        as we match it with a final collection, so the intersection is what we want"""
+        response = self.query_region('physical_modes/physical_mode:0x1/lines/D/stop_areas')
+        assert 'error' not in response
+        stop_areas = get_not_null(response, 'stop_areas')
+        eq_(len(stop_areas), 2)
+        response = self.query_region('physical_modes/physical_mode:0x0/lines/D/stop_areas')
+        assert 'error' not in response
+        stop_areas = get_not_null(response, 'stop_areas')
+        eq_(len(stop_areas), 1)
