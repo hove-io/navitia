@@ -752,6 +752,14 @@ class Journeys(ResourceUri, ResourceUtc):
             traveler_profile = TravelerProfile.make_travelers_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
 
+        # We set default modes for fallback modes.
+        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+        # fallback modes will always have a value, and traveler_type will never override fallback modes.
+        if args.get('origin_mode') is None:
+            args['origin_mode'] = ['walking']
+        if args.get('destination_mode') is None:
+            args['destination_mode'] = ['walking']
+
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
