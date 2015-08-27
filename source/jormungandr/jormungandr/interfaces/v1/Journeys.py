@@ -541,11 +541,9 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking"],
                                 dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking"],
                                 dest="destination_mode", action="append")
         parser_get.add_argument("max_duration_to_pt", type=int,
                                 description="maximal duration of non public transport in second")
@@ -610,6 +608,14 @@ class Journeys(ResourceUri, ResourceUtc):
         if args.get('traveler_type') is not None:
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
+
+        # We set default modes for fallback modes.
+        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+        # fallback modes will always have a value, and traveler_type will never override fallback modes.
+        if args.get('origin_mode') is None:
+            args['origin_mode'] = ['walking']
+        if args.get('destination_mode') is None:
+            args['destination_mode'] = ['walking']
 
         if args['max_duration_to_pt'] is not None:
             #retrocompatibility: max_duration_to_pt override all individual value by mode
