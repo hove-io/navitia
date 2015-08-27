@@ -162,15 +162,19 @@ class Uri(ResourceUri, ResourceUtc):
 
         if not self.region:
             return {"error": "No region"}, 404
-        if collection and id:
-            args["filter"] = '{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
-        elif uri:
+        if uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
             args["filter"] = self.get_filter(uris, args)
+        if collection and id:
+            f = '{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
+            if args.get("filter"):
+                args["filter"] += " and " + f
+            else:
+                args["filter"] = f
 
         response = i_manager.dispatch(args, collection,
                                       instance_name=self.region)
