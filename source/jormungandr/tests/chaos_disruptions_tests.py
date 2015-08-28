@@ -135,7 +135,6 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         disruptions = get_disruptions(stop, response)
 
-        #at first we got only one disruption on B
         assert len(disruptions) == 1
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
@@ -148,7 +147,6 @@ class TestChaosStopPointDisruptions(ChaosDisruptionsFixture):
     def test_disruption_on_stop_point_b(self):
         """
         when calling the pt object stop_point:stopB, at first we have no disruptions,
-
         then we mock a disruption sent from chaos, and we call again the pt object stop_point:stopB
         we then must have a disruption
         """
