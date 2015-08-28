@@ -135,6 +135,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         disruptions = get_disruptions(stop, response)
 
+        #at first we got only one disruption on B
         assert len(disruptions) == 1
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
@@ -170,7 +171,6 @@ class TestChaosStopPointDisruptions(ChaosDisruptionsFixture):
 
         disruptions = get_disruptions(stop_point, response)
 
-        #at first we got only one disruption on B
         assert len(disruptions) == 1
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
