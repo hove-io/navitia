@@ -42,6 +42,7 @@ from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models
 from navitiacommon.models import db
+from functools import wraps
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -116,7 +117,7 @@ jobs_fields = {'jobs': fields.List(fields.Nested({
         'instance': fields.Nested(instance_fields)
 }))}
 
-instance_traveler_types = {
+traveler_profile = {
     'traveler_type': fields.String,
     'walking_speed': fields.Raw,
     'bike_speed': fields.Raw,
@@ -131,6 +132,7 @@ instance_traveler_types = {
     'last_section_mode': fields.List(fields.String),
     'error': fields.String,
 }
+
 
 class Api(flask_restful.Resource):
     def __init__(self):
@@ -572,11 +574,8 @@ class TravelerProfile(flask_restful.Resource):
     """
     Traveler profile api for creating updating and removing
     """
-    @staticmethod
-    def get_args():
+    def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('coverage', type=str, required=True, case_sensitive=False)
-        parser.add_argument('traveler_type', type=parser_args_type.option_value(acceptable_traveler_types), required=True, case_sensitive=False)
         parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
         parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
         parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
@@ -596,76 +595,93 @@ class TravelerProfile(flask_restful.Resource):
         parser.add_argument('last_section_mode[]',
                             type=parser_args_type.option_value(['walking', 'car', 'bss', 'bike']),
                             required=False, action='append', case_sensitive=False, dest='last_section_mode')
-        return parser.parse_args()
+        self.args = parser.parse_args()
 
-    @marshal_with(instance_traveler_types)
-    def get(self):
-        args = self.get_args()
+    def check_resources(f):
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            tp = kwds.get('traveler_type')
+            if tp in acceptable_traveler_types:
+                return f(*args, **kwds)
+            return {'error': 'traveler profile: {0} is not one of in {1}'.format(tp, acceptable_traveler_types)}, 400
+        return wrapper
+
+    @marshal_with(traveler_profile)
+    @check_resources
+    def get(self, name=None, traveler_type=None):
         try:
-            traveler_profile = models.TravelerProfile.get_by_coverage_and_type(coverage=args.coverage,
-                                                                               traveler_type=args.traveler_type)
-            if traveler_profile is not None:
-                return traveler_profile
-            return {'error': 'traveler profile does no exist in db'}, 404
+            traveler_profiles = []
+            # If traveler_type is not specified, we return all existent traveler profiles of this instance
+            if traveler_type is None:
+                traveler_profiles += models.TravelerProfile.get_all_by_coverage(coverage=name)
+            else:
+                profile = models.TravelerProfile.get_by_coverage_and_type(coverage=name, traveler_type=traveler_type)
+                if profile:
+                    traveler_profiles.append(profile)
+
+            if traveler_profiles:
+                return traveler_profiles
+            return {'error': 'No matching traveler profiles are found in db'}, 404
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def post(self):
-        args = self.get_args()
+    @marshal_with(traveler_profile)
+    @check_resources
+    def post(self, name=None, traveler_type=None):
         try:
-            instance = models.Instance.get_by_name(args.coverage)
+            instance = models.Instance.get_by_name(name)
             if instance is None:
-                return {'error': "Coverage: {0} doesn't exist".format(args.coverage)}
-
+                return {'error': "Coverage: {0} doesn't exist".format(name)}
             profile = models.TravelerProfile()
             profile.coverage_id = instance.id
-            for (attr, default_value) in default_traveler_profile_params[args.traveler_type].iteritems():
+            for (attr, default_value) in default_traveler_profile_params[traveler_type].iteritems():
                 # override hardcoded values by args if args are not None
-                value = default_value if args.get(attr) is None else args.get(attr)
+                value = default_value if self.args.get(attr) is None else self.args.get(attr)
                 setattr(profile, attr, value)
             db.session.add(profile)
             db.session.commit()
-            return {'message': 'Profile {0} is created on {1}'.format(args.traveler_type, args.coverage)}
+            return profile
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self):
-        args = self.get_args()
-        profile = models.TravelerProfile.get_by_coverage_and_type(args.coverage, args.traveler_type)
+    @marshal_with(traveler_profile)
+    @check_resources
+    def put(self, name=None, traveler_type=None):
+        profile = models.TravelerProfile.get_by_coverage_and_type(name, traveler_type)
         if profile is None:
-            return {'error': 'Non profile is found to update'}, 400
+            return {'error': 'Non profile is found to update'}, 404
         try:
-            for (attr, default_value) in default_traveler_profile_params[args.traveler_type].iteritems():
+            for (attr, default_value) in default_traveler_profile_params[traveler_type].iteritems():
                 # override hardcoded values by args if args are not None
-                value = default_value if args.get(attr) is None else args.get(attr)
+                value = default_value if self.args.get(attr) is None else self.args.get(attr)
                 setattr(profile, attr, value)
-            db.session.add(profile)
             db.session.commit()
-            return {'message': 'Profile {0} is updated on {1}'.format(args.traveler_type, args.coverage)}
+            return profile
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self):
-        args = self.get_args()
-        profile = models.TravelerProfile.get_by_coverage_and_type(args.coverage, args.traveler_type)
+    @check_resources
+    def delete(self, name=None, traveler_type=None):
+        profile = models.TravelerProfile.get_by_coverage_and_type(name, traveler_type)
         if profile is None:
-            return {'error': 'no such instance in db to delete'}, 400
+            return {'error': 'Instance: {0} has no such profile: {1} in db to delete'.format(name, traveler_type)}, 400
         try:
             db.session.delete(profile)
             db.session.commit()
+            return '', 204
         except sqlalchemy.orm.exc.FlushError, e:
             return {'error': str(e)}, 409
         except sqlalchemy.orm.exc.UnmappedInstanceError:
-            return {'error': 'no such instance in db to delete'}, 400
+            return {'error': 'no such profile in db to delete'}, 400
         except Exception:
             logging.exception("fail")
             raise

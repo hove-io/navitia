@@ -55,7 +55,9 @@ api.add_resource(resources.Index, '/')
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint='jobs')
 api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint='end_points')
 
-api.add_resource(resources.TravelerProfile, '/v0/traveler_profile/')
+api.add_resource(resources.TravelerProfile,
+                 '/v0/instances/<string:name>/traveler_profiles/',
+                 '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>')
 
 @app.errorhandler(Exception)
 def error_handler(exception):

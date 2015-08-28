@@ -330,6 +330,13 @@ class TravelerProfile(db.Model):
         ).first()
         return model
 
+    @classmethod
+    def get_all_by_coverage(cls, coverage):
+        models = cls.query.join(Instance).filter(
+            and_(Instance.name == coverage))
+        return models
+
+
 class Api(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
