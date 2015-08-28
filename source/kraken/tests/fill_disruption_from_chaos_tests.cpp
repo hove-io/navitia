@@ -260,18 +260,24 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         BOOST_REQUIRE(has_adapted_vj);
 
         auto* vj = data.pt_data->vehicle_journeys_map["vj:1"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "000001"), vj->adapted_validity_pattern->days);
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "000111"), vj->validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "000001"),
+                vj->adapted_validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "000111"),
+                vj->validity_pattern->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:2"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "000001"), vj->adapted_validity_pattern->days);
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "000111"), vj->validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "000001"),
+                vj->adapted_validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "000111"),
+                vj->validity_pattern->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:1:adapted-2"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"), vj->adapted_validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"),
+                vj->adapted_validity_pattern->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:2:adapted-3"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"), vj->adapted_validity_pattern->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern->days.to_string(), "00110"),
+                vj->adapted_validity_pattern->days);
 
     };
 
