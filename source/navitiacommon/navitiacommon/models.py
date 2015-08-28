@@ -30,12 +30,13 @@
 # www.navitia.io
 
 import uuid
+import re
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
-from sqlalchemy import func, and_, UniqueConstraint
+from sqlalchemy import func, and_, UniqueConstraint, cast
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from navitiacommon import default_values
@@ -45,6 +46,25 @@ db = SQLAlchemy()
 class TimestampMixin(object):
     created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
+
+
+# https://bitbucket.org/zzzeek/sqlalchemy/issues/3467/array-of-enums-does-not-allow-assigning
+class ArrayOfEnum(ARRAY):
+    def bind_expression(self, bindvalue):
+        return cast(bindvalue, self)
+
+    def result_processor(self, dialect, coltype):
+        super_rp = super(ArrayOfEnum, self).result_processor(dialect, coltype)
+
+        def handle_raw_string(value):
+            if value==None:
+                return []
+            inner = re.match(r"^{(.*)}$", value).group(1)
+            return inner.split(",")
+
+        def process(value):
+            return super_rp(handle_raw_string(value))
+        return process
 
 
 class EndPoint(db.Model):
@@ -298,9 +318,9 @@ class TravelerProfile(db.Model):
 
     fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', name='fallback_mode')
 
-    first_section_mode = db.Column(ARRAY(fallback_mode), nullable=False)
+    first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
 
-    last_section_mode = db.Column(ARRAY(fallback_mode), nullable=False)
+    last_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
 
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):
@@ -309,6 +329,13 @@ class TravelerProfile(db.Model):
                  cls.traveler_type == traveler_type)
         ).first()
         return model
+
+    @classmethod
+    def get_all_by_coverage(cls, coverage):
+        models = cls.query.join(Instance).filter(
+            and_(Instance.name == coverage))
+        return models
+
 
 class Api(db.Model):
     id = db.Column(db.Integer, primary_key=True)

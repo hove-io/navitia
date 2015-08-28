@@ -64,10 +64,10 @@ from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
-from jormungandr.travelers_profile import acceptable_traveler_types, TravelerProfile
+from jormungandr.travelers_profile import TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
-
+from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):

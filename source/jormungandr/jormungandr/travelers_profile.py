@@ -30,6 +30,8 @@
 from collections import OrderedDict
 from jormungandr import app, cache
 from navitiacommon import models
+from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
+
 class TravelerProfile(object):
     def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
                  first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
@@ -99,16 +101,6 @@ class TravelerProfile(object):
         if model is None:
             return default_traveler_profiles[traveler_type]
 
-        def _reformat_fallback_mode(fb_mode_from_db):
-            """
-            RAW fallback_mode returned from db is formatted like this:
-            ['{', 'w', 'a', 'l', 'k', 'i', 'n', 'g', ',', 'b', 'i', 'k', 'e', '}']
-            which represents ['walking', 'bike']
-
-            this function will reformat the raw format to a beautiful list
-            """
-            return ''.join(fb_mode_from_db)[1:-1].split(',')
-
         return cls(traveler_type=traveler_type,
                    walking_speed=model.walking_speed,
                    bike_speed=model.bike_speed,
@@ -119,8 +111,8 @@ class TravelerProfile(object):
                    max_bss_duration_to_pt=model.max_bss_duration_to_pt,
                    max_bike_duration_to_pt=model.max_bike_duration_to_pt,
                    max_car_duration_to_pt=model.max_car_duration_to_pt,
-                   first_section_mode=_reformat_fallback_mode(model.first_section_mode),
-                   last_section_mode=_reformat_fallback_mode(model. last_section_mode),
+                   first_section_mode=model.first_section_mode,
+                   last_section_mode=model. last_section_mode,
                    is_from_db=True,
                    )
 
@@ -133,75 +125,8 @@ class TravelerProfile(object):
             traveler_profiles.append(profile)
         return traveler_profiles
 
-default_traveler_profiles = {
-    'standard': TravelerProfile(traveler_type='standard',
-                                walking_speed=1.11,
-                                bike_speed=3.33,
-                                bss_speed=3.33,
-                                max_duration_to_pt=20*60,
-                                first_section_mode=['walking', 'bss', 'bike', 'car'],
-                                last_section_mode=['walking', 'bss', 'bike'],
-                                is_from_db=False,
-                                ),
+default_traveler_profiles = {}
 
-    'slow_walker': TravelerProfile(traveler_type='slow_walker',
-                                   walking_speed=0.83,
-                                   bike_speed=2.77,
-                                   bss_speed=2.77,
-                                   max_duration_to_pt=20*60,
-                                   first_section_mode=['walking', 'bss', 'bike', 'car'],
-                                   last_section_mode=['walking', 'bss', 'bike'],
-                                   is_from_db=False,
-                                   ),
+for (traveler_type, params) in default_traveler_profile_params.iteritems():
+    default_traveler_profiles[traveler_type] = TravelerProfile(is_from_db=False, **params)
 
-    'fast_walker': TravelerProfile(traveler_type='fast_walker',
-                                   walking_speed=1.67,
-                                   bike_speed=4.16,
-                                   bss_speed=4.16,
-                                   max_duration_to_pt=20*60,
-                                   first_section_mode=['walking', 'bss', 'bike', 'car'],
-                                   last_section_mode=['walking', 'bss', 'bike'],
-                                   is_from_db=False,
-                                   ),
-
-    'luggage': TravelerProfile(traveler_type='luggage',
-                               walking_speed=1.11,
-                               max_duration_to_pt=20*60,
-                               first_section_mode=['walking', 'car'],
-                               last_section_mode=['walking'],
-                               wheelchair=True,
-                               is_from_db=False,
-                               ),
-
-    'wheelchair': TravelerProfile(traveler_type='wheelchair',
-                                  walking_speed=0.83,
-                                  max_duration_to_pt=20*60,
-                                  first_section_mode=['walking', 'car'],
-                                  last_section_mode=['walking'],
-                                  wheelchair=True,
-                                  is_from_db=False,
-                                  ),
-
-    'cyclist': TravelerProfile(traveler_type='cyclist',
-                               walking_speed=1.11,
-                               bike_speed=3.33,
-                               bss_speed=3.33,
-                               max_duration_to_pt=12*60,
-                               first_section_mode=['walking', 'bss', 'bike'],
-                               last_section_mode=['walking', 'bss'],
-                               is_from_db=False,
-                               ),
-
-    'motorist': TravelerProfile(traveler_type='motorist',
-                                walking_speed=1.11,
-                                car_speed=11.11,
-                                max_walking_duration_to_pt=15*60,
-                                max_car_duration_to_pt=35*60,
-                                first_section_mode=['walking', 'car'],
-                                last_section_mode=['walking'],
-                                is_from_db=False,
-                                ),
-
-}
-
-acceptable_traveler_types = default_traveler_profiles.keys()
