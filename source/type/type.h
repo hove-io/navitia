@@ -750,6 +750,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & impacted_by;
     }
 
+    bool is_past_midnight() const;
+
     virtual ~VehicleJourney();
     //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
 private:

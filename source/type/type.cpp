@@ -242,6 +242,14 @@ bool VehicleJourney::has_landing() const{
 
 }
 
+bool VehicleJourney::is_past_midnight() const{
+    if(stop_time_list.empty()) {
+        return false;
+    }
+    return stop_time_list.back().arrival_time >= 24*3600;
+}
+
+
 bool ValidityPattern::is_valid(int day) const {
     if(day < 0) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "

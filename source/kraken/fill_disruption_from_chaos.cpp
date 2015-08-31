@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/find.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -505,9 +506,12 @@ struct vehicle_journey_impactor {
           vj_ptr->journey_pattern = new_jp;
 
           // We should also remove the old jp form impact's impacted_journey_patterns
-          boost::remove_erase_if(impact->impacted_journey_patterns, [&](const nt::JourneyPattern* jp){
+          auto jp_it = boost::find_if(impact->impacted_journey_patterns,[&](const nt::JourneyPattern* jp){
               return jp->uri == old_jp->uri;
           });
+          if (jp_it != std::end(impact->impacted_journey_patterns)) {
+              impact->impacted_journey_patterns.erase(jp_it);
+          }
 
           // Now we can attach the vj to the new jp
           get_vj_list_of_jp_helper<VJ_T>(new_jp).push_back(std::move(old_vj_unique_ptr));
@@ -523,20 +527,22 @@ struct vehicle_journey_impactor {
 
   bool is_impacted(const nt::VehicleJourney& vj) const{
       for (auto period : impact->application_periods) {
-          bg::day_iterator time_itr{period.begin().date() - bg::days{1}};
+          bg::day_iterator time_itr{period.begin().date()};
           for(;time_itr<=period.end().date(); ++time_itr) {
               if (!meta.production_date.contains(*time_itr)) {
                   continue;
               }
-              auto day = (*time_itr - meta.production_date.begin()).days();
+              auto today = (*time_itr - meta.production_date.begin()).days();
+              auto yesterday = today - 1;
 
               if (!vj.is_adapted) {
-                  if (vj.validity_pattern->check(day)) {
+                  if (vj.validity_pattern->check(today) ||
+                          (vj.validity_pattern->check(yesterday) && vj.is_past_midnight())) {
                       return true;
                   }
               }else{
                   // TODO: We should handle the intersected disruption periods
-                  if (vj.adapted_validity_pattern->check(day)) {
+                  if (vj.adapted_validity_pattern->check(today)) {
                       return true;
                   }
               }
@@ -586,7 +592,7 @@ struct vehicle_journey_impactor {
           register_vj_for_update(vj.get(), new_jp);
 
           // The new journey_pattern is linked to the impact
-          push_back_unique(impact->impacted_journey_patterns, new_jp);
+          impact->impacted_journey_patterns.insert(new_jp);
 
       }else{
 
@@ -599,7 +605,7 @@ struct vehicle_journey_impactor {
                   if (is_updated_with_impacted_stop_points(adapted_vj)) {
                       // if this adpated_vj has no JPP in this stop point list, it means that its theoretical
                       // vj is also impacted by this impact.
-                      push_back_unique(impact->impacted_journey_patterns, adapted_vj->journey_pattern);
+                      impact->impacted_journey_patterns.insert(adapted_vj->journey_pattern);
 
                       const bool has_no_impact = std::none_of(std::begin(adapted_vj->impacted_by),
                               std::end(adapted_vj->impacted_by),
@@ -628,7 +634,7 @@ struct vehicle_journey_impactor {
           functor_copy_vj_to_jp{impact, new_jp, impacted_stop_points, pt_data, meta}(*vj);
 
           // The new journey_pattern is linked to the impact
-          push_back_unique(impact->impacted_journey_patterns, new_jp);
+          impact->impacted_journey_patterns.insert(new_jp);
       }
       return true;
   }
@@ -735,7 +741,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
         // remove jp from it's impacts
         boost::for_each(jp_impacts, [&](nt::new_disruption::Impact* impact){
-            boost::range::remove_erase(impact->impacted_journey_patterns, jp);
+            auto it = boost::range::find(impact->impacted_journey_patterns, jp);
+            if (it != std::end(impact->impacted_journey_patterns)) {
+                impact->impacted_journey_patterns.erase(it);
+            }
         });
     }
 
@@ -752,7 +761,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         vehicle_journey_impactor impactor{pt_data, impacted_stop_points, jp, impact, meta};
         jp->for_each_vehicle_journey_ptr(impactor);
 
-        // the vehicle_journey_impactor has register the updated vj and its vj's new jp
+        // the vehicle_journey_impactor has registered the updated vj and its vj's new jp
         // now we should attach the vj to the new jp
         impactor.complete();
 
