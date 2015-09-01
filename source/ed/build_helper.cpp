@@ -148,11 +148,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     mvj->theoric_vj.push_back(vj);
     vj->meta_vj = mvj;
-    vj->idx = b.data->pt_data->vehicle_journeys.size();
-    vj->name = "vehicle_journey " + std::to_string(vj->idx);
+
     b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
-                                                *vj, "vehicle_journey " + std::to_string(vj->idx));
-    vj->uri = vj->name;
+                                                    *vj, "vehicle_journey " + std::to_string(vj->idx));
+
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 

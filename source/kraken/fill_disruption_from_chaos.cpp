@@ -350,9 +350,9 @@ struct functor_copy_vj_to_jp {
 
         adapted_vj.journey_pattern = jp;
         adapted_vj.idx = pt_data.vehicle_journeys.size();
-        adapted_vj.uri =  make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
+        adapted_vj.uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
         adapted_vj.is_adapted = true;
-        pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_ref.name);
+        pt_data.headsign_handler.change_name_and_register_as_headsign(adapted_vj, vj_ref.name);
         adapted_vj.name = vj_ref.name;
         adapted_vj.company = vj_ref.company;
         //TODO: we loose stay_in on impacted vj, we will need to work on this.
@@ -829,6 +829,14 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         vj.adapted_validity_pattern = vj.validity_pattern;
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
+        // We should save all the other impacts previously applied, so that
+        // we can re-apply them later.
+        for (auto& impact_weak_ptr: vj.impacted_by) {
+            auto ptr = impact_weak_ptr.lock();
+            if (ptr && ptr.get() != impact.get()) {
+                other_impacts.insert(ptr);
+            }
+        }
         boost::range::remove_erase_if(vj.impacted_by,
                 [&impact](const boost::weak_ptr<nt::new_disruption::Impact>& i) {
             auto spt = i.lock();
@@ -852,7 +860,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto* journey_pattern : jp_to_delete) {
             journey_pattern->for_each_vehicle_journey([&](const type::VehicleJourney& vj) {
                 // We should save all the other impacts previously applied, so that
-                // we cab re-apply them later.
+                // we can re-apply them later.
                 for (auto& impact_weak_ptr: vj.impacted_by) {
                     auto ptr = impact_weak_ptr.lock();
                     if (ptr && ptr.get() != impact.get()) {
