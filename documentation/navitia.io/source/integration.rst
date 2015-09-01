@@ -296,6 +296,7 @@ Collections
 * commercial_modes
 * physical_modes
 * companies
+* vehicle_journeys
 
 Specific parameters
 ###################
@@ -354,6 +355,21 @@ Examples:
 Warning: this last request gives the stop areas used by the vehicle
 journeys containing the headsign `CANE`, *not* the stop areas where it
 exists a stop time with the headsign `CANE`.
+
+since / until
+_____________
+
+- Type: `datetime`
+
+To be used only on a vehicle journey collection, to filter on a period.
+Both parameters until and since are optional.
+
+Example:
+
+* api.navitia.io/v1/coverage/fr_idf/vehicle_journeys?since=20150912T120000&until=20150913T110000
+
+Warning: this filter is applied using only the first stop time of a vehicle journey,
+since is included and until is excluded.
 
 Filter
 ######
