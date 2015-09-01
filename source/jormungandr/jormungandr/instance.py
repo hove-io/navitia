@@ -46,6 +46,7 @@ from shapely.geos import ReadingError
 from shapely import geometry
 from flask import g
 import json
+import flask
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -240,6 +241,11 @@ class Instance(object):
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False):
         with self.socket(self.context) as socket:
+            try:
+                request.request_id = flask.request.id
+            except RuntimeError:
+                #we aren't in a flask context, so there is no request
+                pass
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
