@@ -410,6 +410,8 @@ struct routing_api_data {
                 ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
+            b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
+                                b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
             //add another bus, much later. we'll use that one for disruptions
             b.vj("B")

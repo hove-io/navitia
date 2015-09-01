@@ -495,3 +495,49 @@ class TestPtRef(AbstractTestFixture):
         assert 'error' not in response
         stop_areas = get_not_null(response, 'stop_areas')
         eq_(len(stop_areas), 1)
+
+    def test_headsign_stop_time_vj(self):
+        """test basic print of headsign in stop_times for vj"""
+        response = self.query_region('vehicle_journeys?filter=vehicle_journey.name="vehicle_journey 0"')
+        assert 'error' not in response
+        vjs = get_not_null(response, 'vehicle_journeys')
+        eq_(len(vjs), 1)
+        eq_(len(vjs[0]['stop_times']), 2)
+        eq_(vjs[0]['stop_times'][0]['headsign'], "A00")
+        eq_(vjs[0]['stop_times'][1]['headsign'], "vehicle_journey 0")
+
+    def test_headsign_display_info_journeys(self):
+        """test basic print of headsign in section for journeys"""
+        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000')
+        assert 'error' not in response
+        journeys = get_not_null(response, 'journeys')
+        eq_(len(journeys), 1)
+        eq_(len(journeys[0]['sections']), 1)
+        eq_(journeys[0]['sections'][0]['display_informations']['headsign'], "A00")
+
+    def test_headsign_display_info_departures(self):
+        """test basic print of headsign in display informations for departures"""
+        response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120615T000000')
+        assert 'error' not in response
+        departures = get_not_null(response, 'departures')
+        eq_(len(departures), 2)
+        assert {"A00", "vehicle_journey 1"} == {d['display_informations']['headsign'] for d in departures}
+
+    def test_headsign_display_info_arrivals(self):
+        """test basic print of headsign in display informations for arrivals"""
+        response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
+        assert 'error' not in response
+        arrivals = get_not_null(response, 'arrivals')
+        eq_(len(arrivals), 1)
+        eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 1")
+
+    def test_headsign_display_info_route_schedules(self):
+        """test basic print of headsign in display informations for route schedules"""
+        response = self.query_region('routes/A:0/route_schedules?from_datetime=20120615T000000')
+        assert 'error' not in response
+        route_schedules = get_not_null(response, 'route_schedules')
+        eq_(len(route_schedules), 1)
+        eq_(len(route_schedules[0]['table']['headers']), 1)
+        display_info = route_schedules[0]['table']['headers'][0]['display_informations']
+        eq_(display_info['headsign'], "vehicle_journey 0")
+        assert {"A00", "vehicle_journey 0"} == set(display_info['headsigns'])

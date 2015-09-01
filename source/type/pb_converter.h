@@ -213,8 +213,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 void fill_pb_object(const type::VehicleJourney* vj,
                     const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info,
-                    const type::StopPoint* origin,
-                    const type::StopPoint* destination,
+                    const type::StopTime* origin,
+                    const type::StopTime* destination,
                     int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period);
@@ -234,13 +234,6 @@ void fill_pb_object(const type::VehicleJourney* vj,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period);
-
-void fill_pb_object(const type::VehicleJourney* vj,
-                    const type::Data& data,
-                    pbnavitia::PtDisplayInfo* pt_display_info,
-                    int max_depth,
-                    const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period);
 
 void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
                                   const bool has_datetime_estimated,

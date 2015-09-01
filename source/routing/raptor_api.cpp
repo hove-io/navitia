@@ -170,9 +170,10 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
     if(! stop_times.empty()){
-        fill_pb_object(vj, d, vj_pt_display_information, stop_times.front()->journey_pattern_point->stop_point, stop_times.back()->journey_pattern_point->stop_point, 0, now, action_period);
+        fill_pb_object(vj, d, vj_pt_display_information, stop_times.front(), stop_times.back()
+                       , 0, now, action_period);
     }else{
-        fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
+        fill_pb_object(vj, d, vj_pt_display_information, nullptr, nullptr, 0, now, action_period);
     }
 
     fill_shape(pb_section, stop_times);

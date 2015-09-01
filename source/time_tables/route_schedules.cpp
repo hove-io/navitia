@@ -288,7 +288,12 @@ route_schedule(const std::string& filter,
                     pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
                     auto vj = dt_stop_time.second->vehicle_journey;
-                    fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
+                    fill_pb_object(vj, d, vj_display_information, dt_stop_time.second, nullptr,
+                                   0, now, action_period);
+                    vj_display_information->set_headsign(vj->name);
+                    for (const auto& headsign: d.pt_data->headsign_handler.get_all_headsigns(vj)) {
+                        vj_display_information->add_headsigns(headsign);
+                    }
                     fill_additional_informations(header->mutable_additional_informations(),
                                                  vj->has_datetime_estimated(),
                                                  vj->has_odt(),
