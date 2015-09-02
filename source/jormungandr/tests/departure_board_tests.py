@@ -244,3 +244,44 @@ class TestDepartureBoard(AbstractTestFixture):
 
         assert len(response["departures"][1]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
+
+    def test_vj_comment(self):
+        """
+        test that a comment on a vehicle journey is linked to each stop_times in stop_schedules
+        but only in the header on route_schedules
+        """
+        # Check if the comment is on the stop_time
+        response = self.query_region("stop_points/stop1/stop_schedules?from_datetime=20120615T080000")
+        assert 'error' not in response
+        assert 'stop_schedules' in response
+        assert len(response["stop_schedules"]) == 1
+        assert len(response["notes"]) == 1
+        assert len(response["stop_schedules"][0]["date_times"]) == 4
+
+        for date_time in response["stop_schedules"][0]["date_times"]:
+            # Extract links of vehicle_journey and notes type
+            # Our comment is on the 'all' vj, it should have one (and only one) note
+            vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+            notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
+            assert(len(vj_link) == 0 or len(notes_link) == 1)
+
+        # Check that the comment is only on the header and not in the rows
+        response = self.query_region("lines/line:A/route_schedules?from_datetime=20120615T080000")
+        assert 'error' not in response
+        assert 'route_schedules' in response
+        assert len(response["route_schedules"]) == 1
+        assert len(response["notes"]) == 1
+        assert len(response["route_schedules"][0]["table"]["headers"]) == 4
+
+        for header in response["route_schedules"][0]["table"]["headers"]:
+            vj_link = [l for l in header["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+            notes_link = [l for l in header["links"] if l["type"] == "notes"]
+            # Assert that if it's the 'all' vj, there is one and only one note
+            assert(len(vj_link) == 0 or len(notes_link) == 1)
+
+        for row in response["route_schedules"][0]["table"]["rows"]:
+           for date_time in row["date_times"]:
+                vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+                notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
+                # assert that if it's the 'all' vj there is no note
+                assert(len(vj_link) == 0 or len(notes_link) == 0)
