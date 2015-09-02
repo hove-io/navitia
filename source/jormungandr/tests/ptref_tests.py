@@ -426,7 +426,7 @@ class TestPtRef(AbstractTestFixture):
         as there is no attribute "code" for route, filter is invalid and ignored"""
         response_all_lines = self.query_region('lines')
         all_lines = get_not_null(response_all_lines, 'lines')
-        response = self.query('v1/coverage/main_routing_test/lines?filter=route.code=bob')
+        response = self.query_region('lines?filter=route.code=bob')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
         eq_(len(lines), 4)

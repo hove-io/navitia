@@ -290,6 +290,9 @@ route_schedule(const std::string& filter,
                     auto vj = dt_stop_time.second->vehicle_journey;
                     fill_pb_object(vj, d, vj_display_information, dt_stop_time.second, nullptr,
                                    0, now, action_period);
+                    // as we only issue headsign for vj in route_schedules:
+                    // - need to override headsign with trip headsign (i.e. vj.name)
+                    // - issue all headsigns of the vj in headsigns
                     vj_display_information->set_headsign(vj->name);
                     for (const auto& headsign: d.pt_data->headsign_handler.get_all_headsigns(vj)) {
                         vj_display_information->add_headsigns(headsign);
