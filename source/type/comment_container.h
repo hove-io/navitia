@@ -28,46 +28,14 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "utils/serialization_fusion_map.h"
 #include "type/type.h"
 #include <type_traits>
 #include <boost/fusion/include/at_key.hpp>
-#include <boost/fusion/container.hpp>
-#include <boost/fusion/algorithm.hpp>
 
 #pragma once
 
-//using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
-using comment_list = std::vector<std::string>;
-
-template <typename T>
-using pt_object_comment_map = std::map<const T*, comment_list>;
-
-template <typename T> using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
-
-using stop_time_key = std::pair<const navitia::type::VehicleJourney*, uint16_t>;
-
-/**
- * Boost serialize for the fusion map
- */
-namespace boost { namespace serialization {
-
-    template <typename Ar>
-    struct Saver {
-        Ar& ar;
-        Saver(Ar& a): ar(a) {}
-        template <typename Pair>
-        void operator()(Pair& data) const {
-            ar & data.second;
-        }
-    };
-
-    template <typename Ar, typename... TArgs>
-    void serialize(Ar& ar, boost::fusion::map<TArgs...>& fmap, unsigned /*version*/) {
-        Saver<Ar> s(ar);
-        fusion::for_each(fmap, s);
-    }
-    }
-}
+namespace navitia { namespace type {
 
 /**
  * Comment container
@@ -99,6 +67,18 @@ struct Comments {
     }
 
 private:
+    //using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
+    using comment_list = std::vector<std::string>;
+
+    template <typename T>
+    using pt_object_comment_map = std::map<const T*, comment_list>;
+
+    template <typename T>
+    using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
+
+    using stop_time_key = std::pair<const navitia::type::VehicleJourney*, uint16_t>;
+
+
     template <typename T>
     const T* get_as_key(const T& obj) const {
         return &obj;
@@ -127,3 +107,5 @@ private:
 
     comment_map_type map;
 };
+
+}}// namespace navitia::type

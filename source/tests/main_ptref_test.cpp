@@ -103,9 +103,9 @@ struct data_set {
         for (auto r: b.lines["line:B"]->route_list) {
             r->destination = b.sas.find("stop_area:stop1")->second;
         }
-        b.lines["line:A"]->codes["external_code"] = "A";
-        b.lines["line:A"]->codes["codeB"] = "B";
-        b.lines["line:A"]->codes["codeC"] = "C";
+        b.data->pt_data->codes.add(b.lines["line:A"], "external_code", "A");
+        b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "B");
+        b.data->pt_data->codes.add(b.lines["line:A"], "codeC", "C");
 
         b.data->build_uri();
 

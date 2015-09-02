@@ -455,13 +455,15 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
 }
 
 template<typename T>
-void fill_or_error(const std::string& uri, const T& map, pbnavitia::Response& pb_response,
-        const type::Data& data) {
-    auto it = map.find(uri);
-    if (it == map.end()) {
+static void fill_or_error(const pbnavitia::PlaceCodeRequest &request,
+                          pbnavitia::Response& pb_response,
+                          const type::Data& data) {
+    const auto& objs = data.pt_data->codes.get_objs<T>(request.type_code(), request.code());
+    if (objs.empty()) {
         fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
     } else {
-        fill_pb_placemark(it->second, data, pb_response.add_places());
+        // FIXME: add every object or (as before) just the first one?
+        fill_pb_placemark(objs.front(), data, pb_response.add_places());
     }
 }
 
@@ -470,42 +472,31 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     this->init_worker_data(data);
     pbnavitia::Response pb_response;
 
-    const auto& ext_codes_map = data->pt_data->ext_codes_map[request.type()];
-    const auto codes_map = ext_codes_map.find(request.type_code());
-    if (codes_map == ext_codes_map.end()) {
-        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        return pb_response;
-    }
-    const auto uri_it = codes_map->second.find(request.code());
-    if (uri_it == codes_map->second.end()) {
-        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        return pb_response;
-    }
     switch(request.type()) {
-        case pbnavitia::PlaceCodeRequest::StopArea:
-            fill_or_error(uri_it->second, data->pt_data->stop_areas_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::Network:
-            fill_or_error(uri_it->second, data->pt_data->networks_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::Company:
-            fill_or_error(uri_it->second, data->pt_data->companies_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::Line:
-            fill_or_error(uri_it->second, data->pt_data->lines_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::Route:
-            fill_or_error(uri_it->second, data->pt_data->routes_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::VehicleJourney:
-            fill_or_error(uri_it->second, data->pt_data->vehicle_journeys_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::StopPoint:
-            fill_or_error(uri_it->second, data->pt_data->stop_points_map, pb_response, *data);
-            break;
-        case pbnavitia::PlaceCodeRequest::Calendar:
-            fill_or_error(uri_it->second, data->pt_data->calendars_map, pb_response, *data);
-            break;
+    case pbnavitia::PlaceCodeRequest::StopArea:
+        fill_or_error<nt::StopArea>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::Network:
+        fill_or_error<nt::Network>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::Company:
+        fill_or_error<nt::Company>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::Line:
+        fill_or_error<nt::Line>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::Route:
+        fill_or_error<nt::Line>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::VehicleJourney:
+        fill_or_error<nt::VehicleJourney>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::StopPoint:
+        fill_or_error<nt::StopPoint>(request, pb_response, *data);
+        break;
+    case pbnavitia::PlaceCodeRequest::Calendar:
+        fill_or_error<nt::Calendar>(request, pb_response, *data);
+        break;
     }
 
     return pb_response;
