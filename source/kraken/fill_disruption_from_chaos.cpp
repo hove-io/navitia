@@ -64,11 +64,6 @@ auto get_vj_list_of_jp_helper<nt::FrequencyVehicleJourney>(nt::JourneyPattern* j
 -> decltype((jp->frequency_vehicle_journey_list))
 { return jp->frequency_vehicle_journey_list; }
 
-template<typename Container, typename Value>
-static void push_back_unique(Container& c, const Value& v) {
-    if (! contains(c, v)) { c.push_back(v); }
-}
-
 }
 
 static boost::shared_ptr<nt::new_disruption::Tag>
