@@ -445,11 +445,11 @@ struct vehicle_journey_impactor {
           nt::JourneyPattern* jp,
           const boost::shared_ptr<nt::new_disruption::Impact>& impact,
           const nt::MetaData& meta):
-              pt_data{pt_data},
-              impacted_stop_points{impacted_stop_points},
-              jp{jp},
-              impact{impact},
-              meta{meta}{}
+              pt_data(pt_data),
+              impacted_stop_points(impacted_stop_points),
+              jp(jp),
+              impact(impact),
+              meta(meta){}
 
   void register_vj_for_update(nt::DiscreteVehicleJourney* vj, nt::JourneyPattern* jp) {
       vj_discrete_to_be_updated.push_back({vj, jp});
