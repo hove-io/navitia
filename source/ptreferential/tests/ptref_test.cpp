@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(parser_method) {
     BOOST_REQUIRE_EQUAL(filters.size(), 1);
     BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
     BOOST_CHECK_EQUAL(filters[0].method, "has_headsign");
-    BOOST_CHECK_EQUAL(filters[0].value, "john");
+    BOOST_CHECK_EQUAL(filters[0].args, std::vector<std::string>{"john"});
 }
 
 struct Moo {
@@ -572,4 +572,20 @@ BOOST_AUTO_TEST_CASE(headsign_sa_request) {
         sas.insert(b.data->pt_data->stop_areas.at(idx)->name);
     }
     BOOST_CHECK_EQUAL(sas, (std::set<std::string>{"stop3", "stop4"}));
+}
+
+BOOST_AUTO_TEST_CASE(code_request) {
+    ed::builder b("20150101");
+    b.generate_dummy_basis();
+    const auto* a = b.sa("A").sa;
+    b.sa("B");
+    b.data->pt_data->codes.add(a, "UIC", "8727100");
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::StopArea,
+                                R"(stop_area.has_code(UIC, 8727100))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_areas.at(res.at(0))->uri, "A");
 }

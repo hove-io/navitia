@@ -338,6 +338,13 @@ class TestPtRef(AbstractTestFixture):
         assert code == 404
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
+    def test_line_by_code(self):
+        """test the filter=type.has_code(key, value)"""
+        response = self.query_region("lines?filter=line.has_code(codeB, B)&show_codes=true")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
+
 
 @dataset(["main_ptref_test", "main_routing_test"])
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
