@@ -48,9 +48,7 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
 
-        #we check afterward that we have the right data
-        #we know there is only one vj in the dataset
-        assert len(vjs) == 2
+        assert len(vjs) == 3
         vj = vjs[0]
         assert vj['id'] == 'vj1'
 
@@ -107,7 +105,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 2
+        assert len(lines) == 3
 
         l = lines[0]
 
@@ -184,10 +182,11 @@ class TestPtRef(AbstractTestFixture):
 
         routes = get_not_null(response, 'routes')
 
-        assert len(routes) == 2
+        assert len(routes) == 3
 
-        r = routes[0]
+        r = routes[2]
         is_valid_route(r, depth_check=1)
+        assert r['id'] == 'line:A:0'
 
         #we know we have a geojson for this test so we can check it
         geo = get_not_null(r, 'geojson')
@@ -259,7 +258,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("v1/lines")
 
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 2
+        assert len(lines) == 3
 
         assert len(lines[0]['physical_modes']) == 1
         assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
@@ -328,19 +327,19 @@ class TestPtRef(AbstractTestFixture):
         assert 'vj1' in (vj['id'] for vj in vjs)
 
         # same with an until at the end of the day
-        response = self.query_region("vehicle_journeys?since=20140112T000000&until=20140112T2359")
+        response = self.query_region("vehicle_journeys?since=20140105T000000&until=20140106T0000")
         vjs = get_not_null(response, 'vehicle_journeys')
         assert 'vj1' in (vj['id'] for vj in vjs)
 
-        # the vj stops the 01/11, so the 01/12, we can't find it
-        response, code = self.query_no_assert("v1/coverage/main_ptref_test/vehicle_journeys?since=20140105T070000")
+        # there is no vj after the 8
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/vehicle_journeys?since=20140109T070000")
 
         assert code == 404
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
 
 @dataset(["main_routing_test"])
-class TestPtRef(AbstractTestFixture):
+class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_with_coord(self):
         """test with a coord in the pt call, so a place nearby is actually called"""

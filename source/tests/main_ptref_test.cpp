@@ -83,7 +83,7 @@ struct data_set {
                 ("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1", "9:00"_t);
 
         // add a line with a unicode name
-        b.vj("line:Ça roule")
+        b.vj("line:Ça roule", "11111111", "", true, "vj_b")
                 ("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
 
@@ -101,6 +101,9 @@ struct data_set {
             r->destination = b.sas.find("stop_area:stop2")->second;
         }
         for (auto r: b.lines["line:B"]->route_list) {
+            r->destination = b.sas.find("stop_area:stop1")->second;
+        }
+        for (auto r: b.lines["line:Ça roule"]->route_list) {
             r->destination = b.sas.find("stop_area:stop1")->second;
         }
         b.data->pt_data->codes.add(b.lines["line:A"], "external_code", "A");
