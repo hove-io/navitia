@@ -488,6 +488,7 @@ display_informations_vj = {
     "code": fields.String(attribute="code"),
     "equipments": equipments(attribute="has_equipments"),
     "headsign": fields.String(attribute="headsign"),
+    "headsigns": NonNullList(fields.String()),
     "links": DisruptionLinks(),
 }
 
@@ -551,6 +552,7 @@ journey_pattern["journey_pattern_points"] = jpps
 stop_time = {
     "arrival_time": SplitDateTime(date=None, time='arrival_time'),
     "departure_time": SplitDateTime(date=None, time='departure_time'),
+    "headsign": fields.String(attribute="headsign"),
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
 }
 

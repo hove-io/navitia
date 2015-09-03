@@ -98,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     // check stop_time headsigns
     const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     auto& vj_vec = data.pt_data->vehicle_journeys;
-    // check that vj 0 & 1 have headsign N1 from first 3 stpop_time, then N2
+    // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
     check_headsigns(data, "N1", 0, 1, 0, 2);
     check_headsigns(data, "N2", 0, 1, 3, 4);
     // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4 & 5 are named vehiclejourney3

@@ -708,6 +708,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
     //arrival/departure in protobuff are also as seconds from midnight (in UTC of course)
     stop_time->set_arrival_time(st->arrival_time);
     stop_time->set_departure_time(st->departure_time);
+    stop_time->set_headsign(data.pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
@@ -1388,8 +1389,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 void fill_pb_object(const nt::VehicleJourney* vj,
                     const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info,
-                    const nt::StopPoint* origin,
-                    const nt::StopPoint* destination,
+                    const nt::StopTime* origin,
+                    const nt::StopTime* destination,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period)
@@ -1406,7 +1407,9 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     for(auto message : vj->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
-    pt_display_info->set_headsign(vj->name);
+    if(origin != nullptr) {
+        pt_display_info->set_headsign(data.pt_data->headsign_handler.get_headsign(*origin));
+    }
     pt_display_info->set_direction(vj->get_direction());
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){
         pt_display_info->set_physical_mode(vj->journey_pattern->physical_mode->name);
@@ -1415,7 +1418,9 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     pt_display_info->set_description(vj->odt_message);
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if(origin && destination){
-        fill_pb_object(vj, data, has_equipments, origin, destination,  max_depth-1, now, action_period);
+        fill_pb_object(vj, data, has_equipments, origin->journey_pattern_point->stop_point,
+                       destination->journey_pattern_point->stop_point,  max_depth-1, now,
+                       action_period);
     }else{
         fill_pb_object(vj, data, has_equipments, max_depth-1, now, action_period);
     }
@@ -1500,16 +1505,6 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
     }
 
-}
-
-void fill_pb_object(const nt::VehicleJourney* vj,
-                    const nt::Data& data,
-                    pbnavitia::PtDisplayInfo* pt_display_info,
-                    int max_depth,
-                    const pt::ptime& now,
-                    const pt::time_period& action_period)
-{
-    fill_pb_object(vj, data, pt_display_info, nullptr, nullptr, max_depth, now, action_period);
 }
 
 void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,

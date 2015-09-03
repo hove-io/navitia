@@ -405,22 +405,18 @@ struct routing_api_data {
         b.sa("stopB", B.lon(), B.lat());
         if (activate_pt) {
             //we add a very fast bus (2 seconds) to be faster than walking and biking
-            b.vj("A")
-                ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
-                ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            b.vj("A")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
+            b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
+                                b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
             //add another bus, much later. we'll use that one for disruptions
-            b.vj("B")
-                ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
-                ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
+            b.vj("B")("stop_point:stopB", "18:01"_t)("stop_point:stopA", "18:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["B"]->code = "1B";
 
-            b.vj("C")
-                ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
-                ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            b.vj("C")("stop_point:stopA", "08:01"_t)("stop_point:stopB", "08:01:02"_t)
                 .st_shape({A, I, B});
             b.lines["C"]->code = "1C";
 
@@ -428,9 +424,7 @@ struct routing_api_data {
 
             b.sa("stopC", J.lon(), J.lat());
             //and we add some one vj from a to D with a metro
-            auto& builder_vj = b.vj("D")
-                ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
-                ("stop_point:stopC", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            auto& builder_vj = b.vj("D")("stop_point:stopA", "08:01"_t)("stop_point:stopC", "08:01:02"_t)
                 .st_shape({A, K, J});
             b.lines["D"]->code = "1D";
             auto jp_d = builder_vj.vj->journey_pattern;
