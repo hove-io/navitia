@@ -52,6 +52,13 @@ struct Calendar;
 
 /**
  * Code container
+ *
+ * PT objects can contain different codes (from different source,
+ * typically).  For example, stop_areas can have UIC codes.  This
+ * container manage, for a subset of pt_types, these codes.  You can
+ * get all the codes of a given object, or searching objects of a
+ * given pt_type for a code type and its value (for example, the
+ * stop_areas that have the UIC code '8727100')
  */
 struct CodeContainer {
     using Codes = std::map<std::string, std::vector<std::string>>;
