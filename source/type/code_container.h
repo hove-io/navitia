@@ -81,7 +81,7 @@ struct CodeContainer {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & obj_map;
+        ar & obj_map & code_map;
     }
 
 private:
