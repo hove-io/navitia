@@ -3,6 +3,10 @@
 #include "type/datetime.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <set>
+#include <vector>
+#include <map>
+
 /*
  * Utilities for tests
  */
@@ -52,7 +56,7 @@ template<typename K, typename V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
     os << "{";
     auto it = m.cbegin(), end = m.cend();
-    if (it != end) { os << it++; }
+    if (it != end) { os << *it++; }
     for (; it != end; ++it) { os << ", " << *it; }
     return os << "}";
 }

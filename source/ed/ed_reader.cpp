@@ -207,55 +207,33 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 
 }
 
-void EdReader::fill_object_codes(navitia::type::Data&, pqxx::work& work){
+// The pqxx::const_result_iterator is not always named the same, thus,
+// we just use poor man's type inference.  Love the .template syntax.
+template<typename Map, typename PqxxIt>
+static void add_code(const Map& map, const PqxxIt& db_it, nt::Data& data) {
+    auto search = map.find(db_it["object_id"].template as<idx_t>());
+    if (search != map.end()) {
+        data.pt_data->codes.add(search->second,
+                                db_it["key"].template as<std::string>(),
+                                db_it["value"].template as<std::string>());
+    }
+}
+
+void EdReader::fill_object_codes(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select object_type_id, object_id, key, value from navitia.object_code";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Type_e object_type_e = static_cast<nt::Type_e>(const_it["object_type_id"].as<int>());
         switch(object_type_e) {
-        case nt::Type_e::Line:{
-            auto it_object = this->line_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->line_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
-        case nt::Type_e::Route:{
-            auto it_object = this->route_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->route_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
-        case nt::Type_e::Network:{
-            auto it_object = this->network_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->network_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
-        case nt::Type_e::VehicleJourney:{
-            auto it_object = this->vehicle_journey_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->vehicle_journey_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
-        case nt::Type_e::StopArea:{
-            auto it_object = this->stop_area_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->stop_area_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
-        case nt::Type_e::StopPoint:{
-            auto it_object = this->stop_point_map.find(const_it["object_id"].as<idx_t>());
-            if (it_object != this->stop_point_map.end()){
-                it_object->second->codes[const_it["key"].as<std::string>()] = const_it["value"].as<std::string>();
-            }
-        }
-        break;
+        case nt::Type_e::StopArea: add_code(this->stop_area_map, const_it, data); break;
+        case nt::Type_e::Network: add_code(this->network_map, const_it, data); break;
+        case nt::Type_e::Company: add_code(this->company_map, const_it, data); break;
+        case nt::Type_e::Line: add_code(this->line_map, const_it, data); break;
+        case nt::Type_e::Route: add_code(this->route_map, const_it, data); break;
+        case nt::Type_e::VehicleJourney: add_code(this->vehicle_journey_map, const_it, data); break;
+        case nt::Type_e::StopPoint: add_code(this->stop_point_map, const_it, data); break;
+        case nt::Type_e::Calendar: add_code(this->calendar_map, const_it, data); break;
         default: break;
         }
     }

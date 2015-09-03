@@ -149,11 +149,6 @@ struct Header {
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
 };
 
-struct Codes {
-    std::map<std::string, std::string> codes;
-};
-
-
 typedef std::bitset<10> Properties;
 struct hasProperties {
     static const uint8_t WHEELCHAIR_BOARDING = 0;
@@ -356,7 +351,7 @@ struct JourneyPatternPoint;
 struct VehicleJourney;
 struct StopTime;
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
+struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
@@ -377,7 +372,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
         // stop_point_connection_list is managed by StopPointConnection
         // journey_pattern_point_list is managed by JourneyPatternPoint
         ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
-            & admin_list & _properties & impacts & codes;
+            & admin_list & _properties & impacts;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
@@ -458,7 +453,7 @@ inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
 }
 
 
-struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
+struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
     std::string additional_data;
@@ -471,8 +466,8 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & label & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & impacts & visible
-                & codes & timezone;
+            & _properties & wheelchair_boarding & impacts & visible
+            & timezone;
     }
 
     std::vector<StopPoint*> stop_point_list;
@@ -480,7 +475,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
-struct Network : public Header, HasMessages, Codes{
+struct Network : public Header, HasMessages {
     std::string name;
     const static Type_e type = Type_e::Network;
     std::string address_name;
@@ -496,7 +491,7 @@ struct Network : public Header, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & sort & line_list & impacts & codes;
+            & mail & website & fax & sort & line_list & impacts;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -521,7 +516,7 @@ struct Contributor : public Header, Nameable{
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
-struct Company : public Header, Nameable, Codes{
+struct Company : public Header, Nameable {
     const static Type_e type = Type_e::Company;
     std::string address_name;
     std::string address_number;
@@ -535,7 +530,7 @@ struct Company : public Header, Nameable, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number &
-        address_type_name & phone_number & mail & website & fax & codes & line_list;
+        address_type_name & phone_number & mail & website & fax & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Company & other) const { return this < &other; }
@@ -599,7 +594,7 @@ struct hasOdtProperties {
 
 struct LineGroup;
 
-struct Line : public Header, Nameable, HasMessages, Codes{
+struct Line : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Line;
     std::string code;
     std::string forward_name;
@@ -628,7 +623,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & impacts & calendar_list & codes & shape & closing_time
+                & impacts & calendar_list & shape & closing_time
                 & opening_time & properties & line_group_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -664,7 +659,7 @@ struct LineGroup : public Header, Nameable{
     bool operator<(const LineGroup & other) const { return this < &other; }
 };
 
-struct Route : public Header, Nameable, HasMessages, Codes{
+struct Route : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Route;
     Line* line = nullptr;
     StopArea* destination = nullptr;
@@ -674,7 +669,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & codes & shape;
+        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -695,7 +690,7 @@ struct MetaVehicleJourney;
  *
  * The JourneyPattern owns 2 differents list for the VJs, and both are treated differently in the algorithm (in best_stop_times)
  */
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes {
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages {
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern = nullptr;
     Company* company = nullptr;
@@ -745,7 +740,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
-            & codes & next_vj & prev_vj
+            & next_vj & prev_vj
             & meta_vj & utc_to_local_offset
             & impacted_by;
     }

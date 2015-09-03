@@ -170,7 +170,7 @@ class Uri(ResourceUri, ResourceUtc):
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
             args["filter"] = self.get_filter(uris, args)
         if collection and id:
-            f = '{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
+            f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
             if args.get("filter"):
                 args["filter"] += " and " + f
             else:

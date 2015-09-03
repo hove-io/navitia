@@ -39,6 +39,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
 #include "comment_container.h"
+#include "code_container.h"
 #include "headsign_handler.h"
 
 #include <boost/serialization/map.hpp>
@@ -56,7 +57,6 @@ namespace type {
 
 typedef std::map<std::string, std::string> code_value_map_type;
 typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
-typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_type> ext_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
@@ -79,7 +79,6 @@ struct PT_Data : boost::noncopyable{
     }
     ITERATE_NAVITIA_PT_TYPES(ERASE_OBJ)
 
-    ext_codes_map_type ext_codes_map;
     std::vector<StopPointConnection*> stop_point_connections;
 
     // meta vj map
@@ -109,6 +108,9 @@ struct PT_Data : boost::noncopyable{
     // Comments container
     Comments comments;
 
+    // Code container
+    CodeContainer codes;
+
     // Headsign handler
     HeadsignHandler headsign_handler;
 
@@ -116,7 +118,7 @@ struct PT_Data : boost::noncopyable{
         ar
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
-                & ext_codes_map & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
+                & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
@@ -124,6 +126,7 @@ struct PT_Data : boost::noncopyable{
                 & meta_vj
                 & stop_points_by_area
                 & comments
+                & codes
                 & headsign_handler;
     }
 
