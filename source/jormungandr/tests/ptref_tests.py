@@ -184,9 +184,10 @@ class TestPtRef(AbstractTestFixture):
 
         assert len(routes) == 3
 
-        r = routes[2]
+        r = [r for r in routes if r['id'] == 'line:A:0']
+        assert len(r) == 1
+        r = r[0]
         is_valid_route(r, depth_check=1)
-        assert r['id'] == 'line:A:0'
 
         #we know we have a geojson for this test so we can check it
         geo = get_not_null(r, 'geojson')
