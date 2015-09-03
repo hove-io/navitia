@@ -338,6 +338,16 @@ class TestPtRef(AbstractTestFixture):
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
 
+@dataset(["main_ptref_test", "main_routing_test"])
+class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
+    def test_external_code(self):
+        """test the strange and ugly external code api"""
+        response = self.query("v1/lines?external_code=A&show_codes=true")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert 'A' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'external_code']
+
+
 @dataset(["main_routing_test"])
 class TestPtRefRoutingCov(AbstractTestFixture):
 
