@@ -48,14 +48,16 @@ BOOST_AUTO_TEST_CASE(test1){
     for(auto jpp : b.data->pt_data->journey_pattern_points)
         jpps.push_back(jpp->idx);
 
-    auto result = get_stop_times(jpps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    auto result = get_stop_times(true, jpps, navitia::DateTimeUtils::min,
+                                 navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
                             [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 0;}));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
                             [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 1;}));
 
-    result = get_stop_times(jpps, navitia::DateTimeUtils::set(0, 86399), navitia::DateTimeUtils::min, 100, *b.data, false, {}, false);
+    result = get_stop_times(false, jpps, navitia::DateTimeUtils::set(0, 86399),
+                            navitia::DateTimeUtils::min, 100, *b.data, false, {});
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
                             [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 1;}));

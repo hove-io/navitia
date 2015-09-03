@@ -61,7 +61,8 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
                [&](type::idx_t idx){return departure_idx_arrival_order.find(idx) == departure_idx_arrival_order.end(); });
 
     //On demande tous les next_departures
-    auto departure_dt_st = get_stop_times(departure_journey_pattern_points, datetime, max_datetime, std::numeric_limits<int>::max(), data, disruption_active);
+    auto departure_dt_st = get_stop_times(true, departure_journey_pattern_points, datetime, max_datetime,
+                                          std::numeric_limits<int>::max(), data, disruption_active);
 
     //On va chercher les retours
     for(auto dep_dt_st : departure_dt_st) {

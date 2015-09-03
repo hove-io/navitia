@@ -59,18 +59,19 @@ next_passages(const std::string &request,
     std::remove_if(handler.journey_pattern_points.begin(),
                    handler.journey_pattern_points.end(), vis.predicate);
 
-    auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
-                            handler.date_time, handler.max_datetime,
-                            nb_stoptimes, data, disruption_active, accessibilite_params);
+    const bool is_on_departures(vis.api_pb == pbnavitia::NEXT_DEPARTURES);
+    auto passages_dt_st = get_stop_times(is_on_departures, handler.journey_pattern_points,
+                                         handler.date_time, handler.max_datetime, nb_stoptimes,
+                                         data, disruption_active, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(vis.api_pb == pbnavitia::NEXT_ARRIVALS) {
-            passage = handler.pb_response.add_next_arrivals();
-        } else {
+        if(is_on_departures) {
             passage = handler.pb_response.add_next_departures();
+        } else {
+            passage = handler.pb_response.add_next_arrivals();
         }
         pt::time_period action_period(navitia::to_posix_time(dt_stop_time.first, data), pt::seconds(1));
         auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);

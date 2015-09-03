@@ -67,9 +67,8 @@ get_all_stop_times(const vector_idx& journey_patterns,
     if(!calendar_id) {
         // If there is no calendar we get all stop times in
         // the desired timeframe
-        first_dt_st = get_stop_times(first_journey_pattern_points,
-                                          dateTime, max_datetime,
-                                          max_stop_date_times, d, disruption_active);
+        first_dt_st = get_stop_times(true, first_journey_pattern_points, dateTime, max_datetime,
+                                     max_stop_date_times, d, disruption_active);
     }
     else {
         // Otherwise we only take stop_times in a vehicle_journey associated to
