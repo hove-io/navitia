@@ -261,14 +261,14 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     b.finish();
 
     auto indexes = make_query(navitia::type::Type_e::Line, "line.uri=A", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list.size(), 2);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list.size(), 2);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list[0]->name, "Car");
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list[1]->name, "Metro");
 
     indexes = make_query(navitia::type::Type_e::Line, "line.uri=C", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list.size(), 1);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->physical_mode_list[0]->name, "Tram");
 }
 
