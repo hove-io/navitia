@@ -537,8 +537,9 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         """test basic print of headsign in display informations for arrivals"""
         response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
         assert 'error' not in response
-        #test only that it is filled, and trust tests on departures for exactness
-        assert all(a['display_informations']['headsign'] is not None for a in response['arrivals'])
+        arrivals = get_not_null(response, 'arrivals')
+        eq_(len(arrivals), 1)
+        eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 2")
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""
