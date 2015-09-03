@@ -467,6 +467,9 @@ class StatManager(object):
         pbf = stat_request.SerializeToString()
         with self.lock:
             try:
+                if self.producer is None:
+                    #if the initialization failed we have to retry the creation of the objects
+                    self._init_rabbitmq()
                 self.producer.publish(pbf)
             except self.connection.connection_errors + self.connection.channel_errors:
                 logging.getLogger(__name__).exception('Server went away, will be reconnected..')
