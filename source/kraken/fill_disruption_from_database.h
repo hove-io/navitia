@@ -63,10 +63,13 @@ namespace navitia {
         std::unique_ptr<chaos::Disruption> disruption = nullptr;
         chaos::Impact* impact = nullptr;
         chaos::Tag* tag = nullptr;
+        chaos::Message* message = nullptr;
+        chaos::Channel* channel = nullptr;
 
         std::string last_message_id = "",
                     last_ptobject_id = "",
-                    last_period_id = "";
+                    last_period_id = "",
+                    last_channel_type_id = "";
         type::PT_Data& pt_data;
         const type::MetaData& meta;
 
@@ -78,7 +81,7 @@ namespace navitia {
                 fill_disruption(const_it);
                 fill_cause(const_it);
                 tag = nullptr;
-                impact = nullptr;
+                impact = nullptr;                
             }
 
             if (disruption && !const_it["tag_id"].is_null() && (!tag ||
@@ -92,6 +95,9 @@ namespace navitia {
                 last_period_id = "";
                 last_ptobject_id = "";
                 last_message_id = "";
+                last_channel_type_id = "";
+                message = nullptr;
+                channel = nullptr;
             }
 
             if (impact && (last_period_id != const_it["application_id"].template as<std::string>())) {
@@ -102,7 +108,15 @@ namespace navitia {
             }
             if (impact && !const_it["message_id"].is_null() &&
                     (last_message_id != const_it["message_id"].template as<std::string>())) {
-                fill_message(const_it);
+                message = impact->add_messages();
+                fill_message(const_it, message);
+                channel = message->mutable_channel();
+                fill_channel(const_it, channel);
+            }
+            if (impact && channel &&
+                    (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
+                fill_channel_type(const_it, channel);
+                last_channel_type_id = const_it["channel_type_id"].template as<std::string>();
             }
         }
 
@@ -234,12 +248,10 @@ namespace navitia {
         }
 
         template<typename T>
-        void fill_message(T const_it) {
-            auto message = impact->add_messages();
+        void fill_message(T const_it, chaos::Message* message) {
             FILL_REQUIRED(message, text, std::string)
             FILL_NULLABLE(message, created_at, uint64_t)
             FILL_NULLABLE(message, updated_at, uint64_t)
-            fill_channel(const_it, message->mutable_channel());
             last_message_id = const_it["message_id"].template as<std::string>();
         }
 
@@ -250,6 +262,28 @@ namespace navitia {
             FILL_REQUIRED(channel, name, std::string)
             FILL_NULLABLE(channel, content_type, std::string)
             FILL_NULLABLE(channel, max_size, uint32_t)
+        }
+
+        template<typename T>
+        void fill_channel_type(T const_it, chaos::Channel* channel) {
+            const auto& type_ = const_it["channel_type"].template as<std::string>();
+            if (type_ == "web"){
+                channel->add_types(chaos::Channel_Type_web);
+            } else if (type_ == "sms") {
+                channel->add_types(chaos::Channel_Type_sms);
+            } else if (type_ == "email") {
+                channel->add_types(chaos::Channel_Type_email);
+            } else if (type_ == "mobile") {
+                channel->add_types(chaos::Channel_Type_mobile);
+            } else if (type_ == "notification") {
+                channel->add_types(chaos::Channel_Type_notification);
+            } else if (type_ == "twitter") {
+                channel->add_types(chaos::Channel_Type_twitter);
+            } else if (type_ == "facebook") {
+                channel->add_types(chaos::Channel_Type_facebook);
+            } else {
+                channel->add_types(chaos::Channel_Type_unkown_type);
+            }
         }
 
     };

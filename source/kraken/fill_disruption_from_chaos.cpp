@@ -209,6 +209,39 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
+std::vector<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+    std::vector<navitia::type::new_disruption::ChannelType> res;
+    for (const auto channel_type: chaos_channel.types()){
+        switch(channel_type){
+        case chaos::Channel_Type_web:
+            res.push_back(nt::new_disruption::ChannelType::web);
+            break;
+        case chaos::Channel_Type_sms:
+            res.push_back(nt::new_disruption::ChannelType::sms);
+            break;
+        case chaos::Channel_Type_email:
+            res.push_back(nt::new_disruption::ChannelType::email);
+            break;
+        case chaos::Channel_Type_mobile:
+            res.push_back(nt::new_disruption::ChannelType::mobile);
+            break;
+        case chaos::Channel_Type_notification:
+            res.push_back(nt::new_disruption::ChannelType::notification);
+            break;
+        case chaos::Channel_Type_twitter:
+            res.push_back(nt::new_disruption::ChannelType::twitter);
+            break;
+        case chaos::Channel_Type_facebook:
+            res.push_back(nt::new_disruption::ChannelType::facebook);
+            break;
+        case chaos::Channel_Type_unkown_type:
+            res.push_back(nt::new_disruption::ChannelType::unkown_type);
+            break;
+        }
+    }
+    return res;
+}
+
 static boost::shared_ptr<nt::new_disruption::Impact>
 make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     auto from_posix = navitia::from_posix_timestamp;
@@ -225,6 +258,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     impact->informed_entities = make_pt_objects(chaos_impact.informed_entities(), pt_data, impact);
     for (const auto& chaos_message: chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
+        auto channel_types = create_channel_types(channel);
         impact->messages.push_back({
             chaos_message.text(),
             channel.id(),
@@ -232,6 +266,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
             channel.content_type(),
             from_posix(chaos_message.created_at()),
             from_posix(chaos_message.updated_at()),
+            channel_types
         });
     }
 
