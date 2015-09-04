@@ -162,8 +162,13 @@ void MaintenanceWorker::init_rabbitmq(){
     if(!is_initialized){
         //first we have to delete the queues, binding can change between two run, and it's don't seem possible
         //to unbind a queue if we don't know at what topic it's subscribed
-        channel->DeleteQueue(queue_name_task);
-        channel->DeleteQueue(queue_name_rt);
+        //if the queue doesn't exist an exception is throw...
+        try{
+            channel->DeleteQueue(queue_name_task);
+        }catch(const std::runtime_error& ex){}
+        try{
+            channel->DeleteQueue(queue_name_rt);
+        }catch(const std::runtime_error& ex){}
 
         this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
