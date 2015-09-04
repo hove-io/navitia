@@ -30,12 +30,15 @@
 # www.navitia.io
 
 import uuid
+import re
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
-from sqlalchemy import func, and_, UniqueConstraint
+from sqlalchemy import func, and_, UniqueConstraint, cast
+from sqlalchemy.dialects.postgresql import ARRAY
+
 from navitiacommon import default_values
 
 db = SQLAlchemy()
@@ -43,6 +46,25 @@ db = SQLAlchemy()
 class TimestampMixin(object):
     created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
+
+
+# https://bitbucket.org/zzzeek/sqlalchemy/issues/3467/array-of-enums-does-not-allow-assigning
+class ArrayOfEnum(ARRAY):
+    def bind_expression(self, bindvalue):
+        return cast(bindvalue, self)
+
+    def result_processor(self, dialect, coltype):
+        super_rp = super(ArrayOfEnum, self).result_processor(dialect, coltype)
+
+        def handle_raw_string(value):
+            if value==None:
+                return []
+            inner = re.match(r"^{(.*)}$", value).group(1)
+            return inner.split(",")
+
+        def process(value):
+            return super_rp(handle_raw_string(value))
+        return process
 
 
 class EndPoint(db.Model):
@@ -261,6 +283,58 @@ class Instance(db.Model):
 
     def __repr__(self):
         return '<Instance %r>' % self.name
+
+
+class TravelerProfile(db.Model):
+    # http://stackoverflow.com/questions/24872541/could-not-assemble-any-primary-key-columns-for-mapped-table
+    __tablename__ = 'traveler_profile'
+    coverage_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
+    traveler_type = db.Column('traveler_type',
+                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage', 'wheelchair',
+                                      # Temporary Profiles
+                                      'cyclist', 'motorist',
+                                      name='traveler_type'),
+                              default='standard', nullable=False)
+
+    __table_args__ = (db.PrimaryKeyConstraint('coverage_id', 'traveler_type'), )
+
+    walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
+
+    bike_speed = db.Column(db.Float, default=default_values.bike_speed, nullable=False)
+
+    bss_speed = db.Column(db.Float, default=default_values.bss_speed, nullable=False)
+
+    car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
+
+    wheelchair = db.Column(db.Boolean, default=False, nullable=False)
+
+    max_walking_duration_to_pt = db.Column(db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False)
+
+    max_bike_duration_to_pt = db.Column(db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False)
+
+    max_bss_duration_to_pt = db.Column(db.Integer, default=default_values.max_bss_duration_to_pt, nullable=False)
+
+    max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
+
+    fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', name='fallback_mode')
+
+    first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
+
+    last_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
+
+    @classmethod
+    def get_by_coverage_and_type(cls, coverage, traveler_type):
+        model = cls.query.join(Instance).filter(
+            and_(Instance.name == coverage,
+                 cls.traveler_type == traveler_type)
+        ).first()
+        return model
+
+    @classmethod
+    def get_all_by_coverage(cls, coverage):
+        models = cls.query.join(Instance).filter(
+            and_(Instance.name == coverage))
+        return models
 
 
 class Api(db.Model):

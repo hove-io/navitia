@@ -95,7 +95,6 @@ def has_car_and_tc(journey):
     for section in journey.sections:
         if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
                 and section.street_network.mode == response_pb2.Car:
-            #if we take a bike before renting a bss then we have a bike mode and not a bss
             has_car = True
         if section.type == response_pb2.PUBLIC_TRANSPORT:
             has_tc = True

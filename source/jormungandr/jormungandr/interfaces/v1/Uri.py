@@ -50,15 +50,18 @@ from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
+from jormungandr.utils import date_to_timestamp, ResourceUtc
 import navitiacommon.type_pb2 as type_pb2
 from datetime import datetime
 
-class Uri(ResourceUri):
+
+class Uri(ResourceUri, ResourceUtc):
     parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
         kwargs['authentication'] = False
         ResourceUri.__init__(self, *args, **kwargs)
+        ResourceUtc.__init__(self)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser = self.parsers["get"]
@@ -81,6 +84,8 @@ class Uri(ResourceUri):
                             action="append")
         parser.add_argument("external_code", type=unicode,
                             description="An external code to query")
+        parser.add_argument("headsign", type=unicode,
+                            description="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser.add_argument("odt_level", type=option_value(odt_levels),
@@ -94,6 +99,10 @@ class Uri(ResourceUri):
                                             " else we consider it as UTC")
         parser.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
+        parser.add_argument("since", type=date_time_format,
+                            description="filters objects not valid before this date")
+        parser.add_argument("until", type=date_time_format,
+                            description="filters objects not valid after this date")
 
         if is_collection:
             parser.add_argument("filter", type=str, default="",
@@ -105,6 +114,14 @@ class Uri(ResourceUri):
         collection = self.collection
 
         args = self.parsers["get"].parse_args()
+
+        # handle headsign
+        if args.get("headsign"):
+            f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))
+            if args.get("filter"):
+                args["filter"] += " and " + f
+            else:
+                args["filter"] = f
 
         # for retrocompatibility purpose
         for forbid_id in args.get('forbidden_ids[]', []):
@@ -135,20 +152,30 @@ class Uri(ResourceUri):
         #we store the region in the 'g' object, which is local to a request
         set_request_timezone(self.region)
 
+        # change dt to utc
+        if args['since']:
+            args['_original_since'] = args['since']
+            args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
+        if args['until']:
+            args['_original_until'] = args['until']
+            args['until'] = date_to_timestamp(self.convert_to_utc(args['until']))
+
         if not self.region:
             return {"error": "No region"}, 404
-        if collection and id:
-            args["filter"] = collections_to_resource_type[collection] + ".uri="
-            args["filter"] += protect(id)
-        elif uri:
+        if uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
             args["filter"] = self.get_filter(uris, args)
-        #else:
-        #    abort(503, message="Not implemented")
+        if collection and id:
+            f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
+            if args.get("filter"):
+                args["filter"] += " and " + f
+            else:
+                args["filter"] = f
+
         response = i_manager.dispatch(args, collection,
                                       instance_name=self.region)
         return response

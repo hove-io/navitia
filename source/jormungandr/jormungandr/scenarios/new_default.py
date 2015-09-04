@@ -35,6 +35,9 @@ from jormungandr.scenarios import simple, journey_filter
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
     fill_uris
 from navitiacommon import type_pb2, response_pb2, request_pb2
+from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
+    duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
+    has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 
 
 def get_kraken_calls(request):
@@ -180,6 +183,114 @@ def nb_journeys(responses):
     return sum(len(r.journeys) for r in responses)
 
 
+def type_journeys(resp, req):
+    """
+    Set the type of the journeys
+    """
+    best_crit = arrival_crit if req["clockwise"] else departure_crit
+    # first, we want a type for every journey. Just pick "rapid" by default.
+    for j in resp.journeys:
+        j.type = "rapid"
+
+    # Then, we want something like the old types
+    trip_caracs = [
+        # comfort tends to limit the number of transfers and fallback
+        ("comfort", trip_carac([
+            has_no_car,
+        ], [
+            transfers_crit,
+            nonTC_crit,
+            best_crit,
+            duration_crit
+        ])),
+        # for car we want at most one journey, the earliest one
+        ("car", trip_carac([
+            has_car,
+            has_pt,  # We don't want car only solution, we MUST have PT
+        ], [
+            best_crit,
+            transfers_crit,
+            nonTC_crit,
+            duration_crit
+        ])),
+        # less_fallback tends to limit the fallback while walking
+        ("less_fallback_walk", trip_carac([
+            has_no_car,
+            has_no_bike,
+        ], [
+            nonTC_crit,
+            transfers_crit,
+            duration_crit,
+            best_crit,
+        ])),
+        # less_fallback tends to limit the fallback for biking and bss
+        ("less_fallback_bike", trip_carac([
+            has_no_car,
+            has_bike,
+            has_no_bss,
+        ], [
+            nonTC_crit,
+            transfers_crit,
+            duration_crit,
+            best_crit,
+        ])),
+        # less_fallback tends to limit the fallback for biking and bss
+        ("less_fallback_bss", trip_carac([
+            has_no_car,
+            has_bss,
+        ], [
+            nonTC_crit,
+            transfers_crit,
+            duration_crit,
+            best_crit,
+        ])),
+        # the fastest is quite explicit
+        ("fastest", trip_carac([
+            has_no_car,
+        ], [
+            duration_crit,
+            transfers_crit,
+            nonTC_crit,
+            best_crit,
+        ])),
+        # the non_pt journeys is the earliest journey without any public transport
+        ("non_pt_walk", trip_carac([
+            non_pt_journey,
+            has_no_car,
+            has_walk
+        ], [
+            best_crit
+        ])),
+        # the non_pt journey is the earliest journey without any public transport
+        # only walking, biking or driving
+        ("non_pt_bike", trip_carac([
+            non_pt_journey,
+            has_no_car,
+            has_bike
+        ], [
+            best_crit
+        ])),
+        ("non_pt_bss", trip_carac([
+            non_pt_journey,
+            has_no_car,
+            has_bss,
+        ], [
+            best_crit
+        ])),
+    ]
+
+    for name, carac in trip_caracs:
+        sublist = filter(and_filters(carac.constraints), resp.journeys)
+        best = min_from_criteria(sublist, carac.criteria)
+        if best is not None:
+            best.type = name
+
+    # Finally, we want exactly one best, the ASAP one
+    best = min_from_criteria(resp.journeys, [best_crit, duration_crit, transfers_crit, nonTC_crit])
+    if best is not None:
+        best.type = "best"
+
+
 def merge_responses(responses):
     """
     Merge all responses in one protobuf response
@@ -262,6 +373,7 @@ class Scenario(simple.Scenario):
         sort_journeys(pb_resp, instance.journey_order, request['clockwise'])
         tag_journeys(pb_resp)
         culling_journeys(pb_resp, request)
+        type_journeys(pb_resp, request)
 
         return pb_resp
 

@@ -170,23 +170,9 @@ void PT_Data::build_admins_stop_areas(){
     }
 }
 
-template<typename T>
-void fill_ext_code_map(navitia::type::ext_codes_map_type& ext_codes_map, const T& range, const pbnavitia::PlaceCodeRequest::Type& type) {
-    for (auto atom: range)
-        for (auto type_code: atom->codes)
-            ext_codes_map[type][type_code.first][type_code.second] = atom->uri;
-}
-
 void PT_Data::build_uri() {
 #define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto element : collection_name) collection_name##_map[element->uri] = element;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
-    fill_ext_code_map(ext_codes_map, stop_areas, pbnavitia::PlaceCodeRequest::StopArea);
-    fill_ext_code_map(ext_codes_map, networks, pbnavitia::PlaceCodeRequest::Network);
-    fill_ext_code_map(ext_codes_map, companies, pbnavitia::PlaceCodeRequest::Company);
-    fill_ext_code_map(ext_codes_map, lines, pbnavitia::PlaceCodeRequest::Line);
-    fill_ext_code_map(ext_codes_map, routes, pbnavitia::PlaceCodeRequest::Route);
-    fill_ext_code_map(ext_codes_map, vehicle_journeys, pbnavitia::PlaceCodeRequest::VehicleJourney);
-    fill_ext_code_map(ext_codes_map, stop_points, pbnavitia::PlaceCodeRequest::StopPoint);
 }
 
 /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1

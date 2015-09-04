@@ -296,6 +296,7 @@ Collections
 * commercial_modes
 * physical_modes
 * companies
+* vehicle_journeys
 
 Specific parameters
 ###################
@@ -338,6 +339,37 @@ ________
 If you specify coords in your filter, you can modify the radius used for the proximity search.
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
 
+headsign
+________
+
+- Type: `String`
+
+If given, add a filter on the vehicle journeys that has the given
+value as headsign (on vehicle journey itself or at a stop time).
+
+Examples:
+
+* http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE
+* http://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE
+
+Warning: this last request gives the stop areas used by the vehicle
+journeys containing the headsign `CANE`, *not* the stop areas where it
+exists a stop time with the headsign `CANE`.
+
+since / until
+_____________
+
+- Type: `datetime`
+
+To be used only on "vehicle_journeys" collection, to filter on a period.
+Both parameters "until" and "since" are optional.
+
+Example:
+
+* https://api.navitia.io/v1/coverage/fr_idf/vehicle_journeys?since=20150912T120000&until=20150913T110000
+
+Warning: this filter is applied using only the first stop time of a vehicle journey,
+"since" is included and "until" is excluded.
 
 Filter
 ######
@@ -653,7 +685,7 @@ https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575
 Journeys (/journeys)
 ********************
 
-This api commutes journeys.
+This api computes journeys.
 
 If used within the coverage api, it will retrieve the next journeys from 
 the selected public transport object or coordinates.
@@ -869,12 +901,13 @@ ______________
 |                         |                                    | * ``waiting``: waiting section between transport   |
 |                         |                                    | * ``stay_in``: this "stay in the vehicle" section  |
 |                         |                                    |   occurs when the traveller has to stay in the     |
-|                         |                                    |   vehicle when the bus change its routing          |
+|                         |                                    |   vehicle when the bus change its routing.         |
 |                         |                                    |   Here is an exemple for a journey from A to B:    |
+|                         |                                    |   (lollipop line)                                  |
 |                         |                                    |                                                    |
 |                         |                                    |   .. image:: stay_in.png                           |
 |                         |                                    |                                                    |
-|                         |                                    | * ``transfer``: transfert section                  |      
+|                         |                                    | * ``transfer``: transfert section                  | 
 |                         |                                    | * ``crow_fly``: teleportation section.             |
 |                         |                                    |   Used when starting or arriving to a city or a    |
 |                         |                                    |   stoparea ("potato shaped" objects)               |

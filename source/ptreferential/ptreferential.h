@@ -56,22 +56,28 @@ www.navitia.io
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
 
-// Un filter est du type stop_area.uri = "kikoolol"
+// Filter is something like `stop_area.uri = "kikoolol"` or `vehicle_journey.has_headsign("john")`
 struct Filter {
-    navitia::type::Type_e navitia_type; //< Le type parsé
-    std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")
-    std::string attribute; //< L'attribu ("uri")
-    Operator_e op; //< la comparaison ("=")
-    std::string value; //< la valeur comparée ("kikoolol")
+    navitia::type::Type_e navitia_type; // parsed type
+    std::string object; // concerned object ("stop_area", "vehicle_journey")
+    std::string attribute; // Attribute ("uri")
+    Operator_e op; // comparison operator ("=")
+    std::string value; // right value compared ("kikoolol") or arg used in method ("john")
+    std::string method; // method called (has_headsign)
+    std::vector<std::string> args; // method arguments
 
-    Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
-    Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
-    Filter(std::string value) : object("journey_pattern_point"), op(AFTER), value(value) {}
+    Filter(std::string object, std::string attribute, Operator_e op, std::string value):
+        object(std::move(object)), attribute(std::move(attribute)), op(op), value(std::move(value)) {}
+    Filter(std::string object, std::string value):
+        object(std::move(object)), op(HAVING), value(std::move(value)) {}
+    Filter(std::string value): object("journey_pattern_point"), op(AFTER), value(std::move(value)) {}
+    Filter(std::string object, std::string method, std::vector<std::string> args):
+        object(std::move(object)), method(std::move(method)), args(std::move(args)) {}
 
     Filter() {}
 };
 
-//@TODO heriter de navitia::exception
+//@TODO inherit from navitia::exception
 struct ptref_error : public std::exception {
     std::string more;
 
@@ -95,20 +101,22 @@ struct parsing_error : public ptref_error{
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::OdtLevel_e odt_level,
-                                    const type::Data &data);
+                                    const boost::optional<boost::posix_time::ptime>& since,
+                                    const boost::optional<boost::posix_time::ptime>& until,
+                                    const type::Data& data);
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
-                                    const type::Data &data);
+                                    const type::Data& data);
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
-                                    const type::Data &data);
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
+                                    const type::Data& data);
 
 
 /// Trouve le chemin d'un type de données à un autre

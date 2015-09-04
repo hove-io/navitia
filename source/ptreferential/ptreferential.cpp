@@ -46,8 +46,13 @@ www.navitia.io
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
+#include <boost/date_time/time_duration.hpp>
 #include "type/pt_data.h"
+#include "type/meta_data.h"
+#include <boost/date_time.hpp>
 
+
+namespace bt = boost::posix_time;
 
 namespace navitia{ namespace ptref{
 using namespace navitia::type;
@@ -60,15 +65,15 @@ parsing_error::~parsing_error() noexcept {}
 namespace qi = boost::spirit::qi;
 
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter
-        template <typename Iterator>
-        struct select_r
-            : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
+template <typename Iterator>
+struct select_r: qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
     qi::rule<Iterator, std::string(), qi::space_type> word, text; // Match a simple word, a string escaped by "" or enclosed by ()
     qi::rule<Iterator, std::string()> escaped_string, bracket_string;
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match a binary operator like <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // the complete string to parse
-    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause;
+    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause, method_clause;
+    qi::rule<Iterator, std::vector<std::string>(), qi::space_type> args_clause;
 
     select_r() : select_r::base_type(filter) {
         // Warning, the '-' in a qi::char_ can have a particular meaning as 'a-z'
@@ -88,10 +93,16 @@ namespace qi = boost::spirit::qi;
                 | qi::string("=") [qi::_val = EQ]
                 | qi::string("DWITHIN") [qi::_val = DWITHIN];
 
-        single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
-        having_clause = (word >> "HAVING" >> bracket_string /*'(' >> (word|escaped_string|bracket_string) >> ')'*/)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
+        single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
+        having_clause = (word >> "HAVING" >> bracket_string)
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
-        filter %= (single_clause | having_clause | after_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
+        args_clause = (word|escaped_string|bracket_string)[boost::phoenix::push_back(qi::_val, qi::_1)] % ',';
+        method_clause = (word >> "." >> word >> "(" >> args_clause >> ")")
+            [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter %= (single_clause | having_clause | after_clause | method_clause)
+            % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };
@@ -133,6 +144,32 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
             result.push_back(i);
     }
     return result;
+}
+
+template<typename T>
+static
+typename boost::enable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    std::vector<idx_t>>::type
+get_indexes_from_code(const Data& d, const std::string& key, const std::string& value) {
+    std::vector<idx_t> res;
+    for (const auto* obj: d.pt_data->codes.get_objs<T>(key, value)) {
+        res.push_back(obj->idx);
+    }
+    return res;
+}
+template<typename T>
+static
+typename boost::disable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    std::vector<idx_t>>::type
+get_indexes_from_code(const Data&, const std::string&, const std::string&) {
+    // there is no codes for unsupporded types, thus the result is empty
+    return {};
 }
 
 template<typename T>
@@ -181,6 +218,19 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
                     indexes.push_back(other_jpp->idx);
                 }
             }
+        }
+    } else if(! filter.method.empty()) {
+        if (filter.object == "vehicle_journey"
+            && filter.method == "has_headsign"
+            && filter.args.size() == 1) {
+            for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.args.at(0))) {
+                indexes.push_back(vj->idx);
+            }
+        } else if (filter.method == "has_code" && filter.args.size() == 2) {
+            indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
+        } else {
+            throw parsing_error(parsing_error::partial_error,
+                                "Unknown method " + filter.object + ":" + filter.method);
         }
     }
     else {
@@ -275,10 +325,85 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
     return final_indexes;
 }
 
-std::vector<idx_t> make_query(Type_e requested_type, std::string request,
+static bool keep_vj(const nt::VehicleJourney* vj,
+                    const bt::time_period& period) {
+    if (vj->stop_time_list.empty()) {
+        return false; //no stop time, so it cannot be valid
+    }
+    const auto& first_departure_dt = vj->stop_time_list.front().departure_time;
+
+    for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
+        if (! vj->validity_pattern->check(*it)) { continue; }
+        bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
+        if (period.contains(vj_dt)) { return true; }
+    }
+
+    return false;
+}
+
+static std::vector<idx_t>
+filter_vj_on_period(const std::vector<type::idx_t>& indexes,
+                    const boost::optional<bt::ptime>& since,
+                    const boost::optional<bt::ptime>& until,
+                    const type::Data& data) {
+
+    // we create the right period using since, until and the production period
+    if (since && until && until < since) {
+        throw ptref_error("invalid filtering period");
+    }
+    auto start = bt::ptime(data.meta->production_date.begin());
+    auto end = bt::ptime(data.meta->production_date.end());
+
+    if (since) {
+        if (data.meta->production_date.is_before(since->date())) {
+            throw ptref_error("invalid filtering period, not in production period");
+        }
+        if (since->date() >= data.meta->production_date.begin()) {
+            start = *since;
+        }
+    }
+    if (until) {
+        if (data.meta->production_date.is_after(until->date())) {
+            throw ptref_error("invalid filtering period, not in production period");
+        }
+        if (until->date() <= data.meta->production_date.last()) {
+            end = *until;
+        }
+    }
+    bt::time_period period {start, end};
+
+    std::vector<idx_t> res;
+    for (const idx_t idx: indexes) {
+        const auto* vj = data.pt_data->vehicle_journeys[idx];
+        if (! keep_vj(vj, period)) { continue; }
+        res.push_back(idx);
+    }
+    return res;
+}
+
+static std::vector<idx_t>
+filter_on_period(const std::vector<type::idx_t>& indexes,
+                 const navitia::type::Type_e requested_type,
+                 const boost::optional<boost::posix_time::ptime>& since,
+                 const boost::optional<boost::posix_time::ptime>& until,
+                 const type::Data& data) {
+
+    switch (requested_type) {
+    case nt::Type_e::VehicleJourney:
+        return filter_vj_on_period(indexes, since, until, data);
+    default:
+        throw parsing_error(parsing_error::error_type::global_error,
+                            "cannot filter on validity period for this type");
+    }
+}
+
+std::vector<idx_t> make_query(const Type_e requested_type,
+                              const std::string& request,
                               const std::vector<std::string>& forbidden_uris,
                               const type::OdtLevel_e odt_level,
-                              const Data & data) {
+                              const boost::optional<boost::posix_time::ptime>& since,
+                              const boost::optional<boost::posix_time::ptime>& until,
+                              const Data& data) {
     std::vector<Filter> filters;
 
     if(!request.empty()){
@@ -349,8 +474,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         }
         final_indexes = get_difference(final_indexes, forbidden_idx);
     }
-       // Manage OdtLevel
+    // Manage OdtLevel
     final_indexes = manage_odt_level(final_indexes, requested_type, odt_level, data);
+
+    // filter on validity periods
+    if (since || until) {
+        final_indexes = filter_on_period(final_indexes, requested_type, since, until, data);
+    }
+
     // When the filters have emptied the results
     if(final_indexes.empty()){
         throw ptref_error("Filters: Unable to find object");
@@ -381,15 +512,21 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
     return final_indexes;
 }
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::Data &data) {
-    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, data);
+    return make_query(requested_type,
+                      request,
+                      forbidden_uris,
+                      type::OdtLevel_e::all,
+                      boost::none,
+                      boost::none,
+                      data);
 }
 
-std::vector<type::idx_t> make_query(type::Type_e requested_type,
-                                    std::string request,
+std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+                                    const std::string& request,
                                     const type::Data &data) {
     const std::vector<std::string> forbidden_uris;
     return make_query(requested_type, request, forbidden_uris, data);

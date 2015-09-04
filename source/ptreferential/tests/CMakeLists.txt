@@ -1,5 +1,5 @@
 
-add_executable(ptref_test ptret_test.cpp)
+add_executable(ptref_test ptref_test.cpp)
 target_link_libraries(ptref_test ed ptreferential data fare routing types pb_lib
     georef utils autocomplete ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY}

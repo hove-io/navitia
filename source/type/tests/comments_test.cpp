@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(comment_map_test) {
     b.data->pt_data->index();
     b.finish();
 
-    Comments& comments_container = b.data->pt_data->comments;
+    nt::Comments& comments_container = b.data->pt_data->comments;
 
     const nt::Line* l = b.data->pt_data->lines[0];
     comments_container.add(l, "bob");

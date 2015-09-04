@@ -35,6 +35,11 @@ from nose.tools import eq_
 import jormungandr.scenarios.new_default
 from jormungandr.instance import Instance
 
+
+def check_journeys(resp):
+    assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
+
+
 @dataset(["main_routing_test"])
 class TestJourneysNewDefault(AbstractTestFixture):
     """
@@ -61,6 +66,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query, display=True)
 
+        check_journeys(response)
         is_valid_journey_response(response, self.tester, journey_basic_query)
 
     def test_error_on_journeys(self):
@@ -75,9 +81,32 @@ class TestJourneysNewDefault(AbstractTestFixture):
 
         assert status != 200, "the response should not be valid"
 
+        check_journeys(response)
         assert response['error']['id'] == "date_out_of_bounds"
         assert response['error']['message'] == "date is not in data production period"
 
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
 
+
+@dataset(["main_ptref_test"])
+class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
+    """Test the new default scenario with ptref_test data"""
+
+    def setup(self):
+        logging.debug('setup for new default')
+        from jormungandr import i_manager
+        dest_instance = i_manager.instances['main_ptref_test']
+        self.old_scenario = dest_instance._scenario
+        dest_instance._scenario = jormungandr.scenarios.new_default.Scenario()
+
+    def teardown(self):
+        from jormungandr import i_manager
+        i_manager.instances['main_ptref_test']._scenario = self.old_scenario
+
+    def test_strange_line_name(self):
+        response = self.query("v1/coverage/main_ptref_test/journeys"
+                              "?from=stop_area:stop2&to=stop_area:stop1"
+                              "&datetime=20140107T100000", display=True)
+        check_journeys(response)
+        eq_(len(response['journeys']), 1)

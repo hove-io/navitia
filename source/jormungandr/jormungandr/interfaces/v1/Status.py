@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from flask.ext.restful import Resource, fields, marshal_with
-from jormungandr import i_manager
+from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import instance_status_with_parameters
 from jormungandr import app
@@ -52,4 +52,5 @@ class Status(Resource):
                     is_open_data = instance_db.is_free
         response['status']["is_open_data"] = is_open_data
         response['status']['parameters'] = instance
+        response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region)
         return response, 200

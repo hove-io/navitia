@@ -64,10 +64,10 @@ from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
-from jormungandr.travelers_profile import travelers_profile
+from jormungandr.travelers_profile import TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
-
+from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -541,11 +541,9 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking"],
                                 dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking"],
                                 dest="destination_mode", action="append")
         parser_get.add_argument("max_duration_to_pt", type=int,
                                 description="maximal duration of non public transport in second")
@@ -583,7 +581,7 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
+        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
 
         self.method_decorators.append(complete_links(self))
@@ -607,9 +605,17 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        if args['traveler_type']:
-            profile = travelers_profile[args['traveler_type']]
-            profile.override_params(args)
+        if args.get('traveler_type') is not None:
+            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
+
+        # We set default modes for fallback modes.
+        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+        # fallback modes will always have a value, and traveler_type will never override fallback modes.
+        if args.get('origin_mode') is None:
+            args['origin_mode'] = ['walking']
+        if args.get('destination_mode') is None:
+            args['destination_mode'] = ['walking']
 
         if args['max_duration_to_pt'] is not None:
             #retrocompatibility: max_duration_to_pt override all individual value by mode
@@ -742,9 +748,17 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        if args['traveler_type']:
-            profile = travelers_profile[args['traveler_type']]
-            profile.override_params(args)
+        if args.get('traveler_type') is not None:
+            traveler_profile = TravelerProfile.make_travelers_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
+
+        # We set default modes for fallback modes.
+        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+        # fallback modes will always have a value, and traveler_type will never override fallback modes.
+        if args.get('origin_mode') is None:
+            args['origin_mode'] = ['walking']
+        if args.get('destination_mode') is None:
+            args['destination_mode'] = ['walking']
 
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:

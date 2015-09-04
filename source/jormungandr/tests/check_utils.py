@@ -469,6 +469,7 @@ def is_valid_journey(journey, tester, query):
     arrival = get_valid_datetime(journey['arrival_date_time'])
     departure = get_valid_datetime(journey['departure_date_time'])
     request = get_valid_datetime(journey['requested_date_time'])
+    assert journey["type"]
 
     assert arrival >= departure
     # test if duration time is consistent with arrival and departure

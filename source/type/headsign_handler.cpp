@@ -90,6 +90,21 @@ const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) cons
     return (--it_headsign)->second;
 }
 
+std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* vj) {
+    std::set<std::string> res;
+    const auto& it_changes = headsign_changes.find(vj);
+    if (!vj || it_changes == std::end(headsign_changes)) {
+        return res;
+    }
+    for (const auto& change: it_changes->second) {
+        //ignore last headsign (vj.name) as it does not concern a stop_time
+        if (change.first < vj->stop_time_list.size()) {
+            res.insert(change.second);
+        }
+    }
+    return res;
+}
+
 bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj,
                                            const std::string& headsign) const {
     if (vj.name == headsign) {

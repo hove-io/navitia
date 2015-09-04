@@ -39,6 +39,7 @@ www.navitia.io
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
+#include "tests/utils_test.h"
 
 namespace navitia{namespace ptref {
 template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
@@ -175,6 +176,13 @@ BOOST_AUTO_TEST_CASE(parser_escaped_string_with_slash) {
     BOOST_CHECK_EQUAL(filters[0].op, EQ);
 }
 
+BOOST_AUTO_TEST_CASE(parser_method) {
+    std::vector<Filter> filters = parse(R"(vehicle_journey.has_headsign("john"))");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
+    BOOST_CHECK_EQUAL(filters[0].method, "has_headsign");
+    BOOST_CHECK_EQUAL(filters[0].args, std::vector<std::string>{"john"});
+}
 
 struct Moo {
     int bli;
@@ -427,4 +435,157 @@ BOOST_AUTO_TEST_CASE(find_path_test){
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(navitia::type::Type_e::Unknown), ptref_error);
+}
+
+//helper to get default values
+static std::vector<nt::idx_t> query(nt::Type_e requested_type, std::string request,
+                                    const nt::Data& data,
+                                    const boost::optional<boost::posix_time::ptime>& since = boost::none,
+                                    const boost::optional<boost::posix_time::ptime>& until = boost::none,
+                                    bool fail = false) {
+    try {
+       return navitia::ptref::make_query(
+                   requested_type, request, {}, navitia::type::OdtLevel_e::all, since, until, data);
+    } catch (const navitia::ptref::ptref_error& e) {
+        if (fail) {
+            throw e;
+        }
+        BOOST_CHECK_MESSAGE(false, " error on ptref request" + std::string(e.what()));
+        return {};
+    }
+}
+
+/*
+ * Test the filtering on the period
+  */
+BOOST_AUTO_TEST_CASE(vj_filtering) {
+    ed::builder builder("20130311");
+    builder.generate_dummy_basis();
+    // Date  11    12    13    14
+    // A      -   08:00 08:00   -
+    // B    10:00 10:00   -   10:00
+    // C      -     -     -   10:00
+    builder.vj("A", "0110")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    builder.vj("B", "1011")("stop3", "10:00"_t)("stop2", "11:00"_t);
+    builder.vj("C", "1000")("stop3", "10:00"_t)("stop2", "11:00"_t);
+    builder.finish();
+    nt::idx_t a = 0;
+    nt::idx_t b = 1;
+    nt::idx_t c = 2;
+
+    auto check = [](const std::vector<nt::idx_t>& col, std::set<nt::idx_t> s_ref) {
+        std::set<nt::idx_t> s_col(std::begin(col), std::end(col));
+        BOOST_CHECK_EQUAL(s_col, s_ref);
+    };
+
+    //not limited, we get 3 vj
+    auto indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data));
+    check(indexes, {a, b, c});
+
+    // the second day A and B are activ
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                    {"20130312T0700"_dt}, {"20130313T0000"_dt});
+    check(indexes, {a, b});
+
+    // but the third only A works
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                    {"20130313T0700"_dt}, {"20130314T0000"_dt});
+    check(indexes, {a});
+
+    // on day 3 and 4, A, B and C are valid only one day, so it's ok
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                    {"20130313T0700"_dt}, {"20130315T0000"_dt});
+    check(indexes, {a, b, c});
+
+    //with just a since, we check til the end of the period
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130313T0000"_dt}, {});
+    check(indexes, {a, b, c}); // all are valid from the 3rd day
+
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {"20130314T0000"_dt}, {});
+    check(indexes, {b, c}); // only B and C are valid from the 4th day
+
+    // with just an until, we check from the begining of the validity period
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data), {}, {"20130313T0000"_dt});
+    check(indexes, {a, b});
+
+    //tests with the time
+    // we want the vj valid from 11pm only the first day, B is valid at 10, so not it the period
+    BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                            {"20130311T1100"_dt}, {"20130312T0000"_dt}, true),
+                      ptref_error);
+
+    // we want the vj valid from 11pm the first day to 08:00 (excluded) the second, we still have no vj
+    BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                            {"20130311T1100"_dt}, {"20130312T0800"_dt}, true),
+                      ptref_error);
+
+    // we want the vj valid from 11pm the first day to 08::00 the second, we now have A in the results
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                    {"20130311T1100"_dt}, {"20130312T080001"_dt});
+    check(indexes, {a});
+
+    // we give a period after or before the validitity period, it's KO
+    BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                            {"20110311T1100"_dt}, {"20110312T0800"_dt}, true),
+                      ptref_error);
+    BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                            {"20160311T1100"_dt}, {"20160312T0800"_dt}, true),
+                      ptref_error);
+
+    // we give a since > until, it's an error
+    BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
+                            {"20130316T1100"_dt}, {"20130311T0800"_dt}, true),
+                      ptref_error);
+}
+
+BOOST_AUTO_TEST_CASE(headsign_request) {
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::VehicleJourney,
+                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0), 1);
+}
+
+BOOST_AUTO_TEST_CASE(headsign_sa_request) {
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::StopArea,
+                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    std::set<std::string> sas;
+    for (const auto& idx: res) {
+        sas.insert(b.data->pt_data->stop_areas.at(idx)->name);
+    }
+    BOOST_CHECK_EQUAL(sas, (std::set<std::string>{"stop3", "stop4"}));
+}
+
+BOOST_AUTO_TEST_CASE(code_request) {
+    ed::builder b("20150101");
+    b.generate_dummy_basis();
+    const auto* a = b.sa("A").sa;
+    b.sa("B");
+    b.data->pt_data->codes.add(a, "UIC", "8727100");
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    const auto res = make_query(navitia::type::Type_e::StopArea,
+                                R"(stop_area.has_code(UIC, 8727100))",
+                                *(b.data));
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_areas.at(res.at(0))->uri, "A");
 }

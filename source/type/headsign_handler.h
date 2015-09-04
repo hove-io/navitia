@@ -54,6 +54,7 @@ struct HeadsignHandler {
     void affect_headsign_to_stop_time(const StopTime& stop_time, const std::string& headsign);
 
     const std::string& get_headsign(const StopTime& stop_time) const;
+    std::set<std::string> get_all_headsigns(const VehicleJourney* vj);
     std::vector<const VehicleJourney*> get_vj_from_headsign(const std::string& headsign) const;
 
     template<class Archive>
