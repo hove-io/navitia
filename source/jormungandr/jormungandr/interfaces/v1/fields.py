@@ -225,6 +225,14 @@ class disruption_status(fields.Raw):
         enum = type_pb2._ACTIVESTATUS
         return str.lower(enum.values_by_number[status].name)
 
+class channel_types(fields.Raw):
+    def output(self, key, obj):
+        channel_types = obj.types
+        descriptor = channel_types.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["ChannelType"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in channel_types.types]
+
 
 class notes(fields.Raw):
 
@@ -415,7 +423,9 @@ channel = {
     "content_type": fields.String(),
     "id": fields.String(),
     "name": fields.String(),
+    "types": channel_types(attribute="types")
 }
+
 disruption_message = {
     "text": fields.String(),
     "channel": NonNullNested(channel)
