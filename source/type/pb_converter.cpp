@@ -157,6 +157,33 @@ void fill_message(const type::new_disruption::Impact& impact,
         pb_channel->set_content_type(m.channel_content_type);
         pb_channel->set_id(m.channel_id);
         pb_channel->set_name(m.channel_name);
+        //TODO channel types
+        pbnavitia::ChannelTypes* channel_tpes = pb_channel->mutable_types();
+        for (const auto& type: m.channel_types){
+            switch (type) {
+            case nt::new_disruption::ChannelType::web:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::web);
+                break;
+            case nt::new_disruption::ChannelType::sms:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::sms);
+                break;
+            case nt::new_disruption::ChannelType::email:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::email);
+                break;
+            case nt::new_disruption::ChannelType::mobile:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::mobile);
+                break;
+            case nt::new_disruption::ChannelType::twitter:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::twitter);
+                break;
+            case nt::new_disruption::ChannelType::facebook:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::facebook);
+                break;
+            case nt::new_disruption::ChannelType::unkown_type:
+                channel_tpes->add_types(pbnavitia::ChannelTypes::unknown_type);
+                break;
+            }
+        }
     }
 
     //we need to compute the active status
