@@ -140,6 +140,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
+        #Todo here we test le message, channel and types
+
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
@@ -569,6 +571,11 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     message.channel.name = "sms"
     message.channel.max_size = 60
     message.channel.content_type = "text"
+    message.channel.types.append(chaos_pb2.Channel.web)
+    message.channel.types.append(chaos_pb2.Channel.sms)
+
+
+    # TODO CHAOS: add 2 channel types (and check in the test the channel type)
 
     message = impact.messages.add()
     message.text = message_text
@@ -576,5 +583,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     message.channel.id = "email"
     message.channel.max_size = 250
     message.channel.content_type = "html"
+    message.channel.types.append(chaos_pb2.Channel.web)
+    message.channel.types.append(chaos_pb2.Channel.email)
+
 
     return feed_message.SerializeToString()

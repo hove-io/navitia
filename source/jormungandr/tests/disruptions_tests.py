@@ -326,6 +326,14 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
 
+        #Check message, channel and types
+        disruption_message = get_not_null(response, 'disruptions')
+        eq_(len(disruption_message), 1)
+        message = get_not_null(disruption_message[0], 'messages')
+        eq_(message[0]['text'], 'no luck')
+        eq_(message[1]['text'], 'try again')
+
+
     def test_disruption_on_route_and_line(self):
         """
         and we check the sort order of the lines
