@@ -65,15 +65,15 @@ parsing_error::~parsing_error() noexcept {}
 namespace qi = boost::spirit::qi;
 
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter
-        template <typename Iterator>
-        struct select_r
-            : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
+template <typename Iterator>
+struct select_r: qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
     qi::rule<Iterator, std::string(), qi::space_type> word, text; // Match a simple word, a string escaped by "" or enclosed by ()
     qi::rule<Iterator, std::string()> escaped_string, bracket_string;
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match a binary operator like <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // the complete string to parse
     qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause, method_clause;
+    qi::rule<Iterator, std::vector<std::string>(), qi::space_type> args_clause;
 
     select_r() : select_r::base_type(filter) {
         // Warning, the '-' in a qi::char_ can have a particular meaning as 'a-z'
@@ -98,7 +98,8 @@ namespace qi = boost::spirit::qi;
         having_clause = (word >> "HAVING" >> bracket_string)
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
-        method_clause = (word >> "." >> word >> "(" >> (word|escaped_string|bracket_string) >> ")")
+        args_clause = (word|escaped_string|bracket_string)[boost::phoenix::push_back(qi::_val, qi::_1)] % ',';
+        method_clause = (word >> "." >> word >> "(" >> args_clause >> ")")
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         filter %= (single_clause | having_clause | after_clause | method_clause)
             % (qi::lexeme["and"] | qi::lexeme["AND"]);
@@ -143,6 +144,32 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
             result.push_back(i);
     }
     return result;
+}
+
+template<typename T>
+static
+typename boost::enable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    std::vector<idx_t>>::type
+get_indexes_from_code(const Data& d, const std::string& key, const std::string& value) {
+    std::vector<idx_t> res;
+    for (const auto* obj: d.pt_data->codes.get_objs<T>(key, value)) {
+        res.push_back(obj->idx);
+    }
+    return res;
+}
+template<typename T>
+static
+typename boost::disable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    std::vector<idx_t>>::type
+get_indexes_from_code(const Data&, const std::string&, const std::string&) {
+    // there is no codes for unsupporded types, thus the result is empty
+    return {};
 }
 
 template<typename T>
@@ -193,10 +220,14 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             }
         }
     } else if(! filter.method.empty()) {
-        if (filter.object == "vehicle_journey" && filter.method == "has_headsign") {
-            for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.value)) {
+        if (filter.object == "vehicle_journey"
+            && filter.method == "has_headsign"
+            && filter.args.size() == 1) {
+            for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.args.at(0))) {
                 indexes.push_back(vj->idx);
             }
+        } else if (filter.method == "has_code" && filter.args.size() == 2) {
+            indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
         } else {
             throw parsing_error(parsing_error::partial_error,
                                 "Unknown method " + filter.object + ":" + filter.method);

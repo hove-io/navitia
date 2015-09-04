@@ -64,11 +64,15 @@ struct Filter {
     Operator_e op; // comparison operator ("=")
     std::string value; // right value compared ("kikoolol") or arg used in method ("john")
     std::string method; // method called (has_headsign)
+    std::vector<std::string> args; // method arguments
 
-    Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
-    Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
-    Filter(std::string value) : object("journey_pattern_point"), op(AFTER), value(value) {}
-    Filter(std::string object, std::string method, std::string arg) : object(object), value(arg), method(method) {}
+    Filter(std::string object, std::string attribute, Operator_e op, std::string value):
+        object(std::move(object)), attribute(std::move(attribute)), op(op), value(std::move(value)) {}
+    Filter(std::string object, std::string value):
+        object(std::move(object)), op(HAVING), value(std::move(value)) {}
+    Filter(std::string value): object("journey_pattern_point"), op(AFTER), value(std::move(value)) {}
+    Filter(std::string object, std::string method, std::vector<std::string> args):
+        object(std::move(object)), method(std::move(method)), args(std::move(args)) {}
 
     Filter() {}
 };

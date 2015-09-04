@@ -65,6 +65,17 @@ struct CodeContainer {
 
     template<typename T> using Objs = std::vector<const T*>;
 
+    using SupportedTypes = boost::mpl::vector<
+        StopArea,
+        Network,
+        Company,
+        Line,
+        Route,
+        VehicleJourney,
+        StopPoint,
+        Calendar
+        >;
+
     template<typename T>
     const Codes& get_codes(const T* obj) const {
         const auto& m = at_key<T>(obj_map);
@@ -96,35 +107,23 @@ private:
     using CodesByObjMap = std::map<const T*, Codes>;
 
     template<typename T>
-    using PairByObj = boost::fusion::pair<T, CodesByObjMap<T>>;
-
-    using ObjMap = boost::fusion::map<
-        PairByObj<StopArea>,
-        PairByObj<Network>,
-        PairByObj<Company>,
-        PairByObj<Line>,
-        PairByObj<Route>,
-        PairByObj<VehicleJourney>,
-        PairByObj<StopPoint>,
-        PairByObj<Calendar>
-        >;
+    struct MakePairByObj {
+        using type = typename boost::fusion::result_of::make_pair<T, CodesByObjMap<T>>::type;
+    };
+    using ObjMap = typename boost::fusion::result_of::as_map<
+        typename boost::mpl::transform<SupportedTypes, MakePairByObj<boost::mpl::_1>>::type
+        >::type;
 
     template<typename T>
     using ObjsByCodeMap = std::map<std::pair<std::string, std::string>, Objs<T>>;
 
     template<typename T>
-    using PairByCode = boost::fusion::pair<T, ObjsByCodeMap<T>>;
-
-    using CodeMap = boost::fusion::map<
-        PairByCode<StopArea>,
-        PairByCode<Network>,
-        PairByCode<Company>,
-        PairByCode<Line>,
-        PairByCode<Route>,
-        PairByCode<VehicleJourney>,
-        PairByCode<StopPoint>,
-        PairByCode<Calendar>
-        >;
+    struct MakePairByCode {
+        using type = typename boost::fusion::result_of::make_pair<T, ObjsByCodeMap<T>>::type;
+    };
+    using CodeMap = typename boost::fusion::result_of::as_map<
+        typename boost::mpl::transform<SupportedTypes, MakePairByCode<boost::mpl::_1>>::type
+        >::type;
 
     template<typename T>
     using RemoveConstPtr = typename std::remove_const<typename std::remove_pointer<T>::type>::type;
