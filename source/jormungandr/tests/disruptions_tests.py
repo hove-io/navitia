@@ -178,10 +178,11 @@ class TestDisruptions(AbstractTestFixture):
         on a arrivals call on stopA, we should get its disruptions
         """
 
-        response = self.query_region('networks/base_network/arrivals?from_datetime=20120614T070000&_current_datetime=20120614T080000')
+        response = self.query_region('stop_points/stop_point:stopA/arrivals?'
+                                     'from_datetime=20120614T070000&_current_datetime=20120614T080000')
 
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 4)
+        eq_(len(arrivals), 2)
 
         arrival = arrivals[0]
         disruptions = get_all_disruptions(arrival, response)
@@ -190,6 +191,9 @@ class TestDisruptions(AbstractTestFixture):
         assert 'too_bad_all_lines' in disruptions
         is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
 
+        arrival = arrivals[1]
+        disruptions = get_all_disruptions(arrival, response)
+        assert not disruptions
 
     def test_direct_disruption_call(self):
         """
