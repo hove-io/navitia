@@ -88,6 +88,7 @@ int main(int argn, char** argv){
 
     int nb_threads = conf.nb_thread();
     // Launch pool of worker threads
+    LOG4CPLUS_INFO(logger, "starting workers threads");
     for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
     }

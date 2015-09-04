@@ -56,6 +56,7 @@ class MaintenanceWorker{
 
         void handle_task(AmqpClient::Envelope::ptr_t envelope);
         void handle_rt(AmqpClient::Envelope::ptr_t envelope);
+        bool is_initialized = false;
 
     public:
         MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf);
