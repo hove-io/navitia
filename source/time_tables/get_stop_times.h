@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #pragma once
+#include "routing/stop_event.h"
 #include "routing/routing.h"
 #include "type/data.h"
 
@@ -48,7 +49,7 @@ typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
  * @return: a list of pair <datetime, departure st.idx>. The list is sorted on the datetimes.
  */
 std::vector<datetime_stop_time>
-get_stop_times(const bool is_on_departures,
+get_stop_times(const navitia::routing::StopEvent stop_event,
                const std::vector<type::idx_t>& journey_pattern_points,
                const DateTime& dt,
                const DateTime& max_dt,

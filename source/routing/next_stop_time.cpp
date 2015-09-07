@@ -118,7 +118,7 @@ get_jpp(JppIdx jpp_idx, const type::Data& data) {
  *  Returns invalid_idx is none is
  */
 static std::pair<const type::StopTime*, DateTime>
-next_valid_discrete(const bool is_on_departures,
+next_valid_discrete(const StopEvent stop_event,
                     const dataRAPTOR& dataRaptor,
                     const JppIdx jpp_idx,
                     const DateTime dt,
@@ -126,9 +126,9 @@ next_valid_discrete(const bool is_on_departures,
                     const type::VehicleProperties& vehicle_props,
                     const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, is_on_departures)) {
+    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
@@ -138,9 +138,9 @@ next_valid_discrete(const bool is_on_departures,
 
     //if none was found, we try again the next day
     date++;
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, is_on_departures)) {
+    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
@@ -153,7 +153,7 @@ next_valid_discrete(const bool is_on_departures,
 }
 
 static std::pair<const type::StopTime*, DateTime>
-next_valid_frequency(const bool is_on_departures,
+next_valid_frequency(const StopEvent stop_event,
                      const type::JourneyPatternPoint* jpp,
                      const DateTime dt,
                      const bool adapted,
@@ -168,7 +168,7 @@ next_valid_frequency(const bool is_on_departures,
             continue;
         }
 
-        const auto next_dt = get_next_stop_time(is_on_departures, dt, *freq_vj, st, adapted);
+        const auto next_dt = get_next_stop_time(stop_event, dt, *freq_vj, st, adapted);
 
         if (next_dt < best.second) {
             best = {&st, next_dt};
@@ -184,7 +184,7 @@ next_valid_frequency(const bool is_on_departures,
                 continue;
             }
 
-            const auto next_dt = get_next_stop_time(is_on_departures, next_date, *freq_vj, st, adapted);
+            const auto next_dt = get_next_stop_time(stop_event, next_date, *freq_vj, st, adapted);
 
             if (next_dt < best.second) {
                 best = {&st, next_dt};
@@ -195,7 +195,7 @@ next_valid_frequency(const bool is_on_departures,
 }
 
 static std::pair<const type::StopTime*, DateTime>
-previous_valid_frequency(const bool is_on_departures,
+previous_valid_frequency(const StopEvent stop_event,
                          const type::JourneyPatternPoint* jpp,
                          const DateTime dt,
                          const bool adapted,
@@ -208,7 +208,7 @@ previous_valid_frequency(const bool is_on_departures,
             continue;
         }
 
-        const auto previous_dt = get_previous_stop_time(is_on_departures, dt, *freq_vj, st, adapted);
+        const auto previous_dt = get_previous_stop_time(stop_event, dt, *freq_vj, st, adapted);
 
         if (previous_dt == DateTimeUtils::not_valid) {
             continue;
@@ -231,7 +231,7 @@ previous_valid_frequency(const bool is_on_departures,
                 continue;
             }
 
-            const auto previous_dt = get_previous_stop_time(is_on_departures, previous_date, *freq_vj,
+            const auto previous_dt = get_previous_stop_time(stop_event, previous_date, *freq_vj,
                                                             st, adapted);
 
             if (previous_dt == DateTimeUtils::not_valid) {
@@ -246,7 +246,7 @@ previous_valid_frequency(const bool is_on_departures,
 }
 
 static std::pair<const type::StopTime*, DateTime>
-previous_valid_discrete(const bool is_on_departures,
+previous_valid_discrete(const StopEvent stop_event,
                         const dataRAPTOR& dataRaptor,
                         const JppIdx jpp_idx,
                         const DateTime dt,
@@ -254,9 +254,9 @@ previous_valid_discrete(const bool is_on_departures,
                         const type::VehicleProperties& vehicle_props,
                         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, is_on_departures)) {
+    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
@@ -269,9 +269,9 @@ previous_valid_discrete(const bool is_on_departures,
     }
 
     --date;
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, is_on_departures)) {
+    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
@@ -283,7 +283,7 @@ previous_valid_discrete(const bool is_on_departures,
 }
 
 std::pair<const type::StopTime*, DateTime>
-NextStopTime::earliest_stop_time(const bool is_on_departures,
+NextStopTime::earliest_stop_time(const StopEvent stop_event,
                                  const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
@@ -292,11 +292,11 @@ NextStopTime::earliest_stop_time(const bool is_on_departures,
                                  const DateTime bound) const
 {
     const auto first_discrete_st_pair =
-        next_valid_discrete(is_on_departures, *data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
+        next_valid_discrete(stop_event, *data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
 
     if (check_freq) {
         const auto first_frequency_st_pair =
-            next_valid_frequency(is_on_departures, get_jpp(jpp_idx, data), dt, adapted, vehicle_props);
+            next_valid_frequency(stop_event, get_jpp(jpp_idx, data), dt, adapted, vehicle_props);
 
         if (first_frequency_st_pair.second < first_discrete_st_pair.second) {
             return first_frequency_st_pair;
@@ -307,7 +307,7 @@ NextStopTime::earliest_stop_time(const bool is_on_departures,
 }
 
 std::pair<const type::StopTime*, DateTime>
-NextStopTime::tardiest_stop_time(const bool is_on_departures,
+NextStopTime::tardiest_stop_time(const StopEvent stop_event,
                                  const JppIdx jpp_idx,
                                  const DateTime dt,
                                  const bool adapted,
@@ -316,11 +316,11 @@ NextStopTime::tardiest_stop_time(const bool is_on_departures,
                                  const DateTime bound) const
 {
     const auto first_discrete_st_pair =
-        previous_valid_discrete(is_on_departures, *data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
+        previous_valid_discrete(stop_event, *data.dataRaptor, jpp_idx, dt, adapted, vehicle_props, bound);
 
     if (check_freq) {
         const auto first_frequency_st_pair =
-            previous_valid_frequency(is_on_departures, get_jpp(jpp_idx, data), dt, adapted, vehicle_props);
+            previous_valid_frequency(stop_event, get_jpp(jpp_idx, data), dt, adapted, vehicle_props);
 
         // since the default value is DateTimeUtils::not_valid (== DateTimeUtils::max)
         // we need to check first that they are
@@ -367,12 +367,12 @@ inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) 
 *
 * Note: If hour in [0, end] we have to check the previous day's validity pattern
 **/
-DateTime get_next_stop_time(const bool is_on_departures,
+DateTime get_next_stop_time(const StopEvent stop_event,
                             DateTime dt,
                             const type::FrequencyVehicleJourney& freq_vj,
                             const type::StopTime& st,
                             const bool adapted) {
-    const u_int32_t considered_time = is_on_departures ? st.departure_time : st.arrival_time;
+    const u_int32_t considered_time = (stop_event == StopEvent::pick_up) ? st.departure_time : st.arrival_time;
     const u_int32_t lower_bound = DateTimeUtils::hour(freq_vj.start_time + considered_time);
     const u_int32_t upper_bound = DateTimeUtils::hour(freq_vj.end_time + considered_time);
 
@@ -427,12 +427,13 @@ DateTime get_next_stop_time(const bool is_on_departures,
     return DateTimeUtils::set(date, DateTimeUtils::hour(lower_bound + x * freq_vj.headway_secs));
 }
 
-DateTime get_previous_stop_time(const bool is_on_departures,
+DateTime get_previous_stop_time(const StopEvent stop_event,
                                 DateTime dt,
                                 const type::FrequencyVehicleJourney& freq_vj,
                                 const type::StopTime& st,
                                 const bool adapted) {
-    const u_int32_t considered_time = is_on_departures ? st.departure_time : st.arrival_time;
+    const u_int32_t considered_time = (stop_event == StopEvent::pick_up) ?
+                                      st.departure_time : st.arrival_time;
     const u_int32_t lower_bound = DateTimeUtils::hour(freq_vj.start_time + considered_time);
     const u_int32_t upper_bound = DateTimeUtils::hour(freq_vj.end_time + considered_time);
 

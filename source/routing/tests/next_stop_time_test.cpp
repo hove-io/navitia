@@ -42,6 +42,7 @@ www.navitia.io
 using namespace navitia;
 using namespace navitia::routing;
 
+
 // TESTS SIMPLES
 /**
  * Teste dropoff, pickup
@@ -83,24 +84,30 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
 
     //SP1
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), sp1_departure - 1, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), sp1_departure - 1, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1),
+                                                        sp1_departure - 1, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1),
+                                                        sp1_departure - 1, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
     }
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), sp1_departure, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), sp1_departure, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1),
+                                                        sp1_departure, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1),
+                                                        sp1_departure, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
     }
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), sp1_departure + 1, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), sp1_departure + 1, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1),
+                                                        sp1_departure + 1, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1),
+                                                        sp1_departure + 1, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
@@ -108,24 +115,30 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     }
     //SP2
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), sp2_departure - 1, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), sp2_departure - 1, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2),
+                                                        sp2_departure - 1, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2),
+                                                        sp2_departure - 1, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
     }
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), sp2_departure, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), sp2_departure, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2),
+                                                        sp2_departure, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2),
+                                                        sp2_departure, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
     }
     {
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), sp2_arrival + 1, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), sp2_arrival + 1, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2),
+                                                        sp2_arrival + 1, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2),
+                                                        sp2_arrival + 1, false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
@@ -179,8 +192,10 @@ BOOST_AUTO_TEST_CASE(base) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(DateTimeUtils::date(dt_test), sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -190,8 +205,10 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(DateTimeUtils::date(dt_test), sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -201,8 +218,10 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -213,7 +232,8 @@ BOOST_AUTO_TEST_CASE(base) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
@@ -222,7 +242,8 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
@@ -231,7 +252,8 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
@@ -240,7 +262,8 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
@@ -249,7 +272,8 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
@@ -259,7 +283,8 @@ BOOST_AUTO_TEST_CASE(base) {
 
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
@@ -269,8 +294,10 @@ BOOST_AUTO_TEST_CASE(base) {
     //SP3
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -281,8 +308,10 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, dt_test);
         BOOST_CHECK(st1 == nullptr);
@@ -293,8 +322,10 @@ BOOST_AUTO_TEST_CASE(base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -344,8 +375,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -355,8 +388,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -366,8 +401,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -378,8 +415,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 101);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         // we ask for the previous departure from 23:59 the day 1
         // the previous departure is the day 1, at 100 (same as the day 0 at 86400 + 100)
@@ -391,8 +430,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp2_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -402,8 +443,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -413,8 +456,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -470,8 +515,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -481,8 +528,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -492,8 +541,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -504,7 +555,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 101);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
@@ -513,7 +565,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
@@ -522,7 +575,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -531,7 +585,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -540,7 +595,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -549,7 +605,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -558,7 +615,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -567,7 +625,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -577,8 +636,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     //SP3
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -588,8 +649,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -599,8 +662,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -651,7 +716,8 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
@@ -659,7 +725,8 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
@@ -667,7 +734,8 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
@@ -676,7 +744,8 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -684,7 +753,8 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(2, sp2_arrival - 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -747,7 +817,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1 - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -755,7 +826,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -763,7 +835,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1 + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
@@ -771,7 +844,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2 - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
@@ -779,7 +853,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
@@ -787,7 +862,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2 + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -796,7 +872,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(0, sp2_arrival1 + 1);
-        std::tie(st1, dt1) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival1);
@@ -804,7 +881,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp2_arrival1);
-        std::tie(st1, dt1) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival1);
@@ -812,7 +890,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival1 - 1);
-        std::tie(st1, dt1) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival2);
@@ -820,7 +899,8 @@ BOOST_AUTO_TEST_CASE(vj2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp2_arrival2 + 1);
-        std::tie(st1, dt1) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival2);
@@ -887,7 +967,8 @@ BOOST_AUTO_TEST_CASE(vp2) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1 - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -895,7 +976,8 @@ BOOST_AUTO_TEST_CASE(vp2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -903,7 +985,8 @@ BOOST_AUTO_TEST_CASE(vp2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
@@ -912,7 +995,8 @@ BOOST_AUTO_TEST_CASE(vp2) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(2, sp2_arrival1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival2));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival2);
@@ -920,7 +1004,8 @@ BOOST_AUTO_TEST_CASE(vp2) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival2 - 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival1));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival1);
@@ -972,8 +1057,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -983,8 +1070,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -994,8 +1083,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1004,14 +1095,16 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 101);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st2 == nullptr);
     }
     {
         //We test if we can find the train leaving after midnight
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -1020,7 +1113,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -1029,7 +1123,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -1038,7 +1133,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -1048,21 +1144,25 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     //SP3
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr); // No departure because this is a terminus
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st2 == nullptr);
         // There are no trip leaving before
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -1072,8 +1172,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -1128,8 +1230,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1139,8 +1243,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1150,8 +1256,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1160,19 +1268,22 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     //SP2
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 101);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st2 == nullptr);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, 0));
         BOOST_CHECK(st1 != nullptr);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -1181,7 +1292,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, 0));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
@@ -1190,7 +1302,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
@@ -1201,8 +1314,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     {
         //The day 0 is unactive
         DateTime dt_test = DateTimeUtils::set(0, sp3_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1210,8 +1325,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1219,8 +1336,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -1230,8 +1349,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp3_arrival));
         BOOST_CHECK(st1 == nullptr);
@@ -1300,8 +1421,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     //SP1
     {
         DateTime dt_test = DateTimeUtils::set(0, start_time - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1310,8 +1433,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, start_time);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1320,8 +1445,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, start_time + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1330,8 +1457,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, end_time - (headway_sec) + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1340,8 +1469,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, end_time);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1350,8 +1481,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, end_time + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1363,8 +1496,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t hour = start_time + (sp2_departure - sp1_departure);
         uint32_t hour2 = start_time + (sp2_arrival - sp1_departure);
         DateTime dt_test = DateTimeUtils::set(0, hour - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, hour2));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1376,8 +1511,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t arrival_hour = start_time + (sp2_arrival- sp1_departure);
         uint32_t departure_hour = start_time + (sp2_departure - sp1_departure);
         DateTime dt_test = DateTimeUtils::set(0, departure_hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1388,8 +1525,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t arrival_hour = start_time + (sp2_arrival- sp1_departure);
         uint32_t departure_hour = start_time + (sp2_departure - sp1_departure);
         DateTime dt_test = DateTimeUtils::set(0, departure_hour + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1400,8 +1539,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t arrival_hour = 7000;
         uint32_t departure_hour = 7050;
         DateTime dt_test = DateTimeUtils::set(0, arrival_hour - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour - headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1412,8 +1553,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t arrival_hour = 7000;
         uint32_t departure_hour = 7050;
         DateTime dt_test = DateTimeUtils::set(0, arrival_hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1424,8 +1567,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         uint32_t arrival_hour = 7000;
         uint32_t departure_hour = 7050;
         DateTime dt_test = DateTimeUtils::set(0, arrival_hour + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
@@ -1436,8 +1581,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     {
         uint32_t hour = start_time + (sp3_arrival - sp2_departure);
         DateTime dt_test = DateTimeUtils::set(0, hour - 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1446,8 +1593,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     {
         uint32_t hour = start_time + (sp3_arrival - sp2_departure);
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_CHECK(st1 == nullptr);
@@ -1456,8 +1605,10 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     {
         uint32_t hour = start_time + (sp3_arrival - sp1_departure);
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp3), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp3), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp3), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp3), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, hour));
         BOOST_CHECK(st1 == nullptr);
@@ -1498,8 +1649,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     {
         uint32_t hour = start_time - 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1510,8 +1663,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     {
         uint32_t hour = start_time;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1521,8 +1676,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     {
         uint32_t hour = start_time + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1532,8 +1689,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Depart dans la periode apres minuit
     {
         DateTime dt_test = DateTimeUtils::set(0, last_time - headway_sec - 10);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time - headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1543,8 +1702,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Depart à minuit
     {
         DateTime dt_test = DateTimeUtils::set(1, 0);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
@@ -1555,8 +1716,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Arrivee apres la periode
     {
         DateTime dt_test = DateTimeUtils::set(0, end_time + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time + sp2_arrival - sp1_departure));
         BOOST_CHECK(st1 == nullptr);
@@ -1566,8 +1729,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Depart dans la periode
     {
         DateTime dt_test = DateTimeUtils::set(0, start_time + sp2_arrival - sp1_departure + 1);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time + sp2_arrival - sp1_departure));
         BOOST_CHECK(st1 == nullptr);
@@ -1577,8 +1742,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Depart dans la periode apres minuit
     {
         DateTime dt_test = DateTimeUtils::set(0, last_time - headway_sec - 10);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time - 2 * headway_sec + sp2_arrival - sp1_departure ));
         BOOST_CHECK(st1 == nullptr);
@@ -1588,8 +1755,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     //Depart à minuit
     {
         DateTime dt_test = DateTimeUtils::set(1, 0);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp2), dt_test, false, false);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp2), dt_test,
+                                                        false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_CHECK(st1 == nullptr);
@@ -1637,7 +1806,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time1 - 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1646,7 +1816,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1655,7 +1826,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time1 + 1 ;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1 + headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1664,7 +1836,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = end_time1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, end_time1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1673,7 +1846,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = end_time1 + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1682,7 +1856,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time2;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1692,7 +1867,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time2 + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2 + headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1701,7 +1877,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 86100;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1710,7 +1887,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 86400;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1719,7 +1897,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 100;
         DateTime dt_test = DateTimeUtils::set(1, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1728,7 +1907,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = last_time2;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1737,7 +1917,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = end_time2;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st1, dt1) = next_st.earliest_stop_time(true, JppIdx(*jpp1), dt_test, false, false);
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, JppIdx(*jpp1), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1747,7 +1928,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = end_time2 + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time2 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1756,7 +1938,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time1 + sp2_arrival - sp1_departure;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1765,7 +1948,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time1 + sp2_arrival - sp1_departure + headway_sec + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time1 + headway_sec + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1774,7 +1958,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = last_time1 + sp2_arrival - sp1_departure;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1783,7 +1968,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = end_time1 + sp2_arrival - sp1_departure + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1792,7 +1978,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time2 + sp2_arrival - sp1_departure;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time2 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1801,7 +1988,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = start_time2 + sp2_arrival - sp1_departure + headway_sec + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time2 + sp2_arrival - sp1_departure + headway_sec));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1810,7 +1998,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 86100;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1819,7 +2008,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 86400;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1828,7 +2018,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = 86610;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, 86600);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1837,7 +2028,8 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     {
         uint32_t hour = last_time2 + sp2_arrival - sp1_departure + 1;
         DateTime dt_test = DateTimeUtils::set(0, hour);
-        std::tie(st2, dt2) = next_st.tardiest_stop_time(false, JppIdx(*jpp2), dt_test, false, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, JppIdx(*jpp2), dt_test,
+                                                        false, false);
         BOOST_CHECK_EQUAL(dt2, last_time2 + sp2_arrival - sp1_departure);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
@@ -1871,7 +2063,7 @@ struct classic_freq_dataset {
 BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_before_period, classic_freq_dataset) {
     DateTime dt = DateTimeUtils::set(1, 8 * 60 * 60);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 10 * 60 * 60 + 30));
 }
@@ -1879,7 +2071,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_before_period, classic_fr
 BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_after_period, classic_freq_dataset) {
     DateTime dt = DateTimeUtils::set(1, 17 * 60 * 60);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::inf);
 }
@@ -1888,7 +2080,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_in_period, classic_freq_d
     //14:00:30 is in period and the next stop will be 14:00:30
     DateTime dt = DateTimeUtils::set(1, 14 * 60 * 60 + 30);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 14 * 60 * 60 + 30));
 }
@@ -1897,7 +2089,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_in_period_2, classic_freq
     //14:00:31 is in period and the next stop will be 14:20:30
     DateTime dt = DateTimeUtils::set(1, 14 * 60 * 60 + 30 + 1);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 14 * 60 * 60 + 20 * 60 + 30));
 }
@@ -1924,7 +2116,7 @@ struct midnight_freq_dataset {
 BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_before_start_after_end, midnight_freq_dataset) {
     DateTime dt = DateTimeUtils::set(1, 16 * 60 * 60);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     //next departure is the beginning of the service
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
@@ -1934,7 +2126,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_before_midnight, midnight_fr
     //the next one after 23:10 is 23:20
     DateTime dt = DateTimeUtils::set(1, 23 * 60 * 60 + 10 * 60);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 23 * 60 * 60 + 20 * 60 + 30));
 }
@@ -1943,7 +2135,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_before_end, midnight_freq_da
     //it's 5:08:30, the next one is 5:20:30, but we have to check the day before (which is ok is this case)
     DateTime dt = DateTimeUtils::set(1, 5 * 60 * 60 + 8 * 60 + 30);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
     std::cout << "rs:" << str(next_dt) << std::endl;
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 5 * 60 * 60 + 20 * 60 + 30));
@@ -1972,7 +2164,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_before_end_no_valid, midnigh
     //since the day before was not valid, we have to wait for the begining of the service
     DateTime dt = DateTimeUtils::set(1, 5 * 60 * 60 + 8 * 60 + 30);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
 }
@@ -1981,7 +2173,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_after_end_no_valid, midnight
     //it's 10:08, the next one is 17:20, and we don't have to check the day before
     DateTime dt = DateTimeUtils::set(1, 10 * 60 * 60 + 8 * 60 + 30);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
 }
@@ -1990,7 +2182,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_begin_service, midnight_freq
     //it's 17:00:30, the next one is 17:00:30, same time, and we don't have to check the day before
     DateTime dt = DateTimeUtils::set(1, 17 * 60 * 60 + 30);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
 }
@@ -2000,7 +2192,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_midnight_case, midnight_freq
     //since the day before is not valid, we have to wait for the begining of the service
     DateTime dt = DateTimeUtils::set(1, 0);
 
-    auto next_dt = get_next_stop_time(true, dt, vj, st);
+    auto next_dt = get_next_stop_time(StopEvent::pick_up, dt, vj, st);
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
 }

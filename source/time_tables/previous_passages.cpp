@@ -38,6 +38,7 @@ www.navitia.io
 
 
 namespace pt = boost::posix_time;
+using navitia::routing::StopEvent;
 
 namespace navitia { namespace timetables {
 
@@ -59,8 +60,9 @@ previous_passages(const std::string &request,
     std::remove_if(handler.journey_pattern_points.begin(),
                    handler.journey_pattern_points.end(), vis.predicate);
 
-    const bool is_on_departures{vis.api_pb == pbnavitia::PREVIOUS_DEPARTURES};
-    auto passages_dt_st = get_stop_times(is_on_departures, handler.journey_pattern_points,
+    const StopEvent stop_event = (vis.api_pb == pbnavitia::PREVIOUS_DEPARTURES) ?
+                                 StopEvent::pick_up : StopEvent::drop_off;
+    auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
                                          data, disruption_active, accessibilite_params);
     size_t total_result = passages_dt_st.size();
@@ -68,7 +70,7 @@ previous_passages(const std::string &request,
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(is_on_departures) {
+        if(stop_event == StopEvent::pick_up) {
             passage = handler.pb_response.add_next_departures();
         } else {
             passage = handler.pb_response.add_next_arrivals();

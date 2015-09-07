@@ -35,7 +35,7 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const bool is_on_departures,
+std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent stop_event,
                                                const std::vector<type::idx_t>& journey_pattern_points,
                                                const DateTime& dt,
                                                const DateTime& max_dt,
@@ -62,7 +62,7 @@ std::vector<datetime_stop_time> get_stop_times(const bool is_on_departures,
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = next_st.next_stop_time(is_on_departures, routing::JppIdx(*jpp),
+            auto st = next_st.next_stop_time(stop_event, routing::JppIdx(*jpp),
                                              next_requested_datetime[jpp_idx], clockwise, disruption_active,
                                              accessibilite_params.vehicle_properties, true);
 
