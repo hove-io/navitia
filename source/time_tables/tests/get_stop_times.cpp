@@ -375,39 +375,53 @@ BOOST_AUTO_TEST_CASE(test_discrete_next_arrivals_prev_departures){
         return jpp_stop;
     };
 
-    auto result_next_arrivals = get_stop_times(false, get_jpp_idx("stop1"), navitia::DateTimeUtils::min,
-                                               navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    const navitia::DateTime yesterday = navitia::DateTimeUtils::min;
+    const navitia::DateTime yesterday_8h45 = navitia::DateTimeUtils::set(0, 8*3600 + 45*60);
+    const navitia::DateTime today = navitia::DateTimeUtils::set(1, 0);
+    const navitia::DateTime today_8h45 = navitia::DateTimeUtils::set(1, 8*3600 + 45*60);
+    const navitia::DateTime tomorrow = navitia::DateTimeUtils::set(2, 0);
+    auto result_next_arrivals = get_stop_times(false, get_jpp_idx("stop1"), today, tomorrow,
+                                               100, *b.data, false);
     BOOST_CHECK_EQUAL(result_next_arrivals.size(), 0);
-    auto result_prev_departures = get_stop_times(true, get_jpp_idx("stop1"), navitia::DateTimeUtils::set(1, 0),
-                                                 navitia::DateTimeUtils::min, 100, *b.data, false);
+    auto result_prev_departures = get_stop_times(true, get_jpp_idx("stop1"), today, yesterday,
+                                                 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "8:01"_t);
 
-    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop2"), navitia::DateTimeUtils::min,
-                                          navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop2"), today, tomorrow,
+                                          100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
-    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "9:00"_t);
-    result_prev_departures = get_stop_times(true, get_jpp_idx("stop2"), navitia::DateTimeUtils::set(1, 0),
-                                            navitia::DateTimeUtils::min, 100, *b.data, false);
+    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "9:00"_t);
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop2"), today, yesterday,
+                                            100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 2);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:01"_t);
     BOOST_CHECK_EQUAL(result_prev_departures.at(1).first, "8:31"_t);
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop2"), today_8h45, today,
+                                            100, *b.data, false);
+    BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
+    BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "24:00"_t + "8:31"_t);
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop2"), today_8h45, yesterday_8h45,
+                                            100, *b.data, false);
+    BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 2);
+    BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "24:00"_t + "8:31"_t);
+    BOOST_CHECK_EQUAL(result_prev_departures.at(1).first, "9:01"_t);
 
-    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop3"), navitia::DateTimeUtils::min,
-                                          navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop3"), today, tomorrow,
+                                          100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 2);
-    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "09:30"_t);
-    BOOST_CHECK_EQUAL(result_next_arrivals.at(1).first, "10:00"_t);
-    result_prev_departures = get_stop_times(true, get_jpp_idx("stop3"), navitia::DateTimeUtils::set(1, 0),
-                                            navitia::DateTimeUtils::min, 100, *b.data, false);
+    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "09:30"_t);
+    BOOST_CHECK_EQUAL(result_next_arrivals.at(1).first, "24:00"_t + "10:00"_t);
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop3"), today, yesterday,
+                                            100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:31"_t);
 
-    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop4"), navitia::DateTimeUtils::min,
-                                 navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop4"), today, tomorrow,
+                                          100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
-    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "10:30"_t);
-    result_prev_departures = get_stop_times(true, get_jpp_idx("stop4"), navitia::DateTimeUtils::set(1, 0),
-                                            navitia::DateTimeUtils::min, 100, *b.data, false);
+    BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "10:30"_t);
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop4"), today, yesterday,
+                                            100, *b.data, false);
     BOOST_CHECK_EQUAL(result_prev_departures.size(), 0);
 }
