@@ -349,6 +349,14 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 
 }
 
+/**
+ *       stop1            stop2            stop3            stop4
+ * A: 08:00-08:01      09:00-09:01      10:00-10:01          ---
+ * B:     ---          08:30-08:31      09:30-09:31      10:30-10:31
+ *
+ * First arrivals and last departures are useless though
+ * Checking that next arrivals and previous departures are ok at each stop_point
+ */
 BOOST_AUTO_TEST_CASE(test_discrete_next_arrivals_prev_departures){
     ed::builder b("20150907");
     b.vj("A")("stop1", "8:00"_t, "8:01"_t)("stop2", "9:00"_t, "9:01"_t)("stop3", "10:00"_t, "10:01"_t);
@@ -358,55 +366,48 @@ BOOST_AUTO_TEST_CASE(test_discrete_next_arrivals_prev_departures){
     b.data->build_uri();
     b.data->build_raptor();
 
-    auto vec_jpp_stop1 = b.data->pt_data->stop_points_map["stop1"]->journey_pattern_point_list;
-    std::vector<navitia::type::idx_t> jpps_stop1;
-    for(auto jpp : vec_jpp_stop1)
-        jpps_stop1.push_back(jpp->idx);
-    auto result_next_arrivals = get_stop_times(false, jpps_stop1, navitia::DateTimeUtils::min,
+    auto get_jpp_idx = [&b] (const std::string& stop_point_id) {
+        std::vector<navitia::type::idx_t> jpp_stop;
+        auto vec_jpp_stop = b.data->pt_data->stop_points_map.at(stop_point_id)->journey_pattern_point_list;
+        for (auto jpp : vec_jpp_stop) {
+            jpp_stop.push_back(jpp->idx);
+        }
+        return jpp_stop;
+    };
+
+    auto result_next_arrivals = get_stop_times(false, get_jpp_idx("stop1"), navitia::DateTimeUtils::min,
                                                navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
     BOOST_CHECK_EQUAL(result_next_arrivals.size(), 0);
-    auto result_prev_departures = get_stop_times(true, jpps_stop1, navitia::DateTimeUtils::set(1, 0),
+    auto result_prev_departures = get_stop_times(true, get_jpp_idx("stop1"), navitia::DateTimeUtils::set(1, 0),
                                                  navitia::DateTimeUtils::min, 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "8:01"_t);
 
-    auto vec_jpp_stop2 = b.data->pt_data->stop_points_map["stop2"]->journey_pattern_point_list;
-    std::vector<navitia::type::idx_t> jpps_stop2;
-    for(auto jpp : vec_jpp_stop2)
-        jpps_stop2.push_back(jpp->idx);
-    result_next_arrivals = get_stop_times(false, jpps_stop2, navitia::DateTimeUtils::min,
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop2"), navitia::DateTimeUtils::min,
                                           navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "9:00"_t);
-    result_prev_departures = get_stop_times(true, jpps_stop2, navitia::DateTimeUtils::set(1, 0),
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop2"), navitia::DateTimeUtils::set(1, 0),
                                             navitia::DateTimeUtils::min, 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 2);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:01"_t);
     BOOST_CHECK_EQUAL(result_prev_departures.at(1).first, "8:31"_t);
 
-    auto vec_jpp_stop3 = b.data->pt_data->stop_points_map["stop3"]->journey_pattern_point_list;
-    std::vector<navitia::type::idx_t> jpps_stop3;
-    for(auto jpp : vec_jpp_stop3)
-        jpps_stop3.push_back(jpp->idx);
-    result_next_arrivals = get_stop_times(false, jpps_stop3, navitia::DateTimeUtils::min,
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop3"), navitia::DateTimeUtils::min,
                                           navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 2);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "09:30"_t);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(1).first, "10:00"_t);
-    result_prev_departures = get_stop_times(true, jpps_stop3, navitia::DateTimeUtils::set(1, 0),
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop3"), navitia::DateTimeUtils::set(1, 0),
                                             navitia::DateTimeUtils::min, 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:31"_t);
 
-    auto vec_jpp_stop4 = b.data->pt_data->stop_points_map["stop4"]->journey_pattern_point_list;
-    std::vector<navitia::type::idx_t> jpps_stop4;
-    for(auto jpp : vec_jpp_stop4)
-        jpps_stop4.push_back(jpp->idx);
-    result_next_arrivals = get_stop_times(false, jpps_stop4, navitia::DateTimeUtils::min,
+    result_next_arrivals = get_stop_times(false, get_jpp_idx("stop4"), navitia::DateTimeUtils::min,
                                  navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "10:30"_t);
-    result_prev_departures = get_stop_times(true, jpps_stop4, navitia::DateTimeUtils::set(1, 0),
+    result_prev_departures = get_stop_times(true, get_jpp_idx("stop4"), navitia::DateTimeUtils::set(1, 0),
                                             navitia::DateTimeUtils::min, 100, *b.data, false);
     BOOST_CHECK_EQUAL(result_prev_departures.size(), 0);
 }

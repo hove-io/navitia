@@ -93,24 +93,20 @@ struct NextStopTimeData {
 
 private:
     struct Departure {
-        template<typename T> inline bool
-        operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
         DateTime get_time(const type::StopTime& st) const;
         bool is_valid(const type::StopTime& st) const;
     };
     struct Arrival {
-        template<typename T> inline bool
-        operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
         DateTime get_time(const type::StopTime& st) const;
         bool is_valid(const type::StopTime& st) const;
     };
     // This structure allow to iterate on stop times in the interesting order
-    template<typename Cmp> struct TimesStopTimes {
+    template<typename Getter> struct TimesStopTimes {
         // times is sorted according to cmp
         // for all i, cmp.get_time(stop_times[i]) == times[i]
         std::vector<DateTime> times;
         std::vector<const type::StopTime*> stop_times;
-        Cmp cmp;
+        Getter getter;
 
         // Returns the range of stop times
         inline StopTimeIter stop_time_range() const {
@@ -122,13 +118,13 @@ private:
         }
         // Returns the range of stop times next to hour(dt)
         inline StopTimeIter next_stop_time_range(const DateTime dt) const {
-            const auto it = boost::lower_bound(times, DateTimeUtils::hour(dt), cmp);
+            const auto it = boost::lower_bound(times, DateTimeUtils::hour(dt));
             const auto idx = it - times.begin();
             return boost::make_iterator_range(stop_times.begin() + idx, stop_times.end());
         }
         // Returns the range of stop times previous to hour(dt)
         inline StopTimeReverseIter prev_stop_time_range(const DateTime dt) const {
-            const auto it = boost::upper_bound(times, DateTimeUtils::hour(dt), cmp);
+            const auto it = boost::upper_bound(times, DateTimeUtils::hour(dt));
             const auto idx = it - times.begin();
             return boost::make_iterator_range(stop_times.rend() - idx, stop_times.rend());
         }

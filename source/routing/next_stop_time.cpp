@@ -50,8 +50,8 @@ bool NextStopTimeData::Arrival::is_valid(const type::StopTime& st) const {
     return st.valid_begin(false);
 }
 
-template<typename Cmp>
-void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
+template<typename Getter>
+void NextStopTimeData::TimesStopTimes<Getter>::init(const type::JourneyPattern* jp,
                                                  const type::JourneyPatternPoint* jpp)
 {
     // collect the stop times at the given jpp
@@ -61,27 +61,27 @@ void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
         assert(vj->stop_time_list.at(jpp_order).journey_pattern_point ==
                jp->journey_pattern_point_list.at(jpp_order));
         const auto& st = vj->stop_time_list[jpp_order];
-        if (! cmp.is_valid(st)) { continue; }
+        if (! getter.is_valid(st)) { continue; }
         stop_times.push_back(&st);
     }
 
-    // sort the stop times according to cmp
+    // sort the stop times in ascending order
     boost::sort(stop_times, [&](const type::StopTime* st1, const type::StopTime* st2) {
-            const auto time1 = DateTimeUtils::hour(cmp.get_time(*st1));
-            const auto time2 = DateTimeUtils::hour(cmp.get_time(*st2));
-            if (time1 != time2) { return cmp(time1, time2); }
+            const auto time1 = DateTimeUtils::hour(getter.get_time(*st1));
+            const auto time2 = DateTimeUtils::hour(getter.get_time(*st2));
+            if (time1 != time2) { return time1 < time2; }
             const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
             const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
-            if (cmp.get_time(st1_first) != cmp.get_time(st2_first)) {
-                return cmp(cmp.get_time(st1_first), cmp.get_time(st2_first));
+            if (getter.get_time(st1_first) != getter.get_time(st2_first)) {
+                return getter.get_time(st1_first) < getter.get_time(st2_first);
             }
-            return cmp(st1_first.vehicle_journey->idx, st2_first.vehicle_journey->idx);
+            return st1_first.vehicle_journey->idx < st2_first.vehicle_journey->idx;
         });
 
     // collect the corresponding times
     times.reserve(stop_times.size());
     for (const auto* st: stop_times) {
-        times.push_back(DateTimeUtils::hour(cmp.get_time(*st)));
+        times.push_back(DateTimeUtils::hour(getter.get_time(*st)));
     }
 }
 
@@ -232,7 +232,7 @@ previous_valid_frequency(const bool is_on_departures,
             }
 
             const auto previous_dt = get_previous_stop_time(is_on_departures, previous_date, *freq_vj,
-                                                          st, adapted);
+                                                            st, adapted);
 
             if (previous_dt == DateTimeUtils::not_valid) {
                 continue;
