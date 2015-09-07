@@ -59,7 +59,7 @@ next_passages(const std::string &request,
     std::remove_if(handler.journey_pattern_points.begin(),
                    handler.journey_pattern_points.end(), vis.predicate);
 
-    const bool is_on_departures(vis.api_pb == pbnavitia::NEXT_DEPARTURES);
+    const bool is_on_departures{vis.api_pb == pbnavitia::NEXT_DEPARTURES};
     auto passages_dt_st = get_stop_times(is_on_departures, handler.journey_pattern_points,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
                                          data, disruption_active, accessibilite_params);

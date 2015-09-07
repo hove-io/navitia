@@ -160,7 +160,7 @@ struct NextStopTime {
             return earliest_stop_time(is_on_departures, jpp_idx, dt, adapted, vehicle_props,
                                       check_freq, bound ? *bound : DateTimeUtils::inf);
         } else {
-            return tardiest_stop_time(is_on_departures,jpp_idx, dt, adapted, vehicle_props,
+            return tardiest_stop_time(is_on_departures, jpp_idx, dt, adapted, vehicle_props,
                                       check_freq, bound ? *bound : DateTimeUtils::min);
         }
     }

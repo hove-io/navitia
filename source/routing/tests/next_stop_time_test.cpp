@@ -2004,5 +2004,3 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_midnight_case, midnight_freq
 
     BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::set(1, 17 * 60 * 60 + 30));
 }
-
-
