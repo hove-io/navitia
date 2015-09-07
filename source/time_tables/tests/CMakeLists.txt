@@ -3,9 +3,9 @@ SET(BOOST_LIBS ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY}
     ${Boost_IOSTREAMS_LIBRARY})
 
-add_executable(get_stop_times get_stop_times.cpp)
-target_link_libraries(get_stop_times time_tables ed data fare georef routing types utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
-ADD_BOOST_TEST(get_stop_times)
+add_executable(get_stop_times_test get_stop_times_test.cpp)
+target_link_libraries(get_stop_times_test time_tables ed data fare georef routing types utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(get_stop_times_test)
 
 
 add_executable(thermometer_test thermometer.cpp)
