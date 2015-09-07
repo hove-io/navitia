@@ -128,7 +128,8 @@ next_valid_discrete(const bool is_on_departures,
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, is_on_departures)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->departure_time));
+        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
             return {st, cur_dt};
@@ -139,7 +140,8 @@ next_valid_discrete(const bool is_on_departures,
     date++;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, is_on_departures)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->departure_time));
+        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
         if (is_valid(st, date, true, adapted, vehicle_props)) {
             return {st, cur_dt};
@@ -254,7 +256,8 @@ previous_valid_discrete(const bool is_on_departures,
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, is_on_departures)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->arrival_time));
+        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
             return {st, cur_dt};
@@ -268,7 +271,8 @@ previous_valid_discrete(const bool is_on_departures,
     --date;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, is_on_departures)) {
         BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(st->arrival_time));
+        const uint32_t hour = is_on_departures ? st->departure_time : st->arrival_time;
+        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
         if (is_valid(st, date, false, adapted, vehicle_props)) {
             return {st, cur_dt};
