@@ -448,11 +448,9 @@ struct RaptorSolutionReader {
             v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
-            //if clockwise: working on departures, else arrivals
-            const StopEvent stop_event{v.clockwise() ? StopEvent::pick_up : StopEvent::drop_off};
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                        stop_event, jpp.idx, begin_dt, v.clockwise(), disruption_active,
+                        v.stop_event(), jpp.idx, begin_dt, v.clockwise(), disruption_active,
                         accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true, begin_limit);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
@@ -488,11 +486,9 @@ struct RaptorSolutionReader {
                   const DateTime begin_dt) {
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
-            //if clockwise: working on departures, else arrivals
-            const StopEvent stop_event{v.clockwise() ? StopEvent::pick_up : StopEvent::drop_off};
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                                stop_event, jpp.idx, begin_dt, v.clockwise(), disruption_active,
+                                v.stop_event(), jpp.idx, begin_dt, v.clockwise(), disruption_active,
                                 accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }

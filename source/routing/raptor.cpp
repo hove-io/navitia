@@ -592,11 +592,8 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
                     if (prec_labels.transfer_is_initialized(jpp.sp_idx) &&
                         (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
-                        //if clockwise: working on departures, else arrivals
-                        const StopEvent stop_event{visitor.clockwise() ?
-                                                   StopEvent::pick_up : StopEvent::drop_off};
                         const auto tmp_st_dt = next_st.next_stop_time(
-                            stop_event, jpp.idx, previous_dt, visitor.clockwise(),
+                            visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(),
                             disruption_active, accessibilite_params.vehicle_properties, jpp.has_freq);
 
                         if (tmp_st_dt.first != nullptr) {
