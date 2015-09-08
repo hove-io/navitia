@@ -570,3 +570,63 @@ BOOST_AUTO_TEST_CASE(multi_impacts_on_stop_area_and_stop_point) {
 
 
 }
+
+BOOST_AUTO_TEST_CASE(multi_impacts_interleaved_on_stop_points) {
+    ed::builder b = {"20150101"};
+    b.generate_dummy_basis();
+    b.vj("l1")("A", "08:00"_t)("B", "09:00"_t)("C", "10:00"_t)("D", "11:00"_t)("E", "12:00"_t);
+    b.finish();
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+
+    chaos::Disruption disruption_bc{};
+    disruption_bc.set_id("disruption_bc");
+    auto impact = disruption_bc.add_impacts();
+    impact->set_id("impact_stop_point");
+    auto severity = impact->mutable_severity();
+    severity->set_id("severity_stop_point");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_point);
+    object->set_uri("B");
+    object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_point);
+    object->set_uri("C");
+    auto app_period = impact->add_application_periods();
+    app_period->set_start("20150102T000000"_pts);
+    app_period->set_end("20150105T000000"_pts);
+    navitia::add_disruption(disruption_bc, *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    chaos::Disruption disruption_cd{};
+    disruption_cd.set_id("disruption_cd");
+    impact = disruption_bc.add_impacts();
+    impact->set_id("impact_stop_point");
+    severity = impact->mutable_severity();
+    severity->set_id("severity_stop_point");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_point);
+    object->set_uri("C");
+    object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_stop_point);
+    object->set_uri("D");
+    app_period = impact->add_application_periods();
+    app_period->set_start("20150103T000000"_pts);
+    app_period->set_end("20150106T000000"_pts);
+    navitia::add_disruption(disruption_cd, *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
+
+    navitia::delete_disruption(disruption_bc.id(), *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    navitia::delete_disruption(disruption_cd.id(), *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+}
