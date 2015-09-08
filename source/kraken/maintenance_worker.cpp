@@ -165,10 +165,10 @@ void MaintenanceWorker::init_rabbitmq(){
         //if the queue doesn't exist an exception is throw...
         try{
             channel->DeleteQueue(queue_name_task);
-        }catch(const std::runtime_error& ex){}
+        }catch(const std::runtime_error&){}
         try{
             channel->DeleteQueue(queue_name_rt);
-        }catch(const std::runtime_error& ex){}
+        }catch(const std::runtime_error&){}
 
         this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
