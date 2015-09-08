@@ -157,9 +157,8 @@ departure_board(const std::string& request,
             }
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {
-                tmp = get_stop_times({jpp->idx}, handler.date_time,
-                                          handler.max_datetime,
-                                          max_date_times, data, disruption_active);
+                tmp = get_stop_times(navitia::routing::StopEvent::pick_up, {jpp->idx}, handler.date_time,
+                                     handler.max_datetime, max_date_times, data, disruption_active);
             } else {
                 tmp = get_stop_times({jpp->idx}, DateTimeUtils::hour(handler.date_time),
                                      DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);

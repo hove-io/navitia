@@ -38,6 +38,7 @@ www.navitia.io
 
 
 namespace pt = boost::posix_time;
+using navitia::routing::StopEvent;
 
 namespace navitia { namespace timetables {
 
@@ -59,18 +60,20 @@ next_passages(const std::string &request,
     std::remove_if(handler.journey_pattern_points.begin(),
                    handler.journey_pattern_points.end(), vis.predicate);
 
-    auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
-                            handler.date_time, handler.max_datetime,
-                            nb_stoptimes, data, disruption_active, accessibilite_params);
+    const StopEvent stop_event = (vis.api_pb == pbnavitia::NEXT_DEPARTURES) ?
+                                 StopEvent::pick_up : StopEvent::drop_off;
+    auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
+                                         handler.date_time, handler.max_datetime, nb_stoptimes,
+                                         data, disruption_active, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(vis.api_pb == pbnavitia::NEXT_ARRIVALS) {
-            passage = handler.pb_response.add_next_arrivals();
-        } else {
+        if(stop_event == StopEvent::pick_up) {
             passage = handler.pb_response.add_next_departures();
+        } else {
+            passage = handler.pb_response.add_next_arrivals();
         }
         pt::time_period action_period(navitia::to_posix_time(dt_stop_time.first, data), pt::seconds(1));
         auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
@@ -78,7 +81,8 @@ next_passages(const std::string &request,
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
 
-        fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(), 0, current_datetime, action_period);
+        fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(),
+                       0, current_datetime, action_period);
 
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(),

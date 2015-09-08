@@ -122,6 +122,7 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
             *cur_jpp->stop_point);
         assert(conn != nullptr);
         const auto new_st_dt = reader.raptor.next_st.earliest_stop_time(
+            StopEvent::pick_up,
             JppIdx(*cur_jpp),
             prev_s->get_out_dt + conn->duration,
             reader.disruption_active,
@@ -449,9 +450,8 @@ struct RaptorSolutionReader {
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                jpp.idx, begin_dt, v.clockwise(), disruption_active,
-                accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true,
-                begin_limit);
+                        v.stop_event(), jpp.idx, begin_dt, v.clockwise(), disruption_active,
+                        accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true, begin_limit);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 
@@ -488,8 +488,8 @@ struct RaptorSolutionReader {
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                jpp.idx, begin_dt, v.clockwise(), disruption_active,
-                accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
+                                v.stop_event(), jpp.idx, begin_dt, v.clockwise(), disruption_active,
+                                accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 

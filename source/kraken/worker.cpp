@@ -264,8 +264,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(),
-                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), *data, true, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_DEPARTURES:
             return timetables::previous_departures(request.departure_filter(),
                     forbidden_uri, until_datetime,
@@ -276,8 +276,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return timetables::previous_arrivals(request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(),
-                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), *data, true, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
                                               request.arrival_filter(),
