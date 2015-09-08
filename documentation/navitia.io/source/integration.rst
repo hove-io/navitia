@@ -720,8 +720,8 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 
 .. _journeys_parameters:
 
-Parameters
-##########
+Main parameters
+###############
 
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | Required | Name                  | Type      | Description                               | Default value   |
@@ -745,9 +745,31 @@ Parameters
 |          |                       |           | If ``arrival`` it will retrieve journeys  |                 |
 |          |                       |           | arriving before datetime.                 |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | traveler_type         | enum      | Define speeds and accessibility values    | standard        |
+|          |                       |           | for different kind of people              |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | * standard                                |                 |
+|          |                       |           | * slow_walker                             |                 |
+|          |                       |           | * fast_walker                             |                 |
+|          |                       |           | * luggage                                 |                 |
+|          |                       |           | * wheelchair                              |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | Each profile also automatically           |                 |
+|          |                       |           | determines appropriate first and last     |                 |
+|          |                       |           | section modes to the covered area.        |                 |
+|          |                       |           | It is possible to overload first and last |                 |
+|          |                       |           | section mode as you specify all of us.    |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
 |          |                       |           | networks, etc.                            |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
+
+Other parameters
+################
+
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| Required | Name                  | Type      | Description                               | Default value   |
++==========+=======================+===========+===========================================+=================+
 | nop      | first_section_mode[]  | array of  | Force the first section mode if the first | walking         |
 |          |                       | string    | section is not a public transport one.    |                 |
 |          |                       |           | It takes one the following values:        |                 |
