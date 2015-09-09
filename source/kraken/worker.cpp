@@ -33,11 +33,11 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
+#include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/route_schedules.h"
 #include "time_tables/next_passages.h"
 #include "time_tables/previous_passages.h"
-#include "time_tables/2stops_schedules.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/disruption_api.h"
 #include "calendar/calendar_api.h"
@@ -278,12 +278,6 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(), *data, true, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
-        case pbnavitia::STOPS_SCHEDULES:
-            return timetables::stops_schedule(request.departure_filter(),
-                                              request.arrival_filter(),
-                                              forbidden_uri,
-                    from_datetime, request.duration(), request.depth(),
-                    *data, false);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
@@ -667,7 +661,6 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::NEXT_ARRIVALS:
         case pbnavitia::PREVIOUS_DEPARTURES:
         case pbnavitia::PREVIOUS_ARRIVALS:
-        case pbnavitia::STOPS_SCHEDULES:
         case pbnavitia::DEPARTURE_BOARDS:
             response = next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:
