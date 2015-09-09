@@ -555,15 +555,8 @@ struct routing_api_data {
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
 
-            channel_types.push_back(ChannelType::web);
-            channel_types.push_back(ChannelType::sms);
-
-            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-
             channel_types.clear();
-            channel_types.push_back(ChannelType::web);
-            channel_types.push_back(ChannelType::email);
+            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"try again", "email", "email", "content type", default_date, default_date, channel_types});
 
             disruption->add_impact(impact);
@@ -586,6 +579,7 @@ struct routing_api_data {
             //add another pt impacted object just to test with several
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
 
+            channel_types.clear();
             impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
 
@@ -613,6 +607,7 @@ struct routing_api_data {
             //add another pt impacted object just to test with several
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
 
+            channel_types.clear();
             impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
 
@@ -636,6 +631,7 @@ struct routing_api_data {
             //add another pt impacted object just to test with several
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
 
+            channel_types.clear();
             impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
 
@@ -663,8 +659,9 @@ struct routing_api_data {
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));            
 
+            channel_types.clear();
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
 
@@ -692,8 +689,15 @@ struct routing_api_data {
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
 
+            channel_types.clear();
+            channel_types.push_back(ChannelType::web);
+            channel_types.push_back(ChannelType::sms);
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
+
+            channel_types.clear();
+            channel_types.push_back(ChannelType::web);
+            channel_types.push_back(ChannelType::email);
+            impact->messages.push_back({"try again", "email", "email", "content type", default_date, default_date, channel_types});
 
             disruption->add_impact(impact);
 
@@ -720,6 +724,7 @@ struct routing_api_data {
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
 
+            channel_types.clear();
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
             impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
 

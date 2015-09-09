@@ -331,7 +331,16 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(disruption_message), 1)
         message = get_not_null(disruption_message[0], 'messages')
         eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 2)
+
         eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'email')
+        eq_(channel['name'], 'email')
+        eq_(len(channel['types']), 2)
 
 
     def test_disruption_on_route_and_line(self):
@@ -365,3 +374,18 @@ class TestDisruptions(AbstractTestFixture):
             is_valid_disruption(d)
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0_and_line')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0_and_line')
+
+        #Verify message and channel without any channel type
+        message = get_not_null(lines_disrupt[0], 'messages')
+        eq_(len(message), 2)
+        eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)
+
+        eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)

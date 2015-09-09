@@ -227,11 +227,11 @@ class disruption_status(fields.Raw):
 
 class channel_types(fields.Raw):
     def output(self, key, obj):
-        channel_types = obj.types
-        descriptor = channel_types.DESCRIPTOR
+        channel = obj
+        descriptor = channel.DESCRIPTOR
         enum = descriptor.enum_types_by_name["ChannelType"]
         return [str.lower(enum.values_by_number[v].name) for v
-                in channel_types.types]
+                in channel.channel_types]
 
 
 class notes(fields.Raw):
@@ -423,7 +423,7 @@ channel = {
     "content_type": fields.String(),
     "id": fields.String(),
     "name": fields.String(),
-    "types": channel_types(attribute="types")
+    "types": channel_types()
 }
 
 disruption_message = {

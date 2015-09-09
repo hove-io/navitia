@@ -267,6 +267,7 @@ namespace navitia {
         template<typename T>
         void fill_channel_type(T const_it, chaos::Channel* channel) {
             const auto& type_ = const_it["channel_type"].template as<std::string>();
+            //Here we have to verify existance of Channel Type in the channel.
             if (type_ == "web"){
                 channel->add_types(chaos::Channel_Type_web);
             } else if (type_ == "sms") {

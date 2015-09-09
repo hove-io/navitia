@@ -235,7 +235,7 @@ std::vector<nt::new_disruption::ChannelType> create_channel_types(const chaos::C
             res.push_back(nt::new_disruption::ChannelType::facebook);
             break;
         case chaos::Channel_Type_unkown_type:
-            res.push_back(nt::new_disruption::ChannelType::unkown_type);
+            res.push_back(nt::new_disruption::ChannelType::unknown_type);
             break;
         }
     }
