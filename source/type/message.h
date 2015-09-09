@@ -76,7 +76,7 @@ enum class ChannelType{
     notification,
     twitter,
     facebook,
-    unkown_type
+    unknown_type
 };
 
 inline std::string to_string(Effect effect) {
