@@ -518,7 +518,7 @@ struct vehicle_journey_impactor {
   void complete() {
       complete_impl(vj_discrete_to_be_updated);
       complete_impl(vj_frequency_to_be_updated);
-  };
+  }
 
   bool is_impacted(const nt::VehicleJourney& vj) const{
       for (auto period : impact->application_periods) {
@@ -556,7 +556,7 @@ struct vehicle_journey_impactor {
           }
       }
       auto jp_key = nt::JourneyPatternKey{jp, std::move(stop_points_for_key)};
-      return pt_data.get_or_create_journey_pattern(jp_key);
+      return pt_data.get_or_create_journey_pattern(jp_key, jp.name, jp.uri);
   }
 
   template<typename T>
@@ -741,6 +741,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 impact->impacted_journey_patterns.erase(it);
             }
         });
+        pt_data.remove_journey_pattern_from_jp_pool(*jp);
     }
 
 

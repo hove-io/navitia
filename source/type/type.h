@@ -582,6 +582,9 @@ struct hasOdtProperties {
     void operator|=(const type::hasOdtProperties& other) {
         odt_properties |= other.odt_properties;
     }
+    bool operator==(const type::hasOdtProperties& other) const {
+        return odt_properties == other.odt_properties;
+    }
 
     void reset() { odt_properties.reset(); }
     void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
@@ -1145,8 +1148,6 @@ struct JourneyPatternKey {
     PhysicalMode* physical_mode = nullptr;
     CommercialMode* commercial_mode = nullptr;
     hasOdtProperties odt_properties{};
-    std::string name{};
-    std::string uri{};
     std::vector<StopPoint*> stop_points{};
 
     explicit JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& sps);
