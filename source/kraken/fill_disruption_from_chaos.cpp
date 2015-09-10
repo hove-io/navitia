@@ -209,33 +209,33 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
-std::vector<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
-    std::vector<navitia::type::new_disruption::ChannelType> res;
+std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+    std::set<navitia::type::new_disruption::ChannelType> res;
     for (const auto channel_type: chaos_channel.types()){
         switch(channel_type){
         case chaos::Channel_Type_web:
-            res.push_back(nt::new_disruption::ChannelType::web);
+            res.insert(nt::new_disruption::ChannelType::web);
             break;
         case chaos::Channel_Type_sms:
-            res.push_back(nt::new_disruption::ChannelType::sms);
+            res.insert(nt::new_disruption::ChannelType::sms);
             break;
         case chaos::Channel_Type_email:
-            res.push_back(nt::new_disruption::ChannelType::email);
+            res.insert(nt::new_disruption::ChannelType::email);
             break;
         case chaos::Channel_Type_mobile:
-            res.push_back(nt::new_disruption::ChannelType::mobile);
+            res.insert(nt::new_disruption::ChannelType::mobile);
             break;
         case chaos::Channel_Type_notification:
-            res.push_back(nt::new_disruption::ChannelType::notification);
+            res.insert(nt::new_disruption::ChannelType::notification);
             break;
         case chaos::Channel_Type_twitter:
-            res.push_back(nt::new_disruption::ChannelType::twitter);
+            res.insert(nt::new_disruption::ChannelType::twitter);
             break;
         case chaos::Channel_Type_facebook:
-            res.push_back(nt::new_disruption::ChannelType::facebook);
+            res.insert(nt::new_disruption::ChannelType::facebook);
             break;
         case chaos::Channel_Type_unkown_type:
-            res.push_back(nt::new_disruption::ChannelType::unknown_type);
+            res.insert(nt::new_disruption::ChannelType::unknown_type);
             break;
         }
     }

@@ -175,7 +175,7 @@ struct Message {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    std::vector<ChannelType> channel_types;
+    std::set<ChannelType> channel_types;
 
 
     template<class Archive>

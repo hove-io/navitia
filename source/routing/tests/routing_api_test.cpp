@@ -1832,7 +1832,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    std::vector<ChannelType> channel_types;
+    std::set<ChannelType> channel_types;
 
     nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
     auto default_date = "20150314T000000"_dt;
@@ -1954,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     bad_severity->priority = 0;
     bad_severity->effect = nt::new_disruption::Effect::DETOUR;
     holder.severities[bad_severity->uri] = bad_severity;
-    std::vector<ChannelType> channel_types;
+    std::set<ChannelType> channel_types;
 
     {
         //we create one disruption on stop A

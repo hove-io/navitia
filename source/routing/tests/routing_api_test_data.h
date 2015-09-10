@@ -533,7 +533,7 @@ struct routing_api_data {
         foo_severity->color = "#FFFFF0";
         foo_severity->priority = 50;
         holder.severities[foo_severity->uri] = foo_severity;
-        std::vector<ChannelType> channel_types;
+        std::set<ChannelType> channel_types;
 
         {
             //we create one disruption on stop A
@@ -690,13 +690,13 @@ struct routing_api_data {
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
 
             channel_types.clear();
-            channel_types.push_back(ChannelType::web);
-            channel_types.push_back(ChannelType::sms);
+            channel_types.insert(ChannelType::web);
+            channel_types.insert(ChannelType::sms);
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
 
             channel_types.clear();
-            channel_types.push_back(ChannelType::web);
-            channel_types.push_back(ChannelType::email);
+            channel_types.insert(ChannelType::web);
+            channel_types.insert(ChannelType::email);
             impact->messages.push_back({"try again", "email", "email", "content type", default_date, default_date, channel_types});
 
             disruption->add_impact(impact);
