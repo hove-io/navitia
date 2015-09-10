@@ -140,7 +140,25 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
-        #Todo here we test le message, channel and types
+        #here we test messages in disruption: message, channel and types
+        messages = get_not_null(disruptions[0], 'messages')
+        assert len(messages) == 2
+        eq_(messages[0]['text'], 'default_message')
+        channel = get_not_null(messages[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(channel['content_type'], 'text')
+        assert len(channel['types']) == 1
+        eq_(channel['types'][0], 'sms')
+
+        eq_(messages[1]['text'], 'default_message')
+        channel = get_not_null(messages[1], 'channel')
+        eq_(channel['id'], 'email')
+        eq_(channel['name'], 'email')
+        eq_(channel['content_type'], 'html')
+        assert len(channel['types']) == 2
+        eq_(channel['types'][0], 'web')
+        eq_(channel['types'][1], 'email')
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -564,19 +582,16 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
         pb_end.uri = end
         pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
 
-    # Messages
+    # Message with one channel and two channel types: web and sms
     message = impact.messages.add()
     message.text = message_text
     message.channel.id = "sms"
     message.channel.name = "sms"
     message.channel.max_size = 60
     message.channel.content_type = "text"
-    message.channel.types.append(chaos_pb2.Channel.web)
     message.channel.types.append(chaos_pb2.Channel.sms)
 
-
-    # TODO CHAOS: add 2 channel types (and check in the test the channel type)
-
+    # Message with one channel and two channel types: web and email
     message = impact.messages.add()
     message.text = message_text
     message.channel.name = "email"
@@ -585,6 +600,5 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     message.channel.content_type = "html"
     message.channel.types.append(chaos_pb2.Channel.web)
     message.channel.types.append(chaos_pb2.Channel.email)
-
 
     return feed_message.SerializeToString()
