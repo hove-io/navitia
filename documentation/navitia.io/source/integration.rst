@@ -757,8 +757,10 @@ Main parameters
 |          |                       |           | Each profile also automatically           |                 |
 |          |                       |           | determines appropriate first and last     |                 |
 |          |                       |           | section modes to the covered area.        |                 |
-|          |                       |           | It is possible to overload first and last |                 |
-|          |                       |           | section mode as you specify all of us.    |                 |
+|          |                       |           | You can overload all parameters           |                 |
+|          |                       |           | (especially speeds,distances, first and   |                 |
+|          |                       |           | last modes) by setting all of them        |                 |
+|          |                       |           | specifically                              |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
 |          |                       |           | networks, etc.                            |                 |
