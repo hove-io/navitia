@@ -110,7 +110,6 @@ struct data_set {
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "B");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeC", "C");
         b.data->pt_data->codes.add(b.sps.at("stop_area:stop1"), "code_uic", "bobette");
-        b.data->pt_data->codes.add(b.sas.at("stop_area:stop1"), "code_uic", "baba");
 
         b.data->build_uri();
 

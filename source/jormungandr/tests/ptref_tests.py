@@ -120,8 +120,6 @@ class TestPtRef(AbstractTestFixture):
             code_uic = [c for c in codes if c['type'] == 'code_uic']
             assert len(code_uic) == 1 and code_uic[0]['value'] == 'bobette'
 
-
-
     def test_line(self):
         """test line formating"""
         response = self.query_region("v1/lines")

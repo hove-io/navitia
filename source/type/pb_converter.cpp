@@ -442,7 +442,7 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
         pbnavitia::JourneyPattern * journey_pattern, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
-    if (jp == nullptr) { return ; }
+    if (jp == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     journey_pattern->set_name(jp->name);
@@ -606,7 +606,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
                     const bool show_codes){
-    if (vj == nullptr) { return ; }
+    if (vj == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     vehicle_journey->set_name(vj->name);
