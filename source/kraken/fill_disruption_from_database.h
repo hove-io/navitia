@@ -81,7 +81,7 @@ namespace navitia {
                 fill_disruption(const_it);
                 fill_cause(const_it);
                 tag = nullptr;
-                impact = nullptr;                
+                impact = nullptr;
             }
 
             if (disruption && !const_it["tag_id"].is_null() && (!tag ||

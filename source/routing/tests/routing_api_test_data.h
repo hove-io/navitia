@@ -659,7 +659,7 @@ struct routing_api_data {
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));            
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
 
             channel_types.clear();
             impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
