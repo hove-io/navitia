@@ -790,24 +790,25 @@ JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp):
         route(jp.route),
         physical_mode(jp.physical_mode),
         commercial_mode(jp.commercial_mode),
-        odt_properties(jp.odt_properties),
-        name(jp.name),
-        uri(jp.uri){}
+        odt_properties(jp.odt_properties){}
 
 bool JourneyPatternKey::operator==(const JourneyPatternKey& other) const{
-    return hash_value(*this) == hash_value(other);
+    return is_frequence == other.is_frequence &&
+           route == other.route &&
+           physical_mode == other.physical_mode &&
+           commercial_mode == other.commercial_mode &&
+           odt_properties == other.odt_properties &&
+           stop_points == other.stop_points;
 }
 
 std::size_t hash_value(const JourneyPatternKey& key){
     std::size_t seed{0};
-    boost::hash_combine(seed, key.stop_points);
     boost::hash_combine(seed, key.is_frequence);
     boost::hash_combine(seed, key.route);
     boost::hash_combine(seed, key.physical_mode);
     boost::hash_combine(seed, key.commercial_mode);
     boost::hash_combine(seed, key.odt_properties.odt_properties.to_string());
-    boost::hash_combine(seed, key.name);
-    boost::hash_combine(seed, key.uri);
+    boost::hash_combine(seed, key.stop_points);
     return seed;
 }
 

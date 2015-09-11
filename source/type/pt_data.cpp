@@ -223,7 +223,9 @@ PT_Data::get_stop_point_connection(const StopPoint& from, const StopPoint& to) c
 }
 
 
-nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatternKey& key){
+nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatternKey& key,
+                                                           const std::string& name,
+                                                           const std::string& uri){
     const auto& it = journey_patterns_pool.find(key);
     if (it != journey_patterns_pool.cend()) {
         return it->second;
@@ -235,8 +237,8 @@ nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatt
     new_jp->commercial_mode = key.commercial_mode;
     new_jp->physical_mode = key.physical_mode;
     new_jp->odt_properties = key.odt_properties;
-    new_jp->name = key.name;
-    auto new_uri = key.uri + ":adapted-" + std::to_string(journey_patterns.size()) ;
+    new_jp->name = name;
+    auto new_uri = uri + ":adapted-" + std::to_string(journey_patterns.size()) ;
 
     // the new_uri may be already existent, to guarantee its unicity,
     // we add a random integer at the end of the uri.
@@ -263,7 +265,7 @@ nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatt
         // TODO: copy LineString
 
         new_jp_point->idx = journey_pattern_points.size();
-        new_jp_point->uri = key.uri + ":" + std::to_string(new_jp->journey_pattern_point_list.size());
+        new_jp_point->uri = uri + ":" + std::to_string(new_jp->journey_pattern_point_list.size());
         new_jp_point->stop_point->journey_pattern_point_list.push_back(new_jp_point);
 
         new_jp_point->order = new_jp->journey_pattern_point_list.size();
@@ -283,6 +285,22 @@ void PT_Data::remove_journey_pattern_from_jp_pool(const JourneyPattern& jp){
 
     auto key = JourneyPatternKey{jp, std::move(stop_points_for_key)};
     journey_patterns_pool.erase(key);
+}
+
+type::ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
+    for (auto vp : validity_patterns) {
+        if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
+            return vp;
+        }
+    }
+    auto vp = new nt::ValidityPattern();
+    vp->idx = validity_patterns.size();
+    vp->uri = make_adapted_uri(vp->uri);
+    vp->beginning_date = vp_ref.beginning_date;
+    vp->days = vp_ref.days;
+    validity_patterns.push_back(vp);
+    validity_patterns_map[vp->uri] = vp;
+    return vp;
 }
 
 PT_Data::~PT_Data() {
