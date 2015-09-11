@@ -242,6 +242,14 @@ bool VehicleJourney::has_landing() const{
 
 }
 
+bool VehicleJourney::is_past_midnight() const{
+    if(stop_time_list.empty()) {
+        return false;
+    }
+    return stop_time_list.back().arrival_time >= 24*3600;
+}
+
+
 bool ValidityPattern::is_valid(int day) const {
     if(day < 0) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
@@ -765,6 +773,43 @@ std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
     case Mode_e::Bss: return os << "bss";
     default: return os << "[unknown mode]";
     }
+}
+
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, const std::vector<StopPoint*>& sps):
+        JourneyPatternKey{jp} {
+            stop_points = sps;
+}
+
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& sps):
+        JourneyPatternKey{jp} {
+            stop_points = std::move(sps);
+}
+
+JourneyPatternKey::JourneyPatternKey(const JourneyPattern& jp):
+        is_frequence(jp.is_frequence),
+        route(jp.route),
+        physical_mode(jp.physical_mode),
+        commercial_mode(jp.commercial_mode),
+        odt_properties(jp.odt_properties){}
+
+bool JourneyPatternKey::operator==(const JourneyPatternKey& other) const{
+    return is_frequence == other.is_frequence &&
+           route == other.route &&
+           physical_mode == other.physical_mode &&
+           commercial_mode == other.commercial_mode &&
+           odt_properties == other.odt_properties &&
+           stop_points == other.stop_points;
+}
+
+std::size_t hash_value(const JourneyPatternKey& key){
+    std::size_t seed{0};
+    boost::hash_combine(seed, key.is_frequence);
+    boost::hash_combine(seed, key.route);
+    boost::hash_combine(seed, key.physical_mode);
+    boost::hash_combine(seed, key.commercial_mode);
+    boost::hash_combine(seed, key.odt_properties.odt_properties.to_string());
+    boost::hash_combine(seed, key.stop_points);
+    return seed;
 }
 
 }} //namespace navitia::type

@@ -135,19 +135,23 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
 
     vj->journey_pattern = jp;
+    vj->idx = b.data->pt_data->vehicle_journeys.size();
+    vj->name = "vehicle_journey " + std::to_string(vj->idx);
+    vj->uri = uri.empty() ? vj->name : uri;
+
     //if we have a meta_vj, we add it in that
     nt::MetaVehicleJourney* mvj;
     if (! meta_vj_name.empty()) {
         mvj = b.get_or_create_metavj(meta_vj_name);
     } else {
-        mvj = b.get_or_create_metavj(uri);
+        mvj = b.get_or_create_metavj(vj->uri);
     }
     mvj->theoric_vj.push_back(vj);
     vj->meta_vj = mvj;
-    vj->idx = b.data->pt_data->vehicle_journeys.size();
+
     b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
-                                                *vj, "vehicle_journey " + std::to_string(vj->idx));
-    vj->uri = vj->name;
+                                                    *vj, "vehicle_journey " + std::to_string(vj->idx));
+
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 
@@ -168,7 +172,6 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     if(wheelchair_boarding){
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
     }
-    vj->uri = uri;
 
     if(!b.data->pt_data->companies.empty())
         vj->company = b.data->pt_data->companies.front();

@@ -140,6 +140,40 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosStopPointDisruptions(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_stop_point_b(self):
+        """
+        when calling the pt object stop_point:stopB, at first we have no disruptions,
+        then we mock a disruption sent from chaos, and we call again the pt object stop_point:stopB
+        we then must have a disruption
+        """
+        self.wait_for_rabbitmq_cnx()
+        response = self.query_region('stop_points/stop_point:stopB')
+
+        stop_points = get_not_null(response, 'stop_points')
+        assert len(stop_points) == 1
+        stop_point = stop_points[0]
+        # at first no disruption
+        assert 'disruptions' not in stop_point
+
+        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stop_point:stopB",
+                "stop_point", blocking=True)
+
+        #and we call again, we must have the disruption now
+        response = self.query_region('stop_points/stop_point:stopB')
+        stop_points = get_not_null(response, 'stop_points')
+        assert len(stop_points) == 1
+        stop_point = stop_points[0]
+
+        disruptions = get_disruptions(stop_point, response)
+
+        assert len(disruptions) == 1
+
+        assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
@@ -545,7 +579,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
         "stop_area": chaos_pb2.PtObject.stop_area,
         "line": chaos_pb2.PtObject.line,
         "line_section": chaos_pb2.PtObject.line_section,
-        "route": chaos_pb2.PtObject.route
+        "route": chaos_pb2.PtObject.route,
+        "stop_point": chaos_pb2.PtObject.stop_point
     }
 
     ptobject = impact.informed_entities.add()

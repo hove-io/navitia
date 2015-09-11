@@ -145,7 +145,8 @@ typedef boost::variant<
     const StopArea *,
     LineSection,
     const Line *,
-    const Route *
+    const Route *,
+    const StopPoint *
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,
@@ -186,7 +187,7 @@ struct Impact {
 
     // Used when an informed entity is a stop_area
     // We need to store it, to be able to delete it afterward
-    std::vector<const JourneyPattern*> impacted_journey_patterns;
+    std::set<const JourneyPattern*> impacted_journey_patterns;
 
     //link to the parent disruption
     //Note: it is a raw pointer because an Impact is owned by it's disruption

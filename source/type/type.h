@@ -577,6 +577,9 @@ struct hasOdtProperties {
     void operator|=(const type::hasOdtProperties& other) {
         odt_properties |= other.odt_properties;
     }
+    bool operator==(const type::hasOdtProperties& other) const {
+        return odt_properties == other.odt_properties;
+    }
 
     void reset() { odt_properties.reset(); }
     void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
@@ -745,6 +748,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & impacted_by;
     }
 
+    bool is_past_midnight() const;
+
     virtual ~VehicleJourney();
     //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
 private:
@@ -807,6 +812,13 @@ struct JourneyPattern : public Header, Nameable {
         // if func return false, we stop
         for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) {return;} }
         for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) {return;} }
+    }
+
+    template <typename T>
+    void for_each_vehicle_journey_ptr(T& func) {
+
+        for (auto& vj: discrete_vehicle_journey_list) { if (! func(vj)) {return;} }
+        for (auto& vj: frequency_vehicle_journey_list) { if (! func(vj)) {return;} }
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -1124,6 +1136,25 @@ std::string get_admin_name(const T* v) {
     }
     return admin_name;
 }
+
+struct JourneyPatternKey {
+    bool is_frequence = false;
+    Route* route = nullptr;
+    PhysicalMode* physical_mode = nullptr;
+    CommercialMode* commercial_mode = nullptr;
+    hasOdtProperties odt_properties{};
+    std::vector<StopPoint*> stop_points{};
+
+    explicit JourneyPatternKey(const JourneyPattern& jp, std::vector<StopPoint*>&& sps);
+    explicit JourneyPatternKey(const JourneyPattern& jp, const std::vector<StopPoint*>& sps);
+    bool operator==(const JourneyPatternKey&) const;
+    friend std::size_t hash_value(const JourneyPatternKey&);
+private:
+    explicit JourneyPatternKey(const JourneyPattern& jp);
+
+};
+
+
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

@@ -31,7 +31,9 @@ www.navitia.io
 #include "pt_data.h"
 #include "utils/functions.h"
 
+#include <random>
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 namespace navitia{namespace type {
 
@@ -206,6 +208,86 @@ PT_Data::get_stop_point_connection(const StopPoint& from, const StopPoint& to) c
     }
 }
 
+
+nt::JourneyPattern* PT_Data::get_or_create_journey_pattern(const nt::JourneyPatternKey& key,
+                                                           const std::string& name,
+                                                           const std::string& uri){
+    const auto& it = journey_patterns_pool.find(key);
+    if (it != journey_patterns_pool.cend()) {
+        return it->second;
+    }
+    auto new_jp = new JourneyPattern{};
+
+    new_jp->is_frequence = key.is_frequence;
+    new_jp->route = key.route;
+    new_jp->commercial_mode = key.commercial_mode;
+    new_jp->physical_mode = key.physical_mode;
+    new_jp->odt_properties = key.odt_properties;
+    new_jp->name = name;
+    auto new_uri = uri + ":adapted-" + std::to_string(journey_patterns.size()) ;
+
+    // the new_uri may be already existent, to guarantee its unicity,
+    // we add a random integer at the end of the uri.
+    // Can we find a more proper way to do that?
+    if (contains(journey_patterns_map, new_uri)) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(100, 999);
+        new_uri = new_uri + "-" + std::to_string(dis(gen));
+    }
+    new_jp->uri = new_uri;
+    new_jp->idx = journey_patterns.size() - 1;
+
+    journey_patterns.push_back(new_jp);
+    journey_patterns_map[new_jp->uri] = new_jp;
+    journey_patterns_pool[key] = new_jp;
+
+    for (auto* stop_point: key.stop_points) {
+
+        auto new_jp_point = new nt::JourneyPatternPoint();
+
+        new_jp_point->journey_pattern = new_jp;
+        new_jp_point->stop_point = stop_point;
+        // TODO: copy LineString
+
+        new_jp_point->idx = journey_pattern_points.size();
+        new_jp_point->uri = uri + ":" + std::to_string(new_jp->journey_pattern_point_list.size());
+        new_jp_point->stop_point->journey_pattern_point_list.push_back(new_jp_point);
+
+        new_jp_point->order = new_jp->journey_pattern_point_list.size();
+        journey_pattern_points.push_back(new_jp_point);
+        journey_pattern_points_map[new_jp_point->uri] = new_jp_point;
+        new_jp->journey_pattern_point_list.push_back(new_jp_point);
+    }
+    return new_jp;
+}
+
+void PT_Data::remove_journey_pattern_from_jp_pool(const JourneyPattern& jp){
+
+    std::vector<StopPoint*> stop_points_for_key{};
+    boost::for_each(jp.journey_pattern_point_list, [&](const JourneyPatternPoint* jpp){
+        stop_points_for_key.push_back(jpp->stop_point);
+    });
+
+    auto key = JourneyPatternKey{jp, std::move(stop_points_for_key)};
+    journey_patterns_pool.erase(key);
+}
+
+type::ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
+    for (auto vp : validity_patterns) {
+        if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
+            return vp;
+        }
+    }
+    auto vp = new nt::ValidityPattern();
+    vp->idx = validity_patterns.size();
+    vp->uri = make_adapted_uri(vp->uri);
+    vp->beginning_date = vp_ref.beginning_date;
+    vp->days = vp_ref.days;
+    validity_patterns.push_back(vp);
+    validity_patterns_map[vp->uri] = vp;
+    return vp;
+}
 
 PT_Data::~PT_Data() {
     //big uggly hack :(

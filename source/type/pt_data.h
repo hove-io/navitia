@@ -87,6 +87,9 @@ struct PT_Data : boost::noncopyable{
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
 
+    // JourneyPattern Pool
+    std::unordered_map<JourneyPatternKey, JourneyPattern*, boost::hash<JourneyPatternKey>> journey_patterns_pool;
+
     // First letter
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopArea);
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopPoint);
@@ -162,21 +165,7 @@ struct PT_Data : boost::noncopyable{
         return nb;
     }
 
-    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
-        for (auto vp : validity_patterns) {
-            if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
-                return vp;
-            }
-        }
-        auto vp = new nt::ValidityPattern();
-        vp->idx = validity_patterns.size();
-        vp->uri = make_adapted_uri(vp->uri);
-        vp->beginning_date = vp_ref.beginning_date;
-        vp->days = vp_ref.days;
-        validity_patterns.push_back(vp);
-        validity_patterns_map[vp->uri] = vp;
-        return vp;
-    }
+    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref);
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *
@@ -192,7 +181,10 @@ struct PT_Data : boost::noncopyable{
 
     const StopPointConnection*
     get_stop_point_connection(const StopPoint& from, const StopPoint& to) const;
-
+    nt::JourneyPattern* get_or_create_journey_pattern (const JourneyPatternKey& key,
+                                                       const std::string& name,
+                                                       const std::string& uri);
+    void remove_journey_pattern_from_jp_pool(const JourneyPattern& jp);
     ~PT_Data();
 
 };
