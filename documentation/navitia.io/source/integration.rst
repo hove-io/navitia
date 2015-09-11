@@ -758,7 +758,7 @@ Main parameters
 |          |                       |           | determines appropriate first and last     |                 |
 |          |                       |           | section modes to the covered area.        |                 |
 |          |                       |           | You can overload all parameters           |                 |
-|          |                       |           | (especially speeds,distances, first and   |                 |
+|          |                       |           | (especially speeds, distances, first and  |                 |
 |          |                       |           | last modes) by setting all of them        |                 |
 |          |                       |           | specifically                              |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
