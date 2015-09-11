@@ -601,6 +601,7 @@ BOOST_AUTO_TEST_CASE(multi_impacts_interleaved_on_stop_points) {
     navitia::add_disruption(disruption_bc, *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    // TODO: check that the new vj is ADE
 
     chaos::Disruption disruption_cd{};
     disruption_cd.set_id("disruption_cd");
@@ -621,10 +622,12 @@ BOOST_AUTO_TEST_CASE(multi_impacts_interleaved_on_stop_points) {
     navitia::add_disruption(disruption_cd, *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
+    // TODO: ADE, AE, ABE
 
     navitia::delete_disruption(disruption_bc.id(), *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    // TODO: ABE
 
     navitia::delete_disruption(disruption_cd.id(), *b.data->pt_data, *b.data->meta);
 
