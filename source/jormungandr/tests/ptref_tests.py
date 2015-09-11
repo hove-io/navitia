@@ -99,6 +99,29 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=3)
 
+    def test_vj_show_codes_propagation(self):
+        """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
+        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys?show_codes=true")
+
+        vjs = get_not_null(response, 'vehicle_journeys')
+
+        assert vjs
+
+        for vj in vjs:
+            is_valid_vehicle_journey(vj, depth_check=1)
+
+        stop_points = [get_not_null(st, 'stop_point') for vj in vjs for st in vj['stop_times']]
+        stops1 = [s for s in stop_points if s['id'] == 'stop_area:stop1']
+        assert stops1
+
+        for stop1 in stops1:
+            # all reference to stop1 must have it's codes
+            codes = get_not_null(stop1, 'codes')
+            code_uic = [c for c in codes if c['type'] == 'code_uic']
+            assert len(code_uic) == 1 and code_uic[0]['value'] == 'bobette'
+
+
+
     def test_line(self):
         """test line formating"""
         response = self.query_region("v1/lines")
