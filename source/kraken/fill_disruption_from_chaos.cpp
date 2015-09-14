@@ -237,6 +237,8 @@ std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Chan
         case chaos::Channel_Type_unkown_type:
             res.insert(nt::new_disruption::ChannelType::unknown_type);
             break;
+        default:
+            throw navitia::exception("Unhandled ChannelType value in Chaos.Proto");
         }
     }
     return res;
