@@ -1576,3 +1576,68 @@ BOOST_AUTO_TEST_CASE(regex_toknize_with_synonyms_and_ghostwords_tests){
     BOOST_CHECK(vec.find("beaume") != vec.end());
 }
 
+
+BOOST_AUTO_TEST_CASE(synonyms_with_non_ascii){
+    int nbmax = 10;
+    std::set<std::string> ghostwords{};
+
+    autocomplete_map synonyms{
+        {"fac", "université"},
+        {"faculté", "université"},
+        {"embarcadère", "gare maritime"}
+    };
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("université de canaltp", 0, ghostwords, synonyms);
+    ac.add_string("gare maritime de canaltp", 1, ghostwords, synonyms);
+    ac.build();
+
+    auto res0 = ac.find_complete("fac", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res0.size(), 1);
+
+    auto res1 = ac.find_complete("faculté", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res2 = ac.find_complete("embarca", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res2.size(), 1);
+
+}
+
+BOOST_AUTO_TEST_CASE(synonyms_with_capital){
+    int nbmax = 10;
+    std::set<std::string> ghostwords{};
+    autocomplete_map synonyms{{"ANPE", "Pole Emploi"}};
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("Pole Emploi de paris", 0, ghostwords, synonyms);
+    ac.build();
+
+    auto res0 = ac.find_complete("ANPE", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res0.size(), 1);
+
+    auto res1 = ac.find_complete("anpe", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res2 = ac.find_complete("AnPe", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res2.size(), 1);
+
+}
+
+BOOST_AUTO_TEST_CASE(synonyms_with_capital_and_non_ascii){
+    int nbmax = 10;
+    std::set<std::string> ghostwords{};
+    autocomplete_map synonyms{
+        {"CPAM", "sécurité sociale"}
+    };
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("Sécurité Sociale de paris", 0, ghostwords, synonyms);
+    ac.build();
+
+    auto res0 = ac.find_complete("CPAM", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res0.size(), 1);
+
+    auto res1 = ac.find_complete("cpam", nbmax, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+}
