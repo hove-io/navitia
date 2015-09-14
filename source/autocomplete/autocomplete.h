@@ -457,6 +457,10 @@ struct Autocomplete
         return str;
     }
 
+    std::string strip_accents_and_lower(const std::string& str) const{
+        return boost::to_lower_copy(strip_accents(str));
+    }
+
     std::set<std::string> tokenize(std::string strFind, const std::set<std::string>& ghostwords,
                                    const autocomplete_map& synonyms = autocomplete_map()) const{
         std::set<std::string> vec;
@@ -467,9 +471,6 @@ struct Autocomplete
         strFind = strip_accents(strFind);
         std::string strTemp = strFind;
 
-        auto strip_accents_and_lower = [this](const std::string& str){
-            return boost::to_lower_copy(strip_accents(str));
-        };
         //if synonyms contains something, add all synonyms if found while serching on key and value.
         //For each synonyms.key found in strFind add synonyms.value
         for(const auto& it : synonyms){
