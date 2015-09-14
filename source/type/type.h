@@ -58,7 +58,24 @@ namespace navitia { namespace georef {
  struct Admin;
  struct GeoRef;
 }}
-namespace navitia { namespace type {
+namespace navitia {
+
+namespace type {
+enum class RTLevel : char {
+    Theoric = 0,
+    Adapted,
+    RealTime
+};
+}
+template <>
+struct enum_size_trait<type::RTLevel> {
+    static constexpr typename get_enum_type<type::RTLevel>::type size() {
+        return 3;
+    }
+};
+
+
+namespace type {
 typedef navitia::idx_t idx_t;
 
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
@@ -719,7 +736,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // thus we store the shit needed to convert all stop times of the vehicle journey to local
     int16_t utc_to_local_offset = 0; //in seconds
 
-    bool is_adapted = false; //REMOVE (change to enum ?)
+    RTLevel realtime_level = RTLevel::Theoric;
     ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
     std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
     VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
@@ -736,7 +753,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
-            & idx & stop_time_list & is_adapted
+            & idx & stop_time_list & realtime_level
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts

@@ -617,7 +617,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         com->set_type("standard");
     }
     vehicle_journey->set_odt_message(vj->odt_message);
-    vehicle_journey->set_is_adapted(vj->is_adapted);
+    vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
 
     vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
     vehicle_journey->set_bike_accepted(vj->bike_accepted());
