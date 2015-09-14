@@ -334,13 +334,20 @@ class TestDisruptions(AbstractTestFixture):
         channel = get_not_null(message[0], 'channel')
         eq_(channel['id'], 'sms')
         eq_(channel['name'], 'sms')
-        eq_(len(channel['types']), 2)
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'sms')
+
 
         eq_(message[1]['text'], 'try again')
         channel = get_not_null(message[1], 'channel')
         eq_(channel['id'], 'email')
         eq_(channel['name'], 'email')
-        eq_(len(channel['types']), 2)
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'email')
 
 
     def test_disruption_on_route_and_line(self):

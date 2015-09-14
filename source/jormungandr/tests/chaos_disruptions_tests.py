@@ -582,7 +582,7 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
         pb_end.uri = end
         pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
 
-    # Message with one channel and two channel types: web and sms
+    # Message with one channel and one channel type: sms
     message = impact.messages.add()
     message.text = message_text
     message.channel.id = "sms"
