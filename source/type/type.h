@@ -59,9 +59,8 @@ namespace navitia { namespace georef {
  struct Admin;
  struct GeoRef;
 }}
-namespace navitia {
 
-namespace type {
+namespace navitia { namespace type {
 typedef navitia::idx_t idx_t;
 
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
@@ -1137,6 +1136,4 @@ struct enum_size_trait<type::Mode_e> {
     }
 };
 
-
 } //namespace navitia
-
