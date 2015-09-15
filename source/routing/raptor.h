@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/type.h"
 #include "type/data.h"
 #include "type/datetime.h"
+#include "type/rt_level.h"
 #include "routing.h"
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
@@ -123,7 +124,7 @@ struct RAPTOR
             int departure_hour,
             int departure_day,
             DateTime bound,
-            bool disruption_active,
+            const nt::RTLevel rt_level,
             bool clockwise = true,
             const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
             uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
@@ -139,7 +140,7 @@ struct RAPTOR
     compute_all(const map_stop_point_duration& departs,
                 const map_stop_point_duration& destinations,
                 const DateTime& departure_datetime,
-                bool disruption_active,
+                const nt::RTLevel rt_level,
                 const DateTime& bound = DateTimeUtils::inf,
                 const uint32_t max_transfers = 10,
                 const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
@@ -156,7 +157,7 @@ struct RAPTOR
     compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
                    const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
                    const DateTime& departure_datetime,
-                   bool disruption_active, 
+                   const nt::RTLevel rt_level,
                    const DateTime& bound,
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams& accessibilite_params,
@@ -176,7 +177,7 @@ struct RAPTOR
               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true,
-              bool disruption_active = false);
+              const nt::RTLevel rt_level = nt::RTLevel::Theoric);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
@@ -184,12 +185,12 @@ struct RAPTOR
     void set_valid_jp_and_jpp(uint32_t date,
                               const type::AccessibiliteParams& accessibilite_params,
                               const std::vector<std::string>& forbidden,
-                              bool disruption_active);
+                              const nt::RTLevel rt_level);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
                       bool clockwise,
-                      bool disruption_active,
+                      const nt::RTLevel rt_level,
                       const uint32_t max_transfers);
 
     /// Apply foot pathes to labels
@@ -199,14 +200,14 @@ struct RAPTOR
     /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
     bool apply_vj_extension(const Visitor& v,
-                            const bool disruption_active,
+                            const nt::RTLevel rt_level,
                             const RoutingState& state);
 
     ///Main loop
     template<typename Visitor>
     void raptor_loop(Visitor visitor,
                      const type::AccessibiliteParams& accessibilite_params,
-                     bool disruption_active,
+                     const nt::RTLevel rt_level,
                      uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
     /// Return the round that has found the best solution for this stop point
@@ -217,7 +218,7 @@ struct RAPTOR
     /// externalized for testing purposes
     void first_raptor_loop(const map_stop_point_duration& dep,
                            const DateTime& departure_datetime,
-                           bool disruption_active,
+                           const nt::RTLevel rt_level,
                            const DateTime& bound,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,

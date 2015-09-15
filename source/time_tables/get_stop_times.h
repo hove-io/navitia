@@ -55,7 +55,7 @@ get_stop_times(const navitia::routing::StopEvent stop_event,
                const DateTime& max_dt,
                const size_t max_departures,
                const type::Data& data,
-               bool disruption_active,
+               const type::RTLevel rt_level,
                const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams());
 
 

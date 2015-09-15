@@ -49,7 +49,7 @@ namespace navitia { namespace routing {
  */
 template<typename Visitor>
 bool RAPTOR::apply_vj_extension(const Visitor& v,
-                                const bool disruption_active,
+                                const nt::RTLevel rt_level,
                                 const RoutingState& state) {
     auto& working_labels = labels[count];
     auto workingDt = state.workingDate;
@@ -60,7 +60,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
         const auto& st_begin = stop_time_list.front();
         workingDt = st_begin.section_end(workingDt, v.clockwise());
         // If the vj is not valid for the first stop it won't be valid at all
-        if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+        if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), rt_level)) {
             return result;
         }
         for (const type::StopTime& st: stop_time_list) {
@@ -169,7 +169,7 @@ void RAPTOR::init(const map_stop_point_duration& dep,
 
 void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
                                const DateTime& departure_datetime,
-                               bool disruption_active,
+                               const nt::RTLevel rt_level,
                                const DateTime& bound,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
@@ -179,12 +179,12 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden_uri,
-                         disruption_active);
+                         rt_level);
 
     clear(clockwise, bound);
     init(dep, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
 }
 
 namespace {
@@ -261,7 +261,7 @@ std::vector<Path>
 RAPTOR::compute_all(const map_stop_point_duration& departures_,
                     const map_stop_point_duration& destinations,
                     const DateTime& departure_datetime,
-                    bool disruption_active,
+                    const nt::RTLevel rt_level,
                     const DateTime& bound,
                     const uint32_t max_transfers,
                     const type::AccessibiliteParams& accessibilite_params,
@@ -286,7 +286,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures_,
     const auto& calc_dep = clockwise ? departures_ : destinations;
     const auto& calc_dest = clockwise ? destinations : departures_;
 
-    first_raptor_loop(calc_dep, departure_datetime, disruption_active,
+    first_raptor_loop(calc_dep, departure_datetime, rt_level,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
 
     // Now, we do the second pass.  In case of clockwise (resp
@@ -318,13 +318,13 @@ RAPTOR::compute_all(const map_stop_point_duration& departures_,
              !clockwise, accessibilite_params.properties);
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
-        boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, max_transfers);
+        boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
         const auto reader_results = read_solutions(*this,
                                                    !clockwise,
                                                    departure_datetime,
                                                    departures_,
                                                    destinations,
-                                                   disruption_active,
+                                                   rt_level,
                                                    accessibilite_params);
         for (const auto& s: reader_results) { solutions.add(s); }
     }
@@ -341,7 +341,7 @@ std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
 RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
                        const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
                        const DateTime& departure_datetime,
-                       bool disruption_active,
+                       const nt::RTLevel rt_level,
                        const DateTime& bound,
                        const uint32_t max_transfers,
                        const type::AccessibiliteParams& accessibilite_params,
@@ -351,7 +351,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_po
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden_uri,
-                         disruption_active);
+                         rt_level);
 
     map_stop_point_duration calc_dep_map;
     for (const auto& n_point : (clockwise ? departures : arrivals)) {
@@ -361,7 +361,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_po
     clear(clockwise, bound);
     init(calc_dep_map, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
 
     for(const auto& m_point : (clockwise ? arrivals : departures)) {
         const type::EntryPoint& m_entry_point = m_point.first;
@@ -394,15 +394,15 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                   const type::AccessibiliteParams& accessibilite_params,
                   const std::vector<std::string>& forbidden,
                   bool clockwise,
-                  bool disruption_active) {
+                  const nt::RTLevel rt_level) {
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden,
-                         disruption_active);
+                         rt_level);
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
 }
 
 
@@ -410,13 +410,15 @@ void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams& accessibilite_params,
     const std::vector<std::string>& forbidden,
-    bool disruption_active)
+    const nt::RTLevel rt_level)
 {
 
-    if(disruption_active){
+    if (rt_level == nt::RTLevel::Adapted) {
         valid_journey_patterns = data.dataRaptor->jp_adapted_validity_pattern[date];
-    }else{
+    } else if (rt_level == nt::RTLevel::Theoric) {
         valid_journey_patterns = data.dataRaptor->jp_validity_patterns[date];
+    } else {
+        throw navitia::exception("rt not implemented yet");
     }
     boost::dynamic_bitset<> valid_journey_pattern_points(data.pt_data->journey_pattern_points.size());
     valid_journey_pattern_points.set();
@@ -531,7 +533,7 @@ void RAPTOR::set_valid_jp_and_jpp(
 template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor,
                          const type::AccessibiliteParams& accessibilite_params,
-                         bool disruption_active,
+                         const nt::RTLevel rt_level,
                          uint32_t max_transfers) {
     bool continue_algorithm = true;
     count = 0; //< Count iteration of raptor algorithm
@@ -594,7 +596,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = next_st.next_stop_time(
                             visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(),
-                            disruption_active, accessibilite_params.vehicle_properties, jpp.has_freq);
+                            rt_level, accessibilite_params.vehicle_properties, jpp.has_freq);
 
                         if (tmp_st_dt.first != nullptr) {
                             if (! is_onboard || &*it_st != tmp_st_dt.first) {
@@ -637,7 +639,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
             q_elt.second = visitor.init_queue_item();
         }
         for (auto state : states_stay_in) {
-            bool applied = apply_vj_extension(visitor, disruption_active, state);
+            bool applied = apply_vj_extension(visitor, rt_level, state);
             continue_algorithm = continue_algorithm || applied;
         }
         continue_algorithm = continue_algorithm && this->foot_path(visitor);
@@ -647,12 +649,12 @@ void RAPTOR::raptor_loop(Visitor visitor,
 
 void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
                           bool clockwise,
-                          bool disruption_active,
+                          const nt::RTLevel rt_level,
                           uint32_t max_transfers) {
     if(clockwise) {
-        raptor_loop(raptor_visitor(), accessibilite_params, disruption_active, max_transfers);
+        raptor_loop(raptor_visitor(), accessibilite_params, rt_level, max_transfers);
     } else {
-        raptor_loop(raptor_reverse_visitor(), accessibilite_params, disruption_active, max_transfers);
+        raptor_loop(raptor_reverse_visitor(), accessibilite_params, rt_level, max_transfers);
     }
 }
 
@@ -662,7 +664,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                                   int departure_hour,
                                   int departure_day,
                                   DateTime borne,
-                                  bool disruption_active,
+                                  const nt::RTLevel rt_level,
                                   bool clockwise,
                                   const type::AccessibiliteParams& accessibilite_params,
                                   uint32_t max_transfers,
@@ -681,7 +683,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
     return compute_all(departures,
                        destinations,
                        DateTimeUtils::set(departure_day, departure_hour),
-                       disruption_active,
+                       rt_level,
                        borne,
                        max_transfers,
                        accessibilite_params,

@@ -98,7 +98,7 @@ departure_board(const std::string& request,
                 uint32_t duration, uint32_t depth,
                 uint32_t max_date_times,
                 int interface_version,
-                int count, int start_page, const type::Data &data, bool disruption_active,
+                int count, int start_page, const type::Data &data, const type::RTLevel rt_level,
                 bool show_codes) {
 
     RequestHandle handler(request, forbidden_uris, date,  duration, data, calendar_id);
@@ -158,7 +158,7 @@ departure_board(const std::string& request,
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {
                 tmp = get_stop_times(navitia::routing::StopEvent::pick_up, {jpp->idx}, handler.date_time,
-                                     handler.max_datetime, max_date_times, data, disruption_active);
+                                     handler.max_datetime, max_date_times, data, rt_level);
             } else {
                 tmp = get_stop_times({jpp->idx}, DateTimeUtils::hour(handler.date_time),
                                      DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);

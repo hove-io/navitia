@@ -41,7 +41,7 @@ std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent
                                                const DateTime& max_dt,
                                                const size_t max_departures,
                                                const type::Data& data, 
-                                               bool disruption_active,
+                                               const type::RTLevel rt_level,
                                                const type::AccessibiliteParams& accessibilite_params) {
     const bool clockwise(max_dt >= dt);
     std::vector<datetime_stop_time> result;
@@ -63,7 +63,7 @@ std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent
                 continue;
             }
             auto st = next_st.next_stop_time(stop_event, routing::JppIdx(*jpp),
-                                             next_requested_datetime[jpp_idx], clockwise, disruption_active,
+                                             next_requested_datetime[jpp_idx], clockwise, rt_level,
                                              accessibilite_params.vehicle_properties, true);
 
             if (st.first != nullptr) {

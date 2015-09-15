@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/time_duration.h"
 #include "datetime.h"
+#include "rt_level.h"
 #include "geographical_coord.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
@@ -59,21 +60,6 @@ namespace navitia { namespace georef {
  struct GeoRef;
 }}
 namespace navitia {
-
-namespace type {
-enum class RTLevel : char {
-    Theoric = 0,
-    Adapted,
-    RealTime
-};
-}
-template <>
-struct enum_size_trait<type::RTLevel> {
-    static constexpr typename get_enum_type<type::RTLevel>::type size() {
-        return 3;
-    }
-};
-
 
 namespace type {
 typedef navitia::idx_t idx_t;
@@ -714,6 +700,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     ValidityPattern* validity_pattern = nullptr;
     std::vector<StopTime> stop_time_list;
 
+    flat_enum_map<RTLevel, ValidityPattern*> validity_patterns;
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
@@ -792,7 +779,7 @@ struct FrequencyVehicleJourney: public VehicleJourney {
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
     virtual ~FrequencyVehicleJourney();
 
-    bool is_valid(int day, const bool is_adapted) const;
+    bool is_valid(int day, const RTLevel rt_level) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
         ar & boost::serialization::base_object<VehicleJourney>(*this);
 
@@ -926,7 +913,7 @@ struct StopTime {
         return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
     }
 
-    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
+    bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
@@ -1150,6 +1137,7 @@ struct enum_size_trait<type::Mode_e> {
         return 4;
     }
 };
+
 
 } //namespace navitia
 

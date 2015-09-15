@@ -285,7 +285,7 @@ int main(int argc, char** argv){
               accessibilite_params,
               {},
               georef_worker,
-              false,
+              type::RTLevel::Theoric,
               std::numeric_limits<int>::max(), 10, false);
 
         if(resp.journeys_size() > 0) {
