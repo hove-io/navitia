@@ -824,7 +824,9 @@ def is_valid_vehicle_journey(vj, depth_check=1):
         for st in stoptimes:
             get_valid_time(get_not_null(st, 'arrival_time'))
             get_valid_time(get_not_null(st, 'departure_time'))
+            is_valid_stop_point(get_not_null(st, 'stop_point'), depth_check=depth_check-1)
 
+            # the JPP are kept only for backward compatibility
             if depth_check > 1:
                 #with depth > 1 (we are already in the stoptime nested object), we don't want jpp
                 is_valid_journey_pattern_point(get_not_null(st, 'journey_pattern_point'), depth_check - 2)

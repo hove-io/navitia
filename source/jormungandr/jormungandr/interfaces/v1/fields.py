@@ -553,7 +553,8 @@ stop_time = {
     "arrival_time": SplitDateTime(date=None, time='arrival_time'),
     "departure_time": SplitDateTime(date=None, time='departure_time'),
     "headsign": fields.String(attribute="headsign"),
-    "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
+    "journey_pattern_point": NonNullProtobufNested(journey_pattern_point),
+    "stop_point": NonNullProtobufNested(stop_point)
 }
 
 line = deepcopy(generic_type)

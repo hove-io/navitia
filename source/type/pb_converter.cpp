@@ -441,16 +441,15 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 
 void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
         pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period, const bool){
-    if(jp == nullptr)
-        return ;
+        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
+    if (jp == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     journey_pattern->set_name(jp->name);
     journey_pattern->set_uri(jp->uri);
     if(depth > 0 && jp->route != nullptr) {
         fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
-                depth-1, now, action_period);
+                depth-1, now, action_period, show_codes);
     }
 }
 
@@ -607,8 +606,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
                     const bool show_codes){
-    if(vj == nullptr)
-        return ;
+    if (vj == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     vehicle_journey->set_name(vj->name);
@@ -644,7 +642,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                 stop_time.arrival_time += vj->utc_to_local_offset;
             }
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
-                           depth-1, now, action_period);
+                           depth-1, now, action_period, show_codes);
         }
         fill_pb_object(vj->journey_pattern->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
@@ -682,9 +680,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 
 void fill_pb_object(const nt::StopTime* st, const type::Data &data,
                     pbnavitia::StopTime *stop_time, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
-    if(st == nullptr)
-        return ;
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes) {
+    if (st == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     //arrival/departure in protobuff are also as seconds from midnight (in UTC of course)
@@ -694,16 +691,25 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
-    if(st->journey_pattern_point != nullptr && depth > 0) {
+
+    // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
+    if (st->journey_pattern_point != nullptr && depth > 0) {
         fill_pb_object(st->journey_pattern_point, data,
                        stop_time->mutable_journey_pattern_point(), depth-1,
-                       now, action_period);
+                       now, action_period, show_codes);
+    }
+
+    if (st->journey_pattern_point) {
+        // we always dump the stop point (with the same depth)
+        fill_pb_object(st->journey_pattern_point->stop_point, data,
+                       stop_time->mutable_stop_point(), depth,
+                       now, action_period, show_codes);
     }
 
     if(st->vehicle_journey != nullptr && depth > 0) {
         fill_pb_object(st->vehicle_journey, data,
                        stop_time->mutable_vehicle_journey(), depth-1, now,
-                       action_period);
+                       action_period, show_codes);
     }
 }
 
@@ -737,7 +743,7 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
         if(jpp->stop_point != nullptr) {
             fill_pb_object(jpp->stop_point, data,
                            journey_pattern_point->mutable_stop_point(),
-                           depth-1, now, action_period);
+                           depth-1, now, action_period, show_codes);
         }
         if(jpp->journey_pattern != nullptr) {
             fill_pb_object(jpp->journey_pattern, data,
