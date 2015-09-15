@@ -700,7 +700,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     ValidityPattern* validity_pattern = nullptr;
     std::vector<StopTime> stop_time_list;
 
-    flat_enum_map<RTLevel, ValidityPattern*> validity_patterns;
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id

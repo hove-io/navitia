@@ -140,7 +140,15 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
             return false;
         --day;
     }
-    return vehicle_journey->validity_patterns[rt_level]->check(day);
+    if (rt_level == RTLevel::Theoric) {
+        return vehicle_journey->validity_pattern->check(day);
+    } else if (rt_level == RTLevel::Adapted) {
+        return vehicle_journey->adapted_validity_pattern->check(day);
+    } else {
+        throw navitia::exception("realtime not handled yet");
+    }
+    //TODO use:
+    //return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
 bool StopTime::operator<(const StopTime& other) const {
@@ -186,7 +194,16 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
-    return validity_patterns[rt_level]->check(day);
+    if (rt_level == RTLevel::Theoric) {
+        return validity_pattern->check(day);
+    } else if (rt_level == RTLevel::Theoric) {
+        return adapted_validity_pattern->check(day);
+    } else {
+        throw navitia::exception("realtime not handled yet");
+    }
+    //TODO use:
+    //return validity_patterns[rt_level]->check(day);
+//    return validity_patterns[rt_level]->check(day);
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
