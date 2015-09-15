@@ -109,9 +109,11 @@ struct RAPTOR
     const type::JourneyPattern* get_jp(JpIdx idx) const {
         return data.pt_data->journey_patterns[idx.val];
     }
+    /*
     const type::JourneyPatternPoint* get_jpp(JppIdx jpp_idx) const {
         return data.pt_data->journey_pattern_points[jpp_idx.val];
     }
+    */
 
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];

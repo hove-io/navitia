@@ -36,3 +36,7 @@ target_link_libraries(co2_emission_test ed data types routing fare pb_lib thermo
   autocomplete utils workers
   ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(co2_emission_test)
+
+add_executable(journey_pattern_container_test journey_pattern_container_test.cpp)
+target_link_libraries(journey_pattern_container_test ${BOOST_LIBS} routing ed data)
+ADD_BOOST_TEST(journey_pattern_container_test)
