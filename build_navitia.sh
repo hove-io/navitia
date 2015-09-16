@@ -109,6 +109,9 @@ then
     exit 1
 fi
 
+#Be sure that basic dependencies are installed
+sudo apt-get install -y unzip wget
+
 if [ -z "$gtfs_data_dir" ] || [ -z "$osm_file" ]
 then
     echo "no gtfs or osm file given, we'll take a default data set, Paris"
@@ -132,6 +135,11 @@ mkdir -p "$run_dir"
 #for this script we thus change the ssh links to https
 sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
 
+#Be sure that git is installed
+if ! [ -x "$(command -v git)" ]; then
+  sudo apt-get install -y git
+fi
+
 #we need to get the submodules
 git submodule update --init
 
@@ -145,7 +153,7 @@ git submodule update --init
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
