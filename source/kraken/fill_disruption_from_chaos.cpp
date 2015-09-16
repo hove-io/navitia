@@ -189,6 +189,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
         case chaos::PtObject_Type_stop_area:
             res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
             break;
+        case chaos::PtObject_Type_stop_point:
+            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data, impact));
+            break;
         case chaos::PtObject_Type_line_section:
             if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact)) {
                 res.push_back(*line_section);
@@ -481,6 +484,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(const nt::StopPoint* stop_point) {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "Disruption on stop point:" + stop_point->uri + " is not handled");
+
+    }
+
+    void handle_stop_point(const nt::StopPoint* stop_point) {
         this->log_start_action(stop_point->uri);
         if (stop_point->journey_pattern_point_list.empty()) {
             return;
@@ -527,7 +536,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     void operator()(const nt::StopArea* stop_area) {
         this->log_start_action(stop_area->uri);
         for (const auto stop_point : stop_area->stop_point_list) {
-            this->operator()(stop_point);
+            handle_stop_point(stop_point);
         }
         this->log_end_action(stop_area->uri);
     }
@@ -576,6 +585,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             }
         }
         return true;
+    }
+
+    void operator()(const nt::StopPoint* stop_point) {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "Deletion of disruption on stop point:" + stop_point->uri + " is not handled");
+
     }
 
     void operator()(const nt::StopArea* stop_area) {

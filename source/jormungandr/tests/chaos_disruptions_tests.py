@@ -504,6 +504,41 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
+@dataset([('main_routing_test', ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
+    """
+    Add disruption on stop point, test if the information is raised in response
+    Then delete disruption, test if there is no more disruptions in response
+    """
+    def test_disruption_on_stop_point(self):
+        disruption_id = 'test_disruption_on_stop_pointA'
+        disruption_msg = 'stop_point_disruption'
+        disruption_target = 'stop_point:stopA'
+        disruption_target_type = 'stop_point'
+        query = 'stop_points/stop_point:stopA'
+	
+	# add disruption on stop point
+        self.send_chaos_disruption_and_sleep(disruption_id,
+                                             disruption_target,
+                                             disruption_target_type,
+                                             blocking=True,
+                                             message=disruption_msg)
+        response = self.query_region(query)
+        disruptions = response.get('disruptions')
+        assert disruptions
+        assert len(disruptions) == 1
+        assert disruptions[0]['disruption_id'] == disruption_id
+
+	# delete disruption on stop point
+        self.send_chaos_disruption_and_sleep(disruption_id,
+                                             disruption_target,
+                                             disruption_target_type,
+                                             is_deleted=True)
+
+        response = self.query_region(query)
+        disruptions = response.get('disruptions')
+        assert not disruptions
+
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
@@ -565,7 +600,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
         "stop_area": chaos_pb2.PtObject.stop_area,
         "line": chaos_pb2.PtObject.line,
         "line_section": chaos_pb2.PtObject.line_section,
-        "route": chaos_pb2.PtObject.route
+        "route": chaos_pb2.PtObject.route,
+        "stop_point": chaos_pb2.PtObject.stop_point
     }
 
     ptobject = impact.informed_entities.add()

@@ -104,6 +104,7 @@ PtObj make_pt_obj(Type_e type,
     switch (type) {
     case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map, impact);
     case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map, impact);
+    case Type_e::StopPoint: return transform_pt_object(uri, pt_data.stop_points_map, impact);
     case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map, impact);
     case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map, impact);
     default: return UnknownPtObj();
