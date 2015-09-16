@@ -266,6 +266,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         set_nb_disruptions(response['networks'])
         response = self.query_region('stop_areas')
         set_nb_disruptions(response['stop_areas'])
+        response = self.query_region('stop_points')
+        set_nb_disruptions(response['stop_points'])
         return nb_disruptions_map
 
     def run_check(self, object_id, type_):
@@ -300,7 +302,13 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                                              start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        check_links_("20120616T080000", False)
+        # Exceptional Case
+        # blocking disruption applied on stop_area and stop_point will not block them
+        # We should still find them in journey
+        if type_ in ['stop_area', 'stop_point']:
+            check_links_("20120616T080000", True)
+        else:
+            check_links_("20120616T080000", False)
         #We test out of the period
         check_links_("20120614T080000", True)
 
@@ -321,7 +329,13 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                                              start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        check_links_("20120616T080000", False)
+        # Exceptional Case
+        # blocking disruption applied on stop_area and stop_point will not block them
+        # We should still find them in journey
+        if type_ in ['stop_area', 'stop_point']:
+            check_links_("20120616T080000", True)
+        else:
+            check_links_("20120616T080000", False)
         #We test out of the period
         check_links_("20120614T080000", True)
 
@@ -329,7 +343,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_,
                 blocking=True, is_deleted=True, start_period=start_period)
 
-    def test_disruption_on_journey(self):
+    def test_blocking_disruption_of_line_route_network_on_journey(self):
         """
         We send blocking disruptions and test if the blocked object is not used
         by the journey.
@@ -343,7 +357,22 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.run_check('A', 'line')
         self.run_check('A:0', 'route')
         self.run_check('base_network', 'network')
+
+    def test_blocking_disruption_of_stop_area_and_stop_point_on_journey(self):
+        """
+        We send blocking disruptions on stop area and stop point. For the moment, even though disruptions are blocking,
+        stop area and stop point are EXCEPTIONALLY not blocked.
+        We then test if the blocked object is STILL used by the journey.
+
+        Then we delete it and test if use the blocked object
+        """
+        self.wait_for_rabbitmq_cnx()
+        response = self.query_region(journey_basic_query, display=True)
+
+        assert "journeys" in response
+
         self.run_check('stopA', 'stop_area')
+        self.run_check('stop_point:stopA', 'stop_point')
 
 
 
@@ -507,8 +536,11 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 @dataset([('main_routing_test', ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
     """
-    Add disruption on stop point, test if the information is raised in response
-    Then delete disruption, test if there is no more disruptions in response
+    Add disruption on stop point:
+        test if the information is raised in response
+        test if stop point is blocked, for the moment the stop point should not be blocking
+    Then delete disruption:
+        test if there is no more disruptions in response
     """
     def test_disruption_on_stop_point(self):
         disruption_id = 'test_disruption_on_stop_pointA'
@@ -517,7 +549,7 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         disruption_target_type = 'stop_point'
         query = 'stop_points/stop_point:stopA'
 	
-	# add disruption on stop point
+        # add disruption on stop point
         self.send_chaos_disruption_and_sleep(disruption_id,
                                              disruption_target,
                                              disruption_target_type,
@@ -529,7 +561,8 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
-	# delete disruption on stop point
+
+        # delete disruption on stop point
         self.send_chaos_disruption_and_sleep(disruption_id,
                                              disruption_target,
                                              disruption_target_type,
@@ -539,6 +572,48 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         disruptions = response.get('disruptions')
         assert not disruptions
 
+
+@dataset([('main_routing_test', ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
+    """
+    Add disruption on stop point:
+        test if the information is raised in response
+        test if stop point is blocked, for the moment the stop point should not be blocking
+    Then delete disruption:
+        test if there is no more disruptions in response
+    """
+    def test_disruption_on_stop_point(self):
+        disruption_id = 'test_disruption_on_stop_areaA'
+        disruption_msg = 'stop_area_disruption'
+        disruption_target = 'stopA'
+        disruption_target_type = 'stop_area'
+        query = 'stop_areas/stopA'
+
+        # add disruption on stop point
+        self.send_chaos_disruption_and_sleep(disruption_id,
+                                             disruption_target,
+                                             disruption_target_type,
+                                             blocking=True,
+                                             message=disruption_msg)
+        response = self.query_region(query)
+        disruptions = response.get('disruptions')
+        assert disruptions
+        assert len(disruptions) == 1
+        assert disruptions[0]['disruption_id'] == disruption_id
+
+        # query
+        response = self.query_region(journey_basic_query + "&disruption_active=true")
+
+
+        # delete disruption on stop point
+        self.send_chaos_disruption_and_sleep(disruption_id,
+                                             disruption_target,
+                                             disruption_target_type,
+                                             is_deleted=True)
+
+        response = self.query_region(query)
+        disruptions = response.get('disruptions')
+        assert not disruptions
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
