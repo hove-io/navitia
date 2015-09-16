@@ -326,6 +326,30 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
 
+        #Check message, channel and types
+        disruption_message = get_not_null(response, 'disruptions')
+        eq_(len(disruption_message), 1)
+        message = get_not_null(disruption_message[0], 'messages')
+        eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'sms')
+
+
+        eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'email')
+        eq_(channel['name'], 'email')
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'email')
+
+
     def test_disruption_on_route_and_line(self):
         """
         and we check the sort order of the lines
@@ -357,3 +381,18 @@ class TestDisruptions(AbstractTestFixture):
             is_valid_disruption(d)
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0_and_line')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0_and_line')
+
+        #Verify message and channel without any channel type
+        message = get_not_null(lines_disrupt[0], 'messages')
+        eq_(len(message), 2)
+        eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)
+
+        eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)

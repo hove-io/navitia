@@ -157,6 +157,34 @@ void fill_message(const type::new_disruption::Impact& impact,
         pb_channel->set_content_type(m.channel_content_type);
         pb_channel->set_id(m.channel_id);
         pb_channel->set_name(m.channel_name);
+        for (const auto& type: m.channel_types){
+            switch (type) {
+            case nt::new_disruption::ChannelType::web:
+                pb_channel->add_channel_types(pbnavitia::Channel::web);
+                break;
+            case nt::new_disruption::ChannelType::sms:
+                pb_channel->add_channel_types(pbnavitia::Channel::sms);
+                break;
+            case nt::new_disruption::ChannelType::email:
+                pb_channel->add_channel_types(pbnavitia::Channel::email);
+                break;
+            case nt::new_disruption::ChannelType::mobile:
+                pb_channel->add_channel_types(pbnavitia::Channel::mobile);
+                break;
+            case nt::new_disruption::ChannelType::notification:
+                pb_channel->add_channel_types(pbnavitia::Channel::notification);
+                break;
+            case nt::new_disruption::ChannelType::twitter:
+                pb_channel->add_channel_types(pbnavitia::Channel::twitter);
+                break;
+            case nt::new_disruption::ChannelType::facebook:
+                pb_channel->add_channel_types(pbnavitia::Channel::facebook);
+                break;
+            case nt::new_disruption::ChannelType::unknown_type:
+                pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
+                break;
+            }
+        }
     }
 
     //we need to compute the active status
