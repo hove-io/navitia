@@ -135,11 +135,6 @@ mkdir -p "$run_dir"
 #for this script we thus change the ssh links to https
 sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
 
-#Be sure that git is installed
-if ! [ -x "$(command -v git)" ]; then
-  sudo apt-get install -y git
-fi
-
 #we need to get the submodules
 git submodule update --init
 
