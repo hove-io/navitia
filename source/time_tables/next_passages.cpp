@@ -49,7 +49,7 @@ next_passages(const std::string &request,
               const pt::ptime datetime,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               const type::AccessibiliteParams & accessibilite_params,
-              const type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
+              const type::Data & data, const type::RTLevel rt_level, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes, const boost::posix_time::ptime current_datetime) {
     RequestHandle handler(request, forbidden_uris, datetime, duration, data, {});
 
@@ -64,7 +64,7 @@ next_passages(const std::string &request,
                                  StopEvent::pick_up : StopEvent::drop_off;
     auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
-                                         data, disruption_active, accessibilite_params);
+                                         data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
@@ -115,7 +115,7 @@ pbnavitia::Response next_departures(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
         const bool show_codes, const pt::ptime current_datetime) {
 
     struct vis_next_departures {
@@ -135,7 +135,7 @@ pbnavitia::Response next_departures(const std::string &request,
     };
     vis_next_departures vis(data);
     return next_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
-                         accessibilite_params, data, disruption_active, vis, count, start_page, show_codes, current_datetime);
+                         accessibilite_params, data, rt_level, vis, count, start_page, show_codes, current_datetime);
 }
 
 
@@ -143,7 +143,7 @@ pbnavitia::Response next_arrivals(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
         const bool show_codes, const pt::ptime current_datetime) {
 
     struct vis_next_arrivals {
@@ -161,7 +161,7 @@ pbnavitia::Response next_arrivals(const std::string &request,
     };
     vis_next_arrivals vis(data);
     return next_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
-            accessibilite_params, data, disruption_active, vis,count , start_page, show_codes, current_datetime);
+            accessibilite_params, data, rt_level, vis,count , start_page, show_codes, current_datetime);
 }
 
 

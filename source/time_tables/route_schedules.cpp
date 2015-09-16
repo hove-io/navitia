@@ -51,7 +51,7 @@ get_all_stop_times(const vector_idx& journey_patterns,
                    const DateTime& max_datetime,
                    const size_t max_stop_date_times,
                    const type::Data& d,
-                   bool disruption_active,
+                   const type::RTLevel rt_level,
                    const boost::optional<const std::string> calendar_id) {
     std::vector<std::vector<datetime_stop_time> > result;
 
@@ -68,7 +68,7 @@ get_all_stop_times(const vector_idx& journey_patterns,
         // If there is no calendar we get all stop times in
         // the desired timeframe
         first_dt_st = get_stop_times(navitia::routing::StopEvent::pick_up, first_journey_pattern_points,
-                                     dateTime, max_datetime, max_stop_date_times, d, disruption_active);
+                                     dateTime, max_datetime, max_stop_date_times, d, rt_level);
     }
     else {
         // Otherwise we only take stop_times in a vehicle_journey associated to
@@ -234,7 +234,7 @@ route_schedule(const std::string& filter,
                const pt::ptime datetime,
                uint32_t duration, size_t max_stop_date_times,
                const uint32_t max_depth, int count, int start_page,
-               const type::Data &d, bool disruption_active, const bool show_codes) {
+               const type::Data &d, const type::RTLevel rt_level, const bool show_codes) {
     RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
 
     if(handler.pb_response.has_error()) {
@@ -254,7 +254,7 @@ route_schedule(const std::string& filter,
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, max_stop_date_times,
-                                             d, disruption_active, calendar_id);
+                                             d, rt_level, calendar_id);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
             auto jp = d.pt_data->journey_patterns[jp_idx];

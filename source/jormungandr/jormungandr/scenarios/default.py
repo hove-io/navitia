@@ -100,7 +100,10 @@ class Scenario(simple.Scenario):
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
-        req.journeys.disruption_active = request["disruption_active"]
+        if request["disruption_active"]:
+            req.journeys.realtime_level = request_pb2.ADAPTED
+        else:
+            req.journeys.realtime_level = request_pb2.THEORIC
         req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]

@@ -33,6 +33,7 @@ www.navitia.io
 #include "routing/stop_event.h"
 #include "routing/raptor_utils.h"
 #include "utils/idx_map.h"
+#include "type/rt_level.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/upper_bound.hpp>
@@ -149,15 +150,15 @@ struct NextStopTime {
                    const JppIdx jpp_idx,
                    const DateTime dt,
                    const bool clockwise,
-                   const bool adapted,
+                   const type::RTLevel rt_level,
                    const type::VehicleProperties& vehicle_props,
                    const bool check_freq = true,
                    const boost::optional<DateTime>& bound = boost::none) const {
         if (clockwise) {
-            return earliest_stop_time(stop_event, jpp_idx, dt, adapted, vehicle_props,
+            return earliest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
                                       check_freq, bound ? *bound : DateTimeUtils::inf);
         } else {
-            return tardiest_stop_time(stop_event, jpp_idx, dt, adapted, vehicle_props,
+            return tardiest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
                                       check_freq, bound ? *bound : DateTimeUtils::min);
         }
     }
@@ -170,7 +171,7 @@ struct NextStopTime {
     earliest_stop_time(const StopEvent stop_event,
                        const JppIdx jpp_idx,
                        const DateTime dt,
-                       const bool adapted,
+                       const type::RTLevel rt_level,
                        const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true,
                        const DateTime bound = DateTimeUtils::inf) const;
@@ -183,7 +184,7 @@ struct NextStopTime {
     tardiest_stop_time(const StopEvent stop_event,
                        const JppIdx jpp_idx,
                        const DateTime dt,
-                       const bool adapted,
+                       const type::RTLevel rt_level,
                        const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true,
                        const DateTime bound = DateTimeUtils::min) const;
@@ -196,12 +197,12 @@ DateTime get_next_stop_time(const StopEvent stop_event,
                             DateTime dt,
                             const type::FrequencyVehicleJourney& freq_vj,
                             const type::StopTime& st,
-                            const bool adapted = false);
+                            const type::RTLevel rt_level = type::RTLevel::Theoric);
 DateTime get_previous_stop_time(const StopEvent stop_event,
                                 DateTime dt,
                                 const type::FrequencyVehicleJourney& freq_vj,
                                 const type::StopTime& st,
-                                const bool adapted = false);
+                                const type::RTLevel rt_level = type::RTLevel::Theoric);
 
 
 }} // namespace navitia::routing

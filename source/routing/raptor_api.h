@@ -32,6 +32,8 @@ www.navitia.io
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/request.pb.h"
+#include "utils/flat_enum_map.h"
+#include "type/rt_level.h"
 #include <limits>
 
 namespace navitia{
@@ -56,7 +58,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::AccessibiliteParams & accessibilite_params,
                                   std::vector<std::string> forbidden,
                                   georef::StreetNetwork & worker,
-                                  bool disruption_active,
+                                  const type::RTLevel rt_level,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                   bool show_codes = false);
@@ -67,7 +69,7 @@ pbnavitia::Response make_nm_response(RAPTOR &raptor, const std::vector<type::Ent
                                      const type::AccessibiliteParams & accessibilite_params,
                                      std::vector<std::string> forbidden,
                                      georef::StreetNetwork & worker,
-                                     bool disruption_active,
+                                     const type::RTLevel rt_level,
                                      uint32_t max_duration, uint32_t max_transfers,
                                      bool show_codes);
 
@@ -77,7 +79,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
-                                   bool disruption_active,
+                                   const type::RTLevel rt_level,
                                    int max_duration = 3600,
                                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                    bool show_codes = false);

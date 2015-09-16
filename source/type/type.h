@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/time_duration.h"
 #include "datetime.h"
+#include "rt_level.h"
 #include "geographical_coord.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
@@ -58,6 +59,7 @@ namespace navitia { namespace georef {
  struct Admin;
  struct GeoRef;
 }}
+
 namespace navitia { namespace type {
 typedef navitia::idx_t idx_t;
 
@@ -719,7 +721,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // thus we store the shit needed to convert all stop times of the vehicle journey to local
     int16_t utc_to_local_offset = 0; //in seconds
 
-    bool is_adapted = false; //REMOVE (change to enum ?)
+    RTLevel realtime_level = RTLevel::Theoric;
     ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
     std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
     VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
@@ -736,7 +738,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
-            & idx & stop_time_list & is_adapted
+            & idx & stop_time_list & realtime_level
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
@@ -775,7 +777,7 @@ struct FrequencyVehicleJourney: public VehicleJourney {
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
     virtual ~FrequencyVehicleJourney();
 
-    bool is_valid(int day, const bool is_adapted) const;
+    bool is_valid(int day, const RTLevel rt_level) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
         ar & boost::serialization::base_object<VehicleJourney>(*this);
 
@@ -909,7 +911,7 @@ struct StopTime {
         return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
     }
 
-    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
+    bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
@@ -1135,4 +1137,3 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
-

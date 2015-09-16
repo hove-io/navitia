@@ -364,7 +364,7 @@ struct functor_add_vj {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
         vj->uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
-        vj->is_adapted = true;
+        vj->realtime_level = nt::RTLevel::Adapted;
         pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_ref.name);
         vj->company = vj_ref.company;
         //TODO: we loose stay_in on impacted vj, we will need to work on this.
