@@ -114,7 +114,7 @@ struct data_set {
         b.data->build_uri();
 
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
-        vj->validity_pattern->add(boost::gregorian::from_undelimited_string("20140101"),
+        vj->validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
         //we add some comments

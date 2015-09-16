@@ -2047,7 +2047,7 @@ struct classic_freq_dataset {
     classic_freq_dataset() {
         vp = type::ValidityPattern(date(2012,7,7), "11");
 
-        vj.validity_pattern = &vp;
+        vj.validity_patterns[type::RTLevel::Theoric] = &vp;
         vj.start_time = 10 * 60 * 60;
         vj.end_time = 15 * 60 * 60;
         vj.headway_secs = 20 * 60;
@@ -2100,7 +2100,7 @@ struct midnight_freq_dataset {
     midnight_freq_dataset() {
         vp = type::ValidityPattern(date(2012,7,7), "11");
 
-        vj.validity_pattern = &vp;
+        vj.validity_patterns[type::RTLevel::Theoric] = &vp;
         vj.start_time = 17 * 60 * 60;
         vj.end_time = 10 * 60 * 60;
         vj.headway_secs = 20 * 60;
@@ -2146,7 +2146,7 @@ struct midnight_freq_dataset_no_valid_first_day {
     midnight_freq_dataset_no_valid_first_day() {
         vp = type::ValidityPattern(date(2012,7,7), "10");
 
-        vj.validity_pattern = &vp;
+        vj.validity_patterns[type::RTLevel::Theoric] = &vp;
         vj.start_time = 17 * 60 * 60;
         vj.end_time = 10 * 60 * 60;
         vj.headway_secs = 20 * 60;

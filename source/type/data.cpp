@@ -341,13 +341,13 @@ static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta
 
     for (auto* vj: meta_vj->theoric_vj) {
         if (validity.beginning_date.is_not_a_date()) {
-            validity.beginning_date = vj->validity_pattern->beginning_date;
+            validity.beginning_date = vj->validity_pattern()->beginning_date;
         } else {
-            if (validity.beginning_date != vj->validity_pattern->beginning_date) {
+            if (validity.beginning_date != vj->validity_pattern()->beginning_date) {
                 throw navitia::exception("the beginning date of the meta_vj are not all the same");
             }
         }
-        validity.days |= vj->validity_pattern->days;
+        validity.days |= vj->validity_pattern()->days;
     }
     return validity;
 }

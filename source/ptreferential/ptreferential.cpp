@@ -333,7 +333,7 @@ static bool keep_vj(const nt::VehicleJourney* vj,
     const auto& first_departure_dt = vj->stop_time_list.front().departure_time;
 
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
-        if (! vj->validity_pattern->check(*it)) { continue; }
+        if (! vj->validity_pattern()->check(*it)) { continue; }
         bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
         if (period.contains(vj_dt)) { return true; }
     }
