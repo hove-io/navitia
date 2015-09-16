@@ -725,7 +725,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
 
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
     VehicleJourney* theoric_vehicle_journey = nullptr;
 
     ValidityPattern* theoric_validity_pattern() const { return validity_patterns[RTLevel::Theoric]; }
@@ -745,7 +744,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_patterns
             & idx & stop_time_list & realtime_level
-            & adapted_vehicle_journey_list
             & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
             & next_vj & prev_vj
