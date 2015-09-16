@@ -153,6 +153,13 @@ then
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
     distrib=`lsb_release -si`
+    version=`lsb_release -sr`
+
+    # Fix Ubuntu 15.04 package
+    if [ "$distrib" = "Ubuntu" && "$version" = "15.04" ]; then
+      postgresql_package='postgresql-9.4'
+      postgresql_postgis_package='postgis postgresql-9.4-postgis-2.1 postgresql-9.4-postgis-scripts'
+    fi
 
     if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
             # on Debian, we must add the APT repository of PostgreSQL project
