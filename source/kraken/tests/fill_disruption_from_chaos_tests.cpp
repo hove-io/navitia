@@ -264,6 +264,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
                 BOOST_CHECK_MESSAGE(boost::find_if(vj->journey_pattern->journey_pattern_point_list,
                             stop_area_finder("stop_area:stop2")) == vj->journey_pattern->journey_pattern_point_list.end(), dump_vj(*vj));
                 break;
+            case nt::RTLevel::RealTime:
             default:
                 //TODO
                 throw navitia::exception("realtime check unhandled case");
@@ -309,7 +310,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
     for (const auto* vj: b.data->pt_data->vehicle_journeys) {
-        BOOST_REQUIRE_NE(vj->realtime_level, nt::RTLevel::Adapted);
+        BOOST_REQUIRE(vj->realtime_level != nt::RTLevel::Adapted);
         BOOST_CHECK(vj->validity_pattern->days == vj->adapted_validity_pattern->days);
     }
     for (const auto* sp: b.data->pt_data->stop_points) {

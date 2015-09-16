@@ -28,6 +28,8 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
+#include <ostream>
+#include "utils/flat_enum_map.h"
 
 namespace navitia {
 
@@ -46,4 +48,17 @@ struct enum_size_trait<type::RTLevel> {
     }
 };
 
+}
+
+inline std::ostream& operator<<(std::ostream& ss, navitia::type::RTLevel l) {
+    switch (l) {
+    case navitia::type::RTLevel::Theoric:
+        return ss << "Theoric";
+    case navitia::type::RTLevel::Adapted:
+        return ss << "Adapted";
+    case navitia::type::RTLevel::RealTime:
+        return ss << "RealTime";
+    default:
+        return ss;
+    }
 }

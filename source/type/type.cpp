@@ -147,6 +147,7 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
     case nt::RTLevel::Adapted:
         return vehicle_journey->adapted_validity_pattern->check(day);
     case nt::RTLevel::RealTime:
+    default:
         throw navitia::exception("realtime not handled yet");
     }
     //TODO use:
@@ -203,6 +204,7 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     case nt::RTLevel::Adapted:
         return adapted_validity_pattern->check(day);
     case nt::RTLevel::RealTime:
+    default:
         throw navitia::exception("realtime not handled yet");
     }
     //TODO use:
