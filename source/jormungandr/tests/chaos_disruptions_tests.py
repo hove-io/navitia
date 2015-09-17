@@ -576,9 +576,9 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
 @dataset([('main_routing_test', ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
     """
-    Add disruption on stop point:
+    Add disruption on stop area:
         test if the information is raised in response
-        test if stop point is blocked, for the moment the stop point should not be blocking
+        test if stop area is blocked, for the moment the stop area should not be blocking
     Then delete disruption:
         test if there is no more disruptions in response
     """
