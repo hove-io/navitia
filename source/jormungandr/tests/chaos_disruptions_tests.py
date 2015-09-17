@@ -346,9 +346,6 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.run_check('stopA', 'stop_area')
 
 
-
-
-
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
     """

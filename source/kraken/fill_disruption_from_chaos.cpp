@@ -374,7 +374,7 @@ struct functor_add_vj {
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
         nt::ValidityPattern tmp_vp;
-        nt::ValidityPattern tmp_ref_vp(*vj_ref.validity_patterns[nt::RTLevel::Adapted]);
+        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern());
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));

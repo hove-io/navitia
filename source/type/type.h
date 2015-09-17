@@ -728,8 +728,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
     VehicleJourney* theoric_vehicle_journey = nullptr;
 
+    ValidityPattern* theoric_validity_pattern() const { return validity_patterns[RTLevel::Theoric]; }
     ValidityPattern* adapted_validity_pattern() const { return validity_patterns[RTLevel::Adapted]; }
-    ValidityPattern* validity_pattern() const { return validity_patterns[RTLevel::Theoric]; }
+    ValidityPattern* rt_validity_pattern() const { return validity_patterns[RTLevel::RealTime]; }
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
