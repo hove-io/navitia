@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "route_schedules.h"
+#include "routing/dataraptor.h"
 #include "thermometer.h"
 #include "request_handle.h"
 #include "type/pb_converter.h"
@@ -46,7 +47,7 @@ namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
 
 static std::vector<std::vector<datetime_stop_time> >
-get_all_stop_times(const vector_idx& journey_patterns,
+get_all_stop_times(const std::vector<routing::JpIdx>& journey_patterns,
                    const DateTime& dateTime,
                    const DateTime& max_datetime,
                    const size_t max_stop_date_times,
@@ -56,18 +57,18 @@ get_all_stop_times(const vector_idx& journey_patterns,
     std::vector<std::vector<datetime_stop_time> > result;
 
     // We take the first journey pattern points from every journey_pattern
-    std::vector<type::idx_t> first_journey_pattern_points;
-    for(type::idx_t jp_idx : journey_patterns) {
-        auto jpp = d.pt_data->journey_patterns[jp_idx];
-        auto first_jpp_idx = jpp->journey_pattern_point_list.front()->idx;
-        first_journey_pattern_points.push_back(first_jpp_idx);
+    std::vector<routing::JppIdx> first_journey_pattern_points;
+    for (const auto& jp_idx: journey_patterns) {
+        const auto& jp = d.dataRaptor->jp_container.get(jp_idx);
+        if (jp.jpps.empty()) { continue; }
+        first_journey_pattern_points.push_back(jp.jpps.front());
     }
 
     std::vector<datetime_stop_time> first_dt_st;
     if(!calendar_id) {
         // If there is no calendar we get all stop times in
         // the desired timeframe
-        first_dt_st = get_stop_times(navitia::routing::StopEvent::pick_up, first_journey_pattern_points,
+        first_dt_st = get_stop_times(routing::StopEvent::pick_up, first_journey_pattern_points,
                                      dateTime, max_datetime, max_stop_date_times, d, rt_level);
     }
     else {
@@ -250,17 +251,18 @@ route_schedule(const std::string& filter,
     routes_idx = paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {
         auto route = d.pt_data->routes[route_idx];
-        auto jps =  ptref::make_query(type::Type_e::JourneyPattern, filter+" and route.uri="+route->uri, forbidden_uris, d);
+        const auto& jps =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, max_stop_date_times,
                                              d, rt_level, calendar_id);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
-            auto jp = d.pt_data->journey_patterns[jp_idx];
+            const auto& jp = d.dataRaptor->jp_container.get(jp_idx);
             stop_points.push_back(vector_idx());
-            for(auto jpp : jp->journey_pattern_point_list) {
-                stop_points.back().push_back(jpp->stop_point->idx);
+            for(auto jpp_idx : jp.jpps) {
+                const auto& jpp = d.dataRaptor->jp_container.get(jpp_idx);
+                stop_points.back().push_back(jpp.sp_idx.val);
             }
         }
         thermometer.generate_thermometer(stop_points);

@@ -133,7 +133,7 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
 void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
-    Q.assign(data.pt_data->journey_patterns, queue_value);
+    Q.assign(data.dataRaptor->jp_container.get_jps_values(), queue_value);
     if (labels.empty()) {
         labels.resize(5);
     }

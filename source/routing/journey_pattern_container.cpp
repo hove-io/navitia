@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "journey_pattern_container.h"
 #include "type/pt_data.h"
+#include <type_traits>
 
 namespace navitia { namespace routing {
 
@@ -44,21 +45,29 @@ JourneyPattern::get_vjs<nt::FrequencyVehicleJourney>() {
     return freq_vjs;
 }
 
-void JourneyPatternContainer::init(const nt::PT_Data& pt_data) {
+void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     map.clear();
     jps.clear();
     jpps.clear();
     jps_from_route.assign(pt_data.routes);
+    jp_from_vj.assign(pt_data.vehicle_journeys);
     for (const auto* jp: pt_data.journey_patterns) {
         for (const auto& vj: jp->discrete_vehicle_journey_list) { add_vj(*vj); }
         for (const auto& vj: jp->frequency_vehicle_journey_list) { add_vj(*vj); }
     }
 }
 
-JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const nt::VehicleJourney& vj) {
+const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
+    const auto& jp = get(jp_from_vj[VjIdx(*st.vehicle_journey)]);
+    return jp.jpps.at(st.journey_pattern_point->order);
+}
+
+
+template<typename VJ>
+JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const VJ& vj) {
     JourneyPatternContainer::JpKey key;
     key.route_idx = RouteIdx(*vj.journey_pattern->route);
-    key.is_freq = dynamic_cast<const nt::FrequencyVehicleJourney*>(&vj) != nullptr;
+    key.is_freq = std::is_same<VJ, nt::FrequencyVehicleJourney>::value;
     for (const auto& st: vj.stop_time_list) {
         key.jpp_keys.emplace_back(SpIdx(*st.journey_pattern_point->stop_point),
                                   st.local_traffic_zone,
@@ -118,11 +127,12 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
     // The vj must not overtake the other vj in its jp, thus searching
     // for one satisfying jp.
     for (auto& jp_idx: jps) {
-        auto& jp = get(jp_idx);
+        auto& jp = get_mut(jp_idx);
         auto& vjs = jp.template get_vjs<VJ>();
         if (! overtake(vj, vjs)) {
             // Great, found a valid jp, inserting and stopping
             vjs.push_back(&vj);
+            jp_from_vj[VjIdx(vj)] = jp_idx;
             return;
         }
     }
@@ -131,27 +141,29 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
     const auto jp_idx = make_jp(key);
     jps.push_back(jp_idx);
     jps_from_route[key.route_idx].push_back(jp_idx);
-    get(jp_idx).template get_vjs<VJ>().push_back(&vj);
+    get_mut(jp_idx).template get_vjs<VJ>().push_back(&vj);
+    jp_from_vj[VjIdx(vj)] = jp_idx;
 }
 
-JpIdxT JourneyPatternContainer::make_jp(const JpKey& key) {
-    const auto idx = JpIdxT(jps.size());
+JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
+    const auto jp_idx = JpIdx(jps.size());
     jps.emplace_back();
     auto& jp = jps.back();
-    uint32_t order = 0;
+    jp.route_idx = key.route_idx;
+    uint16_t order = 0;
     for (const auto& jpp_key: key.jpp_keys) {
-        jp.jpps.push_back(make_jpp(jpp_key.sp_idx, order++));
+        jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
+    return jp_idx;
+}
+
+JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx, const SpIdx& sp_idx, uint16_t order) {
+    const auto idx = JppIdx(jpps.size());
+    jpps.push_back({jp_idx, sp_idx, order});
     return idx;
 }
 
-JppIdxT JourneyPatternContainer::make_jpp(const SpIdx& sp_idx, uint32_t order) {
-    const auto idx = JppIdxT(jpps.size());
-    jpps.push_back({sp_idx, order});
-    return idx;
-}
-
-JourneyPattern& JourneyPatternContainer::get(const JpIdxT& idx) {
+JourneyPattern& JourneyPatternContainer::get_mut(const JpIdx& idx) {
     assert(idx.val < jps.size());
     return jps[idx.val];
 }

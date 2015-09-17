@@ -64,12 +64,13 @@ template<typename Visitor> struct RaptorSolutionReader;
 
 std::pair<const type::StopTime*, DateTime>
 get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
-              const type::JourneyPatternPoint*const target_jpp)
+              const JppIdx& target_jpp,
+              const JourneyPatternContainer& jp_container)
 {
     DateTime cur_dt = in_st_dt.second;
     for (const auto& st: raptor_visitor().st_range(*in_st_dt.first).advance_begin(1)) {
         cur_dt = st.section_end(cur_dt, true);
-        if (st.journey_pattern_point == target_jpp) {
+        if (jp_container.get_jpp(st) == target_jpp) {
             // check if the get_out is valid?
             return {&st, cur_dt};
         }
@@ -79,7 +80,7 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
          stay_in_vj = stay_in_vj->next_vj) {
         for (const auto& st: stay_in_vj->stop_time_list) {
             cur_dt = st.section_end(cur_dt, true);
-            if (st.journey_pattern_point == target_jpp) {
+            if (jp_container.get_jpp(st) == target_jpp) {
                 // check if the get_out is valid?
                 return {&st, cur_dt};
             }
@@ -114,21 +115,24 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
         // there is nothing to do if we have less than 3 sections.
         return;
     }
+    const auto& jp_container = reader.raptor.data.dataRaptor->jp_container;
     const auto* prev_s = &j.sections.at(0);
     for (auto& cur_s: boost::make_iterator_range(j.sections.begin() + 1, j.sections.end() - 1)) {
-        const auto* cur_jpp = cur_s.get_in_st->journey_pattern_point;
+        const auto& cur_jpp_idx = jp_container.get_jpp(*cur_s.get_in_st);
         const auto* conn = reader.raptor.data.pt_data->get_stop_point_connection(
             *prev_s->get_out_st->journey_pattern_point->stop_point,
-            *cur_jpp->stop_point);
+            *cur_s.get_in_st->journey_pattern_point->stop_point);
         assert(conn != nullptr);
         const auto new_st_dt = reader.raptor.next_st.earliest_stop_time(
             StopEvent::pick_up,
-            JppIdx(*cur_jpp),
+            cur_jpp_idx,
             prev_s->get_out_dt + conn->duration,
             reader.rt_level,
             reader.accessibilite_params.vehicle_properties);
         if (new_st_dt.second < cur_s.get_in_dt) {
-            const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
+            const auto out_st_dt = get_out_st_dt(new_st_dt,
+                                                 jp_container.get_jpp(*cur_s.get_out_st),
+                                                 jp_container);
             if (out_st_dt.first) {
                 cur_s.get_in_st = new_st_dt.first;
                 cur_s.get_in_dt = new_st_dt.second;

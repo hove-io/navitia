@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
+#include "routing/dataraptor.h"
 
 
 namespace pt = boost::posix_time;
@@ -62,7 +63,19 @@ next_passages(const std::string &request,
 
     const StopEvent stop_event = (vis.api_pb == pbnavitia::NEXT_DEPARTURES) ?
                                  StopEvent::pick_up : StopEvent::drop_off;
-    auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
+    // TODO: temporary fix: we search the stop points corresponding to
+    // the request, and then extend to the jpp from dataRaptor, even
+    // if that's not exactly the same thing. We'll need to reuse a
+    // request on jpp when the jpp will be inserted to ptref (or
+    // route_point is added, or something like that).
+    const auto sps = ptref::make_query(type::Type_e::StopPoint, request, forbidden_uris, data);
+    std::vector<routing::JppIdx> jpps;
+    for (const auto sp_idx: sps) {
+        for (const auto& jpp: data.dataRaptor->jpps_from_sp[routing::SpIdx(sp_idx)]) {
+            jpps.push_back(jpp.idx);
+        }
+    }
+    auto passages_dt_st = get_stop_times(stop_event, jpps,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
                                          data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();

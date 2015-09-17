@@ -51,15 +51,13 @@ bool NextStopTimeData::Arrival::is_valid(const type::StopTime& st) const {
 }
 
 template<typename Getter>
-void NextStopTimeData::TimesStopTimes<Getter>::init(const type::JourneyPattern* jp,
-                                                 const type::JourneyPatternPoint* jpp)
+void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp,
+                                                    const JourneyPatternPoint& jpp)
 {
     // collect the stop times at the given jpp
-    const size_t jpp_order = jpp->order;
-    stop_times.reserve(jp->discrete_vehicle_journey_list.size());
-    for(const auto& vj: jp->discrete_vehicle_journey_list) {
-        assert(vj->stop_time_list.at(jpp_order).journey_pattern_point ==
-               jp->journey_pattern_point_list.at(jpp_order));
+    const size_t jpp_order = jpp.order;
+    stop_times.reserve(jp.discrete_vjs.size());
+    for(const auto& vj: jp.discrete_vjs) {
         const auto& st = vj->stop_time_list[jpp_order];
         if (! getter.is_valid(st)) { continue; }
         stop_times.push_back(&st);
@@ -85,15 +83,15 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const type::JourneyPattern* 
     }
 }
 
-void NextStopTimeData::load(const type::PT_Data &data) {
-    departure.assign(data.journey_pattern_points);
-    arrival.assign(data.journey_pattern_points);
+void NextStopTimeData::load(const JourneyPatternContainer &jp_container) {
+    departure.assign(jp_container.get_jpps_values());
+    arrival.assign(jp_container.get_jpps_values());
 
-    for(const auto* jp: data.journey_patterns) {
-        for (const auto* jpp: jp->journey_pattern_point_list) {
-            const JppIdx jpp_idx = JppIdx(*jpp);
-            departure[jpp_idx].init(jp, jpp);
-            arrival[jpp_idx].init(jp, jpp);
+    for (const auto& jp: jp_container.get_jps()) {
+        for (const auto& jpp_idx: jp.second.jpps) {
+            const auto& jpp = jp_container.get(jpp_idx);
+            departure[jpp_idx].init(jp.second, jpp);
+            arrival[jpp_idx].init(jp.second, jpp);
         }
     }
 }
@@ -127,7 +125,7 @@ next_valid_discrete(const StopEvent stop_event,
                     const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -139,7 +137,7 @@ next_valid_discrete(const StopEvent stop_event,
     //if none was found, we try again the next day
     date++;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -255,7 +253,7 @@ previous_valid_discrete(const StopEvent stop_event,
                         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
@@ -270,7 +268,7 @@ previous_valid_discrete(const StopEvent stop_event,
 
     --date;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }

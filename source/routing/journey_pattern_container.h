@@ -39,22 +39,17 @@ struct VehicleJourney;
 struct DiscreteVehicleJourney;
 struct FrequencyVehicleJourney;
 struct Route;
+struct StopTime;
 
 }}// namespace navitia::type
 
 namespace navitia { namespace routing {
 
-using RouteIdx = Idx<navitia::type::Route>;
-
-struct JourneyPattern;
-struct JourneyPatternPoint;
-using JppIdxT = Idx<JourneyPatternPoint>;
-using JpIdxT = Idx<JourneyPattern>;
-
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPatternPoint {
+    JpIdx jp_idx;
     SpIdx sp_idx;
-    uint32_t order;
+    uint16_t order;
     bool operator==(const JourneyPatternPoint& other) const {
         return sp_idx == other.sp_idx && order == other.order;
     }
@@ -62,9 +57,10 @@ struct JourneyPatternPoint {
 
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPattern {
-    std::vector<JppIdxT> jpps;
+    std::vector<JppIdx> jpps;
     std::vector<const navitia::type::DiscreteVehicleJourney*> discrete_vjs;
     std::vector<const navitia::type::FrequencyVehicleJourney*> freq_vjs;
+    RouteIdx route_idx;
 
     bool operator==(const JourneyPattern& other) const {
         return jpps == other.jpps
@@ -78,18 +74,18 @@ struct JourneyPattern {
 struct JourneyPatternContainer {
     using Jps = std::vector<JourneyPattern>;
     using Jpps = std::vector<JourneyPatternPoint>;
-    using jp_iterator = IdxMapIterator<JpIdxT, Jps::const_iterator>;
-    using jpp_iterator = IdxMapIterator<JppIdxT, Jpps::const_iterator>;
+    using jp_iterator = IdxMapIterator<JpIdx, Jps::const_iterator>;
+    using jpp_iterator = IdxMapIterator<JppIdx, Jpps::const_iterator>;
     using jp_range = boost::iterator_range<jp_iterator>;
     using jpp_range = boost::iterator_range<jpp_iterator>;
 
-    void init(const navitia::type::PT_Data&);
+    void load(const navitia::type::PT_Data&);
     size_t nb_jps() const { return jps.size(); }
-    const JourneyPattern& get(const JpIdxT& idx) const {
+    const JourneyPattern& get(const JpIdx& idx) const {
         assert(idx.val < jps.size());
         return jps[idx.val];
     }
-    const JourneyPatternPoint& get(const JppIdxT& idx) const {
+    const JourneyPatternPoint& get(const JppIdx& idx) const {
         assert(idx.val < jpps.size());
         return jpps[idx.val];
     }
@@ -103,9 +99,13 @@ struct JourneyPatternContainer {
                                           jpp_iterator(jpps.size(), jpps.end()));
     }
     const Jpps& get_jpps_values() const { return jpps; }
-    const IdxMap<navitia::type::Route, std::vector<JpIdxT>>& get_jps_from_route() const {
+    const IdxMap<type::Route, std::vector<JpIdx>>& get_jps_from_route() const {
         return jps_from_route;
     }
+    const IdxMap<type::VehicleJourney, JpIdx>& get_jp_from_vj() const {
+        return jp_from_vj;
+    }
+    const JppIdx& get_jpp(const type::StopTime&) const;
 
 private:
     struct JppKey {
@@ -147,18 +147,19 @@ private:
     };
 
     // We have a vector to manage overtaking vjs
-    using Map = std::map<JpKey, std::vector<JpIdxT>>;
+    using Map = std::map<JpKey, std::vector<JpIdx>>;
 
     Map map;
     std::vector<JourneyPattern> jps;
     std::vector<JourneyPatternPoint> jpps;
-    IdxMap<navitia::type::Route, std::vector<JpIdxT>> jps_from_route;
+    IdxMap<navitia::type::Route, std::vector<JpIdx>> jps_from_route;
+    IdxMap<navitia::type::VehicleJourney, JpIdx> jp_from_vj;
 
     template<typename VJ> void add_vj(const VJ&);
-    static JpKey make_key(const navitia::type::VehicleJourney&);
-    JpIdxT make_jp(const JpKey&);
-    JppIdxT make_jpp(const SpIdx&, uint32_t order);
-    JourneyPattern& get(const JpIdxT&);
+    template<typename VJ> static JpKey make_key(const VJ&);
+    JpIdx make_jp(const JpKey&);
+    JppIdx make_jpp(const JpIdx&, const SpIdx&, uint16_t order);
+    JourneyPattern& get_mut(const JpIdx&);
 };
 
 }} // namespace navitia::routing

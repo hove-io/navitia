@@ -36,7 +36,7 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-void dataRAPTOR::Connections::load(const type::PT_Data &data) {
+void dataRAPTOR::Connections::load(const type::PT_Data& data) {
     forward_connections.assign(data.stop_points);
     backward_connections.assign(data.stop_points);
     for (const auto* conn: data.stop_point_connections) {
@@ -49,11 +49,13 @@ void dataRAPTOR::Connections::load(const type::PT_Data &data) {
     for (auto& conns: backward_connections.values()) { conns.shrink_to_fit(); }
 }
 
-void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
+void dataRAPTOR::JppsFromSp::load(const type::PT_Data& data,
+                                  const JourneyPatternContainer& jp_container) {
     jpps_from_sp.assign(data.stop_points);
-    for (const auto* sp: data.stop_points) {
-        for (const auto* jpp: sp->journey_pattern_point_list) {
-            jpps_from_sp[SpIdx(*sp)].push_back({JppIdx(*jpp), JpIdx(*jpp->journey_pattern), jpp->order});
+    for (const auto& jp: jp_container.get_jps()) {
+        for (const auto& jpp_idx: jp.second.jpps) {
+            const auto& jpp = jp_container.get(jpp_idx);
+            jpps_from_sp[jpp.sp_idx].push_back({jpp_idx, jp.first, jpp.order});
         }
     }
     for (auto& jpps: jpps_from_sp.values()) { jpps.shrink_to_fit(); }
@@ -67,28 +69,29 @@ void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jp
     }
 }
 
-void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
-    jpps_from_jp.assign(data.journey_patterns);
-    for (const auto* jp: data.journey_patterns) {
-        const bool has_freq = !jp->frequency_vehicle_journey_list.empty();
-        for (const auto* jpp: jp->journey_pattern_point_list) {
-            jpps_from_jp[JpIdx(*jp)].push_back(
-                {JppIdx(*jpp), SpIdx(*jpp->stop_point), has_freq});
+void dataRAPTOR::JppsFromJp::load(const JourneyPatternContainer& jp_container) {
+    jpps_from_jp.assign(jp_container.get_jps_values());
+    for (const auto& jp: jp_container.get_jps()) {
+        const bool has_freq = !jp.second.freq_vjs.empty();
+        for (const auto& jpp_idx: jp.second.jpps) {
+            const auto& jpp = jp_container.get(jpp_idx);
+            jpps_from_jp[jp.first].push_back({jpp_idx, jpp.sp_idx, has_freq});
         }
     }
     for (auto& jpps: jpps_from_jp.values()) { jpps.shrink_to_fit(); }
 }
 
 
-void dataRAPTOR::load(const type::PT_Data &data)
+void dataRAPTOR::load(const type::PT_Data& data)
 {
+    jp_container.load(data);
     labels_const.init_inf(data.stop_points);
     labels_const_reverse.init_min(data.stop_points);
 
     connections.load(data);
-    jpps_from_sp.load(data);
-    jpps_from_jp.load(data);
-    next_stop_time_data.load(data);
+    jpps_from_sp.load(data, jp_container);
+    jpps_from_jp.load(jp_container);
+    next_stop_time_data.load(jp_container);
 
     jp_validity_patterns.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
     jp_adapted_validity_pattern.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));

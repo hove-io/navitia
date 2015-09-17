@@ -32,6 +32,7 @@ www.navitia.io
 #include "request_handle.h"
 #include "get_stop_times.h"
 #include "type/pb_converter.h"
+#include "routing/dataraptor.h"
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "utils/paginate.h"
@@ -120,6 +121,7 @@ departure_board(const std::string& request,
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
 
 
+    // TODO: we let that using the old jpp for the moment
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
     //Mapping route/stop_point
     std::vector<stop_point_line> sps_routes;
@@ -149,25 +151,30 @@ departure_board(const std::string& request,
     for(auto sp_route : sps_routes) {
         std::vector<datetime_stop_time> stop_times;
         const type::StopPoint* stop_point = data.pt_data->stop_points[sp_route.first];
+        const auto sp_idx = routing::SpIdx(*stop_point);
         const type::Route* route = data.pt_data->routes[sp_route.second];
-        auto jpps = stop_point->journey_pattern_point_list;
-        for(auto jpp : jpps) {
-            if(jpp->journey_pattern->route != route) {
-                continue;
-            }
+        const auto route_idx = routing::RouteIdx(*route);
+        const auto& jpps = data.dataRaptor->jpps_from_sp[sp_idx];
+        for (const auto& jpp_from_sp: jpps) {
+            const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
+            const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+            const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+            if (jp.route_idx != route_idx) { continue; }
+
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {
-                tmp = get_stop_times(navitia::routing::StopEvent::pick_up, {jpp->idx}, handler.date_time,
+                tmp = get_stop_times(routing::StopEvent::pick_up, {jpp_idx}, handler.date_time,
                                      handler.max_datetime, max_date_times, data, rt_level);
             } else {
-                tmp = get_stop_times({jpp->idx}, DateTimeUtils::hour(handler.date_time),
+                tmp = get_stop_times({jpp_idx}, DateTimeUtils::hour(handler.date_time),
                                      DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             } else {
-                if (stop_point == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point){
-                    if(jpp->stop_point->stop_area == route->destination){
+                const auto& last_jpp = data.dataRaptor->jp_container.get(jp.jpps.back());
+                if (sp_idx == last_jpp.sp_idx) {
+                    if (stop_point->stop_area == route->destination){
                         response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                     }else{
                         response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
