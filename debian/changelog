@@ -1,3 +1,9 @@
+navitia2 (1.25.2) unstable; urgency=low
+
+  * fix fill_associated_calendar  <https://github.com/CanalTP/navitia/pull/1177> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 18 Sep 2015 09:09:42 +0100
+
 navitia2 (1.25.1) unstable; urgency=low
 
   *kraken: DeleteQueue throw an exepton if the queue doesn't exist <https://github.com/CanalTP/navitia/pull/1162> 

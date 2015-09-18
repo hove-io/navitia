@@ -73,6 +73,12 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     //the comments are loaded before the stop time to reduce the memory foot print
     this->fill_comments(data, work);
 
+    /// grid calendar
+    this->fill_calendars(data, work);
+    this->fill_periods(data, work);
+    this->fill_exception_dates(data, work);
+    this->fill_rel_calendars_lines(data, work);
+
     /// meta vj associated calendars
     this->fill_associated_calendar(data, work);
     this->fill_meta_vehicle_journeys(data, work);
@@ -112,11 +118,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_transitions(data, work);
     this->fill_origin_destinations(data, work);
 
-    /// grid calendar
-    this->fill_calendars(data, work);
-    this->fill_periods(data, work);
-    this->fill_exception_dates(data, work);
-    this->fill_rel_calendars_lines(data, work);
+
 
     check_coherence(data);
 }
