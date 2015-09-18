@@ -179,7 +179,7 @@ then
     sudo pip install -r "$navitia_dir"/source/jormungandr/requirements.txt
     sudo pip install -r "$navitia_dir"/source/tyr/requirements.txt
     #we want a custom protobuff version
-    sudo pip install -U protobuf==2.5.0
+    sudo pip install -U protobuf==2.6.1
 fi
 
 #the build procedure is explained is the install documentation
