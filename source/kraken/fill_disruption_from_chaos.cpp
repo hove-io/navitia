@@ -377,7 +377,7 @@ struct functor_add_vj {
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
         nt::ValidityPattern tmp_vp;
-        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern);
+        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern());
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));
@@ -397,15 +397,15 @@ struct functor_add_vj {
             //this vehicle journey won't ever circulate
             return false;
         }
-        vj->adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
-        vj_ref.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
+        vj->validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj_ref.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
 
         pt_data.vehicle_journeys.push_back(vj);
         pt_data.vehicle_journeys_map[vj->uri] = vj;
 
         // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
-        vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj->validity_patterns[nt::RTLevel::Theoric] = pt_data.get_or_create_validity_pattern(tmp_vp);
         size_t order = 0;
         // We skip the stop_time linked to impacted stop_point
         for (const auto& st_ref : vj_ref.stop_time_list) {
@@ -461,7 +461,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     using apply_impacts_visitor::operator();
 
     bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern);
+        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern());
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));
@@ -478,7 +478,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
         }
-        vj.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
         vj.impacted_by.push_back(impact);
         return true;
     }
@@ -524,7 +524,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
-        vj.adapted_validity_pattern = vj.validity_pattern;
+        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Theoric];
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,

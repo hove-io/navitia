@@ -140,18 +140,7 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
             return false;
         --day;
     }
-
-    switch (rt_level) {
-    case nt::RTLevel::Theoric:
-        return vehicle_journey->validity_pattern->check(day);
-    case nt::RTLevel::Adapted:
-        return vehicle_journey->adapted_validity_pattern->check(day);
-    case nt::RTLevel::RealTime:
-    default:
-        throw navitia::exception("realtime not handled yet");
-    }
-    //TODO use:
-    //return vehicle_journey->validity_patterns[rt_level]->check(day);
+    return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
 bool StopTime::operator<(const StopTime& other) const {
@@ -197,18 +186,7 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
-
-    switch (rt_level) {
-    case nt::RTLevel::Theoric:
-        return validity_pattern->check(day);
-    case nt::RTLevel::Adapted:
-        return adapted_validity_pattern->check(day);
-    case nt::RTLevel::RealTime:
-    default:
-        throw navitia::exception("realtime not handled yet");
-    }
-    //TODO use:
-    //return validity_patterns[rt_level]->check(day);
+    return validity_patterns[rt_level]->check(day);
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
@@ -641,7 +619,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     case Type_e::JourneyPattern: result.push_back(journey_pattern->idx); break;
     case Type_e::Company: result.push_back(company->idx); break;
     case Type_e::PhysicalMode: result.push_back(journey_pattern->physical_mode->idx); break;
-    case Type_e::ValidityPattern: result.push_back(validity_pattern->idx); break;
+    case Type_e::ValidityPattern: result.push_back(theoric_validity_pattern()->idx); break;
     default: break;
     }
     return result;
