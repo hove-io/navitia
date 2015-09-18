@@ -68,6 +68,17 @@ enum class Effect {
   STOP_MOVED
 };
 
+enum class ChannelType{
+    web = 0,
+    sms,
+    email,
+    mobile,
+    notification,
+    twitter,
+    facebook,
+    unknown_type
+};
+
 inline std::string to_string(Effect effect) {
     switch (effect) {
     case Effect::NO_SERVICE: return "NO_SERVICE";
@@ -143,6 +154,7 @@ typedef boost::variant<
     UnknownPtObj,
     const Network *,
     const StopArea *,
+    const StopPoint *,
     LineSection,
     const Line *,
     const Route *
@@ -164,9 +176,12 @@ struct Message {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
+    std::set<ChannelType> channel_types;
+
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & text & created_at & updated_at & channel_id & channel_name & channel_content_type;
+        ar & text & created_at & updated_at & channel_id & channel_name & channel_content_type& channel_types;
     }
 };
 

@@ -109,11 +109,12 @@ struct data_set {
         b.data->pt_data->codes.add(b.lines["line:A"], "external_code", "A");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "B");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeC", "C");
+        b.data->pt_data->codes.add(b.sps.at("stop_area:stop1"), "code_uic", "bobette");
 
         b.data->build_uri();
 
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
-        vj->validity_pattern->add(boost::gregorian::from_undelimited_string("20140101"),
+        vj->theoric_validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
         //we add some comments

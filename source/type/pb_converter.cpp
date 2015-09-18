@@ -157,6 +157,34 @@ void fill_message(const type::new_disruption::Impact& impact,
         pb_channel->set_content_type(m.channel_content_type);
         pb_channel->set_id(m.channel_id);
         pb_channel->set_name(m.channel_name);
+        for (const auto& type: m.channel_types){
+            switch (type) {
+            case nt::new_disruption::ChannelType::web:
+                pb_channel->add_channel_types(pbnavitia::Channel::web);
+                break;
+            case nt::new_disruption::ChannelType::sms:
+                pb_channel->add_channel_types(pbnavitia::Channel::sms);
+                break;
+            case nt::new_disruption::ChannelType::email:
+                pb_channel->add_channel_types(pbnavitia::Channel::email);
+                break;
+            case nt::new_disruption::ChannelType::mobile:
+                pb_channel->add_channel_types(pbnavitia::Channel::mobile);
+                break;
+            case nt::new_disruption::ChannelType::notification:
+                pb_channel->add_channel_types(pbnavitia::Channel::notification);
+                break;
+            case nt::new_disruption::ChannelType::twitter:
+                pb_channel->add_channel_types(pbnavitia::Channel::twitter);
+                break;
+            case nt::new_disruption::ChannelType::facebook:
+                pb_channel->add_channel_types(pbnavitia::Channel::facebook);
+                break;
+            case nt::new_disruption::ChannelType::unknown_type:
+                pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
+                break;
+            }
+        }
     }
 
     //we need to compute the active status
@@ -441,16 +469,15 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 
 void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
         pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period, const bool){
-    if(jp == nullptr)
-        return ;
+        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
+    if (jp == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     journey_pattern->set_name(jp->name);
     journey_pattern->set_uri(jp->uri);
     if(depth > 0 && jp->route != nullptr) {
         fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
-                depth-1, now, action_period);
+                depth-1, now, action_period, show_codes);
     }
 }
 
@@ -607,8 +634,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
                     const bool show_codes){
-    if(vj == nullptr)
-        return ;
+    if (vj == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     vehicle_journey->set_name(vj->name);
@@ -619,7 +645,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         com->set_type("standard");
     }
     vehicle_journey->set_odt_message(vj->odt_message);
-    vehicle_journey->set_is_adapted(vj->is_adapted);
+    vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
 
     vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
     vehicle_journey->set_bike_accepted(vj->bike_accepted());
@@ -644,20 +670,22 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                 stop_time.arrival_time += vj->utc_to_local_offset;
             }
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
-                           depth-1, now, action_period);
+                           depth-1, now, action_period, show_codes);
         }
         fill_pb_object(vj->journey_pattern->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
-        fill_pb_object(vj->validity_pattern, data,
+        fill_pb_object(vj->theoric_validity_pattern(), data,
                        vehicle_journey->mutable_validity_pattern(),
                        depth-1);
-        fill_pb_object(vj->adapted_validity_pattern, data,
+        fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(),
                        depth-1);
-        fill_pb_object(vj->validity_pattern, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
-        fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-        vptranslator::fill_pb_object(vptranslator::translate(*vj->validity_pattern),
+        fill_pb_object(vj->theoric_validity_pattern(), data,
+                       vehicle_journey->mutable_validity_pattern(), max_depth-1);
+        fill_pb_object(vj->adapted_validity_pattern(), data,
+                       vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
+        vptranslator::fill_pb_object(vptranslator::translate(*vj->theoric_validity_pattern()),
                                      data,
                                      vehicle_journey,
                                      max_depth - 1,
@@ -682,9 +710,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 
 void fill_pb_object(const nt::StopTime* st, const type::Data &data,
                     pbnavitia::StopTime *stop_time, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
-    if(st == nullptr)
-        return ;
+                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes) {
+    if (st == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     //arrival/departure in protobuff are also as seconds from midnight (in UTC of course)
@@ -694,16 +721,25 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
-    if(st->journey_pattern_point != nullptr && depth > 0) {
+
+    // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
+    if (st->journey_pattern_point != nullptr && depth > 0) {
         fill_pb_object(st->journey_pattern_point, data,
                        stop_time->mutable_journey_pattern_point(), depth-1,
-                       now, action_period);
+                       now, action_period, show_codes);
+    }
+
+    if (st->journey_pattern_point) {
+        // we always dump the stop point (with the same depth)
+        fill_pb_object(st->journey_pattern_point->stop_point, data,
+                       stop_time->mutable_stop_point(), depth,
+                       now, action_period, show_codes);
     }
 
     if(st->vehicle_journey != nullptr && depth > 0) {
         fill_pb_object(st->vehicle_journey, data,
                        stop_time->mutable_vehicle_journey(), depth-1, now,
-                       action_period);
+                       action_period, show_codes);
     }
 }
 
@@ -737,7 +773,7 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
         if(jpp->stop_point != nullptr) {
             fill_pb_object(jpp->stop_point, data,
                            journey_pattern_point->mutable_stop_point(),
-                           depth-1, now, action_period);
+                           depth-1, now, action_period, show_codes);
         }
         if(jpp->journey_pattern != nullptr) {
             fill_pb_object(jpp->journey_pattern, data,

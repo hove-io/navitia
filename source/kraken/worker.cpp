@@ -33,11 +33,11 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
+#include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/route_schedules.h"
 #include "time_tables/next_passages.h"
 #include "time_tables/previous_passages.h"
-#include "time_tables/2stops_schedules.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/disruption_api.h"
 #include "calendar/calendar_api.h"
@@ -240,7 +240,7 @@ pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request
                                         forbidden_uris);
 }
 
-pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
+pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         pbnavitia::API api) {
     const auto data = data_manager.get_data();
     int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
@@ -258,32 +258,26 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return timetables::next_departures(request.departure_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, true, request.count(),
+                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(),
-                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_DEPARTURES:
             return timetables::previous_departures(request.departure_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, true, request.count(),
+                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_ARRIVALS:
             return timetables::previous_arrivals(request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(),
-                    *data, true, request.count(), request.start_page(), request.show_codes(), current_datetime);
-        case pbnavitia::STOPS_SCHEDULES:
-            return timetables::stops_schedule(request.departure_filter(),
-                                              request.arrival_filter(),
-                                              forbidden_uri,
-                    from_datetime, request.duration(), request.depth(),
-                    *data, false);
+                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
@@ -291,7 +285,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, false, request.show_codes());
+                    request.count(), request.start_page(), *data, type::RTLevel::Theoric, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
@@ -299,7 +293,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri,
                     from_datetime,
                     request.duration(), max_date_times, request.depth(),
-                    request.count(), request.start_page(), *data, false, request.show_codes());
+                    request.count(), request.start_page(), *data, type::RTLevel::Theoric, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
@@ -502,6 +496,27 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_response;
 }
 
+type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
+    // for retrocompatibility, we must handle both the new and the old way of setting the rt_level
+    // retrocompatibility will be droped after the migration
+    if (request.has_realtime_level()) {
+        switch (request.realtime_level()) {
+        case pbnavitia::RTLevel::THEORIC:
+            return type::RTLevel::Theoric;
+        case pbnavitia::RTLevel::ADAPTED:
+            return type::RTLevel::Adapted;
+        case pbnavitia::RTLevel::REAL_TIME:
+            return type::RTLevel::RealTime;
+        default:
+            throw navitia::exception("unhandled realtime level");
+        }
+    }
+    if (request.disruption_active()) {
+        return type::RTLevel::Adapted;
+    }
+    return type::RTLevel::Theoric;
+}
+
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
@@ -574,6 +589,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
 
+    const auto rt_level = get_realtime_level(request);
+
     switch(api) {
     case pbnavitia::ISOCHRONE: {
         type::EntryPoint ep;
@@ -599,20 +616,20 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
                                                 request.clockwise(), accessibilite_params,
                                                 forbidden, *street_network_worker,
-                                                request.disruption_active(), request.max_duration(),
+                                                rt_level, request.max_duration(),
                                                 request.max_transfers(), request.show_codes());
     }
     case pbnavitia::NMPLANNER:
         return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.max_duration(),
+                rt_level, request.max_duration(),
                 request.max_transfers(), request.show_codes());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.max_duration(),
+                rt_level, request.max_duration(),
                 request.max_transfers(), request.show_codes());
     }
 }
@@ -667,7 +684,6 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::NEXT_ARRIVALS:
         case pbnavitia::PREVIOUS_DEPARTURES:
         case pbnavitia::PREVIOUS_ARRIVALS:
-        case pbnavitia::STOPS_SCHEDULES:
         case pbnavitia::DEPARTURE_BOARDS:
             response = next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:

@@ -109,6 +109,9 @@ then
     exit 1
 fi
 
+#Be sure that basic dependencies are installed
+sudo apt-get install -y unzip wget
+
 if [ -z "$gtfs_data_dir" ] || [ -z "$osm_file" ]
 then
     echo "no gtfs or osm file given, we'll take a default data set, Paris"
@@ -145,11 +148,18 @@ git submodule update --init
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
     distrib=`lsb_release -si`
+    version=`lsb_release -sr`
+
+    # Fix Ubuntu 15.04 package
+    if [ "$distrib" = "Ubuntu" -a "$version" = "15.04" ]; then
+      postgresql_package='postgresql-9.4'
+      postgresql_postgis_package='postgis postgresql-9.4-postgis-2.1 postgresql-9.4-postgis-scripts'
+    fi
 
     if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
             # on Debian, we must add the APT repository of PostgreSQL project
@@ -168,8 +178,6 @@ then
 
     sudo pip install -r "$navitia_dir"/source/jormungandr/requirements.txt
     sudo pip install -r "$navitia_dir"/source/tyr/requirements.txt
-    #we want a custom protobuff version
-    sudo pip install -U protobuf==2.5.0
 fi
 
 #the build procedure is explained is the install documentation

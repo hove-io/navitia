@@ -133,18 +133,14 @@ bool HasMessages::has_publishable_message(const boost::posix_time::ptime& curren
     return false;
 }
 
-bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
+bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
         if(day == 0)
             return false;
         --day;
     }
-    if(!is_adapted) {
-        return vehicle_journey->validity_pattern->check(day);
-    } else {
-        return vehicle_journey->adapted_validity_pattern->check(day);
-    }
+    return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
 bool StopTime::operator<(const StopTime& other) const {
@@ -187,14 +183,10 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
     }
 }
 
-bool FrequencyVehicleJourney::is_valid(int day, const bool is_adapted) const {
+bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
-    if (! is_adapted) {
-        return validity_pattern->check(day);
-    } else {
-        return adapted_validity_pattern->check(day);
-    }
+    return validity_patterns[rt_level]->check(day);
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
@@ -627,7 +619,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     case Type_e::JourneyPattern: result.push_back(journey_pattern->idx); break;
     case Type_e::Company: result.push_back(company->idx); break;
     case Type_e::PhysicalMode: result.push_back(journey_pattern->physical_mode->idx); break;
-    case Type_e::ValidityPattern: result.push_back(validity_pattern->idx); break;
+    case Type_e::ValidityPattern: result.push_back(theoric_validity_pattern()->idx); break;
     default: break;
     }
     return result;

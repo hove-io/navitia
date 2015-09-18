@@ -38,6 +38,7 @@ www.navitia.io
 
 
 namespace pt = boost::posix_time;
+using navitia::routing::StopEvent;
 
 namespace navitia { namespace timetables {
 
@@ -48,7 +49,7 @@ previous_passages(const std::string &request,
               const pt::ptime datetime,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               const type::AccessibiliteParams & accessibilite_params,
-              const type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
+              const type::Data & data, const type::RTLevel rt_level, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes, const boost::posix_time::ptime current_datetime) {
     RequestHandle handler(request, forbidden_uris, datetime, duration, data, {}, false);
 
@@ -59,25 +60,30 @@ previous_passages(const std::string &request,
     std::remove_if(handler.journey_pattern_points.begin(),
                    handler.journey_pattern_points.end(), vis.predicate);
 
-    auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
-                            handler.date_time, handler.max_datetime,
-                            nb_stoptimes, data, disruption_active, accessibilite_params,
-                            false);
+    const StopEvent stop_event = (vis.api_pb == pbnavitia::PREVIOUS_DEPARTURES) ?
+                                 StopEvent::pick_up : StopEvent::drop_off;
+    auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
+                                         handler.date_time, handler.max_datetime, nb_stoptimes,
+                                         data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(vis.api_pb == pbnavitia::PREVIOUS_ARRIVALS) {
-            passage = handler.pb_response.add_next_arrivals();
-        } else {
+        if(stop_event == StopEvent::pick_up) {
             passage = handler.pb_response.add_next_departures();
+        } else {
+            passage = handler.pb_response.add_next_arrivals();
         }
         pt::time_period action_period(navitia::to_posix_time(dt_stop_time.first, data), pt::seconds(1));
         auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
+
+        fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(),
+                       0, current_datetime, action_period);
+
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(),
                 depth, current_datetime, action_period);
@@ -93,6 +99,8 @@ previous_passages(const std::string &request,
         fill_pb_object(route, data, m_route, 0, current_datetime, action_period, show_codes);
         fill_pb_object(line, data, m_route->mutable_line(), 0, current_datetime, action_period, show_codes);
         fill_pb_object(physical_mode, data, m_physical_mode, 0, current_datetime, action_period);
+        fill_pb_object(vj, data, passage->mutable_pt_display_informations(),
+                       dt_stop_time.second, nullptr, 0, current_datetime, action_period);
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
@@ -107,7 +115,7 @@ pbnavitia::Response previous_departures(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
         const bool show_codes, const boost::posix_time::ptime current_datetime) {
 
     struct vis_previous_departures {
@@ -134,7 +142,7 @@ pbnavitia::Response previous_departures(const std::string &request,
                              depth,
                              accessibilite_params,
                              data,
-                             disruption_active,
+                             rt_level,
                              vis,
                              count,
                              start_page,
@@ -148,7 +156,7 @@ pbnavitia::Response previous_arrivals(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
         const bool show_codes, const boost::posix_time::ptime current_datetime) {
 
     struct vis_previous_arrivals {
@@ -166,7 +174,7 @@ pbnavitia::Response previous_arrivals(const std::string &request,
     };
     vis_previous_arrivals vis(data);
     return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
-            accessibilite_params, data, disruption_active, vis,count , start_page, show_codes, current_datetime);
+            accessibilite_params, data, rt_level, vis,count , start_page, show_codes, current_datetime);
 }
 
 

@@ -441,46 +441,24 @@ struct Autocomplete
     }
 
     std::string strip_accents(std::string str) const {
-        std::vector< std::pair<std::string, std::string> > vec_str;
-        vec_str.push_back(std::make_pair("à","a"));
-        vec_str.push_back(std::make_pair("À","a"));
-        vec_str.push_back(std::make_pair("â","a"));
-        vec_str.push_back(std::make_pair("Â","a"));
-        vec_str.push_back(std::make_pair("ä","a"));
-        vec_str.push_back(std::make_pair("Ä","a"));
-        vec_str.push_back(std::make_pair("æ","ae"));
-        vec_str.push_back(std::make_pair("é","e"));
-        vec_str.push_back(std::make_pair("É","e"));
-        vec_str.push_back(std::make_pair("è","e"));
-        vec_str.push_back(std::make_pair("È","e"));
-        vec_str.push_back(std::make_pair("ê","e"));
-        vec_str.push_back(std::make_pair("Ê","e"));
-        vec_str.push_back(std::make_pair("ë","e"));
-        vec_str.push_back(std::make_pair("Ë","e"));
-        vec_str.push_back(std::make_pair("ô","o"));
-        vec_str.push_back(std::make_pair("Ô","o"));
-        vec_str.push_back(std::make_pair("ö","o"));
-        vec_str.push_back(std::make_pair("Ö","o"));
-        vec_str.push_back(std::make_pair("û","u"));
-        vec_str.push_back(std::make_pair("Û","u"));
-        vec_str.push_back(std::make_pair("ù","u"));
-        vec_str.push_back(std::make_pair("Ù","u"));
-        vec_str.push_back(std::make_pair("ü","u"));
-        vec_str.push_back(std::make_pair("Ü","u"));
-        vec_str.push_back(std::make_pair("ç","c"));
-        vec_str.push_back(std::make_pair("Ç","c"));
-        vec_str.push_back(std::make_pair("ï","i"));
-        vec_str.push_back(std::make_pair("Ï","i"));
-        vec_str.push_back(std::make_pair("î","i"));
-        vec_str.push_back(std::make_pair("Î","i"));
-        vec_str.push_back(std::make_pair("œ","oe"));
+        const static std::vector< std::pair<std::string, std::string> > vec_str{
+            {"à","a"}, {"À","a"}, {"â","a"}, {"Â","a"}, {"ä","a"}, {"Ä","a"},
+            {"é","e"}, {"É","e"}, {"è","e"}, {"È","e"}, {"ê","e"}, {"Ê","e"}, {"ë","e"}, {"Ë","e"},
+            {"ô","o"}, {"Ô","o"}, {"ö","o"}, {"Ö","o"},
+            {"û","u"}, {"Û","u"}, {"ù","u"}, {"Ù","u"}, {"ü","u"}, {"Ü","u"},
+            {"ç","c"}, {"Ç","c"},
+            {"ï","i"}, {"Ï","i"}, {"î","i"}, {"Î","i"},
+            {"œ","oe"},{"æ","ae"}
+        };
 
-        auto vec = vec_str.begin();
-        while(vec != vec_str.end()){
-            boost::algorithm::replace_all(str, vec->first, vec->second);
-            ++vec;
+        for (const auto& vec : vec_str) {
+            boost::algorithm::replace_all(str, vec.first, vec.second);
         }
         return str;
+    }
+
+    std::string strip_accents_and_lower(const std::string& str) const{
+        return boost::to_lower_copy(strip_accents(str));
     }
 
     std::set<std::string> tokenize(std::string strFind, const std::set<std::string>& ghostwords,
@@ -493,18 +471,18 @@ struct Autocomplete
         strFind = strip_accents(strFind);
         std::string strTemp = strFind;
 
-        //if synonyms contains something, add all synonyms if found while serching on ket et value.
+        //if synonyms contains something, add all synonyms if found while serching on key and value.
         //For each synonyms.key found in strFind add synonyms.value
         for(const auto& it : synonyms){
-            if  (boost::regex_search(strFind,boost::regex("\\<" + it.first + "\\>"))){
-                strTemp += " " + it.second;
+            if  (boost::regex_search(strFind,boost::regex("\\<" + strip_accents_and_lower(it.first) + "\\>"))){
+                strTemp += " " + strip_accents_and_lower(it.second);
             }
         }
 
         //For each synonyms.value found in strFind add synonyms.key
         for(const auto& it : synonyms){
-            if  (boost::regex_search(strFind,boost::regex("\\<" + it.second + "\\>"))){
-                strTemp += " " + it.first;
+            if  (boost::regex_search(strFind,boost::regex("\\<" + strip_accents_and_lower(it.second) + "\\>"))){
+                strTemp += " " + strip_accents_and_lower(it.first);
             }
         }
 

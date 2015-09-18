@@ -197,10 +197,6 @@ class Scenario(object):
     def previous_departures(self, request, instance):
         return self.__stop_times(request, instance, request["filter"], "", type_pb2.PREVIOUS_DEPARTURES)
 
-    def stops_schedules(self, request, instance):
-        return self.__stop_times(request, instance, request["departure_filter"], request["arrival_filter"],
-                                 type_pb2.STOPS_SCHEDULES)
-
     def departure_boards(self, request, instance):
         return self.__stop_times(request, instance, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
 

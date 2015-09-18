@@ -122,9 +122,10 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
             *cur_jpp->stop_point);
         assert(conn != nullptr);
         const auto new_st_dt = reader.raptor.next_st.earliest_stop_time(
+            StopEvent::pick_up,
             JppIdx(*cur_jpp),
             prev_s->get_out_dt + conn->duration,
-            reader.disruption_active,
+            reader.rt_level,
             reader.accessibilite_params.vehicle_properties);
         if (new_st_dt.second < cur_s.get_in_dt) {
             const auto out_st_dt = get_out_st_dt(new_st_dt, cur_s.get_out_st->journey_pattern_point);
@@ -319,14 +320,14 @@ struct RaptorSolutionReader {
                          const DateTime& departure_dt,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
-                         const bool disruption,
+                         const type::RTLevel rt_level,
                          const type::AccessibiliteParams& access):
         raptor(r),
         v(vis),
         departure_datetime(departure_dt),
         sp_dur_deps(deps),
         sp_dur_arrs(arrs),
-        disruption_active(disruption),
+        rt_level(rt_level),
         accessibilite_params(access),
         // Dominates need request_clockwise (the same as reader's visitor)
         solutions(Dominates(v.clockwise()))
@@ -336,7 +337,7 @@ struct RaptorSolutionReader {
     const DateTime departure_datetime;
     const routing::map_stop_point_duration& sp_dur_deps;// departures (not clockwise dependent)
     const routing::map_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
-    const bool disruption_active;
+    const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
     Solutions solutions;
 
@@ -449,9 +450,8 @@ struct RaptorSolutionReader {
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                jpp.idx, begin_dt, v.clockwise(), disruption_active,
-                accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true,
-                begin_limit);
+                        v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
+                        accessibilite_params.vehicle_properties, /*jpp.has_freq*/ true, begin_limit);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 
@@ -488,8 +488,8 @@ struct RaptorSolutionReader {
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st.next_stop_time(
-                jpp.idx, begin_dt, v.clockwise(), disruption_active,
-                accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
+                                v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
+                                accessibilite_params.vehicle_properties/*, jpp.has_freq*/);
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
 
@@ -505,11 +505,11 @@ Solutions read_solutions(const RAPTOR& raptor,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
-                         const bool disruption_active,
+                         const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, v, departure_datetime, deps, arrs, disruption_active, accessibilite_params);
+        raptor, v, departure_datetime, deps, arrs, rt_level, accessibilite_params);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -575,15 +575,15 @@ Solutions read_solutions(const RAPTOR& raptor,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
-                         const bool disruption_active,
+                         const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params)
 {
     if (clockwise) {
         return read_solutions(raptor, raptor_reverse_visitor(), departure_datetime, deps, arrs,
-                              disruption_active, accessibilite_params);
+                              rt_level, accessibilite_params);
     } else {
         return read_solutions(raptor, raptor_visitor(), departure_datetime, deps, arrs,
-                              disruption_active, accessibilite_params);
+                              rt_level, accessibilite_params);
     }
 }
 

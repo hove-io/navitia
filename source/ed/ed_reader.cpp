@@ -815,10 +815,13 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                 vj->company->line_list.push_back(vj->journey_pattern->route->line);
             }
         }
-        vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
+        using navitia::type::RTLevel;
+        vj->validity_patterns[RTLevel::Adapted] =
+                validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
 
         if(!const_it["validity_pattern_id"].is_null()){
-            vj->validity_pattern = validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
+            vj->validity_patterns[RTLevel::Theoric] =
+                    validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
         }
 
         if(!const_it["theoric_vehicle_journey_id"].is_null()){

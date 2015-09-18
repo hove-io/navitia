@@ -35,14 +35,15 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, 
+std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent stop_event,
+                                               const std::vector<type::idx_t>& journey_pattern_points,
                                                const DateTime& dt,
                                                const DateTime& max_dt,
                                                const size_t max_departures,
                                                const type::Data& data, 
-                                               bool disruption_active,
-                                               const type::AccessibiliteParams& accessibilite_params,
-                                               const bool clockwise) {
+                                               const type::RTLevel rt_level,
+                                               const type::AccessibiliteParams& accessibilite_params) {
+    const bool clockwise(max_dt >= dt);
     std::vector<datetime_stop_time> result;
     auto test_add = true;
     routing::NextStopTime next_st = routing::NextStopTime(data);
@@ -61,8 +62,8 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = next_st.next_stop_time(routing::JppIdx(*jpp), next_requested_datetime[jpp_idx],
-                                             clockwise, disruption_active,
+            auto st = next_st.next_stop_time(stop_event, routing::JppIdx(*jpp),
+                                             next_requested_datetime[jpp_idx], clockwise, rt_level,
                                              accessibilite_params.vehicle_properties, true);
 
             if (st.first != nullptr) {

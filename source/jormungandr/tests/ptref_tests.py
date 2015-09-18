@@ -99,6 +99,27 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=3)
 
+    def test_vj_show_codes_propagation(self):
+        """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
+        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys?show_codes=true")
+
+        vjs = get_not_null(response, 'vehicle_journeys')
+
+        assert vjs
+
+        for vj in vjs:
+            is_valid_vehicle_journey(vj, depth_check=1)
+
+        stop_points = [get_not_null(st, 'stop_point') for vj in vjs for st in vj['stop_times']]
+        stops1 = [s for s in stop_points if s['id'] == 'stop_area:stop1']
+        assert stops1
+
+        for stop1 in stops1:
+            # all reference to stop1 must have it's codes
+            codes = get_not_null(stop1, 'codes')
+            code_uic = [c for c in codes if c['type'] == 'code_uic']
+            assert len(code_uic) == 1 and code_uic[0]['value'] == 'bobette'
+
     def test_line(self):
         """test line formating"""
         response = self.query_region("v1/lines")
@@ -544,8 +565,9 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         """test basic print of headsign in display informations for arrivals"""
         response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
         assert 'error' not in response
-        #test only that it is filled, and trust tests on departures for exactness
-        assert all(a['display_informations']['headsign'] is not None for a in response['arrivals'])
+        arrivals = get_not_null(response, 'arrivals')
+        eq_(len(arrivals), 1)
+        eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 2")
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""

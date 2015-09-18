@@ -382,10 +382,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 type::VehicleJourney const *const vj = item.get_vj();
 
                 if (!vp) {
-                    vp = *vj->validity_pattern;
+                    vp = *vj->theoric_validity_pattern();
                 } else {
-                    assert(vp->beginning_date == vj->validity_pattern->beginning_date);
-                    vp->days &= vj->validity_pattern->days;
+                    assert(vp->beginning_date == vj->theoric_validity_pattern()->beginning_date);
+                    vp->days &= vj->theoric_validity_pattern()->days;
                 }
 
                 const size_t nb_sps = item.stop_points.size();
@@ -863,7 +863,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
               const type::AccessibiliteParams& accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
-              bool disruption_active,
+              const type::RTLevel rt_level,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -927,7 +927,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
         std::vector<Path> tmp = raptor.compute_all(
-            departures, destinations, init_dt, disruption_active, bound, max_transfers,
+            departures, destinations, init_dt, rt_level, bound, max_transfers,
             accessibilite_params, forbidden, clockwise, direct_path_dur);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
@@ -960,7 +960,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                  const type::AccessibiliteParams & accessibilite_params,
                  std::vector<std::string> forbidden,
                  georef::StreetNetwork & worker,
-                 bool disruption_active,
+                 const type::RTLevel rt_level,
                  uint32_t max_duration, uint32_t max_transfers,
                  bool show_codes) {
 
@@ -1027,7 +1027,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
         // compute m trip in one call
         auto paths_by_entrypoint = raptor.
-                compute_nm_all(departures, arrivals, init_dt, disruption_active, bound, max_transfers,
+                compute_nm_all(departures, arrivals, init_dt, rt_level, bound, max_transfers,
                                accessibilite_params, forbidden, clockwise);
 
         // compute isochron style result at "m point"
@@ -1066,7 +1066,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
-                                   bool disruption_active,
+                                   const type::RTLevel rt_level,
                                    int max_duration, uint32_t max_transfers, bool show_codes) {
     pbnavitia::Response response;
 
@@ -1091,7 +1091,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params, forbidden, clockwise, disruption_active);
+                           accessibilite_params, forbidden, clockwise, rt_level);
 
     add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
                            init_dt, bound, max_duration, show_codes, false);

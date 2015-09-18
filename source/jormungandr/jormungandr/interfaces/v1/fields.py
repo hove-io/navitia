@@ -225,6 +225,14 @@ class disruption_status(fields.Raw):
         enum = type_pb2._ACTIVESTATUS
         return str.lower(enum.values_by_number[status].name)
 
+class channel_types(fields.Raw):
+    def output(self, key, obj):
+        channel = obj
+        descriptor = channel.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["ChannelType"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in channel.channel_types]
+
 
 class notes(fields.Raw):
 
@@ -415,7 +423,9 @@ channel = {
     "content_type": fields.String(),
     "id": fields.String(),
     "name": fields.String(),
+    "types": channel_types()
 }
+
 disruption_message = {
     "text": fields.String(),
     "channel": NonNullNested(channel)
@@ -553,7 +563,8 @@ stop_time = {
     "arrival_time": SplitDateTime(date=None, time='arrival_time'),
     "departure_time": SplitDateTime(date=None, time='departure_time'),
     "headsign": fields.String(attribute="headsign"),
-    "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
+    "journey_pattern_point": NonNullProtobufNested(journey_pattern_point),
+    "stop_point": NonNullProtobufNested(stop_point)
 }
 
 line = deepcopy(generic_type)

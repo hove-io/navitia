@@ -178,7 +178,8 @@ class TestDisruptions(AbstractTestFixture):
         on a arrivals call on stopA, we should get its disruptions
         """
 
-        response = self.query_region('networks/base_network/arrivals?from_datetime=20120614T070000&_current_datetime=20120614T080000')
+        response = self.query_region('stop_points/stop_point:stopA/arrivals?'
+                                     'from_datetime=20120614T070000&_current_datetime=20120614T080000')
 
         arrivals = get_not_null(response, 'arrivals')
         eq_(len(arrivals), 2)
@@ -190,6 +191,9 @@ class TestDisruptions(AbstractTestFixture):
         assert 'too_bad_all_lines' in disruptions
         is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
 
+        arrival = arrivals[1]
+        disruptions = get_all_disruptions(arrival, response)
+        assert not disruptions
 
     def test_direct_disruption_call(self):
         """
@@ -322,6 +326,30 @@ class TestDisruptions(AbstractTestFixture):
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
 
+        #Check message, channel and types
+        disruption_message = get_not_null(response, 'disruptions')
+        eq_(len(disruption_message), 1)
+        message = get_not_null(disruption_message[0], 'messages')
+        eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'sms')
+
+
+        eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'email')
+        eq_(channel['name'], 'email')
+        channel_types = channel['types']
+        eq_(len(channel_types), 2)
+        eq_(channel_types[0], 'web')
+        eq_(channel_types[1], 'email')
+
+
     def test_disruption_on_route_and_line(self):
         """
         and we check the sort order of the lines
@@ -353,3 +381,18 @@ class TestDisruptions(AbstractTestFixture):
             is_valid_disruption(d)
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0_and_line')
         eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0_and_line')
+
+        #Verify message and channel without any channel type
+        message = get_not_null(lines_disrupt[0], 'messages')
+        eq_(len(message), 2)
+        eq_(message[0]['text'], 'no luck')
+        channel = get_not_null(message[0], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)
+
+        eq_(message[1]['text'], 'try again')
+        channel = get_not_null(message[1], 'channel')
+        eq_(channel['id'], 'sms')
+        eq_(channel['name'], 'sms')
+        eq_(len(channel['types']), 0)

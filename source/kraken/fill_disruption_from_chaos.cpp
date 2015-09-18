@@ -189,6 +189,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
         case chaos::PtObject_Type_stop_area:
             res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
             break;
+        case chaos::PtObject_Type_stop_point:
+            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data, impact));
+            break;
         case chaos::PtObject_Type_line_section:
             if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact)) {
                 res.push_back(*line_section);
@@ -209,6 +212,41 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
+std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+    std::set<navitia::type::new_disruption::ChannelType> res;
+    for (const auto channel_type: chaos_channel.types()){
+        switch(channel_type){
+        case chaos::Channel_Type_web:
+            res.insert(nt::new_disruption::ChannelType::web);
+            break;
+        case chaos::Channel_Type_sms:
+            res.insert(nt::new_disruption::ChannelType::sms);
+            break;
+        case chaos::Channel_Type_email:
+            res.insert(nt::new_disruption::ChannelType::email);
+            break;
+        case chaos::Channel_Type_mobile:
+            res.insert(nt::new_disruption::ChannelType::mobile);
+            break;
+        case chaos::Channel_Type_notification:
+            res.insert(nt::new_disruption::ChannelType::notification);
+            break;
+        case chaos::Channel_Type_twitter:
+            res.insert(nt::new_disruption::ChannelType::twitter);
+            break;
+        case chaos::Channel_Type_facebook:
+            res.insert(nt::new_disruption::ChannelType::facebook);
+            break;
+        case chaos::Channel_Type_unkown_type:
+            res.insert(nt::new_disruption::ChannelType::unknown_type);
+            break;
+        default:
+            throw navitia::exception("Unhandled ChannelType value in Chaos.Proto");
+        }
+    }
+    return res;
+}
+
 static boost::shared_ptr<nt::new_disruption::Impact>
 make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     auto from_posix = navitia::from_posix_timestamp;
@@ -225,6 +263,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     impact->informed_entities = make_pt_objects(chaos_impact.informed_entities(), pt_data, impact);
     for (const auto& chaos_message: chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
+        auto channel_types = create_channel_types(channel);
         impact->messages.push_back({
             chaos_message.text(),
             channel.id(),
@@ -232,6 +271,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
             channel.content_type(),
             from_posix(chaos_message.created_at()),
             from_posix(chaos_message.updated_at()),
+            channel_types
         });
     }
 
@@ -327,7 +367,7 @@ struct functor_add_vj {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
         vj->uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
-        vj->is_adapted = true;
+        vj->realtime_level = nt::RTLevel::Adapted;
         pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_ref.name);
         vj->company = vj_ref.company;
         //TODO: we loose stay_in on impacted vj, we will need to work on this.
@@ -337,7 +377,7 @@ struct functor_add_vj {
         vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         // The validity_pattern is only active on the period of the impact
         nt::ValidityPattern tmp_vp;
-        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern);
+        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern());
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));
@@ -357,15 +397,15 @@ struct functor_add_vj {
             //this vehicle journey won't ever circulate
             return false;
         }
-        vj->adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
-        vj_ref.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
+        vj->validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj_ref.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
 
         pt_data.vehicle_journeys.push_back(vj);
         pt_data.vehicle_journeys_map[vj->uri] = vj;
 
         // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
-        vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj->validity_patterns[nt::RTLevel::Theoric] = pt_data.get_or_create_validity_pattern(tmp_vp);
         size_t order = 0;
         // We skip the stop_time linked to impacted stop_point
         for (const auto& st_ref : vj_ref.stop_time_list) {
@@ -421,7 +461,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     using apply_impacts_visitor::operator();
 
     bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern);
+        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern());
         for (auto period : impact->application_periods) {
             //we can impact a vj with a departure the day before who past midnight
             bg::day_iterator titr(period.begin().date() - bg::days(1));
@@ -438,61 +478,21 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
         }
-        vj.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
         vj.impacted_by.push_back(impact);
         return true;
     }
 
     void operator()(const nt::StopPoint* stop_point) {
-        this->log_start_action(stop_point->uri);
-        if (stop_point->journey_pattern_point_list.empty()) {
-            return;
-        }
-        // We copy this journey_pattern
-        for (const auto jpp_ref : stop_point->journey_pattern_point_list) {
-            const auto jp_ref = jpp_ref->journey_pattern;
-            auto new_jp = new nt::JourneyPattern(*jp_ref);
-            new_jp->uri = make_adapted_uri_fast(new_jp->uri, pt_data.journey_patterns.size());
-            new_jp->idx = pt_data.journey_patterns.size();
-            pt_data.journey_patterns.push_back(new_jp);
-            pt_data.journey_patterns_map[new_jp->uri] = new_jp;
-            new_jp->journey_pattern_point_list.clear();
-            new_jp->discrete_vehicle_journey_list.clear();
-            new_jp->frequency_vehicle_journey_list.clear();
-            // We copy each journey_pattern_point but the ones which are linked
-            // to the impacted stop_area
-            size_t order = 0;
-            for (const auto jpp_to_copy : jp_ref->journey_pattern_point_list) {
-                if (jpp_to_copy->stop_point == stop_point) {
-                    continue;
-                }
-                auto new_jpp = new nt::JourneyPatternPoint(*jpp_to_copy);
-                new_jpp->idx = pt_data.journey_pattern_points.size();
-                new_jpp->uri = make_adapted_uri_fast(new_jpp->uri, pt_data.journey_pattern_points.size());
-                new_jp->journey_pattern_point_list.push_back(new_jpp);
-                new_jpp->stop_point->journey_pattern_point_list.push_back(new_jpp);
-                pt_data.journey_pattern_points.push_back(new_jpp);
-                pt_data.journey_pattern_points_map[new_jpp->uri] = new_jpp;
-                new_jpp->journey_pattern = new_jp;
-                new_jpp->order = order;
-                ++ order;
-            }
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                        "Disruption on stop point:" + stop_point->uri + " is not handled");
 
-            // We copy the vehicle_journeys of the journey_pattern_points
-            functor_add_vj v(impact, new_jp, stop_point, pt_data, meta);
-            jp_ref->for_each_vehicle_journey(v);
-            // The new journey_pattern is linked to the impact
-            impact->impacted_journey_patterns.push_back(new_jp);
-        }
-        this->log_end_action(stop_point->uri);
     }
 
     void operator()(const nt::StopArea* stop_area) {
-        this->log_start_action(stop_area->uri);
-        for (const auto stop_point : stop_area->stop_point_list) {
-            this->operator()(stop_point);
-        }
-        this->log_end_action(stop_area->uri);
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                              "Disruption on stop area:" + stop_area->uri + " is not handled");
+
     }
 };
 
@@ -524,7 +524,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
-        vj.adapted_validity_pattern = vj.validity_pattern;
+        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Theoric];
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,
@@ -541,71 +541,15 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         return true;
     }
 
+    void operator()(const nt::StopPoint* stop_point) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                        "Deletion of disruption on stop point:" + stop_point->uri + " is not handled");
+
+    }
+
     void operator()(const nt::StopArea* stop_area) {
-        this->log_start_action(stop_area->uri);
-        // We need to erase vehicle journeys from the collections and the map
-        // We do not remove the link journey_pattern->vj, because we will
-        // remove the journey_pattern_after
-
-        std::set<nt::idx_t> vehicle_journeys_to_erase;
-        std::set<nt::idx_t> jpp_to_erase;
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "Removing jpp from stop_points");
-        std::vector<const nt::JourneyPattern*> jp_to_delete = impact->impacted_journey_patterns;
-        for (auto journey_pattern : jp_to_delete) {
-            journey_pattern->for_each_vehicle_journey(
-                        [&vehicle_journeys_to_erase](const type::VehicleJourney& vj) {
-                vehicle_journeys_to_erase.insert(vj.idx);
-                return true;
-            });
-
-            // We need to remove the journey_pattern_point from its stop_point
-            // because we will remove the journey_pattern_point after.
-            for (auto journey_pattern_point : journey_pattern->journey_pattern_point_list) {
-                journey_pattern_point->stop_point->journey_pattern_point_list.erase(
-                            boost::remove_if(journey_pattern_point->stop_point->journey_pattern_point_list,
-                                [&](nt::JourneyPatternPoint* jpp) {return journey_pattern_point->uri == jpp->uri;}),
-                        journey_pattern_point->stop_point->journey_pattern_point_list.end());
-                jpp_to_erase.insert(journey_pattern_point->idx);
-            }
-        }
-        //we delete all impacted journey pattern, so there is no more impated journey pattern,
-        //if we don't do that we will try to delete them multiple times
-        impact->impacted_journey_patterns.clear();
-
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        "Removing vehicle_journeys");
-        for(auto it = vehicle_journeys_to_erase.rbegin(); it != vehicle_journeys_to_erase.rend(); ++it) {
-            pt_data.remove_from_collections(*pt_data.vehicle_journeys[*it]);
-        }
-        pt_data.reindex_vehicle_journeys();
-
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        "Removing journey_pattern_points");
-        for(auto it = jpp_to_erase.rbegin(); it != jpp_to_erase.rend(); ++it) {
-            pt_data.erase_obj(pt_data.journey_pattern_points[*it]);
-        }
-        pt_data.reindex_journey_pattern_points();
-
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        "Removing journey_patterns");
-        for (auto journey_pattern : jp_to_delete) {
-            // Now we can erase journey_patterns from the dataset
-            pt_data.erase_obj(journey_pattern);
-            pt_data.reindex_journey_patterns();
-        }
-
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        "Reassigning validity_pattern");
-        for (auto stop_point : stop_area->stop_point_list) {
-            for (auto journey_pattern_point : stop_point->journey_pattern_point_list) {
-                apply_impacts_visitor::operator ()(journey_pattern_point->journey_pattern);
-            }
-        }
-
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        nb_vj_reassigned << " validity pattern reassigned");
-        this->log_end_action(stop_area->uri);
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                        "Deletion of disruption on stop point:" + stop_area->uri + " is not handled");
     }
 };
 

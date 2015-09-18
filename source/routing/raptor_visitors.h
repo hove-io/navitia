@@ -57,6 +57,7 @@ struct raptor_visitor {
     }
 
     bool clockwise() const{return true;}
+    StopEvent stop_event() const{return StopEvent::pick_up;}
     int init_queue_item() const{return std::numeric_limits<int>::max();}
     DateTime worst_datetime() const{return DateTimeUtils::inf;}
 };
@@ -118,6 +119,7 @@ struct raptor_reverse_visitor {
     }
 
     bool clockwise() const{return false;}
+    StopEvent stop_event() const{return StopEvent::drop_off;}
     int init_queue_item() const{return -1;}
     DateTime worst_datetime() const{return DateTimeUtils::min;}
 };
