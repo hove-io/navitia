@@ -156,7 +156,7 @@ then
     version=`lsb_release -sr`
 
     # Fix Ubuntu 15.04 package
-    if [ "$distrib" = "Ubuntu" && "$version" = "15.04" ]; then
+    if [ "$distrib" = "Ubuntu" ] && [ "$version" = "15.04" ]; then
       postgresql_package='postgresql-9.4'
       postgresql_postgis_package='postgis postgresql-9.4-postgis-2.1 postgresql-9.4-postgis-scripts'
     fi
