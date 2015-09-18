@@ -145,6 +145,11 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->validity_pattern->days.to_string(), "001101"), vj->validity_pattern->days);
 }
 
+/*
+ * Test cases are deactivated for the moment. Disruptions on stop_point and stop_area are no
+ * longer blocking
+*/
+/*
 BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
     ed::builder b("20120614");
     b.vj("A", "000111")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60, 8*3600 + 21*60);
@@ -319,7 +324,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         }
     }
 }
-
+*/
 
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {

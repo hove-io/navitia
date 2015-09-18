@@ -154,6 +154,7 @@ typedef boost::variant<
     UnknownPtObj,
     const Network *,
     const StopArea *,
+    const StopPoint *,
     LineSection,
     const Line *,
     const Route *
