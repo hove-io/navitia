@@ -223,7 +223,7 @@ cd "$navitia_dir"/source/sql
 PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
 cd
 
-# Install jormungandr database and upgrade it's sheme
+# Install jormungandr database and upgrade it's schema
 # WARNING : default name is "jormungandr", so it should be the same in your SQLALCHEMY_DATABASE_URI on default_settings.py
 if ! sudo -i -u postgres psql -l | grep -q "^ jormungandr"; then
     sudo -i -u postgres createdb jormungandr -O "$db_owner"
