@@ -199,7 +199,6 @@ echo "** setting up the database"
 kraken_db_name='navitia'
 db_owner='navitia'
 
-kraken_db_name='navitia'
 # for the default build we give ownership of the base to a 'navitia' user, but you can do whatever you want here
 encap=$(sudo -i -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_owner'")  # we check if there is already a user 
 if [ -z "$encap" ]; then
@@ -222,6 +221,19 @@ fi
 # a -x dbname option
 cd "$navitia_dir"/source/sql
 PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
+cd
+
+# Install jormungandr database and upgrade it's sheme
+# WARNING : default name is "jormungandr", so it should be the same in your SQLALCHEMY_DATABASE_URI on default_settings.py
+if ! sudo -i -u postgres psql -l | grep -q "^ jormungandr"; then
+    sudo -i -u postgres createdb jormungandr -O "$db_owner"
+    sudo -i -u postgres psql -c "create extension postgis; " jormungandr
+else
+    echo "db jormungandr already exists"
+fi
+
+cd "$navitia_dir"/source/tyr
+PYTHONPATH=.:../navitiacommon/ TYR_CONFIG_FILE=default_settings.py ./manage_tyr.py db upgrade
 cd
 
 #====================
