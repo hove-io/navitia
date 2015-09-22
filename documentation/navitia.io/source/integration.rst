@@ -281,7 +281,7 @@ Inverted geocoding (/coord)
 In order to determinate the right coverage, you can request navitia with a WGS84 coordinate as:
 https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174
 
-In response, you get the coverage id, a very yuseful label and a ressource id: 
+In response, you will get the coverage id, a very useful label and a ressource id: 
 
 .. code-block:: json
 
