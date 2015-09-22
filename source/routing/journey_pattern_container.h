@@ -75,10 +75,10 @@ struct JourneyPattern {
 struct JourneyPatternContainer {
     using Jps = std::vector<JourneyPattern>;
     using Jpps = std::vector<JourneyPatternPoint>;
-    using jp_iterator = IdxMapIterator<JpIdx, Jps::const_iterator>;
-    using jpp_iterator = IdxMapIterator<JppIdx, Jpps::const_iterator>;
-    using jp_range = boost::iterator_range<jp_iterator>;
-    using jpp_range = boost::iterator_range<jpp_iterator>;
+    using JpIterator = IdxMapIterator<JpIdx, Jps::const_iterator>;
+    using JppIterator = IdxMapIterator<JppIdx, Jpps::const_iterator>;
+    using JpRange = boost::iterator_range<JpIterator>;
+    using JppRange = boost::iterator_range<JppIterator>;
 
     void load(const navitia::type::PT_Data&);
     size_t nb_jps() const { return jps.size(); }
@@ -91,14 +91,14 @@ struct JourneyPatternContainer {
         assert(idx.val < jpps.size());
         return jpps[idx.val];
     }
-    jp_range get_jps() const {
-        return boost::make_iterator_range(jp_iterator(0, jps.begin()),
-                                          jp_iterator(jps.size(), jps.end()));
+    JpRange get_jps() const {
+        return boost::make_iterator_range(JpIterator(0, jps.begin()),
+                                          JpIterator(jps.size(), jps.end()));
     }
     const Jps& get_jps_values() const { return jps; }
-    jpp_range get_jpps() const {
-        return boost::make_iterator_range(jpp_iterator(0, jpps.begin()),
-                                          jpp_iterator(jpps.size(), jpps.end()));
+    JppRange get_jpps() const {
+        return boost::make_iterator_range(JppIterator(0, jpps.begin()),
+                                          JppIterator(jpps.size(), jpps.end()));
     }
     const Jpps& get_jpps_values() const { return jpps; }
     const IdxMap<type::Route, std::vector<JpIdx>>& get_jps_from_route() const {

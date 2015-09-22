@@ -109,6 +109,7 @@ JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const VJ& vj) {
 }
 
 static bool st_are_equals(const nt::VehicleJourney& vj1, const nt::VehicleJourney& vj2) {
+    if (vj1.stop_time_list.size() != vj2.stop_time_list.size()) { return false; }
     for (auto it1 = vj1.stop_time_list.begin(), it2 = vj2.stop_time_list.begin();
          it1 !=  vj1.stop_time_list.end() && it2 !=  vj2.stop_time_list.end();
          ++it1, ++it2) {
@@ -126,7 +127,7 @@ overtake(const VJ& vj, const std::vector<const VJ*> vjs) {
         assert(vj.stop_time_list.size() == cur_vj->stop_time_list.size());
 
         // if the validity patterns do not overlap, it can't overtake
-        const auto levels = {nt::RTLevel::Theoric, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
+        static const auto levels = {nt::RTLevel::Theoric, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
         const bool dont_overlap = boost::algorithm::all_of(levels, [&](nt::RTLevel lvl) {
                 if (vj.validity_patterns[lvl] == nullptr) { return true; }
                 if (cur_vj->validity_patterns[lvl] == nullptr) { return true; }
@@ -182,13 +183,13 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
 
 JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     const auto jp_idx = JpIdx(jps.size());
-    jps.emplace_back();
-    auto& jp = jps.back();
+    JourneyPattern jp;
     jp.route_idx = key.route_idx;
     uint16_t order = 0;
     for (const auto& jpp_key: key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
+    jps.push_back(std::move(jp));
     return jp_idx;
 }
 

@@ -83,7 +83,7 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp,
     }
 }
 
-void NextStopTimeData::load(const JourneyPatternContainer &jp_container) {
+void NextStopTimeData::load(const JourneyPatternContainer& jp_container) {
     departure.assign(jp_container.get_jpps_values());
     arrival.assign(jp_container.get_jpps_values());
 
