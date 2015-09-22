@@ -26,12 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from collections import defaultdict
 from tests import gtfs_realtime_pb2
-from tests_mechanism import AbstractTestFixture, dataset
+from tests_mechanism import dataset
 from check_utils import *
 import chaos_pb2
-from time import sleep
 from jormungandr import utils
 from rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
@@ -67,7 +65,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
-        self.send_and_sleep("bob_the_disruption", "stopB", "stop_area")
+        self.send_mock("bob_the_disruption", "stopB", "stop_area")
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB')
@@ -123,8 +121,8 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in line
 
-        self.send_and_sleep("bobette_the_disruption", "A",
-                "line_section", start="stopA", end="stopB", blocking=True)
+        self.send_mock("bobette_the_disruption", "A",
+                       "line_section", start="stopA", end="stopB", blocking=True)
 
         #and we call again, we must have the disruption now
         response = self.query_region('lines/A')
@@ -161,7 +159,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert not get_disruptions(b['stop_area'], response)
 
         #we create a list with every 'to' section to the stop B (the one we added the disruption on)
-        self.send_and_sleep("bob_the_disruption", "stopB", "stop_area")
+        self.send_mock("bob_the_disruption", "stopB", "stop_area")
 
         response = self.query_region(journey_basic_query)
 
@@ -187,10 +185,6 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
-
-    def __init__(self):
-        ChaosDisruptionsFixture.__init__(self)
-
     def get_nb_disruptions(self):
         nb_disruptions_map = defaultdict(int)
 
@@ -238,8 +232,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         nb_disruptions_map = self.get_nb_disruptions()
         nb_disruptions = nb_disruptions_map[object_id]
         # We send a blocking disruption on the object
-        self.send_and_sleep(disruption_uri, object_id, type_, blocking=True,
-                                             start_period=start_period)
+        self.send_mock(disruption_uri, object_id, type_, blocking=True,
+                       start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
         # Exceptional Case
@@ -255,18 +249,18 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         #We delete the disruption
         nb_disruptions_map = self.get_nb_disruptions()
         nb_disruptions = nb_disruptions_map[object_id]
-        self.send_and_sleep(disruption_uri, object_id, type_,
-                blocking=True, is_deleted=True, start_period=start_period)
+        self.send_mock(disruption_uri, object_id, type_,
+                       blocking=True, is_deleted=True, start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions - nb_disruptions_map[object_id]) == 1
         check_links_("20120616T080000", True)
 
         #We try to send first the disruption, and then the impacts
         nb_disruptions = nb_disruptions_map[object_id]
-        self.send_and_sleep(disruption_uri, None, None, blocking=True,
-                                             start_period=start_period)
-        self.send_and_sleep(disruption_uri, object_id, type_, blocking=True,
-                                             start_period=start_period)
+        self.send_mock(disruption_uri, None, None, blocking=True,
+                       start_period=start_period)
+        self.send_mock(disruption_uri, object_id, type_, blocking=True,
+                       start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
         # Exceptional Case
@@ -280,8 +274,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         check_links_("20120614T080000", True)
 
         #We clean
-        self.send_and_sleep(disruption_uri, object_id, type_,
-                blocking=True, is_deleted=True, start_period=start_period)
+        self.send_mock(disruption_uri, object_id, type_,
+                       blocking=True, is_deleted=True, start_period=start_period)
 
     def test_blocking_disruption_of_line_route_network_on_journey(self):
         """
@@ -332,10 +326,10 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         #no disruptions for the moment
         assert not disruptions
 
-        self.send_and_sleep("blocking_line_disruption", "A",
-                "line", blocking=True)
-        self.send_and_sleep("blocking_network_disruption",
-                "base_network", "network", blocking=True)
+        self.send_mock("blocking_line_disruption", "A",
+                       "line", blocking=True)
+        self.send_mock("blocking_network_disruption",
+                       "base_network", "network", blocking=True)
 
         response = self.query_region(journey_basic_query + "&disruption_active=true")
 
@@ -355,7 +349,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert 'blocking_line_disruption' in disruptions
         assert 'blocking_network_disruption' in disruptions
 
-        self.send_and_sleep("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
+        self.send_mock("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
         links = []
         def get_line_id(k, v):
@@ -420,7 +414,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
 
         #we create a disruption on the network
-        self.send_and_sleep("test_disruption", "base_network", "network", message='message')
+        self.send_mock("test_disruption", "base_network", "network", message='message')
 
         response = self.query_region(query)
 
@@ -436,7 +430,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
 
         #we update the previous disruption
-        self.send_and_sleep("test_disruption", "base_network", "network", message='update')
+        self.send_mock("test_disruption", "base_network", "network", message='update')
 
         response = self.query_region(query)
 
@@ -451,7 +445,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
 
         #we delete the disruption
-        self.send_and_sleep("test_disruption", "base_network", "network", is_deleted=True)
+        self.send_mock("test_disruption", "base_network", "network", is_deleted=True)
 
         response = self.query_region(query)
 
@@ -478,11 +472,11 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         query = 'stop_points/stop_point:stopA'
 
         # add disruption on stop point
-        self.send_and_sleep(disruption_id,
-                            disruption_target,
-                            disruption_target_type,
-                            blocking=True,
-                            message=disruption_msg)
+        self.send_mock(disruption_id,
+                       disruption_target,
+                       disruption_target_type,
+                       blocking=True,
+                       message=disruption_msg)
         response = self.query_region(query)
         disruptions = response.get('disruptions')
         assert disruptions
@@ -490,10 +484,10 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         assert disruptions[0]['disruption_id'] == disruption_id
 
         # delete disruption on stop point
-        self.send_and_sleep(disruption_id,
-                            disruption_target,
-                            disruption_target_type,
-                            is_deleted=True)
+        self.send_mock(disruption_id,
+                       disruption_target,
+                       disruption_target_type,
+                       is_deleted=True)
 
         response = self.query_region(query)
         disruptions = response.get('disruptions')
@@ -517,11 +511,11 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         query = 'stop_areas/stopA'
 
         # add disruption on stop point
-        self.send_and_sleep(disruption_id,
-                            disruption_target,
-                            disruption_target_type,
-                            blocking=True,
-                            message=disruption_msg)
+        self.send_mock(disruption_id,
+                       disruption_target,
+                       disruption_target_type,
+                       blocking=True,
+                       message=disruption_msg)
         response = self.query_region(query)
         disruptions = response.get('disruptions')
         assert disruptions
@@ -534,10 +528,10 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         is_valid_journey_response(response, self.tester, journey_query)
 
         # delete disruption on stop point
-        self.send_and_sleep(disruption_id,
-                            disruption_target,
-                            disruption_target_type,
-                            is_deleted=True)
+        self.send_mock(disruption_id,
+                       disruption_target,
+                       disruption_target_type,
+                       is_deleted=True)
 
         response = self.query_region(query)
         disruptions = response.get('disruptions')

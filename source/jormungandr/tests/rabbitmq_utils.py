@@ -72,7 +72,7 @@ class RabbitMQCnxFixture(AbstractTestFixture):
         """
         raise NotImplementedError()
 
-    def send_and_sleep(self, *args, **kwargs):
+    def send_mock(self, *args, **kwargs):
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
         item = self._make_mock_item(*args, **kwargs)
