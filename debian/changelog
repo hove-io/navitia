@@ -1,3 +1,9 @@
+navitia2 (1.26.1) unstable; urgency=low
+
+  * fix problems with git tags 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 22 Sep 2015 10:09:22 +0100
+
 navitia2 (1.26.0) unstable; urgency=low
 
   * Doc: fix Ubuntu 15.04 conditionnal  <https://github.com/CanalTP/navitia/pull/1178>
