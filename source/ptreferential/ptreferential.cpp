@@ -49,6 +49,7 @@ www.navitia.io
 #include <boost/date_time/time_duration.hpp>
 #include "type/pt_data.h"
 #include "type/meta_data.h"
+#include "routing/dataraptor.h"
 #include <boost/date_time.hpp>
 
 
@@ -174,7 +175,6 @@ get_indexes_from_code(const Data&, const std::string&, const std::string&) {
 
 template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
-    auto data = d.get_data<T>();
     std::vector<idx_t> indexes;
     if(filter.op == DWITHIN) {
         std::vector<std::string> splited;
@@ -211,11 +211,13 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
         std::vector<idx_t> tmp_indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
 
         //On ajoute à indexes tous les journey_patterns qui sont apres
-        for(auto first_jpp : tmp_indexes) {
-            auto jpp = d.pt_data->journey_pattern_points[first_jpp];
-            for(auto other_jpp : jpp->journey_pattern->journey_pattern_point_list) {
-                if(other_jpp->order > jpp->order) {
-                    indexes.push_back(other_jpp->idx);
+        for (const auto& first_jpp: tmp_indexes) {
+            const auto& jpp = d.dataRaptor->jp_container.get(routing::JppIdx(first_jpp));
+            const auto& jp = d.dataRaptor->jp_container.get(jpp.jp_idx);
+            for (const auto& other_jpp_idx : jp.jpps) {
+                const auto& other_jpp = d.dataRaptor->jp_container.get(other_jpp_idx);
+                if (other_jpp.order > jpp.order) {
+                    indexes.push_back(other_jpp_idx.val);
                 }
             }
         }
@@ -232,8 +234,18 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             throw parsing_error(parsing_error::partial_error,
                                 "Unknown method " + filter.object + ":" + filter.method);
         }
-    }
-    else {
+    } else if (filter.object == "journey_pattern" && filter.op == EQ &&
+               in(filter.attribute, {"uri", "name"})) {
+        if (const auto jp_idx = d.dataRaptor->jp_container.get_jp_from_id(filter.value)) {
+            indexes.push_back(jp_idx->val);
+        }
+    } else if (filter.object == "journey_pattern_point" && filter.op == EQ &&
+               in(filter.attribute, {"uri", "name"})) {
+        if (const auto jpp_idx = d.dataRaptor->jp_container.get_jpp_from_id(filter.value)) {
+            indexes.push_back(jpp_idx->val);
+        }
+    } else {
+        auto data = d.get_data<T>();
         indexes = filtered_indexes(data, build_clause<T>({filter}));
     }
     Type_e current = filter.navitia_type;
@@ -428,11 +440,27 @@ std::vector<idx_t> make_query(const Type_e requested_type,
     std::vector<idx_t> indexes;
     for(const Filter & filter : filters){
         switch(filter.navitia_type){
-#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: indexes = get_indexes<type_name>(filter, requested_type, data); break;
+#define GET_INDEXES(type_name, collection_name)\
+        case Type_e::type_name:\
+            indexes = get_indexes<type_name>(filter, requested_type, data);\
+            break;
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
-            case Type_e::POI: indexes = get_indexes<georef::POI>(filter, requested_type, data); break;
-            case Type_e::POIType: indexes = get_indexes<georef::POIType>(filter, requested_type, data); break;
-            case Type_e::Connection: indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data); break;
+#undef GET_INDEXES
+        case Type_e::JourneyPattern:
+            indexes = get_indexes<routing::JourneyPattern>(filter, requested_type, data);
+            break;
+        case Type_e::JourneyPatternPoint:
+            indexes = get_indexes<routing::JourneyPatternPoint>(filter, requested_type, data);
+            break;
+        case Type_e::POI:
+            indexes = get_indexes<georef::POI>(filter, requested_type, data);
+            break;
+        case Type_e::POIType:
+            indexes = get_indexes<georef::POIType>(filter, requested_type, data);
+            break;
+        case Type_e::Connection:
+            indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data);
+            break;
         default:
             throw parsing_error(parsing_error::partial_error,
                     "Filter: Unable to find the requested type. Not parsed: >>"
@@ -458,19 +486,32 @@ std::vector<idx_t> make_query(const Type_e requested_type,
         filter_forbidden.navitia_type = type_;
         std::vector<idx_t> forbidden_idx;
         switch(type_){
-#define GET_INDEXES_FORBID(type_name, collection_name) case Type_e::type_name: forbidden_idx = get_indexes<type_name>(filter_forbidden, requested_type, data); break;
-        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES_FORBID)
-            case Type_e::POI:
-                forbidden_idx = get_indexes<georef::POI>(filter_forbidden, requested_type, data);
-                break;
-            case Type_e::POIType:
-                forbidden_idx = get_indexes<georef::POIType>(filter_forbidden, requested_type, data);
-                break;
-            case Type_e::Connection:
-                forbidden_idx = get_indexes<type::StopPointConnection>(filter_forbidden, requested_type, data);
-                break;
+#define GET_INDEXES_FORBID(type_name, collection_name)\
+        case Type_e::type_name:\
+            forbidden_idx = get_indexes<type_name>(filter_forbidden, requested_type, data);\
+            break;
+            ITERATE_NAVITIA_PT_TYPES(GET_INDEXES_FORBID)
+#undef GET_INDEXES_FORBID
+        case Type_e::JourneyPattern:
+            forbidden_idx = get_indexes<routing::JourneyPattern>(filter_forbidden, requested_type, data);
+            break;
+        case Type_e::JourneyPatternPoint:
+            forbidden_idx = get_indexes<routing::JourneyPatternPoint>(filter_forbidden, requested_type, data);
+            break;
+        case Type_e::POI:
+            forbidden_idx = get_indexes<georef::POI>(filter_forbidden, requested_type, data);
+            break;
+        case Type_e::POIType:
+            forbidden_idx = get_indexes<georef::POIType>(filter_forbidden, requested_type, data);
+            break;
+        case Type_e::Connection:
+            forbidden_idx = get_indexes<type::StopPointConnection>(filter_forbidden, requested_type, data);
+            break;
         default:
-            throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter_forbidden.navitia_type) + "<<");
+            throw parsing_error(parsing_error::partial_error,
+                                "Filter: Unable to find the requested type. Not parsed: >>"
+                                + nt::static_data::get()->captionByType(filter_forbidden.navitia_type)
+                                + "<<");
         }
         final_indexes = get_difference(final_indexes, forbidden_idx);
     }

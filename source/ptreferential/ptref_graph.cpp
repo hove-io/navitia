@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "ptref_graph.h"
 #include "ptreferential.h"
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace navitia { namespace ptref {
 
@@ -46,23 +47,22 @@ namespace navitia { namespace ptref {
 Jointures::Jointures() {
 #define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
+    vertex_map[Type_e::JourneyPattern] = boost::add_vertex(Type_e::JourneyPattern, g);
+    vertex_map[Type_e::JourneyPatternPoint] = boost::add_vertex(Type_e::JourneyPatternPoint, g);
     vertex_map[Type_e::POI] = boost::add_vertex(Type_e::POI, g);
     vertex_map[Type_e::POIType] = boost::add_vertex(Type_e::POIType, g);
     vertex_map[Type_e::Connection] = boost::add_vertex(Type_e::Connection, g);
 
-    // À partir d'un stop area, on peut avoir ses stop points
+    // From a StopArea, we can have its StopPoints.
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
 
-    // À partir d'un network on peut avoir ses lignes
+    // From a Network, we can have its Lines.
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Network), g);
 
-    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::Network), g);
-    boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Company), g);
-
-    // À partir d'une company, on peut avoir ses lignes
+    // From a Company, we can have its Lines.
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Company), g);
 
-    // À partir d'un commercial mode on peut avoir ses lignes et son mode physique
+    // From a CommercialMode, we can have its Lines.
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::CommercialMode), g);
 
     // À partir d'un physical mode on peut avoir les vehicule journeys
@@ -77,25 +77,30 @@ Jointures::Jointures() {
     // À partir d'une route on a sa ligne et ses journey pattern
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Route), g);
+    boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::Route), g);
 
     // À partir d'un journey pattern on peut avoir sa route, ses points et son vehicule journey
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::JourneyPattern), g);
 
-    // À partir d'un vehicle journey, on peut avoir le journey pattern, la compagnie créole, le mode physique et le validity pattern
+    // from a VehicleJourney, we can have the Route, the
+    // JourneyPattern, the Company, the PhysicalMode, the
+    // ValidityPattern.
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
-    // On a mis un poids plus fort sur company, pour obliger d’obtenir les lignes au travers des JPP->Routes
-    // Sinon il tente le raccourci Company->line
+    // Higher weight on the Company to get Route->Line better than Company->Line.
     boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), Edge(2.5), g);
     boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
 
-    // À partir d'un journey pattern point on obtient le journey pattern et le stop point
+    // From a JourneyPatternPoint, we can have the JourneyPattern and
+    // the StopPoints.
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::JourneyPatternPoint), g);
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::JourneyPatternPoint), g);
 
-    // D'un stop point on obtient : le stop area, city, journey pattern point et connection
+    // From a StopPoint, we can have its StopArea, Its
+    // JourneyPatternPoints and its Connection.
     boost::add_edge(vertex_map.at(Type_e::StopArea), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::Connection), vertex_map.at(Type_e::StopPoint), g);
@@ -124,7 +129,7 @@ std::map<Type_e,Type_e> find_path(Type_e source) {
         throw ptref_error("Type doesnot exist as a vertex");
     }
 
-    std::vector<vertex_t> predecessors(boost::num_vertices(j.g));
+    std::vector<Jointures::vertex_t> predecessors(boost::num_vertices(j.g));
     boost::dijkstra_shortest_paths(j.g, j.vertex_map[source],
                                    boost::predecessor_map(&predecessors[0]).
                                    weight_map(boost::get(&Edge::weight, j.g)));
@@ -133,7 +138,7 @@ std::map<Type_e,Type_e> find_path(Type_e source) {
     std::map<Type_e, Type_e> result;
 
 
-    for(vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
+    for(Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
         result[j.g[u]] = j.g[predecessors[u]];
     return result;
 }

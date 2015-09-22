@@ -74,14 +74,12 @@ struct Impact;
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\
     FUN(LineGroup, line_groups)\
-    FUN(JourneyPattern, journey_patterns)\
     FUN(VehicleJourney, vehicle_journeys)\
     FUN(StopPoint, stop_points)\
     FUN(StopArea, stop_areas)\
     FUN(Network, networks)\
     FUN(PhysicalMode, physical_modes)\
     FUN(CommercialMode, commercial_modes)\
-    FUN(JourneyPatternPoint, journey_pattern_points)\
     FUN(Company, companies)\
     FUN(Route, routes)\
     FUN(Contributor, contributors)\
@@ -822,7 +820,6 @@ struct JourneyPattern : public Header, Nameable {
 
     }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const JourneyPattern & other) const { return this < &other; }
 
     void build_odt_properties();
@@ -983,7 +980,6 @@ struct JourneyPatternPoint : public Header{
         this->stop_point->journey_pattern_point_list.push_back(this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const JourneyPatternPoint& jpp2) const {
         return this->journey_pattern < jpp2.journey_pattern  || (this->journey_pattern == jpp2.journey_pattern && this->order < jpp2.order);}

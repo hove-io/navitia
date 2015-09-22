@@ -56,6 +56,7 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
         for (const auto& vj: jp->discrete_vehicle_journey_list) { add_vj(*vj); }
         for (const auto& vj: jp->frequency_vehicle_journey_list) { add_vj(*vj); }
     }
+    std::cout << "jp_container loaded" << std::endl;
 }
 
 const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
@@ -63,6 +64,36 @@ const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
     return jp.jpps.at(st.journey_pattern_point->order);
 }
 
+std::string JourneyPatternContainer::get_id(const JpIdx& jp_idx) const {
+    std::stringstream ss;
+    ss << "journey_pattern:" << jp_idx.val;
+    return ss.str();
+}
+std::string JourneyPatternContainer::get_id(const JppIdx& jpp_idx) const {
+    std::stringstream ss;
+    ss << "journey_pattern_point:" << jpp_idx.val;
+    return ss.str();
+}
+boost::optional<JpIdx> JourneyPatternContainer::get_jp_from_id(const std::string& id) const {
+    static const std::string prefix = "journey_pattern:";
+    if (id.size() > prefix.size() && id.substr(0, prefix.size()) == prefix) {
+        try {
+            const auto idx = boost::lexical_cast<idx_t>(id.substr(prefix.size()));
+            if (idx < nb_jps()) { return JpIdx(idx); }
+        } catch(boost::bad_lexical_cast&) {}
+    }
+    return boost::none;
+}
+boost::optional<JppIdx> JourneyPatternContainer::get_jpp_from_id(const std::string& id) const {
+    static const std::string prefix = "journey_pattern_point:";
+    if (id.size() > prefix.size() && id.substr(0, prefix.size()) == prefix) {
+        try {
+            const auto idx = boost::lexical_cast<idx_t>(id.substr(prefix.size()));
+            if (idx < nb_jpps()) { return JppIdx(idx); }
+        } catch(boost::bad_lexical_cast&) {}
+    }
+    return boost::none;
+}
 
 template<typename VJ>
 JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const VJ& vj) {

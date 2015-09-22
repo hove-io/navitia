@@ -42,6 +42,7 @@ www.navitia.io
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
 #include "vptranslator/block_pattern_to_pb.h"
+#include "routing/dataraptor.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -467,16 +468,21 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 }
 
 
-void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
-        pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
-    if (jp == nullptr) { return; }
+void fill_pb_object(const std::pair<const routing::JpIdx, const routing::JourneyPattern&>& jp,
+                    const nt::Data& data,
+                    pbnavitia::JourneyPattern * journey_pattern,
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period,
+                    const bool show_codes){
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    journey_pattern->set_name(jp->name);
-    journey_pattern->set_uri(jp->uri);
-    if(depth > 0 && jp->route != nullptr) {
-        fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
+    const std::string id = data.dataRaptor->jp_container.get_id(jp.first);
+    journey_pattern->set_name(id);
+    journey_pattern->set_uri(id);
+    if (depth > 0) {
+        const auto* route = data.pt_data->routes[jp.second.route_idx.val];
+        fill_pb_object(route, data, journey_pattern->mutable_route(),
                 depth-1, now, action_period, show_codes);
     }
 }
@@ -656,11 +662,10 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     vehicle_journey->set_school_vehicle(vj->school_vehicle());
 
     if(depth > 0) {
-        if(vj->journey_pattern != nullptr) {
-            fill_pb_object(vj->journey_pattern, data,
-                           vehicle_journey->mutable_journey_pattern(), depth-1,
-                           now, action_period, show_codes);
-        }
+        const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
+        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jp_idx.val], data,
+                       vehicle_journey->mutable_journey_pattern(), depth-1,
+                       now, action_period, show_codes);
         for(type::StopTime stop_time : vj->stop_time_list) {
             //we copy the stoptime since we need to convert it to local time
             if(stop_time.departure_time != std::numeric_limits<uint32_t>::max()){
@@ -723,8 +728,9 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
 
     // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
-    if (st->journey_pattern_point != nullptr && depth > 0) {
-        fill_pb_object(st->journey_pattern_point, data,
+    if (depth > 0) {
+        const auto& jpp_idx = data.dataRaptor->jp_container.get_jpp(*st);
+        fill_pb_object(data.dataRaptor->jp_container.get_jpps()[jpp_idx.val], data,
                        stop_time->mutable_journey_pattern_point(), depth-1,
                        now, action_period, show_codes);
     }
@@ -758,28 +764,25 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
 }
 
 
-void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
+void fill_pb_object(const std::pair<const routing::JppIdx, const routing::JourneyPatternPoint&>& jpp,
+                    const nt::Data& data,
                     pbnavitia::JourneyPatternPoint * journey_pattern_point,
-                    int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period, const bool show_codes){
-    if(jpp == nullptr)
-        return ;
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period,
+                    const bool show_codes){
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    journey_pattern_point->set_uri(jpp->uri);
-    journey_pattern_point->set_order(jpp->order);
+    journey_pattern_point->set_uri(data.dataRaptor->jp_container.get_id(jpp.first));
+    journey_pattern_point->set_order(jpp.second.order);
 
     if(depth > 0){
-        if(jpp->stop_point != nullptr) {
-            fill_pb_object(jpp->stop_point, data,
-                           journey_pattern_point->mutable_stop_point(),
-                           depth-1, now, action_period, show_codes);
-        }
-        if(jpp->journey_pattern != nullptr) {
-            fill_pb_object(jpp->journey_pattern, data,
-                           journey_pattern_point->mutable_journey_pattern(),
-                           depth - 1, now, action_period, show_codes);
-        }
+        fill_pb_object(data.pt_data->stop_points[jpp.second.sp_idx.val], data,
+                       journey_pattern_point->mutable_stop_point(),
+                       depth-1, now, action_period, show_codes);
+        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jpp.second.jp_idx.val], data,
+                       journey_pattern_point->mutable_journey_pattern(),
+                       depth - 1, now, action_period, show_codes);
     }
 }
 
@@ -1414,7 +1417,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
         fill_pb_object(vj->journey_pattern->route, data, pt_display_info,max_depth,now,action_period);
         uris->set_route(vj->journey_pattern->route->uri);
-        uris->set_journey_pattern(vj->journey_pattern->uri);
+        const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
+        uris->set_journey_pattern(data.dataRaptor->jp_container.get_id(jp_idx));
     }
     for(auto message : vj->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);

@@ -99,9 +99,7 @@ public:
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
     /** Retourne la structure de données associée au type */
-    /// TODO : attention aux perfs à faire la copie
-    template<typename T> std::vector<T*> & get_data();
-    template<typename T> std::vector<T*> get_data() const;
+    template<typename T> const std::vector<T*>& get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *

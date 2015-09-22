@@ -83,6 +83,8 @@ class Data: boost::noncopyable {
 public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
+        std::vector<types::JourneyPattern*> journey_patterns;
+    std::vector<types::JourneyPatternPoint*> journey_pattern_points;
     std::vector<types::StopTime*> stops;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
@@ -216,6 +218,8 @@ public:
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
+            for (ed::types::JourneyPattern* elt: journey_patterns) { delete elt; }
+        for (ed::types::JourneyPatternPoint* elt: journey_pattern_points) { delete elt; }
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }

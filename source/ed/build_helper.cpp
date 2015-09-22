@@ -574,6 +574,7 @@ void builder::build_blocks() {
              }
          }
      }
+     data->build_raptor();
  }
 
 /*

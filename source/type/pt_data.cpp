@@ -39,12 +39,15 @@ namespace navitia{namespace type {
 void PT_Data::sort(){
 
 #define SORT_AND_INDEX(type_name, collection_name)\
-    std::stable_sort(collection_name.begin(), collection_name.end(), Less());\
+    std::stable_sort(collection_name.begin(), collection_name.end(), Less()); \
     std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
-
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
-
 #undef SORT_AND_INDEX
+
+    std::stable_sort(journey_patterns.begin(), journey_patterns.end(), Less());
+    std::for_each(journey_patterns.begin(), journey_patterns.end(), Indexer<nt::idx_t>());
+    std::stable_sort(journey_pattern_points.begin(), journey_pattern_points.end(), Less());
+    std::for_each(journey_pattern_points.begin(), journey_pattern_points.end(), Indexer<nt::idx_t>());
 
     std::stable_sort(stop_point_connections.begin(), stop_point_connections.end());
     std::for_each(stop_point_connections.begin(), stop_point_connections.end(), Indexer<idx_t>());
@@ -173,6 +176,8 @@ void PT_Data::build_admins_stop_areas(){
 void PT_Data::build_uri() {
 #define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto element : collection_name) collection_name##_map[element->uri] = element;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
+    for (auto elt: journey_patterns) { journey_patterns_map[elt->uri] = elt; }
+    for (auto elt: journey_pattern_points) { journey_pattern_points_map[elt->uri] = elt; }
 }
 
 /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1
@@ -190,6 +195,8 @@ struct Indexer{
 void PT_Data::index(){
 #define INDEX(type_name, collection_name) std::for_each(collection_name.begin(), collection_name.end(), Indexer());
     ITERATE_NAVITIA_PT_TYPES(INDEX)
+    std::for_each(journey_patterns.begin(), journey_patterns.end(), Indexer());
+    std::for_each(journey_pattern_points.begin(), journey_pattern_points.end(), Indexer());
 }
 
 const StopPointConnection*
@@ -218,6 +225,8 @@ PT_Data::~PT_Data() {
         std::for_each(collection_name.begin(), collection_name.end(),\
                 [](type_name* obj){delete obj;});
     ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
+    for (auto obj: journey_patterns) { delete obj; }
+    for (auto obj: journey_pattern_points) { delete obj; }
 
     for (auto metavj: meta_vj) {
         delete metavj.second;

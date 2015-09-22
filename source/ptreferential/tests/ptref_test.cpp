@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     auto indexes = make_query(navitia::type::Type_e::Line, "line.uri=A", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-    indexes = make_query(navitia::type::Type_e::JourneyPattern, "journey_pattern.uri=A:0:0", *(b.data));
+    indexes = make_query(navitia::type::Type_e::JourneyPattern, "journey_pattern.uri=journey_pattern:0", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(navitia::type::Type_e::StopPoint, "stop_point.uri=stop1", *(b.data));
@@ -397,6 +397,7 @@ BOOST_AUTO_TEST_CASE(after_filter) {
     b.vj("B")("stop5", 9000,9050)("stop2", 9200,9250);
     b.vj("C")("stop6", 9000,9050)("stop2", 9200,9250)("stop7", 10000);
     b.vj("D")("stop5", 9000,9050)("stop2", 9200,9250)("stop3", 10000);
+    b.finish();
 
     auto indexes = make_query(navitia::type::Type_e::StopArea,
                               "AFTER(stop_area.uri=stop2)", *(b.data));
@@ -427,7 +428,7 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     // En connexité non forte, il y a un seul ensemble : validity pattern est relié (en un seul sens) au gros paté
     // Avec les composantes fortement connexes : there must be only two : validity pattern est isolé car on ne peut y aller
     Jointures j;
-    std::vector<vertex_t> component(boost::num_vertices(j.g));
+    std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
     BOOST_CHECK_EQUAL(num, 3);
     num =  boost::strong_components(j.g, &component[0]);

@@ -152,6 +152,7 @@ public:
         b.finish();
         b.data->pt_data->index();
         b.data->build_uri();
+        b.data->build_raptor();
         for(navitia::type::Line *line : b.data->pt_data->lines){
             line->network->line_list.push_back(line);
         }

@@ -59,6 +59,10 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
     while(test_add && result.size() < max_departures) {
         test_add = false;
         for(auto jpp_idx : journey_pattern_points) {
+            const routing::JourneyPatternPoint& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+            if (!data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
+                continue;
+            }
             auto st = next_st.next_stop_time(stop_event, jpp_idx,
                                              next_requested_datetime[jpp_idx], clockwise, rt_level,
                                              accessibilite_params.vehicle_properties, true);

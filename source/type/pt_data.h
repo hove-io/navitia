@@ -60,24 +60,10 @@ typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
-
-#define REINDEX(type_name, collection_name) void reindex_##collection_name() {\
-        std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());}
-    ITERATE_NAVITIA_PT_TYPES(REINDEX)
-
-#define ERASE_OBJ(type_name, collection_name) \
-    void remove_from_collections(const type_name& obj) { \
-        const auto it_map = collection_name##_map.find(obj.uri);\
-        if (it_map != collection_name##_map.end()) {\
-            collection_name##_map.erase(it_map);\
-        }\
-        collection_name.erase(collection_name.begin() + obj.idx);\
-    }\
-    void erase_obj(const type_name* obj) {\
-        remove_from_collections(*obj);\
-        delete obj;\
-    }
-    ITERATE_NAVITIA_PT_TYPES(ERASE_OBJ)
+    std::vector<JourneyPattern*> journey_patterns;
+    std::unordered_map<std::string, JourneyPattern*> journey_patterns_map;
+    std::vector<JourneyPatternPoint*> journey_pattern_points;
+    std::unordered_map<std::string, JourneyPatternPoint*> journey_pattern_points_map;
 
     std::vector<StopPointConnection*> stop_point_connections;
 

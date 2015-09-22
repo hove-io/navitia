@@ -36,6 +36,7 @@ www.navitia.io
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "utils/paginate.h"
+#include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
 
@@ -121,15 +122,13 @@ departure_board(const std::string& request,
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
 
 
-    // TODO: we let that using the old jpp for the moment
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
     //Mapping route/stop_point
     std::vector<stop_point_line> sps_routes;
     for(auto jpp_idx : handler.journey_pattern_points) {
-        auto jpp = data.pt_data->journey_pattern_points[jpp_idx];
-        auto route_idx  = jpp->journey_pattern->route->idx;
-        auto sp_idx = jpp->stop_point->idx;
-        stop_point_line key = stop_point_line(sp_idx, route_idx);
+        const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+        const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+        stop_point_line key = stop_point_line(jpp.sp_idx.val, jp.route_idx.val);
         auto find_predicate = [&](stop_point_line spl) {
             return spl.first == key.first && spl.second == key.second;
         };

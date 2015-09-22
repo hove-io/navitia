@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "raptor_utils.h"
+#include <boost/optional.hpp>
 
 namespace navitia { namespace type {
 
@@ -81,6 +82,7 @@ struct JourneyPatternContainer {
 
     void load(const navitia::type::PT_Data&);
     size_t nb_jps() const { return jps.size(); }
+    size_t nb_jpps() const { return jpps.size(); }
     const JourneyPattern& get(const JpIdx& idx) const {
         assert(idx.val < jps.size());
         return jps[idx.val];
@@ -106,6 +108,10 @@ struct JourneyPatternContainer {
         return jp_from_vj;
     }
     const JppIdx& get_jpp(const type::StopTime&) const;
+    std::string get_id(const JpIdx&) const;
+    std::string get_id(const JppIdx&) const;
+    boost::optional<JpIdx> get_jp_from_id(const std::string&) const;
+    boost::optional<JppIdx> get_jpp_from_id(const std::string&) const;
 
 private:
     struct JppKey {
