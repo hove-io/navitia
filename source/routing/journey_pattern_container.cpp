@@ -31,6 +31,7 @@ www.navitia.io
 #include "journey_pattern_container.h"
 #include "type/pt_data.h"
 #include <type_traits>
+#include <boost/algorithm/cxx11/all_of.hpp>
 
 namespace navitia { namespace routing {
 
@@ -94,10 +95,13 @@ overtake(const VJ& vj, const std::vector<const VJ*> vjs) {
         assert(vj.stop_time_list.size() == cur_vj->stop_time_list.size());
 
         // if the validity patterns do not overlap, it can't overtake
-        if ((vj.validity_pattern->days & cur_vj->validity_pattern->days).none() &&
-            (vj.adapted_validity_pattern->days & cur_vj->adapted_validity_pattern->days).none()) {
-            continue;
-        }
+        const auto levels = {nt::RTLevel::Theoric, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
+        const bool dont_overlap = boost::algorithm::all_of(levels, [&](nt::RTLevel lvl) {
+                if (vj.validity_patterns[lvl] == nullptr) { return true; }
+                if (cur_vj->validity_patterns[lvl] == nullptr) { return true; }
+                return (vj.validity_patterns[lvl]->days & cur_vj->validity_patterns[lvl]->days).none();
+            });
+        if (dont_overlap) { continue; }
 
         // if the stop times are the same, they don't overtake
         if (st_are_equals(vj, *cur_vj)) { continue; }
