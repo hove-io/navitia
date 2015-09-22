@@ -31,6 +31,7 @@ www.navitia.io
 #include "maintenance_worker.h"
 
 #include "fill_disruption_from_chaos.h"
+#include "realtime.h"
 #include "type/task.pb.h"
 #include "type/pt_data.h"
 #include <boost/algorithm/string/join.hpp>
@@ -111,13 +112,16 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
             data = data_manager.get_data_clone();
             data->last_rt_data_loaded = pt::microsec_clock::universal_time();
         }
-        if(entity.is_deleted()){
+        if (entity.is_deleted()) {
             LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
             delete_disruption(entity.id(), *data->pt_data, *data->meta);
-        }else if(entity.HasExtension(chaos::disruption)){
+        } else if(entity.HasExtension(chaos::disruption)) {
             LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
             add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
-        }else{
+        } else if(entity.has_trip_update()) {
+            LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
+            handle_realtime(entity.trip_update(), *data);
+        } else {
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
     }

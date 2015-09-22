@@ -56,6 +56,8 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         response = self.query_region('vehicle_journeys')
         assert len(response) > 0
 
+        #TODO
+
 
 def make_mock_kirin_item(*args, **kwargs):
     feed_message = gtfs_realtime_pb2.FeedMessage()
