@@ -170,7 +170,7 @@ get_all_stop_times(const routing::JourneyPattern& jp,
     std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj: vjs) {
         //loop through stop times for stop jpp->stop_point
-        const auto& st = *(vj->stop_time_list.begin() + jpp.order);
+        const auto& st = vj->stop_time_list[jpp.order];
         if (! st.vehicle_journey->accessible(vehicle_properties)) {
             continue; //the stop time must be accessible
         }
