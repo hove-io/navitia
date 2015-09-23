@@ -104,6 +104,7 @@ struct PT_Data : boost::noncopyable{
         ar
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
+                & journey_patterns & journey_patterns_map & journey_pattern_points & journey_pattern_points_map
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
                 & stop_area_proximity_list & stop_point_proximity_list
