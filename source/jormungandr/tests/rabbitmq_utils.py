@@ -41,26 +41,26 @@ rt_topic = 'rt_test_{}'.format(uuid.uuid1())
 
 class RabbitMQCnxFixture(AbstractTestFixture):
     """
-    Mock a chaos disruption message, in order to check the api
+    Mock a message over RabbitMQ
     """
     def _get_producer(self):
-        producer = producers[self.mock_chaos_connection].acquire(block=True, timeout=2)
+        producer = producers[self._mock_rabbit_connection].acquire(block=True, timeout=2)
         self._connections.add(producer.connection)
         return producer
 
     def setup(self):
         #Note: not a setup_class method, not to conflict with AbstractTestFixture's setup
-        self.mock_chaos_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
-        self._connections = {self.mock_chaos_connection}
+        self._mock_rabbit_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
+        self._connections = {self._mock_rabbit_connection}
         self._exchange = Exchange('navitia', durable=True, delivry_mode=2, type='topic')
-        self.mock_chaos_connection.connect()
+        self._mock_rabbit_connection.connect()
 
         #wait for the cnx to run the test
         self._wait_for_rabbitmq_cnx()
 
     def teardown(self):
         #we need to release the amqp connection
-        self.mock_chaos_connection.release()
+        self._mock_rabbit_connection.release()
 
     def _publish(self, item):
         with self._get_producer() as producer:
