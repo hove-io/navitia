@@ -822,6 +822,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         if(!const_it["validity_pattern_id"].is_null()){
             vj->validity_patterns[RTLevel::Theoric] =
                     validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
+            vj->validity_patterns[RTLevel::RealTime] = vj->validity_patterns[RTLevel::Theoric];
         }
 
         if(!const_it["theoric_vehicle_journey_id"].is_null()){

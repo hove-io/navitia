@@ -157,13 +157,14 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
                         b.data->pt_data->validity_patterns.end(), find_vp_predicate);
     if(it_vp != b.data->pt_data->validity_patterns.end()) {
         delete vp;
-        vj->validity_patterns[nt::RTLevel::Theoric] = *(it_vp);
+        vp = *(it_vp);
     } else {
          b.data->pt_data->validity_patterns.push_back(vp);
-         vj->validity_patterns[nt::RTLevel::Theoric] = vp;
     }
-    b.vps[validity_pattern] = vj->validity_patterns[nt::RTLevel::Theoric];
-    vj->validity_patterns[nt::RTLevel::Adapted] = vj->validity_patterns[nt::RTLevel::Theoric];
+    //by default we assign all the validity patterns (theoric/adapted/realtime) to the same vp
+    for (const auto& vj_vp: vj->validity_patterns) {
+        vj_vp.second = vp;
+    }
 
     if(wheelchair_boarding){
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
