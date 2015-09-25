@@ -105,7 +105,7 @@ void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envel
 
 
 void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes){
-    auto data = boost::shared_ptr<nt::Data>{nullptr};
+    boost::shared_ptr<nt::Data> data{};
     for (auto& envelope: envelopes) {
         LOG4CPLUS_DEBUG(logger, "realtime info received!");
         assert(envelope);
