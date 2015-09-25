@@ -387,7 +387,7 @@ struct PoiHouseNumberVisitor {
             {"amenity:college" , new ed::types::PoiType(0,  "école")},
             {"amenity:university" , new ed::types::PoiType(1, "université")},
             {"amenity:theatre" , new ed::types::PoiType(2, "théâtre")},
-            {"hospital" , new ed::types::PoiType(3, "hôpital")},
+            {"amenity:hospital" , new ed::types::PoiType(3, "hôpital")},
             {"amenity:post_office" , new ed::types::PoiType(4, "bureau de poste")},
             {"amenity:bicycle_rental" , new ed::types::PoiType(5, "station vls")},
             {"amenity:bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
