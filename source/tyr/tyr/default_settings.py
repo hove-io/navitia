@@ -12,7 +12,7 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 #URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
 
 
 #URI for cities database
