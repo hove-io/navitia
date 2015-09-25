@@ -149,14 +149,20 @@ MaintenanceWorker::consume_in_batch(const std::string& consume_tag,
     assert(consume_tag != "");
     assert(max_nb);
 
-    bool not_empty = true;
     std::vector<AmqpClient::Envelope::ptr_t> envelopes;
     envelopes.reserve(max_nb);
     size_t consumed_nb = 0;
-    while(not_empty && consumed_nb < max_nb) {
-        AmqpClient::Envelope::ptr_t envelope = nullptr;
-        not_empty = channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
-        if (not_empty && envelope) {
+    while(consumed_nb < max_nb) {
+        AmqpClient::Envelope::ptr_t envelope{};
+
+        /* !
+         * The emptiness is tested thanks to the timeout. We consider that the queue is empty when
+         * BasicConsumeMessage() timeout.
+         * */
+        bool queue_is_empty = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
+        if (queue_is_empty) break;
+
+        if (envelope) {
             envelopes.push_back(envelope);
             channel->BasicAck(envelope);
             ++ consumed_nb;
@@ -178,7 +184,9 @@ void MaintenanceWorker::listen_rabbitmq(){
     data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
         size_t timeout_ms = conf.broker_timeout();
-        size_t max_batch_nb = 100; // Magic Number :)
+        // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
+        // in theory, we can handle a batch of 200 disruptions in one time very quickly too.
+        size_t max_batch_nb = 200;
 
         auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms);
         handle_rt_in_batch(rt_envelopes);
