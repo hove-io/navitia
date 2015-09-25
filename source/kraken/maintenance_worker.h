@@ -70,7 +70,8 @@ class MaintenanceWorker{
         std::vector<AmqpClient::Envelope::ptr_t>
         consume_in_batch(const std::string& consume_tag,
                 size_t max_nb,
-                size_t timeout_ms);
+                size_t timeout_ms,
+                bool no_ack);
         bool is_initialized = false;
 
     public:

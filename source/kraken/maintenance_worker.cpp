@@ -145,7 +145,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
 std::vector<AmqpClient::Envelope::ptr_t>
 MaintenanceWorker::consume_in_batch(const std::string& consume_tag,
         size_t max_nb,
-        size_t timeout_ms){
+        size_t timeout_ms,
+        bool no_ack){
     assert(consume_tag != "");
     assert(max_nb);
 
@@ -164,7 +165,7 @@ MaintenanceWorker::consume_in_batch(const std::string& consume_tag,
 
         if (envelope) {
             envelopes.push_back(envelope);
-            channel->BasicAck(envelope);
+            if (! no_ack) channel->BasicAck(envelope);
             ++ consumed_nb;
         }
     }
@@ -185,13 +186,13 @@ void MaintenanceWorker::listen_rabbitmq(){
     while(true){
         size_t timeout_ms = conf.broker_timeout();
         // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
-        // in theory, we can handle a batch of 200 disruptions in one time very quickly too.
-        size_t max_batch_nb = 200;
+        // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
+        size_t max_batch_nb = 5000;
 
-        auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms);
+        auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
         handle_rt_in_batch(rt_envelopes);
 
-        auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms);
+        auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
         handle_task_in_batch(task_envelopes);
 
         // Since consume_in_batch is non blocking, we don't want that the worker loops for nothing, when the
