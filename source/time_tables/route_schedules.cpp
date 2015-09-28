@@ -249,24 +249,22 @@ route_schedule(const std::string& filter,
     auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, d);
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
-    for(type::idx_t route_idx : routes_idx) {
+    for (const type::idx_t& route_idx: routes_idx) {
         auto route = d.pt_data->routes[route_idx];
         const auto& jps =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
-        //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, max_stop_date_times,
                                              d, rt_level, calendar_id);
         std::vector<vector_idx> stop_points;
-        for(auto jp_idx : jps) {
+        for (const auto& jp_idx : jps) {
             const auto& jp = d.dataRaptor->jp_container.get(jp_idx);
             stop_points.push_back(vector_idx());
-            for(auto jpp_idx : jp.jpps) {
+            for (const auto& jpp_idx : jp.jpps) {
                 const auto& jpp = d.dataRaptor->jp_container.get(jpp_idx);
                 stop_points.back().push_back(jpp.sp_idx.val);
             }
         }
         thermometer.generate_thermometer(stop_points);
-        //On génère la matrice
         auto  matrice = make_matrice(stop_times, thermometer, d);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
@@ -278,7 +276,6 @@ route_schedule(const std::string& filter,
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data->stop_points[spidx];
-            //version v1
             pbnavitia::RouteScheduleRow* row = table->add_rows();
             fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
                            now, action_period, show_codes);

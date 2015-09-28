@@ -172,6 +172,7 @@ Test 1 :
 */
 
 BOOST_AUTO_TEST_CASE(test1) {
+    reset_vj();
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
 
@@ -196,6 +197,7 @@ Test 2 :
 */
 
 BOOST_AUTO_TEST_CASE(test2) {
+    reset_vj();
     set_estimated("VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
@@ -220,6 +222,7 @@ Test 3 :
 */
 
 BOOST_AUTO_TEST_CASE(test3) {
+    reset_vj();
     set_estimated("VJ111");
     set_zonal("VJ111");
 
@@ -253,6 +256,7 @@ Test 4 :
 */
 
 BOOST_AUTO_TEST_CASE(test4) {
+    reset_vj();
     set_estimated("VJ111");
     set_zonal("VJ111");
 

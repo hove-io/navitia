@@ -428,7 +428,7 @@ struct routing_api_data {
             auto& builder_vj = b.vj("D")("stop_point:stopA", "08:01"_t)("stop_point:stopC", "08:01:02"_t)
                 .st_shape({A, K, J});
             b.lines["D"]->code = "1D";
-            builder_vj.vj->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
+            builder_vj.vj->physical_mode = b.data->pt_data->physical_modes[1]; // Metro
             assert (builder_vj.vj->physical_mode->name == "Metro");
             builder_vj.vj->physical_mode->vehicle_journey_list.push_back(builder_vj.vj);
 

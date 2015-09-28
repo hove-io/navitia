@@ -98,12 +98,8 @@ struct PT_Data : boost::noncopyable{
 
     // shape manager
     struct ShapeManager {
-        const LineString* get(const LineString& l) {
-            return &*set.insert(l).first;
-        }
-        template<class Archive> void serialize(Archive & ar, const unsigned int) {
-            ar & set;
-        }
+        const LineString* get(const LineString& l) { return &*set.insert(l).first; }
+        template<class Archive> void serialize(Archive & ar, const unsigned int) { ar & set; }
     private:
         std::set<LineString> set;
     };
