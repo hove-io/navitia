@@ -581,7 +581,7 @@ class TravelerProfile(flask_restful.Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False,
-                            location=('json', 'args'))
+                            location=('json', 'values'))
         parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False,
                             location=('json', 'values'))
         parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False,
