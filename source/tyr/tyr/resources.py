@@ -35,7 +35,7 @@ from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
-
+from itertools import combinations, chain
 import logging
 
 from navitiacommon import models, parser_args_type
@@ -570,31 +570,49 @@ class EndPoint(flask_restful.Resource):
             raise
         return ({}, 204)
 
+
 class TravelerProfile(flask_restful.Resource):
     """
     Traveler profile api for creating updating and removing
     """
     def __init__(self):
+        # fallback modes
+        fb_modes = ['walking', 'car', 'bss', 'bike']
+
         parser = reqparse.RequestParser()
-        parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
-        parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
-        parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
-        parser.add_argument('car_speed', type=parser_args_type.float_gt_0, required=False, case_sensitive=False)
-        parser.add_argument('wheelchair', type=parser_args_type.true_false, required=False, case_sensitive=False)
+        parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'args'))
+        parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
+        parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
+        parser.add_argument('car_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
+        parser.add_argument('wheelchair', type=parser_args_type.true_false, required=False, location=('json', 'values'))
         parser.add_argument('max_walking_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
-                            case_sensitive=False, help='in second')
+                            help='in second', location=('json', 'values'))
         parser.add_argument('max_bike_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
-                            case_sensitive=False, help='in second')
+                            help='in second', location=('json', 'values'))
         parser.add_argument('max_bss_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
-                            case_sensitive=False)
+                            help='in second', location=('json', 'values'))
         parser.add_argument('max_car_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
-                            case_sensitive=False)
+                            help='in second', location=('json', 'values'))
         parser.add_argument('first_section_mode[]',
-                            type=parser_args_type.option_value(['walking', 'car', 'bss', 'bike']),
-                            required=False, action='append', case_sensitive=False, dest='first_section_mode')
+                            type=parser_args_type.option_value(fb_modes),
+                            required=False, action='append', dest='first_section_mode', location='values')
         parser.add_argument('last_section_mode[]',
-                            type=parser_args_type.option_value(['walking', 'car', 'bss', 'bike']),
-                            required=False, action='append', case_sensitive=False, dest='last_section_mode')
+                            type=parser_args_type.option_value(fb_modes),
+                            required=False, action='append', dest='last_section_mode', location='values')
+        # powerset recipe
+        # https://docs.python.org/3/library/itertools.html
+        # all_option_combino: [('walking'), ('car'), ('bss'), ('bike'), ('car','bss'), ('walking', 'bss') ...]
+        all_fb_combino = chain.from_iterable(combinations(fb_modes, r) for r in range(1, len(fb_modes)+1))
+        # all_option_combino: [['walking'], ['car'], ['bss'], ['bike'], ['car','bss'], ['walking', 'bss'] ...]
+        all_fb_combino = reduce(lambda x, y: x + [list(y)], all_fb_combino, list())
+
+        # flask parser returns a list for first_section_mode and last_section_mode, in order to check the validity of
+        # the input, option values should be a list of list
+        parser.add_argument('first_section_mode',
+                            type=parser_args_type.option_value(all_fb_combino), required=False, location='json')
+        parser.add_argument('last_section_mode',
+                            type=parser_args_type.option_value(all_fb_combino), required=False, location='json')
+
         self.args = parser.parse_args()
 
     def check_resources(f):
@@ -657,10 +675,10 @@ class TravelerProfile(flask_restful.Resource):
         if profile is None:
             return {'error': 'Non profile is found to update'}, 404
         try:
-            for (attr, default_value) in default_traveler_profile_params[traveler_type].iteritems():
+            for (attr, args_value) in self.args.iteritems():
                 # override hardcoded values by args if args are not None
-                value = default_value if self.args.get(attr) is None else self.args.get(attr)
-                setattr(profile, attr, value)
+                if args_value is not None:
+                    setattr(profile, attr, args_value)
             db.session.commit()
             return profile
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:

@@ -47,9 +47,11 @@ def float_gt_0(value, name):
 
 
 def true_false(value, name):
-    if value == "true":
+    if isinstance(value, bool):
+        return value
+    if value.lower() == "true":
         return True
-    elif value == "false":
+    elif value.lower() == "false":
         return False
     else:
         raise ValueError("The {} argument must be true or false, you gave : {}"
