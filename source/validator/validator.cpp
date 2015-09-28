@@ -151,21 +151,23 @@ int main(int argc, char** argv) {
     error_count += check_relations(d.pt_data->stop_points, &StopPoint::stop_area, d.pt_data->stop_areas);
 //    error_count += check_relations(d.pt_data->stop_points, &StopPoint::admin_list, d.geo_ref.admins);
     error_count += check_relations(d.pt_data->stop_points, &StopPoint::network, d.pt_data->networks);
-    error_count += check_relations(d.pt_data->stop_points, &StopPoint::journey_pattern_point_list, d.pt_data->journey_pattern_points);
-    error_count += check_relations(d.pt_data->stop_points, &StopPoint::journey_pattern_point_list, d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point);
+    //error_count += check_relations(d.pt_data->stop_points, &StopPoint::journey_pattern_point_list, d.pt_data->journey_pattern_points);
+    //error_count += check_relations(d.pt_data->stop_points, &StopPoint::journey_pattern_point_list, d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point);
 
     error_count += check_relations(d.pt_data->lines, &Line::company_list, d.pt_data->companies);
 
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::route, d.pt_data->routes);
+    //error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::route, d.pt_data->routes);
     error_count += check_relations(d.pt_data->routes, &Route::line, d.pt_data->lines);
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::journey_pattern_point_list, d.pt_data->journey_pattern_points);
+    //error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::journey_pattern_point_list, d.pt_data->journey_pattern_points);
 
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::discrete_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::frequency_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
+    //error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::discrete_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
+    //error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::frequency_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
 
-    error_count += check_relations(d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point, d.pt_data->stop_points);
+    //error_count += check_relations(d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point, d.pt_data->stop_points);
 
-    error_count += check_relations(d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern, d.pt_data->journey_patterns);
+    //error_count += check_relations(d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern, d.pt_data->journey_patterns);
+
+#if 0
     for(const VehicleJourney* vj: d.pt_data->vehicle_journeys){
         for(size_t i = 1; i < vj->stop_time_list.size(); ++i){
             const StopTime& st1 = vj->stop_time_list[i-1];
@@ -210,7 +212,7 @@ int main(int argc, char** argv) {
             }
         }
     }
-
+#endif
 
 
     return 0;

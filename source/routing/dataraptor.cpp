@@ -93,14 +93,14 @@ void dataRAPTOR::load(const type::PT_Data& data)
     jpps_from_jp.load(jp_container);
     next_stop_time_data.load(jp_container);
 
-    jp_validity_patterns.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
-    jp_adapted_validity_pattern.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
+    jp_validity_patterns.assign(366, boost::dynamic_bitset<>(jp_container.nb_jps()));
+    jp_adapted_validity_pattern.assign(366, boost::dynamic_bitset<>(jp_container.nb_jps()));
 
-    for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
-        for(int i=0; i<=365; ++i) {
-            journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+    for (const auto& jp: jp_container.get_jps()) {
+        for (int i = 0; i <= 365; ++i) {
+            jp.second.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
                 if(vj.theoric_validity_pattern()->check2(i)) {
-                    jp_validity_patterns[i].set(journey_pattern->idx);
+                    jp_validity_patterns[i].set(jp.first.val);
                     return false;
                 }
                 return true;
@@ -108,10 +108,10 @@ void dataRAPTOR::load(const type::PT_Data& data)
         }
 
         //A journey pattern is valid is at least one validity pattern of its vj is valid on [day-1;day+1]
-        for(int i=0; i<=365; ++i) {
-            journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+        for (int i = 0; i <= 365; ++i) {
+            jp.second.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
                 if(vj.adapted_validity_pattern()->check2(i)) {
-                    jp_adapted_validity_pattern[i].set(journey_pattern->idx);
+                    jp_adapted_validity_pattern[i].set(jp.first.val);
                     return false;
                 }
                 return true;

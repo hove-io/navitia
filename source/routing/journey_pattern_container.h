@@ -69,6 +69,11 @@ struct JourneyPattern {
             && freq_vjs == other.freq_vjs;
     }
     template<typename VJ> std::vector<const VJ*>& get_vjs();
+    template<typename F> void for_each_vehicle_journey(const F f) const {
+        for (const auto& vj: discrete_vjs) { if (! f(*vj)) { return; } }
+        for (const auto& vj: freq_vjs) { if (! f(*vj)) { return; } }
+    }
+
 };
 
 

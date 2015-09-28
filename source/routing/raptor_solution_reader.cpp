@@ -120,8 +120,8 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
     for (auto& cur_s: boost::make_iterator_range(j.sections.begin() + 1, j.sections.end() - 1)) {
         const auto& cur_jpp_idx = jp_container.get_jpp(*cur_s.get_in_st);
         const auto* conn = reader.raptor.data.pt_data->get_stop_point_connection(
-            *prev_s->get_out_st->journey_pattern_point->stop_point,
-            *cur_s.get_in_st->journey_pattern_point->stop_point);
+            *prev_s->get_out_st->stop_point,
+            *cur_s.get_in_st->stop_point);
         assert(conn != nullptr);
         const auto new_st_dt = reader.raptor.next_st.earliest_stop_time(
             StopEvent::pick_up,
@@ -168,8 +168,8 @@ get_transfer_waiting(const type::PT_Data& data,
                      const Journey::Section& from,
                      const Journey::Section& to) {
     const auto* conn = data.get_stop_point_connection(
-        *from.get_out_st->journey_pattern_point->stop_point,
-        *to.get_in_st->journey_pattern_point->stop_point);
+        *from.get_out_st->stop_point,
+        *to.get_in_st->stop_point);
     assert(conn);
     if (! conn) { return std::make_pair(0_s, 0_s); }// it should be dead code
     const auto dur_conn = conn->display_duration;
@@ -201,8 +201,8 @@ Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& r
     // getting departure/arrival values
     const Journey::Section& dep_section = j.sections.front();
     const Journey::Section& arr_section = j.sections.back();
-    const auto dep_sp_idx = SpIdx(*dep_section.get_in_st->journey_pattern_point->stop_point);
-    const auto arr_sp_idx = SpIdx(*arr_section.get_out_st->journey_pattern_point->stop_point);
+    const auto dep_sp_idx = SpIdx(*dep_section.get_in_st->stop_point);
+    const auto arr_sp_idx = SpIdx(*arr_section.get_out_st->stop_point);
 
     // is_sp_idx(sp_idx)(sp_dur) returns true if sp_idx == sp_dur.first
     const auto is_sp_idx = [](const SpIdx idx) {
@@ -273,7 +273,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
         current_arr = in_st->begin_from_end(current_dep, true);
     }
 
-    size_t order = current_st->journey_pattern_point->order;
+    size_t order = current_st->order();
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
         res.emplace_back(section, current_st->vehicle_journey);
 
@@ -397,7 +397,7 @@ struct RaptorSolutionReader {
             // trying to end
             if (! end_st.valid_end(v.clockwise())) { continue; }
             if (begin_zone != no_zone && begin_zone == end_st.local_traffic_zone) { continue; }
-            const SpIdx end_sp_idx = SpIdx(*end_st.journey_pattern_point->stop_point);
+            const SpIdx end_sp_idx = SpIdx(*end_st.stop_point);
             const DateTime end_limit = raptor.labels[count - 1].dt_transfer(end_sp_idx);
             if (v.comp(end_limit, cur_dt)) { continue; }
             if (! raptor.valid_stop_points[end_sp_idx.val]) { continue; }
@@ -565,10 +565,10 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
        << j.sn_dur << ") ";
     for (const auto& s: j.sections) {
         os << "("
-           << s.get_in_st->journey_pattern_point->journey_pattern->route->line->uri << ": "
-           << s.get_in_st->journey_pattern_point->stop_point->uri << "@"
+           << s.get_in_st->vehicle_journey->route->line->uri << ": "
+           << s.get_in_st->stop_point->uri << "@"
            << s.get_in_dt << ", "
-           << s.get_out_st->journey_pattern_point->stop_point->uri << "@"
+           << s.get_out_st->stop_point->uri << "@"
            << s.get_out_dt << ")";
     }
     return os;
@@ -599,11 +599,11 @@ Path make_path(const Journey& journey, const type::Data& data) {
 
     const Journey::Section* last_section = nullptr;
     for (const auto& section: journey.sections) {
-        const auto dep_stop_point = section.get_in_st->journey_pattern_point->stop_point;
+        const auto dep_stop_point = section.get_in_st->stop_point;
         if (! path.items.empty()) {
             //we add a connexion
             auto waiting_section_start = posix(last_section->get_out_dt);
-            const auto previous_stop = last_section->get_out_st->journey_pattern_point->stop_point;
+            const auto previous_stop = last_section->get_out_st->stop_point;
 
             const auto* conn = data.pt_data->get_stop_point_connection(
                         *previous_stop, *dep_stop_point);
@@ -645,8 +645,8 @@ Path make_path(const Journey& journey, const type::Data& data) {
                                         posix(section.get_out_dt));
                 auto& stay_in_section = path.items.back();
                 const auto& last_st = last_vj_section->stop_times_and_dt.back();
-                stay_in_section.stop_points.push_back(last_st.st.journey_pattern_point->stop_point);
-                const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.journey_pattern_point->stop_point;
+                stay_in_section.stop_points.push_back(last_st.st.stop_point);
+                const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.stop_point;
                 stay_in_section.stop_points.push_back(first_stop_point);
                 stay_in_section.departure = posix(last_st.departure);
                 stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
@@ -664,7 +664,7 @@ Path make_path(const Journey& journey, const type::Data& data) {
                 }
 
                 item.stop_times.push_back(&st_dt.st);
-                item.stop_points.push_back(st_dt.st.journey_pattern_point->stop_point);
+                item.stop_points.push_back(st_dt.st.stop_point);
                 item.arrivals.push_back(posix(st_dt.arrival));
                 item.departures.push_back(posix(st_dt.departure));
             }

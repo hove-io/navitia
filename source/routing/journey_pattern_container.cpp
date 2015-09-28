@@ -51,16 +51,15 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     jpps.clear();
     jps_from_route.assign(pt_data.routes);
     jp_from_vj.assign(pt_data.vehicle_journeys);
-    for (const auto* jp: pt_data.journey_patterns) {
-        for (const auto& vj: jp->discrete_vehicle_journey_list) { add_vj(*vj); }
-        for (const auto& vj: jp->frequency_vehicle_journey_list) { add_vj(*vj); }
+    for (const auto* route: pt_data.routes) {
+        for (const auto& vj: route->discrete_vehicle_journey_list) { add_vj(*vj); }
+        for (const auto& vj: route->frequency_vehicle_journey_list) { add_vj(*vj); }
     }
-    std::cout << "jp_container loaded" << std::endl;
 }
 
 const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
     const auto& jp = get(jp_from_vj[VjIdx(*st.vehicle_journey)]);
-    return jp.jpps.at(st.journey_pattern_point->order);
+    return jp.jpps.at(st.order());
 }
 
 std::string JourneyPatternContainer::get_id(const JpIdx& jp_idx) const {
@@ -97,10 +96,10 @@ boost::optional<JppIdx> JourneyPatternContainer::get_jpp_from_id(const std::stri
 template<typename VJ>
 JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const VJ& vj) {
     JourneyPatternContainer::JpKey key;
-    key.route_idx = RouteIdx(*vj.journey_pattern->route);
+    key.route_idx = RouteIdx(*vj.route);
     key.is_freq = std::is_same<VJ, nt::FrequencyVehicleJourney>::value;
     for (const auto& st: vj.stop_time_list) {
-        key.jpp_keys.emplace_back(SpIdx(*st.journey_pattern_point->stop_point),
+        key.jpp_keys.emplace_back(SpIdx(*st.stop_point),
                                   st.local_traffic_zone,
                                   st.properties);
     }

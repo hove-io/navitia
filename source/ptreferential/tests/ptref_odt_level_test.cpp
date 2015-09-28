@@ -61,7 +61,6 @@ public:
     nt::Network* current_ntw;
     nt::Line* current_ln;
     nt::Route* current_rt;
-    nt::JourneyPattern* current_jp;
     void add_network(const std::string& ntw_name){
         nt::Network* nt = new nt::Network();
         nt->uri = ntw_name;
@@ -85,52 +84,71 @@ public:
         current_rt = rt;
         current_ln->route_list.push_back(rt);
     }
-    void add_journey_pattern(const std::string& jp_name){
-        nt::JourneyPattern* jp = new nt::JourneyPattern();
-        jp->uri = jp_name;
-        jp->name = jp_name;
-
-        data.pt_data->journey_patterns.push_back(jp);
-        current_jp = jp;
-        current_rt->journey_pattern_list.push_back(jp);
+    void add_vj(const std::string& vj_name) {
+        auto vj = std::make_unique<nt::DiscreteVehicleJourney>();
+        vj->uri = vj_name;
+        vj->name = vj_name;
+        vj->route = current_rt;
+        vj->stop_time_list.emplace_back();
+        vj->stop_time_list.back().stop_point = data.pt_data->stop_points.at(0);
+        data.pt_data->vehicle_journeys.push_back(vj.get());
+        current_rt->discrete_vehicle_journey_list.push_back(std::move(vj));
     }
-    void set_odt_journey_patterns(){
-        for (nt::JourneyPattern* jp : data.pt_data->journey_patterns){
-            jp->odt_properties.reset();
+    void set_estimated(const std::string& vj_name) {
+        data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().set_date_time_estimated(true);
+    }
+    void set_zonal(const std::string& vj_name) {
+        data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().stop_point =
+            data.pt_data->stop_points.at(1);
+    }
+    void reset_vj() {
+        for (auto* vj: data.pt_data->vehicle_journeys) {
+            vj->stop_time_list.front().set_date_time_estimated(false);
+            vj->stop_time_list.front().stop_point = data.pt_data->stop_points.at(0);
         }
     }
 
     Params(){
+        auto* normal_sp = new nt::StopPoint();
+        normal_sp->uri = "normal";
+        normal_sp->name = "normal";
+        data.pt_data->stop_points.push_back(normal_sp);
+
+        auto* zonal_sp = new nt::StopPoint();
+        zonal_sp->is_zonal = true;
+        zonal_sp->uri = "zonal";
+        zonal_sp->name = "zonal";
+        data.pt_data->stop_points.push_back(zonal_sp);
         /*
         Line1 :
             Route11 :
-                JP111 :   SP1     SP2     SP3
-                JP112 :   SP1     SP2     SP3     SP4
+                VJ111
+                VJ112
            Route12 :
-                JP121 :   SP3     SP2     SP1
-                JP122 :   SP4     SP3     SP2     SP1
+                VJ121
+                VJ122
 
         Line2 :
             Route21 :
-                JP211 :   SP1     SP2     SP3
-                JP212 :   SP1     SP2     SP3     SP4
+                VJ211
+                VJ212
 
         */
         add_network("R1");
         add_line("Line1");
         add_route("Route11");
-        add_journey_pattern("JP111");
-        add_journey_pattern("JP112");
+        add_vj("VJ111");
+        add_vj("VJ112");
 
         add_route("Route12");
-        add_journey_pattern("JP121");
-        add_journey_pattern("JP122");
+        add_vj("VJ121");
+        add_vj("VJ122");
 
         add_network("R2");
         add_line("Line2");
         add_route("Route21");
-        add_journey_pattern("JP211");
-        add_journey_pattern("JP212");
+        add_vj("VJ211");
+        add_vj("VJ212");
         data.build_uri();
     }
 
@@ -154,7 +172,6 @@ Test 1 :
 */
 
 BOOST_AUTO_TEST_CASE(test1) {
-    set_odt_journey_patterns();
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
 
@@ -171,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test1) {
 /*
 Test 2 :
     line 2 :
-        JP111 is virtual and JP112 is none odt
+        VJ111 is virtual and VJ112 is none odt
     line 2 :
         all journeypattern odt_level = none
 
@@ -179,9 +196,7 @@ Test 2 :
 */
 
 BOOST_AUTO_TEST_CASE(test2) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* JP111 = data.pt_data->journey_patterns_map["JP111"];
-    JP111->odt_properties.set_estimated();
+    set_estimated("VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
@@ -197,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test2) {
 /*
 Test 3 :
     line 1 :
-        JP111 and JP112 are zonal
+        VJ111 and VJ112 are zonal
     line 2 :
         all journeypattern odt_level = none
 
@@ -205,14 +220,11 @@ Test 3 :
 */
 
 BOOST_AUTO_TEST_CASE(test3) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ111");
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ112");
+    set_zonal("VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
@@ -233,26 +245,22 @@ BOOST_AUTO_TEST_CASE(test3) {
 /*
 Test 4 :
     line 2 :
-        JP111 is zonal and JP112 is zonal
+        VJ111 is zonal and VJ112 is zonal
     line 2 :
-        JP211 is zonal and JP212 is none odt
+        VJ211 is zonal and VJ212 is none odt
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test4) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ111");
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ112");
+    set_zonal("VJ112");
 
-    jp = data.pt_data->journey_patterns_map["JP211"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ211");
+    set_zonal("VJ211");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled),
                       ptref_error);
@@ -270,30 +278,26 @@ BOOST_AUTO_TEST_CASE(test4) {
 /*
 Test 5 :
     line 2 :
-        JP111 and JP112 are zonal
+        VJ111 and VJ112 are zonal
     line 2 :
-        JP211 and JP212 are zonal
+        VJ211 and VJ212 are zonal
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test5) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    reset_vj();
+    set_estimated("VJ111");
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ112");
+    set_zonal("VJ112");
 
-    jp = data.pt_data->journey_patterns_map["JP211"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ211");
+    set_zonal("VJ211");
 
-    jp = data.pt_data->journey_patterns_map["JP212"];
-    jp->odt_properties.set_estimated();
-    jp->odt_properties.set_zonal();
+    set_estimated("VJ212");
+    set_zonal("VJ212");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled),
                       ptref_error);
@@ -311,17 +315,16 @@ BOOST_AUTO_TEST_CASE(test5) {
 /*
 Test 6 :
     line 1 :
-        JP111 is zonal and JP112 is none
+        VJ111 is zonal and VJ112 is none
     line 2 :
-        JP211 is none and JP212 is none
+        VJ211 is none and VJ212 is none
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test6) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_zonal();
+    reset_vj();
+    set_zonal("VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
@@ -342,20 +345,18 @@ BOOST_AUTO_TEST_CASE(test6) {
 /*
 Test 7 :
     line 2 :
-        JP111 is zonal and JP112 is zonal odt
+        VJ111 is zonal and VJ112 is zonal odt
     line 2 :
-        JP211 is none and JP212 is none odt
+        VJ211 is none and VJ212 is none odt
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test7) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_zonal();
+    reset_vj();
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
@@ -378,23 +379,20 @@ BOOST_AUTO_TEST_CASE(test7) {
 /*
 Test 8 :
     line 2 :
-        JP111 is zonal and JP112 is zonal odt
+        VJ111 is zonal and VJ112 is zonal odt
     line 2 :
-        JP211 is zonal and JP212 is none odt
+        VJ211 is zonal and VJ212 is none odt
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test8) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_zonal();
+    reset_vj();
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ112");
 
-    jp = data.pt_data->journey_patterns_map["JP211"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ211");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
@@ -410,26 +408,22 @@ BOOST_AUTO_TEST_CASE(test8) {
 /*
 Test 9 :
     line 2 :
-        JP111 is zonal and JP112 is zonal odt
+        VJ111 is zonal and VJ112 is zonal odt
     line 2 :
-        JP211 is zonal and JP212 is zonal odt
+        VJ211 is zonal and VJ212 is zonal odt
 
     Call make_query function with OdtLevel : none, mixt, zonal and all
 */
 
 BOOST_AUTO_TEST_CASE(test9) {
-    set_odt_journey_patterns();
-    nt::JourneyPattern* jp = data.pt_data->journey_patterns_map["JP111"];
-    jp->odt_properties.set_zonal();
+    reset_vj();
+    set_zonal("VJ111");
 
-    jp = data.pt_data->journey_patterns_map["JP112"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ112");
 
-    jp = data.pt_data->journey_patterns_map["JP211"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ211");
 
-    jp = data.pt_data->journey_patterns_map["JP212"];
-    jp->odt_properties.set_zonal();
+    set_zonal("VJ212");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 

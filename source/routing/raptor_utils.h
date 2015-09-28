@@ -37,8 +37,6 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-struct JourneyPatternPoint;
-struct JourneyPattern;
 struct StopPoint;
 struct StopTime;
 struct Route;

@@ -214,13 +214,11 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
     LOG4CPLUS_INFO(logger, "line_groups: " << data.pt_data->line_groups.size());
     LOG4CPLUS_INFO(logger, "route: " << data.pt_data->routes.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.pt_data->journey_patterns.size());
     LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data->stop_areas.size());
     LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data->stop_points.size());
     LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data->vehicle_journeys.size());
     LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->nb_stop_times());
     LOG4CPLUS_INFO(logger, "connection: " << data.pt_data->stop_point_connections.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data->journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.pt_data->physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.pt_data->validity_patterns.size());
     LOG4CPLUS_INFO(logger, "calendars: " << data.pt_data->calendars.size());

@@ -334,121 +334,13 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
     void operator()(const nt::Route* route) {
         this->log_start_action(route->uri);
-        for (auto journey_pattern : route->journey_pattern_list) {
-            (*this)(journey_pattern);
-        }
+        route->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
+                return func_on_vj(vj);
+        });
         this->log_end_action(route->uri);
     }
 
-    void operator()(const nt::JourneyPattern* journey_pattern) {
-        this->log_start_action(journey_pattern->uri);
-        journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
-                return func_on_vj(vj);
-        });
-        this->log_end_action(journey_pattern->uri);
-    }
-
 };
-
-struct functor_add_vj {
-    const boost::shared_ptr<nt::new_disruption::Impact>& impact;
-    nt::JourneyPattern* jp;
-    const nt::StopPoint* stop_point;
-    nt::PT_Data& pt_data;
-    const nt::MetaData& meta;
-
-    functor_add_vj(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
-            nt::JourneyPattern* jp, const nt::StopPoint* stop_point,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        impact(impact), jp(jp), stop_point(stop_point), pt_data(pt_data), meta(meta) {}
-
-    //return true only if the new vj circulate at least one day
-    bool init_vj(nt::VehicleJourney* vj, nt::VehicleJourney& vj_ref) const {
-        vj->journey_pattern = jp;
-        vj->idx = pt_data.vehicle_journeys.size();
-        vj->uri = make_adapted_uri_fast(vj_ref.uri, pt_data.vehicle_journeys.size());
-        vj->realtime_level = nt::RTLevel::Adapted;
-        pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_ref.name);
-        vj->company = vj_ref.company;
-        //TODO: we loose stay_in on impacted vj, we will need to work on this.
-        vj->next_vj = nullptr;
-        vj->prev_vj = nullptr;
-        vj->meta_vj = vj_ref.meta_vj;
-        vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
-        // The validity_pattern is only active on the period of the impact
-        nt::ValidityPattern tmp_vp;
-        nt::ValidityPattern tmp_ref_vp(*vj_ref.adapted_validity_pattern());
-        for (auto period : impact->application_periods) {
-            //we can impact a vj with a departure the day before who past midnight
-            bg::day_iterator titr(period.begin().date() - bg::days(1));
-            for(;titr<=period.end().date(); ++titr) {
-                if (!meta.production_date.contains(*titr)) {
-                    continue;
-                }
-                const auto day = (*titr - meta.production_date.begin()).days();
-                //if the ref is active this day, we active the new one too
-                if(tmp_ref_vp.check(day) && execution_period(*titr, vj_ref).intersects(period)){
-                    tmp_vp.add(day);
-                    tmp_ref_vp.remove(day);
-                }
-            }
-        }
-        if(tmp_vp.days.none()){
-            //this vehicle journey won't ever circulate
-            return false;
-        }
-        vj->validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
-        vj_ref.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_ref_vp);
-
-        pt_data.vehicle_journeys.push_back(vj);
-        pt_data.vehicle_journeys_map[vj->uri] = vj;
-
-        // The vehicle_journey is never active on theorical validity_pattern
-        tmp_vp.reset();
-        vj->validity_patterns[nt::RTLevel::Theoric] = pt_data.get_or_create_validity_pattern(tmp_vp);
-        size_t order = 0;
-        // We skip the stop_time linked to impacted stop_point
-        for (const auto& st_ref : vj_ref.stop_time_list) {
-            if (st_ref.journey_pattern_point->stop_point == stop_point) {
-                continue;
-            }
-            vj->stop_time_list.emplace_back(st_ref);
-            auto& st = vj->stop_time_list.back();
-            // We link the journey_pattern_point to the stop_time
-            st.journey_pattern_point = jp->journey_pattern_point_list[order];
-            st.vehicle_journey = vj;
-            ++ order;
-        }
-
-        // we need to copy the vj's comments
-        for (const auto& c: pt_data.comments.get(vj_ref)) {
-            pt_data.comments.add(vj, c);
-        }
-        // We need to link the newly created vj with this impact
-        vj->impacted_by.push_back(impact);
-        return true;
-    }
-
-    bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
-        auto vj = std::make_unique<nt::DiscreteVehicleJourney>();
-        if(init_vj(vj.get(), vj_ref)){
-            jp->discrete_vehicle_journey_list.push_back(std::move(vj));
-        }
-        return true;
-    }
-
-    bool operator()(nt::FrequencyVehicleJourney& vj_ref) const {
-        auto vj = std::make_unique<nt::FrequencyVehicleJourney>();
-        vj->start_time = vj_ref.start_time;
-        vj->end_time = vj_ref.end_time;
-        vj->headway_secs = vj_ref.headway_secs;
-        if(init_vj(vj.get(), vj_ref)){
-            jp->frequency_vehicle_journey_list.push_back(std::move(vj));
-        }
-        return true;
-    }
-};
-
 
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,

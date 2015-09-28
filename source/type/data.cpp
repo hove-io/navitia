@@ -370,7 +370,7 @@ void Data::build_associated_calendar() {
 
         //some check can be done on any theoric vj, we do them on the first
         auto* first_vj = meta_vj->theoric_vj.front();
-        const std::vector<Calendar*> calendar_list = first_vj->journey_pattern->route->line->calendar_list;
+        const std::vector<Calendar*> calendar_list = first_vj->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
             nb_not_matched_vj++;
@@ -430,55 +430,39 @@ void Data::build_associated_calendar() {
 
 void Data::build_relations(){
     // physical_mode_list of line
-    for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        if((jp->physical_mode && jp->route && jp->route->line)
-            && (boost::range::find(jp->route->line->physical_mode_list,
-                                  jp->physical_mode) == jp->route->line->physical_mode_list.end())){
-            jp->route->line->physical_mode_list.push_back(jp->physical_mode);
+    for (const auto* vj: pt_data->vehicle_journeys) {
+        if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
+        if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
+            != vj->route->line->physical_mode_list.end()) {
+            // physical_mode already in line
+            continue;
         }
+        vj->route->line->physical_mode_list.push_back(vj->physical_mode);
     }
 }
 
 void Data::aggregate_odt(){
-    for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        jp->build_odt_properties();
-    }
-
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     //
     // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
     // for some ODT kind, we have to fill the Admin structure with the ODT stop points
     std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
-    for (const auto jp: pt_data->journey_patterns) {
-        if (! jp->odt_properties.is_zonal()) {
+    for (const auto* route: pt_data->routes) {
+        if (! route->get_odt_properties().is_zonal()) {
             continue;
         }
-        if (jp->journey_pattern_point_list.size() != 2) {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
-                           << jp->uri << ") has more than 2 stops, we skip it");
-            continue;
-        }
-        bool add = false;
         // we add it for the ODT type where the vehicle comes directly to the user
-        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+        route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
             if (in(vj.vehicle_journey_type, {VehicleJourneyType::adress_to_stop_point,
                      VehicleJourneyType::odt_point_to_point} )) {
-                add = true;
-                return false; // we can stop
+                for (const auto& st: vj.stop_time_list) {
+                    for (auto* admin: st.stop_point->admin_list) {
+                        odt_stops_by_admin[admin].insert(st.stop_point);
+                    }
+                }
             }
             return true;
         });
-
-        if (! add ) {
-            continue;
-        }
-
-        for (const auto jpp: jp->journey_pattern_point_list) {
-            const auto sp = jpp->stop_point;
-            for (auto* admin: sp->admin_list) {
-                odt_stops_by_admin[admin].insert(sp);
-            }
-        }
     }
 
     //we first store the stops in a set not to have dupplicates

@@ -1468,8 +1468,8 @@ BOOST_AUTO_TEST_CASE(simple_odt){
     BOOST_REQUIRE_EQUAL(journey.items.size(), 1);
     const auto& section = journey.items.front();
     BOOST_REQUIRE_EQUAL(section.stop_times.size(), 2);
-    BOOST_CHECK_EQUAL(section.stop_times[0]->journey_pattern_point->stop_point->uri, "stop1");
-    BOOST_CHECK_EQUAL(section.stop_times[1]->journey_pattern_point->stop_point->uri, "stop4");
+    BOOST_CHECK_EQUAL(section.stop_times[0]->stop_point->uri, "stop1");
+    BOOST_CHECK_EQUAL(section.stop_times[1]->stop_point->uri, "stop4");
 }
 
 // Same as previous test, but with a virtual_with_stop_time
@@ -1494,10 +1494,10 @@ BOOST_AUTO_TEST_CASE(simple_odt_virtual_with_stop_time){
     BOOST_REQUIRE_EQUAL(journey.items.size(), 1);
     const auto& section = journey.items.front();
     BOOST_REQUIRE_EQUAL(section.stop_times.size(), 4);
-    BOOST_CHECK_EQUAL(section.stop_times[0]->journey_pattern_point->stop_point->uri, "stop1");
-    BOOST_CHECK_EQUAL(section.stop_times[1]->journey_pattern_point->stop_point->uri, "stop2");
-    BOOST_CHECK_EQUAL(section.stop_times[2]->journey_pattern_point->stop_point->uri, "stop3");
-    BOOST_CHECK_EQUAL(section.stop_times[3]->journey_pattern_point->stop_point->uri, "stop4");
+    BOOST_CHECK_EQUAL(section.stop_times[0]->stop_point->uri, "stop1");
+    BOOST_CHECK_EQUAL(section.stop_times[1]->stop_point->uri, "stop2");
+    BOOST_CHECK_EQUAL(section.stop_times[2]->stop_point->uri, "stop3");
+    BOOST_CHECK_EQUAL(section.stop_times[3]->stop_point->uri, "stop4");
 }
 
 // 1

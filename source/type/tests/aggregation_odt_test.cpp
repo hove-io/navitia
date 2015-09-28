@@ -151,34 +151,6 @@ BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test4, aggregate_odt_fixture) {
     BOOST_CHECK_EQUAL(odt_point_to_point_vj->has_zonal_stop_point(), true);
 }
 
-// Tests for JourneyPattern Object
-BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
-    const auto* jp = b.data->pt_data->journey_patterns_map.at("none:0:0");
-
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), false);
-}
-
-BOOST_FIXTURE_TEST_CASE(jp_mixed_odt_test, aggregate_odt_fixture) {
-    const auto* jp = b.data->pt_data->journey_patterns_map.at("mixed:1:0");
-
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), false);
-}
-
-BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test, aggregate_odt_fixture) {
-    const auto* jp = b.data->pt_data->journey_patterns_map.at("zonal:2:0");
-
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_scheduled(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_with_stops(), false);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_estimated(), true);
-    BOOST_CHECK_EQUAL(jp->odt_properties.is_zonal(), true);
-}
-
 // Tests for Route Object
 BOOST_FIXTURE_TEST_CASE(route_none_odt, aggregate_odt_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("none:0");

@@ -89,7 +89,7 @@ struct RAPTOR
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
-        valid_journey_patterns(data.pt_data->journey_patterns.size()),
+        valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
         Q(data.dataRaptor->jp_container.get_jps_values()),
         valid_stop_points(data.pt_data->stop_points.size())
     {
@@ -106,9 +106,6 @@ struct RAPTOR
               const type::Properties& properties);
 
     // pt_data object getters by typed idx
-    const type::JourneyPattern* get_jp(JpIdx idx) const {
-        return data.pt_data->journey_patterns[idx.val];
-    }
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];
     }

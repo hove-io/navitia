@@ -69,7 +69,7 @@ const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) cons
     // otherwise use headsign change map
     const auto& map_stop_time_headsign_change =
             headsign_changes.at(stop_time.vehicle_journey);
-    uint16_t order_stop_time = stop_time.journey_pattern_point->order;
+    uint16_t order_stop_time = stop_time.order();
 
     // if no headsign change stored: return name
     if (map_stop_time_headsign_change.empty()) {
@@ -154,7 +154,7 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time,
         return;
     }
 
-    uint16_t order = stop_time.journey_pattern_point->order;
+    uint16_t order = stop_time.order();
     auto& vj_headsign_changes = headsign_changes[vj];
     // erase change if exists
     if (navitia::contains(vj_headsign_changes, order)) {

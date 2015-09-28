@@ -60,10 +60,6 @@ typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
-    std::vector<JourneyPattern*> journey_patterns;
-    std::unordered_map<std::string, JourneyPattern*> journey_patterns_map;
-    std::vector<JourneyPatternPoint*> journey_pattern_points;
-    std::unordered_map<std::string, JourneyPatternPoint*> journey_pattern_points_map;
 
     std::vector<StopPointConnection*> stop_point_connections;
 
@@ -100,11 +96,24 @@ struct PT_Data : boost::noncopyable{
     // Headsign handler
     HeadsignHandler headsign_handler;
 
+    // shape manager
+    struct ShapeManager {
+        const LineString* get(const LineString& l) {
+            return &*set.insert(l).first;
+        }
+        template<class Archive> void serialize(Archive & ar, const unsigned int) {
+            ar & set;
+        }
+    private:
+        std::set<LineString> set;
+    };
+    ShapeManager shape_manager;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
+                & shape_manager // before anything
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
-                & journey_patterns & journey_patterns_map & journey_pattern_points & journey_pattern_points_map
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
                 & stop_area_proximity_list & stop_point_proximity_list
@@ -140,8 +149,8 @@ struct PT_Data : boost::noncopyable{
 
     size_t nb_stop_times() const {
         size_t nb = 0;
-        for (const auto jp:journey_patterns) {
-            jp->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
+        for (const auto* route: routes) {
+            route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
                 nb += vj.stop_time_list.size();
                 return true;
             });

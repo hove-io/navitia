@@ -76,7 +76,7 @@ check_vjs(const nr::JourneyPatternContainer& jp_container,
 
             // stop point of the jpp is coherent with the vj
             BOOST_CHECK_EQUAL(jpp.sp_idx,
-                              nr::SpIdx(*vj->stop_time_list.at(order).journey_pattern_point->stop_point));
+                              nr::SpIdx(*vj->stop_time_list.at(order).stop_point));
             ++order;
         }
     }
@@ -104,10 +104,10 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
 
             // vj <-> route coherence
             for (const auto* vj: jp.discrete_vjs) {
-                BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj->journey_pattern->route));
+                BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj->route));
             }
             for (const auto* vj: jp.freq_vjs) {
-                BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj->journey_pattern->route));
+                BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj->route));
             }
         }
     }

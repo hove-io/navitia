@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, DateTimeUtils::hour(sp1_departure));
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //SP2
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure + 1);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
 
     {
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //SP3
     {
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival - 1);
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(base) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
 }
 
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //SP2
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 1);
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
 }
 
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //SP2
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival - 1);
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 1);
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure + 1);
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     //SP3
     {
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival);
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
 }
 /**
@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     //SP2
     {
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(2, sp2_arrival - 1);
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
 }
 
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1);
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1 + 1);
@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2 - 1);
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2);
@@ -835,7 +835,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure2);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure2 + 1);
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     //SP2
     {
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp2_arrival1);
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival1 - 1);
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival2);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp2_arrival2 + 1);
@@ -881,7 +881,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_arrival2));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival2);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
 
 }
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure1);
@@ -954,7 +954,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp1_departure1);
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure1));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure1);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     //SP2
     {
@@ -973,7 +973,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival2));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival2);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival2 - 1);
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(1, sp2_arrival1));
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival1);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
 }
 /**
@@ -1032,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1045,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1076,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
@@ -1086,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
@@ -1096,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
@@ -1106,7 +1106,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //SP3
     {
@@ -1135,7 +1135,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
@@ -1148,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
 }
 
@@ -1199,7 +1199,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1212,7 +1212,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1249,7 +1249,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
@@ -1259,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival + 1);
@@ -1269,7 +1269,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st2->departure_time, sp2_departure);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //SP3
     {
@@ -1306,7 +1306,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->arrival_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp3_arrival + 1);
@@ -1319,7 +1319,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
         BOOST_CHECK_EQUAL(st2->departure_time, sp3_arrival);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
 }
 
@@ -1383,7 +1383,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1395,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1407,7 +1407,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1419,7 +1419,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1431,7 +1431,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1443,7 +1443,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //SP2
@@ -1458,9 +1458,9 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, hour2));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
     }
     {
         uint32_t arrival_hour = start_time + (sp2_arrival- sp1_departure);
@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 == st1);
     }
     {
@@ -1487,7 +1487,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 == st1);
     }
     {
@@ -1501,7 +1501,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour - headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 == st1);
     }
     {
@@ -1515,7 +1515,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 == st1);
     }
     {
@@ -1529,7 +1529,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, departure_hour));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, arrival_hour));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa2);
         BOOST_CHECK(st2 == st1);
     }
     //SP3
@@ -1568,7 +1568,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, hour));
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa3);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa3);
     }
 }
 BOOST_AUTO_TEST_CASE(freq_pam) {
@@ -1607,7 +1607,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //Depart dans la periode
@@ -1621,7 +1621,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     {
@@ -1634,7 +1634,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time + headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //Depart dans la periode apres minuit
@@ -1647,7 +1647,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time - headway_sec));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //Depart à minuit
@@ -1660,7 +1660,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
         BOOST_CHECK(st2 == nullptr);
     }
     //SP2
@@ -1675,7 +1675,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time + sp2_arrival - sp1_departure));
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //Depart dans la periode
     {
@@ -1688,7 +1688,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time + sp2_arrival - sp1_departure));
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //Depart dans la periode apres minuit
     {
@@ -1701,7 +1701,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time - 2 * headway_sec + sp2_arrival - sp1_departure ));
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     //Depart à minuit
     {
@@ -1714,7 +1714,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_CHECK(st1 == nullptr);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
 }
 
@@ -1757,7 +1757,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart a start_time1 (resultat : start_time1)
     {
@@ -1767,7 +1767,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart entre start_time1 et end_time1 (resultat : start_time1 + headway_secs)
     {
@@ -1777,7 +1777,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time1 + headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart a end_time1 (resultat : end_time1)
     {
@@ -1787,7 +1787,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, end_time1));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart entre end_time1 et start_time2 (resutat : start_time2)
     {
@@ -1797,7 +1797,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart à start_time2
     {
@@ -1807,7 +1807,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
 
     // Depart entre start_time2 et 86400 dans la derniere periode de la journee (resultat : 86000)
@@ -1818,7 +1818,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, start_time2 + headway_sec));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart entre start_time2 et 86400 dans la apres periode de la journee (resultat : 86500)
     {
@@ -1828,7 +1828,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart à 86400 (resultat : 86500)
     {
@@ -1838,7 +1838,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart entre 0 et end_time2 (resultat : 86500)
     {
@@ -1848,7 +1848,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, 100));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart à last_time2 (resultat : last_time2)
     {
@@ -1858,7 +1858,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, last_time2));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     // Depart à end_time2 (resultat : start_time1 le lendemain)
     {
@@ -1868,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, start_time1));
         BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+        BOOST_CHECK_EQUAL(st1->stop_point->stop_area->name, spa1);
     }
     //SP2
     // Arrivee entre end_time2 et start_time1 (resultat : last_time2)
@@ -1879,7 +1879,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time2 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee a start_time1 (resultat : start_time1)
     {
@@ -1889,7 +1889,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre start_time1 et end_time1 (resutat : start_time1 + headway_secs)
     {
@@ -1899,7 +1899,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time1 + headway_sec + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee a last_time1 (resultat : last_time1)
     {
@@ -1909,7 +1909,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre end_time1 et start_time2 (resultat : last_time1)
     {
@@ -1919,7 +1919,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, last_time1 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee a start_time2 (resultat : start_time2)
     {
@@ -1929,7 +1929,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time2 + sp2_arrival - sp1_departure));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre start_time2 et 86400 (resultat : start_time2 + headway_secs)
     {
@@ -1939,7 +1939,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::set(0, start_time2 + sp2_arrival - sp1_departure + headway_sec));
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre start_time2 et 86400 (resultat : 86100)
     {
@@ -1949,7 +1949,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee a 86400 (resutat : 86100)
     {
@@ -1959,7 +1959,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, 86100);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre 0 et end_time2 (resultat : 86600)
     {
@@ -1969,7 +1969,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, 86600);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
     // Arrivee entre last_time2 et end_time2 (last_time2)
     {
@@ -1979,7 +1979,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
                                                         nt::RTLevel::Theoric, nt::VehicleProperties());
         BOOST_CHECK_EQUAL(dt2, last_time2 + sp2_arrival - sp1_departure);
         BOOST_REQUIRE(st2 != nullptr);
-        BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
+        BOOST_CHECK_EQUAL(st2->stop_point->stop_area->name, spa2);
     }
 }
 

@@ -40,8 +40,11 @@ struct Thermometer {
     void generate_thermometer(const std::vector<vector_idx> &journey_patterns);
     void generate_thermometer(const type::Route* route);
     vector_idx get_thermometer() const;
-    std::vector<uint32_t> match_journey_pattern(const type::JourneyPattern & journey_pattern) const;
-    std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern) const;
+
+    // res[stop_time.order()] correspond of the index of the
+    // thermometer for a stop time of the given vj
+    std::vector<uint32_t> stop_times_order(const type::VehicleJourney&) const;
+    std::vector<uint32_t> stop_times_order_helper(const vector_idx &stop_points) const;
 
     struct cant_match {
         type::idx_t jpp_idx;
