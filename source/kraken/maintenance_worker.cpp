@@ -96,13 +96,13 @@ void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envel
         }
         switch(task.action()){
             case pbnavitia::RELOAD:
-                load(); break;
+                load();
+                // For now, we have only one type of task: reload_kraken. We don't want that this command
+                // is executed several times in stride for nothing.
+                return;
             default:
                 LOG4CPLUS_TRACE(logger, "Task ignored");
         }
-        // For now, we have only one type of task: reload_kraken. We don't want that this command
-        // is executed several times in stride for nothing.
-        break;
     }
 }
 
