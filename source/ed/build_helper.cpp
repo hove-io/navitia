@@ -147,7 +147,12 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     vj->idx = b.data->pt_data->vehicle_journeys.size();
     b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
                                                 *vj, "vehicle_journey " + std::to_string(vj->idx));
-    vj->uri = vj->name;
+
+    if (! uri.empty()) {
+        vj->uri = uri;
+    } else {
+        vj->uri = "vj:" + line_name + ":" + std::to_string(vj->idx);
+    }
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 
@@ -169,7 +174,6 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     if(wheelchair_boarding){
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
     }
-    vj->uri = uri;
 
     if(!b.data->pt_data->companies.empty())
         vj->company = b.data->pt_data->companies.front();

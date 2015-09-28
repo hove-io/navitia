@@ -283,7 +283,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         by the journey.
         Then we delete it and test if use the blocked object
         """
-        response = self.query_region(journey_basic_query, display=True)
+        response = self.query_region(journey_basic_query)
 
         assert "journeys" in response
 
@@ -299,7 +299,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         Then we delete it and test if use the blocked object
         """
-        response = self.query_region(journey_basic_query, display=True)
+        response = self.query_region(journey_basic_query)
 
         assert "journeys" in response
 

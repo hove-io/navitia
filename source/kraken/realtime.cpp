@@ -29,11 +29,53 @@ www.navitia.io
 */
 #include "realtime.h"
 #include "utils/logger.h"
+#include "type/data.h"
+#include "type/pt_data.h"
+
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace navitia {
 
+void cancel_vj(type::VehicleJourney* theoric_vj,
+               const boost::gregorian::date& date,
+               const transit_realtime::TripUpdate& /*trip_update*/,
+               const type::Data& data) {
+
+    // the train is cancelled on one day, we just need to unset its realtime validitypattern
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
+                   "canceling the vj " << theoric_vj->uri << " on " << date);
+
+    nt::ValidityPattern tmp_vp(*theoric_vj->rt_validity_pattern());
+    tmp_vp.remove(date);
+
+    theoric_vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+}
+
 void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type::Data& data) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("realtime"), "realtime trip update received");
+    auto log = log4cplus::Logger::getInstance("realtime");
+    LOG4CPLUS_TRACE(log, "realtime trip update received");
+    const auto& trip = trip_update.trip();
+
+    // for the moment we handle only trip cancelation
+    if (! trip.CANCELED) {
+        LOG4CPLUS_DEBUG(log, "unhandled real time message");
+        return;
+    }
+
+    auto vj = find_or_default(trip.trip_id(), data.pt_data->vehicle_journeys_map);
+    if (! vj) {
+        LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
+        // TODO for trip().ADDED, we'll need to create a new VJ
+        return;
+    }
+
+    auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
+
+    if (trip.CANCELED) {
+        cancel_vj(vj, circulation_date, trip_update, data);
+        return;
+    }
+
 }
 
 }
