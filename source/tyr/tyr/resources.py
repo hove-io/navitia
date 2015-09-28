@@ -580,11 +580,16 @@ class TravelerProfile(flask_restful.Resource):
         fb_modes = ['walking', 'car', 'bss', 'bike']
 
         parser = reqparse.RequestParser()
-        parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'args'))
-        parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
-        parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
-        parser.add_argument('car_speed', type=parser_args_type.float_gt_0, required=False, location=('json', 'values'))
-        parser.add_argument('wheelchair', type=parser_args_type.true_false, required=False, location=('json', 'values'))
+        parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False,
+                            location=('json', 'args'))
+        parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False,
+                            location=('json', 'values'))
+        parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False,
+                            location=('json', 'values'))
+        parser.add_argument('car_speed', type=parser_args_type.float_gt_0, required=False,
+                            location=('json', 'values'))
+        parser.add_argument('wheelchair', type=parser_args_type.true_false, required=False,
+                            location=('json', 'values'))
         parser.add_argument('max_walking_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
                             help='in second', location=('json', 'values'))
         parser.add_argument('max_bike_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
