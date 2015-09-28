@@ -60,7 +60,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
         ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
-        ("BROKER.sleeptime", po::value<int>()->default_value(5), "sleeptime for maintenance worker in second")
+        ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
 
