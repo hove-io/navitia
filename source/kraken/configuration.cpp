@@ -59,6 +59,8 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.vhost", po::value<std::string>()->default_value("/"), "vhost for rabbitmq")
         ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
+        ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
+        ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
 
@@ -125,6 +127,14 @@ std::string Configuration::broker_vhost() const{
 }
 std::string Configuration::broker_exchange() const{
     return this->vm["BROKER.exchange"].as<std::string>();
+}
+
+int Configuration::broker_timeout() const {
+    return vm["BROKER.timeout"].as<int>();
+}
+
+int Configuration::broker_sleeptime() const {
+    return vm["BROKER.sleeptime"].as<int>();
 }
 
 std::vector<std::string> Configuration::rt_topics() const{

@@ -38,6 +38,9 @@ www.navitia.io
 #include <boost/optional.hpp>
 #include <sys/stat.h>
 #include <signal.h>
+#include <SimpleAmqpClient/Envelope.h>
+#include <chrono>
+#include <thread>
 #include "utils/get_hostname.h"
 
 namespace nt = navitia::type;
@@ -82,69 +85,122 @@ void MaintenanceWorker::operator()(){
     }
 }
 
-void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
-    LOG4CPLUS_TRACE(logger, "Task received");
-    pbnavitia::Task task;
-    bool result = task.ParseFromString(envelope->Message()->Body());
-    if(!result){
-        LOG4CPLUS_WARN(logger, "Protobuf is not valid!");
-        return;
-    }
-    switch(task.action()){
-        case pbnavitia::RELOAD:
-            load(); break;
-        default:
-            LOG4CPLUS_TRACE(logger, "Task ignored");
+void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes){
+    for (auto& envelope: envelopes) {
+        LOG4CPLUS_TRACE(logger, "Task received");
+        pbnavitia::Task task;
+        bool result = task.ParseFromString(envelope->Message()->Body());
+        if(!result){
+            LOG4CPLUS_WARN(logger, "Protobuf is not valid!");
+            return;
+        }
+        switch(task.action()){
+            case pbnavitia::RELOAD:
+                load(); break;
+            default:
+                LOG4CPLUS_TRACE(logger, "Task ignored");
+        }
+        // For now, we have only one type of task: reload_kraken. We don't want that this command
+        // is executed several times in stride for nothing.
+        break;
     }
 }
 
-void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
-    LOG4CPLUS_DEBUG(logger, "realtime info received!");
-    transit_realtime::FeedMessage feed_message;
-    if(! feed_message.ParseFromString(envelope->Message()->Body())){
-        LOG4CPLUS_WARN(logger, "protobuf not valid!");
-        return;
-    }
-    boost::shared_ptr<nt::Data> data;
-    LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
-    for(const auto& entity: feed_message.entity()){
-        if (!data) {
-            data = data_manager.get_data_clone();
-            data->last_rt_data_loaded = pt::microsec_clock::universal_time();
+
+void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes){
+    boost::shared_ptr<nt::Data> data{};
+    for (auto& envelope: envelopes) {
+        LOG4CPLUS_DEBUG(logger, "realtime info received!");
+        assert(envelope);
+        transit_realtime::FeedMessage feed_message;
+        if(! feed_message.ParseFromString(envelope->Message()->Body())){
+            LOG4CPLUS_WARN(logger, "protobuf not valid!");
+            return;
         }
-        if (entity.is_deleted()) {
-            LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
-            delete_disruption(entity.id(), *data->pt_data, *data->meta);
-        } else if(entity.HasExtension(chaos::disruption)) {
-            LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
-            add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
-        } else if(entity.has_trip_update()) {
-            LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-            handle_realtime(entity.trip_update(), *data);
-        } else {
-            LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
+        LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
+        for(const auto& entity: feed_message.entity()){
+            if (!data) {
+                data = data_manager.get_data_clone();
+                data->last_rt_data_loaded = pt::microsec_clock::universal_time();
+            }
+            if (entity.is_deleted()) {
+                LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
+                delete_disruption(entity.id(), *data->pt_data, *data->meta);
+            } else if(entity.HasExtension(chaos::disruption)) {
+                LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
+                add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
+            } else if(entity.has_trip_update()) {
+                LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
+                handle_realtime(entity.trip_update(), *data);
+            } else {
+                LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
+            }
         }
     }
-    if (data) { data->build_raptor(); data_manager.set_data(std::move(data)); }
-    LOG4CPLUS_DEBUG(logger, "data updated");
+    if (data) {
+        LOG4CPLUS_INFO(logger, "rebuilding data raptor");
+        data->build_raptor();
+        data_manager.set_data(std::move(data));
+        LOG4CPLUS_INFO(logger, "data updated");
+    }
+}
+
+std::vector<AmqpClient::Envelope::ptr_t>
+MaintenanceWorker::consume_in_batch(const std::string& consume_tag,
+        size_t max_nb,
+        size_t timeout_ms,
+        bool no_ack){
+    assert(consume_tag != "");
+    assert(max_nb);
+
+    std::vector<AmqpClient::Envelope::ptr_t> envelopes;
+    envelopes.reserve(max_nb);
+    size_t consumed_nb = 0;
+    while(consumed_nb < max_nb) {
+        AmqpClient::Envelope::ptr_t envelope{};
+
+        /* !
+         * The emptiness is tested thanks to the timeout. We consider that the queue is empty when
+         * BasicConsumeMessage() timeout.
+         * */
+        bool queue_is_empty = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
+        if (queue_is_empty) break;
+
+        if (envelope) {
+            envelopes.push_back(envelope);
+            if (! no_ack) channel->BasicAck(envelope);
+            ++ consumed_nb;
+        }
+    }
+    return envelopes;
 }
 
 void MaintenanceWorker::listen_rabbitmq(){
     if(!channel){
         throw std::runtime_error("not connected to rabbitmq");
     }
-    std::string task_tag = this->channel->BasicConsume(this->queue_name_task);
-    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt);
+    bool no_local = true;
+    bool no_ack = false;
+    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack);
+    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack);
 
     LOG4CPLUS_INFO(logger, "start event loop");
     data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
-        auto envelope = this->channel->BasicConsumeMessage(std::vector<std::string>({task_tag, rt_tag}));
-        if(envelope->ConsumerTag() == task_tag){
-            handle_task(envelope);
-        }else if(envelope->ConsumerTag() == rt_tag){
-            handle_rt(envelope);
-        }
+        size_t timeout_ms = conf.broker_timeout();
+        // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
+        // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
+        size_t max_batch_nb = 5000;
+
+        auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
+        handle_rt_in_batch(rt_envelopes);
+
+        auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
+        handle_task_in_batch(task_envelopes);
+
+        // Since consume_in_batch is non blocking, we don't want that the worker loops for nothing, when the
+        // queue is empty.
+        std::this_thread::sleep_for(std::chrono::seconds(conf.broker_sleeptime()));
     }
 }
 
