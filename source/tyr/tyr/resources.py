@@ -604,19 +604,19 @@ class TravelerProfile(flask_restful.Resource):
         parser.add_argument('last_section_mode[]',
                             type=parser_args_type.option_value(fb_modes),
                             required=False, action='append', dest='last_section_mode', location='values')
-        # powerset recipe
+        # powersets recipe
         # https://docs.python.org/3/library/itertools.html
-        # all_option_combino: [('walking'), ('car'), ('bss'), ('bike'), ('car','bss'), ('walking', 'bss') ...]
-        all_fb_combino = chain.from_iterable(combinations(fb_modes, r) for r in range(1, len(fb_modes)+1))
-        # all_option_combino: [['walking'], ['car'], ['bss'], ['bike'], ['car','bss'], ['walking', 'bss'] ...]
-        all_fb_combino = reduce(lambda x, y: x + [list(y)], all_fb_combino, list())
+        # all_option_combinos: [('walking'), ('car'), ('bss'), ('bike'), ('car','bss'), ('walking', 'bss') ...]
+        all_fb_combinos = chain.from_iterable(combinations(fb_modes, r) for r in range(1, len(fb_modes)+1))
+        # all_option_combinos: [['walking'], ['car'], ['bss'], ['bike'], ['car','bss'], ['walking', 'bss'] ...]
+        all_fb_combinos = reduce(lambda x, y: x + [list(y)], all_fb_combinos, list())
 
         # flask parser returns a list for first_section_mode and last_section_mode, in order to check the validity of
         # the input, option values should be a list of list
         parser.add_argument('first_section_mode',
-                            type=parser_args_type.option_value(all_fb_combino), required=False, location='json')
+                            type=parser_args_type.option_value(all_fb_combinos), required=False, location='json')
         parser.add_argument('last_section_mode',
-                            type=parser_args_type.option_value(all_fb_combino), required=False, location='json')
+                            type=parser_args_type.option_value(all_fb_combinos), required=False, location='json')
 
         self.args = parser.parse_args()
 
