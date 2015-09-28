@@ -496,7 +496,7 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_response;
 }
 
-type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
+static type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
     // for retrocompatibility, we must handle both the new and the old way of setting the rt_level
     // retrocompatibility will be droped after the migration
     if (request.has_realtime_level()) {
