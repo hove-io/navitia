@@ -94,10 +94,10 @@ void dataRAPTOR::load(const type::PT_Data &data)
         const auto rt_level = level_cont.first;
         auto& jp_vp = level_cont.second;
         jp_vp.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
-        for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
-            for(int i=0; i<=365; ++i) {
+        for (const type::JourneyPattern* journey_pattern : data.journey_patterns) {
+            for (int i = 0; i <= 365; ++i) {
                 journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                    if(vj.validity_patterns[rt_level]->check2(i)) {
+                    if (vj.validity_patterns[rt_level]->check2(i)) {
                         jp_vp[i].set(journey_pattern->idx);
                         return false;
                     }

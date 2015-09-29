@@ -36,19 +36,25 @@ www.navitia.io
 
 namespace navitia {
 
-void cancel_vj(type::VehicleJourney* theoric_vj,
+void cancel_vj(type::MetaVehicleJourney* meta_vj,
                const boost::gregorian::date& date,
                const transit_realtime::TripUpdate& /*trip_update*/,
                const type::Data& data) {
+    // we need to cancel all vj of the meta vj
+    for (const auto& vect_vj: {meta_vj->theoric_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
+        for (auto* vj: vect_vj) {
+            // the train is canceled on one day, we just need to unset its realtime validitypattern
 
-    // the train is cancelled on one day, we just need to unset its realtime validitypattern
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
-                   "canceling the vj " << theoric_vj->uri << " on " << date);
+            if (! vj->rt_validity_pattern()->check(date)) { continue; }
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
+                           "canceling the vj " << vj->uri << " on " << date);
 
-    nt::ValidityPattern tmp_vp(*theoric_vj->rt_validity_pattern());
-    tmp_vp.remove(date);
+            nt::ValidityPattern tmp_vp(*vj->rt_validity_pattern());
+            tmp_vp.remove(date);
 
-    theoric_vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+            vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+        }
+    }
 }
 
 void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type::Data& data) {
@@ -62,8 +68,8 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
         return;
     }
 
-    auto vj = find_or_default(trip.trip_id(), data.pt_data->vehicle_journeys_map);
-    if (! vj) {
+    auto meta_vj = find_or_default(trip.trip_id(), data.pt_data->meta_vj);
+    if (! meta_vj) {
         LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
         // TODO for trip().ADDED, we'll need to create a new VJ
         return;
@@ -72,7 +78,7 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
     auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
 
     if (trip.CANCELED) {
-        cancel_vj(vj, circulation_date, trip_update, data);
+        cancel_vj(meta_vj, circulation_date, trip_update, data);
         return;
     }
 

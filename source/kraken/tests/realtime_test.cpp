@@ -40,7 +40,8 @@ www.navitia.io
 
 namespace nt = navitia::type;
 
-transit_realtime::TripUpdate make_cancellation_message(std::string vj_uri, std::string date) {
+static transit_realtime::TripUpdate
+make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
-    auto& pt_data = b.data->pt_data;
+    const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150929");
-    auto& pt_data = b.data->pt_data;
+    const auto& pt_data = b.data->pt_data;
 
     navitia::handle_realtime(trip_update, *b.data);
 
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
-    auto& pt_data = b.data->pt_data;
+    const auto& pt_data = b.data->pt_data;
 
     pt_data->index();
     b.finish();
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     auto res = compute(nt::RTLevel::Theoric);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
-    //on the realtime level, we should also gt one solution, since for the moment there is no cancellation
+    //on the realtime level, we should also get one solution, since for the moment there is no cancellation
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
@@ -150,7 +151,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     b.vj("B")("stop1", "08:00"_t)("stop2", "09:30"_t);
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
-    auto& pt_data = b.data->pt_data;
+    const auto& pt_data = b.data->pt_data;
 
     pt_data->index();
     b.finish();

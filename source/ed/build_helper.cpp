@@ -135,24 +135,31 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
 
     vj->journey_pattern = jp;
-    //if we have a meta_vj, we add it in that
-    nt::MetaVehicleJourney* mvj;
-    if (! meta_vj_name.empty()) {
-        mvj = b.get_or_create_metavj(meta_vj_name);
-    } else {
-        mvj = b.get_or_create_metavj(uri);
-    }
-    mvj->theoric_vj.push_back(vj);
-    vj->meta_vj = mvj;
-    vj->idx = b.data->pt_data->vehicle_journeys.size();
-    b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
-                                                *vj, "vehicle_journey " + std::to_string(vj->idx));
 
+    vj->idx = b.data->pt_data->vehicle_journeys.size();
     if (! uri.empty()) {
         vj->uri = uri;
     } else {
         vj->uri = "vj:" + line_name + ":" + std::to_string(vj->idx);
     }
+
+    // NOTE: the meta vj name should be the same as the vj's name
+    std::string name;
+    if (! meta_vj_name.empty()) {
+        name = meta_vj_name;
+    } else if (! uri.empty()) {
+        name = uri;
+    } else {
+        name = "vehicle_journey " + std::to_string(vj->idx);
+    }
+
+    nt::MetaVehicleJourney* mvj = b.get_or_create_metavj(name);
+    mvj->theoric_vj.push_back(vj);
+    vj->meta_vj = mvj;
+
+    b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
+                                                *vj, name);
+
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 

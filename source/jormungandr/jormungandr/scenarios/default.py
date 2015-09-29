@@ -101,9 +101,9 @@ class Scenario(simple.Scenario):
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
 
-        if request["data_freshness"] == 'realtime':
+        if request['data_freshness'] == 'realtime':
             req.journeys.realtime_level = request_pb2.REAL_TIME
-        elif request["data_freshness"] == 'adapted':
+        elif request['data_freshness'] == 'adapted':
             req.journeys.realtime_level = request_pb2.ADAPTED
         else:
             req.journeys.realtime_level = request_pb2.THEORIC

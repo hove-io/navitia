@@ -406,7 +406,7 @@ struct routing_api_data {
         b.sa("stopB", B.lon(), B.lat());
         if (activate_pt) {
             //we add a very fast bus (2 seconds) to be faster than walking and biking
-            b.vj("A")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
+            b.vj("A", "111111", "", true, "vjA")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
             b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(

@@ -29,6 +29,7 @@
 
 # Note: the tests_mechanism should be the first
 # import for the conf to be loaded correctly when only this test is ran
+from nose.tools.trivial import eq_
 from tests.tests_mechanism import dataset
 
 from jormungandr import utils
@@ -77,20 +78,20 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         """
         response = self.query_region(journey_basic_query + "&data_freshness=realtime")
 
-        # with no cancellation, we have 2 jounrneys, one direct and one with the vj:A:0
-        assert _get_arrivals(response) == ['20120614T080222', '20120614T080435']
-        assert _get_used_vj(response) == [['vj:A:0'], []]
+        # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
+        eq_(_get_arrivals(response), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(response), [['vjA'], []])
 
-        self.send_mock("vj:A:0", "20120614", 'cancelled')
+        self.send_mock("vjA", "20120614", 'canceled')
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        assert _get_arrivals(new_response) == ['20120614T080435', '20120614T180222']
-        assert _get_used_vj(new_response) == [[], ['vj:B:1']]
+        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
+        eq_(_get_used_vj(new_response), [[], ['vj:B:1']])
 
         # it should not have changed anything for the theoric
         new_theoric = self.query_region(journey_basic_query + "&data_freshness=theoric")
-        assert _get_arrivals(new_theoric) == ['20120614T080222', '20120614T080435']
-        assert _get_used_vj(new_theoric) == [['vj:A:0'], []]
+        eq_(_get_arrivals(new_theoric), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(new_theoric), [['vjA'], []])
         assert new_theoric['journeys'] == response['journeys']
 
 
