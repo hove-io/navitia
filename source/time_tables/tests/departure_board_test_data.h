@@ -32,17 +32,17 @@ struct calendar_fixture {
         b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
         // Check partial terminus tag
-        b.vj("A", "10111111", "", true, "vj1", "", "jp1")("Tstop1", 10*3600, 10*3600)
-                                                         ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
-        b.vj("A", "10111111", "", true, "vj2", "", "jp2")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
-                                                         ("Tstop2", 11*3600,11*3600)
-                                                         ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", 10*3600, 10*3600)
+                                                  ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+        b.vj("A", "10111111", "", true, "vj2", "")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
+                                                  ("Tstop2", 11*3600,11*3600)
+                                                  ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
         // Check date_time_estimated at stoptime
-        b.vj("B", "10111111", "", true, "date_time_estimated", "", "date_time_estimated")
+        b.vj("B", "10111111", "", true, "date_time_estimated", "")
             ("ODTstop1", 10*3600, 10*3600)
             ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
         // Check on_demand_transport at stoptime
-        b.vj("B", "10111111", "", true, "on_demand_transport", "", "on_demand_transport")
+        b.vj("B", "10111111", "", true, "on_demand_transport", "")
             ("ODTstop1", 11*3600, 11*3600)
             ("ODTstop2", 11*3600 + 30*60, 11*3600 + 30*60);
 

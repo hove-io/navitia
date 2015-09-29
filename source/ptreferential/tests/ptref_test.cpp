@@ -250,9 +250,9 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     // Physical_mode = Car
-    b.vj("A","11110000","",true,"", "","JP1", "physical_mode:Car")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("A","11110000","",true,"", "","physical_mode:Car")("stop1", 8000,8050)("stop2", 8200,8250);
     // Physical_mode = Metro
-    b.vj("A","00001111","",true,"", "","JP2", "physical_mode:0x1")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500,8500);
+    b.vj("A","00001111","",true,"", "","physical_mode:0x1")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500,8500);
     // Physical_mode = Tram
     b.vj("C")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
