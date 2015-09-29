@@ -689,8 +689,9 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
         "vj.company_id as company_id, "
-        "vj.journey_pattern_id as journey_pattern_id,"
         "vj.validity_pattern_id as validity_pattern_id,"
+        "vj.physical_mode_id as physical_mode_id,"
+        "vj.route_id as route_id,"
         "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,"
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
@@ -708,11 +709,9 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vp.audible_announcement as audible_announcement,"
         "vp.appropriate_escort as appropriate_escort,"
         "vp.appropriate_signage as appropriate_signage,"
-        "vp.school_vehicle as school_vehicle,"
-        "jp.physical_mode_id as physical_mode_id,"
-        "jp.route_id as route_id "
-        "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp, navitia.journey_pattern as jp "
-        "WHERE vj.vehicle_properties_id = vp.id AND vj.journey_pattern_id = jp.id ";
+        "vp.school_vehicle as school_vehicle "
+        "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
+        "WHERE vj.vehicle_properties_id = vp.id";
 
     pqxx::result result = work.exec(request);
     std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
@@ -944,11 +943,10 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "st.date_time_estimated as date_time_estimated,"
         "st.id as id,"
         "st.headsign as headsign,"
-        "jpp.stop_point_id as stop_point_id,"
-        "ST_AsText(jpp.shape_from_prev) as shape_from_prev "
-        "FROM navitia.stop_time as st, navitia.journey_pattern_point as jpp "
-        "WHERE st.journey_pattern_point_id = jpp.id "
-        "ORDER BY st.vehicle_journey_id, jpp.\"order\"";
+        "st.stop_point_id as stop_point_id,"
+        "ST_AsText(st.shape_from_prev) as shape_from_prev "
+        "FROM navitia.stop_time as st "
+        "ORDER BY st.vehicle_journey_id, st.\"order\"";
 
     pqxx::result result = work.exec(request);
 

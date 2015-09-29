@@ -232,24 +232,13 @@ connection = Table('connection', metadata,*[
     schema='navitia')
 
 
-journey_pattern = Table('journey_pattern', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('route_id', BIGINT(), primary_key=False, nullable=False),
-    Column('physical_mode_id', BIGINT(), primary_key=False, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('is_frequence', BOOLEAN(), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['route_id'], [u'navitia.route.id'], name=u'journey_pattern_route_id_fkey'),
-    ForeignKeyConstraint(['physical_mode_id'], [u'navitia.physical_mode.id'], name=u'journey_pattern_physical_mode_id_fkey'),],
-    schema='navitia')
-
-
 vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('adapted_validity_pattern_id', BIGINT(), primary_key=False, nullable=False),
     Column('validity_pattern_id', BIGINT(), primary_key=False),
     Column('company_id', BIGINT(), primary_key=False, nullable=False),
-    Column('journey_pattern_id', BIGINT(), primary_key=False, nullable=False),
+    Column('route_id', BIGINT(), primary_key=False, nullable=True),
+    Column('physical_mode_id', BIGINT(), primary_key=False, nullable=True),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('odt_message', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
@@ -267,7 +256,8 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     ForeignKeyConstraint(['validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['previous_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_previous_vehicle_journey_id_fkey'),
     ForeignKeyConstraint(['next_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_next_vehicle_journey_id_fkey'),
-    ForeignKeyConstraint(['journey_pattern_id'], [u'navitia.journey_pattern.id'], name=u'vehicle_journey_journey_pattern_id_fkey'),
+    ForeignKeyConstraint(['route_id'], [u'navitia.route.id'], name=u'vehicle_journey_route_id_fkey'),
+    ForeignKeyConstraint(['physical_mode_id'], [u'navitia.physical_mode.id'], name=u'vehicle_journey_physical_mode_id_fkey'),
     ForeignKeyConstraint(['adapted_validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_adapted_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['company_id'], [u'navitia.company.id'], name=u'vehicle_journey_company_id_fkey'),
     ForeignKeyConstraint(['theoric_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_theoric_vehicle_journey_id_fkey'),],
@@ -293,7 +283,9 @@ stop_point = Table('stop_point', metadata,*[
 stop_time = Table('stop_time', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".stop_time_id_seq\'::regclass)')),
     Column('vehicle_journey_id', BIGINT(), primary_key=False, nullable=False),
-    Column('journey_pattern_point_id', BIGINT(), primary_key=False, nullable=False),
+    Column('order', INTEGER(), primary_key=False, nullable=True),
+    Column('stop_point_id', BIGINT(), primary_key=False, nullable=True),
+    Column('shape_from_prev', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
     Column('arrival_time', INTEGER(), primary_key=False),
     Column('departure_time', INTEGER(), primary_key=False),
     Column('local_traffic_zone', INTEGER(), primary_key=False),
@@ -306,20 +298,7 @@ stop_time = Table('stop_time', metadata,*[
     Column('headsign', TEXT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'stop_time_vehicle_journey_id_fkey'),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_time_properties_id_fkey'),
-    ForeignKeyConstraint(['journey_pattern_point_id'], [u'navitia.journey_pattern_point.id'], name=u'stop_time_journey_pattern_point_id_fkey'),],
-    schema='navitia')
-
-
-journey_pattern_point = Table('journey_pattern_point', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('journey_pattern_id', BIGINT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('order', INTEGER(), primary_key=False, nullable=False),
-    Column('stop_point_id', BIGINT(), primary_key=False, nullable=False),
-    Column('shape_from_prev', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
-    ForeignKeyConstraint(['stop_point_id'], [u'navitia.stop_point.id'], name=u'journey_pattern_point_stop_point_id_fkey'),
-    ForeignKeyConstraint(['journey_pattern_id'], [u'navitia.journey_pattern.id'], name=u'journey_pattern_point_journey_pattern_id_fkey'),],
+    ForeignKeyConstraint(['stop_point_id'], [u'navitia.stop_point.id'], name=u'stop_time_stop_point_id_fkey'),],
     schema='navitia')
 
 
