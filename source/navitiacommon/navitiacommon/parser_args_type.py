@@ -58,11 +58,17 @@ def true_false(value, name):
                          .format(name, value))
 
 
-def option_value(values):
+def option_value(optional_values):
     def to_return(value, name):
-        if not (value in values):
+        # if input value is iterable
+        if hasattr(value, '__iter__'):
+            if not all((v in optional_values for v in value)):
+                error = "The {} argument must be in list {}, you gave {}".\
+                    format(name, str(optional_values), value)
+                raise ValueError(error)
+        elif not (value in optional_values):
             error = "The {} argument must be in list {}, you gave {}".\
-                format(name, str(values), value)
+                format(name, str(optional_values), value)
             raise ValueError(error)
         return value
     return to_return
