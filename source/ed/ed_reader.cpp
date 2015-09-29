@@ -746,12 +746,12 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         assert (vj->route);
 
         if (vj->route && vj->route->line){
-            if(boost::range::find(vj->route->line->company_list,
-                         vj->company) == vj->route->line->company_list.end()){
+            if (boost::range::find(vj->route->line->company_list, vj->company)
+                == vj->route->line->company_list.end()) {
                 vj->route->line->company_list.push_back(vj->company);
             }
-            if(boost::range::find(vj->company->line_list,
-                         vj->route->line) == vj->company->line_list.end()){
+            if (boost::range::find(vj->company->line_list, vj->route->line)
+                == vj->company->line_list.end()) {
                 vj->company->line_list.push_back(vj->route->line);
             }
         }

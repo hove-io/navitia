@@ -840,9 +840,8 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     std::vector<std::string> columns = {
         "id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
-        "pick_up_allowed", "drop_off_allowed", "is_frequency",
-        "\"order\"", "stop_point_id", "shape_from_prev", "vehicle_journey_id", "date_time_estimated",
-        "headsign"};
+        "pick_up_allowed", "drop_off_allowed", "is_frequency", "\"order\"", "stop_point_id",
+        "shape_from_prev", "vehicle_journey_id", "date_time_estimated", "headsign"};
 
     this->lotus.prepare_bulk_insert("navitia.stop_time", columns);
     size_t inserted_count = 0;
