@@ -68,8 +68,6 @@ using nt::hasVehicleProperties;
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
-struct JourneyPattern;
-struct JourneyPatternPoint;
 struct StopTime;
 
 using nt::ConnectionType;
@@ -248,26 +246,12 @@ struct Route : public Header, Nameable{
     bool operator<(const Route& other) const;
 };
 
-struct JourneyPattern : public Header, Nameable{
-    const static nt::Type_e type = nt::Type_e::JourneyPattern;
-    bool is_frequence;
-    Route* route;
-    PhysicalMode* physical_mode;
-    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
-    nt::LineString shape;
-
-    JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){}
-
-    bool operator<(const JourneyPattern& other) const;
- };
-
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern = nullptr;
+    Route* route = nullptr;
     Company* company = nullptr;
-    PhysicalMode* physical_mode = nullptr; // Read in journey_pattern
+    PhysicalMode* physical_mode = nullptr;
     Line * tmp_line = nullptr; // May be empty
-    Route* tmp_route = nullptr;
     //Vehicle* vehicle;
     bool wheelchair_boarding = false;
     navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
@@ -296,19 +280,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
 };
 
 
-struct JourneyPatternPoint : public Header, Nameable{
-    const static nt::Type_e type = nt::Type_e::JourneyPatternPoint;
-    int order;
-    bool main_stop_point;
-    int fare_section;
-    JourneyPattern* journey_pattern;
-    StopPoint* stop_point;
-    nt::LineString shape_from_prev;
-
-    JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
-
-    bool operator<(const JourneyPatternPoint& other) const;
-};
 
 struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
@@ -328,25 +299,22 @@ struct StopPoint : public Header, Nameable, hasProperties{
 };
 
 struct StopTime {
-    size_t idx;
-    int arrival_time; /// Number of seconds from midnight can be negative when
-    int departure_time; /// we shift in UTC conversion
-    VehicleJourney* vehicle_journey;
-    JourneyPatternPoint* journey_pattern_point;
-    StopPoint* tmp_stop_point;// not mandatory
-    unsigned int order;
-    bool ODT;
-    bool pick_up_allowed;
-    bool drop_off_allowed;
-    bool is_frequency;
-    bool wheelchair_boarding;
-    bool date_time_estimated;
+    size_t idx = 0;
+    int arrival_time = 0; /// Number of seconds from midnight can be negative when
+    int departure_time = 0; /// we shift in UTC conversion
+    VehicleJourney* vehicle_journey = nullptr;
+    StopPoint* stop_point = nullptr;
+    nt::LineString shape_from_prev;
+    unsigned int order = 0;
+    bool ODT = false;
+    bool pick_up_allowed = false;
+    bool drop_off_allowed = false;
+    bool is_frequency = false;
+    bool wheelchair_boarding = false;
+    bool date_time_estimated = false;
     std::string headsign;
 
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
-
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false) {}
 
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {

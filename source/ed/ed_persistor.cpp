@@ -862,14 +862,14 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         values.push_back(std::to_string(stop->drop_off_allowed));
         values.push_back(std::to_string(stop->is_frequency));
 
-        values.push_back(std::to_string(stop->journey_pattern_point->order));
-        values.push_back(std::to_string(stop->journey_pattern_point->stop_point->idx));
+        values.push_back(std::to_string(stop->order));
+        values.push_back(std::to_string(stop->stop_point->idx));
         std::stringstream shape;
-        if (stop->journey_pattern_point->shape_from_prev.empty()) {
+        if (stop->shape_from_prev.empty()) {
             shape << "NULL";
         } else {
             shape << std::setprecision(16)
-                  << boost::geometry::wkt(stop->journey_pattern_point->shape_from_prev);
+                  << boost::geometry::wkt(stop->shape_from_prev);
         }
         values.push_back(shape.str());
 
@@ -955,8 +955,8 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(std::to_string(vj->journey_pattern->route->idx));
-        values.push_back(std::to_string(vj->journey_pattern->physical_mode->idx));
+        values.push_back(std::to_string(vj->route->idx));
+        values.push_back(std::to_string(vj->physical_mode->idx));
 
         if(vj->theoric_vehicle_journey != NULL){
             values.push_back(std::to_string(vj->theoric_vehicle_journey->idx));

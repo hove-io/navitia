@@ -310,8 +310,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA");
     BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600);
     BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600);
-    BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
-    BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_REQUIRE(data.stops[0]->stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 
     data.complete();
@@ -418,16 +418,16 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_dst_1");
     BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600 + 480*60); //first day is on a non dst period, so the utc offset
     BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600 + 480*60); //for los angeles is -480 minutes
-    BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
-    BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_REQUIRE(data.stops[0]->stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 
     BOOST_REQUIRE(data.stops[1]->vehicle_journey != nullptr);
     BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA_dst_2");
     BOOST_CHECK_EQUAL(data.stops[1]->arrival_time, 6*3600 + 420*60); //the second st is on a dst period, so the utc offset
     BOOST_CHECK_EQUAL(data.stops[1]->departure_time, 6*3600 + 420*60); //for los angeles is -420 minutes
-    BOOST_REQUIRE(data.stops[1]->tmp_stop_point != nullptr);
-    BOOST_CHECK_EQUAL(data.stops[1]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_REQUIRE(data.stops[1]->stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[1]->stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
 
     for (auto st : data.stops) {

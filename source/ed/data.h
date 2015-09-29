@@ -51,8 +51,6 @@ void normalize_uri(std::vector<T*>& vec){
     }
 }
 
-bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
-
 // Returns a LineString begining by "from" and finishing by "to",
 // following the given shape.
 //
@@ -83,8 +81,6 @@ class Data: boost::noncopyable {
 public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
-        std::vector<types::JourneyPattern*> journey_patterns;
-    std::vector<types::JourneyPatternPoint*> journey_pattern_points;
     std::vector<types::StopTime*> stops;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
@@ -143,8 +139,6 @@ public:
     void add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment);
 
     void add_feed_info(const std::string&, const std::string&);
-    /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
-    void build_journey_patterns();
 
     /// Construit les associated_calendar
     void build_grid_validity_pattern();
@@ -159,10 +153,8 @@ public:
     void shift_stop_times();
     void shift_vp_left(types::ValidityPattern& vp);
 
-    /// Construit les journey_patternpoint
-    void build_journey_pattern_points();
-
     void build_block_id();
+    void build_shape_from_prev();
 
     void normalize_uri();
     /**
@@ -218,8 +210,6 @@ public:
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
-            for (ed::types::JourneyPattern* elt: journey_patterns) { delete elt; }
-        for (ed::types::JourneyPatternPoint* elt: journey_pattern_points) { delete elt; }
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }
