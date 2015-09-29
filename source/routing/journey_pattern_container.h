@@ -55,6 +55,8 @@ struct JourneyPatternPoint {
         return sp_idx == other.sp_idx && order == other.order;
     }
 };
+std::ostream& operator<<(std::ostream&, const JourneyPatternPoint&);
+
 
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPattern {
@@ -75,6 +77,7 @@ struct JourneyPattern {
         for (const auto& vj: freq_vjs) { if (! f(*vj)) { return; } }
     }
 };
+std::ostream& operator<<(std::ostream&, const JourneyPattern&);
 
 
 struct JourneyPatternContainer {

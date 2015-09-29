@@ -40,17 +40,6 @@ www.navitia.io
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
 
-namespace navitia { namespace routing {
-
-std::ostream& operator<<(std::ostream& os, const JourneyPatternPoint& jpp) {
-    return os << "Jpp(" << jpp.sp_idx << ", " << jpp.order << ")";
-}
-std::ostream& operator<<(std::ostream& os, const JourneyPattern& jp) {
-    return os << "Jp(" << jp.jpps << ", " << jp.discrete_vjs << ", " << jp.freq_vjs << ")";
-}
-
-}} // namespace navitia::rounting
-
 // helper for check_jp_container
 template<typename VJ> static void
 check_vjs(const nr::JourneyPatternContainer& jp_container,

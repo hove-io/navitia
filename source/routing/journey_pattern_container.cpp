@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "journey_pattern_container.h"
 #include "type/pt_data.h"
+#include "tests/utils_test.h"
 #include <type_traits>
 
 namespace navitia { namespace routing {
@@ -43,6 +44,12 @@ JourneyPattern::get_vjs<nt::DiscreteVehicleJourney>() {
 template<> std::vector<const nt::FrequencyVehicleJourney*>&
 JourneyPattern::get_vjs<nt::FrequencyVehicleJourney>() {
     return freq_vjs;
+}
+std::ostream& operator<<(std::ostream& os, const JourneyPatternPoint& jpp) {
+    return os << "Jpp(" << jpp.sp_idx << ", " << jpp.order << ")";
+}
+std::ostream& operator<<(std::ostream& os, const JourneyPattern& jp) {
+    return os << "Jp(" << jp.jpps << ", " << jp.discrete_vjs << ", " << jp.freq_vjs << ")";
 }
 
 void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
