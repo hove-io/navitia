@@ -569,3 +569,73 @@ BOOST_AUTO_TEST_CASE(parse_with_feed_info) {
     BOOST_CHECK_EQUAL(data.feed_infos["feed_publisher_url"], "http://ratp.fr");
 
 }
+/*
+ Test start_date and en_date in file feed_info, without beginning_date
+ */
+BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_1) {
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir)
+                                      + gtfs_path + "_with_feed_start_end_date");
+    parser.fill(data);
+
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
+
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2010, 01, 15),
+                                                      boost::gregorian::date(2010, 12, 27)));
+}
+
+/*
+ Test start_date and en_date in file feed_info, with beginning_date
+
+beginning_date  20100113
+
+                                                    |--------------------------------------|
+                                                start_date(20100115)               end_date(20101226)
+production date :                                   |-----------------------------------------|
+                                                 start_date                                 end_date + 1 Day
+
+ */
+BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_2) {
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir)
+                                      + gtfs_path + "_with_feed_start_end_date");
+    parser.fill(data, "20100113");
+
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
+
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2010, 01, 15),
+                                                      boost::gregorian::date(2010, 12, 27)));
+}
+
+
+/*
+ Test start_date and en_date in file feed_info, with beginning_date
+
+beginning_date                                          20100117
+                                                           |
+
+                                                    |--------------------------------------|
+                                                start_date(20100115)               end_date(20101226)
+production date :                                          |---------------------------------|
+                                                        beginning_date                   end_date + 1 Day
+
+ */
+BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_3) {
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir)
+                                      + gtfs_path + "_with_feed_start_end_date");
+    parser.fill(data, "20100117");
+
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
+    BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2010, 01, 17),
+                                                      boost::gregorian::date(2010, 12, 27)));
+}
