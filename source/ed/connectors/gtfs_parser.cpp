@@ -1131,16 +1131,7 @@ GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
 GenericGtfsParser::~GenericGtfsParser() {}
 
 void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
-    /*
-    try {
-        gtfs_data.production_date = find_production_date(beginning_date);
-    } catch (...) {
-        if(beginning_date == "") {
-            LOG4CPLUS_FATAL(logger, "Impossible to find the production date");
-            return;
-        }
-    }
-    */
+
     parse_files(data, beginning_date);
 
     normalize_extcodes(data);
