@@ -458,16 +458,14 @@ void RAPTOR::set_valid_jp_and_jpp(
             }
             continue;
         }
-        /*
-        // TODO: physical_mode in jp?
         const auto it_physical_mode = data.pt_data->physical_modes_map.find(uri);
         if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
-            for (const auto jp  : it_physical_mode->second->journey_pattern_list) {
-                valid_journey_patterns.set(jp->idx, false);
+            const auto phy_mode_idx = PhyModeIdx(*it_physical_mode->second);
+            for (const auto& jp_idx: jp_container.get_jps_from_phy_mode()[phy_mode_idx]) {
+                valid_journey_patterns.set(jp_idx.val, false);
             }
             continue;
         }
-        */
         const auto it_network = data.pt_data->networks_map.find(uri);
         if (it_network != data.pt_data->networks_map.end()) {
             for (const auto line : it_network->second->line_list) {

@@ -58,6 +58,7 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     jpps.clear();
     jps_from_route.assign(pt_data.routes);
     jp_from_vj.assign(pt_data.vehicle_journeys);
+    jps_from_phy_mode.assign(pt_data.physical_modes);
     for (const auto* route: pt_data.routes) {
         for (const auto& vj: route->discrete_vehicle_journey_list) { add_vj(*vj); }
         for (const auto& vj: route->frequency_vehicle_journey_list) { add_vj(*vj); }
@@ -104,6 +105,7 @@ template<typename VJ>
 JourneyPatternContainer::JpKey JourneyPatternContainer::make_key(const VJ& vj) {
     JourneyPatternContainer::JpKey key;
     key.route_idx = RouteIdx(*vj.route);
+    key.phy_mode_idx = PhyModeIdx(*vj.physical_mode);
     key.is_freq = std::is_same<VJ, nt::FrequencyVehicleJourney>::value;
     for (const auto& st: vj.stop_time_list) {
         key.jpp_keys.emplace_back(SpIdx(*st.stop_point),
@@ -182,6 +184,7 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
     const auto jp_idx = make_jp(key);
     jps.push_back(jp_idx);
     jps_from_route[key.route_idx].push_back(jp_idx);
+    jps_from_phy_mode[key.phy_mode_idx].push_back(jp_idx);
     get_mut(jp_idx).template get_vjs<VJ>().push_back(&vj);
     jp_from_vj[VjIdx(vj)] = jp_idx;
 }
@@ -190,6 +193,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     const auto jp_idx = JpIdx(jps.size());
     JourneyPattern jp;
     jp.route_idx = key.route_idx;
+    jp.phy_mode_idx = key.phy_mode_idx;
     uint16_t order = 0;
     for (const auto& jpp_key: key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));

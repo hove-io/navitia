@@ -36,10 +36,8 @@ www.navitia.io
 namespace navitia { namespace type {
 
 struct PT_Data;
-struct VehicleJourney;
 struct DiscreteVehicleJourney;
 struct FrequencyVehicleJourney;
-struct Route;
 struct StopTime;
 
 }}// namespace navitia::type
@@ -61,9 +59,10 @@ std::ostream& operator<<(std::ostream&, const JourneyPatternPoint&);
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPattern {
     std::vector<JppIdx> jpps;
-    std::vector<const navitia::type::DiscreteVehicleJourney*> discrete_vjs;
-    std::vector<const navitia::type::FrequencyVehicleJourney*> freq_vjs;
+    std::vector<const type::DiscreteVehicleJourney*> discrete_vjs;
+    std::vector<const type::FrequencyVehicleJourney*> freq_vjs;
     RouteIdx route_idx;
+    PhyModeIdx phy_mode_idx;
 
     bool operator==(const JourneyPattern& other) const {
         return jpps == other.jpps
@@ -112,6 +111,9 @@ struct JourneyPatternContainer {
     const IdxMap<type::Route, std::vector<JpIdx>>& get_jps_from_route() const {
         return jps_from_route;
     }
+    const IdxMap<type::PhysicalMode, std::vector<JpIdx>>& get_jps_from_phy_mode() const {
+        return jps_from_phy_mode;
+    }
     const IdxMap<type::VehicleJourney, JpIdx>& get_jp_from_vj() const {
         return jp_from_vj;
     }
@@ -149,12 +151,20 @@ private:
         // (and in practice, it should change nothing).
         RouteIdx route_idx;
 
+        // The physical mode is not needed by raptor, but used by
+        // forbidden uris.  To remove it, we may precompute a big
+        // matrix for next_stop_time.  Also, there is ideas of a meta
+        // journey pattern that will not contain the high level
+        // information as the route and the physical mode.
+        PhyModeIdx phy_mode_idx;
+
         // We do not want a jp with frequency and discrete vj as it is
         // difficult to check if they overtake.
         bool is_freq = false;
 
         bool operator<(const JpKey& other) const {
             if (route_idx != other.route_idx) { return route_idx < other.route_idx; }
+            if (phy_mode_idx != other.phy_mode_idx) { return phy_mode_idx < other.phy_mode_idx; }
             if (is_freq != other.is_freq) { return is_freq < other.is_freq; }
             return jpp_keys < other.jpp_keys;
         }
@@ -166,8 +176,9 @@ private:
     Map map;
     std::vector<JourneyPattern> jps;
     std::vector<JourneyPatternPoint> jpps;
-    IdxMap<navitia::type::Route, std::vector<JpIdx>> jps_from_route;
-    IdxMap<navitia::type::VehicleJourney, JpIdx> jp_from_vj;
+    IdxMap<type::Route, std::vector<JpIdx>> jps_from_route;
+    IdxMap<type::VehicleJourney, JpIdx> jp_from_vj;
+    IdxMap<type::PhysicalMode, std::vector<JpIdx>> jps_from_phy_mode;
 
     template<typename VJ> void add_vj(const VJ&);
     template<typename VJ> static JpKey make_key(const VJ&);
