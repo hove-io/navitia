@@ -184,16 +184,13 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
 /**
  * Test get_all_stop_times for one calendar
  *
- * 2 vj going from sp1 to somewhere, valid for our calendar
+ * 1 vj going from sp1 to somewhere, valid for our calendar
  * vj1 is a frequency vj
- * vj2 is a 'normal' vj
  *
  * ==========     =====
  * stop point     sp1
  * === ========== =====
  * vj1 departure  every 100s from 8000 to 9000
- * === ========== ===== =====
- * vj2 departure  8001
  * === ========== ===== =====
  *
  */
@@ -207,11 +204,6 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
                    "default_network", "1010", "", true, "vj1")
                     (spa1, vj1_departure, vj1_departure)
                     ("useless_stop", 10000, 10000);
-    /*
-    b.vj("A", "1010", "", true, "vj2")
-        (spa1, vj2_departure, vj2_departure)
-        ("useless_stop", 10001, 10001);
-    */
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
     cal->uri="cal1";
@@ -219,11 +211,9 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
 
     b.finish();
 
-    for (auto vj_name: {"vj1"/*, "vj2"*/}) {
-        auto associated_cal = new type::AssociatedCalendar();
-        associated_cal->calendar = cal;
-        b.data->pt_data->meta_vj[vj_name]->associated_calendars.insert({cal->uri, associated_cal});
-    }
+    auto associated_cal = new type::AssociatedCalendar();
+    associated_cal->calendar = cal;
+    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
 
     b.data->pt_data->index();
     b.data->build_uri();
@@ -233,7 +223,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
 
     auto res = get_all_stop_times(jpp1.first, jpp1.second, cal->uri);
 
-    BOOST_REQUIRE_EQUAL(res.size(), 11/*+1*/);
+    BOOST_REQUIRE_EQUAL(res.size(), 11);
 
     //result are not sorted
     using p = std::pair<uint32_t, const type::StopTime*>;
@@ -244,18 +234,9 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
     BOOST_REQUIRE(first_elt.second != nullptr);
     BOOST_CHECK_EQUAL(first_elt.second->stop_point->stop_area->name, spa1);
 
-    //second is the 'normal' vj departure
-    /*
-    auto second_elt = res[1];
-    BOOST_CHECK_EQUAL(second_elt.first, vj2_departure);
-    BOOST_REQUIRE(second_elt.second != nullptr);
-    BOOST_CHECK_EQUAL(second_elt.second->departure_time, vj2_departure);
-    BOOST_CHECK_EQUAL(second_elt.second->stop_point->stop_area->name, spa1);
-    */
-
     //then all vj1 departures
-    for (size_t i = 1/*2*/; i < res.size(); ++i) {
-        auto departure = vj1_departure + headway_sec * (i/* - 1*/);
+    for (size_t i = 1; i < res.size(); ++i) {
+        auto departure = vj1_departure + headway_sec * i;
         BOOST_CHECK_EQUAL(res[i].first, departure);
         BOOST_REQUIRE(res[i].second != nullptr);
         BOOST_CHECK_EQUAL(res[i].second->stop_point->stop_area->name, spa1);
