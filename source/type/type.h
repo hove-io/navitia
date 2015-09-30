@@ -1034,7 +1034,7 @@ struct Calendar : public Nameable, public Header {
 struct MetaVehicleJourney {
     //store the name ?
     //TODO if needed use a flat_enum_map
-    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> base_vj;
     std::vector<VehicleJourney*> adapted_vj;
     std::vector<VehicleJourney*> real_time_vj;
 
@@ -1043,7 +1043,7 @@ struct MetaVehicleJourney {
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & theoric_vj & adapted_vj & real_time_vj & associated_calendars;
+        ar & base_vj & adapted_vj & real_time_vj & associated_calendars;
     }
 };
 

@@ -41,7 +41,7 @@ void cancel_vj(type::MetaVehicleJourney* meta_vj,
                const transit_realtime::TripUpdate& /*trip_update*/,
                const type::Data& data) {
     // we need to cancel all vj of the meta vj
-    for (const auto& vect_vj: {meta_vj->theoric_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
+    for (const auto& vect_vj: {meta_vj->base_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
         for (auto* vj: vect_vj) {
             // the train is canceled on one day, we just need to unset its realtime validitypattern
 

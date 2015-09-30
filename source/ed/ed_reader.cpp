@@ -949,7 +949,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 
         const std::string vj_class = const_it["vj_class"].as<std::string>();
         if (vj_class == "Theoric") {
-            meta_vj->theoric_vj.push_back(vj);
+            meta_vj->base_vj.push_back(vj);
         } else if (vj_class == "Adapted") {
             meta_vj->adapted_vj.push_back(vj);
         } else if (vj_class == "RealTime") {
