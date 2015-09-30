@@ -275,7 +275,8 @@ VJ builder::vj(const std::string& line_name,
                const std::string& uri,
                const std::string& meta_vj,
                const std::string& physical_mode){
-    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, physical_mode);
+    return vj_with_network("base_network", line_name, validity_pattern, block_id,
+                           wheelchair_boarding, uri, meta_vj, physical_mode);
 }
 
 VJ builder::vj_with_network(const std::string& network_name,
@@ -287,7 +288,8 @@ VJ builder::vj_with_network(const std::string& network_name,
                const std::string& meta_vj,
                const std::string& physical_mode,
                bool is_frequency) {
-    auto res = VJ(*this, line_name, validity_pattern, is_frequency, wheelchair_boarding, uri, meta_vj, physical_mode);
+    auto res = VJ(*this, line_name, validity_pattern, is_frequency,
+                  wheelchair_boarding, uri, meta_vj, physical_mode);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){
@@ -303,8 +305,8 @@ VJ builder::vj_with_network(const std::string& network_name,
         vj->route->line->network = it->second;
 
         auto line = vj->route->line;
-        if (boost::find_if(it->second->line_list, [line](navitia::type::Line* l) { return l->uri == line->uri;})
-                == it->second->line_list.end()) {
+        if (boost::find_if(it->second->line_list, [&](navitia::type::Line* l) { return l->uri == line->uri; })
+            == it->second->line_list.end()) {
             it->second->line_list.push_back(vj->route->line);
         }
     }
@@ -325,7 +327,8 @@ VJ builder::frequency_vj(const std::string& line_name,
                 const bool wheelchair_boarding,
                 const std::string& uri,
                 const std::string& meta_vj){
-    auto res = vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, "", true);
+    auto res = vj_with_network(network_name, line_name, validity_pattern, block_id,
+                               wheelchair_boarding, uri, meta_vj, "", true);
     auto vj = static_cast<nt::FrequencyVehicleJourney*>(this->data->pt_data->vehicle_journeys.back());
 
     //we get the last frequency vj of the jp, it's the one we just created

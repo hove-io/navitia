@@ -41,7 +41,7 @@ struct Thermometer {
     void generate_thermometer(const type::Route* route);
     vector_idx get_thermometer() const;
 
-    // res[stop_time.order()] correspond of the index of the
+    // res[stop_time.order()] correspond to the index of the
     // thermometer for a stop time of the given vj
     std::vector<uint32_t> stop_times_order(const type::VehicleJourney&) const;
     std::vector<uint32_t> stop_times_order_helper(const vector_idx &stop_points) const;

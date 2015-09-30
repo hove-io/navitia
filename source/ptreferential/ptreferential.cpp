@@ -207,11 +207,11 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
     else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
     } else if(filter.op == AFTER) {
-        //On récupère les indexes à partir des quels on veut faire la requete
-        std::vector<idx_t> tmp_indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+        // Getting the jpps from the request
+        const auto& first_jpps = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
 
-        //On ajoute à indexes tous les journey_patterns qui sont apres
-        for (const auto& first_jpp: tmp_indexes) {
+        // We get the jpps after the ones of the request
+        for (const auto& first_jpp: first_jpps) {
             const auto& jpp = d.dataRaptor->jp_container.get(routing::JppIdx(first_jpp));
             const auto& jp = d.dataRaptor->jp_container.get(jpp.jp_idx);
             for (const auto& other_jpp_idx : jp.jpps) {
