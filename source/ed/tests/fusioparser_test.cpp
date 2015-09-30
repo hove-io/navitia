@@ -145,6 +145,9 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
 
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2015, 3, 25),
+                                                      boost::gregorian::date(2015, 8, 27)));
 
     /* Line groups.
      * 3 groups in the file, 3 use cases :
@@ -237,3 +240,73 @@ production date :                                          |--------------------
     BOOST_CHECK_EQUAL(period, bg::date_period(bg::date(2015, 1, 7), end_date + bg::days(1)));
 }
 
+
+/*
+ Test start_date and en_date in file feed_info, with beginning_date
+
+beginning_date  20150310
+
+                                                    |--------------------------------------|
+                                                start_date(20150325)               end_date(20150826)
+production date :                                   |-----------------------------------------|
+                                                 start_date                                 end_date + 1 Day
+
+ */
+BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
+
+    using namespace ed;
+
+
+    ed::Data data;
+    ed::connectors::FusioParser parser(ntfs_path);
+    parser.fill(data, "20150310");
+
+    // feed_info
+    std::map<std::string, std::string> feed_info_test ={
+        {"feed_start_date","20150325"},
+        {"feed_end_date","20150826"},
+        {"feed_publisher_name","Ile de France open data"},
+        {"feed_publisher_url","http://www.canaltp.fr"},
+        {"feed_license","ODBL"}
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
+                                  feed_info_test.begin(), feed_info_test.end());
+
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2015, 3, 25),
+                                                      boost::gregorian::date(2015, 8, 27)));
+}
+
+
+/*
+ Test start_date and en_date in file feed_info, with beginning_date
+
+beginning_date                                          20150327
+                                                           |
+
+                                                    |--------------------------------------|
+                                                start_date(20150325)               end_date(20150826)
+production date :                                          |---------------------------------|
+                                                        beginning_date                   end_date + 1 Day
+
+ */
+BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
+    ed::Data data;
+
+    ed::connectors::FusioParser parser(ntfs_path);
+    parser.fill(data, "20150327");
+
+    // feed_info
+    std::map<std::string, std::string> feed_info_test ={
+        {"feed_start_date","20150325"},
+        {"feed_end_date","20150826"},
+        {"feed_publisher_name","Ile de France open data"},
+        {"feed_publisher_url","http://www.canaltp.fr"},
+        {"feed_license","ODBL"}
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
+                                  feed_info_test.begin(), feed_info_test.end());
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+                        boost::gregorian::date_period(boost::gregorian::date(2015, 3, 27),
+                                                      boost::gregorian::date(2015, 8, 27)));
+}
