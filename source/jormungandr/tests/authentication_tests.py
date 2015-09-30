@@ -78,6 +78,7 @@ class FakeUser:
         self.login = name
         self.have_access_to_free_instances = have_access_to_free_instances
         self.is_super_user = is_super_user
+        self.end_point_id = None
 
     @classmethod
     def get_from_token(cls, token):
