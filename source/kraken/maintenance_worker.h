@@ -57,6 +57,8 @@ class MaintenanceWorker{
         void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
         void handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
 
+        void load_realtime();
+
         /*!
          * This function will consume message in batch. It calls
          * AmqpClient::Channel::BasicConsumeMessage(const std::string&, Envelope::ptr_t&, int) to try

@@ -60,6 +60,39 @@ void MaintenanceWorker::load(){
         auto data = data_manager.get_data();
         data->meta->instance_name = conf.instance_name();
     }
+    if(conf.enable_realtime()){
+        load_realtime();
+    }
+}
+
+
+void MaintenanceWorker::load_realtime(){
+    LOG4CPLUS_INFO(logger, "loading realtime data");
+
+    std::string queue_name = channel->DeclareQueue("", false, false, true, true);
+    LOG4CPLUS_DEBUG(logger, "queue use for as callback for realtime data: " << queue_name);
+    pbnavitia::Task task;
+    task.set_action(pbnavitia::LOAD_REALTIME);
+    auto* lr = task.mutable_load_realtime();
+    lr->set_queue_name(queue_name);
+    for(auto topic: conf.rt_topics()){
+        lr->add_contributors(topic);
+    }
+    std::string stream;
+    task.SerializeToString(&stream);
+    auto message = AmqpClient::BasicMessage::Create(stream);
+    //we ask for realtime data
+    channel->BasicPublish(conf.broker_exchange(), "task.load_realtime.INSTANCE", message);
+
+    std::string consumer_tag = this->channel->BasicConsume(queue_name, "");
+    AmqpClient::Envelope::ptr_t envelope{};
+    //waiting for a full gtfs-rt
+    if(channel->BasicConsumeMessage(consumer_tag, envelope, conf.kirin_timeout())){
+        this->handle_rt_in_batch({envelope});
+    }else{
+        LOG4CPLUS_WARN(logger, "no realtime data receive before timeout: going without it!");
+    }
+
 }
 
 
