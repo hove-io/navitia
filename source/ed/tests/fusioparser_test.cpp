@@ -40,6 +40,8 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "ed/connectors/fusio_parser.h"
 
+namespace bg = boost::gregorian;
+
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
@@ -178,5 +180,60 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
 
+}
+/*
+complete production without beginning_date
+*/
+BOOST_AUTO_TEST_CASE(complete_production_date_without_beginning_date) {
+    using namespace ed;
+    connectors::FusioParser parser(ntfs_path);
+    std::string beginning_date;
+    bg::date start_date(bg::date(2015, 1, 1));
+    bg::date end_date(bg::date(2015, 1, 15));
+
+    bg::date_period period = parser.complete_production_date(beginning_date, start_date, end_date);
+    BOOST_CHECK_EQUAL(period, bg::date_period(start_date, end_date + bg::days(1)));
+
+}
+
+/*
+complete production with beginning_date
+*/
+BOOST_AUTO_TEST_CASE(complete_production_date_with_beginning_date) {
+    using namespace ed;
+    connectors::FusioParser parser(ntfs_path);
+    /*
+beginning_date  20150103
+
+                                                    |--------------------------------------|
+                                                start_date(20150105)               end_date(20150115)
+production date :                                   |-----------------------------------------|
+                                                 start_date                                 end_date + 1 Day
+    */
+    std::string beginning_date("20150103");
+    bg::date start_date(bg::date(2015, 1, 5));
+    bg::date end_date(bg::date(2015, 1, 15));
+
+    bg::date_period period = parser.complete_production_date(beginning_date, start_date, end_date);
+
+    BOOST_CHECK_EQUAL(period, bg::date_period(start_date, end_date + bg::days(1)));
+
+
+    /*
+beginning_date                                          20150107
+                                                           |
+
+                                                    |--------------------------------------|
+                                                start_date(20150105)               end_date(20150115)
+production date :                                          |---------------------------------|
+                                                        beginning_date                   end_date + 1 Day
+    */
+    beginning_date = "20150107";
+    start_date = bg::date(2015, 1, 5);
+    end_date = bg::date(2015, 1, 15);
+
+    period = parser.complete_production_date(beginning_date, start_date, end_date);
+
+    BOOST_CHECK_EQUAL(period, bg::date_period(bg::date(2015, 1, 7), end_date + bg::days(1)));
 }
 
