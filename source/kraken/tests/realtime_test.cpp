@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     auto vj = pt_data->vehicle_journeys.front();
-    BOOST_CHECK_EQUAL(vj->theoric_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     navitia::handle_realtime(trip_update, *b.data);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
-    BOOST_CHECK_NE(vj->theoric_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     //the rt vp must be empty
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, navitia::type::ValidityPattern::year_bitset());
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
-    BOOST_CHECK_NE(vj->theoric_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 }
 
 /*
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     auto vj = pt_data->vehicle_journeys.front();
-    BOOST_CHECK_EQUAL(vj->theoric_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 }
 
 BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     };
 
     //on the theoric level, we should get one solution
-    auto res = compute(nt::RTLevel::Theoric);
+    auto res = compute(nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
     //on the realtime level, we should also get one solution, since for the moment there is no cancellation
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     navitia::handle_realtime(trip_update, *b.data);
 
     //on the theoric level, we should still get one solution
-    res = compute(nt::RTLevel::Theoric);
+    res = compute(nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
     //on the realtime we should now have no solution
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     };
 
     //on the theoric and realtime level, we should arrive at 9:00 (with line A)
-    auto res = compute(nt::RTLevel::Theoric);
+    auto res = compute(nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
     res = compute(nt::RTLevel::RealTime);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     navitia::handle_realtime(trip_update, *b.data);
 
     // on the theoric, nothing has changed
-    res = compute(nt::RTLevel::Theoric);
+    res = compute(nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 

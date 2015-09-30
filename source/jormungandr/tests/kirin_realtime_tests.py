@@ -89,10 +89,10 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(_get_used_vj(new_response), [[], ['vj:B:1']])
 
         # it should not have changed anything for the theoric
-        new_theoric = self.query_region(journey_basic_query + "&data_freshness=theoric")
-        eq_(_get_arrivals(new_theoric), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(new_theoric), [['vjA'], []])
-        assert new_theoric['journeys'] == response['journeys']
+        new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
+        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(new_base), [['vjA'], []])
+        assert new_base['journeys'] == response['journeys']
 
 
 def make_mock_kirin_item(vj_id, date, status='delayed'):

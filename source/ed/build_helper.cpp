@@ -173,7 +173,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     } else {
          b.data->pt_data->validity_patterns.push_back(vp);
     }
-    //by default we assign all the validity patterns (theoric/adapted/realtime) to the same vp
+    //by default we assign all the validity patterns (base/adapted/realtime) to the same vp
     for (const auto& vj_vp: vj->validity_patterns) {
         vj_vp.second = vp;
     }

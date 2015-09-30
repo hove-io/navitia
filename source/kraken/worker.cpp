@@ -285,7 +285,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, type::RTLevel::Theoric, request.show_codes());
+                    request.count(), request.start_page(), *data, type::RTLevel::Base, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
@@ -293,7 +293,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri,
                     from_datetime,
                     request.duration(), max_date_times, request.depth(),
-                    request.count(), request.start_page(), *data, type::RTLevel::Theoric, request.show_codes());
+                    request.count(), request.start_page(), *data, type::RTLevel::Base, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
@@ -501,8 +501,8 @@ type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
     // retrocompatibility will be droped after the migration
     if (request.has_realtime_level()) {
         switch (request.realtime_level()) {
-        case pbnavitia::RTLevel::THEORIC:
-            return type::RTLevel::Theoric;
+        case pbnavitia::RTLevel::BASE:
+            return type::RTLevel::Base;
         case pbnavitia::RTLevel::ADAPTED:
             return type::RTLevel::Adapted;
         case pbnavitia::RTLevel::REAL_TIME:
@@ -514,7 +514,7 @@ type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
     if (request.disruption_active()) {
         return type::RTLevel::Adapted;
     }
-    return type::RTLevel::Theoric;
+    return type::RTLevel::Base;
 }
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {

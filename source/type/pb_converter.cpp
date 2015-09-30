@@ -675,17 +675,17 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         fill_pb_object(vj->journey_pattern->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
-        fill_pb_object(vj->theoric_validity_pattern(), data,
+        fill_pb_object(vj->base_validity_pattern(), data,
                        vehicle_journey->mutable_validity_pattern(),
                        depth-1);
         fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(),
                        depth-1);
-        fill_pb_object(vj->theoric_validity_pattern(), data,
+        fill_pb_object(vj->base_validity_pattern(), data,
                        vehicle_journey->mutable_validity_pattern(), max_depth-1);
         fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-        vptranslator::fill_pb_object(vptranslator::translate(*vj->theoric_validity_pattern()),
+        vptranslator::fill_pb_object(vptranslator::translate(*vj->base_validity_pattern()),
                                      data,
                                      vehicle_journey,
                                      max_depth - 1,
