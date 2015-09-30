@@ -1130,8 +1130,8 @@ GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
 }
 GenericGtfsParser::~GenericGtfsParser() {}
 
-void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
-
+void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
+    /*
     try {
         gtfs_data.production_date = find_production_date(beginning_date);
     } catch (...) {
@@ -1140,8 +1140,8 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
             return;
         }
     }
-
-    parse_files(data);
+    */
+    parse_files(data, beginning_date);
 
     normalize_extcodes(data);
 
@@ -1351,7 +1351,42 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
         }
 
     }
+    return complete_production_date(beginning_date, start_date, end_date);
+}
 
+void GenericGtfsParser::manage_production_date(Data& data, const std::string& beginning_date){
+    auto start_it = data.feed_infos.find("feed_start_date");
+    auto end_it = data.feed_infos.find("feed_end_date");
+    boost::gregorian::date start_date(boost::gregorian::not_a_date_time), end_date(boost::gregorian::not_a_date_time);
+    if ((start_it != data.feed_infos.end()) && (end_it != data.feed_infos.end())) {
+        try{
+            start_date = boost::gregorian::from_undelimited_string(start_it->second);
+        }catch(const std::exception& e) {
+           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse start_date :"<<start_it->second<<", error : "<<std::string(e.what()));
+        }
+        try{
+            end_date = boost::gregorian::from_undelimited_string(end_it->second);
+        }catch(const std::exception& e) {
+           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse end_date :"<<end_it->second<<", error : "<<std::string(e.what()));
+        }
+        gtfs_data.production_date = complete_production_date(beginning_date, start_date, end_date);
+    } else {
+        LOG4CPLUS_INFO(logger, "Unable to find production date in add_feed_info.");
+    }
+    if ((start_date.is_not_a_date()) || (end_date.is_not_a_date())){
+        try {
+            gtfs_data.production_date = find_production_date(beginning_date);
+        } catch (...) {
+            if(beginning_date == "") {
+                LOG4CPLUS_FATAL(logger, "Impossible to find the production date");
+            }
+        }
+    }
+}
+
+boost::gregorian::date_period GenericGtfsParser::complete_production_date(const std::string& beginning_date,
+                                              boost::gregorian::date start_date,
+                                              boost::gregorian::date end_date){
 
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
     if(beginning_date != "")
@@ -1370,10 +1405,15 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     return boost::gregorian::date_period(beginning, end + boost::gregorian::days(1));
 }
 
-void GtfsParser::parse_files(Data& data) {
-    fill_default_modes(data);
+void GtfsParser::parse_files(Data& data, const std::string& beginning_date) {
 
     parse<FeedInfoGtfsHandler>(data, "feed_info.txt");
+
+    manage_production_date(data, beginning_date);
+
+    fill_default_modes(data);
+
+
     parse<ShapesGtfsHandler>(data, "shapes.txt");
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);

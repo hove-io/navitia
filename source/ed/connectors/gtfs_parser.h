@@ -392,7 +392,7 @@ protected:
     template <typename Handler>
     void parse(Data&); //some parser do not need a file since they just add default data
 
-    virtual void parse_files(Data&) = 0;
+    virtual void parse_files(Data&, const std::string& = "") = 0;
 public:
     GtfsData gtfs_data;
 
@@ -401,11 +401,15 @@ public:
     virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre
-    void fill(ed::Data& data, const std::string beginning_date = "");
+    void fill(ed::Data& data, const std::string& beginning_date = "");
 
     /// Ajout des objets par défaut
     void fill_default_modes(Data & data);
 
+    void manage_production_date(Data& data, const std::string& beginning_date);
+    boost::gregorian::date_period complete_production_date(const std::string& beginning_date,
+                                                        boost::gregorian::date start_date,
+                                                        boost::gregorian::date end_date);
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);
 
@@ -429,7 +433,7 @@ inline void GenericGtfsParser::parse(Data& data) {
  * simply define the list of elemental parsers to use
  */
 struct GtfsParser : public GenericGtfsParser {
-    virtual void parse_files(Data&);
+    virtual void parse_files(Data&, const std::string&);
     GtfsParser(const std::string & path) : GenericGtfsParser(path) {}
 };
 
