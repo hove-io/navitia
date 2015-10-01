@@ -1363,7 +1363,6 @@ void GenericGtfsParser::manage_production_date(Data& data, const std::string& be
            LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse end_date :"
                           << end_it->second << ", error : " << e.what());
         }
-        gtfs_data.production_date = complete_production_date(beginning_date, start_date, end_date);
     } else {
         LOG4CPLUS_INFO(logger, "Unable to find production date in add_feed_info.");
     }
@@ -1375,6 +1374,8 @@ void GenericGtfsParser::manage_production_date(Data& data, const std::string& be
                 LOG4CPLUS_FATAL(logger, "Impossible to find the production date");
             }
         }
+    } else {
+        gtfs_data.production_date = complete_production_date(beginning_date, start_date, end_date);
     }
 }
 
