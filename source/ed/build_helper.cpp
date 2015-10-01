@@ -77,12 +77,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 
     if (is_frequency) {
         auto f_vj = std::make_unique<nt::FrequencyVehicleJourney>();
-        f_vj->idx = route->frequency_vehicle_journey_list.size() - 1;
         vj = f_vj.get();
         route->frequency_vehicle_journey_list.push_back(std::move(f_vj));
     } else {
         auto d_vj = std::make_unique<nt::DiscreteVehicleJourney>();
-        d_vj->idx = route->discrete_vehicle_journey_list.size() - 1;
         vj = d_vj.get();
         route->discrete_vehicle_journey_list.push_back(std::move(d_vj));
     }
@@ -124,6 +122,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
                                                 *vj, "vehicle_journey " + std::to_string(vj->idx));
     vj->uri = vj->name;
+    vj->idx = b.data->pt_data->vehicle_journeys.size();
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 
