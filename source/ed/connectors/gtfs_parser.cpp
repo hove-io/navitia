@@ -1348,17 +1348,20 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 void GenericGtfsParser::manage_production_date(Data& data, const std::string& beginning_date){
     auto start_it = data.feed_infos.find("feed_start_date");
     auto end_it = data.feed_infos.find("feed_end_date");
-    boost::gregorian::date start_date(boost::gregorian::not_a_date_time), end_date(boost::gregorian::not_a_date_time);
+    boost::gregorian::date start_date(boost::gregorian::not_a_date_time),
+            end_date(boost::gregorian::not_a_date_time);
     if ((start_it != data.feed_infos.end()) && (end_it != data.feed_infos.end())) {
         try{
             start_date = boost::gregorian::from_undelimited_string(start_it->second);
         }catch(const std::exception& e) {
-           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse start_date :"<<start_it->second<<", error : "<<std::string(e.what()));
+           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse start_date :"
+                          << start_it->second << ", error : " << e.what());
         }
         try{
             end_date = boost::gregorian::from_undelimited_string(end_it->second);
         }catch(const std::exception& e) {
-           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse end_date :"<<end_it->second<<", error : "<<std::string(e.what()));
+           LOG4CPLUS_WARN(logger, "manage_production_date, Unable to parse end_date :"
+                          << end_it->second << ", error : " << e.what());
         }
         gtfs_data.production_date = complete_production_date(beginning_date, start_date, end_date);
     } else {
