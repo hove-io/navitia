@@ -198,7 +198,6 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
     ed::builder b("20120614");
     std::string spa1 = "stop1";
     DateTime vj1_departure = 8000;
-    //DateTime vj2_departure = 8001;
     size_t headway_sec = 100;
     b.frequency_vj("A", vj1_departure, 9000, headway_sec,
                    "default_network", "1010", "", true, "vj1")
