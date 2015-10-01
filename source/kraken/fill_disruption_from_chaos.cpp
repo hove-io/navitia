@@ -405,7 +405,7 @@ struct functor_add_vj {
 
         // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
-        vj->validity_patterns[nt::RTLevel::Theoric] = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj->validity_patterns[nt::RTLevel::Base] = pt_data.get_or_create_validity_pattern(tmp_vp);
         size_t order = 0;
         // We skip the stop_time linked to impacted stop_point
         for (const auto& st_ref : vj_ref.stop_time_list) {
@@ -524,7 +524,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
-        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Theoric];
+        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Base];
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,

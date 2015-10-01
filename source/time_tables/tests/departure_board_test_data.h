@@ -62,15 +62,15 @@ struct calendar_fixture {
         vj->stop_time_list[0].set_date_time_estimated(true);
 
         vj_week = b.data->pt_data->vehicle_journeys_map["week"];
-        vj_week->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+        vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
         vj_week_bis = b.data->pt_data->vehicle_journeys_map["week_bis"];
-        vj_week_bis->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+        vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
         vj_weekend = b.data->pt_data->vehicle_journeys_map["weekend"];
-        vj_weekend->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
+        vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
         vj_all = b.data->pt_data->vehicle_journeys_map["all"];
-        vj_all->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
+        vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
         vj_wednesday = b.data->pt_data->vehicle_journeys_map["wednesday"];
-        vj_wednesday->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+        vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
 
         //we now add 2 similar calendars
         auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());

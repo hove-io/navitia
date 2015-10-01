@@ -85,7 +85,6 @@ struct SA {
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
-    std::map<std::string, navitia::type::ValidityPattern *> vps;
     std::map<std::string, navitia::type::StopArea *> sas;
     std::map<std::string, navitia::type::StopPoint *> sps;
     std::map<std::string, navitia::type::Network *> nts;

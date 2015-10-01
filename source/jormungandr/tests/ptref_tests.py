@@ -480,7 +480,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign(self):
         """test basic usage of headsign"""
-        response = self.query_region('vehicle_journeys?headsign=vehicle_journey 0')
+        response = self.query_region('vehicle_journeys?headsign=vjA')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         eq_(len(vjs), 1)
@@ -488,7 +488,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
         response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys'
-                                     '?headsign=vehicle_journey 0')
+                                     '?headsign=vjA')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         eq_(len(vjs), 1)
@@ -496,7 +496,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_headsign_with_code_filter_and_resource_uri(self):
         """test usage of headsign with code filter and resource uri"""
         response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys'
-                                     '?headsign=vehicle_journey 0&filter=line.code=1A')
+                                     '?headsign=vjA&filter=line.code=1A')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         eq_(len(vjs), 1)
@@ -536,13 +536,13 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign_stop_time_vj(self):
         """test basic print of headsign in stop_times for vj"""
-        response = self.query_region('vehicle_journeys?filter=vehicle_journey.name="vehicle_journey 0"')
+        response = self.query_region('vehicle_journeys?filter=vehicle_journey.name="vjA"')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         eq_(len(vjs), 1)
         eq_(len(vjs[0]['stop_times']), 2)
         eq_(vjs[0]['stop_times'][0]['headsign'], "A00")
-        eq_(vjs[0]['stop_times'][1]['headsign'], "vehicle_journey 0")
+        eq_(vjs[0]['stop_times'][1]['headsign'], "vjA")
 
     def test_headsign_display_info_journeys(self):
         """test basic print of headsign in section for journeys"""
@@ -577,5 +577,5 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         eq_(len(route_schedules), 1)
         eq_(len(route_schedules[0]['table']['headers']), 1)
         display_info = route_schedules[0]['table']['headers'][0]['display_informations']
-        eq_(display_info['headsign'], "vehicle_journey 0")
-        assert {"A00", "vehicle_journey 0"} == set(display_info['headsigns'])
+        eq_(display_info['headsign'], "vjA")
+        assert {"A00", "vjA"} == set(display_info['headsigns'])

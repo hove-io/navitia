@@ -720,14 +720,14 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // thus we store the shit needed to convert all stop times of the vehicle journey to local
     int16_t utc_to_local_offset = 0; //in seconds
 
-    RTLevel realtime_level = RTLevel::Theoric;
+    RTLevel realtime_level = RTLevel::Base;
 
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
 
     VehicleJourney* theoric_vehicle_journey = nullptr;
 
-    ValidityPattern* theoric_validity_pattern() const { return validity_patterns[RTLevel::Theoric]; }
+    ValidityPattern* base_validity_pattern() const { return validity_patterns[RTLevel::Base]; }
     ValidityPattern* adapted_validity_pattern() const { return validity_patterns[RTLevel::Adapted]; }
     ValidityPattern* rt_validity_pattern() const { return validity_patterns[RTLevel::RealTime]; }
 
@@ -1034,7 +1034,7 @@ struct Calendar : public Nameable, public Header {
 struct MetaVehicleJourney {
     //store the name ?
     //TODO if needed use a flat_enum_map
-    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> base_vj;
     std::vector<VehicleJourney*> adapted_vj;
     std::vector<VehicleJourney*> real_time_vj;
 
@@ -1043,7 +1043,7 @@ struct MetaVehicleJourney {
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & theoric_vj & adapted_vj & real_time_vj & associated_calendars;
+        ar & base_vj & adapted_vj & real_time_vj & associated_calendars;
     }
 };
 

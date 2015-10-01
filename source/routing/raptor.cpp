@@ -412,16 +412,7 @@ void RAPTOR::set_valid_jp_and_jpp(
     const std::vector<std::string>& forbidden,
     const nt::RTLevel rt_level)
 {
-    switch (rt_level) {
-    case nt::RTLevel::Theoric:
-        valid_journey_patterns = data.dataRaptor->jp_validity_patterns[date];
-        break;
-    case nt::RTLevel::Adapted:
-        valid_journey_patterns = data.dataRaptor->jp_adapted_validity_pattern[date];
-        break;
-    case nt::RTLevel::RealTime:
-        throw navitia::exception("rt not implemented yet");
-    }
+    valid_journey_patterns = data.dataRaptor->jp_validity_patterns[rt_level][date];
     boost::dynamic_bitset<> valid_journey_pattern_points(data.pt_data->journey_pattern_points.size());
     valid_journey_pattern_points.set();
 

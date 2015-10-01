@@ -54,8 +54,8 @@ namespace nt = navitia::type;
 struct HeadsignFixture {
     ed::builder b;
     HeadsignFixture() : b("20120614") {
-        b.vj("A")("stop00", 8000)("stop01", 8100);
-        b.vj("B")("stop10", 8000)("stop11", 8100)("stop12", 8200);
+        b.vj("A", "1111", "", true, "A1", "metaVJA")("stop00", 8000)("stop01", 8100);
+        b.vj("A", "1111", "", true, "A2", "metaVJA")("stop10", 8000)("stop11", 8100)("stop12", 8200);
         b.vj("C")("stop20", 8000)("stop21", 8100)("stop22", 8200);
         b.vj("D")("stop30", 8000);
         b.vj("E")("stop40", 8000);
@@ -92,13 +92,11 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign(vj_vec[4]->stop_time_list.at(0)), vj_vec[4]->name);
 
     // check that we can retrieve every vj from matching headsign
-    BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign("vehicle_journey 0").size(), 1);
-    BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[0]->name), vj_vec[0]));
+    BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign("metaVJA").size(), 2);
+    BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign("metaVJA"), vj_vec[0]));
+    BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign("metaVJA"), vj_vec[1]));
     BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign("A00").size(), 1);
     BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign("A00"), vj_vec[0]));
-    BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign("vehicle_journey 1").size(), 2);
-    BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[1]->name), vj_vec[0]));
-    BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[1]->name), vj_vec[1]));
     BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign("B11").size(), 1);
     BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign("B11"), vj_vec[1]));
     BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign(vj_vec[2]->name).size(), 1);
@@ -109,9 +107,6 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
     BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[3]->name), vj_vec[3]));
     BOOST_CHECK_EQUAL(headsign_handler.get_vj_from_headsign(vj_vec[4]->name).size(), 1);
     BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[4]->name), vj_vec[4]));
-
-    boost::archive::text_oarchive oa(std::cout);
-    oa & b.data->pt_data;
 }
 
 struct HeadsignHandlerTest: nt::HeadsignHandler {
@@ -130,29 +125,29 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_internal_test, HeadsignFixture) {
     }
 
     headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(0), "A00");
-    headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(1), vj_vec[1]->name);
-    headsign_handler.affect_headsign_to_stop_time(vj_vec[1]->stop_time_list.at(0), vj_vec[1]->name);
+    headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(1), "metaVJA");
+    headsign_handler.affect_headsign_to_stop_time(vj_vec[1]->stop_time_list.at(0), "metaVJA");
     headsign_handler.affect_headsign_to_stop_time(vj_vec[1]->stop_time_list.at(1), "B11");
     headsign_handler.affect_headsign_to_stop_time(vj_vec[1]->stop_time_list.at(2), "B11");
-    headsign_handler.affect_headsign_to_stop_time(vj_vec[2]->stop_time_list.at(1), "C21");
+    // We check that we can have the same headsign for different vjs
+    headsign_handler.affect_headsign_to_stop_time(vj_vec[2]->stop_time_list.at(1), "metaVJA");
+
     headsign_handler.affect_headsign_to_stop_time(vj_vec[3]->stop_time_list.at(0), "D31");
     headsign_handler.affect_headsign_to_stop_time(vj_vec[3]->stop_time_list.at(0), vj_vec[3]->name);
 
     // check that we only store changes, no more
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_changes().size(), 3);
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_changes().at(vj_vec[0]).size(), 3);
+    BOOST_REQUIRE_EQUAL(headsign_handler.get_headsign_changes().size(), 3);
+    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_changes().at(vj_vec[0]).size(), 2);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_changes().at(vj_vec[1]).size(), 2);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_changes().at(vj_vec[2]).size(), 2);
 
     // check that we store all matches, no more
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().size(), 8);
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at(vj_vec[0]->name).size(), 1);
+    BOOST_REQUIRE_EQUAL(headsign_handler.get_headsign_mvj().size(), 6);
+    // check that only 2 meta-vj are stored for metaVJA (but 3 vj are behind)
+    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at("metaVJA").size(), 2);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at("A00").size(), 1);
-    // check that only one meta-vj is stored for B (but 2 vj are behind)
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at(vj_vec[1]->name).size(), 1);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at("B11").size(), 1);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at(vj_vec[2]->name).size(), 1);
-    BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at("C21").size(), 1);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at(vj_vec[3]->name).size(), 1);
     BOOST_CHECK_EQUAL(headsign_handler.get_headsign_mvj().at(vj_vec[4]->name).size(), 1);
 }

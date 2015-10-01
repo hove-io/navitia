@@ -154,7 +154,7 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
             continue;
         }
         //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
-        vjs.push_back(meta_vj->theoric_vj.front());
+        vjs.push_back(meta_vj->base_vj.front());
     }
     if (vjs.empty()) {
         return {};

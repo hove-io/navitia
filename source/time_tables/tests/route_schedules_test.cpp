@@ -118,7 +118,7 @@ struct route_schedule_fixture {
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 100,
-                                                                   3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                   3, 10, 0, *(b.data), nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -131,7 +131,7 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 0,
-                                                                   3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                   3, 10, 0, *(b.data), nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -211,7 +211,7 @@ struct route_schedule_calendar_fixture {
 
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
         pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=B", calendar, {}, d("20120615T070000"), 86400, 100,
-                                                                       3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                       3, 10, 0, *(b.data), nt::RTLevel::Base, false);
         BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         print_route_schedule(route_schedule);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);

@@ -29,11 +29,59 @@ www.navitia.io
 */
 #include "realtime.h"
 #include "utils/logger.h"
+#include "type/data.h"
+#include "type/pt_data.h"
+
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace navitia {
 
+void cancel_vj(type::MetaVehicleJourney* meta_vj,
+               const boost::gregorian::date& date,
+               const transit_realtime::TripUpdate& /*trip_update*/,
+               const type::Data& data) {
+    // we need to cancel all vj of the meta vj
+    for (const auto& vect_vj: {meta_vj->base_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
+        for (auto* vj: vect_vj) {
+            // the train is canceled on one day, we just need to unset its realtime validitypattern
+
+            if (! vj->rt_validity_pattern()->check(date)) { continue; }
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
+                           "canceling the vj " << vj->uri << " on " << date);
+
+            nt::ValidityPattern tmp_vp(*vj->rt_validity_pattern());
+            tmp_vp.remove(date);
+
+            vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+        }
+    }
+}
+
 void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type::Data& data) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("realtime"), "realtime trip update received");
+    auto log = log4cplus::Logger::getInstance("realtime");
+    LOG4CPLUS_TRACE(log, "realtime trip update received");
+    const auto& trip = trip_update.trip();
+
+    // for the moment we handle only trip cancelation
+    if (! trip.CANCELED) {
+        LOG4CPLUS_DEBUG(log, "unhandled real time message");
+        return;
+    }
+
+    auto meta_vj = find_or_default(trip.trip_id(), data.pt_data->meta_vj);
+    if (! meta_vj) {
+        LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
+        // TODO for trip().ADDED, we'll need to create a new VJ
+        return;
+    }
+
+    auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
+
+    if (trip.CANCELED) {
+        cancel_vj(meta_vj, circulation_date, trip_update, data);
+        return;
+    }
+
 }
 
 }
