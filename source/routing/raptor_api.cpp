@@ -382,10 +382,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 type::VehicleJourney const *const vj = item.get_vj();
 
                 if (!vp) {
-                    vp = *vj->theoric_validity_pattern();
+                    vp = *vj->base_validity_pattern();
                 } else {
-                    assert(vp->beginning_date == vj->theoric_validity_pattern()->beginning_date);
-                    vp->days &= vj->theoric_validity_pattern()->days;
+                    assert(vp->beginning_date == vj->base_validity_pattern()->beginning_date);
+                    vp->days &= vj->base_validity_pattern()->days;
                 }
 
                 const size_t nb_sps = item.stop_points.size();

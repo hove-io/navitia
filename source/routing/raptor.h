@@ -170,7 +170,7 @@ struct RAPTOR
               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true,
-              const nt::RTLevel rt_level = nt::RTLevel::Theoric);
+              const nt::RTLevel rt_level = nt::RTLevel::Base);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul

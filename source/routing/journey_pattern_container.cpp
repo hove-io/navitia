@@ -134,7 +134,7 @@ overtake(const VJ& vj, const std::vector<const VJ*> vjs) {
         assert(vj.stop_time_list.size() == cur_vj->stop_time_list.size());
 
         // if the validity patterns do not overlap, it can't overtake
-        static const auto levels = {nt::RTLevel::Theoric, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
+        static const auto levels = {nt::RTLevel::Base, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
         const bool dont_overlap = std::all_of(std::begin(levels), std::end(levels), [&](nt::RTLevel lvl) {
                 if (vj.validity_patterns[lvl] == nullptr) { return true; }
                 if (cur_vj->validity_patterns[lvl] == nullptr) { return true; }

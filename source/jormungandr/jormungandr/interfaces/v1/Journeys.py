@@ -567,8 +567,10 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
-        parser_get.add_argument("disruption_active",
-                                type=boolean, default=False)
+        parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp
+        # no default value for data_freshness because we need to maintain retrocomp with disruption_active
+        parser_get.add_argument("data_freshness",
+                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
 # a supprimer
         parser_get.add_argument("max_duration", type=int, default=3600*24)
         parser_get.add_argument("wheelchair", type=boolean, default=False)
@@ -623,6 +625,11 @@ class Journeys(ResourceUri, ResourceUtc):
             args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
             args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_duration_to_pt'] = args['max_duration_to_pt']
+
+        if args['data_freshness'] is None:
+            # retrocompatibilty handling
+            args['data_freshness'] = \
+                'adapted_schedule' if args['disruption_active'] is True else 'base_schedule'
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':

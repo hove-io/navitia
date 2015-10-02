@@ -109,20 +109,30 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    //if we have a meta_vj, we add it in that
-    nt::MetaVehicleJourney* mvj;
-    if (! meta_vj_name.empty()) {
-        mvj = b.get_or_create_metavj(meta_vj_name);
+    vj->idx = b.data->pt_data->vehicle_journeys.size();
+    if (! uri.empty()) {
+        vj->uri = uri;
     } else {
-        mvj = b.get_or_create_metavj(uri);
+        vj->uri = "vj:" + line_name + ":" + std::to_string(vj->idx);
     }
-    mvj->theoric_vj.push_back(vj);
+
+    // NOTE: the meta vj name should be the same as the vj's name
+    std::string name;
+    if (! meta_vj_name.empty()) {
+        name = meta_vj_name;
+    } else if (! uri.empty()) {
+        name = uri;
+    } else {
+        name = "vehicle_journey " + std::to_string(vj->idx);
+    }
+
+    nt::MetaVehicleJourney* mvj = b.get_or_create_metavj(name);
+    mvj->base_vj.push_back(vj);
     vj->meta_vj = mvj;
-    vj->idx = b.data->pt_data->vehicle_journeys.size();
+
     b.data->pt_data->headsign_handler.change_name_and_register_as_headsign(
-                                                *vj, "vehicle_journey " + std::to_string(vj->idx));
-    vj->uri = vj->name;
-    vj->idx = b.data->pt_data->vehicle_journeys.size();
+                                                *vj, name);
+
     b.data->pt_data->vehicle_journeys.push_back(vj);
     b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 
@@ -132,18 +142,18 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
                         b.data->pt_data->validity_patterns.end(), find_vp_predicate);
     if(it_vp != b.data->pt_data->validity_patterns.end()) {
         delete vp;
-        vj->validity_patterns[nt::RTLevel::Theoric] = *(it_vp);
+        vp = *(it_vp);
     } else {
          b.data->pt_data->validity_patterns.push_back(vp);
-         vj->validity_patterns[nt::RTLevel::Theoric] = vp;
     }
-    b.vps[validity_pattern] = vj->validity_patterns[nt::RTLevel::Theoric];
-    vj->validity_patterns[nt::RTLevel::Adapted] = vj->validity_patterns[nt::RTLevel::Theoric];
+    //by default we assign all the validity patterns (base/adapted/realtime) to the same vp
+    for (const auto& vj_vp: vj->validity_patterns) {
+        vj_vp.second = vp;
+    }
 
     if(wheelchair_boarding){
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
     }
-    vj->uri = uri;
 
     if(!b.data->pt_data->companies.empty())
         vj->company = b.data->pt_data->companies.front();

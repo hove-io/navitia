@@ -108,11 +108,7 @@ struct dataRAPTOR {
     Labels labels_const_reverse;
 
     // jp_validity_patterns[date][jp_idx] == any(vj.validity_pattern->check2(date) for vj in jp)
-    std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
-
-    // as jp_validity_patterns for the adapted ones
-    std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
-
+    flat_enum_map<type::RTLevel, std::vector<boost::dynamic_bitset<>>> jp_validity_patterns;
 
     dataRAPTOR() {}
     void load(const navitia::type::PT_Data& data);

@@ -35,8 +35,8 @@ namespace navitia {
 
 namespace type {
 enum class RTLevel : char {
-    Theoric = 0,
-    Adapted,
+    Base = 0, // base schedule (theoretical, from the GTFS)
+    Adapted, // adapted schedule (planned maintenance, strike, ...)
     RealTime
 };
 }
@@ -52,8 +52,8 @@ struct enum_size_trait<type::RTLevel> {
 
 inline std::ostream& operator<<(std::ostream& ss, navitia::type::RTLevel l) {
     switch (l) {
-    case navitia::type::RTLevel::Theoric:
-        return ss << "Theoric";
+    case navitia::type::RTLevel::Base:
+        return ss << "Base";
     case navitia::type::RTLevel::Adapted:
         return ss << "Adapted";
     case navitia::type::RTLevel::RealTime:

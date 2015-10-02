@@ -182,11 +182,13 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
     logger = logging.getLogger(__name__)
     # we filter journeys that arrive way later than other ones
     if request.get('clockwise', True):
-        comp_func = lambda j: j.arrival_date_time
+        comp_value = lambda j: j.arrival_date_time
+        comp_func = min
     else:
-        comp_func = lambda j: j.departure_date_time
+        comp_value = lambda j: j.departure_date_time
+        comp_func = max
 
-    asap_journey = min((j for j in journeys if not _to_be_deleted(j)), key=comp_func)
+    asap_journey = comp_func((j for j in journeys if not _to_be_deleted(j)), key=comp_value)
 
     for j in journeys:
         if _to_be_deleted(j):
@@ -200,7 +202,8 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
 def similar_journeys_generator(journey):
     for s in journey.sections:
-        yield s.pt_display_informations.uris.vehicle_journey
+        if s.type == response_pb2.PUBLIC_TRANSPORT:
+            yield s.pt_display_informations.uris.vehicle_journey
 
 
 def fallback_duration(journey):

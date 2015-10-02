@@ -416,7 +416,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
-        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Theoric];
+        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Base];
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,

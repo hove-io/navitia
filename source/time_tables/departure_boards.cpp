@@ -82,6 +82,15 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
             auto date_time = schedule->add_date_times();
             fill_pb_object(dt_st.second, data, date_time, 0,
                            current_time, action_period, dt_st.first, calendar_id);
+            if (dt_st.second != nullptr) {
+                auto vj = dt_st.second->vehicle_journey;
+                if(vj != nullptr) {
+                    for (const auto& comment: data.pt_data->comments.get(*vj)) {
+                        fill_pb_object(comment, data, date_time->mutable_properties()->add_notes(),
+                                       0, current_time, action_period);
+                    }
+                }
+            }
         }
         const auto& it = response_status.find(id_vec.first.second);
         if(it != response_status.end()){

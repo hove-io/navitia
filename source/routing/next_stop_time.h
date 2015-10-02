@@ -199,12 +199,12 @@ DateTime get_next_stop_time(const StopEvent stop_event,
                             DateTime dt,
                             const type::FrequencyVehicleJourney& freq_vj,
                             const type::StopTime& st,
-                            const type::RTLevel rt_level = type::RTLevel::Theoric);
+                            const type::RTLevel rt_level = type::RTLevel::Base);
 DateTime get_previous_stop_time(const StopEvent stop_event,
                                 DateTime dt,
                                 const type::FrequencyVehicleJourney& freq_vj,
                                 const type::StopTime& st,
-                                const type::RTLevel rt_level = type::RTLevel::Theoric);
+                                const type::RTLevel rt_level = type::RTLevel::Base);
 
 
 }} // namespace navitia::routing
