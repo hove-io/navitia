@@ -51,6 +51,10 @@ po::options_description get_options_description(const boost::optional<std::strin
          "name of the instance")
 
         ("GENERAL.nb_threads", po::value<int>()->default_value(1), "number of workers threads")
+        ("GENERAL.is_realtime_enabled", po::value<bool>()->default_value(false),
+                                        "enable loading of realtime data")
+        ("GENERAL.kirin_timeout", po::value<int>()->default_value(10000),
+                                  "timeout in ms for loading realtime data from kirin")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -108,6 +112,14 @@ boost::optional<std::string> Configuration::chaos_database() const{
 }
 int Configuration::nb_thread() const{
     return this->vm["GENERAL.nb_threads"].as<int>();
+}
+
+bool Configuration::is_realtime_enabled() const{
+    return this->vm["GENERAL.is_realtime_enabled"].as<bool>();
+}
+
+int Configuration::kirin_timeout() const{
+    return this->vm["GENERAL.kirin_timeout"].as<int>();
 }
 
 std::string Configuration::broker_host() const{
