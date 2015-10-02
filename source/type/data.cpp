@@ -370,7 +370,7 @@ void Data::build_associated_calendar() {
 
         //some check can be done on any theoric vj, we do them on the first
         auto* first_vj = meta_vj->base_vj.front();
-        const std::vector<Calendar*> calendar_list = first_vj->route->line->calendar_list;
+        const auto& calendar_list = first_vj->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
             nb_not_matched_vj++;

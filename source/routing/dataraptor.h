@@ -50,7 +50,7 @@ struct dataRAPTOR {
             DateTime duration;
             SpIdx sp_idx;
         };
-        void load(const navitia::type::PT_Data& data);
+        void load(const navitia::type::PT_Data&);
 
         // for a stop point, get the corresponding forward connections
         IdxMap<type::StopPoint, std::vector<Connection>> forward_connections;
@@ -111,7 +111,7 @@ struct dataRAPTOR {
     flat_enum_map<type::RTLevel, std::vector<boost::dynamic_bitset<>>> jp_validity_patterns;
 
     dataRAPTOR() {}
-    void load(const navitia::type::PT_Data& data);
+    void load(const navitia::type::PT_Data&);
 };
 
 }}

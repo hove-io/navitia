@@ -249,7 +249,7 @@ route_schedule(const std::string& filter,
     auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, d);
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
-    for (const type::idx_t& route_idx: routes_idx) {
+    for (const auto& route_idx: routes_idx) {
         auto route = d.pt_data->routes[route_idx];
         const auto& jps =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
         auto stop_times = get_all_stop_times(jps, handler.date_time,

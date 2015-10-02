@@ -55,7 +55,7 @@ struct VJ {
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        bool wheelchair_boarding = true, const std::string& uri="",
-       std::string meta_vj_name = "", const std::string& physical_mode = "");
+       const std::string& meta_vj_name = "", const std::string& physical_mode = "");
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée

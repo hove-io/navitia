@@ -328,12 +328,12 @@ void Data::clean() {
             continue;
         }
         // we check that no stop times are negatives
-        for (const auto* st: vj->stop_time_list) {
-            if (st->departure_time < 0 || st->arrival_time < 0) {
-                toErase.insert(vj->uri);
-                ++erase_invalid_stoptimes;
-                break;
-            }
+        const auto st_is_invalid = [](const types::StopTime* st) {
+            return st->departure_time < 0 || st->arrival_time < 0;
+        };
+        if (std::any_of(vj->stop_time_list.begin(), vj->stop_time_list.end(), st_is_invalid)) {
+            toErase.insert(vj->uri);
+            ++erase_invalid_stoptimes;
         }
     }
 

@@ -51,7 +51,7 @@ nt::MetaVehicleJourney* builder::get_or_create_metavj(const std::string name) {
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        bool wheelchair_boarding, const std::string& uri,
-       std::string meta_vj_name, const std::string& physical_mode): b(b) {
+       const std::string& meta_vj_name, const std::string& physical_mode): b(b) {
     // the vj is owned by the route, so we need to have the route before everything else
     auto it = b.lines.find(line_name);
     nt::Route* route = nullptr;
@@ -313,7 +313,7 @@ VJ builder::vj_with_network(const std::string& network_name,
     } else {
         vj->route->line->network = it->second;
 
-        auto line = vj->route->line;
+        const auto* line = vj->route->line;
         if (boost::find_if(it->second->line_list, [&](navitia::type::Line* l) { return l->uri == line->uri; })
             == it->second->line_list.end()) {
             it->second->line_list.push_back(vj->route->line);

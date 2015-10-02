@@ -128,7 +128,7 @@ static bool st_are_equals(const nt::VehicleJourney& vj1, const nt::VehicleJourne
 }
 
 template<typename VJ> static bool
-overtake(const VJ& vj, const std::vector<const VJ*> vjs) {
+overtake(const VJ& vj, const std::vector<const VJ*>& vjs) {
     if (vj.stop_time_list.empty()) { return false; }
     for (const VJ* cur_vj: vjs) {
         assert(vj.stop_time_list.size() == cur_vj->stop_time_list.size());
