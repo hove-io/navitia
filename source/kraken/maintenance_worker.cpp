@@ -60,7 +60,7 @@ void MaintenanceWorker::load(){
         auto data = data_manager.get_data();
         data->meta->instance_name = conf.instance_name();
     }
-    if(conf.enable_realtime()){
+    if(conf.is_realtime_enabled()){
         load_realtime();
     }
 }
@@ -68,7 +68,7 @@ void MaintenanceWorker::load(){
 
 void MaintenanceWorker::load_realtime(){
     LOG4CPLUS_INFO(logger, "loading realtime data");
-
+    //                                             name, passive, durable, exclusive, auto_delete
     std::string queue_name = channel->DeclareQueue("", false, false, true, true);
     LOG4CPLUS_DEBUG(logger, "queue use for as callback for realtime data: " << queue_name);
     pbnavitia::Task task;

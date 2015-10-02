@@ -55,7 +55,7 @@ namespace navitia { namespace kraken{
             std::string broker_exchange() const;
             int broker_timeout() const;
             int broker_sleeptime() const;
-            bool enable_realtime() const;
+            bool is_realtime_enabled() const;
             int kirin_timeout() const;
 
             std::vector<std::string> rt_topics() const;
