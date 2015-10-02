@@ -111,14 +111,13 @@ static navitia::routing::Path string_to_path(const std::vector<std::string>& key
 
         nt::StopTime* first_st = new nt::StopTime();
         first_st->vehicle_journey = new nt::DiscreteVehicleJourney();
-        first_st->vehicle_journey->journey_pattern = new nt::JourneyPattern();
-        first_st->vehicle_journey->journey_pattern->route = new nt::Route();
-        first_st->vehicle_journey->journey_pattern->route->line = new nt::Line();
-        first_st->vehicle_journey->journey_pattern->route->line->uri = line;
-        first_st->vehicle_journey->journey_pattern->route->line->network = new nt::Network();
-        first_st->vehicle_journey->journey_pattern->route->line->network->uri = network;
-        first_st->vehicle_journey->journey_pattern->physical_mode = new nt::PhysicalMode();
-        first_st->vehicle_journey->journey_pattern->physical_mode->uri = mode;
+        first_st->vehicle_journey->route = new nt::Route();
+        first_st->vehicle_journey->route->line = new nt::Line();
+        first_st->vehicle_journey->route->line->uri = line;
+        first_st->vehicle_journey->route->line->network = new nt::Network();
+        first_st->vehicle_journey->route->line->network->uri = network;
+        first_st->vehicle_journey->physical_mode = new nt::PhysicalMode();
+        first_st->vehicle_journey->physical_mode->uri = mode;
         nt::StopTime* last_st = new nt::StopTime();
 
         item.stop_points.push_back(first_sp);

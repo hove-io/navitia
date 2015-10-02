@@ -54,8 +54,8 @@ struct VJ {
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
-       const std::string & block_id, bool wheelchair_boarding = true, const std::string& uri="",
-       std::string meta_vj_name = "", std::string jp_uri = "", const std::string& physical_mode = "");
+       bool wheelchair_boarding = true, const std::string& uri="",
+       const std::string& meta_vj_name = "", const std::string& physical_mode = "");
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -112,7 +112,6 @@ struct builder {
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string& jp_uri = "",
           const std::string& physical_mode = "");
 
     VJ vj_with_network(const std::string& network_name,
@@ -122,7 +121,6 @@ struct builder {
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string &jp_uri="",
           const std::string& physical_mode = "",
           bool is_frequency=false);
 
@@ -135,9 +133,7 @@ struct builder {
                     const std::string& block_id="",
                     const bool wheelchair_boarding = true,
                     const std::string& uri="",
-                    const std::string& meta_vj="",
-                    const std::string &jp_uri="",
-                    const std::string& physical_mode = "");
+                    const std::string& meta_vj="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0,
@@ -149,8 +145,6 @@ struct builder {
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
-    void build(navitia::type::PT_Data & pt_data);
-    void build_relations(navitia::type::PT_Data & data);
     void build_blocks();
     void finish();
     void generate_dummy_basis();

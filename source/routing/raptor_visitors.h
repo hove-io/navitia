@@ -20,9 +20,8 @@ struct raptor_visitor {
     }
 
     inline stop_time_range st_range(const type::StopTime& st) const {
-        const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
-        return boost::make_iterator_range(vj->stop_time_list.begin() + jpp->order,
+        return boost::make_iterator_range(vj->stop_time_list.begin() + st.order(),
                                           vj->stop_time_list.end());
     }
 
@@ -41,15 +40,6 @@ struct raptor_visitor {
     inline
     const type::VehicleJourney* get_extension_vj(const type::VehicleJourney* vj) const {
        return vj->next_vj;
-    }
-
-    inline
-    const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-       if(vj->prev_vj) {
-            return vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
-       } else {
-           return nullptr;
-       }
     }
 
     inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {
@@ -81,10 +71,9 @@ struct raptor_reverse_visitor {
     }
 
     inline stop_time_range st_range(const type::StopTime& st) const {
-        const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
         const type::VehicleJourney* vj = st.vehicle_journey;
         return boost::make_iterator_range(
-            vj->stop_time_list.rbegin() + vj->stop_time_list.size() - jpp->order - 1,
+            vj->stop_time_list.rbegin() + vj->stop_time_list.size() - st.order() - 1,
             vj->stop_time_list.rend());
     }
 
@@ -103,15 +92,6 @@ struct raptor_reverse_visitor {
     inline
     const type::VehicleJourney* get_extension_vj(const type::VehicleJourney* vj) const {
        return vj->prev_vj;
-    }
-
-    inline
-    const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-        if(vj->next_vj != nullptr) {
-            return vj->next_vj->journey_pattern->journey_pattern_point_list.front();
-        } else {
-            return nullptr;
-        }
     }
 
     inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {

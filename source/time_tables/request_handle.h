@@ -41,7 +41,7 @@ namespace navitia { namespace timetables {
 struct RequestHandle {
     pbnavitia::Response pb_response;
     DateTime date_time, max_datetime;
-    std::vector<type::idx_t> journey_pattern_points;
+    std::vector<routing::JppIdx> journey_pattern_points;
     int total_result;
 
     RequestHandle(const std::string& request,

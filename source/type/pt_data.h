@@ -61,24 +61,6 @@ struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
 
-#define REINDEX(type_name, collection_name) void reindex_##collection_name() {\
-        std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());}
-    ITERATE_NAVITIA_PT_TYPES(REINDEX)
-
-#define ERASE_OBJ(type_name, collection_name) \
-    void remove_from_collections(const type_name& obj) { \
-        const auto it_map = collection_name##_map.find(obj.uri);\
-        if (it_map != collection_name##_map.end()) {\
-            collection_name##_map.erase(it_map);\
-        }\
-        collection_name.erase(collection_name.begin() + obj.idx);\
-    }\
-    void erase_obj(const type_name* obj) {\
-        remove_from_collections(*obj);\
-        delete obj;\
-    }
-    ITERATE_NAVITIA_PT_TYPES(ERASE_OBJ)
-
     std::vector<StopPointConnection*> stop_point_connections;
 
     // meta vj map
@@ -114,8 +96,18 @@ struct PT_Data : boost::noncopyable{
     // Headsign handler
     HeadsignHandler headsign_handler;
 
+    // shape manager
+    struct ShapeManager {
+        const LineString* get(const LineString& l) { return &*set.insert(l).first; }
+        template<class Archive> void serialize(Archive & ar, const unsigned int) { ar & set; }
+    private:
+        std::set<LineString> set;
+    };
+    ShapeManager shape_manager;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
+                & shape_manager // before anything
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
@@ -153,8 +145,8 @@ struct PT_Data : boost::noncopyable{
 
     size_t nb_stop_times() const {
         size_t nb = 0;
-        for (const auto jp:journey_patterns) {
-            jp->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
+        for (const auto* route: routes) {
+            route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
                 nb += vj.stop_time_list.size();
                 return true;
             });

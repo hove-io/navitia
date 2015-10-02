@@ -118,23 +118,25 @@ static uint32_t get_max_sp(const std::vector<vector_idx>& journey_patterns) {
 }
 
 void Thermometer::generate_thermometer(const type::Route* route) {
-        std::vector<vector_idx> stop_points;
-        for(auto jp : route->journey_pattern_list) {
-            stop_points.push_back(vector_idx());
-            for(auto jpp : jp->journey_pattern_point_list) {
-                stop_points.back().push_back(jpp->stop_point->idx);
+    std::set<vector_idx> stop_point_lists;
+    route->for_each_vehicle_journey([&](const type::VehicleJourney& vj) {
+            vector_idx stop_point_list;
+            for (const auto& st: vj.stop_time_list) {
+                stop_point_list.push_back(st.stop_point->idx);
             }
-        }
-        this->generate_thermometer(stop_points);
+            stop_point_lists.insert(std::move(stop_point_list));
+            return true;
+        });
+    generate_thermometer(std::vector<vector_idx>(stop_point_lists.begin(), stop_point_lists.end()));
 }
 
-void Thermometer::generate_thermometer(const std::vector<vector_idx> &journey_patterns) {
+void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point_lists) {
 
-    uint32_t max_sp = get_max_sp(journey_patterns);
+    uint32_t max_sp = get_max_sp(stop_point_lists);
     nb_branches = 0;
     std::vector<vector_idx> req;
-    if(journey_patterns.size() > 1) {
-        for(auto v : journey_patterns) {
+    if(stop_point_lists.size() > 1) {
+        for(auto v : stop_point_lists) {
             if(req.empty())
                 req.push_back(v);
             else {
@@ -149,8 +151,8 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx> &journey_pa
             }
         }
         thermometer = req.back();
-    } else if(journey_patterns.size() == 1){
-        thermometer = journey_patterns.back();
+    } else if(stop_point_lists.size() == 1){
+        thermometer = stop_point_lists.back();
     }
 
 }
@@ -162,15 +164,15 @@ vector_idx Thermometer::get_thermometer() const {
 
 
 
-std::vector<uint32_t> Thermometer::match_journey_pattern(const type::JourneyPattern & journey_pattern) const {
+std::vector<uint32_t> Thermometer::stop_times_order(const type::VehicleJourney& vj) const {
     std::vector<type::idx_t> tmp;
-    for(auto jpp : journey_pattern.journey_pattern_point_list)
-        tmp.push_back(jpp->stop_point->idx);
+    for(const auto& st: vj.stop_time_list)
+        tmp.push_back(st.stop_point->idx);
     
-    return match_journey_pattern(tmp);
+    return stop_times_order_helper(tmp);
 }
 
-std::vector<uint32_t> Thermometer::match_journey_pattern(const vector_idx &stop_point_list) const {
+std::vector<uint32_t> Thermometer::stop_times_order_helper(const vector_idx &stop_point_list) const {
     std::vector<uint32_t> result;
     auto it = thermometer.begin();
     for(type::idx_t spidx : stop_point_list) {

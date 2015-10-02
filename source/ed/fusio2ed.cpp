@@ -120,8 +120,8 @@ int main(int argc, char * argv[])
     size_t nb_hacked = 0;
     for (auto* vj: data.vehicle_journeys) {
         if (vj->stop_time_list.size() != 2) { continue; }
-        if (vj->stop_time_list[0]->journey_pattern_point->stop_point
-            != vj->stop_time_list[1]->journey_pattern_point->stop_point) {
+        if (vj->stop_time_list[0]->stop_point
+            != vj->stop_time_list[1]->stop_point) {
             continue;
         }
         if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) { continue; }
@@ -162,13 +162,11 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
     LOG4CPLUS_INFO(logger, "line_group: " << data.line_groups.size());
     LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.journey_patterns.size());
     LOG4CPLUS_INFO(logger, "stoparea: " << data.stop_areas.size());
     LOG4CPLUS_INFO(logger, "stoppoint: " << data.stop_points.size());
     LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.vehicle_journeys.size());
     LOG4CPLUS_INFO(logger, "stop: " << data.stops.size());
     LOG4CPLUS_INFO(logger, "connection: " << data.stop_point_connections.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
 

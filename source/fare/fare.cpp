@@ -245,19 +245,19 @@ void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, c
 SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : path_item_idx(idx) {
     const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
-    const navitia::type::JourneyPattern* jp = path_item.get_vj()->journey_pattern;
+    const navitia::type::VehicleJourney* vj = path_item.get_vj();
 
     //TODO, original uri for all
-    network = jp->route->line->network->uri; //uri ?
+    network = vj->route->line->network->uri; //uri ?
     start_stop_area = first_sp->stop_area->uri;
     dest_stop_area = last_sp->stop_area->uri;
-    line = jp->route->line->uri;
+    line = vj->route->line->uri;
     date = path_item.departure.date();
     start_time = path_item.departure.time_of_day().total_seconds();
     dest_time = path_item.arrival.time_of_day().total_seconds();
     start_zone = first_sp->fare_zone;
     dest_zone = last_sp->fare_zone;
-    mode = jp->physical_mode->uri; //CHECK
+    mode = vj->physical_mode->uri; //CHECK
 }
 
 template<class T> bool compare(const T& a, const T& b, Comp_e comp) {

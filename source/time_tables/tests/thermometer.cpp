@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(t10) {
     bool error = false;
     for(auto journey_pattern : vec_tmp) {
         try {
-            t.match_journey_pattern(journey_pattern);
+            t.stop_times_order_helper(journey_pattern);
         } catch(const Thermometer::cant_match&) {
             error = true;
         }

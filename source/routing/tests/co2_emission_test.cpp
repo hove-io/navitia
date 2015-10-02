@@ -64,11 +64,11 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
     navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
-    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
+    navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys.at(0);
     navitia::type::StopPoint *dep = b.data->pt_data->stop_points_map["stop_area:stop1"];
     navitia::type::StopPoint *arr = b.data->pt_data->stop_points_map["stop_area:stop2"];
     mt->co2_emission=2.3;
-    jp->physical_mode = mt;
+    vj->physical_mode = mt;
     navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
@@ -105,9 +105,9 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     nr::RAPTOR raptor(*b.data);
 
     navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
-    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];
+    navitia::type::VehicleJourney *vj = b.data->pt_data->vehicle_journeys[0];
     mt->co2_emission=0.0;
-    jp->physical_mode = mt;
+    vj->physical_mode = mt;
     navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     nr::RAPTOR raptor(*b.data);
 
     navitia::type::PhysicalMode *mt = b.data->pt_data->physical_modes_map["physical_mode:0x1"];
-    navitia::type::JourneyPattern *jp = b.data->pt_data->journey_patterns_map["A:0:0"];    
-    jp->physical_mode = mt;
+    navitia::type::VehicleJourney *vj = b.data->pt_data->vehicle_journeys.at(0);
+    vj->physical_mode = mt;
     navitia::type::Type_e origin_type = b.data->get_type_of_id("stop_area:stop1");
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");

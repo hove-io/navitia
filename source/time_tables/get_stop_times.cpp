@@ -30,13 +30,14 @@ www.navitia.io
 
 #include "get_stop_times.h"
 #include "routing/next_stop_time.h"
+#include "routing/dataraptor.h"
 #include "type/pb_converter.h"
 #include <functional>
 
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent stop_event,
-                                               const std::vector<type::idx_t>& journey_pattern_points,
+std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_event,
+                                               const std::vector<routing::JppIdx>& journey_pattern_points,
                                                const DateTime& dt,
                                                const DateTime& max_dt,
                                                const size_t max_departures,
@@ -50,7 +51,7 @@ std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent
 
     // Next departure for the next stop: we use it not to have twice the same stop_time
     // We init it with the wanted date time
-    std::map<type::idx_t, DateTime> next_requested_datetime;
+    std::map<routing::JppIdx, DateTime> next_requested_datetime;
     for(auto jpp_idx : journey_pattern_points){
         next_requested_datetime[jpp_idx] = dt;
     }
@@ -58,11 +59,11 @@ std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent
     while(test_add && result.size() < max_departures) {
         test_add = false;
         for(auto jpp_idx : journey_pattern_points) {
-            const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
-            if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
+            const routing::JourneyPatternPoint& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+            if (!data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = next_st.next_stop_time(stop_event, routing::JppIdx(*jpp),
+            auto st = next_st.next_stop_time(stop_event, jpp_idx,
                                              next_requested_datetime[jpp_idx], clockwise, rt_level,
                                              accessibilite_params.vehicle_properties, true);
 
@@ -92,20 +93,24 @@ std::vector<datetime_stop_time> get_stop_times(const navitia::routing::StopEvent
 }
 
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
-                                               const uint32_t begining_time,
-                                               const uint32_t max_time,
-                                               const type::Data& data,
-                                               const std::string calendar_id,
-                                               const type::AccessibiliteParams& accessibilite_params) {
+std::vector<datetime_stop_time>
+get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
+               const uint32_t begining_time,
+               const uint32_t max_time,
+               const type::Data& data,
+               const std::string calendar_id,
+               const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
 
     for(auto jpp_idx : journey_pattern_points) {
-        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
-        if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
+        const routing::JourneyPatternPoint& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+        if (!data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
             continue;
         }
-        auto st = get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
+        auto st = get_all_stop_times(data.dataRaptor->jp_container.get(jpp.jp_idx),
+                                     jpp,
+                                     calendar_id,
+                                     accessibilite_params.vehicle_properties);
 
         //afterward we filter the datetime not in [dt, max_dt]
         //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
@@ -137,16 +142,18 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
  * and we loop through all stop times for the jpp
 */
 std::vector<std::pair<uint32_t, const type::StopTime*>>
-get_all_stop_times(const type::JourneyPatternPoint* jpp,
+get_all_stop_times(const routing::JourneyPattern& jp,
+                   const routing::JourneyPatternPoint& jpp,
                    const std::string calendar_id,
                    const type::VehicleProperties& vehicle_properties) {
 
     std::set<const type::MetaVehicleJourney*> meta_vjs;
-    jpp->journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj ) {
+    auto insert_meta_vj = [&](const nt::VehicleJourney& vj ) {
         assert(vj.meta_vj);
         meta_vjs.insert(vj.meta_vj);
-        return true;
-    });
+    };
+    for (const auto* vj: jp.discrete_vjs) { insert_meta_vj(*vj); }
+    for (const auto* vj: jp.freq_vjs) { insert_meta_vj(*vj); }
     std::vector<const type::VehicleJourney*> vjs;
     for (const auto meta_vj: meta_vjs) {
         if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
@@ -163,7 +170,7 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
     std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj: vjs) {
         //loop through stop times for stop jpp->stop_point
-        const auto& st = *(vj->stop_time_list.begin() + jpp->order);
+        const auto& st = vj->stop_time_list[jpp.order];
         if (! st.vehicle_journey->accessible(vehicle_properties)) {
             continue; //the stop time must be accessible
         }

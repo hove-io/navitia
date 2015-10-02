@@ -60,8 +60,8 @@ static pt::ptime d(std::string str) {
 
 BOOST_AUTO_TEST_CASE(departureboard_test1) {
     ed::builder b("20150615");
-    b.vj("A", "110011000001", "", true, "vj1", "", "jp1")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
-    b.vj("B", "110000001111", "", true, "vj2", "", "jp2")("stop1", 10*3600 + 10*60, 10*3600 + 10*60)("stop2", 10*3600 + 40*60,10*3600 + 40*60)("stop3", 10*3600 + 50*60,10*3600 + 50*60);
+    b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
+    b.vj("B", "110000001111", "", true, "vj2", "")("stop1", 10*3600 + 10*60, 10*3600 + 10*60)("stop2", 10*3600 + 40*60,10*3600 + 40*60)("stop3", 10*3600 + 50*60,10*3600 + 50*60);
 
     const auto it1 = b.sas.find("stop2");
     b.data->pt_data->routes.front()->destination= it1->second; // Route A
@@ -136,11 +136,11 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
      * stop schedule for B must say it is a partial_terminus and stop_schedule on C must say it is a real terminus
      * */
     ed::builder b("20150615");
-    b.vj("A", "11111111", "", true, "vj1", "", "jp1")("stop1", 10*3600, 10*3600)
-                                                     ("stop2", 10*3600 + 30*60, 10*3600 + 30*60);
-    b.vj("A", "10111111", "", true, "vj2", "", "jp2")("stop1", 10*3600 + 30*60, 10*3600 + 30*60)
-                                                     ("stop2", 11*3600,11*3600)
-                                                     ("stop3", 11*3600 + 30*60,36300 + 30*60);
+    b.vj("A", "11111111", "", true, "vj1", "")("stop1", 10*3600, 10*3600)
+                                              ("stop2", 10*3600 + 30*60, 10*3600 + 30*60);
+    b.vj("A", "10111111", "", true, "vj2", "")("stop1", 10*3600 + 30*60, 10*3600 + 30*60)
+                                              ("stop2", 11*3600,11*3600)
+                                              ("stop3", 11*3600 + 30*60,36300 + 30*60);
     const auto it = b.sas.find("stop3");
     b.data->pt_data->routes.front()->destination= it->second;
 

@@ -74,14 +74,12 @@ struct Impact;
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\
     FUN(LineGroup, line_groups)\
-    FUN(JourneyPattern, journey_patterns)\
     FUN(VehicleJourney, vehicle_journeys)\
     FUN(StopPoint, stop_points)\
     FUN(StopArea, stop_areas)\
     FUN(Network, networks)\
     FUN(PhysicalMode, physical_modes)\
     FUN(CommercialMode, commercial_modes)\
-    FUN(JourneyPatternPoint, journey_pattern_points)\
     FUN(Company, companies)\
     FUN(Route, routes)\
     FUN(Contributor, contributors)\
@@ -346,10 +344,8 @@ struct StopArea;
 struct Network;
 struct StopPointConnection;
 struct Line;
-struct JourneyPattern;
 struct ValidityPattern;
 struct Route;
-struct JourneyPatternPoint;
 struct VehicleJourney;
 struct StopTime;
 
@@ -364,7 +360,6 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
-    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<StopPointConnection*> stop_point_connection_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -372,7 +367,6 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
         // during serialization and deserialization.
         //
         // stop_point_connection_list is managed by StopPointConnection
-        // journey_pattern_point_list is managed by JourneyPatternPoint
         ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
             & admin_list & _properties & impacts;
     }
@@ -552,10 +546,10 @@ struct CommercialMode : public Header, Nameable{
 struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
     boost::optional<double> co2_emission;
-    std::vector<JourneyPattern*> journey_pattern_list;
+    std::vector<VehicleJourney*> vehicle_journey_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & co2_emission & journey_pattern_list;
+        ar & idx & name & uri & co2_emission & vehicle_journey_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -661,24 +655,6 @@ struct LineGroup : public Header, Nameable{
     bool operator<(const LineGroup & other) const { return this < &other; }
 };
 
-struct Route : public Header, Nameable, HasMessages {
-    const static Type_e type = Type_e::Route;
-    Line* line = nullptr;
-    StopArea* destination = nullptr;
-    MultiLineString shape;
-    std::vector<JourneyPattern*> journey_pattern_list;
-
-    type::hasOdtProperties get_odt_properties() const;
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & destination & journey_pattern_list & impacts & shape;
-    }
-
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Route & other) const { return this < &other; }
-
-};
-struct JourneyPattern;
 struct MetaVehicleJourney;
 
 /**
@@ -690,11 +666,12 @@ struct MetaVehicleJourney;
  *  - FrequencyVehicleJourney
  * A frequency VJ, with a start, an end and frequency (headway)
  *
- * The JourneyPattern owns 2 differents list for the VJs, and both are treated differently in the algorithm (in best_stop_times)
+ * The Route owns 2 differents list for the VJs
  */
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages {
     const static Type_e type = Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern = nullptr;
+    Route* route = nullptr;
+    PhysicalMode* physical_mode = nullptr;
     Company* company = nullptr;
     std::vector<StopTime> stop_time_list;
 
@@ -707,12 +684,13 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     const MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
 
-    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
-    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
     std::vector<boost::weak_ptr<new_disruption::Impact>> impacted_by;
+
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
+    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
 
     // all times are stored in UTC
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
@@ -742,7 +720,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & validity_patterns
+        ar & name & uri & route & physical_mode & company & validity_patterns
             & idx & stop_time_list & realtime_level
             & theoric_vehicle_journey & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
@@ -789,43 +767,32 @@ struct FrequencyVehicleJourney: public VehicleJourney {
     }
 };
 
-struct JourneyPattern : public Header, Nameable {
-    const static Type_e type = Type_e::JourneyPattern;
-    bool is_frequence = false;
-    Route* route = nullptr;
-    CommercialMode* commercial_mode = nullptr;
-    PhysicalMode* physical_mode = nullptr;
-
-    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
-    hasOdtProperties odt_properties;
-
+struct Route : public Header, Nameable, HasMessages {
+    const static Type_e type = Type_e::Route;
+    Line* line = nullptr;
+    StopArea* destination = nullptr;
+    MultiLineString shape;
     std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
     std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
 
-    JourneyPattern() {}
-    ~JourneyPattern();
-    JourneyPattern(const JourneyPattern&);
-    JourneyPattern operator=(const JourneyPattern&) = delete;
+    type::hasOdtProperties get_odt_properties() const;
 
-    template <typename T>
+    template<typename T>
     void for_each_vehicle_journey(const T func) const {
         //call the functor for each vj.
         // if func return false, we stop
-        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) {return;} }
-        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) {return;} }
+        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) { return; } }
+        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) { return; } }
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
-                & physical_mode & journey_pattern_point_list & discrete_vehicle_journey_list
-                & frequency_vehicle_journey_list;
-
+        ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
+            & frequency_vehicle_journey_list & impacts & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const JourneyPattern & other) const { return this < &other; }
+    bool operator<(const Route & other) const { return this < &other; }
 
-    void build_odt_properties();
 };
 
 struct AssociatedCalendar {
@@ -861,7 +828,8 @@ struct StopTime {
     uint32_t departure_time = 0; ///< seconds since midnight
 
     VehicleJourney* vehicle_journey = nullptr;
-    JourneyPatternPoint* journey_pattern_point = nullptr;
+    StopPoint* stop_point = nullptr;
+    const LineString* shape_from_prev = nullptr;
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -874,6 +842,15 @@ struct StopTime {
     inline void set_odt(bool value) {properties[ODT] = value;}
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
+    inline uint16_t order() const {
+        static_assert(std::is_same<decltype(vehicle_journey->stop_time_list), std::vector<StopTime>>::value,
+                      "vehicle_journey->stop_time_list must be a std::vector<StopTime>");
+        assert(vehicle_journey);
+        // as vehicle_journey->stop_time_list is a vector, pointer
+        // arithmetic gives us the order of the stop time in the
+        // vector.
+        return this - &vehicle_journey->stop_time_list.front();
+    }
 
     /// can we start with this stop time (according to clockwise)
     bool valid_begin(bool clockwise) const {return clockwise ? pick_up_allowed() : drop_off_allowed();}
@@ -918,11 +895,9 @@ struct StopTime {
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
+            ar & arrival_time & departure_time & vehicle_journey & stop_point & shape_from_prev
             & properties & local_traffic_zone;
     }
-
-    bool operator<(const StopTime& other) const;
 
 private:
     uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
@@ -963,33 +938,6 @@ public:
     bool operator<(const ValidityPattern & other) const { return this < &other; }
     bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
-
-struct JourneyPatternPoint : public Header{
-    const static Type_e type = Type_e::JourneyPatternPoint;
-    JourneyPattern* journey_pattern;
-    StopPoint* stop_point;
-    uint16_t order;
-    LineString shape_from_prev;
-
-    JourneyPatternPoint() : journey_pattern(nullptr), stop_point(nullptr), order(0){}
-
-    template<class Archive> void save(Archive & ar, const unsigned int) const{
-        ar & idx & uri & order & journey_pattern & stop_point & order & shape_from_prev;
-    }
-    template<class Archive> void load(Archive & ar, const unsigned int) {
-        ar & idx & uri & order & journey_pattern & stop_point & order & shape_from_prev;
-
-        // loading manage StopPoint::journey_pattern_point_list
-        this->stop_point->journey_pattern_point_list.push_back(this);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    bool operator<(const JourneyPatternPoint& jpp2) const {
-        return this->journey_pattern < jpp2.journey_pattern  || (this->journey_pattern == jpp2.journey_pattern && this->order < jpp2.order);}
-
-};
-
 
 struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;

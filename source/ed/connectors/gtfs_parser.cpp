@@ -956,7 +956,6 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
-        vj->journey_pattern = 0;
         vj->tmp_line = line;
         if(has_col(block_id_c, row))
             vj->block_id = row[block_id_c];
@@ -1068,8 +1067,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
         stop_time->departure_time = to_utc(row[departure_c], utc_offset);
 
-        stop_time->tmp_stop_point = stop_it->second;
-        //stop_time->journey_pattern_point = journey_pattern_point;
+        stop_time->stop_point = stop_it->second;
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
 

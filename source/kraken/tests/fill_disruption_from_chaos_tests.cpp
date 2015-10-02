@@ -55,7 +55,7 @@ namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ba = boost::algorithm;
 
-
+/*
 struct stop_area_finder{
     std::string sa_uri;
     stop_area_finder(const std::string& sa_uri): sa_uri(sa_uri){}
@@ -64,12 +64,13 @@ struct stop_area_finder{
         return jpp->stop_point->stop_area->uri == sa_uri;
     }
 };
+*/
 
 static std::string dump_vj(const nt::VehicleJourney& vj){
     std::stringstream ss;
     ss << vj.uri << std::endl;
     for(const auto& st: vj.stop_time_list){
-    ss << "\t" << st.journey_pattern_point->stop_point->uri << ": " << st.arrival_time << " - " << st.departure_time << std::endl;
+    ss << "\t" << st.stop_point->uri << ": " << st.arrival_time << " - " << st.departure_time << std::endl;
     }
     ss << "\tvalidity_pattern: " << ba::trim_left_copy_if(vj.base_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
     ss << "\tadapted_validity_pattern: " << ba::trim_left_copy_if(vj.adapted_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
@@ -112,7 +113,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
     auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"), vj->adapted_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
@@ -129,7 +129,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     navitia::delete_disruption("test01", *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
     vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000111"), vj->adapted_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
@@ -356,7 +355,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
     auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "010001"), dump_vj(*vj));
 }
@@ -394,7 +392,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->journey_patterns.size(), 1);
     auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "010110"), dump_vj(*vj));
 }

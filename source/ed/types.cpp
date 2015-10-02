@@ -130,24 +130,6 @@ bool Route::operator<(const Route& other) const {
     }
 }
 
-bool JourneyPattern::operator<(const JourneyPattern& other) const {
-    if(this->route == other.route){
-        BOOST_ASSERT(this->uri != other.uri);
-        return this->uri <  other.uri;
-    }else{
-        return *(this->route) < *(other.route);
-    }
-}
-
-bool JourneyPatternPoint::operator<(const JourneyPatternPoint& other) const {
-    if(this->journey_pattern == other.journey_pattern){
-        BOOST_ASSERT(this->order != other.order);
-        return this->order < other.order;
-    }else{
-        return *(this->journey_pattern) < *(other.journey_pattern);
-    }
-}
-
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
 
 void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
@@ -195,12 +177,7 @@ bool StopPoint::operator<(const StopPoint& other) const {
 
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
-    if(this->journey_pattern == other.journey_pattern){
-        // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
-        return this->stop_time_list.front() < other.stop_time_list.front();
-    }else{
-        return *(this->journey_pattern) < *(other.journey_pattern);
-    }
+    return this->uri < other.uri;
 }
 
 bool ValidityPattern::operator <(const ValidityPattern &other) const {
@@ -223,10 +200,8 @@ bool StopPointConnection::operator<(const StopPointConnection& other) const{
 }
 
 bool StopTime::operator<(const StopTime& other) const {
-    if(this->vehicle_journey == other.vehicle_journey){
-        BOOST_ASSERT(this->journey_pattern_point->order != other.journey_pattern_point->order);
-        return this->journey_pattern_point->order < other.journey_pattern_point->order;
-    } else {
+    if(this->vehicle_journey != other.vehicle_journey){
         return *(this->vehicle_journey) < *(other.vehicle_journey);
     }
+    return this->order < other.order;
 }

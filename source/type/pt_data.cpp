@@ -41,17 +41,11 @@ void PT_Data::sort(){
 #define SORT_AND_INDEX(type_name, collection_name)\
     std::stable_sort(collection_name.begin(), collection_name.end(), Less());\
     std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
-
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
-
 #undef SORT_AND_INDEX
 
     std::stable_sort(stop_point_connections.begin(), stop_point_connections.end());
     std::for_each(stop_point_connections.begin(), stop_point_connections.end(), Indexer<idx_t>());
-
-    for(auto* vj: this->vehicle_journeys){
-        std::stable_sort(vj->stop_time_list.begin(), vj->stop_time_list.end());
-    }
 }
 
 

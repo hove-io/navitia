@@ -49,8 +49,8 @@ typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
  * @return: a list of pair <datetime, departure st.idx>. The list is sorted on the datetimes.
  */
 std::vector<datetime_stop_time>
-get_stop_times(const navitia::routing::StopEvent stop_event,
-               const std::vector<type::idx_t>& journey_pattern_points,
+get_stop_times(const routing::StopEvent stop_event,
+               const std::vector<routing::JppIdx>& journey_pattern_points,
                const DateTime& dt,
                const DateTime& max_dt,
                const size_t max_departures,
@@ -60,7 +60,7 @@ get_stop_times(const navitia::routing::StopEvent stop_event,
 
 
 std::vector<datetime_stop_time>
-get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
+get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
                const uint32_t begining_time,
                const uint32_t max_time,
                const type::Data& data,
@@ -69,7 +69,8 @@ get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
 
 /// Return a list of all {time in the day, stoptime} leaving the jpp for the given calendar
 std::vector<std::pair<uint32_t, const type::StopTime*>>
-get_all_stop_times(const type::JourneyPatternPoint* jpp,
+get_all_stop_times(const routing::JourneyPattern& jp,
+                   const routing::JourneyPatternPoint& jpp,
                    const std::string calendar_id,
                    const type::VehicleProperties& vehicle_properties = type::VehicleProperties());
 

@@ -64,9 +64,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_line_groups(data, work);
     this->fill_routes(data, work);
 
-    this->fill_journey_patterns(data, work);
-    this->fill_journey_pattern_points(data, work);
-
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
 
@@ -600,65 +597,6 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     }
 }
 
-void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, route_id, "
-        "is_frequence, physical_mode_id FROM navitia.journey_pattern";
-
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::JourneyPattern* journey_pattern = new nt::JourneyPattern();
-        const_it["uri"].to(journey_pattern->uri);
-        const_it["name"].to(journey_pattern->name);
-        const_it["is_frequence"].to(journey_pattern->is_frequence);
-
-        journey_pattern->route = route_map[const_it["route_id"].as<idx_t>()];
-        journey_pattern->route->journey_pattern_list.push_back(journey_pattern);
-
-        // attach the physical mode with database values
-        journey_pattern->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
-        journey_pattern->physical_mode->journey_pattern_list.push_back(journey_pattern);
-
-        // get commercial mode from the line of the route of the journey_pattern
-        journey_pattern->commercial_mode = journey_pattern->route->line->commercial_mode;
-
-        data.pt_data->journey_patterns.push_back(journey_pattern);
-        this->journey_pattern_map[const_it["id"].as<idx_t>()] = journey_pattern;
-    }
-}
-
-
-void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, \"order\","
-        "stop_point_id, journey_pattern_id, ST_AsText(shape_from_prev) as shape "
-        "FROM navitia.journey_pattern_point";
-
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::JourneyPatternPoint* jpp = new nt::JourneyPatternPoint();
-
-        const_it["uri"].to(jpp->uri);
-        const_it["\"order\""].to(jpp->order);
-
-        jpp->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
-        jpp->journey_pattern->journey_pattern_point_list.push_back(jpp);
-
-        jpp->stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
-
-        jpp->idx = data.pt_data->journey_pattern_points.size();
-
-        boost::geometry::read_wkt(const_it["shape"].as<std::string>("LINESTRING()"),
-                                  jpp->shape_from_prev);
-
-        data.pt_data->journey_pattern_points.push_back(jpp);
-        this->journey_pattern_point_map[const_it["id"].as<idx_t>()] = jpp;
-    }
-
-    //we need to sort all jpp by order
-    for (auto journey_pattern : data.pt_data->journey_patterns) {
-        auto comp = [](const nt::JourneyPatternPoint* jpp1, const nt::JourneyPatternPoint* jpp2){return jpp1->order < jpp2->order;};
-        std::sort(journey_pattern->journey_pattern_point_list.begin(), journey_pattern->journey_pattern_point_list.end(), comp);
-    }
-}
 
 
 void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
@@ -751,8 +689,9 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
         "vj.company_id as company_id, "
-        "vj.journey_pattern_id as journey_pattern_id,"
         "vj.validity_pattern_id as validity_pattern_id,"
+        "vj.physical_mode_id as physical_mode_id,"
+        "vj.route_id as route_id,"
         "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,"
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
@@ -772,25 +711,25 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vp.appropriate_signage as appropriate_signage,"
         "vp.school_vehicle as school_vehicle "
         "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
-        "where vj.vehicle_properties_id = vp.id ";
+        "WHERE vj.vehicle_properties_id = vp.id";
 
     pqxx::result result = work.exec(request);
     std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
 
-        auto journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
+        auto* route = route_map[const_it["route_id"].as<idx_t>()];
         navitia::type::VehicleJourney* vj = nullptr;
         if (const_it["is_frequency"].as<bool>()) {
-            journey_pattern->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
-            auto& freq_vj = journey_pattern->frequency_vehicle_journey_list.back();
+            route->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
+            auto& freq_vj = route->frequency_vehicle_journey_list.back();
 
             const_it["start_time"].to(freq_vj->start_time);
             const_it["end_time"].to(freq_vj->end_time);
             const_it["headway_sec"].to(freq_vj->headway_secs);
             vj = freq_vj.get();
         } else {
-            journey_pattern->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
-            vj = journey_pattern->discrete_vehicle_journey_list.back().get();
+            route->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
+            vj = route->discrete_vehicle_journey_list.back().get();
         }
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);
@@ -798,21 +737,22 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
-        vj->journey_pattern = journey_pattern;
+        vj->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
+        vj->route = route;
 
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
         assert (vj->company);
-        assert (vj->journey_pattern);
+        assert (vj->route);
 
-        if (vj->journey_pattern->route && vj->journey_pattern->route->line){
-            if(boost::range::find(vj->journey_pattern->route->line->company_list,
-                         vj->company) == vj->journey_pattern->route->line->company_list.end()){
-                vj->journey_pattern->route->line->company_list.push_back(vj->company);
+        if (vj->route && vj->route->line){
+            if (boost::range::find(vj->route->line->company_list, vj->company)
+                == vj->route->line->company_list.end()) {
+                vj->route->line->company_list.push_back(vj->company);
             }
-            if(boost::range::find(vj->company->line_list,
-                         vj->journey_pattern->route->line) == vj->company->line_list.end()){
-                vj->company->line_list.push_back(vj->journey_pattern->route->line);
+            if (boost::range::find(vj->company->line_list, vj->route->line)
+                == vj->company->line_list.end()) {
+                vj->company->line_list.push_back(vj->route->line);
             }
         }
         using navitia::type::RTLevel;
@@ -992,10 +932,22 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
-    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, "
-        "departure_time, local_traffic_zone, odt, pick_up_allowed, drop_off_allowed, is_frequency, "
-        "date_time_estimated, id, headsign "
-        "FROM navitia.stop_time;";
+    std::string request = "SELECT "
+        "st.vehicle_journey_id as vehicle_journey_id,"
+        "st.arrival_time as arrival_time,"
+        "st.departure_time as departure_time,"
+        "st.local_traffic_zone as local_traffic_zone,"
+        "st.odt as odt,"
+        "st.pick_up_allowed as pick_up_allowed,"
+        "st.drop_off_allowed as drop_off_allowed,"
+        "st.is_frequency as is_frequency,"
+        "st.date_time_estimated as date_time_estimated,"
+        "st.id as id,"
+        "st.headsign as headsign,"
+        "st.stop_point_id as stop_point_id,"
+        "ST_AsText(st.shape_from_prev) as shape_from_prev "
+        "FROM navitia.stop_time as st "
+        "ORDER BY st.vehicle_journey_id, st.\"order\"";
 
     pqxx::result result = work.exec(request);
 
@@ -1023,8 +975,12 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
         stop.set_is_frequency(const_it["is_frequency"].as<bool>());
 
-        stop.journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
+        stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
         stop.vehicle_journey = vj;
+
+        nt::LineString shape_from_prev;
+        boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"), shape_from_prev);
+        stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
 
         if (!const_it["headsign"].is_null()){
             std::string headsign = const_it["headsign"].as<std::string>();
@@ -1042,11 +998,6 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
             }
             cpt_comment_found++;
         }
-    }
-
-    for(auto* vj: data.pt_data->vehicle_journeys) {
-        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                  [](const nt::StopTime& st1, const nt::StopTime& st2){return st1.journey_pattern_point->order < st2.journey_pattern_point->order;});
     }
 
     if (cpt_comment_found != stop_time_comments.size()) {

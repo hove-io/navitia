@@ -59,7 +59,8 @@ RequestHandle::RequestHandle(const std::string &request,
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {
-            journey_pattern_points = ptref::make_query(jpp_t, request, forbidden_uris, data);
+            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, data);
+            for (const auto idx: jpps) { journey_pattern_points.push_back(routing::JppIdx(idx)); }
             total_result = journey_pattern_points.size();
         } catch(const ptref::ptref_error &ptref_error){
             fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more,pb_response.mutable_error());

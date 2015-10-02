@@ -72,7 +72,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                state.l_zone == st.local_traffic_zone) {
                 continue;
             }
-            auto sp = st.journey_pattern_point->stop_point;
+            auto sp = st.stop_point;
             const auto sp_idx = SpIdx(*sp);
 
             if (! v.comp(workingDt, best_labels_pts[sp_idx])) { continue; }
@@ -133,7 +133,7 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
 void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
-    Q.assign(data.pt_data->journey_patterns, queue_value);
+    Q.assign(data.dataRaptor->jp_container.get_jps_values(), queue_value);
     if (labels.empty()) {
         labels.resize(5);
     }
@@ -412,8 +412,9 @@ void RAPTOR::set_valid_jp_and_jpp(
     const std::vector<std::string>& forbidden,
     const nt::RTLevel rt_level)
 {
+    const auto& jp_container = data.dataRaptor->jp_container;
     valid_journey_patterns = data.dataRaptor->jp_validity_patterns[rt_level][date];
-    boost::dynamic_bitset<> valid_journey_pattern_points(data.pt_data->journey_pattern_points.size());
+    boost::dynamic_bitset<> valid_journey_pattern_points(jp_container.nb_jpps());
     valid_journey_pattern_points.set();
 
 
@@ -424,16 +425,16 @@ void RAPTOR::set_valid_jp_and_jpp(
         const auto it_line = data.pt_data->lines_map.find(uri);
         if (it_line != data.pt_data->lines_map.end()) {
             for (const auto route : it_line->second->route_list) {
-                for (const auto jp  : route->journey_pattern_list) {
-                    valid_journey_patterns.set(jp->idx, false);
+                for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                    valid_journey_patterns.set(jp_idx.val, false);
                 }
             }
             continue;
         }
         const auto it_route = data.pt_data->routes_map.find(uri);
         if (it_route != data.pt_data->routes_map.end()) {
-            for (const auto jp  : it_route->second->journey_pattern_list) {
-                valid_journey_patterns.set(jp->idx, false);
+            for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*it_route->second)]) {
+                valid_journey_patterns.set(jp_idx.val, false);
             }
             continue;
         }
@@ -441,8 +442,8 @@ void RAPTOR::set_valid_jp_and_jpp(
         if (it_commercial_mode != data.pt_data->commercial_modes_map.end()) {
             for (const auto line : it_commercial_mode->second->line_list) {
                 for (auto route : line->route_list) {
-                    for (const auto jp  : route->journey_pattern_list) {
-                        valid_journey_patterns.set(jp->idx, false);
+                    for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                        valid_journey_patterns.set(jp_idx.val, false);
                     }
                 }
             }
@@ -450,8 +451,9 @@ void RAPTOR::set_valid_jp_and_jpp(
         }
         const auto it_physical_mode = data.pt_data->physical_modes_map.find(uri);
         if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
-            for (const auto jp  : it_physical_mode->second->journey_pattern_list) {
-                valid_journey_patterns.set(jp->idx, false);
+            const auto phy_mode_idx = PhyModeIdx(*it_physical_mode->second);
+            for (const auto& jp_idx: jp_container.get_jps_from_phy_mode()[phy_mode_idx]) {
+                valid_journey_patterns.set(jp_idx.val, false);
             }
             continue;
         }
@@ -459,27 +461,18 @@ void RAPTOR::set_valid_jp_and_jpp(
         if (it_network != data.pt_data->networks_map.end()) {
             for (const auto line : it_network->second->line_list) {
                 for (const auto route : line->route_list) {
-                    for (const auto jp  : route->journey_pattern_list) {
-                        valid_journey_patterns.set(jp->idx, false);
+                    for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                        valid_journey_patterns.set(jp_idx.val, false);
                     }
                 }
             }
             continue;
         }
-        const auto it_jp = data.pt_data->journey_patterns_map.find(uri);
-        if (it_jp != data.pt_data->journey_patterns_map.end()) {
-            valid_journey_patterns.set(it_jp->second->idx, false);
-        }
-        const auto it_jpp = data.pt_data->journey_pattern_points_map.find(uri);
-        if (it_jpp !=  data.pt_data->journey_pattern_points_map.end()) {
-            valid_journey_pattern_points.set(it_jpp->second->idx, false);
-            continue;
-        }
         const auto it_sp = data.pt_data->stop_points_map.find(uri);
         if (it_sp !=  data.pt_data->stop_points_map.end()) {
             valid_stop_points.set(it_sp->second->idx, false);
-            for (const auto jpp : it_sp->second->journey_pattern_point_list) {
-                valid_journey_pattern_points.set(jpp->idx, false);
+            for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*it_sp->second)]) {
+                valid_journey_pattern_points.set(jpp.idx.val, false);
             }
             continue;
         }
@@ -487,8 +480,8 @@ void RAPTOR::set_valid_jp_and_jpp(
         if (it_sa !=  data.pt_data->stop_areas_map.end()) {
             for (const auto sp : it_sa->second->stop_point_list) {
                 valid_stop_points.set(sp->idx, false);
-                for (const auto jpp : sp->journey_pattern_point_list) {
-                    valid_journey_pattern_points.set(jpp->idx, false);
+                for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*sp)]) {
+                    valid_journey_pattern_points.set(jpp.idx.val, false);
                 }
             }
             continue;
@@ -500,8 +493,8 @@ void RAPTOR::set_valid_jp_and_jpp(
         for (const auto* sp: data.pt_data->stop_points) {
             if (sp->accessible(accessibilite_params.properties)) { continue; }
             valid_stop_points.set(sp->idx, false);
-            for (const auto* jpp: sp->journey_pattern_point_list) {
-                valid_journey_pattern_points.set(jpp->idx, false);
+            for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*sp)]) {
+                valid_journey_pattern_points.set(jpp.idx.val, false);
             }
         }
     }
@@ -509,9 +502,9 @@ void RAPTOR::set_valid_jp_and_jpp(
     // propagate the invalid jp in their jpp
     for (JpIdx jp_idx = JpIdx(0); jp_idx.val < valid_journey_patterns.size(); ++jp_idx.val) {
         if (valid_journey_patterns[jp_idx.val]) { continue; }
-        const auto* jp = get_jp(jp_idx);
-        for (const auto* jpp: jp->journey_pattern_point_list) {
-            valid_journey_pattern_points.set(jpp->idx, false);
+        const auto& jp = jp_container.get(jp_idx);
+        for (const auto& jpp_idx: jp.jpps) {
+            valid_journey_pattern_points.set(jpp_idx.val, false);
         }
     }
 
