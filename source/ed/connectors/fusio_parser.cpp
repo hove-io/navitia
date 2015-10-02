@@ -1445,8 +1445,12 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
     return default_physical_mode;
 }
 
-void FusioParser::parse_files(Data& data) {
+void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
+
     parse<FeedInfoFusioHandler>(data, "feed_infos.txt");
+
+    manage_production_date(data, beginning_date);
+
     parse<GeometriesFusioHandler>(data, "geometries.txt");
 
     if (! parse<AgencyFusioHandler>(data, "networks.txt")) {

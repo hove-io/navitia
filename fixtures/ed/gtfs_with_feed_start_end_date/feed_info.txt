@@ -1,0 +1,3 @@
+"feed_publisher_name","feed_publisher_url","feed_start_date","feed_end_date"
+"ratp","http://test.fr","20100115","20101226"
+
