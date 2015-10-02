@@ -392,7 +392,7 @@ protected:
     template <typename Handler>
     void parse(Data&); //some parser do not need a file since they just add default data
 
-    virtual void parse_files(Data&, const std::string& = "") = 0;
+    virtual void parse_files(Data&, const std::string& beginning_date = "") = 0;
 public:
     GtfsData gtfs_data;
 
@@ -433,7 +433,7 @@ inline void GenericGtfsParser::parse(Data& data) {
  * simply define the list of elemental parsers to use
  */
 struct GtfsParser : public GenericGtfsParser {
-    virtual void parse_files(Data&, const std::string&);
+    virtual void parse_files(Data&, const std::string& beginning_date);
     GtfsParser(const std::string & path) : GenericGtfsParser(path) {}
 };
 
