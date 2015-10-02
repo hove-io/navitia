@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
+#include "routing/dataraptor.h"
 
 
 namespace pt = boost::posix_time;
@@ -84,14 +85,12 @@ next_passages(const std::string &request,
         fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(),
                        0, current_datetime, action_period);
 
-        const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
-        fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(),
+        fill_pb_object(dt_stop_time.second->stop_point, data, passage->mutable_stop_point(),
                 depth, current_datetime, action_period);
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
-        const type::JourneyPattern* jp = vj->journey_pattern;
-        const type::Route* route = jp->route;
+        const type::Route* route = vj->route;
         const type::Line* line = route->line;
-        const type::PhysicalMode* physical_mode = jp->physical_mode;
+        const type::PhysicalMode* physical_mode = vj->physical_mode;
         auto m_vj = passage->mutable_vehicle_journey();
         auto m_route = m_vj->mutable_route();
         auto m_physical_mode = m_vj->mutable_journey_pattern()->mutable_physical_mode();
@@ -122,10 +121,11 @@ pbnavitia::Response next_departures(const std::string &request,
         struct predicate_t {
             const type::Data &data;
             predicate_t(const type::Data& data) : data(data){}
-            bool operator()(const type::idx_t jppidx) const {
-                auto jpp = data.pt_data->journey_pattern_points[jppidx];
-                auto last_jpp = jpp->journey_pattern->journey_pattern_point_list.back();
-                return jpp == last_jpp;
+            bool operator()(const routing::JppIdx& jpp_idx) const {
+                const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+                const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+                if (jp.jpps.empty()) { return false; }
+                return jpp_idx == jp.jpps.back();
             }
         };
         pbnavitia::API api_pb;
@@ -150,8 +150,9 @@ pbnavitia::Response next_arrivals(const std::string &request,
         struct predicate_t {
             const type::Data &data;
             predicate_t(const type::Data& data) : data(data){}
-            bool operator()(const type::idx_t jppidx) const{
-                return data.pt_data->journey_pattern_points[jppidx]->order == 0;
+            bool operator()(const routing::JppIdx& jpp_idx) const {
+                const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+                return jpp.order == 0;
             }
         };
         pbnavitia::API api_pb;

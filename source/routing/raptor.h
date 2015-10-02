@@ -78,7 +78,7 @@ struct RAPTOR
     boost::dynamic_bitset<> valid_journey_patterns;
     dataRAPTOR::JppsFromSp jpps_from_sp;
     /// Order of the first journey_pattern point of each journey_pattern
-    IdxMap<type::JourneyPattern, int> Q;
+    IdxMap<JourneyPattern, int> Q;
 
     // set to store if the stop_point is valid
     boost::dynamic_bitset<> valid_stop_points;
@@ -89,8 +89,8 @@ struct RAPTOR
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
-        valid_journey_patterns(data.pt_data->journey_patterns.size()),
-        Q(data.pt_data->journey_patterns),
+        valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
+        Q(data.dataRaptor->jp_container.get_jps_values()),
         valid_stop_points(data.pt_data->stop_points.size())
     {
         labels.assign(10, data.dataRaptor->labels_const);
@@ -106,13 +106,6 @@ struct RAPTOR
               const type::Properties& properties);
 
     // pt_data object getters by typed idx
-    const type::JourneyPattern* get_jp(JpIdx idx) const {
-        return data.pt_data->journey_patterns[idx.val];
-    }
-    const type::JourneyPatternPoint* get_jpp(JppIdx jpp_idx) const {
-        return data.pt_data->journey_pattern_points[jpp_idx.val];
-    }
-
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];
     }
@@ -177,7 +170,7 @@ struct RAPTOR
               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true,
-              const nt::RTLevel rt_level = nt::RTLevel::Theoric);
+              const nt::RTLevel rt_level = nt::RTLevel::Base);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul

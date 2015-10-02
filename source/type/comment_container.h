@@ -92,7 +92,7 @@ private:
         return obj;
     }
     const stop_time_key get_as_key(const navitia::type::StopTime& st) const {
-        return std::make_pair(st.vehicle_journey, st.journey_pattern_point->order);
+        return std::make_pair(st.vehicle_journey, st.order());
     }
 
     typedef boost::fusion::map<

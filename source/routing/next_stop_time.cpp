@@ -51,15 +51,13 @@ bool NextStopTimeData::Arrival::is_valid(const type::StopTime& st) const {
 }
 
 template<typename Getter>
-void NextStopTimeData::TimesStopTimes<Getter>::init(const type::JourneyPattern* jp,
-                                                 const type::JourneyPatternPoint* jpp)
+void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp,
+                                                    const JourneyPatternPoint& jpp)
 {
     // collect the stop times at the given jpp
-    const size_t jpp_order = jpp->order;
-    stop_times.reserve(jp->discrete_vehicle_journey_list.size());
-    for(const auto& vj: jp->discrete_vehicle_journey_list) {
-        assert(vj->stop_time_list.at(jpp_order).journey_pattern_point ==
-               jp->journey_pattern_point_list.at(jpp_order));
+    const size_t jpp_order = jpp.order;
+    stop_times.reserve(jp.discrete_vjs.size());
+    for(const auto& vj: jp.discrete_vjs) {
         const auto& st = vj->stop_time_list[jpp_order];
         if (! getter.is_valid(st)) { continue; }
         stop_times.push_back(&st);
@@ -85,15 +83,15 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const type::JourneyPattern* 
     }
 }
 
-void NextStopTimeData::load(const type::PT_Data &data) {
-    departure.assign(data.journey_pattern_points);
-    arrival.assign(data.journey_pattern_points);
+void NextStopTimeData::load(const JourneyPatternContainer& jp_container) {
+    departure.assign(jp_container.get_jpps_values());
+    arrival.assign(jp_container.get_jpps_values());
 
-    for(const auto* jp: data.journey_patterns) {
-        for (const auto* jpp: jp->journey_pattern_point_list) {
-            const JppIdx jpp_idx = JppIdx(*jpp);
-            departure[jpp_idx].init(jp, jpp);
-            arrival[jpp_idx].init(jp, jpp);
+    for (const auto& jp: jp_container.get_jps()) {
+        for (const auto& jpp_idx: jp.second.jpps) {
+            const auto& jpp = jp_container.get(jpp_idx);
+            departure[jpp_idx].init(jp.second, jpp);
+            arrival[jpp_idx].init(jp.second, jpp);
         }
     }
 }
@@ -109,11 +107,6 @@ is_valid(const type::StopTime* st,
         st->vehicle_journey->accessible(vehicle_props);
 }
 
-static const type::JourneyPatternPoint*
-get_jpp(JppIdx jpp_idx, const type::Data& data) {
-    return data.pt_data->journey_pattern_points[jpp_idx.val];
-}
-
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
@@ -127,7 +120,7 @@ next_valid_discrete(const StopEvent stop_event,
                     const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -139,7 +132,7 @@ next_valid_discrete(const StopEvent stop_event,
     //if none was found, we try again the next day
     date++;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -154,15 +147,18 @@ next_valid_discrete(const StopEvent stop_event,
 
 static std::pair<const type::StopTime*, DateTime>
 next_valid_frequency(const StopEvent stop_event,
-                     const type::JourneyPatternPoint* jpp,
+                     const dataRAPTOR& dataRaptor,
+                     const JppIdx jpp_idx,
                      const DateTime dt,
                      const type::RTLevel rt_level,
                      const type::VehicleProperties &vehicle_props) {
     // to find the next frequency VJ, for the moment we loop through all frequency VJ of the JP
     // and for each jp, get compute the datetime on the jpp
+    const auto& jpp = dataRaptor.jp_container.get(jpp_idx);
+    const auto& jp = dataRaptor.jp_container.get(jpp.jp_idx);
     std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::inf};
-    for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
-        const auto& st = freq_vj->stop_time_list[jpp->order];
+    for (const auto& freq_vj: jp.freq_vjs) {
+        const auto& st = freq_vj->stop_time_list[jpp.order];
 
         if (! st.valid_begin(true) || ! freq_vj->accessible(vehicle_props)) {
             continue;
@@ -177,8 +173,8 @@ next_valid_frequency(const StopEvent stop_event,
 
     if (best.first == nullptr) {
         const auto next_date = DateTimeUtils::set(DateTimeUtils::date(dt) + 1, 0);
-        for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
-            const auto& st = freq_vj->stop_time_list[jpp->order];
+        for (const auto& freq_vj: jp.freq_vjs) {
+            const auto& st = freq_vj->stop_time_list[jpp.order];
 
             if (! st.valid_begin(true) || ! freq_vj->accessible(vehicle_props)) {
                 continue;
@@ -196,13 +192,16 @@ next_valid_frequency(const StopEvent stop_event,
 
 static std::pair<const type::StopTime*, DateTime>
 previous_valid_frequency(const StopEvent stop_event,
-                         const type::JourneyPatternPoint* jpp,
+                         const dataRAPTOR& dataRaptor,
+                         const JppIdx jpp_idx,
                          const DateTime dt,
                          const type::RTLevel rt_level,
                          const type::VehicleProperties &vehicle_props) {
+    const auto& jpp = dataRaptor.jp_container.get(jpp_idx);
+    const auto& jp = dataRaptor.jp_container.get(jpp.jp_idx);
     std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::not_valid};
-    for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
-        const auto& st = freq_vj->stop_time_list[jpp->order];
+    for (const auto& freq_vj: jp.freq_vjs) {
+        const auto& st = freq_vj->stop_time_list[jpp.order];
 
         if (! st.valid_begin(false) || ! freq_vj->accessible(vehicle_props)) {
             continue;
@@ -224,8 +223,8 @@ previous_valid_frequency(const StopEvent stop_event,
             return best;
         }
         const auto previous_date = DateTimeUtils::set(date - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
-        for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
-            const auto& st = freq_vj->stop_time_list[jpp->order];
+        for (const auto& freq_vj: jp.freq_vjs) {
+            const auto& st = freq_vj->stop_time_list[jpp.order];
 
             if (! st.valid_begin(false) || ! freq_vj->accessible(vehicle_props)) {
                 continue;
@@ -255,7 +254,7 @@ previous_valid_discrete(const StopEvent stop_event,
                         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
@@ -270,7 +269,7 @@ previous_valid_discrete(const StopEvent stop_event,
 
     --date;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(JppIdx(*st->journey_pattern_point) == jpp_idx);
+        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
@@ -296,7 +295,7 @@ NextStopTime::earliest_stop_time(const StopEvent stop_event,
 
     if (check_freq) {
         const auto first_frequency_st_pair =
-            next_valid_frequency(stop_event, get_jpp(jpp_idx, data), dt, rt_level, vehicle_props);
+            next_valid_frequency(stop_event, *data.dataRaptor, jpp_idx, dt, rt_level, vehicle_props);
 
         if (first_frequency_st_pair.second < first_discrete_st_pair.second) {
             return first_frequency_st_pair;
@@ -320,7 +319,7 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
 
     if (check_freq) {
         const auto first_frequency_st_pair =
-            previous_valid_frequency(stop_event, get_jpp(jpp_idx, data), dt, rt_level, vehicle_props);
+            previous_valid_frequency(stop_event, *data.dataRaptor, jpp_idx, dt, rt_level, vehicle_props);
 
         // since the default value is DateTimeUtils::not_valid (== DateTimeUtils::max)
         // we need to check first that they are

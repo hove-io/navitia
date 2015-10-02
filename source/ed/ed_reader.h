@@ -74,9 +74,7 @@ private:
     std::unordered_map<idx_t, navitia::type::Line*> line_map;
     std::unordered_map<idx_t, navitia::type::LineGroup*> line_group_map;
     std::unordered_map<idx_t, navitia::type::Route*> route_map;
-    std::unordered_map<idx_t, navitia::type::JourneyPattern*> journey_pattern_map;
     std::unordered_map<idx_t, navitia::type::ValidityPattern*> validity_pattern_map;
-    std::unordered_map<idx_t, navitia::type::JourneyPatternPoint*> journey_pattern_point_map;
     std::unordered_map<idx_t, navitia::type::VehicleJourney*> vehicle_journey_map;
 
     //we need a temporary structure to store the comments on the stop times
@@ -110,10 +108,8 @@ private:
     void fill_line_groups(navitia::type::Data& data, pqxx::work& work);
 
     void fill_routes(navitia::type::Data& data, pqxx::work& work);
-    void fill_journey_patterns(navitia::type::Data& data, pqxx::work& work);
     void fill_validity_patterns(navitia::type::Data& data, pqxx::work& work);
 
-    void fill_journey_pattern_points(navitia::type::Data& data, pqxx::work& work);
     void fill_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
     void fill_associated_calendar(navitia::type::Data& data, pqxx::work& work);
     void fill_meta_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);

@@ -74,7 +74,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 43; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version = 44; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
@@ -99,9 +99,7 @@ public:
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
     /** Retourne la structure de données associée au type */
-    /// TODO : attention aux perfs à faire la copie
-    template<typename T> std::vector<T*> & get_data();
-    template<typename T> std::vector<T*> get_data() const;
+    template<typename T> const std::vector<T*>& get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *

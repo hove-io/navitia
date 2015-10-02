@@ -100,10 +100,10 @@ struct route_schedule_fixture {
                           b_name = "stopB",
                           c_name = "stopC",
                           d_name = "stopD";
-        b.vj("A", "1111111", "", true, "1", "1", "JP1")(c_name, 8*3600 + 5*60)(d_name, 9*3600 + 30*60);
-        b.vj("A", "1111111", "", true, "2", "2", "JP2")(a_name, 8*3600)(b_name, 8*3600 + 10*60);
-        b.vj("A", "1111111", "", true, "3", "3", "JP2")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
-        b.vj("A", "1111111", "", true, "4", "4", "JP3")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
+        b.vj("A", "1111111", "", true, "1", "1")(c_name, 8*3600 + 5*60)(d_name, 9*3600 + 30*60);
+        b.vj("A", "1111111", "", true, "2", "2")(a_name, 8*3600)(b_name, 8*3600 + 10*60);
+        b.vj("A", "1111111", "", true, "3", "3")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
+        b.vj("A", "1111111", "", true, "4", "4")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
         b.finish();
         b.data->pt_data->index();
         b.data->build_raptor();
@@ -118,7 +118,7 @@ struct route_schedule_fixture {
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 100,
-                                                                   3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                   3, 10, 0, *(b.data), nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -131,7 +131,7 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
     pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=A", {}, {}, d("20120615T070000"), 86400, 0,
-                                                                   3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                   3, 10, 0, *(b.data), nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -169,9 +169,9 @@ struct route_schedule_calendar_fixture {
         boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
-        vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5", "JP4")(S1_name, 10*3600)(S2_name, 10*3600 + 30*60)(S3_name, 11*3600).vj;
-        vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6", "JP4")(S1_name, 11*3600)(S2_name, 11*3600 + 30*60)(S3_name, 12*3600).vj;
-        vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7", "JP4")(S1_name, 13*3600)(S2_name, 13*3600 + 37*60)(S3_name, 14*3600).vj;
+        vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5")(S1_name, 10*3600)(S2_name, 10*3600 + 30*60)(S3_name, 11*3600).vj;
+        vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6")(S1_name, 11*3600)(S2_name, 11*3600 + 30*60)(S3_name, 12*3600).vj;
+        vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")(S1_name, 13*3600)(S2_name, 13*3600 + 37*60)(S3_name, 14*3600).vj;
 
         c1 = new navitia::type::Calendar(begin);
         c1->uri = "C1";
@@ -211,7 +211,7 @@ struct route_schedule_calendar_fixture {
 
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
         pbnavitia::Response resp = navitia::timetables::route_schedule("line.uri=B", calendar, {}, d("20120615T070000"), 86400, 100,
-                                                                       3, 10, 0, *(b.data), nt::RTLevel::Theoric, false);
+                                                                       3, 10, 0, *(b.data), nt::RTLevel::Base, false);
         BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         print_route_schedule(route_schedule);
@@ -243,18 +243,18 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
 // st6 5 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_1) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A", "A")
+    b.vj("L", "1111111", "", true, "A", "A")
         ("st4", "5:00"_t)
         ("st5", "6:00"_t)
         ("st6", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B", "B")
+    b.vj("L", "1111111", "", true, "B", "B")
         ("st1", "1:00"_t)
         ("st2", "3:00"_t)
         ("st3", "5:00"_t)
         ("st4", "6:00"_t)
         ("st5", "7:00"_t)
         ("st6", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C", "C")
+    b.vj("L", "1111111", "", true, "C", "C")
         ("st1", "2:00"_t)
         ("st4", "3:00"_t)
         ("st5", "4:00"_t)
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
 // st8 10 11
 BOOST_AUTO_TEST_CASE(complicated_order_2) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A", "A")
+    b.vj("L", "1111111", "", true, "A", "A")
         ("st1", "1:00"_t)
         ("st2", "2:00"_t)
         ("st3", "3:00"_t)
@@ -299,12 +299,12 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
         ("st6", "9:00"_t)
         ("st7", "10:00"_t)
         ("st8", "11:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B", "B")
+    b.vj("L", "1111111", "", true, "B", "B")
         ("st1", "2:00"_t)
         ("st2", "3:00"_t)
         ("st3", "4:00"_t)
         ("st6", "7:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C", "C")
+    b.vj("L", "1111111", "", true, "C", "C")
         ("st6", "8:00"_t)
         ("st7", "9:00"_t)
         ("st8", "10:00"_t);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
@@ -335,21 +335,21 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
 // st4 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_3) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A", "A")
+    b.vj("L", "1111111", "", true, "A", "A")
         ("st3", "6:00"_t)
         ("st4", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B", "B")
+    b.vj("L", "1111111", "", true, "B", "B")
         ("st1", "1:00"_t)
         ("st2", "2:00"_t)
         ("st3", "7:00"_t)
         ("st4", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C", "C")
+    b.vj("L", "1111111", "", true, "C", "C")
         ("st1", "2:00"_t)
         ("st2", "3:00"_t);
-    b.vj("L", "1111111", "", true, "D", "D", "D")
+    b.vj("L", "1111111", "", true, "D", "D")
         ("st1", "3:00"_t)
         ("st2", "4:00"_t);
-    b.vj("L", "1111111", "", true, "E", "E", "E")
+    b.vj("L", "1111111", "", true, "E", "E")
         ("st1", "4:00"_t)
         ("st2", "5:00"_t);
 
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
         "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
-        3, 10, 0, *b.data, nt::RTLevel::Theoric, false);
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);

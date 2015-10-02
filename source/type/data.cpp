@@ -339,15 +339,15 @@ void Data::complete(){
 static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
     ValidityPattern validity;
 
-    for (auto* vj: meta_vj->theoric_vj) {
+    for (auto* vj: meta_vj->base_vj) {
         if (validity.beginning_date.is_not_a_date()) {
-            validity.beginning_date = vj->theoric_validity_pattern()->beginning_date;
+            validity.beginning_date = vj->base_validity_pattern()->beginning_date;
         } else {
-            if (validity.beginning_date != vj->theoric_validity_pattern()->beginning_date) {
+            if (validity.beginning_date != vj->base_validity_pattern()->beginning_date) {
                 throw navitia::exception("the beginning date of the meta_vj are not all the same");
             }
         }
-        validity.days |= vj->theoric_validity_pattern()->days;
+        validity.days |= vj->base_validity_pattern()->days;
     }
     return validity;
 }
@@ -360,7 +360,7 @@ void Data::build_associated_calendar() {
     for(auto meta_vj_pair : this->pt_data->meta_vj) {
         auto meta_vj = meta_vj_pair.second;
 
-        assert (! meta_vj->theoric_vj.empty());
+        assert (! meta_vj->base_vj.empty());
 
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
@@ -369,8 +369,8 @@ void Data::build_associated_calendar() {
         ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
-        auto* first_vj = meta_vj->theoric_vj.front();
-        const std::vector<Calendar*> calendar_list = first_vj->journey_pattern->route->line->calendar_list;
+        auto* first_vj = meta_vj->base_vj.front();
+        const auto& calendar_list = first_vj->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
             nb_not_matched_vj++;
@@ -430,55 +430,39 @@ void Data::build_associated_calendar() {
 
 void Data::build_relations(){
     // physical_mode_list of line
-    for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        if((jp->physical_mode && jp->route && jp->route->line)
-            && (boost::range::find(jp->route->line->physical_mode_list,
-                                  jp->physical_mode) == jp->route->line->physical_mode_list.end())){
-            jp->route->line->physical_mode_list.push_back(jp->physical_mode);
+    for (const auto* vj: pt_data->vehicle_journeys) {
+        if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
+        if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
+            != vj->route->line->physical_mode_list.end()) {
+            // physical_mode already in line
+            continue;
         }
+        vj->route->line->physical_mode_list.push_back(vj->physical_mode);
     }
 }
 
 void Data::aggregate_odt(){
-    for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        jp->build_odt_properties();
-    }
-
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     //
     // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
     // for some ODT kind, we have to fill the Admin structure with the ODT stop points
     std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
-    for (const auto jp: pt_data->journey_patterns) {
-        if (! jp->odt_properties.is_zonal()) {
+    for (const auto* route: pt_data->routes) {
+        if (! route->get_odt_properties().is_zonal()) {
             continue;
         }
-        if (jp->journey_pattern_point_list.size() != 2) {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
-                           << jp->uri << ") has more than 2 stops, we skip it");
-            continue;
-        }
-        bool add = false;
         // we add it for the ODT type where the vehicle comes directly to the user
-        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+        route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
             if (in(vj.vehicle_journey_type, {VehicleJourneyType::adress_to_stop_point,
                      VehicleJourneyType::odt_point_to_point} )) {
-                add = true;
-                return false; // we can stop
+                for (const auto& st: vj.stop_time_list) {
+                    for (auto* admin: st.stop_point->admin_list) {
+                        odt_stops_by_admin[admin].insert(st.stop_point);
+                    }
+                }
             }
             return true;
         });
-
-        if (! add ) {
-            continue;
-        }
-
-        for (const auto jpp: jp->journey_pattern_point_list) {
-            const auto sp = jpp->stop_point;
-            for (auto* admin: sp->admin_list) {
-                odt_stops_by_admin[admin].insert(sp);
-            }
-        }
     }
 
     //we first store the stops in a set not to have dupplicates
@@ -521,41 +505,35 @@ void Data::compute_labels() {
 }
 
 #define GET_DATA(type_name, collection_name)\
-template<> std::vector<type_name*> & \
-Data::get_data<type_name>() {\
-    return this->pt_data->collection_name;\
-}\
-template<> std::vector<type_name *> \
+template<> const std::vector<type_name*>& \
 Data::get_data<type_name>() const {\
     return this->pt_data->collection_name;\
 }
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
-template<> std::vector<georef::POI*> &
-Data::get_data<georef::POI>() {
-    return this->geo_ref->pois;
-}
-template<> std::vector<georef::POI*>
+template<> const std::vector<georef::POI*>&
 Data::get_data<georef::POI>() const {
     return this->geo_ref->pois;
 }
-
-template<> std::vector<georef::POIType*> &
-Data::get_data<georef::POIType>() {
-    return this->geo_ref->poitypes;
-}
-template<> std::vector<georef::POIType*>
+template<> const std::vector<georef::POIType*>&
 Data::get_data<georef::POIType>() const {
     return this->geo_ref->poitypes;
 }
-
-template<> std::vector<StopPointConnection*> &
-Data::get_data<StopPointConnection>() {
-    return this->pt_data->stop_point_connections;
-}
-template<> std::vector<StopPointConnection*>
+template<> const std::vector<StopPointConnection*>&
 Data::get_data<StopPointConnection>() const {
     return this->pt_data->stop_point_connections;
+}
+
+// JP and JPP can't work with automatic build clause
+template<> const std::vector<routing::JourneyPattern*>&
+Data::get_data<routing::JourneyPattern>() const {
+    static const std::vector<routing::JourneyPattern*> res;
+    return res;
+}
+template<> const std::vector<routing::JourneyPatternPoint*>&
+Data::get_data<routing::JourneyPatternPoint>() const {
+    static const std::vector<routing::JourneyPatternPoint*> res;
+    return res;
 }
 
 
@@ -566,6 +544,8 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     case Type_e::type_name:\
         num_elements = this->pt_data->collection_name.size();break;
     ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
+    case Type_e::JourneyPattern: num_elements = dataRaptor->jp_container.nb_jps(); break;
+    case Type_e::JourneyPatternPoint: num_elements = dataRaptor->jp_container.nb_jpps(); break;
     case Type_e::POI: num_elements = this->geo_ref->pois.size(); break;
     case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
     case Type_e::Connection:
@@ -603,19 +583,75 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         result.push_back(source_idx);
         return result;
     }
-    switch(source) {
-    #define GET_INDEXES(type_name, collection_name)\
-        case Type_e::type_name:\
-            result = pt_data->collection_name[source_idx]->get(target, *pt_data);\
+    const auto& jp_container = dataRaptor->jp_container;
+    if (target == Type_e::JourneyPattern) {
+        switch (source) {
+        case Type_e::Route:
+            for (const auto& jpp: jp_container.get_jps_from_route()[routing::RouteIdx(source_idx)]) {
+                result.push_back(jpp.val);
+            }
             break;
-    ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
-        case Type_e::POI:
-            result = geo_ref->pois[source_idx]->get(target, *geo_ref);
+        case Type_e::VehicleJourney:
+            result.push_back(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
             break;
-        case Type_e::POIType:
-            result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
+        case Type_e::JourneyPatternPoint:
+            result.push_back(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
             break;
         default: break;
+        }
+        return result;
+    }
+    if (target == Type_e::JourneyPatternPoint) {
+        switch (source) {
+        case Type_e::StopPoint:
+            for (const auto& jpp: dataRaptor->jpps_from_sp[routing::SpIdx(source_idx)]) {
+                result.push_back(jpp.idx.val);
+            }
+            break;
+        case Type_e::JourneyPattern:
+            for (const auto& jpp_idx: jp_container.get(routing::JpIdx(source_idx)).jpps) {
+                result.push_back(jpp_idx.val);
+            }
+            break;
+        default: break;
+        }
+        return result;
+    }
+    switch(source) {
+    case Type_e::JourneyPattern: {
+        const auto& jp = jp_container.get(routing::JpIdx(source_idx));
+        switch(target) {
+        case Type_e::Route: result.push_back(jp.route_idx.val); break;
+        case Type_e::JourneyPatternPoint: /* already done */ break;
+        case Type_e::VehicleJourney:
+            for (const auto& vj: jp.discrete_vjs) { result.push_back(vj->idx); }
+            for (const auto& vj: jp.freq_vjs) { result.push_back(vj->idx); }
+            break;
+        default: break;
+        }
+        break;
+    }
+    case Type_e::JourneyPatternPoint:
+        switch(target) {
+        case Type_e::JourneyPattern: /* already done */ break;
+        case Type_e::StopPoint:
+            result.push_back(jp_container.get(routing::JppIdx(source_idx)).sp_idx.val);
+            break;
+        default: break;
+        }
+        break;
+#define GET_INDEXES(type_name, collection_name) \
+    case Type_e::type_name:                                         \
+        result = pt_data->collection_name[source_idx]->get(target, *pt_data); \
+        break;
+    ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+    case Type_e::POI:
+        result = geo_ref->pois[source_idx]->get(target, *geo_ref);
+        break;
+    case Type_e::POIType:
+        result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
+        break;
+    default: break;
     }
     return result;
 }

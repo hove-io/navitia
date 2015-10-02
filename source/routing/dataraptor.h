@@ -34,9 +34,11 @@ www.navitia.io
 #include "routing/raptor_utils.h"
 #include "utils/idx_map.h"
 #include "routing/next_stop_time.h"
+#include "routing/journey_pattern_container.h"
 
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>
+
 namespace navitia { namespace routing {
 
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
@@ -48,7 +50,7 @@ struct dataRAPTOR {
             DateTime duration;
             SpIdx sp_idx;
         };
-        void load(const navitia::type::PT_Data &data);
+        void load(const navitia::type::PT_Data&);
 
         // for a stop point, get the corresponding forward connections
         IdxMap<type::StopPoint, std::vector<Connection>> forward_connections;
@@ -68,7 +70,7 @@ struct dataRAPTOR {
         inline const std::vector<Jpp>& operator[](const SpIdx& sp) const {
             return jpps_from_sp[sp];
         }
-        void load(const navitia::type::PT_Data &data);
+        void load(const type::PT_Data&, const JourneyPatternContainer&);
         void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
 
         inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
@@ -91,27 +93,25 @@ struct dataRAPTOR {
         inline const std::vector<Jpp>& operator[](const JpIdx& jp) const {
             return jpps_from_jp[jp];
         }
-        void load(const navitia::type::PT_Data &data);
+        void load(const JourneyPatternContainer&);
     private:
-        IdxMap<type::JourneyPattern, std::vector<Jpp>> jpps_from_jp;
+        IdxMap<JourneyPattern, std::vector<Jpp>> jpps_from_jp;
     };
     JppsFromJp jpps_from_jp;
 
     NextStopTimeData next_stop_time_data;
+
+    JourneyPatternContainer jp_container;
 
     // blank labels, to fast init labels with a memcpy
     Labels labels_const;
     Labels labels_const_reverse;
 
     // jp_validity_patterns[date][jp_idx] == any(vj.validity_pattern->check2(date) for vj in jp)
-    std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
-
-    // as jp_validity_patterns for the adapted ones
-    std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
-
+    flat_enum_map<type::RTLevel, std::vector<boost::dynamic_bitset<>>> jp_validity_patterns;
 
     dataRAPTOR() {}
-    void load(const navitia::type::PT_Data &data);
+    void load(const navitia::type::PT_Data&);
 };
 
 }}

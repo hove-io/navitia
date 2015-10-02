@@ -375,7 +375,7 @@ struct ObjectCodesFusioHandler: public GenericHandler {
  * simply define the list of elemental parsers to use
  */
 struct FusioParser : public GenericGtfsParser {
-    void parse_files(Data&);
+    void parse_files(Data&, const std::string& beginning_date = "");
     FusioParser(const std::string & path) : GenericGtfsParser(path) {}
 };
 }

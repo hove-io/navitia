@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
 
@@ -61,7 +62,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            depth, current_time, action_period, show_codes);
             break;
         case Type_e::JourneyPattern:
-            fill_pb_object(data.pt_data->journey_patterns[idx], data,
+            fill_pb_object(data.dataRaptor->jp_container.get_jps()[idx], data,
                            result.add_journey_patterns(), depth, current_time, action_period);
             break;
         case Type_e::StopPoint:
@@ -85,7 +86,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            result.add_commercial_modes(), depth, current_time, action_period);
             break;
         case Type_e::JourneyPatternPoint:
-            fill_pb_object(data.pt_data->journey_pattern_points[idx], data,
+            fill_pb_object(data.dataRaptor->jp_container.get_jpps()[idx], data,
                            result.add_journey_pattern_points(), depth, current_time, action_period);
             break;
         case Type_e::Company:

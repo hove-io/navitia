@@ -50,11 +50,13 @@ typedef std::bitset<8> VehicleProperties;
 
 namespace routing {
 
+struct JourneyPatternContainer;
+
 struct NextStopTimeData {
     typedef boost::iterator_range<std::vector<const type::StopTime*>::const_iterator> StopTimeIter;
     typedef boost::iterator_range<std::vector<const type::StopTime*>::const_reverse_iterator> StopTimeReverseIter;
 
-    void load(const navitia::type::PT_Data &data);
+    void load(const JourneyPatternContainer&);
 
     // Returns the range of the stop times in increasing time order
     inline StopTimeIter stop_time_range_forward(const JppIdx jpp_idx,
@@ -130,10 +132,10 @@ private:
             const auto idx = it - times.begin();
             return boost::make_iterator_range(stop_times.rend() - idx, stop_times.rend());
         }
-        void init(const type::JourneyPattern* jp, const type::JourneyPatternPoint* jpp);
+        void init(const JourneyPattern& jp, const JourneyPatternPoint& jpp);
     };
-    IdxMap<type::JourneyPatternPoint, TimesStopTimes<Departure>> departure;
-    IdxMap<type::JourneyPatternPoint, TimesStopTimes<Arrival>> arrival;
+    IdxMap<JourneyPatternPoint, TimesStopTimes<Departure>> departure;
+    IdxMap<JourneyPatternPoint, TimesStopTimes<Arrival>> arrival;
 };
 
 struct NextStopTime {
@@ -197,12 +199,12 @@ DateTime get_next_stop_time(const StopEvent stop_event,
                             DateTime dt,
                             const type::FrequencyVehicleJourney& freq_vj,
                             const type::StopTime& st,
-                            const type::RTLevel rt_level = type::RTLevel::Theoric);
+                            const type::RTLevel rt_level = type::RTLevel::Base);
 DateTime get_previous_stop_time(const StopEvent stop_event,
                                 DateTime dt,
                                 const type::FrequencyVehicleJourney& freq_vj,
                                 const type::StopTime& st,
-                                const type::RTLevel rt_level = type::RTLevel::Theoric);
+                                const type::RTLevel rt_level = type::RTLevel::Base);
 
 
 }} // namespace navitia::routing

@@ -31,6 +31,11 @@ LOGGER = {
             'level': 'INFO',
             'propagate': True
         },
+        'navitiacommon.default_values': {
+            'handlers': ['default'],
+            'level': 'ERROR',
+            'propagate': True
+        },
     }
 }
 

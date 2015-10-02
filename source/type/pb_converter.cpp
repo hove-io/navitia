@@ -42,6 +42,7 @@ www.navitia.io
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
 #include "vptranslator/block_pattern_to_pb.h"
+#include "routing/dataraptor.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -467,16 +468,21 @@ void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
 }
 
 
-void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
-        pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period, const bool show_codes){
-    if (jp == nullptr) { return; }
+void fill_pb_object(const std::pair<const routing::JpIdx, const routing::JourneyPattern&>& jp,
+                    const nt::Data& data,
+                    pbnavitia::JourneyPattern * journey_pattern,
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period,
+                    const bool show_codes){
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    journey_pattern->set_name(jp->name);
-    journey_pattern->set_uri(jp->uri);
-    if(depth > 0 && jp->route != nullptr) {
-        fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
+    const std::string id = data.dataRaptor->jp_container.get_id(jp.first);
+    journey_pattern->set_name(id);
+    journey_pattern->set_uri(id);
+    if (depth > 0) {
+        const auto* route = data.pt_data->routes[jp.second.route_idx.val];
+        fill_pb_object(route, data, journey_pattern->mutable_route(),
                 depth-1, now, action_period, show_codes);
     }
 }
@@ -534,10 +540,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                 fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
                         now, action_period, show_codes);
         }
-        std::set<nt::PhysicalMode*> physical_modes;
-        for (auto journey_pattern : r->journey_pattern_list) {
-            physical_modes.insert(journey_pattern->physical_mode);
-        }
+        std::set<const nt::PhysicalMode*> physical_modes;
+        r->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                physical_modes.insert(vj.physical_mode);
+                return true;
+            });
         for (auto physical_mode : physical_modes) {
             fill_pb_object(physical_mode, data, route->add_physical_modes(), 0, now, action_period,
                            show_codes);
@@ -656,36 +663,28 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     vehicle_journey->set_school_vehicle(vj->school_vehicle());
 
     if(depth > 0) {
-        if(vj->journey_pattern != nullptr) {
-            fill_pb_object(vj->journey_pattern, data,
-                           vehicle_journey->mutable_journey_pattern(), depth-1,
-                           now, action_period, show_codes);
-        }
-        for(type::StopTime stop_time : vj->stop_time_list) {
-            //we copy the stoptime since we need to convert it to local time
-            if(stop_time.departure_time != std::numeric_limits<uint32_t>::max()){
-                stop_time.departure_time += vj->utc_to_local_offset;
-            }
-            if(stop_time.arrival_time != std::numeric_limits<uint32_t>::max()){
-                stop_time.arrival_time += vj->utc_to_local_offset;
-            }
+        const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
+        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jp_idx.val], data,
+                       vehicle_journey->mutable_journey_pattern(), depth-1,
+                       now, action_period, show_codes);
+        for(const auto& stop_time : vj->stop_time_list) {
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period, show_codes);
         }
-        fill_pb_object(vj->journey_pattern->physical_mode, data,
+        fill_pb_object(vj->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
-        fill_pb_object(vj->theoric_validity_pattern(), data,
+        fill_pb_object(vj->base_validity_pattern(), data,
                        vehicle_journey->mutable_validity_pattern(),
                        depth-1);
         fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(),
                        depth-1);
-        fill_pb_object(vj->theoric_validity_pattern(), data,
+        fill_pb_object(vj->base_validity_pattern(), data,
                        vehicle_journey->mutable_validity_pattern(), max_depth-1);
         fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-        vptranslator::fill_pb_object(vptranslator::translate(*vj->theoric_validity_pattern()),
+        vptranslator::fill_pb_object(vptranslator::translate(*vj->base_validity_pattern()),
                                      data,
                                      vehicle_journey,
                                      max_depth - 1,
@@ -714,27 +713,30 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
     if (st == nullptr) { return; }
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    //arrival/departure in protobuff are also as seconds from midnight (in UTC of course)
-    stop_time->set_arrival_time(st->arrival_time);
-    stop_time->set_departure_time(st->departure_time);
+    // arrival/departure in protobuff are as seconds from midnight in local time
+    const auto offset = [&](const uint32_t time) {
+        static const auto flag = std::numeric_limits<uint32_t>::max();
+        return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset;
+    };
+    stop_time->set_arrival_time(st->arrival_time + offset(st->arrival_time));
+    stop_time->set_departure_time(st->departure_time + offset(st->departure_time));
     stop_time->set_headsign(data.pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
 
     // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
-    if (st->journey_pattern_point != nullptr && depth > 0) {
-        fill_pb_object(st->journey_pattern_point, data,
+    if (depth > 0) {
+        const auto& jpp_idx = data.dataRaptor->jp_container.get_jpp(*st);
+        fill_pb_object(data.dataRaptor->jp_container.get_jpps()[jpp_idx.val], data,
                        stop_time->mutable_journey_pattern_point(), depth-1,
                        now, action_period, show_codes);
     }
 
-    if (st->journey_pattern_point) {
-        // we always dump the stop point (with the same depth)
-        fill_pb_object(st->journey_pattern_point->stop_point, data,
-                       stop_time->mutable_stop_point(), depth,
-                       now, action_period, show_codes);
-    }
+    // we always dump the stop point (with the same depth)
+    fill_pb_object(st->stop_point, data,
+                   stop_time->mutable_stop_point(), depth,
+                   now, action_period, show_codes);
 
     if(st->vehicle_journey != nullptr && depth > 0) {
         fill_pb_object(st->vehicle_journey, data,
@@ -758,28 +760,25 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
 }
 
 
-void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
+void fill_pb_object(const std::pair<const routing::JppIdx, const routing::JourneyPatternPoint&>& jpp,
+                    const nt::Data& data,
                     pbnavitia::JourneyPatternPoint * journey_pattern_point,
-                    int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period, const bool show_codes){
-    if(jpp == nullptr)
-        return ;
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period,
+                    const bool show_codes){
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    journey_pattern_point->set_uri(jpp->uri);
-    journey_pattern_point->set_order(jpp->order);
+    journey_pattern_point->set_uri(data.dataRaptor->jp_container.get_id(jpp.first));
+    journey_pattern_point->set_order(jpp.second.order);
 
     if(depth > 0){
-        if(jpp->stop_point != nullptr) {
-            fill_pb_object(jpp->stop_point, data,
-                           journey_pattern_point->mutable_stop_point(),
-                           depth-1, now, action_period, show_codes);
-        }
-        if(jpp->journey_pattern != nullptr) {
-            fill_pb_object(jpp->journey_pattern, data,
-                           journey_pattern_point->mutable_journey_pattern(),
-                           depth - 1, now, action_period, show_codes);
-        }
+        fill_pb_object(data.pt_data->stop_points[jpp.second.sp_idx.val], data,
+                       journey_pattern_point->mutable_stop_point(),
+                       depth-1, now, action_period, show_codes);
+        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jpp.second.jp_idx.val], data,
+                       journey_pattern_point->mutable_journey_pattern(),
+                       depth - 1, now, action_period, show_codes);
     }
 }
 
@@ -1276,14 +1275,12 @@ get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exceptio
 
 static bool is_partial_terminus(const navitia::type::StopTime* stop_time){
     return stop_time->vehicle_journey
-            && stop_time->vehicle_journey->journey_pattern
-            && stop_time->vehicle_journey->journey_pattern->route
-            && stop_time->vehicle_journey->journey_pattern->route->destination
-            && (!stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.empty())
-            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point
-            && stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area
-            && (stop_time->vehicle_journey->journey_pattern->route->destination
-                != stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area);
+        && stop_time->vehicle_journey->route
+        && stop_time->vehicle_journey->route->destination
+        && ! stop_time->vehicle_journey->stop_time_list.empty()
+        && stop_time->vehicle_journey->stop_time_list.back().stop_point
+        && stop_time->vehicle_journey->route->destination
+           != stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
 }
 
 void fill_pb_object(const navitia::type::StopTime* stop_time,
@@ -1312,7 +1309,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
 
     // partial terminus
     if (is_partial_terminus(stop_time)) {
-        auto sa = stop_time->journey_pattern_point->journey_pattern->journey_pattern_point_list.back()->stop_point->stop_area;
+        auto sa = stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
         destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
@@ -1411,10 +1408,11 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj->uri);
-    if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
-        fill_pb_object(vj->journey_pattern->route, data, pt_display_info,max_depth,now,action_period);
-        uris->set_route(vj->journey_pattern->route->uri);
-        uris->set_journey_pattern(vj->journey_pattern->uri);
+    if (vj->route) {
+        fill_pb_object(vj->route, data, pt_display_info,max_depth,now,action_period);
+        uris->set_route(vj->route->uri);
+        const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
+        uris->set_journey_pattern(data.dataRaptor->jp_container.get_id(jp_idx));
     }
     for(auto message : vj->get_applicable_messages(now, action_period)){
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
@@ -1423,15 +1421,15 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         pt_display_info->set_headsign(data.pt_data->headsign_handler.get_headsign(*origin));
     }
     pt_display_info->set_direction(vj->get_direction());
-    if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){
-        pt_display_info->set_physical_mode(vj->journey_pattern->physical_mode->name);
-        uris->set_physical_mode(vj->journey_pattern->physical_mode->uri);
+    if (vj->physical_mode != nullptr) {
+        pt_display_info->set_physical_mode(vj->physical_mode->name);
+        uris->set_physical_mode(vj->physical_mode->uri);
     }
     pt_display_info->set_description(vj->odt_message);
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if(origin && destination){
-        fill_pb_object(vj, data, has_equipments, origin->journey_pattern_point->stop_point,
-                       destination->journey_pattern_point->stop_point,  max_depth-1, now,
+        fill_pb_object(vj, data, has_equipments, origin->stop_point,
+                       destination->stop_point,  max_depth-1, now,
                        action_period);
     }else{
         fill_pb_object(vj, data, has_equipments, max_depth-1, now, action_period);
@@ -1609,10 +1607,8 @@ void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& d
 }
 
 void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data, const type::VehicleJourney* vehicle_journey){
-    if (vehicle_journey
-            && vehicle_journey->journey_pattern
-            && vehicle_journey->journey_pattern->physical_mode){
-        fill_co2_emission_by_mode(pb_section, data, vehicle_journey->journey_pattern->physical_mode->uri);
+    if (vehicle_journey && vehicle_journey->physical_mode) {
+        fill_co2_emission_by_mode(pb_section, data, vehicle_journey->physical_mode->uri);
     }
 }
 

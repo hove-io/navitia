@@ -71,7 +71,7 @@ struct data_set {
         //add lines
         b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
         b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
-        b.vj("line:A", "", "", true, "vj1", "", "", "physical_mode:Car")
+        b.vj("line:A", "", "", true, "vj1", "", "physical_mode:Car")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
@@ -79,7 +79,7 @@ struct data_set {
 
         // we add a stop area with a strange name (with space and special char)
         b.sa("stop_with name bob \" , é", 20, 20);
-        b.vj("line:B", "", "", true, "vj_b", "", "", "physical_mode:Car")
+        b.vj("line:B", "", "", true, "vj_b", "", "physical_mode:Car")
                 ("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1", "9:00"_t);
 
         // add a line with a unicode name
@@ -114,7 +114,7 @@ struct data_set {
         b.data->build_uri();
 
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
-        vj->theoric_validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
+        vj->base_validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
         //we add some comments

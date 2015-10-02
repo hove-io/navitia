@@ -206,12 +206,6 @@ struct associated_cal_fixture {
         route->line = line;
         data.routes.push_back(route);
 
-        auto* journey_pattern = new ed::types::JourneyPattern();
-        journey_pattern->idx = data.journey_patterns.size();
-        journey_pattern->uri ="jp";
-        journey_pattern->route = route;
-        data.journey_patterns.push_back(journey_pattern);
-
         auto st1 = new ed::types::StopTime();
         st1->arrival_time = 10 * 3600 + 15 * 60;
         st1->departure_time = 10 * 3600 + 15 * 60;
@@ -222,10 +216,10 @@ struct associated_cal_fixture {
         st2->departure_time = 11 * 3600 + 10 * 60;
         data.stops.push_back(st2);
 
-        st1->tmp_stop_point = new ed::types::StopPoint();
-        data.stop_points.push_back(st1->tmp_stop_point);
-        st2->tmp_stop_point = new ed::types::StopPoint();
-        data.stop_points.push_back(st2->tmp_stop_point);
+        st1->stop_point = new ed::types::StopPoint();
+        data.stop_points.push_back(st1->stop_point);
+        st2->stop_point = new ed::types::StopPoint();
+        data.stop_points.push_back(st2->stop_point);
 
 
         //b.vj("network:R", "line:A", "", "", true, "vj1")
@@ -236,7 +230,7 @@ struct associated_cal_fixture {
         vj1->idx = data.vehicle_journeys.size();
         vj1->name = "vj1";
         vj1->uri = "vj1";
-        vj1->journey_pattern = journey_pattern;
+        vj1->route = route;
         vj1->stop_time_list.push_back(st1);
         vj1->stop_time_list.push_back(st2);
         data.vehicle_journeys.push_back(vj1);
@@ -249,7 +243,7 @@ struct associated_cal_fixture {
         vj2->idx = data.vehicle_journeys.size();
         vj2->name = "vj2";
         vj2->uri = "vj2";
-        vj2->journey_pattern = journey_pattern;
+        vj2->route = route;
         vj2->stop_time_list.push_back(st1);
         vj2->stop_time_list.push_back(st2);
         data.vehicle_journeys.push_back(vj2);
@@ -262,7 +256,7 @@ struct associated_cal_fixture {
         vj2_b->idx = data.vehicle_journeys.size();
         vj2_b->name = "vj2_bis";
         vj2_b->uri = "vj2_bis";
-        vj2_b->journey_pattern = journey_pattern;
+        vj2_b->route = route;
         vj2_b->stop_time_list.push_back(st1);
         vj2_b->stop_time_list.push_back(st2);
         data.vehicle_journeys.push_back(vj2_b);

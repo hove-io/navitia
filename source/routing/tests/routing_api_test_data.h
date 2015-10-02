@@ -406,7 +406,7 @@ struct routing_api_data {
         b.sa("stopB", B.lon(), B.lat());
         if (activate_pt) {
             //we add a very fast bus (2 seconds) to be faster than walking and biking
-            b.vj("A")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
+            b.vj("A", "111111", "", true, "vjA")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
             b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
@@ -428,10 +428,9 @@ struct routing_api_data {
             auto& builder_vj = b.vj("D")("stop_point:stopA", "08:01"_t)("stop_point:stopC", "08:01:02"_t)
                 .st_shape({A, K, J});
             b.lines["D"]->code = "1D";
-            auto jp_d = builder_vj.vj->journey_pattern;
-            jp_d->physical_mode = b.data->pt_data->physical_modes[1]; //the metro is the second physical mode
-            assert (jp_d->physical_mode->name == "Metro");
-            jp_d->physical_mode->journey_pattern_list.push_back(jp_d);
+            builder_vj.vj->physical_mode = b.data->pt_data->physical_modes[1]; // Metro
+            assert (builder_vj.vj->physical_mode->name == "Metro");
+            builder_vj.vj->physical_mode->vehicle_journey_list.push_back(builder_vj.vj);
 
             for(auto r : b.data->pt_data->routes){
                 r->destination = b.sas.find("stopA")->second;

@@ -1,3 +1,21 @@
+navitia2 (1.27.0) unstable; urgency=low
+
+  * Ed: Find production date  <https://github.com/CanalTP/navitia/pull/1191>
+  * Kraken: Loading of realtime data from kirin  <https://github.com/CanalTP/navitia/pull/1189>
+  * Jormungandr: fix new_default scenario  <https://github.com/CanalTP/navitia/pull/1188>
+  * Kraken: --clang warnings  <https://github.com/CanalTP/navitia/pull/1187>
+  * RT: train cancelling  <https://github.com/CanalTP/navitia/pull/1186>
+  * Tyr: fix profile creation bug; update/create profile with json  <https://github.com/CanalTP/navitia/pull/1185>
+  * osm2ed: integration of poi amenity:hospital  <https://github.com/CanalTP/navitia/pull/1183>
+  * Kraken: batch processing for maintenance worker  <https://github.com/CanalTP/navitia/pull/1182>
+  * RT: add a test mocking kirin  <https://github.com/CanalTP/navitia/pull/1181>
+  * Doc: Update integration.rst  <https://github.com/CanalTP/navitia/pull/1180>
+  * Doc: install jormungandr database & scheme  <https://github.com/CanalTP/navitia/pull/1179>
+  * Type: add comments on vj in stop_times links <https://github.com/CanalTP/navitia/pull/1138>
+  * All: raptor manage its journey patterns <https://github.com/CanalTP/navitia/pull/1171>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 02 Oct 2015 15:10:23 +0100
+
 navitia2 (1.26.1) unstable; urgency=low
 
   * fix problems with git tags 

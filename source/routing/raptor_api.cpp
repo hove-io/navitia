@@ -74,18 +74,18 @@ static void fill_shape(pbnavitia::Section* pb_section,
 {
     if (stop_times.empty()) { return; }
 
-    type::GeographicalCoord prev_coord = stop_times.front()->journey_pattern_point->stop_point->coord;
+    type::GeographicalCoord prev_coord = stop_times.front()->stop_point->coord;
     add_coord(prev_coord, pb_section);
-    auto prev_order = stop_times.front()->journey_pattern_point->order;
+    auto prev_order = stop_times.front()->order();
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
-        const auto* jpp = (*it)->journey_pattern_point;
-        const auto cur_order = jpp->order;
+        const auto* st = *it;
+        const auto cur_order = st->order();
 
         // As every stop times may not be present (because they can be
         // filtered because of estimated datetime), we can only print
         // the shape if the 2 stop times are consecutive
-        if (prev_order + 1 == cur_order) {
-            for (const auto& cur_coord: jpp->shape_from_prev) {
+        if (prev_order + 1 == cur_order && st-> shape_from_prev != nullptr) {
+            for (const auto& cur_coord: *st->shape_from_prev) {
                 if (cur_coord == prev_coord) { continue; }
                 add_coord(cur_coord, pb_section);
                 prev_coord = cur_coord;
@@ -93,7 +93,7 @@ static void fill_shape(pbnavitia::Section* pb_section,
         }
         // Add the coordinates of the stop point if not already added
         // by the shape.
-        const auto& sp_coord = jpp->stop_point->coord;
+        const auto& sp_coord = st->stop_point->coord;
         if (sp_coord != prev_coord) {
             add_coord(sp_coord, pb_section);
             prev_coord = sp_coord;
@@ -382,10 +382,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 type::VehicleJourney const *const vj = item.get_vj();
 
                 if (!vp) {
-                    vp = *vj->theoric_validity_pattern();
+                    vp = *vj->base_validity_pattern();
                 } else {
-                    assert(vp->beginning_date == vj->theoric_validity_pattern()->beginning_date);
-                    vp->days &= vj->theoric_validity_pattern()->days;
+                    assert(vp->beginning_date == vj->base_validity_pattern()->beginning_date);
+                    vp->days &= vj->base_validity_pattern()->days;
                 }
 
                 const size_t nb_sps = item.stop_points.size();

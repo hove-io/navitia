@@ -37,17 +37,23 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-struct JourneyPatternPoint;
-struct JourneyPattern;
 struct StopPoint;
 struct StopTime;
+struct Route;
+struct VehicleJourney;
+struct PhysicalMode;
 }
 
 namespace routing {
 
-typedef Idx<type::JourneyPatternPoint> JppIdx;
-typedef Idx<type::JourneyPattern> JpIdx;
-typedef Idx<type::StopPoint> SpIdx;
+struct JourneyPattern;
+struct JourneyPatternPoint;
+using JppIdx = Idx<JourneyPatternPoint>;
+using JpIdx = Idx<JourneyPattern>;
+using SpIdx = Idx<type::StopPoint>;
+using RouteIdx = Idx<type::Route>;
+using VjIdx = Idx<type::VehicleJourney>;
+using PhyModeIdx = Idx<type::PhysicalMode>;
 
 using map_stop_point_duration = boost::container::flat_map<SpIdx, navitia::time_duration>;
 

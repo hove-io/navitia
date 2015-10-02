@@ -64,6 +64,7 @@ def different_arrival_times_test():
     eq_(response.journeys[0].arrival_date_time, str_to_time_stamp("20140422T0758"))
     eq_(response.journeys[1].arrival_date_time, str_to_time_stamp("20140422T0800"))
 
+
 def different_departure_times_test():
     scenario = Scenario()
     response = response_pb2.Response()
@@ -237,7 +238,8 @@ def create_dummy_journey():
 
     return journey
 
-def journeys_equality_test_different_journeys():
+
+def test_journeys_equality_test_different_journeys():
     """
     test the are_equals method, applied to different journeys
     """
@@ -252,7 +254,7 @@ def journeys_equality_test_different_journeys():
     assert not are_equals(journey1, journey2)
 
 
-def journeys_equality_test_different_nb_sections():
+def test_journeys_equality_test_different_nb_sections():
     """
     test the are_equals method, applied to journeys with different number of sections
     """
@@ -267,7 +269,7 @@ def journeys_equality_test_different_nb_sections():
     assert not are_equals(journey1, journey2)
 
 
-def journeys_equality_test_same_journeys():
+def test_journeys_equality_test_same_journeys():
     """No question, a  journey must be equal to self"""
     journey1 = create_dummy_journey()
 
@@ -285,7 +287,7 @@ def journeys_gen(list_responses):
                 yield j
 
 
-def journeys_equality_test_almost_same_journeys():
+def test_journeys_equality_test_almost_same_journeys():
     """
     test the are_equals method, applied to different journeys, but with meaningless differences
     """
@@ -302,7 +304,7 @@ def journeys_equality_test_almost_same_journeys():
     assert are_equals(journey1, journey2)
 
 
-def similar_journeys_test():
+def test_similar_journeys():
 
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -315,12 +317,12 @@ def similar_journeys_test():
     journey2.duration = 43
     journey2.sections[0].uris.vehicle_journey = 'bob'
 
-    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
 
-    assert len([journeys_gen(responses)]) == 1
+    assert len(list(journeys_gen(responses))) == 1
 
 
-def similar_journeys_test2():
+def test_similar_journeys_test2():
 
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -334,12 +336,12 @@ def similar_journeys_test2():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bob'
 
-    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
 
-    assert len([journeys_gen(responses)]) == 1
+    assert len(list(journeys_gen(responses))) == 1
 
 
-def similar_journeys_test3():
+def test_similar_journeys_test3():
 
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -353,7 +355,38 @@ def similar_journeys_test3():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter._filter_similar_journeys(journeys_gen(responses), {})
+    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+
+    assert journey2 in journeys_gen(responses)
+
+
+def test_similar_journeys_different_transfer():
+    """
+     If 2 journeys take the same vjs but with a different number of sections,
+     one should be filtered
+    """
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[-1].uris.vehicle_journey = 'bob'
+    journey1.sections.add()
+    journey1.duration = 42
+    journey1.sections[-1].uris.vehicle_journey = 'bobette'
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bob'
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].type = response_pb2.TRANSFER
+    journey2.sections.add()
+    journey2.duration = 43
+    journey2.sections[-1].uris.vehicle_journey = 'bobette'
+
+    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
 
     assert journey2 in journeys_gen(responses)
 
@@ -362,7 +395,8 @@ class MockInstance(object):
     def __init__(self):
         pass  #TODO when we'll got instances's param
 
-def too_late_journeys():
+
+def test_too_late_journeys():
     request = {'datetime': 1000}
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -378,13 +412,15 @@ def too_late_journeys():
     journey3.departure_date_time = 10000
     journey3.arrival_date_time = 13000
 
-    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+                                                 MockInstance(), request, request)
 
-    assert journey1 in journeys_gen(responses)
-    assert journey2 not in journeys_gen(responses)
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' not in journey2.tags
+    assert 'to_delete' in journey3.tags
 
 
-def not_too_late_journeys():
+def test_not_too_late_journeys():
     request = {'datetime': 1000}
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -396,16 +432,15 @@ def not_too_late_journeys():
     journey2.departure_date_time = 3100
     journey2.arrival_date_time = 3200
 
-    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+                                                 MockInstance(), request, request)
 
-    journeys = [journeys_gen(responses)]
-
-    assert journey1 in journeys
-    assert journey2 in journeys
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' not in journey2.tags
 
 
-def not_too_late_journeys_non_clockwise():
-    request = {'datetime': 10000, 'clockwise': False}
+def test_not_too_late_journeys_non_clockwise():
+    request = {'datetime': 12000, 'clockwise': False}
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
     journey1.departure_date_time = 2000  # way too soon compared to the second one
@@ -413,16 +448,16 @@ def not_too_late_journeys_non_clockwise():
 
     responses.append(response_pb2.Response())
     journey2 = responses[-1].journeys.add()
-    journey2.departure_date_time = 8000
-    journey2.arrival_date_time = 9000
+    journey2.departure_date_time = 10000
+    journey2.arrival_date_time = 11000
 
     journey3 = responses[-1].journeys.add() # before journey2, but acceptable
-    journey3.departure_date_time = 7000
-    journey3.arrival_date_time = 7500
+    journey3.departure_date_time = 8000
+    journey3.arrival_date_time = 9000
 
-    journey_filter._filter_not_coherent_journeys(journeys_gen(responses), MockInstance(), request, request)
+    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+                                                 MockInstance(), request, request)
 
-    journeys = [journeys_gen(responses)]
-    assert journey1 not in journeys
-    assert journey2 in journeys
-    assert journey3 in journeys
+    assert 'to_delete' in journey1.tags
+    assert 'to_delete' not in journey2.tags
+    assert 'to_delete' not in journey3.tags

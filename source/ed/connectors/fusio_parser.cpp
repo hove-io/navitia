@@ -448,9 +448,8 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
-        vj->journey_pattern = nullptr;
-        vj->tmp_route = route;
-        vj->tmp_line = vj->tmp_route->line;
+        vj->route = route;
+        vj->tmp_line = vj->route->line;
         if(is_valid(block_id_c, row))
             vj->block_id = row[block_id_c];
         else
@@ -1445,8 +1444,12 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
     return default_physical_mode;
 }
 
-void FusioParser::parse_files(Data& data) {
+void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
+
     parse<FeedInfoFusioHandler>(data, "feed_infos.txt");
+
+    manage_production_date(data, beginning_date);
+
     parse<GeometriesFusioHandler>(data, "geometries.txt");
 
     if (! parse<AgencyFusioHandler>(data, "networks.txt")) {

@@ -2,6 +2,7 @@
 
 #include "time_tables/departure_boards.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 /**
  * Data set for departure board
@@ -26,23 +27,26 @@ struct calendar_fixture {
         b.vj("line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
 
         // and one everytime
-        b.vj("line:A", "1100101", "", true, "all")("stop1", 15 * 3600, 15 * 3600 + 10 * 60)("stop2", 16 * 3600, 16 * 3600 + 10 * 60);
+        auto& builder_vj = b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)
+                                                                     ("stop2", "16:00"_t, "16:10"_t);
+        // Add a comment on the vj
+        b.data->pt_data->comments.add(builder_vj.vj, "vj comment");
 
         // and wednesday that will not be matched to any cal
         b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
         // Check partial terminus tag
-        b.vj("A", "10111111", "", true, "vj1", "", "jp1")("Tstop1", 10*3600, 10*3600)
-                                                         ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
-        b.vj("A", "10111111", "", true, "vj2", "", "jp2")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
-                                                         ("Tstop2", 11*3600,11*3600)
-                                                         ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", 10*3600, 10*3600)
+                                                  ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+        b.vj("A", "10111111", "", true, "vj2", "")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
+                                                  ("Tstop2", 11*3600,11*3600)
+                                                  ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
         // Check date_time_estimated at stoptime
-        b.vj("B", "10111111", "", true, "date_time_estimated", "", "date_time_estimated")
+        b.vj("B", "10111111", "", true, "date_time_estimated", "")
             ("ODTstop1", 10*3600, 10*3600)
             ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
         // Check on_demand_transport at stoptime
-        b.vj("B", "10111111", "", true, "on_demand_transport", "", "on_demand_transport")
+        b.vj("B", "10111111", "", true, "on_demand_transport", "")
             ("ODTstop1", 11*3600, 11*3600)
             ("ODTstop2", 11*3600 + 30*60, 11*3600 + 30*60);
 
@@ -58,15 +62,15 @@ struct calendar_fixture {
         vj->stop_time_list[0].set_date_time_estimated(true);
 
         vj_week = b.data->pt_data->vehicle_journeys_map["week"];
-        vj_week->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+        vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
         vj_week_bis = b.data->pt_data->vehicle_journeys_map["week_bis"];
-        vj_week_bis->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+        vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
         vj_weekend = b.data->pt_data->vehicle_journeys_map["weekend"];
-        vj_weekend->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
+        vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
         vj_all = b.data->pt_data->vehicle_journeys_map["all"];
-        vj_all->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
+        vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
         vj_wednesday = b.data->pt_data->vehicle_journeys_map["wednesday"];
-        vj_wednesday->theoric_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+        vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
 
         //we now add 2 similar calendars
         auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());

@@ -38,6 +38,10 @@ www.navitia.io
 namespace navitia {
     namespace routing {
         struct PathItem;
+        struct JourneyPattern;
+        struct JourneyPatternPoint;    
+        using JppIdx = Idx<JourneyPatternPoint>;
+        using JpIdx = Idx<JourneyPattern>;
     }
     namespace georef {
         struct PathItem;
@@ -93,6 +97,21 @@ struct EnhancedResponse {
             const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false);
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
+void fill_pb_object(const std::pair<const routing::JpIdx, const routing::JourneyPattern&>& item,
+                    const navitia::type::Data& data,
+                    pbnavitia::JourneyPattern *,
+                    int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const bool show_codes=false);
+void fill_pb_object(const std::pair<const routing::JppIdx, const routing::JourneyPatternPoint&>& item,
+                    const navitia::type::Data& data,
+                    pbnavitia::JourneyPatternPoint *,
+                    int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const bool show_codes=false);
+    
 
 void fill_pb_object(const navitia::georef::Way* way, const type::Data &data, pbnavitia::Address* address, int house_number,
         const type::GeographicalCoord& coord, int max_depth = 0,
