@@ -278,10 +278,16 @@ The only arguments are the ones of `paging`_.
 
 Inverted geocoding (/coord)
 ***************************
-In order to determinate the right coverage, you can request navitia with a WGS84 coordinate as:
+Very simple service: you give Navitia some coordinates, it answers you where you are:
+
+* your detailed postal address
+* the right Navitia "coverage" which allows you to access to all known local mobility services
+
+For example, you can request navitia with a WGS84 coordinate as:
+
 https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174
 
-In response, you will get the coverage id, a very useful label and a ressource id: 
+In response, you will get the coverage id, a very useful label and a ressource id:
 
 .. code-block:: json
 
@@ -291,10 +297,42 @@ In response, you will get the coverage id, a very useful label and a ressource i
         ],
         address": {
         ...,
-        "label": "17 Rue Hector Malot (Paris)",
+        "label": "20 Rue Hector Malot (Paris)",
         ...,
         "id": "2.37691590564;48.8467597481"
     },
+
+The coverage id is *"regions": ["fr-idf"]* so you can ask Navitia on accessible local mobility services:
+
+https://api.navitia.io/v1/coverage/fr-idf/
+	
+.. code-block:: json
+
+    {
+        "regions": [{
+                "status": "running",
+                "start_production_date": "20150804","end_production_date": "20160316",
+                "id": "fr-idf"
+                }],
+        "links": [
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/coords"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/places"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/networks"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/companies"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/lines"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/routes"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_points"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/line_groups"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/connections"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/poi_types"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/pois"},
+            {"href": "http://api.navitia.io/v1/coverage/fr-idf/"}
+            ]
+    }
 
 
 Public transportation objects exploration (/networks or /lines or /routes...)
