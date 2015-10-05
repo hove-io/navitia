@@ -63,7 +63,7 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
     const auto& trip = trip_update.trip();
 
     // for the moment we handle only trip cancelation
-    if (! trip.CANCELED) {
+    if (trip.schedule_relationship() != transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
     }
@@ -77,7 +77,7 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
 
     auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
 
-    if (trip.CANCELED) {
+    if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
         cancel_vj(meta_vj, circulation_date, trip_update, data);
         return;
     }
