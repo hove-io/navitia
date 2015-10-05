@@ -136,6 +136,7 @@ class ReleaseManager:
                         break
                 else:
                     lines.append(u'  * {title}  <{url}>\n'.format(title=title, url=url))
+                    print lines[-1]
                     nb_successive_merged_pr = 0
 
         return lines
@@ -243,8 +244,11 @@ class ReleaseManager:
 
         print "publishing the release"
 
-        print "check the release and when you're happy do:"
-        print "git push {} release dev --tags".format(self.remote_name)
+        print "Check the release, you will probably want to merge release in dev:"
+        print "  git checkout dev"
+        print "  git merge release"
+        print "And when you're happy do:"
+        print "  git push {} release dev --tags".format(self.remote_name)
         #TODO: when we'll be confident, we will do that automaticaly
 
     def release_the_kraken(self):
@@ -266,13 +270,13 @@ class ReleaseManager:
         if self.release_type == "hotfix":
             print "now time to do your actual hotfix!"
             print "Note: you'll have to merge/tag/push manually after your fix:"
-            print "git checkout release"
-            print "git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
-            print "git tag -a {}".format(get_tag_name(self.version))
+            print "  git checkout release"
+            print "  git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
+            print "  git tag -a {}".format(get_tag_name(self.version))
 
-            print "git checkout dev"
-            print "git merge --no-ff release".format(tmp_branch=tmp_name)
-            print "git push {} release dev --tags".format(self.remote_name)
+            print "  git checkout dev"
+            print "  git merge release"
+            print "  git push {} release dev --tags".format(self.remote_name)
 
             #TODO2 try to script that (put 2 hotfix param, like hotfix init and hotfix publish ?)
             exit(0)
