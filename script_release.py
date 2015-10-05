@@ -91,28 +91,52 @@ class ReleaseManager:
 
         print "current branch {}".format(self.repo.active_branch)
 
+    def closed_pr_generator(self):
+        # lazy get all closed PR ordered by last updated
+        closed_pr = []
+        page = 1
+        while True:
+            query = "https://api.github.com/repos/CanalTP/navitia/" \
+                    "pulls?state=closed&head={latest_tag}&sort=updated&direction=desc&page={page}"\
+                    .format(latest_tag=self.latest_tag, page=page)
+            print "query github api: " + query
+            github_response = requests.get(query)
+
+            if github_response.status_code != 200:
+                message = github_response.json()['message']
+                print u'  * Impossible to retrieve PR\n  * '+ message
+                return
+
+            closed_pr = github_response.json()
+            if not closed_pr:
+                print "Reached end of PR list"
+                return
+
+            for pr in closed_pr:
+                yield pr
+
+            page += 1
+
     def get_merged_pullrequest(self):
-
-        #we get all closed PR since latest tag
-        #WARNING: it is not the list of merged PR since github does not have that
-        query = "https://api.github.com/repos/CanalTP/navitia/" \
-                "pulls?state=closed&head={latest_tag}".format(latest_tag=self.latest_tag)
-
-        print "query github api: " + query
-
-        github_response = requests.get(query)
-
-        if github_response.status_code != 200:
-            message = github_response.json()['message']
-            return u'  * Impossible de récupérer les PR\n  * '+ message
-
-        closed_pr = github_response.json()
-
         lines = []
-        for pr in closed_pr:
+        nb_successive_merged_pr = 0
+        for pr in self.closed_pr_generator():
             title = pr['title']
             url = pr['html_url']
-            lines.append(u'  * {title}  <{url}>\n'.format(title=title, url=url))
+            pr_head_sha = pr['head']['sha']
+            # test if PR was merged (not simply closed)
+            # and if distant/release contains HEAD of PR
+            # (stops after 10 successive merged PR)
+            if pr['merged_at'] :
+                branches = self.git.branch('-r', '--contains', pr_head_sha)+'\n'
+                release_branch_name = '  '+self.remote_name+'/release'
+                if release_branch_name+'\n' in branches:
+                    nb_successive_merged_pr += 1
+                    if nb_successive_merged_pr >= 10:
+                        break
+                else:
+                    lines.append(u'  * {title}  <{url}>\n'.format(title=title, url=url))
+                    nb_successive_merged_pr = 0
 
         return lines
 
