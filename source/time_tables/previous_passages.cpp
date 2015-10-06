@@ -71,7 +71,7 @@ previous_passages(const std::string &request,
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(stop_event == StopEvent::pick_up) {
+        if(vis.api_pb == pbnavitia::PREVIOUS_DEPARTURES) {
             passage = handler.pb_response.add_next_departures();
         } else {
             passage = handler.pb_response.add_next_arrivals();

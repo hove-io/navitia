@@ -69,9 +69,9 @@ next_passages(const std::string &request,
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
-    for(auto dt_stop_time : passages_dt_st) {
-        pbnavitia::Passage * passage;
-        if(stop_event == StopEvent::pick_up) {
+    for (auto dt_stop_time : passages_dt_st) {
+        pbnavitia::Passage* passage;
+        if (vis.api_pb == pbnavitia::NEXT_DEPARTURES) {
             passage = handler.pb_response.add_next_departures();
         } else {
             passage = handler.pb_response.add_next_arrivals();

@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(queue_comp_test_anti_clockwise) {
  *                                        Center
  *
  * A: A1   9H
- *    A2     9H15
+ *    A2                 10h30
  *    A3                      11h
  *
  * B: B1                                     19H

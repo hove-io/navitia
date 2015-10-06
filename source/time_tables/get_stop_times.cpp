@@ -110,7 +110,7 @@ get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
                                      accessibilite_params.vehicle_properties);
 
         //afterward we filter the datetime not in [dt, max_dt]
-        //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
+        //the difficult part comes from the fact that, for calendar, 'dt' and 'max_dt' are not really datetime,
         //there are time but max_dt can be the day after like [today 4:00, tomorow 3:00]
         for (auto& res: st) {
             auto time = DateTimeUtils::hour(res.first);
