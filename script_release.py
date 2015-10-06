@@ -104,7 +104,7 @@ class ReleaseManager:
 
             if github_response.status_code != 200:
                 message = github_response.json()['message']
-                print u'  * Impossible to retrieve PR\n  * '+ message
+                print u'  * Impossible to retrieve PR\n  * ' + message
                 return
 
             closed_pr = github_response.json()
@@ -128,9 +128,10 @@ class ReleaseManager:
             # and if distant/release contains HEAD of PR
             # (stops after 10 successive merged PR)
             if pr['merged_at'] :
-                branches = self.git.branch('-r', '--contains', pr_head_sha)+'\n'
-                release_branch_name = '  '+self.remote_name+'/release'
-                if release_branch_name+'\n' in branches:
+                branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
+                # adding separators before and after to match only branch name
+                release_branch_name = '  ' + self.remote_name + '/release\n'
+                if release_branch_name in branches:
                     nb_successive_merged_pr += 1
                     if nb_successive_merged_pr >= 10:
                         break
