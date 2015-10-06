@@ -120,7 +120,7 @@ class JourneySorter(object):
         the departure for clockwise, and the arrival for not clockwise
         """
         if j1.duration != j2.duration:
-            return j2.duration - j1.duration
+            return j1.duration - j2.duration
 
         if j1.nb_transfers != j2.nb_transfers:
             return j1.nb_transfers - j2.nb_transfers
