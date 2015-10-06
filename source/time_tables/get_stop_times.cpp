@@ -46,47 +46,44 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
                                                const type::AccessibiliteParams& accessibilite_params) {
     const bool clockwise(max_dt >= dt);
     std::vector<datetime_stop_time> result;
-    auto test_add = true;
     routing::NextStopTime next_st = routing::NextStopTime(data);
 
-    // Next departure for the next stop: we use it not to have twice the same stop_time
-    // We init it with the wanted date time
-    std::map<routing::JppIdx, DateTime> next_requested_datetime;
-    for(auto jpp_idx : journey_pattern_points){
-        next_requested_datetime[jpp_idx] = dt;
-    }
+    // Next departure for the next stop: we store it to have to next departure for each jpp
+    // We init it with the next_stop_time for each jpp
+    JppStQueue next_requested_dt({clockwise});
+    for (const auto& jpp_idx : journey_pattern_points) {
+        const routing::JourneyPatternPoint& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+        if (! data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
+            // we do not push them in the queue at all
+            continue;
+        }
+        auto st = next_st.next_stop_time(stop_event, jpp_idx,
+                                         dt, clockwise, rt_level,
+                                         accessibilite_params.vehicle_properties, true);
 
-    while(test_add && result.size() < max_departures) {
-        test_add = false;
-        for(auto jpp_idx : journey_pattern_points) {
-            const routing::JourneyPatternPoint& jpp = data.dataRaptor->jp_container.get(jpp_idx);
-            if (!data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
-                continue;
-            }
-            auto st = next_st.next_stop_time(stop_event, jpp_idx,
-                                             next_requested_datetime[jpp_idx], clockwise, rt_level,
-                                             accessibilite_params.vehicle_properties, true);
-
-            if (st.first != nullptr) {
-                DateTime dt_temp = st.second;
-                if ( (clockwise && dt_temp <= max_dt) || (!clockwise && dt_temp >= max_dt)) {
-                    result.push_back(std::make_pair(dt_temp, st.first));
-                    test_add = true;
-                    // The next stop time must be at least one second after
-                    next_requested_datetime[jpp_idx] = dt_temp + (clockwise? 1 : -1);
-                }
-            }
+        if (st.first) {
+            next_requested_dt.push({jpp_idx, st.first, st.second});
         }
     }
-    std::sort(result.begin(), result.end(),
-            [&clockwise](datetime_stop_time dst1, datetime_stop_time dst2) {
-            if (clockwise) {
-                return dst1.first < dst2.first;
-            }
-            return dst1.first > dst2.first;
-    });
-    if (result.size() > max_departures) {
-        result.resize(max_departures);
+
+    while (! next_requested_dt.empty() && result.size() < max_departures) {
+        const auto best_jpp_dt = next_requested_dt.top(); // copy
+        next_requested_dt.pop();
+        if ((clockwise && best_jpp_dt.dt > max_dt) ||
+                (!clockwise && best_jpp_dt.dt < max_dt)) {
+            // the best elt of the queue is after the limit, we can stop
+            break;
+        }
+        result.push_back(std::make_pair(best_jpp_dt.dt, best_jpp_dt.st));
+
+        // we insert the next stop time in the queue (it must be at least one second after/before)
+        auto next_dt = best_jpp_dt.dt + (clockwise ? 1 : -1);
+        auto st = next_st.next_stop_time(stop_event, best_jpp_dt.jpp,
+                                         next_dt, clockwise, rt_level,
+                                         accessibilite_params.vehicle_properties, true);
+        if (st.first) {
+            next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second});
+        }
     }
 
     return result;

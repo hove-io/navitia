@@ -32,6 +32,7 @@ www.navitia.io
 #include "routing/stop_event.h"
 #include "routing/routing.h"
 #include "type/data.h"
+#include <queue>
 
 
 namespace navitia { namespace timetables {
@@ -74,4 +75,25 @@ get_all_stop_times(const routing::JourneyPattern& jp,
                    const std::string calendar_id,
                    const type::VehicleProperties& vehicle_properties = type::VehicleProperties());
 
+
+struct JppSt {
+    routing::JppIdx jpp;
+    const type::StopTime* st;
+    DateTime dt;
+};
+
+/*
+ * Comparator used in the heap
+ * for clockwise, we want the smallest first,
+ * for anticlockwise, we want the greatest first
+ */
+struct BestDTComp {
+    bool operator()(const JppSt& j1, const JppSt& j2) {
+        if (clockwise) { return j1.dt > j2.dt; }
+        return j1.dt < j2.dt;
+    }
+    const bool clockwise;
+};
+
+using JppStQueue = std::priority_queue<JppSt, std::vector<JppSt>, BestDTComp>;
 }}
