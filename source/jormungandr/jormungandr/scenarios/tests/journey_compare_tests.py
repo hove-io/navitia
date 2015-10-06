@@ -27,11 +27,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.scenarios import journey_filter
+from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
 from jormungandr.scenarios.journey_filter import _to_be_deleted
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
 from nose.tools import eq_
+import random
 
 
 def empty_journeys_test():
@@ -111,8 +113,8 @@ def different_duration_test():
     scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
-    assert response.journeys[0].duration == 5*60
-    assert response.journeys[1].duration == 3*60
+    assert response.journeys[0].duration == 3*60
+    assert response.journeys[1].duration == 5*60
 
 
 def different_nb_transfers_test():
@@ -461,3 +463,94 @@ def test_not_too_late_journeys_non_clockwise():
     assert 'to_delete' in journey1.tags
     assert 'to_delete' not in journey2.tags
     assert 'to_delete' not in journey3.tags
+
+def test_departure_sort():
+    """
+    we want to sort by departure hour, then by duration
+    """
+    j1 = response_pb2.Journey()
+    j1.departure_date_time = str_to_time_stamp('20151005T071000')
+    j1.arrival_date_time = str_to_time_stamp('20151005T081900')
+    j1.duration = j1.arrival_date_time - j1.departure_date_time
+    j1.nb_transfers = 0
+
+    j2 = response_pb2.Journey()
+    j2.departure_date_time = str_to_time_stamp('20151005T072200')
+    j2.arrival_date_time = str_to_time_stamp('20151005T083500')
+    j2.duration = j2.arrival_date_time - j2.departure_date_time
+    j2.nb_transfers = 0
+
+    j3 = response_pb2.Journey()
+    j3.departure_date_time = str_to_time_stamp('20151005T074500')
+    j3.arrival_date_time = str_to_time_stamp('20151005T091200')
+    j3.duration = j3.arrival_date_time - j3.departure_date_time
+    j3.nb_transfers = 0
+
+    j4 = response_pb2.Journey()
+    j4.departure_date_time = str_to_time_stamp('20151005T074500')
+    j4.arrival_date_time = str_to_time_stamp('20151005T091100')
+    j4.duration = j4.arrival_date_time - j4.departure_date_time
+    j4.nb_transfers = 0
+
+    j5 = response_pb2.Journey()
+    j5.departure_date_time = str_to_time_stamp('20151005T074500')
+    j5.arrival_date_time = str_to_time_stamp('20151005T090800')
+    j5.duration = j5.arrival_date_time - j5.departure_date_time
+    j5.nb_transfers = 0
+
+    result = [j1, j2, j3, j4, j5]
+    random.shuffle(result)
+
+    compartor = DepartureJourneySorter(True)
+    result.sort(compartor)
+    eq_(result[0], j1)
+    eq_(result[1], j2)
+    eq_(result[2], j5)
+    eq_(result[3], j4)
+    eq_(result[4], j3)
+
+def test_arrival_sort():
+    """
+    we want to sort by arrival hour, then by duration
+    """
+    j1 = response_pb2.Journey()
+    j1.departure_date_time = str_to_time_stamp('20151005T071000')
+    j1.arrival_date_time = str_to_time_stamp('20151005T081900')
+    j1.duration = j1.arrival_date_time - j1.departure_date_time
+    j1.nb_transfers = 0
+
+    j2 = response_pb2.Journey()
+    j2.departure_date_time = str_to_time_stamp('20151005T072200')
+    j2.arrival_date_time = str_to_time_stamp('20151005T083500')
+    j2.duration = j2.arrival_date_time - j2.departure_date_time
+    j2.nb_transfers = 0
+
+    j3 = response_pb2.Journey()
+    j3.departure_date_time = str_to_time_stamp('20151005T074500')
+    j3.arrival_date_time = str_to_time_stamp('20151005T091200')
+    j3.duration = j3.arrival_date_time - j3.departure_date_time
+    j3.nb_transfers = 0
+
+    j4 = response_pb2.Journey()
+    j4.departure_date_time = str_to_time_stamp('20151005T075000')
+    j4.arrival_date_time = str_to_time_stamp('20151005T091200')
+    j4.duration = j4.arrival_date_time - j4.departure_date_time
+    j4.nb_transfers = 0
+
+    j5 = response_pb2.Journey()
+    j5.departure_date_time = str_to_time_stamp('20151005T075500')
+    j5.arrival_date_time = str_to_time_stamp('20151005T091200')
+    j5.duration = j5.arrival_date_time - j5.departure_date_time
+    j5.nb_transfers = 0
+
+    result = [j1, j2, j3, j4, j5]
+    random.shuffle(result)
+
+    compartor = ArrivalJourneySorter(True)
+    result.sort(compartor)
+    eq_(result[0], j1)
+    eq_(result[1], j2)
+    eq_(result[2], j5)
+    eq_(result[3], j4)
+    eq_(result[4], j3)
+
