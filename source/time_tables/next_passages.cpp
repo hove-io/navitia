@@ -31,12 +31,12 @@ www.navitia.io
 #include "next_passages.h"
 #include "get_stop_times.h"
 #include "request_handle.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
 #include "routing/dataraptor.h"
-
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace pt = boost::posix_time;
 using navitia::routing::StopEvent;
@@ -58,8 +58,7 @@ next_passages(const std::string &request,
         return handler.pb_response;
     }
 
-    std::remove_if(handler.journey_pattern_points.begin(),
-                   handler.journey_pattern_points.end(), vis.predicate);
+    boost::remove_erase_if(handler.journey_pattern_points, vis.predicate);
 
     const StopEvent stop_event = (vis.api_pb == pbnavitia::NEXT_DEPARTURES) ?
                                  StopEvent::pick_up : StopEvent::drop_off;
