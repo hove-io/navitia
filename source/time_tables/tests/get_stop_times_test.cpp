@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 }
 
 struct departure_helper {
-
+    departure_helper(): b("20150907") {}
     std::vector<navitia::routing::JppIdx> get_jpp_idx (const std::string& stop_point_id) {
         std::vector<navitia::routing::JppIdx>  jpp_stop;
         const auto sp_idx = routing::SpIdx(*b.data->pt_data->stop_points_map.at(stop_point_id));
@@ -345,8 +345,7 @@ struct departure_helper {
         return jpp_stop;
     }
 
-    ed::builder b = ed::builder("20150907");
-
+    ed::builder b;
     const navitia::DateTime yesterday = navitia::DateTimeUtils::min;
     const navitia::DateTime yesterday_8h45 = navitia::DateTimeUtils::set(0, 8*3600 + 45*60);
     const navitia::DateTime today = navitia::DateTimeUtils::set(1, 0);
