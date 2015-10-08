@@ -362,6 +362,41 @@ Specific parameters
 
 There are other specific parameters.
 
+depth
+_____
+
+This tiny parameter can expand Navitia power by making it more wordy.
+Here is some examples with the line 1 from the Parisian Metro :
+
+* Get the line 1 id 
+
+	* https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201
+	* the id is "line:RTP:1197611"
+
+* Get routes for this line 
+
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes
+
+* want a tiny response, just add "depth=0"
+
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=0
+	* the response is lighter (parent lines disappear for example)
+
+* Get more informations, just add "depth=2"
+
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=2
+	* the response is a little more verbose (with some geojson appear in response)
+
+* Wanna fat more informations, let's try "depth=3"
+
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=3
+	* big response: all stop_points are shown
+
+* wanna spam the internet bandwidth? Try "depth=42"
+
+	* No. There is a technical limit with depth=3
+
+
 odt_level
 _________
 
