@@ -36,7 +36,7 @@ www.navitia.io
 
 namespace navitia {
 
-void cancel_vj(type::MetaVehicleJourney* meta_vj,
+static void cancel_vj(type::MetaVehicleJourney* meta_vj,
                const boost::gregorian::date& date,
                const transit_realtime::TripUpdate& /*trip_update*/,
                const type::Data& data) {

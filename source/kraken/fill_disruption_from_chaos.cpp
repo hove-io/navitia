@@ -212,7 +212,7 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
-std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+static std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
     std::set<navitia::type::new_disruption::ChannelType> res;
     for (const auto channel_type: chaos_channel.types()){
         switch(channel_type){
