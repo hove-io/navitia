@@ -346,11 +346,11 @@ struct departure_helper {
     }
 
     ed::builder b;
-    const navitia::DateTime yesterday = navitia::DateTimeUtils::min;
-    const navitia::DateTime yesterday_8h45 = navitia::DateTimeUtils::set(0, 8*3600 + 45*60);
-    const navitia::DateTime today = navitia::DateTimeUtils::set(1, 0);
-    const navitia::DateTime today_8h45 = navitia::DateTimeUtils::set(1, 8*3600 + 45*60);
-    const navitia::DateTime tomorrow = navitia::DateTimeUtils::set(2, 0);
+    const navitia::DateTime yesterday = "00:00"_t;
+    const navitia::DateTime yesterday_8h45 = "8:45"_t;
+    const navitia::DateTime today = "24:00"_t;
+    const navitia::DateTime today_8h45 = "24:00"_t + "8:45"_t;
+    const navitia::DateTime tomorrow = "48:00"_t;
 };
 
 /**
@@ -428,9 +428,9 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_next_arrivals_prev_departures, departure_h
  */
 BOOST_FIXTURE_TEST_CASE(test_discrete_lolipop, departure_helper) {
     b.vj("A")("s1", "8:00"_t, "8:01"_t)
-            ("s2", "9:00"_t, "9:01"_t)
-            ("s3", "10:00"_t, "10:01"_t)
-            ("s2", "11:00"_t, "11:01"_t);
+             ("s2", "9:00"_t, "9:01"_t)
+             ("s3", "10:00"_t, "10:01"_t)
+             ("s2", "11:00"_t, "11:01"_t);
 
     b.finish();
     b.data->pt_data->index();

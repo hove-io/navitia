@@ -48,7 +48,7 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
     std::vector<datetime_stop_time> result;
     routing::NextStopTime next_st = routing::NextStopTime(data);
 
-    // Next departure for the next stop: we store it to have to next departure for each jpp
+    // Next departure for the next stop: we store it to have the next departure for each jpp
     // We init it with the next_stop_time for each jpp
     JppStQueue next_requested_dt({clockwise});
     for (const auto& jpp_idx : journey_pattern_points) {

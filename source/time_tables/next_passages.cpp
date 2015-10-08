@@ -70,7 +70,7 @@ next_passages(const std::string &request,
 
     for (auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage* passage;
-        if (vis.api_pb == pbnavitia::NEXT_DEPARTURES) {
+        if (stop_event == StopEvent::pick_up) {
             passage = handler.pb_response.add_next_departures();
         } else {
             passage = handler.pb_response.add_next_arrivals();
