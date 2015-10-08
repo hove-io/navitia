@@ -122,6 +122,7 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
 void OSMCache::build_relations_geometries() {
     for (auto& relation : relations) {
         relation.second.build_geometry(*this);
+        if (relation.second.polygon.empty()) { continue; }
         boost::geometry::model::box<point> box;
         boost::geometry::envelope(relation.second.polygon, box);
         Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(),
