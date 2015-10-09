@@ -336,10 +336,10 @@ void Data::complete(){
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
-static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
+static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney& meta_vj) {
     ValidityPattern validity;
 
-    for (auto* vj: meta_vj->base_vj) {
+    for (auto* vj: meta_vj.base_vj) {
         if (validity.beginning_date.is_not_a_date()) {
             validity.beginning_date = vj->base_validity_pattern()->beginning_date;
         } else {
@@ -357,16 +357,14 @@ void Data::build_associated_calendar() {
     std::multimap<ValidityPattern, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
-    for(auto meta_vj_pair : this->pt_data->meta_vj) {
-        auto meta_vj = meta_vj_pair.second;
-
+    for(auto& meta_vj : this->pt_data->meta_vj_fact) {
         assert (! meta_vj->base_vj.empty());
 
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
         // split because of dst (day saving time)
         // because of that we try to match the calendar with the union of all theoric vj validity pattern
-        ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(meta_vj);
+        ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(*meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
         auto* first_vj = meta_vj->base_vj.front();
@@ -387,10 +385,10 @@ void Data::build_associated_calendar() {
             continue;
         }
 
-        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
+        auto close_cal = find_matching_calendar(*this, meta_vj->uri, meta_vj_validity_pattern, calendar_list);
 
         if (close_cal.empty()) {
-            LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
+            LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj->uri << " has been attached to no calendar");
             nb_not_matched_vj++;
             continue;
         }
@@ -419,7 +417,7 @@ void Data::build_associated_calendar() {
             cal_uri << associated_calendar->calendar->uri << " ";
         }
 
-        LOG4CPLUS_DEBUG(log, "the meta vj " << meta_vj_pair.first << " has been attached to " << cal_uri.str());
+        LOG4CPLUS_DEBUG(log, "the meta vj " << meta_vj->uri << " has been attached to " << cal_uri.str());
     }
 
     LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");

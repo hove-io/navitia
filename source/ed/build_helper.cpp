@@ -36,18 +36,6 @@ namespace pt = boost::posix_time;
 
 namespace ed {
 
-nt::MetaVehicleJourney* builder::get_or_create_metavj(const std::string name) {
-    auto it = data->pt_data->meta_vj.find(name);
-
-
-    if (it == data->pt_data->meta_vj.end()) {
-        auto mvj = new nt::MetaVehicleJourney;
-        data->pt_data->meta_vj.insert({name, mvj});
-        return mvj;
-    }
-    return it->second;
-}
-
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        bool wheelchair_boarding, const std::string& uri,
@@ -127,7 +115,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         name = "vehicle_journey " + std::to_string(vj->idx);
     }
 
-    nt::MetaVehicleJourney* mvj = b.get_or_create_metavj(name);
+    nt::MetaVehicleJourney* mvj = pt_data.meta_vj_fact.get_or_create(name);
     mvj->base_vj.push_back(vj);
     vj->meta_vj = mvj;
 

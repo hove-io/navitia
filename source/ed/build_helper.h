@@ -150,8 +150,6 @@ struct builder {
     void generate_dummy_basis();
     void manage_admin();
     void build_autocomplete();
-
-    nt::MetaVehicleJourney* get_or_create_metavj(const std::string name);
 };
 
 }

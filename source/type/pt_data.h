@@ -38,6 +38,7 @@ www.navitia.io
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
+#include "utils/obj_factory.h"
 #include "comment_container.h"
 #include "code_container.h"
 #include "headsign_handler.h"
@@ -63,8 +64,8 @@ struct PT_Data : boost::noncopyable{
 
     std::vector<StopPointConnection*> stop_point_connections;
 
-    // meta vj map
-    std::map<std::string, MetaVehicleJourney*> meta_vj;
+    // meta vj factory
+    navitia::ObjFactory<MetaVehicleJourney> meta_vj_fact;
 
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
@@ -115,7 +116,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
                 & disruption_holder
-                & meta_vj
+                & meta_vj_fact
                 & stop_points_by_area
                 & comments
                 & codes

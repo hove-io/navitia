@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     for (auto vj_name: {"vj1", "vj2"}) {
         auto associated_cal = new type::AssociatedCalendar();
         associated_cal->calendar = cal;
-        b.data->pt_data->meta_vj[vj_name]->associated_calendars.insert({cal->uri, associated_cal});
+        b.data->pt_data->meta_vj_fact.get_mut(vj_name)->associated_calendars.insert({cal->uri, associated_cal});
     }
 
     b.data->pt_data->index();
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
 
     auto associated_cal = new type::AssociatedCalendar();
     associated_cal->calendar = cal;
-    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
+    b.data->pt_data->meta_vj_fact.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
 
     b.data->pt_data->index();
     b.data->build_uri();
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
 
     auto associated_cal = new type::AssociatedCalendar();
     associated_cal->calendar = cal;
-    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
+    b.data->pt_data->meta_vj_fact.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
 
     b.data->pt_data->index();
     b.data->build_uri();
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 
     auto associated_cal = new type::AssociatedCalendar();
     associated_cal->calendar = cal;
-    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
+    b.data->pt_data->meta_vj_fact.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
 
     b.data->pt_data->index();
     b.data->build_uri();

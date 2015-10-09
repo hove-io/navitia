@@ -228,9 +228,6 @@ PT_Data::~PT_Data() {
                 [](type_name* obj){delete obj;});
     ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
 
-    for (auto metavj: meta_vj) {
-        delete metavj.second;
-    }
     for (auto cal: associated_calendars) {
         delete cal;
     }
