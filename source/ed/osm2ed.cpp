@@ -202,22 +202,21 @@ void OSMCache::build_relations_geometries() {
 /*
  * Find the admin of coordinates
  */
-const OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat, uint32_t level) {
+const OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    typedef std::pair<uint32_t, std::vector<const OSMRelation*>*> level_relations;
+    typedef std::vector<const OSMRelation*> relations;
 
-    std::vector<const OSMRelation*> result;
+    relations result;
     auto callback = [](const OSMRelation* rel, void* c)->bool{
-        level_relations* context;
-        context = reinterpret_cast<level_relations*>(c);
-        if(rel->level == context->first){
-            context->second->push_back(rel);
+        relations* context;
+        context = reinterpret_cast<relations*>(c);
+        if (rel->level == 8) { // we want to match only cities
+            context->push_back(rel);
         }
         return true;
     };
-    level_relations context = std::make_pair(level, &result);
-    admin_tree.Search(search_rect.min, search_rect.max, callback, &context);
+    admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
     for(auto rel : result) {
         if (boost::geometry::within(p, rel->polygon)){
             return rel;
@@ -236,7 +235,7 @@ void OSMCache::match_nodes_admin() {
         if (!node.is_defined() || node.admin) {
             continue;
         }
-        node.admin = match_coord_admin(node.lon(), node.lat(), 8);
+        node.admin = match_coord_admin(node.lon(), node.lat());
         if (node.admin != nullptr) {
             ++ count_matches;
         }
@@ -726,7 +725,7 @@ void PoiHouseNumberVisitor::insert_house_numbers() {
  */
 const OSMWay* PoiHouseNumberVisitor::find_way_without_name(const double lon, const double lat) {
     const OSMWay* result = nullptr;
-    const auto admin = cache.match_coord_admin(lon, lat, 8);
+    const auto admin = cache.match_coord_admin(lon, lat);
     if (!admin) {
         return result;
     }
@@ -792,7 +791,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
         }
     }
     // Otherwize we try to match coords with an admin
-    const auto admin = cache.match_coord_admin(lon, lat, 8);
+    const auto admin = cache.match_coord_admin(lon, lat);
     if (admin) {
         auto it_admin = it_ways->second.find({admin});
         if (it_admin != it_ways->second.end()) {

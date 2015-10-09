@@ -136,29 +136,28 @@ void OSMCache::build_postal_codes(){
         if(relation.second.level != 9){
             continue;
         }
-        auto rel = this->match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>(), 8);
+        auto rel = this->match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>());
         if(rel){
             rel->postal_codes.insert(relation.second.postal_codes.begin(), relation.second.postal_codes.end());
         }
     }
 }
 
-OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat, uint32_t level) {
+OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    typedef std::pair<uint32_t, std::vector<OSMRelation*>*> level_relations;
+    typedef std::vector<OSMRelation*> relations;
 
-    std::vector<OSMRelation*> result;
+    relations result;
     auto callback = [](OSMRelation* rel, void* c)->bool{
-        level_relations* context;
-        context = reinterpret_cast<level_relations*>(c);
-        if(rel->level == context->first){
-            context->second->push_back(rel);
+        relations* context;
+        context = reinterpret_cast<relations*>(c);
+        if (rel->level == 8) { // we want to match only cities
+            context->push_back(rel);
         }
         return true;
     };
-    level_relations context = std::make_pair(level, &result);
-    admin_tree.Search(search_rect.min, search_rect.max, callback, &context);
+    admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
     for(auto rel : result) {
         if (boost::geometry::within(p, rel->polygon)){
             return rel;

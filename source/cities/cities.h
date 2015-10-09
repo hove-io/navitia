@@ -166,7 +166,7 @@ struct OSMCache {
     OSMCache(const std::string& connection_string) : lotus(connection_string) {}
 
     void build_relations_geometries();
-    OSMRelation* match_coord_admin(const double lon, const double lat, uint32_t level);
+    OSMRelation* match_coord_admin(const double lon, const double lat);
     void match_nodes_admin();
     void insert_relations();
     void build_postal_codes();
