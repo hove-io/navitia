@@ -110,13 +110,13 @@ struct calendar_fixture {
         associated_calendar_for_week_end->calendar = weekend_cal;
         pt_data.associated_calendars.push_back(associated_calendar_for_week);
         pt_data.associated_calendars.push_back(associated_calendar_for_week_end);
-        auto* week_mvj = pt_data.meta_vj_fact.get_mut("week");
+        auto* week_mvj = pt_data.meta_vjs.get_mut("week");
         week_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
-        auto* week_bis_mvj = pt_data.meta_vj_fact.get_mut("week_bis");
+        auto* week_bis_mvj = pt_data.meta_vjs.get_mut("week_bis");
         week_bis_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
-        auto* weekend_mvj = pt_data.meta_vj_fact.get_mut("weekend");
+        auto* weekend_mvj = pt_data.meta_vjs.get_mut("weekend");
         weekend_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
-        auto* all_mvj = pt_data.meta_vj_fact.get_mut("all");
+        auto* all_mvj = pt_data.meta_vjs.get_mut("all");
         all_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
         all_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
 

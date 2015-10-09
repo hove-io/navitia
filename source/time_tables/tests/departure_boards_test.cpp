@@ -169,16 +169,16 @@ BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
 
     //we check that each vj is associated with the right calendar
     //NOTE: this is better checked in the UT for associated cal
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj_fact["week"]->associated_calendars.size(), 1);
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["week"]->associated_calendars.at("week_cal"));
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj_fact["week_bis"]->associated_calendars.size(), 1);
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["week_bis"]->associated_calendars.at("week_cal"));
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj_fact["weekend"]->associated_calendars.size(), 1);
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["weekend"]->associated_calendars.at("weekend_cal"));
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj_fact["all"]->associated_calendars.size(), 2);
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["all"]->associated_calendars.at("week_cal"));
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["all"]->associated_calendars.at("weekend_cal"));
-    BOOST_REQUIRE(b.data->pt_data->meta_vj_fact["wednesday"]->associated_calendars.empty());
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vjs["week"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["week"]->associated_calendars.at("week_cal"));
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vjs["week_bis"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["week_bis"]->associated_calendars.at("week_cal"));
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vjs["weekend"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["weekend"]->associated_calendars.at("weekend_cal"));
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vjs["all"]->associated_calendars.size(), 2);
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["all"]->associated_calendars.at("week_cal"));
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["all"]->associated_calendars.at("weekend_cal"));
+    BOOST_REQUIRE(b.data->pt_data->meta_vjs["wednesday"]->associated_calendars.empty());
 }
 
 /*
@@ -285,11 +285,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     exception_date.type = navitia::type::ExceptionDate::ExceptionType::sub;
     associated_nearly_calendar->exceptions.push_back(exception_date);
     b.data->pt_data->associated_calendars.push_back(associated_nearly_calendar);
-    auto* week_mvj = b.data->pt_data->meta_vj_fact.get_mut("week");
+    auto* week_mvj = b.data->pt_data->meta_vjs.get_mut("week");
     week_mvj->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
-    auto* week_bis_mvj = b.data->pt_data->meta_vj_fact.get_mut("week_bis");
+    auto* week_bis_mvj = b.data->pt_data->meta_vjs.get_mut("week_bis");
     week_bis_mvj->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
-    auto* all_mvj = b.data->pt_data->meta_vj_fact.get_mut("all");
+    auto* all_mvj = b.data->pt_data->meta_vjs.get_mut("all");
     all_mvj->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
 
     //call all the init again
@@ -358,7 +358,7 @@ struct small_cal_fixture {
         navitia::type::AssociatedCalendar* associated_calendar = new navitia::type::AssociatedCalendar();
         associated_calendar->calendar = cal;
         b.data->pt_data->associated_calendars.push_back(associated_calendar);
-        b.data->pt_data->meta_vj_fact.get_mut("vj1")->associated_calendars[cal->uri] = associated_calendar;
+        b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars[cal->uri] = associated_calendar;
 
         //call all the init again
         b.finish();

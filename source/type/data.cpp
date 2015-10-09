@@ -357,7 +357,7 @@ void Data::build_associated_calendar() {
     std::multimap<ValidityPattern, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
-    for(auto& meta_vj : this->pt_data->meta_vj_fact) {
+    for(auto& meta_vj : this->pt_data->meta_vjs) {
         assert (! meta_vj->base_vj.empty());
 
         // we check the theoric vj of a meta vj

@@ -197,10 +197,10 @@ struct route_schedule_calendar_fixture {
         navitia::type::AssociatedCalendar a3;
         a1.calendar = c3;
 
-        b.data->pt_data->meta_vj_fact.get_mut("MVJ5")->associated_calendars.insert({c1->uri, &a1});
-        b.data->pt_data->meta_vj_fact.get_mut("MVJ5")->associated_calendars.insert({c2->uri, &a2});
-        b.data->pt_data->meta_vj_fact.get_mut("MVJ6")->associated_calendars.insert({c2->uri, &a2});
-        b.data->pt_data->meta_vj_fact.get_mut("MVJ6")->associated_calendars.insert({c3->uri, &a3});
+        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c1->uri, &a1});
+        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c2->uri, &a2});
+        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c2->uri, &a2});
+        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, &a3});
 
         b.finish();
         b.data->pt_data->index();

@@ -115,7 +115,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         name = "vehicle_journey " + std::to_string(vj->idx);
     }
 
-    nt::MetaVehicleJourney* mvj = pt_data.meta_vj_fact.get_or_create(name);
+    nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
     mvj->base_vj.push_back(vj);
     vj->meta_vj = mvj;
 

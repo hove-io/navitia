@@ -65,7 +65,7 @@ struct PT_Data : boost::noncopyable{
     std::vector<StopPointConnection*> stop_point_connections;
 
     // meta vj factory
-    navitia::ObjFactory<MetaVehicleJourney> meta_vj_fact;
+    navitia::ObjFactory<MetaVehicleJourney> meta_vjs;
 
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
@@ -116,7 +116,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
                 & disruption_holder
-                & meta_vj_fact
+                & meta_vjs
                 & stop_points_by_area
                 & comments
                 & codes

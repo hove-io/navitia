@@ -68,7 +68,7 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
         return;
     }
 
-    auto meta_vj = data.pt_data->meta_vj_fact.get_mut(trip.trip_id());
+    auto meta_vj = data.pt_data->meta_vjs.get_mut(trip.trip_id());
     if (! meta_vj) {
         LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
         // TODO for trip().ADDED, we'll need to create a new VJ

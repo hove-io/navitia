@@ -121,5 +121,5 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
 
-    BOOST_CHECK_EQUAL(data.pt_data->meta_vj_fact.size(), 3);
+    BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 3);
 }
