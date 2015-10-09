@@ -199,9 +199,10 @@ struct Dom {
     bool clockwise;
     typedef StartingPointSndPhase Arg;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
-        return lhs.count <= rhs.count
-            && (clockwise ? lhs.end_dt <= rhs.end_dt : lhs.end_dt >= rhs.end_dt)
-            && lhs.fallback_dur <= rhs.fallback_dur;
+        return false;
+//        return lhs.count <= rhs.count
+//            && (clockwise ? lhs.end_dt <= rhs.end_dt : lhs.end_dt >= rhs.end_dt)
+//            && lhs.fallback_dur <= rhs.fallback_dur;
     }
 };
 ParetoFront<StartingPointSndPhase, Dom>
