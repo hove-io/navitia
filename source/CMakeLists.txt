@@ -20,7 +20,8 @@ include(GetGitRevisionDescription)
 git_describe(GIT_REVISION)
 
 IF(NOT CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE Debug)
+    #https://cmake.org/pipermail/cmake/2009-June/030311.html
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
