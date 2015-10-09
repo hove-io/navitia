@@ -205,13 +205,12 @@ void OSMCache::build_relations_geometries() {
 const OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    typedef std::vector<const OSMRelation*> relations;
+    using relations = std::vector<const OSMRelation*>;
 
     relations result;
     auto callback = [](const OSMRelation* rel, void* c)->bool{
-        relations* context;
-        context = reinterpret_cast<relations*>(c);
         if (rel->level == 8) { // we want to match only cities
+            relations* context = reinterpret_cast<relations*>(c);
             context->push_back(rel);
         }
         return true;

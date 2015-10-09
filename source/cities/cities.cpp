@@ -136,7 +136,7 @@ void OSMCache::build_postal_codes(){
         if(relation.second.level != 9){
             continue;
         }
-        auto rel = this->match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>());
+        auto rel = match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>());
         if(rel){
             rel->postal_codes.insert(relation.second.postal_codes.begin(), relation.second.postal_codes.end());
         }
@@ -146,13 +146,12 @@ void OSMCache::build_postal_codes(){
 OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    typedef std::vector<OSMRelation*> relations;
+    using relations = std::vector<OSMRelation*>;
 
     relations result;
     auto callback = [](OSMRelation* rel, void* c)->bool{
-        relations* context;
-        context = reinterpret_cast<relations*>(c);
         if (rel->level == 8) { // we want to match only cities
+            relations* context = reinterpret_cast<relations*>(c);
             context->push_back(rel);
         }
         return true;
