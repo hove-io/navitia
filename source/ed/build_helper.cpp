@@ -129,7 +129,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return vp->days == vp1->days;};
     auto it_vp = std::find_if(pt_data.validity_patterns.begin(),
             pt_data.validity_patterns.end(), find_vp_predicate);
-    if(it_vp != pt_data.validity_patterns.end()) {
+    if (it_vp != pt_data.validity_patterns.end()) {
         delete vp;
         vp = *(it_vp);
     } else {
@@ -140,12 +140,13 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj_vp.second = vp;
     }
 
-    if(wheelchair_boarding){
+    if (wheelchair_boarding) {
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
     }
 
-    if(!pt_data.companies.empty())
+    if (! pt_data.companies.empty()) {
         vj->company = pt_data.companies.front();
+    }
 }
 
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
