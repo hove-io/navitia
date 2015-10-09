@@ -452,6 +452,7 @@ disruption_marshaller = {
     "messages": NonNullList(NonNullNested(disruption_message)),
     "uri": fields.String(),
     "disruption_uri": fields.String(),
+    "contributor": fields.String()
 }
 
 
