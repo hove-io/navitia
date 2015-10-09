@@ -228,7 +228,8 @@ struct Tag {
 
 struct Disruption {
     std::string uri;
-
+    // Provider of the disruption
+    std::string contributor;
     // it's the title of the disruption as shown in the backoffice
     std::string reference;
 
@@ -255,7 +256,7 @@ struct Disruption {
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & uri & reference & publication_period
-           & created_at & updated_at & cause & impacts & localization & tags & note;
+           & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 
     void add_impact(const boost::shared_ptr<Impact>& impact);
