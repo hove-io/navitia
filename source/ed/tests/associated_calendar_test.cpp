@@ -264,13 +264,14 @@ struct associated_cal_fixture {
         // meta_vj
 
         ed::types::MetaVehicleJourney mvj;
+        mvj.uri = "meta_vj";
         mvj.theoric_vj.push_back(vj1);
         mvj.theoric_vj.push_back(vj2);
         mvj.theoric_vj.push_back(vj2_b);
-        vj1->meta_vj_name = "meta_vj";
-        vj2->meta_vj_name = "meta_vj";
-        vj2_b->meta_vj_name = "meta_vj";
-        data.meta_vj_map.insert({"meta_vj", mvj});
+        vj1->meta_vj_name = mvj.uri;
+        vj2->meta_vj_name = mvj.uri;
+        vj2_b->meta_vj_name = mvj.uri;
+        data.meta_vj_map.insert({mvj.uri, mvj});
 
         always_on_cal->line_list.push_back(line);
         wednesday_cal->line_list.push_back(line);
