@@ -122,6 +122,7 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
 void OSMCache::build_relations_geometries() {
     for (auto& relation : relations) {
         relation.second.build_geometry(*this);
+        if (relation.second.polygon.empty()) { continue; }
         boost::geometry::model::box<point> box;
         boost::geometry::envelope(relation.second.polygon, box);
         Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(),
@@ -135,29 +136,27 @@ void OSMCache::build_postal_codes(){
         if(relation.second.level != 9){
             continue;
         }
-        auto rel = this->match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>(), 8);
+        auto rel = match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>());
         if(rel){
             rel->postal_codes.insert(relation.second.postal_codes.begin(), relation.second.postal_codes.end());
         }
     }
 }
 
-OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat, uint32_t level) {
+OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    typedef std::pair<uint32_t, std::vector<OSMRelation*>*> level_relations;
+    using relations = std::vector<OSMRelation*>;
 
-    std::vector<OSMRelation*> result;
+    relations result;
     auto callback = [](OSMRelation* rel, void* c)->bool{
-        level_relations* context;
-        context = reinterpret_cast<level_relations*>(c);
-        if(rel->level == context->first){
-            context->second->push_back(rel);
+        if (rel->level == 8) { // we want to match only cities
+            relations* context = reinterpret_cast<relations*>(c);
+            context->push_back(rel);
         }
         return true;
     };
-    level_relations context = std::make_pair(level, &result);
-    admin_tree.Search(search_rect.min, search_rect.max, callback, &context);
+    admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
     for(auto rel : result) {
         if (boost::geometry::within(p, rel->polygon)){
             return rel;
