@@ -362,43 +362,43 @@ Specific parameters
 
 There are other specific parameters.
 
-depth
-_____
+"depth"
+_______
 
 This tiny parameter can expand Navitia power by making it more wordy.
-Here is some examples with the line 1 from the Parisian Metro :
+Here is some examples around "metro line 1" from the Parisian network:
 
-* Get the line 1 id 
+* Get "line 1" id 
 
 	* https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201
-	* the id is "line:RTP:1197611"
+	* The id is "line:RTP:1197611"
 
 * Get routes for this line 
 
 	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes
 
-* want a tiny response, just add "depth=0"
+* Want to get a tiny response? Just add "depth=0"
 
 	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=0
-	* the response is lighter (parent lines disappear for example)
+	* The response is lighter (parent lines disappear for example)
 
-* Get more informations, just add "depth=2"
+* Want more informations, just add "depth=2"
 
 	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=2
-	* the response is a little more verbose (with some geojson appear in response)
+	* The response is a little more verbose (with some geojson appear in response)
 
 * Wanna fat more informations, let's try "depth=3"
 
 	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=3
-	* big response: all stop_points are shown
+	* Big response: all stop_points are shown
 
-* wanna spam the internet bandwidth? Try "depth=42"
+* Wanna spam the internet bandwidth? Try "depth=42"
 
-	* No. There is a technical limit with depth=3
+	* No. There is a technical limit with "depth=3"
 
 
-odt_level
-_________
+"odt_level"
+___________
 
 - Type: `String`
 - Default value: `all`
@@ -424,8 +424,8 @@ https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
 
 https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=scheduled
 
-distance
-________
+"distance"
+__________
 
 - Type: `Integer`
 - Default value: 200
@@ -433,8 +433,8 @@ ________
 If you specify coords in your filter, you can modify the radius used for the proximity search.
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules?distance=500
 
-headsign
-________
+"headsign"
+__________
 
 - Type: `String`
 
@@ -450,8 +450,8 @@ Warning: this last request gives the stop areas used by the vehicle
 journeys containing the headsign `CANE`, *not* the stop areas where it
 exists a stop time with the headsign `CANE`.
 
-since / until
-_____________
+"since" / "until"
+_________________
 
 - Type: `datetime`
 
