@@ -384,20 +384,19 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     //     1       2            3            4           5            6           7           8        9
     //
     // technically we can handle only one year of data in navitia, so we limit the period to 2007 -> 2008
-    // -> we split the period in 3
+    // we group each vp by dst, so we split each period in 2:
+    // [------)          |------)  VP1
+    //        [----------)         VP2
 
-    //each validity pattern are valid on the entire period, so each are split in 9
-    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2 * 3);
+    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2 * 2);
     BOOST_CHECK_EQUAL(data.validity_patterns[0]->uri, "FULLW_1");
     BOOST_CHECK_EQUAL(data.validity_patterns[1]->uri, "FULLW_2");
-    BOOST_CHECK_EQUAL(data.validity_patterns[2]->uri, "FULLW_3");
 
-    BOOST_CHECK_EQUAL(data.validity_patterns[3]->uri, "WE_1");
-    BOOST_CHECK_EQUAL(data.validity_patterns[4]->uri, "WE_2");
-    BOOST_CHECK_EQUAL(data.validity_patterns[5]->uri, "WE_3");
+    BOOST_CHECK_EQUAL(data.validity_patterns[2]->uri, "WE_1");
+    BOOST_CHECK_EQUAL(data.validity_patterns[3]->uri, "WE_2");
 
     // same for the vj, all have been split in 9
-    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 3);
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 2);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_dst_1");
     BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
@@ -406,14 +405,14 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
 
-    for (int i = 1; i <= 3; ++i) {
+    for (int i = 1; i <= 2; ++i) {
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_dst_" + std::to_string(i));
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->validity_pattern != nullptr);
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
     }
 
     //Stop time
-    BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 3);
+    BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 2);
     BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_dst_1");
     BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600 + 480*60); //first day is on a non dst period, so the utc offset
@@ -533,7 +532,7 @@ BOOST_AUTO_TEST_CASE(boost_year_iterator) {
  * the returned periods must be a partition of the validity period => all day must be in exactly one period
  */
 BOOST_AUTO_TEST_CASE(get_dst_periods) {
-    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
+    boost::gregorian::date_period validity_period {"20120101"_d, "20150102"_d};
     ed::connectors::GtfsData gtfs_data;
     auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
 
@@ -557,6 +556,43 @@ BOOST_AUTO_TEST_CASE(get_dst_periods) {
         }
         BOOST_CHECK_EQUAL(nb_found, 1);
     }
+}
+
+/*
+ * Test that split_over_dst correctly split the sub_period
+ *
+ * Period is :
+ *
+ *         01/02/2012----------------------------------05/11/2012
+ *                winter dst  |  summer dst      | winter dst
+ *
+ *    we must have 2 groups:
+ *    one on the winter utc shift with 2 periods
+ *    one on the summer utc shift with 1 period
+ */
+BOOST_AUTO_TEST_CASE(split_over_dst) {
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
+
+    boost::gregorian::date_period vj_validity_period {"20120201"_d, "20121105"_d};
+
+    auto split_periods = ed::connectors::split_over_dst(vj_validity_period, tz_pair.second);
+
+    BOOST_REQUIRE_EQUAL(split_periods.size(), 2);
+
+    const auto winter_paris_utc_shift = 60 * 60;
+    const auto& winter_periods = split_periods.at(winter_paris_utc_shift);
+    BOOST_REQUIRE_EQUAL(winter_periods.size(), 2);
+    BOOST_CHECK_EQUAL(winter_periods.at(0).begin(), "20120201"_d);
+    BOOST_CHECK_EQUAL(winter_periods.at(0).last(), "20120324"_d);
+    BOOST_CHECK_EQUAL(winter_periods.at(1).begin(), "20121028"_d);
+    BOOST_CHECK_EQUAL(winter_periods.at(1).last(), "20121104"_d);
+
+    const auto summer_paris_utc_shift = 2 * 60 * 60;
+    const auto& summer_periods = split_periods.at(summer_paris_utc_shift);
+    BOOST_REQUIRE_EQUAL(summer_periods.size(), 1);
+    BOOST_CHECK_EQUAL(summer_periods.at(0).begin(), "20120325"_d);
+    BOOST_CHECK_EQUAL(summer_periods.at(0).last(), "20121027"_d);
 }
 
 BOOST_AUTO_TEST_CASE(parse_with_feed_info) {

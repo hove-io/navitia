@@ -130,11 +130,11 @@ struct GtfsData {
 };
 
 //a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to
-struct period_with_utc_shift {
-    period_with_utc_shift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
+struct PeriodWithUtcShift {
+    PeriodWithUtcShift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
         period(p), utc_shift(dur.total_seconds() / 60)
     {}
-    period_with_utc_shift(boost::gregorian::date_period p, int dur) :
+    PeriodWithUtcShift(boost::gregorian::date_period p, int dur) :
         period(p), utc_shift(dur)
     {}
     boost::gregorian::date_period period;
@@ -143,8 +143,11 @@ struct period_with_utc_shift {
     //add info to handle the cornercase of the day of the DST (the time of the shift)
 };
 
-std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
-std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+using UtcShift = int;
+using periods_by_utc_shift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
+
+std::vector<PeriodWithUtcShift> get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+periods_by_utc_shift split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
 
