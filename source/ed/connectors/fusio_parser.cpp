@@ -415,6 +415,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     std::vector<ed::types::VehicleJourney*> res;
 
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
+    meta_vj.uri = row[trip_c];
     // Store the meta vj with its external code, only if this code exists
     if(is_valid(ext_code_c, row)){
         gtfs_data.metavj_by_external_code.insert({row[ext_code_c], &meta_vj});

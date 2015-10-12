@@ -36,7 +36,7 @@ www.navitia.io
 
 namespace navitia {
 
-void cancel_vj(type::MetaVehicleJourney* meta_vj,
+static void cancel_vj(type::MetaVehicleJourney* meta_vj,
                const boost::gregorian::date& date,
                const transit_realtime::TripUpdate& /*trip_update*/,
                const type::Data& data) {
@@ -68,7 +68,7 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
         return;
     }
 
-    auto meta_vj = find_or_default(trip.trip_id(), data.pt_data->meta_vj);
+    auto meta_vj = data.pt_data->meta_vjs.get_mut(trip.trip_id());
     if (! meta_vj) {
         LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
         // TODO for trip().ADDED, we'll need to create a new VJ

@@ -929,6 +929,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
+    meta_vj.uri = row[trip_c];
 
     // get shape if possible
     const std::string &shape_id = has_col(shape_id_c, row) ? row.at(shape_id_c) : "";

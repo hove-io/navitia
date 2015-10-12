@@ -979,8 +979,7 @@ struct Calendar : public Nameable, public Header {
  *
  *
  */
-struct MetaVehicleJourney {
-    //store the name ?
+struct MetaVehicleJourney: public Header {
     //TODO if needed use a flat_enum_map
     std::vector<VehicleJourney*> base_vj;
     std::vector<VehicleJourney*> adapted_vj;

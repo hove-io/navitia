@@ -340,8 +340,7 @@ struct StopTime {
  *
  *
  */
-struct MetaVehicleJourney {
-    //store the name ?
+struct MetaVehicleJourney: public Header {
     //TODO if needed use a flat_enum_map
     std::vector<VehicleJourney*> theoric_vj;
     std::vector<VehicleJourney*> adapted_vj;

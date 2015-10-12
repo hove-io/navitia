@@ -578,8 +578,8 @@ void Data::build_associated_calendar() {
     size_t nb_matched(0);
     size_t nb_ignored(0);
 
-    for(auto meta_vj_pair : meta_vj_map) {
-        auto& meta_vj = meta_vj_map[meta_vj_pair.first]; //meta_vj_pair.second;
+    for(auto& meta_vj_pair : meta_vj_map) {
+        auto& meta_vj = meta_vj_pair.second;
 
         assert (! meta_vj.theoric_vj.empty());
 
