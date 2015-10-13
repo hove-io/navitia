@@ -340,7 +340,8 @@ struct TripsGtfsHandler : public GenericHandler {
     int id_c, service_c,
             trip_c, headsign_c,
             block_id_c, wheelchair_c,
-            bikes_c, shape_id_c;
+            bikes_c, shape_id_c,
+            direction_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -351,6 +352,11 @@ struct TripsGtfsHandler : public GenericHandler {
     const std::vector<std::string> required_headers() const {
         return {"route_id", "service_id", "trip_id"};
     }
+
+    using RouteId = std::pair<types::Line*, const std::string>;
+    std::map<RouteId, types::Route*> routes;
+
+    types::Route* get_or_create_route(Data& data, const RouteId&);
 };
 struct StopTimeGtfsHandler : public GenericHandler {
     StopTimeGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}

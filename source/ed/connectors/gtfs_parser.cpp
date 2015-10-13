@@ -893,6 +893,7 @@ void TripsGtfsHandler::init(Data& data) {
     wheelchair_c = csv.get_pos_col("wheelchair_accessible");
     bikes_c = csv.get_pos_col("bikes_allowed");
     shape_id_c = csv.get_pos_col("shape_id");
+    direction_id_c = csv.get_pos_col("direction_id");
 }
 
 void TripsGtfsHandler::finish(Data& data) {
@@ -902,18 +903,42 @@ void TripsGtfsHandler::finish(Data& data) {
     LOG4CPLUS_TRACE(logger, ignored_vj << " duplicated vehicule journey have been ignored");
 }
 
+/*
+ * We create one route by line and direction_id
+ * the direction_id field is usually a boolean, but can be used as a string
+ * to create as many routes as wanted
+ */
+types::Route* TripsGtfsHandler::get_or_create_route(Data& data, const RouteId& route_id) {
+    const auto it = routes.find(route_id);
+    if (it != std::end(routes)) {
+        return it->second;
+    } else {
+        types::Route* route = new types::Route();
+        route->line = route_id.first;
+        //uri is {line}:{direction}
+        route->uri = route->line->uri + ":" + route_id.second;
+        route->name = route->line->name;
+        route->idx = data.routes.size();
+        data.routes.push_back(route);
+        routes[route_id] = route;
+        return route;
+    }
+}
+
 void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     auto it = gtfs_data.line_map.find(row[id_c]);
     if (it == gtfs_data.line_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs route " + row[id_c]
-                       + " referenced by trip " + row[trip_c]);
+        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs line " << row[id_c]
+                       << " referenced by trip " << row[trip_c]);
         ignored++;
         return;
     }
 
     nm::Line* line = it->second;
 
-    auto vp_range= gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
+    nm::Route* route = get_or_create_route(data, {line, row[direction_id_c]});
+
+    auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
     if(empty(vp_range)) {
         LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
@@ -922,7 +947,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     //we look in the meta vj table to see if we already have one such vj
-    if(data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
+    if (data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
         LOG4CPLUS_DEBUG(logger, "vj " << row[trip_c] << " already read, we skip the second one");
         ignored_vj++;
         return;
@@ -956,7 +981,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
-        vj->tmp_line = line;
+        vj->route = route;
         if(has_col(block_id_c, row))
             vj->block_id = row[block_id_c];
         else

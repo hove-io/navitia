@@ -281,20 +281,20 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     //Trips
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1");
-    BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
     BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->route != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->route->uri, "AB:0");
 
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->uri, "AAMV4");
-    BOOST_REQUIRE(data.vehicle_journeys[10]->tmp_line != nullptr);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->tmp_line->uri, "AAMV");
     BOOST_REQUIRE(data.vehicle_journeys[10]->validity_pattern != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->validity_pattern->uri, "WE");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->name, "to Airport");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->block_id, "");
+    BOOST_REQUIRE(data.vehicle_journeys[10]->route != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->route->uri, "AAMV:1");
 
     //Calendar
     BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2);
@@ -368,6 +368,24 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
     BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
 
+    // we need to also check the number of routes created (since they are implicit in GTFS)
+    // we create one by line/direction id
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 9);
+    BOOST_CHECK_EQUAL(data.routes[0]->uri, "AB:0"); //NOTE: order is not important
+    BOOST_CHECK_EQUAL(data.routes[1]->uri, "AB:1");
+    BOOST_CHECK_EQUAL(data.routes[2]->uri, "STBA:");
+    BOOST_CHECK_EQUAL(data.routes[3]->uri, "CITY:0");
+    BOOST_CHECK_EQUAL(data.routes[4]->uri, "CITY:1");
+    BOOST_CHECK_EQUAL(data.routes[5]->uri, "BFC:0");
+    BOOST_CHECK_EQUAL(data.routes[6]->uri, "BFC:1");
+    BOOST_CHECK_EQUAL(data.routes[7]->uri, "AAMV:0");
+    BOOST_CHECK_EQUAL(data.routes[8]->uri, "AAMV:1");
+    for (const auto& r: data.routes) {
+        BOOST_CHECK_NE(r->idx, navitia::invalid_idx);
+        BOOST_REQUIRE(r->line);
+        BOOST_CHECK_EQUAL(r->name, r->line->name);//route's name is it's line's name
+    }
+
     //Calendar, Trips and stop times are another matters
     //we have to split the trip validity period in such a fashion that the period does not overlap a dst
 
@@ -399,17 +417,18 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     // same for the vj, all have been split in 9
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 3);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_dst_1");
-    BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
     BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW_1");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->route != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->route->uri, "AB:0");
 
     for (int i = 1; i <= 3; ++i) {
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_dst_" + std::to_string(i));
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->validity_pattern != nullptr);
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
+        BOOST_REQUIRE(data.vehicle_journeys[i-1]->route != nullptr);
     }
 
     //Stop time
