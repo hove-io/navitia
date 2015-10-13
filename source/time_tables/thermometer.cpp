@@ -130,8 +130,17 @@ void Thermometer::generate_thermometer(const type::Route* route) {
     generate_thermometer(std::vector<vector_idx>(stop_point_lists.begin(), stop_point_lists.end()));
 }
 
+// Generate an topologicaly exact thermometer
+// return false if topological sort fail (probably because of a cycle)
+// return true if succeed
+bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx> &stop_point_lists) {
+    return false;
+}
+
 void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point_lists) {
 
+    if (generate_topological_thermometer(stop_point_lists))
+        return;
     uint32_t max_sp = get_max_sp(stop_point_lists);
     nb_branches = 0;
     std::vector<vector_idx> req;
