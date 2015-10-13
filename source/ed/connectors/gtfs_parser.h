@@ -144,10 +144,12 @@ struct PeriodWithUtcShift {
 };
 
 using UtcShift = int;
-using periods_by_utc_shift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
+using PeriodsByUtcShift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
 
-std::vector<PeriodWithUtcShift> get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
-periods_by_utc_shift split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+std::vector<PeriodWithUtcShift>
+get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+PeriodsByUtcShift
+split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
 
