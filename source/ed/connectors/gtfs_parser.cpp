@@ -134,7 +134,8 @@ std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const
  *
  *       [    +7h       )[  +8h    )[       +7h          )[   +8h     )[      +7h     )
  */
-std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
+std::vector<PeriodWithUtcShift> get_dst_periods(const boost::gregorian::date_period& validity_period,
+                                                const boost::local_time::time_zone_ptr& tz) {
 
     if (validity_period.is_null()) {
         return {};
@@ -148,7 +149,7 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
 
     BOOST_ASSERT(! years.empty());
 
-    std::vector<period_with_utc_shift> res;
+    std::vector<PeriodWithUtcShift> res;
     for (int year: years) {
         if (! res.empty()) {
             //if res is not empty we add the additional period without the dst
@@ -177,9 +178,9 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
     return res;
 }
 
-std::vector<period_with_utc_shift>
+PeriodsByUtcShift
 split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
-    std::vector<period_with_utc_shift> res;
+    PeriodsByUtcShift res;
 
     if (! tz) {
         LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
@@ -190,11 +191,11 @@ split_over_dst(const boost::gregorian::date_period& validity_period, const boost
 
     if (! tz->has_dst()) {
         //no dst -> easy way out, no split, we just have to take the utc offset into account
-        res.push_back({validity_period, utc_offset});
+        res[utc_offset.total_seconds() / 60].push_back(validity_period);
         return res;
     }
 
-    std::vector<period_with_utc_shift> dst_periods = get_dst_periods(validity_period, tz);
+    std::vector<PeriodWithUtcShift> dst_periods = get_dst_periods(validity_period, tz);
 
     //we now compute all intersection between periods
     //to use again the example of get_dst_periods:
@@ -207,14 +208,20 @@ split_over_dst(const boost::gregorian::date_period& validity_period, const boost
     // we create the periods:
     //
     //                                  [+8)[       +7h          )[+8h)
-    for (auto dst_period: dst_periods) {
+    //
+    // all period_with_utc_shift are grouped by dst offsets.
+    // ie in the previous example there are 2 period_with_utc_shift:
+    //                        1/        [+8)                      [+8h)
+    //                        2/            [       +7h          )
+    for (const auto& dst_period: dst_periods) {
 
         if (! validity_period.intersects(dst_period.period)) {
             //no intersection, we don't consider it
             continue;
         }
         auto intersec = validity_period.intersection(dst_period.period);
-        res.push_back({intersec, dst_period.utc_shift});
+
+        res[dst_period.utc_shift].push_back(intersec);
     }
 
     return res;
@@ -794,12 +801,14 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
         BOOST_ASSERT(! split_periods.empty() || smallest_active_period.is_null()); //by construction it cannot be empty if the validity period is not null
 
         size_t cpt(1);
-        for (const auto& split_period: split_periods) {
+        for (const auto& utc_shit_and_periods: split_periods) {
             nm::ValidityPattern* vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
 
-            for(boost::gregorian::day_iterator it(split_period.period.begin()); it < split_period.period.end(); ++it) {
-                if (original_vp.check(*it)) {
-                    vp->add(*it);
+            for (const auto period: utc_shit_and_periods.second) {
+                for(boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
+                    if (original_vp.check(*it)) {
+                        vp->add(*it);
+                    }
                 }
             }
 
@@ -810,18 +819,17 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
                 vp->uri = original_vp.uri + "_" + std::to_string(cpt);
             }
             gtfs_data.tz.vp_by_name.insert({original_vp.uri, vp});
-            gtfs_data.tz.offset_by_vp.insert({vp, split_period.utc_shift});
+            gtfs_data.tz.offset_by_vp.insert({vp, utc_shit_and_periods.first});
             data.validity_patterns.push_back(vp);
             cpt++;
         }
-
     }
-
 
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Nb validity patterns : " << data.validity_patterns.size());
     BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
-    if (data.validity_patterns.empty())
+    if (data.validity_patterns.empty()) {
         LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "No validity_patterns");
+    }
 
 }
 

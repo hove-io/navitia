@@ -98,9 +98,8 @@ void Data::build_block_id() {
     );
 
     types::VehicleJourney* prev_vj = nullptr;
-    for(auto* vj : vehicle_journeys) {
-        if(prev_vj && prev_vj->block_id != "" &&
-           prev_vj->block_id == vj->block_id){
+    for (auto* vj : vehicle_journeys) {
+        if (prev_vj && prev_vj->block_id != "" && prev_vj->block_id == vj->block_id) {
             //NOTE: we do nothing for vj with empty stop times, they will be removed in the clean()
             if (! vj->stop_time_list.empty() && ! prev_vj->stop_time_list.empty()) {
 
