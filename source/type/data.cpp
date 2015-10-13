@@ -63,6 +63,8 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
+const unsigned int Data::data_version = 47; //< *INCREMENT* every time serialized data are modified
+
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
@@ -709,3 +711,5 @@ void Data::clone_from(const Data& from) {
 }
 
 }} //namespace navitia::type
+
+BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)

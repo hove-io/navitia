@@ -74,7 +74,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 47; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version; //< Data version number. *INCREMENT* in cpp file
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
@@ -225,5 +225,3 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
 
 
 }} //namespace navitia::type
-
-BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)
