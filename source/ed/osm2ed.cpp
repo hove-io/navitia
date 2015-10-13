@@ -364,6 +364,7 @@ void OSMCache::insert_edges() {
  * Insert relations into the database
  */
 void OSMCache::insert_relations() {
+    auto logger = log4cplus::Logger::getInstance("log");
     lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;
     for (auto relation : relations) {
@@ -377,11 +378,12 @@ void OSMCache::insert_relations() {
                           std::to_string(relation.level), coord, polygon_str,
                           "admin:"+std::to_string(relation.osm_id)});
         } else {
+            LOG4CPLUS_WARN(logger, "admin " << relation.name << " id: " << relation.osm_id << " of level "
+                                  << relation.level << " won't be inserted since it has an empty polygon");
             ++nb_empty_polygons;
         }
     }
     lotus.finish_bulk_insert();
-    auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_INFO(logger, "Ignored " << std::to_string(nb_empty_polygons) 
             << " admins because their polygons were empty");
 }
