@@ -251,7 +251,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Route* route = nullptr;
     Company* company = nullptr;
     PhysicalMode* physical_mode = nullptr;
-    Line * tmp_line = nullptr; // May be empty
     //Vehicle* vehicle;
     bool wheelchair_boarding = false;
     navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;

@@ -1,3 +1,9 @@
+navitia2 (1.27.1) unstable; urgency=low
+
+  * Ed: for the GTFS create one route by line and direction_id  <https://github.com/CanalTP/navitia/pull/1205> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 13 Oct 2015 10:10:04 +0100
+
 navitia2 (1.27.0) unstable; urgency=low
 
   * Ed: Find production date  <https://github.com/CanalTP/navitia/pull/1191>
