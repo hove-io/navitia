@@ -404,6 +404,10 @@ validity_pattern = {
     'days': fields.String(),
 }
 
+trip = {
+    'id': fields.String(attribute="uri"),
+}
+
 code = {
     "type": fields.String(),
     "value": fields.String()

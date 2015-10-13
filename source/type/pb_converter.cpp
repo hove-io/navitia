@@ -639,6 +639,15 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
     validity_pattern->set_days(vp->days.to_string());
 }
 
+void fill_pb_object(const nt::MetaVehicleJourney* nav_mvj,
+                    pbnavitia::Trip* pb_trip,
+                    int /*max_depth*/,
+                    const pt::ptime& /*now*/,
+                    const pt::time_period& /*action_period*/,
+                    const bool /*show_codes*/) {
+    pb_trip->set_uri(nav_mvj->uri);
+}
+
 void fill_pb_object(const nt::VehicleJourney* vj,
                     const nt::Data& data,
                     pbnavitia::VehicleJourney* vehicle_journey,
@@ -676,6 +685,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period, show_codes);
         }
+        fill_pb_object(vj->meta_vj, vehicle_journey->mutable_trip(), depth-1, now,
+                       action_period, show_codes);
         fill_pb_object(vj->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
