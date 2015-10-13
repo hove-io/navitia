@@ -804,8 +804,8 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
         for (const auto& utc_shit_and_periods: split_periods) {
             nm::ValidityPattern* vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
 
-            for (const auto period: utc_shit_and_periods.second) {
-                for(boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
+            for (const auto& period: utc_shit_and_periods.second) {
+                for (boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
                     if (original_vp.check(*it)) {
                         vp->add(*it);
                     }
