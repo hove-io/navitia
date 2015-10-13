@@ -86,8 +86,7 @@ class TestDisruptions(AbstractTestFixture):
         eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['uri'], 'too_bad_again')
 
-
-        eq_(hasattr(network_disrupt[1], 'contributor'), False)
+        eq_(network_disrupt[1]['contributor'], '')
 
         eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
         eq_(network_disrupt[1]['uri'], 'later_impact')
