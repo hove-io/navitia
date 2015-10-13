@@ -567,6 +567,7 @@ struct routing_api_data {
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A";
             disruption->publication_period = default_period;
+            disruption->contributor = "contrib";
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad_again";

@@ -128,6 +128,11 @@ void fill_message(const type::new_disruption::Impact& impact,
     auto pb_disrution = pb_object->add_disruptions();
 
     pb_disrution->set_disruption_uri(impact.disruption->uri);
+
+    if (!impact.disruption->contributor.empty()){
+        pb_disrution->set_contributor(impact.disruption->contributor);
+    }
+
     pb_disrution->set_uri(impact.uri);
     for (const auto& app_period: impact.application_periods) {
         auto p = pb_disrution->add_application_periods();

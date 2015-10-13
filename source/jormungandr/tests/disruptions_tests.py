@@ -70,6 +70,7 @@ class TestDisruptions(AbstractTestFixture):
         for d in lines_disrupt:
             is_valid_disruption(d)
         eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+        eq_(lines_disrupt[0]['contributor'], 'contrib')
         eq_(lines_disrupt[0]['uri'], 'too_bad_again')
         eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
@@ -84,6 +85,8 @@ class TestDisruptions(AbstractTestFixture):
             is_valid_disruption(d)
         eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['uri'], 'too_bad_again')
+
+        eq_(network_disrupt[1]['contributor'], '')
 
         eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
         eq_(network_disrupt[1]['uri'], 'later_impact')

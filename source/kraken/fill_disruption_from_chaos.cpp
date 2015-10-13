@@ -497,6 +497,11 @@ void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_d
 
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
+
+    if (chaos_disruption.has_contributor()){
+        disruption->contributor = chaos_disruption.contributor();
+    }
+
     disruption->reference = chaos_disruption.reference();
     disruption->publication_period = {
         from_posix(chaos_disruption.publication_period().start()),
