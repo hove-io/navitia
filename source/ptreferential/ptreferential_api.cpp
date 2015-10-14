@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include "type/meta_data.h"
 #include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
@@ -46,7 +47,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
                                         const bool show_codes,
                                         const boost::posix_time::ptime& current_time) {
     pbnavitia::Response result;
-    auto action_period = pt::time_period(current_time, pt::seconds(1));
+    const auto& action_period = data.meta->production_period();
     for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:

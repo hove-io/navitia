@@ -83,8 +83,8 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
 
 
 //return the time period of circulation of a vj for one day
-static boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
-                                                          const nt::VehicleJourney& vj){
+boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
+                                                const nt::VehicleJourney& vj) {
     uint32_t first_departure = std::numeric_limits<uint32_t>::max();
     uint32_t last_arrival = 0;
     for(const auto& st: vj.stop_time_list){
@@ -132,6 +132,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
 #undef EFFECT_ENUM_CONVERSION
     }
 
+    weak_severity = severity;
     return std::move(severity);
 }
 

@@ -31,8 +31,11 @@ www.navitia.io
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include "type/meta_data.h"
+#include "kraken/fill_disruption_from_chaos.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/make_shared.hpp>
 
 namespace navitia {
 
@@ -57,7 +60,69 @@ static void cancel_vj(type::MetaVehicleJourney* meta_vj,
     }
 }
 
-void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type::Data& data) {
+static boost::shared_ptr<nt::new_disruption::Severity>
+make_no_service_severity(const boost::posix_time::ptime& timestamp,
+                         nt::new_disruption::DisruptionHolder& holder) {
+    // Yeah, that's quite hardcodded...
+    const std::string id = "kraken:rt:no_service";
+    auto& weak_severity = holder.severities[id];
+    if (auto severity = weak_severity.lock()) { return std::move(severity); }
+
+    auto severity = boost::make_shared<nt::new_disruption::Severity>();
+    severity->uri = id;
+    severity->wording = "trip canceled!";
+    severity->created_at = timestamp;
+    severity->updated_at = timestamp;
+    severity->color = "#000000";
+    severity->priority = 42;
+    severity->effect = nt::new_disruption::Effect::NO_SERVICE;
+
+    weak_severity = severity;
+    return std::move(severity);
+}
+
+static void
+create_disruption(const std::string& id,
+                  const boost::posix_time::ptime& timestamp,
+                  const transit_realtime::TripUpdate& trip_update,
+                  const type::Data& data) {
+    auto log = log4cplus::Logger::getInstance("realtime");
+    nt::new_disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
+    auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+    const auto& a_vj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id())->base_vj.front();
+
+    delete_disruption(id, *data.pt_data, *data.meta);
+    auto disruption = std::make_unique<nt::new_disruption::Disruption>();
+    disruption->uri = id;
+    disruption->reference = disruption->uri;
+    disruption->publication_period = data.meta->production_period();
+    disruption->created_at = timestamp;
+    disruption->updated_at = timestamp;
+    // cause
+    {// impact
+        auto impact = boost::make_shared<nt::new_disruption::Impact>();
+        impact->uri = disruption->uri;
+        impact->created_at = timestamp;
+        impact->updated_at = timestamp;
+        impact->application_periods.push_back(execution_period(circulation_date, a_vj));
+        impact->severity = make_no_service_severity(timestamp, holder);
+        impact->informed_entities.push_back(
+            make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
+        // messages
+        disruption->add_impact(std::move(impact));
+    }
+    // localization
+    // tags
+    // note
+
+    holder.disruptions.push_back(std::move(disruption));
+    LOG4CPLUS_DEBUG(log, "Disruption added");
+}
+
+void handle_realtime(const std::string& id,
+                     const boost::posix_time::ptime& timestamp,
+                     const transit_realtime::TripUpdate& trip_update,
+                     const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
     const auto& trip = trip_update.trip();
@@ -74,6 +139,8 @@ void handle_realtime(const transit_realtime::TripUpdate& trip_update, const type
         // TODO for trip().ADDED, we'll need to create a new VJ
         return;
     }
+
+    create_disruption(id, timestamp, trip_update, data);
 
     auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
 

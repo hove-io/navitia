@@ -164,7 +164,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if(entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-                handle_realtime(entity.trip_update(), *data);
+                handle_realtime(entity.id(),
+                                navitia::from_posix_timestamp(feed_message.header().timestamp()),
+                                entity.trip_update(),
+                                *data);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
             }
