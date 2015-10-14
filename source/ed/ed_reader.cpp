@@ -765,10 +765,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             vj->validity_patterns[RTLevel::RealTime] = vj->validity_patterns[RTLevel::Base];
         }
 
-        if(!const_it["theoric_vehicle_journey_id"].is_null()){
-            vj->theoric_vehicle_journey = vehicle_journey_map[const_it["theoric_vehicle_journey_id"].as<idx_t>()];
-        }
-
         if (const_it["wheelchair_accessible"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
         }

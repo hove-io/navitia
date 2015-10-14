@@ -82,10 +82,8 @@ void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
 
 namespace {
 template<typename T>
-PtObj transform_pt_object(const std::string& uri,
-                          const std::unordered_map<std::string, T*>& map,
-                          const boost::shared_ptr<Impact>& impact) {
-    if (auto o = find_or_default(uri, map)) {
+PtObj transform_pt_object(const std::string& uri, T* o, const boost::shared_ptr<Impact>& impact) {
+    if (o != nullptr) {
         if (impact){
             o->add_impact(impact);
         }
@@ -95,11 +93,23 @@ PtObj transform_pt_object(const std::string& uri,
         return UnknownPtObj();
     }
 }
+template<typename T>
+PtObj transform_pt_object(const std::string& uri,
+                          const std::unordered_map<std::string, T*>& map,
+                          const boost::shared_ptr<Impact>& impact) {
+    return transform_pt_object(uri, find_or_default(uri, map), impact);
+}
+template<typename T>
+PtObj transform_pt_object(const std::string& uri,
+                          ObjFactory<T>& factory,
+                          const boost::shared_ptr<Impact>& impact) {
+    return transform_pt_object(uri, factory.get_mut(uri), impact);
+}
 }
 
 PtObj make_pt_obj(Type_e type,
                   const std::string& uri,
-                  const PT_Data& pt_data,
+                  PT_Data& pt_data,
                   const boost::shared_ptr<Impact>& impact) {
     switch (type) {
     case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map, impact);
@@ -107,6 +117,7 @@ PtObj make_pt_obj(Type_e type,
     case Type_e::StopPoint: return transform_pt_object(uri, pt_data.stop_points_map, impact);
     case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map, impact);
     case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map, impact);
+    case Type_e::MetaVehicleJourney: return transform_pt_object(uri, pt_data.meta_vjs, impact);
     default: return UnknownPtObj();
     }
 }

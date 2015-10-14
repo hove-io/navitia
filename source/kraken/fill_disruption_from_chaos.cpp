@@ -203,6 +203,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
         case chaos::PtObject_Type_route:
             res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data, impact));
             break;
+        case chaos::PtObject_Type_trip:
+            res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data, impact));
+            break;
         case chaos::PtObject_Type_unkown_type:
             res.push_back(UnknownPtObj());
             break;
@@ -338,6 +341,14 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                 return func_on_vj(vj);
         });
         this->log_end_action(route->uri);
+    }
+
+    void operator()(const nt::MetaVehicleJourney* mvj) {
+        this->log_start_action(mvj->uri);
+        for (auto* vj: mvj->base_vj) { func_on_vj(*vj); }
+        for (auto* vj: mvj->adapted_vj) { func_on_vj(*vj); }
+        for (auto* vj: mvj->real_time_vj) { func_on_vj(*vj); }
+        this->log_end_action(mvj->uri);
     }
 
 };
