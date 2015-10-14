@@ -585,6 +585,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('vehicle_journeys')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
-        eq_(len(vjs), 4)
         for vj in vjs:
-            eq_(vj['name'], vj['trip']['id'])
+            is_valid_vehicle_journey(vj, depth_check=1)
+        assert any(vj['name'] == "vehicle_journey 1" and vj['trip']['id'] == "vehicle_journey 1" for vj in vjs)
