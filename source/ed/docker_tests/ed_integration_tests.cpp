@@ -31,10 +31,11 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE associated_calendar_test
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string.hpp>
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
-#include <boost/algorithm/string.hpp>
+#include "routing/raptor_utils.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -43,6 +44,7 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 namespace pt = boost::posix_time;
 namespace nt = navitia::type;
+namespace nr = navitia::routing;
 
 struct ArgsFixture {
    ArgsFixture() {
@@ -124,8 +126,8 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
 
     BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 3);
-    for(auto& mvj : data.pt_data->meta_vjs) {
+    for (auto& mvj : data.pt_data->meta_vjs) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
-        BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[navitia::Idx<nt::MetaVehicleJourney>(mvj->idx)], mvj.get());
+        BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
     }
 }
