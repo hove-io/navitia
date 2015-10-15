@@ -150,7 +150,7 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
 
     Graph stop_point_graph;
     std::map<type::idx_t, Vertex> vertex_map;
-    for (const auto& v: stop_point_list) {
+    for (const auto& v: stop_point_lists) {
         bool first = true;
         Vertex previous_vx;
         for (auto sp : v) {
