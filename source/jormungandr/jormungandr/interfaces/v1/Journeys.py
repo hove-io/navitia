@@ -309,7 +309,7 @@ class add_journey_href(object):
                 del kwargs["lon"]
                 del kwargs["lat"]
             for journey in objects[0]['journeys']:
-                if not "sections" in journey:
+                if "sections" not in journey:
                     kwargs["datetime"] = journey["requested_date_time"]
                     kwargs["to"] = journey["to"]["id"]
                     journey['links'] = [create_external_link("v1.journeys", rel="journeys", **kwargs)]

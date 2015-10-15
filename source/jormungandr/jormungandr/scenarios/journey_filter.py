@@ -30,7 +30,7 @@ from itertools import izip
 import logging
 import itertools
 import datetime
-from jormungandr.scenarios.utils import compare
+from jormungandr.scenarios.utils import compare, get_pseudo_duration
 from navitiacommon import response_pb2
 
 #we can't use reverse(enumerate(list)) without creating a temporary list, so we define our own reverse enumerate
@@ -136,6 +136,7 @@ def _filter_similar_journeys(journeys, request):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
+
 def way_later(journey, asap_journey, original_request):
     """
     to check if a journey is way later than the asap journey
@@ -158,12 +159,10 @@ def way_later(journey, asap_journey, original_request):
 
     """
     requested_dt = original_request['datetime']
-    if original_request.get('clockwise', True):
-        pseudo_asap_duration = asap_journey.arrival_date_time - requested_dt
-        pseudo_journey_duration = journey.arrival_date_time - requested_dt
-    else:
-        pseudo_asap_duration = requested_dt - asap_journey.departure_date_time
-        pseudo_journey_duration = requested_dt - journey.departure_date_time
+    is_clockwise = original_request.get('clockwise', True)
+
+    pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
+    pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
 
     max_factor = 3  #TODO get it in instance
     base_factor = 60*60  #TODO get it in instance, for the moment 1h
