@@ -198,11 +198,9 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point
         nb_branches = 0;
         std::vector<vector_idx> req;
         for (auto v : stop_point_lists) {
-            if (req.empty()) {
-                req.push_back(v);
-            } else {
+            req.push_back(v);
+            if (!req.empty()) {
                 nb_branches = 0;
-                req.push_back(v);
                 auto plb = pre_compute_lower_bound(req, max_sp);
                 uint32_t lowerbound = get_lower_bound(plb, max_sp);
                 auto tp = recc(req, plb, lowerbound, max_sp).first;
@@ -259,7 +257,7 @@ vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &jo
     // If journey_pattern 1 is empty, or if the journey_pattern last element is not present in journey_pattern0, we return the head of journey_pattern 1
     if (journey_patterns[0].empty() || (!journey_patterns[1].empty() && pre_computed_lb[0][journey_patterns[1].back()] == 0) ) {
         return {journey_patterns[1].back()};
-    } else if (journey_patterns[1].empty() ||(!journey_patterns[0].empty() && pre_computed_lb[1][journey_patterns[0].back()] == 0)) { //Même chose mais avec la journey_pattern 0
+    } else if (journey_patterns[1].empty() || (!journey_patterns[0].empty() && pre_computed_lb[1][journey_patterns[0].back()] == 0)) { // The same for journey_pattern 0
         return {journey_patterns[0].back()};
     }
 
