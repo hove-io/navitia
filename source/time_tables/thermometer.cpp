@@ -162,13 +162,13 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
                 current_vx = boost::add_vertex(VertexProperties(sp), stop_point_graph);
                 vertex_map[sp] = current_vx;
             } else {
-	        current_vx = it->second;
-	    }
-	    if (!first) {
-	        boost::add_edge(previous_vx, current_vx, stop_point_graph);
-	    }
-	    first = false;
-	    previous_vx = current_vx;
+                current_vx = it->second;
+            }
+            if (!first) {
+                boost::add_edge(previous_vx, current_vx, stop_point_graph);
+            }
+            first = false;
+            previous_vx = current_vx;
         }
     }
 
