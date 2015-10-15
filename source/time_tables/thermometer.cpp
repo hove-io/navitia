@@ -141,7 +141,6 @@ struct VertexProperties
 };
 typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS, boost::property<boost::vertex_bundle_t, VertexProperties> > Graph;
 typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-typedef std::vector< Vertex > Container;
 
 // Generate an topologicaly exact thermometer
 // return false if topological sort fail (because of a cycle)
@@ -172,7 +171,7 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
         }
     }
 
-    Container c;
+    std::vector< Vertex > c;
     try {
         boost::topological_sort(stop_point_graph, std::back_inserter(c));
     } catch (const boost::not_a_dag &) {
@@ -181,8 +180,8 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
     }
 
     // Build thermometer with sort result
-    for (Container::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
-        thermometer.push_back(stop_point_graph[*ii].idx);
+    for (auto it = c.rbegin(); it != c.rend(); ++it) {
+        thermometer.push_back(stop_point_graph[*it].idx);
     }
     return true;
 }
