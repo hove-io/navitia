@@ -324,7 +324,7 @@ def culling_journeys(resp, request):
     candidates_pool, sections_set = _build_candidate_pool_and_sections_set(resp)
 
     nb_journeys_must_have = len(resp.journeys) - len(candidates_pool)
-    logger.debug("There are {0} journeys we mush keep".format(nb_journeys_must_have))
+    logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
     nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
     if nb_journeys_to_find == 0:
         [resp.journeys.remove(j) for j in candidates_pool]
