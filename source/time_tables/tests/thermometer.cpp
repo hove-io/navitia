@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(t13) {
     auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result[0], 0);
-    BOOST_REQUIRE_EQUAL(result[1], 1);
-    BOOST_REQUIRE_EQUAL(result[2], 3);
+    BOOST_REQUIRE_EQUAL(result[1], 3);
+    BOOST_REQUIRE_EQUAL(result[2], 1);
     BOOST_REQUIRE_EQUAL(result[3], 2);
 }
 
@@ -356,8 +356,8 @@ BOOST_AUTO_TEST_CASE(t14) {
     auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result[0], 0);
-    BOOST_REQUIRE_EQUAL(result[1], 1);
-    BOOST_REQUIRE_EQUAL(result[2], 3);
+    BOOST_REQUIRE_EQUAL(result[1], 3);
+    BOOST_REQUIRE_EQUAL(result[2], 1);
     BOOST_REQUIRE_EQUAL(result[3], 2);
 }
 

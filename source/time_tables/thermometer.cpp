@@ -31,6 +31,8 @@ www.navitia.io
 #include "thermometer.h"
 #include "ptreferential/ptreferential.h"
 #include "time.h"
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/topological_sort.hpp>
 
 namespace navitia { namespace timetables {
 
@@ -130,21 +132,72 @@ void Thermometer::generate_thermometer(const type::Route* route) {
     generate_thermometer(std::vector<vector_idx>(stop_point_lists.begin(), stop_point_lists.end()));
 }
 
+// Define types for next function 'generate_topological_thermometer'
+struct VertexProperties
+{
+    type::idx_t idx;
+    VertexProperties() : idx(0) {}
+    VertexProperties(type::idx_t const& i): idx(i) {}
+};
+typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS, boost::property<boost::vertex_bundle_t, VertexProperties> > Graph;
+typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+typedef std::vector< Vertex > Container;
+
 // Generate an topologicaly exact thermometer
-// return false if topological sort fail (probably because of a cycle)
+// return false if topological sort fail (because of a cycle)
 // return true if succeed
 bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx> &stop_point_lists) {
-    return false;
+
+    Graph stop_point_graph;
+    std::map<type::idx_t, Vertex> vertex_map;
+    std::map<type::idx_t, Vertex>::iterator it;
+    for(auto v : stop_point_lists) {
+        bool first = true;
+        Vertex previous_vx;
+        for(auto sp : v) {
+            Vertex current_vx;
+
+            // We don't add a vertex twice
+            it = vertex_map.find(sp);
+            if(it == vertex_map.end()) {
+                current_vx = boost::add_vertex(VertexProperties(sp), stop_point_graph);
+                vertex_map[sp] = current_vx;
+            } else {
+	        current_vx = it->second;
+	    }
+	    if(!first) {
+	        boost::add_edge(previous_vx, current_vx, stop_point_graph);
+	    }
+	first = false;
+	previous_vx = current_vx;
+        }
+    }
+
+    Container c;
+    try {
+        boost::topological_sort(stop_point_graph, std::back_inserter(c));
+    }catch(const boost::not_a_dag &){
+        // Graph contains cycles : we need to try custom algorithm
+        return false;
+    }
+
+    // Build thermometer with sort result
+    for ( Container::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
+        thermometer.push_back(stop_point_graph[*ii].idx);
+    }
+    return true;
 }
 
 void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point_lists) {
 
-    if (generate_topological_thermometer(stop_point_lists))
-        return;
-    uint32_t max_sp = get_max_sp(stop_point_lists);
-    nb_branches = 0;
-    std::vector<vector_idx> req;
     if(stop_point_lists.size() > 1) {
+        // Try a topological_sort first
+        //If succeed, return, else use custom algorithm
+        if (generate_topological_thermometer(stop_point_lists))
+            return;
+        uint32_t max_sp = get_max_sp(stop_point_lists);
+        nb_branches = 0;
+        std::vector<vector_idx> req;
         for(auto v : stop_point_lists) {
             if(req.empty())
                 req.push_back(v);
