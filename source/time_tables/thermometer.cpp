@@ -252,11 +252,11 @@ std::vector<uint32_t> Thermometer::stop_times_order_helper(const vector_idx &sto
 
 vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb) {
 
-    //C'est qu'il n'y a pas de possibilités possibles
+    // There is no possible solution
     if (journey_patterns[0].empty() && journey_patterns[1].empty()) { return {}; }
 
 
-    //Si la journey_pattern une est vide, ou bien si le dernier de la journey_pattern n'est pas présent dans la journey_pattern 0, on renvoie la tete de la journey_pattern 1
+    // If journey_pattern 1 is empty, or if the journey_pattern last element is not present in journey_pattern0, we return the head of journey_pattern 1
     if (journey_patterns[0].empty() || (!journey_patterns[1].empty() && pre_computed_lb[0][journey_patterns[1].back()] == 0) ) {
         return {journey_patterns[1].back()};
     } else if (journey_patterns[1].empty() ||(!journey_patterns[0].empty() && pre_computed_lb[1][journey_patterns[0].back()] == 0)) { //Même chose mais avec la journey_pattern 0
