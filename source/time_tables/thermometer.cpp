@@ -140,7 +140,7 @@ struct VertexProperties
     VertexProperties() : idx(0) {}
     VertexProperties(type::idx_t const& i): idx(i) {}
 };
-using Graph = boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS, boost::property<boost::vertex_bundle_t, VertexProperties> >;
+using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, boost::property<boost::vertex_bundle_t, VertexProperties> >;
 using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
 
 // Generate an topologicaly exact thermometer
@@ -172,7 +172,7 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
         }
     }
 
-    std::vector< Vertex > c;
+    std::vector<Vertex> c;
     try {
         boost::topological_sort(stop_point_graph, std::back_inserter(c));
     } catch (const boost::not_a_dag &) {
