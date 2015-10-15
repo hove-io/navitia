@@ -42,7 +42,7 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 
 static const std::string feed_id = "42";
-static const pt::ptime timestamp = pt::ptime(boost::gregorian::date(2015,01,01),pt::time_duration(13,37,00));
+static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
 make_cancellation_message(const std::string& vj_uri, const std::string& date) {
