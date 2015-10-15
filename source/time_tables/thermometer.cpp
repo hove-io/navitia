@@ -166,8 +166,8 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
 	    if (!first) {
 	        boost::add_edge(previous_vx, current_vx, stop_point_graph);
 	    }
-	first = false;
-	previous_vx = current_vx;
+	    first = false;
+	    previous_vx = current_vx;
         }
     }
 
