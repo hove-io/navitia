@@ -152,8 +152,8 @@ def build_candidate_pool_and_sections_set_test():
     assert selected_sections_matrix.shape == (13, 8)
 
     # it's too verbose to check the entire matrix... we check only the first and the last line
-    assert all(selected_sections_matrix[0] == [1, 0, 1, 0, 1, 0, 1, 1])
-    assert all(selected_sections_matrix[-1] == [0, 0, 0, 0, 0, 0, 0, 1])
+    assert [1, 0, 1, 0, 1, 0, 1, 1] in selected_sections_matrix
+    assert [0, 0, 0, 0, 0, 0, 0, 1] in selected_sections_matrix
 
 def get_sorted_solutions_indexes_test():
     mocked_pb_response = build_mocked_response()

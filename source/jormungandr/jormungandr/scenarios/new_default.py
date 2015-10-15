@@ -272,17 +272,16 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
     integrity shows at which point a solution(chosen journeys) covers sections.
     0 means a solution covers all sections
     1 means a solutions covers almost all sections but 1 is missing
+    2 means 2 sections are missing
+    .... etc
     """
-    integrity = res_pool.shape[1] - np.array([np.count_nonzero(l) for l in res_pool])
+    integrity = res_pool.shape[1] - np.array([np.count_nonzero(r) for r in res_pool])
 
     """
     We want to find the solutions covers as many sections as possible which has less sections(less transfer to do)
     """
     the_best_idx = np.lexsort((nb_sections, integrity))[0]  # sort by integrity then by nb_sections
 
-    """
-    Let's find the best of best :)
-    """
     best_indexes = np.where(np.logical_and(nb_sections == nb_sections[the_best_idx],
                                            integrity == integrity[the_best_idx]))[0]
 
@@ -304,7 +303,7 @@ def culling_journeys(resp, request):
     if request['debug']:
         return
 
-    if not request["max_nb_journeys"] or request["max_nb_journeys"] > len(resp.journeys):
+    if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
         logger.debug('No need to cull journeys')
         return
 
@@ -326,7 +325,6 @@ def culling_journeys(resp, request):
 
     nb_journeys_must_have = len(resp.journeys) - len(candidates_pool)
     logger.debug("There are {0} journeys we mush keep".format(nb_journeys_must_have))
-
     nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
     if nb_journeys_to_find == 0:
         [resp.journeys.remove(j) for j in candidates_pool]
@@ -356,6 +354,9 @@ def culling_journeys(resp, request):
     the_best_index = best_indexes[0]
 
     logger.debug("Trying to find the best of best")
+    """
+    Let's find the best of best :)
+    """
     # If there're several solutions which have the same score of integrity and nb_sections
     if best_indexes.shape[0] != 1:
         requested_dt = request['datetime']

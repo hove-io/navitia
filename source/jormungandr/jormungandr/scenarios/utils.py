@@ -311,7 +311,7 @@ def gen_all_combin(n, t):
 
     Example:
     Given 4 elements, list all possible unordered combinations when choosing 3 elements
-    >>> list(get_nt_comb_v1(4, 3))
+    >>> list(gen_all_combin(4, 3))
     [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
 
     """
