@@ -239,9 +239,9 @@ std::vector<uint32_t> Thermometer::stop_times_order_helper(const vector_idx &sto
     auto it = thermometer.begin();
     for (type::idx_t spidx : stop_point_list) {
         it = std::find(it, thermometer.end(),  spidx);
-        if (it == thermometer.end())
+        if (it == thermometer.end()) {
             throw cant_match(spidx);
-        else {
+        } else {
             result.push_back( distance(thermometer.begin(), it));
         }
         ++it;
