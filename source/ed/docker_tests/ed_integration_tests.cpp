@@ -154,20 +154,20 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     const auto* fur_creek = pt_data.stop_areas_map.at("stop_area:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek->uri, "stop_area:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek->name, "Furnace Creek Resort (Demo)");
-    BOOST_CHECK_CLOSE(fur_creek->coord.lat(), 36.425288, 0.1);
-    BOOST_CHECK_CLOSE(fur_creek->coord.lon(), -117.133162, 0.1);
+    BOOST_CHECK_CLOSE(fur_creek->coord.lat(), 36.425288, 0.001);
+    BOOST_CHECK_CLOSE(fur_creek->coord.lon(), -117.133162, 0.001);
 
     for (auto sa: pt_data.stop_areas) {
         BOOST_CHECK_EQUAL(sa->timezone, "America/Los_Angeles");
     }
 
-    //stop point, and lines shoudl be equals too
+    //stop point, and lines should be equals too
     BOOST_REQUIRE_EQUAL(pt_data.stop_points.size(), 9);
     const auto* fur_creek_sp = pt_data.stop_points_map.at("stop_point:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek_sp->uri, "stop_point:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek_sp->name, "Furnace Creek Resort (Demo)");
-    BOOST_CHECK_CLOSE(fur_creek_sp->coord.lat(), 36.425288, 0.1);
-    BOOST_CHECK_CLOSE(fur_creek_sp->coord.lon(), -117.133162, 0.1);
+    BOOST_CHECK_CLOSE(fur_creek_sp->coord.lat(), 36.425288, 0.001);
+    BOOST_CHECK_CLOSE(fur_creek_sp->coord.lon(), -117.133162, 0.001);
     BOOST_CHECK_EQUAL(fur_creek_sp->stop_area, fur_creek);
 
     // no connection in the gtfs provided, so we only create only cnx
