@@ -75,8 +75,9 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_p
         lower_bound = lower_bound - temp1 + std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
 
         uint32_t u = upper_bound;
-        if (u != std::numeric_limits<uint32_t>::max())
+        if (u != std::numeric_limits<uint32_t>::max()) {
             --u;
+        }
 
         if (lower_bound >= u) {
             int temp = std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
@@ -191,8 +192,8 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point
     if (stop_point_lists.size() > 1) {
         // Try a topological_sort first
         //If succeed, return, else use custom algorithm
-        if (generate_topological_thermometer(stop_point_lists))
-            return;
+        if (generate_topological_thermometer(stop_point_lists)) { return; }
+
         uint32_t max_sp = get_max_sp(stop_point_lists);
         nb_branches = 0;
         std::vector<vector_idx> req;
@@ -226,8 +227,9 @@ vector_idx Thermometer::get_thermometer() const {
 
 std::vector<uint32_t> Thermometer::stop_times_order(const type::VehicleJourney& vj) const {
     std::vector<type::idx_t> tmp;
-    for (const auto& st: vj.stop_time_list)
+    for (const auto& st: vj.stop_time_list) {
         tmp.push_back(st.stop_point->idx);
+    }
     
     return stop_times_order_helper(tmp);
 }
@@ -251,8 +253,7 @@ std::vector<uint32_t> Thermometer::stop_times_order_helper(const vector_idx &sto
 vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb) {
 
     //C'est qu'il n'y a pas de possibilités possibles
-    if (journey_patterns[0].empty() && journey_patterns[1].empty())
-        return {};
+    if (journey_patterns[0].empty() && journey_patterns[1].empty()) { return {}; }
 
 
     //Si la journey_pattern une est vide, ou bien si le dernier de la journey_pattern n'est pas présent dans la journey_pattern 0, on renvoie la tete de la journey_pattern 1
