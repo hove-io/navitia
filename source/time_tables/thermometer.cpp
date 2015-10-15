@@ -150,7 +150,6 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
 
     Graph stop_point_graph;
     std::map<type::idx_t, Vertex> vertex_map;
-    std::map<type::idx_t, Vertex>::iterator it;
     for(auto v : stop_point_lists) {
         bool first = true;
         Vertex previous_vx;
@@ -158,7 +157,7 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
             Vertex current_vx;
 
             // We don't add a vertex twice
-            it = vertex_map.find(sp);
+            auto it = vertex_map.find(sp);
             if(it == vertex_map.end()) {
                 current_vx = boost::add_vertex(VertexProperties(sp), stop_point_graph);
                 vertex_map[sp] = current_vx;
