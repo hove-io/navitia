@@ -31,16 +31,20 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE associated_calendar_test
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string.hpp>
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
-#include <boost/algorithm/string.hpp>
+#include "routing/raptor_utils.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
+namespace pt = boost::posix_time;
+namespace nt = navitia::type;
+namespace nr = navitia::routing;
 
 struct ArgsFixture {
    ArgsFixture() {
@@ -67,10 +71,10 @@ struct ArgsFixture {
 };
 
 // check headsign value for stop times on given vjs
-static void check_headsigns(const navitia::type::Data& data, const std::string& headsign,
+static void check_headsigns(const nt::Data& data, const std::string& headsign,
                      size_t first_it_vj, size_t last_it_vj,
                      size_t first_it_st = 0, size_t last_it_st = std::numeric_limits<size_t>::max()) {
-    const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     auto& vj_vec = data.pt_data->vehicle_journeys;
     for (size_t it_vj = first_it_vj; it_vj <= last_it_vj; ++it_vj) {
         size_t real_last_it_st = vj_vec[it_vj]->stop_time_list.size() - 1;
@@ -85,7 +89,7 @@ static void check_headsigns(const navitia::type::Data& data, const std::string& 
 
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     const auto input_file = input_file_paths.at("ntfs_file");
-    navitia::type::Data data;
+    nt::Data data;
 
     const auto res = data.load(input_file);
 
@@ -96,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
 
     // check stop_time headsigns
-    const navitia::type::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     auto& vj_vec = data.pt_data->vehicle_journeys;
     // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
     check_headsigns(data, "N1", 0, 1, 0, 2);
@@ -122,4 +126,8 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
 
     BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 3);
+    for (auto& mvj : data.pt_data->meta_vjs) {
+        BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
+        BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
+    }
 }

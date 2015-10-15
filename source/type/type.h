@@ -990,7 +990,7 @@ struct MetaVehicleJourney: public Header {
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & base_vj & adapted_vj & real_time_vj & associated_calendars;
+        ar & idx & uri & base_vj & adapted_vj & real_time_vj & associated_calendars;
     }
 };
 

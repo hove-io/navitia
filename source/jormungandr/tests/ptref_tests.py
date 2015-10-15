@@ -579,3 +579,12 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         display_info = route_schedules[0]['table']['headers'][0]['display_informations']
         eq_(display_info['headsign'], "vjA")
         assert {"A00", "vjA"} == set(display_info['headsigns'])
+
+    def test_trip_id_vj(self):
+        """test basic print of trip and its id in vehicle_journeys"""
+        response = self.query_region('vehicle_journeys')
+        assert 'error' not in response
+        vjs = get_not_null(response, 'vehicle_journeys')
+        for vj in vjs:
+            is_valid_vehicle_journey(vj, depth_check=1)
+        assert any(vj['name'] == "vehicle_journey 1" and vj['trip']['id'] == "vehicle_journey 1" for vj in vjs)
