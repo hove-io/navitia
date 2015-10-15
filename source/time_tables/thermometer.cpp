@@ -198,16 +198,18 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point
         nb_branches = 0;
         std::vector<vector_idx> req;
         for (auto v : stop_point_lists) {
-            req.push_back(v);
-            if (!req.empty()) {
-                nb_branches = 0;
-                auto plb = pre_compute_lower_bound(req, max_sp);
-                uint32_t lowerbound = get_lower_bound(plb, max_sp);
-                auto tp = recc(req, plb, lowerbound, max_sp).first;
-                req.clear();
-
-                req.push_back(tp);
+            if (req.empty()) { 
+                req.push_back(v);
+                continue;
             }
+            nb_branches = 0;
+            req.push_back(v);
+            auto plb = pre_compute_lower_bound(req, max_sp);
+            uint32_t lowerbound = get_lower_bound(plb, max_sp);
+            auto tp = recc(req, plb, lowerbound, max_sp).first;
+            req.clear();
+
+            req.push_back(tp);
         }
         thermometer = req.back();
     } else if(stop_point_lists.size() == 1) {
