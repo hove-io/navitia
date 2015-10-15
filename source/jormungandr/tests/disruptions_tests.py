@@ -103,7 +103,7 @@ class TestDisruptions(AbstractTestFixture):
         eq_(stop_disrupt[0]['uri'], 'too_bad')
 
         """
-        by querying directly the impacted object, we only find publicable disruptions
+        by querying directly the impacted object, we only find publishable disruptions
         """
         networks = self.query_region('networks/base_network?' + default_date_filter)
         network = get_not_null(networks, 'networks')[0]
@@ -147,7 +147,7 @@ class TestDisruptions(AbstractTestFixture):
         when calling the pt object stopA, we should get its disruptions
         """
 
-        response = self.query_region('stop_areas/stopA?' + default_date_filter, display=True)
+        response = self.query_region('stop_areas/stopA?' + default_date_filter)
 
         stops = get_not_null(response, 'stop_areas')
         eq_(len(stops), 1)

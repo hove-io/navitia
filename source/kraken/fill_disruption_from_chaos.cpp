@@ -51,7 +51,7 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_tag = holder.tags[chaos_tag.id()];
-    if (auto tag = weak_tag.lock()) { return std::move(tag); }
+    if (auto tag = weak_tag.lock()) { return tag; }
 
     auto tag = boost::make_shared<nt::new_disruption::Tag>();
     tag->uri = chaos_tag.id();
@@ -60,7 +60,7 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     tag->updated_at = from_posix(chaos_tag.updated_at());
 
     weak_tag = tag;
-    return std::move(tag);
+    return tag;
 }
 
 static boost::shared_ptr<nt::new_disruption::Cause>
@@ -68,7 +68,7 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_cause = holder.causes[chaos_cause.id()];
-    if (auto cause = weak_cause.lock()) { return std::move(cause); }
+    if (auto cause = weak_cause.lock()) { return cause; }
 
     auto cause = boost::make_shared<nt::new_disruption::Cause>();
     cause->uri = chaos_cause.id();
@@ -77,7 +77,7 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
     cause->updated_at = from_posix(chaos_cause.updated_at());
 
     weak_cause = cause;
-    return std::move(cause);
+    return cause;
 
 }
 
@@ -106,7 +106,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_severity = holder.severities[chaos_severity.id()];
-    if (auto severity = weak_severity.lock()) { return std::move(severity); }
+    if (auto severity = weak_severity.lock()) { return severity; }
 
     auto severity = boost::make_shared<new_disr::Severity>();
     severity->uri = chaos_severity.id();
@@ -133,7 +133,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     }
 
     weak_severity = severity;
-    return std::move(severity);
+    return severity;
 }
 
 static boost::optional<nt::new_disruption::LineSection>
@@ -279,7 +279,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
         });
     }
 
-    return std::move(impact);
+    return impact;
 }
 
 

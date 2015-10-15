@@ -66,7 +66,7 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
     // Yeah, that's quite hardcodded...
     const std::string id = "kraken:rt:no_service";
     auto& weak_severity = holder.severities[id];
-    if (auto severity = weak_severity.lock()) { return std::move(severity); }
+    if (auto severity = weak_severity.lock()) { return severity; }
 
     auto severity = boost::make_shared<nt::new_disruption::Severity>();
     severity->uri = id;
@@ -78,7 +78,7 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
     severity->effect = nt::new_disruption::Effect::NO_SERVICE;
 
     weak_severity = severity;
-    return std::move(severity);
+    return severity;
 }
 
 static void
