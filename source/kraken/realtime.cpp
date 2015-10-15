@@ -81,6 +81,18 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
     return severity;
 }
 
+static boost::posix_time::time_period
+execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
+    for (const auto* vj: mvj.base_vj) {
+        if (vj->base_validity_pattern()->check(date)) {
+            return execution_period(date, *vj);
+        }
+    }
+    // should be dead code
+    return execution_period(date, *mvj.base_vj.front());
+}
+
+
 static void
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
@@ -89,7 +101,7 @@ create_disruption(const std::string& id,
     auto log = log4cplus::Logger::getInstance("realtime");
     nt::new_disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
-    const auto& a_vj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id())->base_vj.front();
+    const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
@@ -104,7 +116,7 @@ create_disruption(const std::string& id,
         impact->uri = disruption->uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
-        impact->application_periods.push_back(execution_period(circulation_date, a_vj));
+        impact->application_periods.push_back(execution_period(circulation_date, mvj));
         impact->severity = make_no_service_severity(timestamp, holder);
         impact->informed_entities.push_back(
             make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
