@@ -88,6 +88,9 @@ void MaintenanceWorker::load_realtime(){
     for(auto topic: conf.rt_topics()){
         lr->add_contributors(topic);
     }
+    auto data = data_manager.get_data();
+    lr->set_begin_date(bg::to_iso_string(data->meta->production_date.begin()));
+    lr->set_end_date(bg::to_iso_string(data->meta->production_date.end()));
     std::string stream;
     task.SerializeToString(&stream);
     auto message = AmqpClient::BasicMessage::Create(stream);
