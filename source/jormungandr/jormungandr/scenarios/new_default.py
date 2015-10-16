@@ -347,7 +347,7 @@ def culling_journeys(resp, request):
     if nb_journeys_to_find <= 0:
         # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
         for jrny in candidates_pool:
-             journey_filter.mark_as_dead(jrny, "We don't need to keep this type of journey")
+             journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
 
         nb_jrny_to_keep = len([j for j in resp.journeys if 'to_delete' not in j.tags])
         if nb_jrny_to_keep == request["max_nb_journeys"]:
@@ -368,7 +368,7 @@ def culling_journeys(resp, request):
             sorted_by_type_journeys.extend(list_dict.get(t, []))
 
         for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
-            journey_filter.mark_as_dead(jrny, "max_nb_journeys bigger than nb_journeys_must_have")
+            journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
         return
@@ -413,7 +413,7 @@ def culling_journeys(resp, request):
 
     logger.debug('Removing non selected journeys')
     for jrny in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
-        journey_filter.mark_as_dead(jrny, "journey is not selected in the solution")
+        journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
 
     journey_filter.delete_journeys((resp,), request)
 
