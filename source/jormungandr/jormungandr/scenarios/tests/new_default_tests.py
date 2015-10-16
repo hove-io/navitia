@@ -202,3 +202,16 @@ def culling_jounreys_3_test():
                     (u'', u'uri_8', u'uri_9')}
     for j in mocked_pb_response.journeys:
         assert tuple(s.uris.line for s in j.sections) in journey_uris
+
+
+def culling_jounreys_4_test():
+    """
+    When max_nb_journeys ==1, we should get the first journey of resp.journeys
+    """
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'max_nb_journeys': 1, 'debug': False, 'datetime': 1444903200}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+    assert len(mocked_pb_response.journeys) == 1
+    journey_uri = (u'uri_1', u'uri_2', u'uri_3', u'uri_4', u'')
+    j = mocked_pb_response.journeys[0]
+    assert tuple(s.uris.line for s in j.sections) == journey_uri

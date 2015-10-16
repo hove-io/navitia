@@ -294,6 +294,8 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
 def culling_journeys(resp, request):
     """
     Remove some journeys if there are too many of them to have max_nb_journeys journeys.
+    
+    resp.journeys should be sorted before this function is called
 
     The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
     but have as few as possible sum(sections)
@@ -323,6 +325,12 @@ def culling_journeys(resp, request):
 
     if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
         logger.debug('No need to cull journeys')
+        return
+
+    # max_nb_journeys equals to 1 we return the best journey, since journeys SHOULD BE ALREADY SORTED,
+    # we keep just the first journey WITHOUT CHECKING TYPE
+    if request["max_nb_journeys"] == 1:
+        del resp.journeys[1:]
         return
 
     logger.debug('Trying to culling the journeys')
