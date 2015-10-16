@@ -39,6 +39,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
+import collections
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = {'best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss'}
@@ -327,12 +328,6 @@ def culling_journeys(resp, request):
         logger.debug('No need to cull journeys')
         return
 
-    # max_nb_journeys equals to 1 we return the best journey, since journeys SHOULD BE ALREADY SORTED,
-    # we keep just the first journey WITHOUT CHECKING TYPE
-    if request["max_nb_journeys"] == 1:
-        del resp.journeys[1:]
-        return
-
     logger.debug('Trying to culling the journeys')
 
     """
@@ -352,8 +347,23 @@ def culling_journeys(resp, request):
     nb_journeys_must_have = len(resp.journeys) - len(candidates_pool)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
     nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
-    if nb_journeys_to_find == 0:
+    if nb_journeys_to_find <= 0:
+        logger.debug('max_nb_journeys is < or = nb_journeys_must_have')
+        # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
         [resp.journeys.remove(j) for j in candidates_pool]
+        if len(resp.journeys) == request["max_nb_journeys"]:
+            return
+        # At this point, resp.journeys should contain only must-have journeys
+        list_dict = collections.defaultdict(list)
+        for jrny in resp.journeys:
+            list_dict[jrny.type].append(jrny)
+        sorted_by_type_journeys = []
+        for t in JOURNEY_TYPES_TO_RETAIN:
+            sorted_by_type_journeys.extend(list_dict.get(t, []))
+
+        for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
+            resp.journeys.remove(jrny)
+
         return
 
     logger.debug('Trying to find {0} journeys from {1}'.format(nb_journeys_to_find,
