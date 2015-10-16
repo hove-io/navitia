@@ -42,7 +42,7 @@ import numpy as np
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = {'best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss'}
-STREE_NETWORK_MODE_TO_RETAIN = {response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
+STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 
 
 def get_kraken_calls(request):
@@ -178,7 +178,7 @@ def tag_journeys(resp):
 def _get_section_id(section):
     street_network_mode = None
     if section.type in SECTION_TYPES_TO_RETAIN:
-        if getattr(section.street_network, 'mode', None) in STREE_NETWORK_MODE_TO_RETAIN:
+        if getattr(section.street_network, 'mode', None) in STREET_NETWORK_MODE_TO_RETAIN:
             street_network_mode = section.street_network.mode
     return section.uris.line, street_network_mode, section.type
 

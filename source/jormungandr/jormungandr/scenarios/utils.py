@@ -304,7 +304,7 @@ def gen_all_combin(n, t):
 
     This function is used to generate all possible unordered combinations
     Combination = {c_1, c_2, ..., c_t |  all c_t belongs to S }
-    where S is a set whose card(S) = n, c_t are indexes of elements in S
+    where S is a set whose card(S) = n, c_t are indexes of elements in S (c as choice)
 
     The function is a implementation of the algorithm L from the book of DONALD E.KNUTH's
     <The art of computer programming> Section7.2.1.3
@@ -316,6 +316,7 @@ def gen_all_combin(n, t):
 
     """
     import numpy as np
+    # c is an array of choices
     c = np.ones(t+2, dtype=int).tolist()
     # init
     for i in range(1, t+1):

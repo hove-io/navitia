@@ -155,6 +155,7 @@ def build_candidate_pool_and_sections_set_test():
     assert [1, 0, 1, 0, 1, 0, 1, 1] in selected_sections_matrix
     assert [0, 0, 0, 0, 0, 0, 0, 1] in selected_sections_matrix
 
+
 def get_sorted_solutions_indexes_test():
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set =new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
@@ -162,6 +163,7 @@ def get_sorted_solutions_indexes_test():
     best_indexes, selection_matrix = new_default._get_sorted_solutions_indexes(selected_sections_matrix, 5)
     assert best_indexes.shape[0] == 9
     assert all(selection_matrix[best_indexes[0]] == [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0])
+
 
 def culling_jounreys_1_test():
     """
@@ -174,6 +176,7 @@ def culling_jounreys_1_test():
     new_default.culling_journeys(mocked_pb_response, mocked_request)
     assert len(mocked_pb_response.journeys) == nb_journeys
 
+
 def culling_jounreys_2_test():
     """
     max_nb_journeys equals to nb of must-keep journeys ('comfort', 'best')
@@ -184,6 +187,7 @@ def culling_jounreys_2_test():
     assert len(mocked_pb_response.journeys) == 2
     assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN
                 for j in mocked_pb_response.journeys])
+
 
 def culling_jounreys_3_test():
     mocked_pb_response = build_mocked_response()
