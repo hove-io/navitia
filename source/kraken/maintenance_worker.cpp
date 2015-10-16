@@ -68,8 +68,8 @@ void MaintenanceWorker::load_realtime(){
     if(!conf.is_realtime_enabled()){
         return;
     }
-    data_manager.get_data()->is_realtime_loaded = false;
     if(!channel){
+        data_manager.get_data()->is_realtime_loaded = false;
         throw std::runtime_error("not connected to rabbitmq");
     }
     if(data_manager.get_data()->is_realtime_loaded){
@@ -77,6 +77,7 @@ void MaintenanceWorker::load_realtime(){
         LOG4CPLUS_TRACE(logger, "realtime data already loaded, skipping init");
         return;
     }
+    data_manager.get_data()->is_realtime_loaded = false;
     LOG4CPLUS_INFO(logger, "loading realtime data");
     //                                             name, passive, durable, exclusive, auto_delete
     std::string queue_name = channel->DeclareQueue("", false, false, true, true);
