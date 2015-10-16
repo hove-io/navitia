@@ -326,6 +326,41 @@ BOOST_AUTO_TEST_CASE(tmp) {
     BOOST_REQUIRE_EQUAL(result.size(), 10);
 }
 
+
+BOOST_AUTO_TEST_CASE(t13) {
+    Thermometer t;
+    std::vector<vector_idx> req;
+    req.push_back({1,2});
+    req.push_back({3,2});
+    req.push_back({0,3,2});
+    req.push_back({0,1,2});
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
+
+    BOOST_REQUIRE_EQUAL(result[0], 0);
+    BOOST_REQUIRE_EQUAL(result[1], 3);
+    BOOST_REQUIRE_EQUAL(result[2], 1);
+    BOOST_REQUIRE_EQUAL(result[3], 2);
+}
+
+BOOST_AUTO_TEST_CASE(t14) {
+    Thermometer t;
+    std::vector<vector_idx> req;
+    req.push_back({1,2});
+    req.push_back({3,2});
+    req.push_back({0,1,2});
+    req.push_back({0,3,2});
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
+
+    BOOST_REQUIRE_EQUAL(result[0], 0);
+    BOOST_REQUIRE_EQUAL(result[1], 3);
+    BOOST_REQUIRE_EQUAL(result[2], 1);
+    BOOST_REQUIRE_EQUAL(result[3], 2);
+}
+
 //        BOOST_AUTO_TEST_CASE(lower_bound){
 //            BOOST_CHECK_LE(get_lower_bound({}), 0);
 //            BOOST_CHECK_LE(get_lower_bound({{1}}), 1);
