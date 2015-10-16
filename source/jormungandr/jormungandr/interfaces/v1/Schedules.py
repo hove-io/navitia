@@ -126,7 +126,10 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args["from_datetime"] and not args["until_datetime"]:
             args['from_datetime'] = datetime.datetime.now()
-            args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
+            if args["calendar"]:  # if we have a calendar 00:00 is fine
+                args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)
+            else:
+                args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['from_datetime']

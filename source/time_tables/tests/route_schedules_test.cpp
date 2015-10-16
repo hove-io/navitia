@@ -36,6 +36,7 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "time_tables/route_schedules.h"
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 namespace ntt = navitia::timetables;
 
@@ -264,6 +265,15 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
 
+struct AllRouteSTSorter {
+    // order of the get_all_route_stop_times is not important
+    // so we sort it for the check by first datetime
+    bool operator()(const std::vector<ntt::datetime_stop_time>& v1,
+                    const std::vector<ntt::datetime_stop_time>& v2) const {
+        // by construction vect cannot be empty
+        return v1.front().first < v2.front().first;
+    }
+};
 
 namespace ba = boost::adaptors;
 using vec_dt = std::vector<navitia::DateTime>;
@@ -287,15 +297,15 @@ navitia::DateTime get_dt(const ntt::datetime_stop_time& p) { return p.first; }
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_calendar_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("B:0");
 
-    const auto res = navitia::timetables::get_all_route_stop_times(route,
-                                                                   "00:00"_t,
-                                                                   "00:00"_t + "24:00"_t,
-                                                                   std::numeric_limits<size_t>::max(),
-                                                                   *b.data, nt::RTLevel::Base,
-                                                                   {c2->uri});
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "00:00"_t,
+                                                             "00:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base,
+                                                             {c2->uri});
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
-
+    boost::sort(res, AllRouteSTSorter());
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"12:00"_t, "12:30"_t, "13:00"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
 }
@@ -313,18 +323,21 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_c
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_schedule_calendar_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("B:0");
 
-    const auto res = navitia::timetables::get_all_route_stop_times(route,
-                                                                   "12:37"_t,
-                                                                   "12:37"_t + "24:00"_t,
-                                                                   std::numeric_limits<size_t>::max(),
-                                                                   *b.data, nt::RTLevel::Base,
-                                                                   {c2->uri});
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "12:37"_t,
+                                                             "12:37"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base,
+                                                             {c2->uri});
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
     auto one_day = "24:00"_t;
-    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"12:00"_t + one_day, "12:30"_t + one_day, "13:00"_t + one_day}));
-    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
+    boost::sort(res, AllRouteSTSorter());
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
+            vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
+            vec_dt({"12:00"_t + one_day, "12:30"_t + one_day, "13:00"_t + one_day}));
 }
 
 /*
@@ -343,18 +356,22 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_s
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_calendar_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("B:0");
 
-    const auto res = navitia::timetables::get_all_route_stop_times(route,
-                                                                   "11:37"_t,
-                                                                   "11:37"_t + "24:00"_t,
-                                                                   std::numeric_limits<size_t>::max(),
-                                                                   *b.data, nt::RTLevel::Base, {});
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "11:37"_t,
+                                                             "11:37"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, {});
 
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     auto one_day = "24:00"_t;
-    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"13:00"_t, "13:37"_t, "14:00"_t}));
-    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"10:00"_t + one_day, "10:30"_t + one_day, "11:00"_t + one_day}));
-    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"11:00"_t + one_day, "11:30"_t + one_day, "12:00"_t + one_day}));
+    boost::sort(res, AllRouteSTSorter());
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
+            vec_dt({"13:00"_t, "13:37"_t, "14:00"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
+            vec_dt({"10:00"_t + one_day, "10:30"_t + one_day, "11:00"_t + one_day}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt),
+            vec_dt({"11:00"_t + one_day, "11:30"_t + one_day, "12:00"_t + one_day}));
 }
 
 /*
@@ -410,18 +427,40 @@ struct CalWithDSTFixture {
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp, CalWithDSTFixture) {
     const auto* route = b.data->pt_data->routes.at(0);
 
-    const auto res = navitia::timetables::get_all_route_stop_times(route,
-                                                                   "00:00"_t,
-                                                                   "00:00"_t + "24:00"_t,
-                                                                   std::numeric_limits<size_t>::max(),
-                                                                   *b.data, nt::RTLevel::Base, std::string("cal"));
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "00:00"_t,
+                                                             "00:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, std::string("cal"));
 
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
+    boost::sort(res, AllRouteSTSorter());
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"00:50"_t, "01:50"_t, "02:50"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
 }
+
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour, CalWithDSTFixture) {
+    const auto* route = b.data->pt_data->routes.at(0);
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "01:00"_t,
+                                                             "01:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, std::string("cal"));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    auto one_day = "24:00"_t;
+    boost::sort(res, AllRouteSTSorter());
+    //both are after the asked time (1h), so they are on the following day
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt),
+            vec_dt({"00:50"_t + one_day, "01:50"_t + one_day, "02:50"_t + one_day}));
+}
+
 
 // We want:
 //     C A B
