@@ -131,12 +131,14 @@ public:
     // before.
     mutable std::atomic<bool> is_connected_to_rabbitmq;
 
+    mutable std::atomic<bool> is_realtime_loaded;
+
     Data(size_t data_identifier=0);
     ~Data();
 
     friend class boost::serialization::access;
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq & is_realtime_loaded;
     }
     template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
