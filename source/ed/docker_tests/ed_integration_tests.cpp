@@ -37,7 +37,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "tests/utils_test.h"
-#include <boost/algorithm/string.hpp>
+#include "routing/raptor_utils.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
