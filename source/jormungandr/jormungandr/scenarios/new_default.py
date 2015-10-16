@@ -293,10 +293,28 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
 
 def culling_journeys(resp, request):
     """
-    remove some journeys if there are too many of them
-    since the journeys are sorted, we remove the last elt in the list
+    Remove some journeys if there are too many of them to have max_nb_journeys journeys.
 
-    no remove done in debug
+    The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
+    but have as few as possible sum(sections)
+
+    Ex:
+
+    From:
+
+    Journey_1 : Line 1 -> Line 8 -> Bus 172
+    Journey_2 : Line 14 -> Line 6 -> Bus 165
+    Journey_3 : Line 14 -> Line 6 ->Line 8 -> Bus 165
+
+    W'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+
+    Because
+    With Journey_1 and Journey_3, they cover all lines but have 5 transfers in all
+    With Journey_2 and Journey_3, they don't cover all lines(Line 1 is missing) and have 5 transfers in all
+
+    With Journey_1 and Journey_2, they cover all lines and have only 4 transfers in all -> OK
+
+    No removing done in debug
     """
     logger = logging.getLogger(__name__)
 
