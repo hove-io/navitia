@@ -42,7 +42,7 @@ import numpy as np
 import collections
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
-JOURNEY_TYPES_TO_RETAIN = {'best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss'}
+JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 
 

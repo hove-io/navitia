@@ -47,9 +47,11 @@ JOURNEYS 12             1                        1  1        |
 JOURNEYS 13     1       1                        1  1        |
 JOURNEYS 14     1                                   1        |
 JOURNEYS 15     1                                1  1        |
+JOURNEYS 16     1                                            |
+JOURNEYS 17                                             1    |
 """
 SECTIONS_CHOICES = (
-    (response_pb2.STREET_NETWORK, response_pb2.Bike, None),
+    (response_pb2.STREET_NETWORK, response_pb2.Bike, 'bike'),
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_1'),
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_2'),
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_3'),
@@ -59,7 +61,7 @@ SECTIONS_CHOICES = (
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_7'),
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_8'),
     (response_pb2.PUBLIC_TRANSPORT, None, 'uri_9'),
-    (response_pb2.STREET_NETWORK, response_pb2.Walking, None),
+    (response_pb2.STREET_NETWORK, response_pb2.Walking, 'walking'),
 )
 
 JOURNEYS = (
@@ -108,6 +110,12 @@ JOURNEYS = (
     # J15
     # 10/15/2015 @ 12:08pm (UTC)
     (1444903680, 'best', (0, 8, 9)),
+    # J16
+    # 10/15/2015 @ 12:08pm (UTC)
+    (1444903680, 'non_pt_bike', (0,)),
+    # J17
+    # 10/15/2015 @ 12:05pm (UTC)
+    (1444903500, 'non_pt_walk', (10,)),
 )
 
 
@@ -137,11 +145,11 @@ def create_candidate_pool_and_sections_set_test():
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set =new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
 
-    # We got 15 journeys in all and two of them are tagged with 'best' and 'comfort'
-    assert candidates_pool.shape[0] == 13
-    # We got 11 sections in all and 3 of them are included in J14 and J15, they should be excluded from the section_set
-    # to avoid redundant computation
-    assert len(sections_set) == 8
+    # We got 17 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
+    assert candidates_pool.shape[0] == (17 - 4)
+    # We got 11 sections in all and 3 of them are included in J14, J15, J16 and J17
+    # they should be excluded from the section_set to avoid redundant computation
+    assert len(sections_set) == 7
 
 
 def build_candidate_pool_and_sections_set_test():
@@ -149,11 +157,11 @@ def build_candidate_pool_and_sections_set_test():
     candidates_pool, sections_set =new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
     # selected_sections_matrix should have 13 lines(13 journeys) and 9 columns(9 sections)
-    assert selected_sections_matrix.shape == (13, 8)
+    assert selected_sections_matrix.shape == (13, 7)
 
-    # it's too verbose to check the entire matrix... we check only the first and the last line
-    assert [1, 0, 1, 0, 1, 0, 1, 1] in selected_sections_matrix
-    assert [0, 0, 0, 0, 0, 0, 0, 1] in selected_sections_matrix
+    # it's too verbose to check the entire matrix... we check only two lines
+    assert [1, 0, 1, 0, 1, 0, 1] in selected_sections_matrix
+    assert [0, 0, 0, 1, 1, 1, 1] in selected_sections_matrix
 
 
 def get_sorted_solutions_indexes_test():
@@ -161,8 +169,8 @@ def get_sorted_solutions_indexes_test():
     candidates_pool, sections_set =new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
     best_indexes, selection_matrix = new_default._get_sorted_solutions_indexes(selected_sections_matrix, 5)
-    assert best_indexes.shape[0] == 9
-    assert all(selection_matrix[best_indexes[0]] == [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0])
+    assert best_indexes.shape[0] == 27
+    assert all(selection_matrix[best_indexes[0]] == [0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0])
 
 
 def culling_jounreys_1_test():
@@ -191,26 +199,29 @@ def culling_jounreys_2_test():
 
 def culling_jounreys_3_test():
     mocked_pb_response = build_mocked_response()
-    mocked_request = {'max_nb_journeys': 5, 'debug': False, 'datetime': 1444903200}
+    mocked_request = {'max_nb_journeys': 6, 'debug': False, 'datetime': 1444903200}
     new_default.culling_journeys(mocked_pb_response, mocked_request)
-    assert len(mocked_pb_response.journeys) == 5
+    assert len(mocked_pb_response.journeys) == 6
 
-    journey_uris = {(u'uri_1', u'uri_2', u'uri_5', u'uri_6', u''),
-                    (u'uri_2', u'uri_3', u'uri_4', u''),
-                    (u'', u'uri_2', u'uri_7', u''),
-                    (u'', u'uri_9'),
-                    (u'', u'uri_8', u'uri_9')}
+    journey_uris = {(u'uri_1', u'uri_2', u'uri_5', u'uri_6', u'walking'),
+                    (u'uri_2', u'uri_3', u'uri_4', u'walking'),
+                    (u'bike', u'uri_2', u'uri_7', u'walking'),
+                    (u'bike', u'uri_9'),
+                    (u'bike', u'uri_8', u'uri_9'),
+                    (u'bike',),
+                    (u'walking',)}
     for j in mocked_pb_response.journeys:
         assert tuple(s.uris.line for s in j.sections) in journey_uris
 
 
 def culling_jounreys_4_test():
     """
-    When max_nb_journeys ==1, we should get the first journey of resp.journeys
+    When max_nb_journeys == 2 and nb_must_have_journeys == 4
     """
     mocked_pb_response = build_mocked_response()
-    mocked_request = {'max_nb_journeys': 1, 'debug': False, 'datetime': 1444903200}
+    mocked_request = {'max_nb_journeys': 3, 'debug': False, 'datetime': 1444903200}
     new_default.culling_journeys(mocked_pb_response, mocked_request)
-    assert len(mocked_pb_response.journeys) == 1
-    j = mocked_pb_response.journeys[0]
-    assert j.type == 'best'
+    assert len(mocked_pb_response.journeys) == 3
+    for jrny in mocked_pb_response.journeys:
+        # 'non_pt_bike' shouldn't appear in returned journeys
+        assert jrny.type in ('best', 'comfort', 'non_pt_walk')
