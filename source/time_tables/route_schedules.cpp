@@ -90,7 +90,8 @@ get_all_route_stop_times(const nt::Route* route,
                 } else {
                     // for calendar, we need to shift the time to local time
                     const auto utc_to_local_offset = stop_time.vehicle_journey->utc_to_local_offset;
-                    dt = DateTimeUtils::shift(dt, stop_time.departure_time + utc_to_local_offset);
+                    dt = DateTimeUtils::hour(dt);
+                    dt = DateTimeUtils::shift(dt, DateTimeUtils::hour(stop_time.departure_time + utc_to_local_offset));
                 }
             } else {
                 // for frequencies, we only need to add the stoptime offset to the first stoptime
@@ -103,10 +104,18 @@ get_all_route_stop_times(const nt::Route* route,
         }
     }
 
-    // for calendar's schedule we need to sort the datetimes
     if (calendar_id) {
-        for (auto& vec_dt_st: result) {
-            boost::sort(vec_dt_st, CalendarScheduleSort(date_time));
+        // for calendar's schedule we need to sort the datetimes in a different way
+        // we add 24h for each vj's dt that starts before 'date_time' so the vj will be sorted
+        // at the end (with the complex score of the route schedule)
+        for (auto& vjs_stops: result) {
+            //by construction the vector cannot be empty
+            if (DateTimeUtils::hour(vjs_stops.front().first) >= DateTimeUtils::hour(date_time)) {
+                continue;
+            }
+            for (auto& dt_st: vjs_stops) {
+                dt_st.first += DateTimeUtils::SECONDS_PER_DAY;
+            }
         }
     }
     return result;
@@ -253,9 +262,9 @@ route_schedule(const std::string& filter,
                uint32_t duration, size_t max_stop_date_times,
                const uint32_t max_depth, int count, int start_page,
                const type::Data &d, const type::RTLevel rt_level, const bool show_codes) {
-    RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
+    RequestHandle handler(filter, forbidden_uris, datetime, duration, d, calendar_id);
 
-    if(handler.pb_response.has_error()) {
+    if (handler.pb_response.has_error()) {
         return handler.pb_response;
     }
     auto now = pt::second_clock::universal_time();
