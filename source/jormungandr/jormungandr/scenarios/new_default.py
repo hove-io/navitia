@@ -348,11 +348,13 @@ def culling_journeys(resp, request):
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
     nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
     if nb_journeys_to_find <= 0:
-        logger.debug('max_nb_journeys is < or = nb_journeys_must_have')
         # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
         [resp.journeys.remove(j) for j in candidates_pool]
         if len(resp.journeys) == request["max_nb_journeys"]:
+            logger.debug('max_nb_journeys equals to nb_journeys_must_have')
             return
+        logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
+                     .format(request["max_nb_journeys"], nb_journeys_must_have))
         # At this point, resp.journeys should contain only must-have journeys
         list_dict = collections.defaultdict(list)
         for jrny in resp.journeys:
