@@ -147,16 +147,16 @@ def create_candidate_pool_and_sections_set_test():
 
     # We got 17 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
     assert candidates_pool.shape[0] == (17 - 4)
-    # We got 11 sections in all and 3 of them are included in J14, J15, J16 and J17
+    # We got 11 sections in all and 4 of them are included in J14, J15, J16 and J17
     # they should be excluded from the section_set to avoid redundant computation
-    assert len(sections_set) == 7
+    assert len(sections_set) == (11 - 4)
 
 
 def build_candidate_pool_and_sections_set_test():
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set =new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
-    # selected_sections_matrix should have 13 lines(13 journeys) and 9 columns(9 sections)
+    # selected_sections_matrix should have 13 lines(13 journeys) and 7 columns(7 sections)
     assert selected_sections_matrix.shape == (13, 7)
 
     # it's too verbose to check the entire matrix... we check only two lines
@@ -216,7 +216,7 @@ def culling_jounreys_3_test():
 
 def culling_jounreys_4_test():
     """
-    When max_nb_journeys == 2 and nb_must_have_journeys == 4
+    When max_nb_journeys == 3 and nb_must_have_journeys == 4
     """
     mocked_pb_response = build_mocked_response()
     mocked_request = {'max_nb_journeys': 3, 'debug': False, 'datetime': 1444903200}
