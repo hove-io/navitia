@@ -55,6 +55,10 @@ def date_time_format(value):
     we want to valid the date format
     """
     try:
-        return parse_input_date(value)
+        d = parse_input_date(value)
+        if d.year < 1970:
+            raise ValueError('date is too early!')
+
+        return d
     except ValueError as e:
         raise ValueError("Unable to parse datetime, {}".format(e.message))
