@@ -37,7 +37,7 @@ from navitiacommon import response_pb2
 reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
 
-def _delete_journeys(responses, request):
+def delete_journeys(responses, request):
 
     if request.get('debug', False):
         return
@@ -73,7 +73,7 @@ def filter_journeys(response_list, instance, request, original_request):
 
     _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
-    _delete_journeys(response_list, request)
+    delete_journeys(response_list, request)
 
     return response_list
 
@@ -107,7 +107,7 @@ def _to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
-def _mark_as_dead(journey, *reasons):
+def mark_as_dead(journey, *reasons):
     journey.tags.append('to_delete')
     for reason in reasons:
         journey.tags.append('deleted_because_' + reason)
@@ -132,7 +132,7 @@ def _filter_similar_journeys(journeys, request):
                                                                                 j2.internal_id,
                                                                                 worst.internal_id))
 
-            _mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
+            mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
@@ -195,7 +195,7 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j.internal_id, asap_journey.internal_id))
 
-            _mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
+            mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
 
 
 def similar_journeys_generator(journey):

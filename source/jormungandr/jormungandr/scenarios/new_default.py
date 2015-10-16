@@ -321,9 +321,6 @@ def culling_journeys(resp, request):
     """
     logger = logging.getLogger(__name__)
 
-    if request['debug']:
-        return
-
     if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
         logger.debug('No need to cull journeys')
         return
@@ -349,23 +346,31 @@ def culling_journeys(resp, request):
     nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
     if nb_journeys_to_find <= 0:
         # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
-        [resp.journeys.remove(j) for j in candidates_pool]
-        if len(resp.journeys) == request["max_nb_journeys"]:
+        for jrny in candidates_pool:
+             journey_filter.mark_as_dead(jrny, "We don't need to keep this type of journey")
+
+        nb_jrny_to_keep = len([j for j in resp.journeys if 'to_delete' not in j.tags])
+        if nb_jrny_to_keep == request["max_nb_journeys"]:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
             return
+
         logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
                      .format(request["max_nb_journeys"], nb_journeys_must_have))
+
         # At this point, resp.journeys should contain only must-have journeys
         list_dict = collections.defaultdict(list)
         for jrny in resp.journeys:
-            list_dict[jrny.type].append(jrny)
+            if 'to_delete' not in jrny.tags:
+                list_dict[jrny.type].append(jrny)
+
         sorted_by_type_journeys = []
         for t in JOURNEY_TYPES_TO_RETAIN:
             sorted_by_type_journeys.extend(list_dict.get(t, []))
 
         for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
-            resp.journeys.remove(jrny)
+            journey_filter.mark_as_dead(jrny, "max_nb_journeys bigger than nb_journeys_must_have")
 
+        journey_filter.delete_journeys((resp,), request)
         return
 
     logger.debug('Trying to find {0} journeys from {1}'.format(nb_journeys_to_find,
@@ -407,8 +412,10 @@ def culling_journeys(resp, request):
         the_best_index = min(best_indexes, key=combinations_sorter)
 
     logger.debug('Removing non selected journeys')
-    for j in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
-        resp.journeys.remove(j)
+    for jrny in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
+        journey_filter.mark_as_dead(jrny, "journey is not selected in the solution")
+
+    journey_filter.delete_journeys((resp,), request)
 
 
 def nb_journeys(responses):
