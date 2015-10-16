@@ -39,6 +39,10 @@ www.navitia.io
 #include "routing/raptor.h"
 
 namespace nt = navitia::type;
+namespace pt = boost::posix_time;
+
+static const std::string feed_id = "42";
+static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
 make_cancellation_message(const std::string& vj_uri, const std::string& date) {
@@ -64,7 +68,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
     // we should not have created any objects save for one validity_pattern
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -77,7 +81,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, navitia::type::ValidityPattern::year_bitset());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime(trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
     // we should not have created any objects save for one validity_pattern
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -98,7 +102,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150929");
     const auto& pt_data = b.data->pt_data;
 
-    navitia::handle_realtime(trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -134,7 +138,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
-    navitia::handle_realtime(trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
     //on the theoric level, we should still get one solution
     res = compute(nt::RTLevel::Base);
@@ -173,7 +177,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 
     // we cancel the vj1
-    navitia::handle_realtime(trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
     // on the theoric, nothing has changed
     res = compute(nt::RTLevel::Base);

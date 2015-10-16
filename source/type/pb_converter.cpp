@@ -708,15 +708,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                                      action_period);
     }
 
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for (const auto& message: vj->meta_vj->get_applicable_messages(now, action_period)) {
         fill_message(*message, data, vehicle_journey, max_depth-1, now, action_period);
-    }
-
-    //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
-    if(vj->theoric_vehicle_journey != nullptr){
-        for(auto message : vj->theoric_vehicle_journey->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, vehicle_journey, max_depth-1, now, action_period);
-        }
     }
 
     if (show_codes) { fill_codes(vj, data, vehicle_journey); }
@@ -1430,7 +1423,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
         uris->set_journey_pattern(data.dataRaptor->jp_container.get_id(jp_idx));
     }
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for (const auto& message : vj->meta_vj->get_applicable_messages(now, action_period)) {
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
     if(origin != nullptr) {

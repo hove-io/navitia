@@ -157,12 +157,13 @@ typedef boost::variant<
     const StopPoint *,
     LineSection,
     const Line *,
-    const Route *
+    const Route *,
+    const MetaVehicleJourney *
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,
                   const std::string &uri,
-                  const PT_Data& pt_data,
+                  PT_Data& pt_data,
                   const boost::shared_ptr<Impact> &impact = {});
 
 struct Disruption;

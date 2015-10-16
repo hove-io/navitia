@@ -34,7 +34,7 @@ def get_impacts(response):
     return {d['id']: d for d in response['disruptions']}
 
 # for the tests we need custom datetime to display the disruptions
-default_date_filter = '_current_datetime=20140101T000000'
+default_date_filter = '_current_datetime=20120801T000000'
 
 
 @dataset(["main_routing_test"])
@@ -103,17 +103,19 @@ class TestDisruptions(AbstractTestFixture):
         eq_(stop_disrupt[0]['uri'], 'too_bad')
 
         """
-        by querying directly the impacted object, we only find active disruptions
+        by querying directly the impacted object, we only find publishable disruptions
         """
         networks = self.query_region('networks/base_network?' + default_date_filter)
         network = get_not_null(networks, 'networks')[0]
         is_valid_network(network)
         network_disrupt = get_disruptions(network, response)
-        eq_(len(network_disrupt), 1)
+        eq_(len(network_disrupt), 2)
         for d in network_disrupt:
             is_valid_disruption(d)
         eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
         eq_(network_disrupt[0]['uri'], 'too_bad_again')
+        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+        eq_(network_disrupt[1]['uri'], 'later_impact')
 
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
@@ -252,17 +254,17 @@ class TestDisruptions(AbstractTestFixture):
         """
         test the publication date filter
 
-        'disruption_on_line_A_but_publish_later' is published from the 28th of january at 10
+        'disruption_on_line_A_but_publish_later' is published from 2012-08-28 10:00
 
         so at 9 it is not in the list, at 11, we get it
         """
-        response = self.query_region('traffic_reports?_current_datetime=20140128T090000')
+        response = self.query_region('traffic_reports?_current_datetime=20120828T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 3)
         assert 'impact_published_later' not in impacts
 
-        response = self.query_region('traffic_reports?_current_datetime=20140128T130000')
+        response = self.query_region('traffic_reports?_current_datetime=20120828T130000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 4)
@@ -271,30 +273,30 @@ class TestDisruptions(AbstractTestFixture):
     def test_disruption_datefilter_limits(self):
         """
         the _current_datetime is by default in UTC, we test that this is correctly taken into account
-        disruption_on_line_A is applied from 20140101T000000 to 20140201T115959
+        disruption_on_line_A is applied from 20120801T000000 to 20120901T115959
         """
-        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T000000Z')
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T000000Z')
 
         #we should have disruptions at this date
         assert len(response['disruptions']) > 0
 
-        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20131231T235959Z')
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120731T235959Z')
 
         #before the start of the period => no disruptions
         assert len(response['disruptions']) == 0
 
         #%2B is the code for '+'
-        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T005959%2B0100')
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T005959%2B0100')
 
         #UTC + 1, so in UTC it's 23h59 the day before => no disruption
         assert len(response['disruptions']) == 0
 
-        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20140101T000000-0100')
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T000000-0100')
 
         #UTC - 1, so in UTC it's 01h => disruptions
         assert len(response['disruptions']) > 0
 
-        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20131231T235959-0100')
+        response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120731T235959-0100')
 
         #UTC - 1, so in UTC it's 00h59 => disruptions
         assert len(response['disruptions']) > 0
@@ -303,12 +305,12 @@ class TestDisruptions(AbstractTestFixture):
         """
         check that disruption on route are displayed on the corresponding line
         """
-        response = self.query_region('traffic_reports?_current_datetime=20150325T090000')
+        response = self.query_region('traffic_reports?_current_datetime=20130225T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 0)
 
-        response = self.query_region('traffic_reports?_current_datetime=20150327T090000')
+        response = self.query_region('traffic_reports?_current_datetime=20130227T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 1)
@@ -357,12 +359,12 @@ class TestDisruptions(AbstractTestFixture):
         """
         and we check the sort order of the lines
         """
-        response = self.query_region('traffic_reports?_current_datetime=20150125T090000')
+        response = self.query_region('traffic_reports?_current_datetime=20130425T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 0)
 
-        response = self.query_region('traffic_reports?_current_datetime=20150127T090000')
+        response = self.query_region('traffic_reports?_current_datetime=20130427T090000')
 
         impacts = get_impacts(response)
         eq_(len(impacts), 3)
