@@ -136,7 +136,6 @@ def _filter_similar_journeys(journeys, request):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-
 def way_later(journey, asap_journey, original_request):
     """
     to check if a journey is way later than the asap journey
