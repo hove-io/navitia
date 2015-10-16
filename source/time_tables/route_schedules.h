@@ -39,6 +39,15 @@ namespace navitia { namespace timetables {
 typedef std::vector<std::string> vector_string;
 typedef std::pair<DateTime, const type::StopTime*> vector_date_time;
 
+std::vector<std::vector<datetime_stop_time> >
+get_all_route_stop_times(const navitia::type::Route* route,
+                   const DateTime& dateTime,
+                   const DateTime& max_datetime,
+                   const size_t max_stop_date_times,
+                   const type::Data& d,
+                   const type::RTLevel rt_level,
+                   const boost::optional<const std::string> calendar_id);
+
 pbnavitia::Response route_schedule(const std::string & line_externalcode,
         const boost::optional<const std::string> calendar_id,
         const std::vector<std::string>& forbidden_uris,

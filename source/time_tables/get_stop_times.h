@@ -96,4 +96,25 @@ struct BestDTComp {
 };
 
 using JppStQueue = std::priority_queue<JppSt, std::vector<JppSt>, BestDTComp>;
+
+
+/*
+ * for schedule with calendar, we want to sort the result a quite a strange way
+ * we want the first stop time to start from a given dt and loop through the day after
+ * */
+struct CalendarScheduleSort {
+    CalendarScheduleSort(DateTime d): pivot(d) {}
+    DateTime pivot;
+    bool operator()(datetime_stop_time dst1, datetime_stop_time dst2) const {
+        auto is_before_start1 = (DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(pivot));
+        auto is_before_start2 = (DateTimeUtils::hour(dst2.first) < DateTimeUtils::hour(pivot));
+
+        if (is_before_start1 != is_before_start2) {
+            //if one is before and one is after, we want the one after first
+            return ! is_before_start1;
+        }
+        return DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(dst2.first);
+    }
+};
+
 }}
