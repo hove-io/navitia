@@ -165,7 +165,7 @@ class StatManager(object):
         """
         store data from response of all requests
         """
-        if 'pagination' in call_result[0]:
+        if 'pagination' in call_result[0] and 'items_on_page' in call_result[0]['pagination']:
             stat_info_response.object_count = call_result[0]['pagination']['items_on_page']
 
     def fill_result(self, stat_request, call_result):
