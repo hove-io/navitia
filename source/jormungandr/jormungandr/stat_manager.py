@@ -43,6 +43,7 @@ from threading import Lock
 import time
 import sys
 import kombu
+
 f_datetime = "%Y%m%dT%H%M%S"
 
 def init_journey(stat_journey):
@@ -160,6 +161,13 @@ class StatManager(object):
         self.fill_result(stat_request, call_result)
         self.publish_request(stat_request)
 
+    def fill_info_response(self, stat_info_response, call_result):
+        """
+        store data from response of all requests
+        """
+        if 'pagination' in call_result[0]:
+            stat_info_response.object_count = call_result[0]['pagination']['items_on_page']
+
     def fill_result(self, stat_request, call_result):
         if 'error' in call_result[0]:
             self.fill_error(stat_request, call_result[0]['error'])
@@ -202,6 +210,9 @@ class StatManager(object):
         stat_request.path = request.path
 
         stat_request.response_size = sys.getsizeof(call_result[0])
+
+        self.fill_info_response(stat_request.info_response, call_result)
+
 
     def register_interpreted_parameters(self, args):
         """
