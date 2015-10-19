@@ -66,8 +66,11 @@ struct MetaData{
         ar & production_date & publication_date & data_sources & shape & timezone &
                 publisher_name & publisher_url & license & instance_name;
     }
-
-    friend class boost::serialization::access;
-
+    boost::posix_time::time_period production_period() const {
+        namespace pt = boost::posix_time;
+        const auto begin = pt::ptime(production_date.begin(), pt::minutes(0));
+        const auto end = pt::ptime(production_date.end(), pt::minutes(0));
+        return {begin, end};
+    }
 };
 }}

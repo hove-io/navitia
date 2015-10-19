@@ -30,3 +30,4 @@ aniso8601==0.82
 elasticsearch==1.4.0
 ujson==1.33
 urllib3==1.10.1
+numpy==1.9

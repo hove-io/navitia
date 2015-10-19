@@ -33,8 +33,23 @@ www.navitia.io
 
 #include <boost/range/algorithm/find_if.hpp>
 
-namespace navitia{namespace type {
+namespace navitia { namespace type {
 
+ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
+    for (auto vp : validity_patterns) {
+        if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
+            return vp;
+        }
+    }
+    auto vp = new nt::ValidityPattern();
+    vp->idx = validity_patterns.size();
+    vp->uri = make_adapted_uri(vp->uri);
+    vp->beginning_date = vp_ref.beginning_date;
+    vp->days = vp_ref.days;
+    validity_patterns.push_back(vp);
+    validity_patterns_map[vp->uri] = vp;
+    return vp;
+}
 
 void PT_Data::sort(){
 
@@ -213,9 +228,6 @@ PT_Data::~PT_Data() {
                 [](type_name* obj){delete obj;});
     ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
 
-    for (auto metavj: meta_vj) {
-        delete metavj.second;
-    }
     for (auto cal: associated_calendars) {
         delete cal;
     }

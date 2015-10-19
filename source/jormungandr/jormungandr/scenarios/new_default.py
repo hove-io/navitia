@@ -33,11 +33,17 @@ import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import simple, journey_filter
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
-    fill_uris
+    fill_uris, gen_all_combin, get_pseudo_duration
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
+import numpy as np
+import collections
+
+SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
+JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 
 
 def get_kraken_calls(request):
@@ -170,18 +176,246 @@ def tag_journeys(resp):
     pass
 
 
+def _get_section_id(section):
+    street_network_mode = None
+    if section.type in SECTION_TYPES_TO_RETAIN:
+        if getattr(section.street_network, 'mode', None) in STREET_NETWORK_MODE_TO_RETAIN:
+            street_network_mode = section.street_network.mode
+    return section.uris.line, street_network_mode, section.type
+
+
+def _build_candidate_pool_and_sections_set(resp):
+    sections_set = set()
+    sections_set_must_keep = set()
+    candidates_pool = list()
+
+    for j in resp.journeys:
+        # journeys that we want to keep absolutely
+        if j.type in JOURNEY_TYPES_TO_RETAIN:
+            for s in j.sections:
+                sections_set_must_keep.add(_get_section_id(s))
+            continue
+        candidates_pool.append(j)
+
+    for j in candidates_pool:
+        for s in j.sections:
+            if s.type in SECTION_TYPES_TO_RETAIN:
+                section_id = _get_section_id(s)
+                if section_id not in sections_set_must_keep:
+                    sections_set.add(section_id)
+    return np.array(candidates_pool), sections_set
+
+
+def _build_selected_sections_matrix(sections_set, candidates_pool):
+    sections_2_index_dict = dict()
+    for index, value in enumerate(sections_set):
+        sections_2_index_dict[value] = index
+    selected_sections_matrix = list()
+    nb_sections = len(sections_set)
+
+    for j in candidates_pool:
+        section_select = np.zeros(nb_sections, dtype=int)
+
+        def _gen_section_ind():
+            for s in j.sections:
+                ind = sections_2_index_dict.get(_get_section_id(s))
+                if ind is not None:
+                    yield ind
+        selected_indexes = list(_gen_section_ind())
+        section_select[selected_indexes] = 1
+        selected_sections_matrix.append(section_select)
+    return np.array(selected_sections_matrix)
+
+
+def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find):
+    """
+    The entry is a 2D array where its lines are journeys, its columns are (non) chosen sections
+    """
+    logger = logging.getLogger(__name__)
+    """
+    Get a matrix which illustrate all possible non ordered combinations of t elements from n elements where n >= t with
+    their indexes.
+
+    Let's say we'd like to find all combinations of 2 elements from a set of 3.
+
+    selected_journeys_matrix will be like:
+
+    [[0,1]
+     [0,2]
+     [1,2]]
+    """
+    selected_journeys_matrix = np.array(list(gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+
+    selection_matrix = np.zeros((selected_journeys_matrix.shape[0], selected_sections_matrix.shape[0]))
+
+    """
+    Given  selected_journeys_matrix:
+    [[0,1]
+     [0,2]
+     [1,2]]
+
+    selection_matrix will be like:
+    [[1,1,0], -> the first one and the second are chosen, etc...
+     [1,0,1],
+     [0,1,1]]
+    """
+    # http://stackoverflow.com/questions/20103779/index-2d-numpy-array-by-a-2d-array-of-indices-without-loops
+    selection_matrix[np.arange(selected_journeys_matrix.shape[0])[:, None], selected_journeys_matrix] = 1
+
+    res_pool = np.dot(selection_matrix, selected_sections_matrix)
+
+    """
+    Get number of sections(or tranfers) for every solution
+    """
+    nb_sections = np.sum(res_pool, axis=1)
+
+    """
+    integrity shows at which point a solution(chosen journeys) covers sections.
+    0 means a solution covers all sections
+    1 means a solutions covers almost all sections but 1 is missing
+    2 means 2 sections are missing
+    .... etc
+    """
+    integrity = res_pool.shape[1] - np.array([np.count_nonzero(r) for r in res_pool])
+
+    """
+    We want to find the solutions covers as many sections as possible which has less sections(less transfer to do)
+    """
+    the_best_idx = np.lexsort((nb_sections, integrity))[0]  # sort by integrity then by nb_sections
+
+    best_indexes = np.where(np.logical_and(nb_sections == nb_sections[the_best_idx],
+                                           integrity == integrity[the_best_idx]))[0]
+
+    logger.debug("Best Itegrity: {0}".format(integrity[the_best_idx]))
+    logger.debug("Best Nb sections: {0}".format(nb_sections[the_best_idx]))
+
+    return best_indexes, selection_matrix
+
+
 def culling_journeys(resp, request):
     """
-    remove some journeys if there are too many of them
-    since the journeys are sorted, we remove the last elt in the list
+    Remove some journeys if there are too many of them to have max_nb_journeys journeys.
+    
+    resp.journeys should be sorted before this function is called
 
-    no remove done in debug
+    The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
+    but have as few as possible sum(sections)
+
+    Ex:
+
+    From:
+
+    Journey_1 : Line 1 -> Line 8 -> Bus 172
+    Journey_2 : Line 14 -> Line 6 -> Bus 165
+    Journey_3 : Line 14 -> Line 6 ->Line 8 -> Bus 165
+
+    W'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+
+    Because
+    With Journey_1 and Journey_3, they cover all lines but have 5 transfers in all
+    With Journey_2 and Journey_3, they don't cover all lines(Line 1 is missing) and have 5 transfers in all
+
+    With Journey_1 and Journey_2, they cover all lines and have only 4 transfers in all -> OK
+
+    No removing done in debug
     """
-    if request['debug']:
+    logger = logging.getLogger(__name__)
+
+    if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
+        logger.debug('No need to cull journeys')
         return
 
-    if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
-        del resp.journeys[request["max_nb_journeys"]:]
+    logger.debug('Trying to culling the journeys')
+
+    """
+    To create a candidates pool, we choose only journeys that are NOT tagged as 'comfort' and 'best' and we create a
+    section set from that pool
+
+    Ex:
+    Journey_1 (Best): Line 14 -> Line 8 -> Bus 172
+    Journey_2 : Line 14 -> Line 6 -> Bus 165
+    Journey_3 : Line 14 -> Line 8 -> Bus 165
+
+    The candidate pool will be like [Journey_2, Journey_3]
+    The sections set will be like set([Line 14, Line 6, Line 8, Bus 165])
+    """
+    candidates_pool, sections_set = _build_candidate_pool_and_sections_set(resp)
+
+    nb_journeys_must_have = len(resp.journeys) - len(candidates_pool)
+    logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
+    nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
+    if nb_journeys_to_find <= 0:
+        # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
+        for jrny in candidates_pool:
+             journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+
+        nb_jrny_to_keep = len([j for j in resp.journeys if 'to_delete' not in j.tags])
+        if nb_jrny_to_keep == request["max_nb_journeys"]:
+            logger.debug('max_nb_journeys equals to nb_journeys_must_have')
+            return
+
+        logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
+                     .format(request["max_nb_journeys"], nb_journeys_must_have))
+
+        # At this point, resp.journeys should contain only must-have journeys
+        list_dict = collections.defaultdict(list)
+        for jrny in resp.journeys:
+            if 'to_delete' not in jrny.tags:
+                list_dict[jrny.type].append(jrny)
+
+        sorted_by_type_journeys = []
+        for t in JOURNEY_TYPES_TO_RETAIN:
+            sorted_by_type_journeys.extend(list_dict.get(t, []))
+
+        for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
+            journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+
+        journey_filter.delete_journeys((resp,), request)
+        return
+
+    logger.debug('Trying to find {0} journeys from {1}'.format(nb_journeys_to_find,
+                                                               candidates_pool.shape[0]))
+
+    """
+    Ex:
+    Journey_2 : Line 14 -> Line 6 -> Bus 165
+    Journey_3 : Line 14 -> Line 8 -> Bus 165
+
+    The candidate pool will be like [Journey_2, Journey_3]
+    The sections set will be like set([Line 14, Line 6, Line 8, Bus 165])
+
+    selected_sections_matrix:
+    [[1,1,0,1] -> journey_2
+     [1,0,1,1] -> journey_3
+    ]
+    """
+    selected_sections_matrix = _build_selected_sections_matrix(sections_set, candidates_pool)
+
+    best_indexes, selection_matrix = _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
+    logger.debug("Nb best solutions: {0}".format(best_indexes.shape[0]))
+
+    the_best_index = best_indexes[0]
+
+    logger.debug("Trying to find the best of best")
+    """
+    Let's find the best of best :)
+    """
+    # If there're several solutions which have the same score of integrity and nb_sections
+    if best_indexes.shape[0] != 1:
+        requested_dt = request['datetime']
+        is_clockwise = request.get('clockwise', True)
+
+        def combinations_sorter(v):
+            # Hoping to find We sort the solution by the sum of journeys' pseudo duration
+            return np.sum((get_pseudo_duration(jrny, requested_dt, is_clockwise)
+                           for jrny in np.array(candidates_pool)[np.where(selection_matrix[v, :] == 0)]))
+        the_best_index = min(best_indexes, key=combinations_sorter)
+
+    logger.debug('Removing non selected journeys')
+    for jrny in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
+        journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+
+    journey_filter.delete_journeys((resp,), request)
 
 
 def nb_journeys(responses):
@@ -309,7 +543,7 @@ def merge_responses(responses):
 
         change_ids(r, len(merged_response.journeys))
 
-        #we don't want to add a journey already there
+        # we don't want to add a journey already there
         merged_response.journeys.extend(r.journeys)
 
         # we have to add the additional fares too
@@ -341,6 +575,7 @@ class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
     """
+
     def __init__(self):
         super(Scenario, self).__init__()
         self.nb_kraken_calls = 0
@@ -351,7 +586,7 @@ class Scenario(simple.Scenario):
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
-        
+
         responses = []
         last_nb_journeys = 0
         while nb_journeys(responses) < min_asked_journeys:
@@ -361,27 +596,25 @@ class Scenario(simple.Scenario):
             responses.extend(tmp_resp)
             new_nb_journeys = nb_journeys(responses)
             if new_nb_journeys == 0:
-                #no new journeys found, we stop
+                # no new journeys found, we stop
                 break
-            
-            #we filter unwanted journeys by side effects
+
+            # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)
 
             if last_nb_journeys == new_nb_journeys:
-                #we are stuck with the same number of journeys, we stops
+                # we are stuck with the same number of journeys, we stops
                 break
             last_nb_journeys = new_nb_journeys
-            
+
             request = create_next_kraken_request(request, responses)
 
         pb_resp = merge_responses(responses)
         sort_journeys(pb_resp, instance.journey_order, request['clockwise'])
         tag_journeys(pb_resp)
-        culling_journeys(pb_resp, request)
         type_journeys(pb_resp, request)
-
+        culling_journeys(pb_resp, request)
         return pb_resp
-
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
@@ -389,8 +622,8 @@ class Scenario(simple.Scenario):
 
         return the list of all responses
         """
-        #TODO: handle min_alternative_journeys
-        #TODO: call first bss|bss and do not call walking|walking if no bss in first results
+        # TODO: handle min_alternative_journeys
+        # TODO: call first bss|bss and do not call walking|walking if no bss in first results
 
         resp = []
         logger = logging.getLogger(__name__)
@@ -400,7 +633,7 @@ class Scenario(simple.Scenario):
 
             local_resp = instance.send_and_receive(pb_request)
 
-            #for log purpose we put and id in each journeys
+            # for log purpose we put and id in each journeys
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 

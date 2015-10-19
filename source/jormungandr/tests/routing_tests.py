@@ -226,6 +226,18 @@ class TestJourneys(AbstractTestFixture):
         assert 'message' in response
         assert response['message'] == "Unable to parse datetime, hour must be in 0..23"
 
+    def test_journeys_date_valid_invalid(self):
+        """some format of date are bizarrely interpreted, and can result in date in 800"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="T0800")
+
+        response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert not 'journeys' in response
+        assert 'message' in response
+        assert response['message'] == "Unable to parse datetime, date is too early!"
+
     def test_journeys_bad_speed(self):
         """speed <= 0 is invalid"""
 

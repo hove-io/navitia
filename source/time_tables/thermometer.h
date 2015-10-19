@@ -59,6 +59,8 @@ private :
     std::string filter;
     int nb_branches = 0;
 
+    bool generate_topological_thermometer(const std::vector<vector_idx> &journey_patterns);
+
     std::vector<uint32_t> untail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
     void retail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
     vector_idx generate_possibilities(const std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb);

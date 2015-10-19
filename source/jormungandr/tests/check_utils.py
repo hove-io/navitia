@@ -816,6 +816,9 @@ def is_valid_vehicle_journey(vj, depth_check=1):
         is_valid_comment(c)
 
     if depth_check > 0:
+        get_not_null(vj, "trip")
+        get_not_null(vj["trip"], "id")
+
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
         is_valid_validity_pattern(get_not_null(vj, 'validity_pattern'), depth_check=depth_check-1)
 

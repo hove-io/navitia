@@ -38,6 +38,7 @@ www.navitia.io
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
 #include "utils/functions.h"
+#include "utils/obj_factory.h"
 #include "comment_container.h"
 #include "code_container.h"
 #include "headsign_handler.h"
@@ -63,8 +64,8 @@ struct PT_Data : boost::noncopyable{
 
     std::vector<StopPointConnection*> stop_point_connections;
 
-    // meta vj map
-    std::map<std::string, MetaVehicleJourney*> meta_vj;
+    // meta vj factory
+    navitia::ObjFactory<MetaVehicleJourney> meta_vjs;
 
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
@@ -115,7 +116,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
                 & disruption_holder
-                & meta_vj
+                & meta_vjs
                 & stop_points_by_area
                 & comments
                 & codes
@@ -154,21 +155,7 @@ struct PT_Data : boost::noncopyable{
         return nb;
     }
 
-    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
-        for (auto vp : validity_patterns) {
-            if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
-                return vp;
-            }
-        }
-        auto vp = new nt::ValidityPattern();
-        vp->idx = validity_patterns.size();
-        vp->uri = make_adapted_uri(vp->uri);
-        vp->beginning_date = vp_ref.beginning_date;
-        vp->days = vp_ref.days;
-        validity_patterns.push_back(vp);
-        validity_patterns_map[vp->uri] = vp;
-        return vp;
-    }
+    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref);
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *

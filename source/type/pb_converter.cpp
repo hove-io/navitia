@@ -128,6 +128,11 @@ void fill_message(const type::new_disruption::Impact& impact,
     auto pb_disrution = pb_object->add_disruptions();
 
     pb_disrution->set_disruption_uri(impact.disruption->uri);
+
+    if (!impact.disruption->contributor.empty()){
+        pb_disrution->set_contributor(impact.disruption->contributor);
+    }
+
     pb_disrution->set_uri(impact.uri);
     for (const auto& app_period: impact.application_periods) {
         auto p = pb_disrution->add_application_periods();
@@ -634,6 +639,15 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
     validity_pattern->set_days(vp->days.to_string());
 }
 
+void fill_pb_object(const nt::MetaVehicleJourney* nav_mvj,
+                    pbnavitia::Trip* pb_trip,
+                    int /*max_depth*/,
+                    const pt::ptime& /*now*/,
+                    const pt::time_period& /*action_period*/,
+                    const bool /*show_codes*/) {
+    pb_trip->set_uri(nav_mvj->uri);
+}
+
 void fill_pb_object(const nt::VehicleJourney* vj,
                     const nt::Data& data,
                     pbnavitia::VehicleJourney* vehicle_journey,
@@ -671,6 +685,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period, show_codes);
         }
+        fill_pb_object(vj->meta_vj, vehicle_journey->mutable_trip(), depth-1, now,
+                       action_period, show_codes);
         fill_pb_object(vj->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
@@ -692,15 +708,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                                      action_period);
     }
 
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for (const auto& message: vj->meta_vj->get_applicable_messages(now, action_period)) {
         fill_message(*message, data, vehicle_journey, max_depth-1, now, action_period);
-    }
-
-    //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
-    if(vj->theoric_vehicle_journey != nullptr){
-        for(auto message : vj->theoric_vehicle_journey->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, vehicle_journey, max_depth-1, now, action_period);
-        }
     }
 
     if (show_codes) { fill_codes(vj, data, vehicle_journey); }
@@ -1414,7 +1423,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
         uris->set_journey_pattern(data.dataRaptor->jp_container.get_id(jp_idx));
     }
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for (const auto& message : vj->meta_vj->get_applicable_messages(now, action_period)) {
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
     if(origin != nullptr) {

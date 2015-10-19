@@ -51,7 +51,7 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_tag = holder.tags[chaos_tag.id()];
-    if (auto tag = weak_tag.lock()) { return std::move(tag); }
+    if (auto tag = weak_tag.lock()) { return tag; }
 
     auto tag = boost::make_shared<nt::new_disruption::Tag>();
     tag->uri = chaos_tag.id();
@@ -60,7 +60,7 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     tag->updated_at = from_posix(chaos_tag.updated_at());
 
     weak_tag = tag;
-    return std::move(tag);
+    return tag;
 }
 
 static boost::shared_ptr<nt::new_disruption::Cause>
@@ -68,7 +68,7 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_cause = holder.causes[chaos_cause.id()];
-    if (auto cause = weak_cause.lock()) { return std::move(cause); }
+    if (auto cause = weak_cause.lock()) { return cause; }
 
     auto cause = boost::make_shared<nt::new_disruption::Cause>();
     cause->uri = chaos_cause.id();
@@ -77,14 +77,14 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
     cause->updated_at = from_posix(chaos_cause.updated_at());
 
     weak_cause = cause;
-    return std::move(cause);
+    return cause;
 
 }
 
 
 //return the time period of circulation of a vj for one day
-static boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
-                                                          const nt::VehicleJourney& vj){
+boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
+                                                const nt::VehicleJourney& vj) {
     uint32_t first_departure = std::numeric_limits<uint32_t>::max();
     uint32_t last_arrival = 0;
     for(const auto& st: vj.stop_time_list){
@@ -106,7 +106,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_severity = holder.severities[chaos_severity.id()];
-    if (auto severity = weak_severity.lock()) { return std::move(severity); }
+    if (auto severity = weak_severity.lock()) { return severity; }
 
     auto severity = boost::make_shared<new_disr::Severity>();
     severity->uri = chaos_severity.id();
@@ -132,7 +132,8 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
 #undef EFFECT_ENUM_CONVERSION
     }
 
-    return std::move(severity);
+    weak_severity = severity;
+    return severity;
 }
 
 static boost::optional<nt::new_disruption::LineSection>
@@ -203,6 +204,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
         case chaos::PtObject_Type_route:
             res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data, impact));
             break;
+        case chaos::PtObject_Type_trip:
+            res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data, impact));
+            break;
         case chaos::PtObject_Type_unkown_type:
             res.push_back(UnknownPtObj());
             break;
@@ -212,7 +216,7 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
-std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+static std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
     std::set<navitia::type::new_disruption::ChannelType> res;
     for (const auto channel_type: chaos_channel.types()){
         switch(channel_type){
@@ -275,7 +279,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
         });
     }
 
-    return std::move(impact);
+    return impact;
 }
 
 
@@ -338,6 +342,14 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                 return func_on_vj(vj);
         });
         this->log_end_action(route->uri);
+    }
+
+    void operator()(const nt::MetaVehicleJourney* mvj) {
+        this->log_start_action(mvj->uri);
+        for (auto* vj: mvj->base_vj) { func_on_vj(*vj); }
+        for (auto* vj: mvj->adapted_vj) { func_on_vj(*vj); }
+        for (auto* vj: mvj->real_time_vj) { func_on_vj(*vj); }
+        this->log_end_action(mvj->uri);
     }
 
 };
@@ -497,6 +509,11 @@ void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_d
 
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
+
+    if (chaos_disruption.has_contributor()){
+        disruption->contributor = chaos_disruption.contributor();
+    }
+
     disruption->reference = chaos_disruption.reference();
     disruption->publication_period = {
         from_posix(chaos_disruption.publication_period().start()),

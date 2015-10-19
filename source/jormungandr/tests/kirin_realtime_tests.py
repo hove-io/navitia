@@ -82,7 +82,16 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(_get_arrivals(response), ['20120614T080222', '20120614T080435'])
         eq_(_get_used_vj(response), [['vjA'], []])
 
+        # no disruption yet
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 0)
+
         self.send_mock("vjA", "20120614", 'canceled')
+
+        # we should see the disruption
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
@@ -92,6 +101,9 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
         eq_(_get_used_vj(new_base), [['vjA'], []])
+        # see http://jira.canaltp.fr/browse/NAVP-266,
+        # _current_datetime is needed to make it working
+        #eq_(len(new_base['disruptions']), 1)
         assert new_base['journeys'] == response['journeys']
 
 

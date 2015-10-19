@@ -445,7 +445,7 @@ struct routing_api_data {
         b.data->build_raptor();
 
         b.data->build_proximity_list();
-        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_days);
+        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 365_days);
         b.data->compute_labels();
 
         //add bike sharing edges
@@ -509,8 +509,8 @@ struct routing_api_data {
 
     void add_disruptions() {
         nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
-        auto default_date = "20140101T000000"_dt;
-        auto default_period = boost::posix_time::time_period(default_date, "20140201T120000"_dt);
+        auto default_date = "20120801T000000"_dt;
+        auto default_period = boost::posix_time::time_period(default_date, "20120901T120000"_dt);
 
         auto info_severity = boost::make_shared<Severity>();
         info_severity->uri = "info";
@@ -567,6 +567,7 @@ struct routing_api_data {
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A";
             disruption->publication_period = default_period;
+            disruption->contributor = "contrib";
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad_again";
@@ -586,17 +587,17 @@ struct routing_api_data {
         }
 
         {
-            //we create another disruption on line A, but with different date to test the period filtering
-            // publication period is june to july 2015
-            // application period is split in 2, first half on june + first half of august 2015
+            //we create another disruption on line A, but with
+            //different date to test the period filtering
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A_but_later";
             disruption->publication_period = default_period;
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "later_impact";
-            impact->application_periods = {boost::posix_time::time_period("20150601T000000"_dt, "20150615T120000"_dt),
-                                          boost::posix_time::time_period("20150801T000000"_dt, "20150815T120000"_dt)};
+            impact->application_periods = {
+                boost::posix_time::time_period("20121001T000000"_dt, "20121015T120000"_dt),
+                boost::posix_time::time_period("20121201T000000"_dt, "20121215T120000"_dt)};
 
             impact->severity = info_severity;
 
@@ -613,10 +614,10 @@ struct routing_api_data {
         }
         {
             //we create another disruption on line A, but not publish at the same date as the other ones
-            //this one is published from the 28th of january
+            //this one is published from the 28th
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A_but_publish_later";
-            disruption->publication_period = boost::posix_time::time_period("20140128T120000"_dt, "20140201T120000"_dt);;
+            disruption->publication_period = boost::posix_time::time_period("20120828T120000"_dt, "20120901T120000"_dt);;
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "impact_published_later";
@@ -665,7 +666,7 @@ struct routing_api_data {
         }
 
         {
-            auto period = boost::posix_time::time_period("20150326T060000"_dt, "20150330T120000"_dt);
+            auto period = boost::posix_time::time_period("20130226T060000"_dt, "20130228T120000"_dt);
             //we create one disruption on line A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_route_A:0";
@@ -692,7 +693,7 @@ struct routing_api_data {
         }
 
         {
-            auto period = boost::posix_time::time_period("20150126T060000"_dt, "20150130T120000"_dt);
+            auto period = boost::posix_time::time_period("20130426T060000"_dt, "20130430T120000"_dt);
             //we create one disruption on line A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_route_A:0_and_line";

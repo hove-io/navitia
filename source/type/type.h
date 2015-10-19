@@ -112,7 +112,8 @@ enum class Type_e {
     Admin                           = 22,
     POIType                         = 23,
     Calendar                        = 24,
-    LineGroup                       = 25
+    LineGroup                       = 25,
+    MetaVehicleJourney              = 26
 };
 
 enum class Mode_e {
@@ -668,7 +669,7 @@ struct MetaVehicleJourney;
  *
  * The Route owns 2 differents list for the VJs
  */
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages {
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     const static Type_e type = Type_e::VehicleJourney;
     Route* route = nullptr;
     PhysicalMode* physical_mode = nullptr;
@@ -703,8 +704,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
 
-    VehicleJourney* theoric_vehicle_journey = nullptr;
-
     ValidityPattern* base_validity_pattern() const { return validity_patterns[RTLevel::Base]; }
     ValidityPattern* adapted_validity_pattern() const { return validity_patterns[RTLevel::Adapted]; }
     ValidityPattern* rt_validity_pattern() const { return validity_patterns[RTLevel::RealTime]; }
@@ -722,8 +721,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & name & uri & route & physical_mode & company & validity_patterns
             & idx & stop_time_list & realtime_level
-            & theoric_vehicle_journey & vehicle_journey_type
-            & odt_message & _vehicle_properties & impacts
+            & vehicle_journey_type
+            & odt_message & _vehicle_properties
             & next_vj & prev_vj
             & meta_vj & utc_to_local_offset
             & impacted_by;
@@ -979,8 +978,7 @@ struct Calendar : public Nameable, public Header {
  *
  *
  */
-struct MetaVehicleJourney {
-    //store the name ?
+struct MetaVehicleJourney: public Header, HasMessages {
     //TODO if needed use a flat_enum_map
     std::vector<VehicleJourney*> base_vj;
     std::vector<VehicleJourney*> adapted_vj;
@@ -991,7 +989,7 @@ struct MetaVehicleJourney {
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & base_vj & adapted_vj & real_time_vj & associated_calendars;
+        ar & idx & uri & base_vj & adapted_vj & real_time_vj & associated_calendars & impacts;
     }
 };
 

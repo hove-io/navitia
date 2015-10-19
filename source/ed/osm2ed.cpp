@@ -190,6 +190,7 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
 void OSMCache::build_relations_geometries() {
     for (const auto& relation : relations) {
         relation.build_geometry(*this);
+        if (relation.polygon.empty()) { continue; }
         boost::geometry::model::box<point> box;
         boost::geometry::envelope(relation.polygon, box);
         Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(),
@@ -204,10 +205,14 @@ void OSMCache::build_relations_geometries() {
 const OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
+    using relations = std::vector<const OSMRelation*>;
 
-    std::vector<OSMRelation*> result;
-    auto callback = [](const OSMRelation* rel, void* vec)->bool{
-        reinterpret_cast<std::vector<const OSMRelation*>*>(vec)->push_back(rel);
+    relations result;
+    auto callback = [](const OSMRelation* rel, void* c)->bool{
+        if (rel->level == 8) { // we want to match only cities
+            relations* context = reinterpret_cast<relations*>(c);
+            context->push_back(rel);
+        }
         return true;
     };
     admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
@@ -359,6 +364,7 @@ void OSMCache::insert_edges() {
  * Insert relations into the database
  */
 void OSMCache::insert_relations() {
+    auto logger = log4cplus::Logger::getInstance("log");
     lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;
     for (auto relation : relations) {
@@ -372,11 +378,12 @@ void OSMCache::insert_relations() {
                           std::to_string(relation.level), coord, polygon_str,
                           "admin:"+std::to_string(relation.osm_id)});
         } else {
+            LOG4CPLUS_WARN(logger, "admin " << relation.name << " id: " << relation.osm_id << " of level "
+                                  << relation.level << " won't be inserted since it has an empty polygon");
             ++nb_empty_polygons;
         }
     }
     lotus.finish_bulk_insert();
-    auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_INFO(logger, "Ignored " << std::to_string(nb_empty_polygons) 
             << " admins because their polygons were empty");
 }

@@ -157,12 +157,13 @@ typedef boost::variant<
     const StopPoint *,
     LineSection,
     const Line *,
-    const Route *
+    const Route *,
+    const MetaVehicleJourney *
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,
                   const std::string &uri,
-                  const PT_Data& pt_data,
+                  PT_Data& pt_data,
                   const boost::shared_ptr<Impact> &impact = {});
 
 struct Disruption;
@@ -228,7 +229,8 @@ struct Tag {
 
 struct Disruption {
     std::string uri;
-
+    // Provider of the disruption
+    std::string contributor;
     // it's the title of the disruption as shown in the backoffice
     std::string reference;
 
@@ -255,7 +257,7 @@ struct Disruption {
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & uri & reference & publication_period
-           & created_at & updated_at & cause & impacts & localization & tags & note;
+           & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 
     void add_impact(const boost::shared_ptr<Impact>& impact);

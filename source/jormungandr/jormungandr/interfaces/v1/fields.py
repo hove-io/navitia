@@ -404,6 +404,10 @@ validity_pattern = {
     'days': fields.String(),
 }
 
+trip = {
+    'id': fields.String(attribute="uri"),
+}
+
 code = {
     "type": fields.String(),
     "value": fields.String()
@@ -452,6 +456,7 @@ disruption_marshaller = {
     "messages": NonNullList(NonNullNested(disruption_message)),
     "uri": fields.String(),
     "disruption_uri": fields.String(),
+    "contributor": fields.String()
 }
 
 

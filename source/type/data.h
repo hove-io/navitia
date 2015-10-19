@@ -74,7 +74,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 44; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version; //< Data version number. *INCREMENT* in cpp file
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
@@ -131,12 +131,14 @@ public:
     // before.
     mutable std::atomic<bool> is_connected_to_rabbitmq;
 
+    mutable std::atomic<bool> is_realtime_loaded;
+
     Data(size_t data_identifier=0);
     ~Data();
 
     friend class boost::serialization::access;
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq & is_realtime_loaded;
     }
     template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
@@ -225,5 +227,3 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
 
 
 }} //namespace navitia::type
-
-BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)

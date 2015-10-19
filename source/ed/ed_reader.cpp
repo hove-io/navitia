@@ -765,10 +765,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             vj->validity_patterns[RTLevel::RealTime] = vj->validity_patterns[RTLevel::Base];
         }
 
-        if(!const_it["theoric_vehicle_journey_id"].is_null()){
-            vj->theoric_vehicle_journey = vehicle_journey_map[const_it["theoric_vehicle_journey_id"].as<idx_t>()];
-        }
-
         if (const_it["wheelchair_accessible"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
         }
@@ -868,15 +864,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
 
-        nt::MetaVehicleJourney* meta_vj;
-
-        auto it_mvj = data.pt_data->meta_vj.find(name);
-        if (it_mvj == data.pt_data->meta_vj.end()) {
-            meta_vj = new nt::MetaVehicleJourney();
-            data.pt_data->meta_vj.insert({name, meta_vj});
-        } else {
-            meta_vj = it_mvj->second;
-        }
+        nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_or_create(name);
 
         const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
         const auto vj_it = vehicle_journey_map.find(vj_idx);
@@ -910,13 +898,11 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
-        nt::MetaVehicleJourney* meta_vj;
-        auto it_mvj = data.pt_data->meta_vj.find(name);
-        if (it_mvj == data.pt_data->meta_vj.end()) {
+        nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_mut(name);
+        if (meta_vj == nullptr) {
             LOG4CPLUS_ERROR(log, "Impossible to find the meta vj " << name << ", we won't add associated calendar");
             continue;
         }
-        meta_vj = it_mvj->second;
 
         int associated_calendar_idx = const_it["associated_calendar_id"].as<idx_t>();
         nt::AssociatedCalendar* associated_calendar;

@@ -134,6 +134,12 @@ namespace navitia {
             if (!start_date.is_null()) {
                 period->set_start(start_date.template as<uint64_t>());
             }
+
+            auto contributor = const_it["contributor"];
+            if (disruption && !contributor.is_null()){
+                disruption->set_contributor(contributor.template as<std::string>());
+            }
+
             auto end_date = const_it["disruption_end_publication_date"];
             if (!end_date.is_null()) {
                 period->set_end(end_date.template as<uint64_t>());

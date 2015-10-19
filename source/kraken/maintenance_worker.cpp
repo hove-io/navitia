@@ -60,17 +60,28 @@ void MaintenanceWorker::load(){
         auto data = data_manager.get_data();
         data->meta->instance_name = conf.instance_name();
     }
-    if(conf.is_realtime_enabled()){
-        load_realtime();
-    }
+    load_realtime();
 }
 
 
 void MaintenanceWorker::load_realtime(){
+    if(!conf.is_realtime_enabled()){
+        return;
+    }
+    if(!channel){
+        data_manager.get_data()->is_realtime_loaded = false;
+        throw std::runtime_error("not connected to rabbitmq");
+    }
+    if(data_manager.get_data()->is_realtime_loaded){
+        //realtime data are already loaded, we don't have anything todo
+        LOG4CPLUS_TRACE(logger, "realtime data already loaded, skipping init");
+        return;
+    }
+    data_manager.get_data()->is_realtime_loaded = false;
     LOG4CPLUS_INFO(logger, "loading realtime data");
     //                                             name, passive, durable, exclusive, auto_delete
     std::string queue_name = channel->DeclareQueue("", false, false, true, true);
-    LOG4CPLUS_DEBUG(logger, "queue use for as callback for realtime data: " << queue_name);
+    LOG4CPLUS_DEBUG(logger, "queue used as callback for realtime data: " << queue_name);
     pbnavitia::Task task;
     task.set_action(pbnavitia::LOAD_REALTIME);
     auto* lr = task.mutable_load_realtime();
@@ -78,6 +89,9 @@ void MaintenanceWorker::load_realtime(){
     for(auto topic: conf.rt_topics()){
         lr->add_contributors(topic);
     }
+    auto data = data_manager.get_data();
+    lr->set_begin_date(bg::to_iso_string(data->meta->production_date.begin()));
+    lr->set_end_date(bg::to_iso_string(data->meta->production_date.end()));
     std::string stream;
     task.SerializeToString(&stream);
     auto message = AmqpClient::BasicMessage::Create(stream);
@@ -89,10 +103,10 @@ void MaintenanceWorker::load_realtime(){
     //waiting for a full gtfs-rt
     if(channel->BasicConsumeMessage(consumer_tag, envelope, conf.kirin_timeout())){
         this->handle_rt_in_batch({envelope});
+        data_manager.get_data()->is_realtime_loaded = true;
     }else{
         LOG4CPLUS_WARN(logger, "no realtime data receive before timeout: going without it!");
     }
-
 }
 
 
@@ -100,6 +114,7 @@ void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "Starting background thread");
 
     try{
+        this->load_realtime();
         this->listen_rabbitmq();
     }catch(const std::runtime_error& ex){
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -109,6 +124,8 @@ void MaintenanceWorker::operator()(){
     while(true){
         try{
             this->init_rabbitmq();
+            //we try to load realtime data in case of rabbitmq problems previously
+            this->load_realtime();
             this->listen_rabbitmq();
         }catch(const std::runtime_error& ex){
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -164,7 +181,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if(entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-                handle_realtime(entity.trip_update(), *data);
+                handle_realtime(entity.id(),
+                                navitia::from_posix_timestamp(feed_message.header().timestamp()),
+                                entity.trip_update(),
+                                *data);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
             }
@@ -293,7 +313,12 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, krak
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
         data_manager.get_data()->is_connected_to_rabbitmq = false;
     }
-    load();
+    try{
+        load();
+    }catch(const std::runtime_error& ex){
+        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+        data_manager.get_data()->is_connected_to_rabbitmq = false;
+    }
 }
 
 }

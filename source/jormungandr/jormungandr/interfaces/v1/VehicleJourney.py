@@ -44,4 +44,5 @@ vehicle_journey = {
     "codes": NonNullList(NonNullNested(fields.code)),
     "validity_pattern": NonNullProtobufNested(fields.validity_pattern),
     "calendars": NonNullList(NonNullNested(calendar)),
+    "trip": NonNullProtobufNested(fields.trip),
 }

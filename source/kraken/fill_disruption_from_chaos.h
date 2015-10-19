@@ -38,6 +38,9 @@ www.navitia.io
 
 namespace navitia {
 
+boost::posix_time::time_period
+execution_period(const boost::gregorian::date& date, const nt::VehicleJourney& vj);
+
 void add_disruption(const chaos::Disruption& chaos_disruption,
                     navitia::type::PT_Data& pt_data,
                     const navitia::type::MetaData& meta);

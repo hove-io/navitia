@@ -1,3 +1,34 @@
+navitia2 (1.28.0) unstable; urgency=low
+
+  * jormun: fix a enormous bug in the retry of loading realtime  <https://github.com/CanalTP/navitia/pull/1217>
+  * kraken: add production period in call to load_realtime  <https://github.com/CanalTP/navitia/pull/1216>
+  * Kraken: correcting compilation and warning  <https://github.com/CanalTP/navitia/pull/1215>
+  * jormun: remove the ability to search an object in all coverage  <https://github.com/CanalTP/navitia/pull/1214>
+  * jormun: handle bad format of date  <https://github.com/CanalTP/navitia/pull/1213>
+  * kraken: retry loading of realtime data if it fail the first time  <https://github.com/CanalTP/navitia/pull/1212>
+  * Timetable: Pr thermometer algorithm issue 1159  <https://github.com/CanalTP/navitia/pull/1211>
+  * Jormun: implement magic algo and tests  <https://github.com/CanalTP/navitia/pull/1210>
+  * RT: Create a disruption when we receive a realtime trip update  <https://github.com/CanalTP/navitia/pull/1209>
+  * Ed: add docker tests on gtfs fixture  <https://github.com/CanalTP/navitia/pull/1208>
+  * All: print vj.trip.id  <https://github.com/CanalTP/navitia/pull/1207>
+  * osm2ed: add a log for admins with an empty shape  <https://github.com/CanalTP/navitia/pull/1206>
+  * Ed: limit validity pattern split over dst  <https://github.com/CanalTP/navitia/pull/1204>
+  * kraken: Manage contributor  <https://github.com/CanalTP/navitia/pull/1203>
+  * Type: obj_factory for meta_vj  <https://github.com/CanalTP/navitia/pull/1202>
+  * Build: change default build behaviour, use Release  <https://github.com/CanalTP/navitia/pull/1201>
+  * Osm: fix crash on debug and way merge  <https://github.com/CanalTP/navitia/pull/1200>
+  * Doc: add depth parameter  <https://github.com/CanalTP/navitia/pull/1199>
+  * Doc: remove old and useless french documentation  <https://github.com/CanalTP/navitia/pull/1198>
+  * TimeTable: Fix /departures and /arrivals  <https://github.com/CanalTP/navitia/pull/1197>
+  * Doc: remove useless doxygen file  <https://github.com/CanalTP/navitia/pull/1196>
+  * Update integration.rst  <https://github.com/CanalTP/navitia/pull/1195>
+  * Jormun: sorting by duration was in the wrong order  <https://github.com/CanalTP/navitia/pull/1194>
+  * Build: retrieving newly merged PR only  <https://github.com/CanalTP/navitia/pull/1193>
+  * kraken: only cancel vj that are canceled  <https://github.com/CanalTP/navitia/pull/1192>
+  * Raptor: remove second pass filter for test purpose  <https://github.com/CanalTP/navitia/pull/1190>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Mon, 19 Oct 2015 09:10:46 +0100
+
 navitia2 (1.27.1) unstable; urgency=low
 
   * Ed: for the GTFS create one route by line and direction_id  <https://github.com/CanalTP/navitia/pull/1205> 

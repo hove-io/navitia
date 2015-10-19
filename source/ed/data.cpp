@@ -98,9 +98,8 @@ void Data::build_block_id() {
     );
 
     types::VehicleJourney* prev_vj = nullptr;
-    for(auto* vj : vehicle_journeys) {
-        if(prev_vj && prev_vj->block_id != "" &&
-           prev_vj->block_id == vj->block_id){
+    for (auto* vj : vehicle_journeys) {
+        if (prev_vj && prev_vj->block_id != "" && prev_vj->block_id == vj->block_id) {
             //NOTE: we do nothing for vj with empty stop times, they will be removed in the clean()
             if (! vj->stop_time_list.empty() && ! prev_vj->stop_time_list.empty()) {
 
@@ -578,8 +577,8 @@ void Data::build_associated_calendar() {
     size_t nb_matched(0);
     size_t nb_ignored(0);
 
-    for(auto meta_vj_pair : meta_vj_map) {
-        auto& meta_vj = meta_vj_map[meta_vj_pair.first]; //meta_vj_pair.second;
+    for(auto& meta_vj_pair : meta_vj_map) {
+        auto& meta_vj = meta_vj_pair.second;
 
         assert (! meta_vj.theoric_vj.empty());
 
