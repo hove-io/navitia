@@ -51,6 +51,8 @@ pt_object_type = {
     'line_group': type_pb2.LINE_GROUP
 }
 
+PSEUDO_DURATION_FACTORS = ((1, -1, 'departure_date_time'), (-1, 1, 'arrival_date_time'))
+
 
 def compare(obj1, obj2, compare_generator):
     """
@@ -286,3 +288,46 @@ def fill_uris(resp):
                 uris.commercial_mode = pt_infos.uris.commercial_mode
                 uris.physical_mode = pt_infos.uris.physical_mode
                 uris.network = pt_infos.uris.network
+
+
+def get_pseudo_duration(journey, requested_dt, is_clockwise):
+    f1, f2, attr = PSEUDO_DURATION_FACTORS[is_clockwise]
+    return f1 * requested_dt + f2 * getattr(journey, attr)
+
+
+def gen_all_combin(n, t):
+    """
+
+    :param n: number of elements in the whole set
+    :param t: number of choices
+    :return: iterator
+
+    This function is used to generate all possible unordered combinations
+    Combination = {c_1, c_2, ..., c_t |  all c_t belongs to S }
+    where S is a set whose card(S) = n, c_t are indexes of elements in S (c as choice)
+
+    The function is a implementation of the algorithm L from the book of DONALD E.KNUTH's
+    <The art of computer programming> Section7.2.1.3
+
+    Example:
+    Given 4 elements, list all possible unordered combinations when choosing 3 elements
+    >>> list(gen_all_combin(4, 3))
+    [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
+
+    """
+    import numpy as np
+    # c is an array of choices
+    c = np.ones(t+2, dtype=int).tolist()
+    # init
+    for i in range(1, t+1):
+        c[i-1] = i - 1
+    c[t] = n
+    c[t+1] = 0
+    j = 0
+    while j < t:
+        yield c[0:-2]
+        j = 0
+        while (c[j] + 1) == c[j+1]:
+            c[j] = j
+            j += 1
+        c[j] += 1

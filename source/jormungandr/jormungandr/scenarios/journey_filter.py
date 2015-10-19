@@ -30,14 +30,14 @@ from itertools import izip
 import logging
 import itertools
 import datetime
-from jormungandr.scenarios.utils import compare
+from jormungandr.scenarios.utils import compare, get_pseudo_duration
 from navitiacommon import response_pb2
 
 #we can't use reverse(enumerate(list)) without creating a temporary list, so we define our own reverse enumerate
 reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
 
-def _delete_journeys(responses, request):
+def delete_journeys(responses, request):
 
     if request.get('debug', False):
         return
@@ -73,7 +73,7 @@ def filter_journeys(response_list, instance, request, original_request):
 
     _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
-    _delete_journeys(response_list, request)
+    delete_journeys(response_list, request)
 
     return response_list
 
@@ -107,7 +107,7 @@ def _to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
-def _mark_as_dead(journey, *reasons):
+def mark_as_dead(journey, *reasons):
     journey.tags.append('to_delete')
     for reason in reasons:
         journey.tags.append('deleted_because_' + reason)
@@ -132,7 +132,7 @@ def _filter_similar_journeys(journeys, request):
                                                                                 j2.internal_id,
                                                                                 worst.internal_id))
 
-            _mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
+            mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
@@ -158,12 +158,10 @@ def way_later(journey, asap_journey, original_request):
 
     """
     requested_dt = original_request['datetime']
-    if original_request.get('clockwise', True):
-        pseudo_asap_duration = asap_journey.arrival_date_time - requested_dt
-        pseudo_journey_duration = journey.arrival_date_time - requested_dt
-    else:
-        pseudo_asap_duration = requested_dt - asap_journey.departure_date_time
-        pseudo_journey_duration = requested_dt - journey.departure_date_time
+    is_clockwise = original_request.get('clockwise', True)
+
+    pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
+    pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
 
     max_factor = 3  #TODO get it in instance
     base_factor = 60*60  #TODO get it in instance, for the moment 1h
@@ -197,7 +195,7 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j.internal_id, asap_journey.internal_id))
 
-            _mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
+            mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
 
 
 def similar_journeys_generator(journey):
