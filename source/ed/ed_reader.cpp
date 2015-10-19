@@ -1141,7 +1141,7 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
     }
 }
 
-void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
+void EdReader::fill_house_numbers(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -1158,6 +1158,9 @@ void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
                 way->add_house_number(hn);
             }
         }
+    }
+    for(auto way: data.geo_ref->ways){
+        way->sort_house_numbers();
     }
 }
 

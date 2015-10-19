@@ -53,12 +53,15 @@ namespace navitia{ namespace georef{
 
 void Way::add_house_number(const HouseNumber& house_number){
     if (house_number.number % 2 == 0){
-            this->house_number_right.push_back(house_number);
-            std::sort(this->house_number_right.begin(),this->house_number_right.end());
+        this->house_number_right.push_back(house_number);
     } else{
         this->house_number_left.push_back(house_number);
-        std::sort(this->house_number_left.begin(),this->house_number_left.end());
     }
+}
+
+void Way::sort_house_numbers(){
+    std::sort(this->house_number_right.begin(),this->house_number_right.end());
+    std::sort(this->house_number_left.begin(),this->house_number_left.end());
 }
 
 std::string Way::get_label() const {
