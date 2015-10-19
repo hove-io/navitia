@@ -58,6 +58,7 @@ void MaintenanceWorker::load(){
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
     if(this->data_manager.load(database, chaos_database, contributors)){
         auto data = data_manager.get_data();
+        data->is_realtime_loaded = false;
         data->meta->instance_name = conf.instance_name();
     }
     load_realtime();

@@ -53,7 +53,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.nb_threads", po::value<int>()->default_value(1), "number of workers threads")
         ("GENERAL.is_realtime_enabled", po::value<bool>()->default_value(false),
                                         "enable loading of realtime data")
-        ("GENERAL.kirin_timeout", po::value<int>()->default_value(10000),
+        ("GENERAL.kirin_timeout", po::value<int>()->default_value(60000),
                                   "timeout in ms for loading realtime data from kirin")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
