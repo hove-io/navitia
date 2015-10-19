@@ -1,3 +1,10 @@
+navitia2 (1.28.1) unstable; urgency=low
+
+  * Ed: sort house number only one times  <https://github.com/CanalTP/navitia/pull/1222>
+  * Kraken: fix activation of full RT load  <https://github.com/CanalTP/navitia/pull/1221>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 19 Oct 2015 18:10:37 +0100
+
 navitia2 (1.28.0) unstable; urgency=low
 
   * jormun: fix a enormous bug in the retry of loading realtime  <https://github.com/CanalTP/navitia/pull/1217>

@@ -79,7 +79,7 @@ Data::Data(size_t data_identifier) :
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
-    is_realtime_loaded = true;
+    is_realtime_loaded = false;
 }
 
 Data::~Data(){}
