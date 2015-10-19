@@ -155,6 +155,8 @@ public:
     }
     std::string get_label() const;
 
+    void sort_house_numbers();
+
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     template <typename Stream, typename G>
     void print(Stream& stream, const G& g){
