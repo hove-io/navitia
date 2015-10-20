@@ -133,7 +133,8 @@ HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
     }
 
     for (const MetaVehicleJourney* mvj: it_vj_set->second) {
-        for (const auto& vect_vj: {mvj->base_vj, mvj->adapted_vj, mvj->real_time_vj}) {
+        for (const std::vector<navitia::type::VehicleJourney*>& vect_vj:
+                {std::ref(mvj->base_vj), std::ref(mvj->adapted_vj), std::ref(mvj->real_time_vj)}) {
             for (const VehicleJourney* vj: vect_vj) {
                 if (has_headsign_or_name(*vj, headsign)) {
                     res.push_back(vj);
