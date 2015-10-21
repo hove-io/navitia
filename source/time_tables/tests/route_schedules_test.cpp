@@ -362,16 +362,16 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  * The dataset in LOCAL TIME (france) is:
  *
  *      vj1    vj2    vj3
- * S1  00:50  01:05  01:15
- * S2  01:50  02:05  02:15
- * S3  02:50  03:05  03:15
+ * S1  00:50  01:50  02:50
+ * S2  01:05  02:05  03:05
+ * S3  01:15  02:15  03:15
  *
  * The small catch is that there is 2 hours UTC shift, thus vj1 and vj2 validity pattern's are shifted the day before:
  *
  *      vj1    vj2    vj3
- * S1  22:50  23:05  23:15
- * S2  23:50  00:05  00:15
- * S3  00:50  01:05  01:15
+ * S1  22:50  23:50  00:50
+ * S2  23:05  00:05  01:05
+ * S3  23:15  00:15  01:15
  *
  */
 struct CalWithDSTFixture {
@@ -380,11 +380,11 @@ struct CalWithDSTFixture {
     CalWithDSTFixture() {
         auto normal_vp = "111111";
         auto shifted_vp = "111110";
-        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:50"_t)("S3", "00:50"_t)
+        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t)
                 .vj->utc_to_local_offset = "02:00"_t;
-        b.vj("B", shifted_vp)("S1", "23:05"_t)("S2", "00:05"_t)("S3", "01:05"_t)
+        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t)
                 .vj->utc_to_local_offset = "02:00"_t;
-        b.vj("B", normal_vp)("S1", "23:15"_t)("S2", "00:15"_t)("S3", "01:15"_t)
+        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t)
                 .vj->utc_to_local_offset = "02:00"_t;
 
         auto cal = new navitia::type::Calendar();
@@ -418,9 +418,9 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp, CalWith
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     boost::sort(res);
-    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"00:50"_t, "01:50"_t, "02:50"_t}));
-    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
-    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"00:50"_t, "01:05"_t, "01:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:50"_t, "02:05"_t, "02:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"02:50"_t, "03:05"_t, "03:15"_t}));
 }
 
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour, CalWithDSTFixture) {
@@ -437,10 +437,10 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
     auto one_day = "24:00"_t;
     boost::sort(res);
     //both are after the asked time (1h), so they are on the following day
-    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
-    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"01:50"_t, "02:05"_t, "02:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"02:50"_t, "03:05"_t, "03:15"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt),
-            vec_dt({"00:50"_t + one_day, "01:50"_t + one_day, "02:50"_t + one_day}));
+            vec_dt({"00:50"_t + one_day, "01:05"_t + one_day, "01:15"_t + one_day}));
 }
 
 
