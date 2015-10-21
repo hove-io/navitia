@@ -1,3 +1,10 @@
+navitia2 (1.28.2) unstable; urgency=low
+
+  * Kraken: update librabbitmq-c and SimpleAmqpClient  <https://github.com/CanalTP/navitia/pull/1227>
+  * Jormun: fix an encoding bug in logs   <https://github.com/CanalTP/navitia/pull/1226>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Wed, 21 Oct 2015 18:10:45 +0100
+
 navitia2 (1.28.1) unstable; urgency=low
 
   * Ed: sort house number only one times  <https://github.com/CanalTP/navitia/pull/1222>
