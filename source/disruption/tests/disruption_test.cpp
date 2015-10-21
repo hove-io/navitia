@@ -67,10 +67,10 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 namespace pt = boost::posix_time;
-using navitia::type::new_disruption::Impact;
-using navitia::type::new_disruption::PtObj;
-using navitia::type::new_disruption::Disruption;
-using navitia::type::new_disruption::Severity;
+using navitia::type::disruption::Impact;
+using navitia::type::disruption::PtObj;
+using navitia::type::disruption::Disruption;
+using navitia::type::disruption::Severity;
 
 struct DisruptionCreator {
     std::string uri;
@@ -97,7 +97,7 @@ public:
     u_int64_t end_date;
 
     void add_disruption(DisruptionCreator disrupt, nt::PT_Data& pt_data) {
-        nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
+        nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
         auto disruption = std::make_unique<Disruption>();
         disruption->uri = disrupt.uri;

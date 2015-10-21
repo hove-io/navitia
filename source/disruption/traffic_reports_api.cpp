@@ -39,7 +39,7 @@ namespace navitia { namespace disruption {
 
 namespace { // anonymous namespace
 
-using DisruptionSet = std::set<boost::shared_ptr<type::new_disruption::Impact>, Less>;
+using DisruptionSet = std::set<boost::shared_ptr<type::disruption::Impact>, Less>;
 
 struct NetworkDisrupt {
     type::idx_t idx;

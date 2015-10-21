@@ -58,10 +58,10 @@ std::string VehicleJourney::get_direction() const {
     return "";
 }
 
-std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
+std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);
@@ -80,9 +80,9 @@ std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_applicab
 
 }
 
-std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_publishable_messages(
+std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_messages(
             const boost::posix_time::ptime& current_time) const{
-    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);

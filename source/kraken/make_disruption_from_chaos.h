@@ -42,7 +42,7 @@ namespace navitia {
  *
  * The disruption is registered in pt_data
  */
-const std::unique_ptr<type::new_disruption::Disruption>&
+const std::unique_ptr<type::disruption::Disruption>&
 make_disruption(const chaos::Disruption& chaos_disruption, type::PT_Data& pt_data);
 
 /*

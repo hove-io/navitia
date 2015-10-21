@@ -42,7 +42,7 @@ namespace navitia {
 boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::VehicleJourney& vj);
 
-void apply_disruption(const std::unique_ptr<type::new_disruption::Disruption>&,
+void apply_disruption(const std::unique_ptr<type::disruption::Disruption>&,
                       navitia::type::PT_Data&,
                       const navitia::type::MetaData&);
 

@@ -60,22 +60,22 @@ static void cancel_vj(type::MetaVehicleJourney* meta_vj,
     }
 }
 
-static boost::shared_ptr<nt::new_disruption::Severity>
+static boost::shared_ptr<nt::disruption::Severity>
 make_no_service_severity(const boost::posix_time::ptime& timestamp,
-                         nt::new_disruption::DisruptionHolder& holder) {
+                         nt::disruption::DisruptionHolder& holder) {
     // Yeah, that's quite hardcodded...
     const std::string id = "kraken:rt:no_service";
     auto& weak_severity = holder.severities[id];
     if (auto severity = weak_severity.lock()) { return severity; }
 
-    auto severity = boost::make_shared<nt::new_disruption::Severity>();
+    auto severity = boost::make_shared<nt::disruption::Severity>();
     severity->uri = id;
     severity->wording = "trip canceled!";
     severity->created_at = timestamp;
     severity->updated_at = timestamp;
     severity->color = "#000000";
     severity->priority = 42;
-    severity->effect = nt::new_disruption::Effect::NO_SERVICE;
+    severity->effect = nt::disruption::Effect::NO_SERVICE;
 
     weak_severity = severity;
     return severity;
@@ -99,12 +99,12 @@ create_disruption(const std::string& id,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
-    nt::new_disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
+    nt::disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
-    auto disruption = std::make_unique<nt::new_disruption::Disruption>();
+    auto disruption = std::make_unique<nt::disruption::Disruption>();
     disruption->uri = id;
     disruption->reference = disruption->uri;
     disruption->publication_period = data.meta->production_period();
@@ -112,7 +112,7 @@ create_disruption(const std::string& id,
     disruption->updated_at = timestamp;
     // cause
     {// impact
-        auto impact = boost::make_shared<nt::new_disruption::Impact>();
+        auto impact = boost::make_shared<nt::disruption::Impact>();
         impact->uri = disruption->uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;

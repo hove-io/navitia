@@ -66,7 +66,7 @@ typedef navitia::idx_t idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
-namespace new_disruption {
+namespace disruption {
 struct Impact;
 }
 
@@ -288,11 +288,11 @@ struct hasVehicleProperties {
 
 struct HasMessages{
 protected:
-    mutable std::vector<boost::weak_ptr<new_disruption::Impact>> impacts;
+    mutable std::vector<boost::weak_ptr<disruption::Impact>> impacts;
 public:
-    void add_impact(const boost::shared_ptr<new_disruption::Impact>& i) {impacts.push_back(i);}
+    void add_impact(const boost::shared_ptr<disruption::Impact>& i) {impacts.push_back(i);}
 
-    std::vector<boost::shared_ptr<new_disruption::Impact>> get_applicable_messages(
+    std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
             const boost::posix_time::time_period& action_period) const;
 
@@ -302,16 +302,16 @@ public:
 
     bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
 
-    std::vector<boost::shared_ptr<new_disruption::Impact>> get_publishable_messages(
+    std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
             const boost::posix_time::ptime& current_time) const;
 
 
-    std::vector<boost::weak_ptr<new_disruption::Impact>> get_impacts() const {
+    std::vector<boost::weak_ptr<disruption::Impact>> get_impacts() const {
         return impacts;
     }
 
-    void remove_impact(const boost::shared_ptr<new_disruption::Impact>& impact) {
-        auto it = std::find_if(impacts.begin(), impacts.end(),[&impact](const boost::weak_ptr<new_disruption::Impact>& i) {
+    void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
+        auto it = std::find_if(impacts.begin(), impacts.end(),[&impact](const boost::weak_ptr<disruption::Impact>& i) {
             return i.lock() == impact;
         });
         if (it != impacts.end()) {
@@ -688,7 +688,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
-    std::vector<boost::weak_ptr<new_disruption::Impact>> impacted_by;
+    std::vector<boost::weak_ptr<disruption::Impact>> impacted_by;
 
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;

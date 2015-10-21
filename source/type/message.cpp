@@ -38,7 +38,7 @@ namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
 
-namespace navitia { namespace type { namespace new_disruption {
+namespace navitia { namespace type { namespace disruption {
 
 bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 

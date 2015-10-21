@@ -49,12 +49,12 @@ namespace bg = boost::gregorian;
 namespace {
 
 struct apply_impacts_visitor : public boost::static_visitor<> {
-    boost::shared_ptr<nt::new_disruption::Impact> impact;
+    boost::shared_ptr<nt::disruption::Impact> impact;
     nt::PT_Data& pt_data;
     const nt::MetaData& meta;
     std::string action;
 
-    apply_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
+    apply_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action) :
         impact(impact), pt_data(pt_data), meta(meta), action(action) {}
 
@@ -73,7 +73,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                         "Finished to " << action << " impact " << impact.get()->uri << " on object " << uri);
     }
 
-    void operator()(nt::new_disruption::UnknownPtObj&) {
+    void operator()(nt::disruption::UnknownPtObj&) {
     }
 
     void operator()(const nt::Network* network) {
@@ -84,7 +84,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         this->log_end_action(network->uri);
     }
 
-    void operator()(nt::new_disruption::LineSection & ls) {
+    void operator()(nt::disruption::LineSection & ls) {
         std::string uri = "line section (" +  ls.line->uri  + ")";
         this->log_start_action(uri);
         this->operator()(ls.line);
@@ -118,7 +118,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 };
 
 struct add_impacts_visitor : public apply_impacts_visitor {
-    add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
+    add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "add") {}
 
@@ -163,9 +163,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 };
 
-void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::disruption::Impact>impact,
                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
-    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
+    if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
         return;
     }
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
@@ -180,7 +180,7 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
 struct delete_impacts_visitor : public apply_impacts_visitor {
     size_t nb_vj_reassigned = 0;
 
-    delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+    delete_impacts_visitor(boost::shared_ptr<nt::disruption::Impact> impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         apply_impacts_visitor(impact, pt_data, meta, "delete") {}
 
@@ -195,7 +195,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         ++ nb_vj_reassigned;
         const auto& impact = this->impact;
         boost::range::remove_erase_if(vj.impacted_by,
-            [&impact](const boost::weak_ptr<nt::new_disruption::Impact>& i) {
+            [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
                 auto spt = i.lock();
                 return (spt) ? spt == impact : true;
         });
@@ -220,9 +220,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     }
 };
 
-void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+void delete_impact(boost::shared_ptr<nt::disruption::Impact>impact,
                           nt::PT_Data& pt_data, const nt::MetaData& meta) {
-    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
+    if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
         return;
     }
     auto log = log4cplus::Logger::getInstance("log");
@@ -239,14 +239,14 @@ void delete_disruption(const std::string& disruption_id,
                        const nt::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
-    nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
+    nt::disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
     auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
-            [&disruption_id](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
+            [&disruption_id](const std::unique_ptr<nt::disruption::Disruption>& disruption){
                 return disruption->uri == disruption_id;
             });
     if (it != holder.disruptions.end()) {
-        std::vector<nt::new_disruption::PtObj> informed_entities;
+        std::vector<nt::disruption::PtObj> informed_entities;
         for (const auto& impact : (*it)->get_impacts()) {
             informed_entities.insert(informed_entities.end(),
                               impact->informed_entities.begin(),
@@ -258,7 +258,7 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, disruption_id << " disruption deleted");
 }
 
-void apply_disruption(const std::unique_ptr<type::new_disruption::Disruption>& disruption, nt::PT_Data& pt_data,
+void apply_disruption(const std::unique_ptr<type::disruption::Disruption>& disruption, nt::PT_Data& pt_data,
                     const navitia::type::MetaData &meta) {
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption->uri);
     for (const auto& impact: disruption->get_impacts()) {

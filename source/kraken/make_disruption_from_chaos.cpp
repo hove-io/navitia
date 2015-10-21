@@ -36,14 +36,14 @@ namespace bt = boost::posix_time;
 
 namespace navitia {
 
-static boost::shared_ptr<nt::new_disruption::Tag>
-make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Tag>
+make_tag(const chaos::Tag& chaos_tag, nt::disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_tag = holder.tags[chaos_tag.id()];
     if (auto tag = weak_tag.lock()) { return tag; }
 
-    auto tag = boost::make_shared<nt::new_disruption::Tag>();
+    auto tag = boost::make_shared<nt::disruption::Tag>();
     tag->uri = chaos_tag.id();
     tag->name = chaos_tag.name();
     tag->created_at = from_posix(chaos_tag.created_at());
@@ -53,14 +53,14 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     return tag;
 }
 
-static boost::shared_ptr<nt::new_disruption::Cause>
-make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Cause>
+make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_cause = holder.causes[chaos_cause.id()];
     if (auto cause = weak_cause.lock()) { return cause; }
 
-    auto cause = boost::make_shared<nt::new_disruption::Cause>();
+    auto cause = boost::make_shared<nt::disruption::Cause>();
     cause->uri = chaos_cause.id();
     cause->wording = chaos_cause.wording();
     cause->created_at = from_posix(chaos_cause.created_at());
@@ -89,10 +89,10 @@ boost::posix_time::time_period execution_period(const boost::gregorian::date& da
             bt::ptime(date, bt::seconds(last_arrival)));
 }
 
-static boost::shared_ptr<nt::new_disruption::Severity>
-make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Severity>
+make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
     namespace tr = transit_realtime;
-    namespace new_disr = nt::new_disruption;
+    namespace new_disr = nt::disruption;
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_severity = holder.severities[chaos_severity.id()];
@@ -126,17 +126,17 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     return severity;
 }
 
-static boost::optional<nt::new_disruption::LineSection>
+static boost::optional<nt::disruption::LineSection>
 make_line_section(const chaos::PtObject& chaos_section,
                   nt::PT_Data& pt_data,
-                  const boost::shared_ptr<nt::new_disruption::Impact>& impact) {
+                  const boost::shared_ptr<nt::disruption::Impact>& impact) {
     if (!chaos_section.has_pt_line_section()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
                        "fill_disruption_from_chaos: LineSection invalid!");
         return boost::none;
     }
     const auto& pb_section = chaos_section.pt_line_section();
-    nt::new_disruption::LineSection line_section;
+    nt::disruption::LineSection line_section;
     auto* line = find_or_default(pb_section.line().uri(), pt_data.lines_map);
     if (line) {
         line_section.line = line;
@@ -166,11 +166,11 @@ make_line_section(const chaos::PtObject& chaos_section,
     return line_section;
 }
 
-static std::vector<nt::new_disruption::PtObj>
+static std::vector<nt::disruption::PtObj>
 make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
                 nt::PT_Data& pt_data,
-                const boost::shared_ptr<nt::new_disruption::Impact>& impact = {}) {
-    using namespace nt::new_disruption;
+                const boost::shared_ptr<nt::disruption::Impact>& impact = {}) {
+    using namespace nt::disruption;
 
     std::vector<PtObj> res;
     for (const auto& chaos_pt_object: chaos_pt_objects) {
@@ -207,33 +207,33 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
     return res;
 }
 
-static std::set<nt::new_disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
-    std::set<navitia::type::new_disruption::ChannelType> res;
+static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
+    std::set<navitia::type::disruption::ChannelType> res;
     for (const auto channel_type: chaos_channel.types()){
         switch(channel_type){
         case chaos::Channel_Type_web:
-            res.insert(nt::new_disruption::ChannelType::web);
+            res.insert(nt::disruption::ChannelType::web);
             break;
         case chaos::Channel_Type_sms:
-            res.insert(nt::new_disruption::ChannelType::sms);
+            res.insert(nt::disruption::ChannelType::sms);
             break;
         case chaos::Channel_Type_email:
-            res.insert(nt::new_disruption::ChannelType::email);
+            res.insert(nt::disruption::ChannelType::email);
             break;
         case chaos::Channel_Type_mobile:
-            res.insert(nt::new_disruption::ChannelType::mobile);
+            res.insert(nt::disruption::ChannelType::mobile);
             break;
         case chaos::Channel_Type_notification:
-            res.insert(nt::new_disruption::ChannelType::notification);
+            res.insert(nt::disruption::ChannelType::notification);
             break;
         case chaos::Channel_Type_twitter:
-            res.insert(nt::new_disruption::ChannelType::twitter);
+            res.insert(nt::disruption::ChannelType::twitter);
             break;
         case chaos::Channel_Type_facebook:
-            res.insert(nt::new_disruption::ChannelType::facebook);
+            res.insert(nt::disruption::ChannelType::facebook);
             break;
         case chaos::Channel_Type_unkown_type:
-            res.insert(nt::new_disruption::ChannelType::unknown_type);
+            res.insert(nt::disruption::ChannelType::unknown_type);
             break;
         default:
             throw navitia::exception("Unhandled ChannelType value in Chaos.Proto");
@@ -242,12 +242,12 @@ static std::set<nt::new_disruption::ChannelType> create_channel_types(const chao
     return res;
 }
 
-static boost::shared_ptr<nt::new_disruption::Impact>
+static boost::shared_ptr<nt::disruption::Impact>
 make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     auto from_posix = navitia::from_posix_timestamp;
-    nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
+    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto impact = boost::make_shared<nt::new_disruption::Impact>();
+    auto impact = boost::make_shared<nt::disruption::Impact>();
     impact->uri = chaos_impact.id();
     impact->created_at = from_posix(chaos_impact.created_at());
     impact->updated_at = from_posix(chaos_impact.updated_at());
@@ -273,14 +273,14 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return impact;
 }
 
-const std::unique_ptr<type::new_disruption::Disruption>&
+const std::unique_ptr<type::disruption::Disruption>&
 make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     auto from_posix = navitia::from_posix_timestamp;
-    nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
+    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto disruption = std::make_unique<nt::new_disruption::Disruption>();
+    auto disruption = std::make_unique<nt::disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
 
     if (chaos_disruption.has_contributor()){
