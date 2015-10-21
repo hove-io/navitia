@@ -452,6 +452,11 @@ class Scenario(simple.Scenario):
         req.journeys.streetnetwork_params.destination_mode = self.destination_modes[0]
         resp = instance.send_and_receive(req)
 
+        if not request['debug']:
+            # on isochrone we can filter the number of max journeys
+            if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
+                del resp.journeys[request["max_nb_journeys"]:]
+
         return resp
 
     def _remove_not_long_enough_fallback(self, resp, instance):
