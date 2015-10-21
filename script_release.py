@@ -42,6 +42,10 @@ class ReleaseManager:
         self.str_version = ""
         self.latest_tag = ""
 
+        # if API rate limit exceeded use, get 'personal access token' on github then provide:
+        # self.auth = ('user', 'pass')
+        self.auth = None
+
     def get_new_version_number(self):
         latest_version = None
         last_tag = self.git.describe('--tags', abbrev=0)
@@ -97,10 +101,10 @@ class ReleaseManager:
         page = 1
         while True:
             query = "https://api.github.com/repos/CanalTP/navitia/" \
-                    "pulls?state=closed&head={latest_tag}&sort=updated&direction=desc&page={page}"\
+                    "pulls?state=closed&base=dev&sort=updated&direction=desc&page={page}"\
                     .format(latest_tag=self.latest_tag, page=page)
             print "query github api: " + query
-            github_response = requests.get(query)
+            github_response = requests.get(query, auth=self.auth)
 
             if github_response.status_code != 200:
                 message = github_response.json()['message']
@@ -127,7 +131,7 @@ class ReleaseManager:
             # test if PR was merged (not simply closed)
             # and if distant/release contains HEAD of PR
             # (stops after 10 successive merged PR)
-            if pr['merged_at'] :
+            if pr['merged_at']:
                 branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
                 # adding separators before and after to match only branch name
                 release_branch_name = '  ' + self.remote_name + '/release\n'
@@ -136,10 +140,19 @@ class ReleaseManager:
                     if nb_successive_merged_pr >= 10:
                         break
                 else:
-                    lines.append(u'  * {title}  <{url}>\n'.format(title=title, url=url))
-                    print lines[-1]
-                    nb_successive_merged_pr = 0
+                    # doing the label search as late as possible to save api calls
+                    has_excluded_label = False
+                    label_query = pr['_links']['issue']['href'] + '/labels'
+                    labels = requests.get(label_query, auth=self.auth).json()
+                    if any(label['name'] == "hotfix" for label in labels):
+                        has_excluded_label = True
+                    if any(label['name'] == "not_in_changelog" for label in labels):
+                        has_excluded_label = True
 
+                    if not has_excluded_label:
+                        lines.append(u'  * {title}  <{url}>\n'.format(title=title, url=url))
+                        print lines[-1]
+                        nb_successive_merged_pr = 0
         return lines
 
     def create_changelog(self):
