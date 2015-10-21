@@ -35,7 +35,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "pqxx/result.hxx"
 #include "type/chaos.pb.h"
-#include "fill_disruption_from_chaos.h"
+#include "make_disruption_from_chaos.h"
 
 
 namespace navitia {
@@ -125,7 +125,7 @@ namespace navitia {
         template<typename T>
         void fill_disruption(T const_it) {
             if (disruption) {
-                add_disruption(*disruption, pt_data, meta);
+                make_and_apply_disruption(*disruption, pt_data, meta);
             }
             disruption = std::make_unique<chaos::Disruption>();
             FILL_TIMESTAMPMIXIN(disruption)

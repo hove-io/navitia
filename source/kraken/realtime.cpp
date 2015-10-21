@@ -32,7 +32,7 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
-#include "kraken/fill_disruption_from_chaos.h"
+#include "kraken/apply_disruption.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>

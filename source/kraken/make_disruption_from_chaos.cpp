@@ -1,50 +1,40 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-
-#include "fill_disruption_from_chaos.h"
+#include "make_disruption_from_chaos.h"
+#include "apply_disruption.h"
 #include "utils/logger.h"
-#include "type/datetime.h"
-
 #include <boost/make_shared.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp"
+
+namespace bt = boost::posix_time;
 
 namespace navitia {
-
-namespace nt = navitia::type;
-namespace bt = boost::posix_time;
-namespace bg = boost::gregorian;
 
 static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
@@ -175,6 +165,7 @@ make_line_section(const chaos::PtObject& chaos_section,
     if (impact) line->add_impact(impact);
     return line_section;
 }
+
 static std::vector<nt::new_disruption::PtObj>
 make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
                 nt::PT_Data& pt_data,
@@ -282,230 +273,12 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return impact;
 }
 
-
-namespace {
-
-struct apply_impacts_visitor : public boost::static_visitor<> {
-    boost::shared_ptr<nt::new_disruption::Impact> impact;
-    nt::PT_Data& pt_data;
-    const nt::MetaData& meta;
-    std::string action;
-
-    apply_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action) :
-        impact(impact), pt_data(pt_data), meta(meta), action(action) {}
-
-    virtual ~apply_impacts_visitor() {}
-    apply_impacts_visitor(const apply_impacts_visitor&) = default;
-
-    virtual bool func_on_vj(nt::VehicleJourney&) = 0;
-
-    void log_start_action(std::string uri) {
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "Start to " << action << " impact " << impact.get()->uri << " on object " << uri);
-    }
-
-    void log_end_action(std::string uri) {
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "Finished to " << action << " impact " << impact.get()->uri << " on object " << uri);
-    }
-
-    void operator()(nt::new_disruption::UnknownPtObj&) {
-    }
-
-    void operator()(const nt::Network* network) {
-        this->log_start_action(network->uri);
-        for(auto line : network->line_list) {
-            this->operator()(line);
-        }
-        this->log_end_action(network->uri);
-    }
-
-    void operator()(nt::new_disruption::LineSection & ls) {
-        std::string uri = "line section (" +  ls.line->uri  + ")";
-        this->log_start_action(uri);
-        this->operator()(ls.line);
-        this->log_end_action(uri);
-    }
-
-    void operator()(const nt::Line* line) {
-        this->log_start_action(line->uri);
-        for(auto route : line->route_list) {
-            this->operator()(route);
-        }
-        this->log_end_action(line->uri);
-    }
-
-    void operator()(const nt::Route* route) {
-        this->log_start_action(route->uri);
-        route->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
-                return func_on_vj(vj);
-        });
-        this->log_end_action(route->uri);
-    }
-
-    void operator()(const nt::MetaVehicleJourney* mvj) {
-        this->log_start_action(mvj->uri);
-        for (auto* vj: mvj->base_vj) { func_on_vj(*vj); }
-        for (auto* vj: mvj->adapted_vj) { func_on_vj(*vj); }
-        for (auto* vj: mvj->real_time_vj) { func_on_vj(*vj); }
-        this->log_end_action(mvj->uri);
-    }
-
-};
-
-struct add_impacts_visitor : public apply_impacts_visitor {
-    add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        apply_impacts_visitor(impact, pt_data, meta, "add") {}
-
-    ~add_impacts_visitor() {}
-    add_impacts_visitor(const add_impacts_visitor&) = default;
-
-    using apply_impacts_visitor::operator();
-
-    bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern tmp_vp(*vj.adapted_validity_pattern());
-        for (auto period : impact->application_periods) {
-            //we can impact a vj with a departure the day before who past midnight
-            bg::day_iterator titr(period.begin().date() - bg::days(1));
-            for(;titr<=period.end().date(); ++titr) {
-                if (!meta.production_date.contains(*titr)) {
-                    continue;
-                }
-                auto day = (*titr - meta.production_date.begin()).days();
-                if (!tmp_vp.check(day)){
-                    continue;
-                }
-                if(period.intersects(execution_period(*titr, vj))) {
-                    tmp_vp.remove(day);
-                }
-            }
-        }
-        vj.validity_patterns[nt::RTLevel::Adapted] = pt_data.get_or_create_validity_pattern(tmp_vp);
-        vj.impacted_by.push_back(impact);
-        return true;
-    }
-
-    void operator()(const nt::StopPoint* stop_point) {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                        "Disruption on stop point:" + stop_point->uri + " is not handled");
-
-    }
-
-    void operator()(const nt::StopArea* stop_area) {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                              "Disruption on stop area:" + stop_area->uri + " is not handled");
-
-    }
-};
-
-void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-                         nt::PT_Data& pt_data, const nt::MetaData& meta) {
-    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
-        return;
-    }
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "Adding impact: " << impact.get()->uri);
-    add_impacts_visitor v(impact, pt_data, meta);
-    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " impact added");
-}
-
-
-struct delete_impacts_visitor : public apply_impacts_visitor {
-    size_t nb_vj_reassigned = 0;
-
-    delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        apply_impacts_visitor(impact, pt_data, meta, "delete") {}
-
-    ~delete_impacts_visitor() {}
-
-    using apply_impacts_visitor::operator();
-
-    // We set all the validity pattern to the theorical one, we will re-apply
-    // other disruptions after
-    bool func_on_vj(nt::VehicleJourney& vj) {
-        vj.validity_patterns[nt::RTLevel::Adapted] = vj.validity_patterns[nt::RTLevel::Base];
-        ++ nb_vj_reassigned;
-        const auto& impact = this->impact;
-        boost::range::remove_erase_if(vj.impacted_by,
-            [&impact](const boost::weak_ptr<nt::new_disruption::Impact>& i) {
-                auto spt = i.lock();
-                return (spt) ? spt == impact : true;
-        });
-        for (auto i: vj.impacted_by) {
-            if (auto spt = i.lock()) {
-                auto v = add_impacts_visitor(spt, pt_data, meta);
-                v.func_on_vj(vj);
-            }
-        }
-        return true;
-    }
-
-    void operator()(const nt::StopPoint* stop_point) {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                        "Deletion of disruption on stop point:" + stop_point->uri + " is not handled");
-
-    }
-
-    void operator()(const nt::StopArea* stop_area) {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                        "Deletion of disruption on stop point:" + stop_area->uri + " is not handled");
-    }
-};
-
-void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
-    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
-        return;
-    }
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Deleting impact: " << impact.get()->uri);
-    delete_impacts_visitor v(impact, pt_data, meta);
-    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " deleted");
-}
-
-} // anonymous namespace
-
-void delete_disruption(const std::string& disruption_id,
-                       nt::PT_Data& pt_data,
-                       const nt::MetaData& meta) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Deleting disruption: " << disruption_id);
-    nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
-
-    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
-            [&disruption_id](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
-                return disruption->uri == disruption_id;
-            });
-    if(it != holder.disruptions.end()) {
-        std::vector<nt::new_disruption::PtObj> informed_entities;
-        for (const auto& impact : (*it)->get_impacts()) {
-            informed_entities.insert(informed_entities.end(),
-                              impact->informed_entities.begin(),
-                              impact->informed_entities.end());
-            delete_impact(impact, pt_data, meta);
-        }
-        holder.disruptions.erase(it);
-    }
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    disruption_id << " disruption deleted");
-}
-
-void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
-                    const navitia::type::MetaData &meta) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Adding disruption: " << chaos_disruption.id());
+const std::unique_ptr<type::new_disruption::Disruption>&
+make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data) {
+    auto log = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     auto from_posix = navitia::from_posix_timestamp;
-    nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
-
-    //we delete the disrupion before adding the new one
-    delete_disruption(chaos_disruption.id(), pt_data, meta);
+    nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
@@ -525,7 +298,6 @@ void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_d
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
         auto impact = make_impact(chaos_impact, pt_data);
         disruption->add_impact(impact);
-        apply_impact(impact, pt_data, meta);
     }
     disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
@@ -534,8 +306,19 @@ void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_d
     disruption->note = chaos_disruption.note();
 
     holder.disruptions.push_back(std::move(disruption));
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    chaos_disruption.id() << " disruption added");
+    LOG4CPLUS_DEBUG(log, chaos_disruption.id() << " disruption added");
+
+    return holder.disruptions.back();
 }
 
-} // namespace navitia
+void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
+                    navitia::type::PT_Data& pt_data,
+                    const navitia::type::MetaData& meta) {
+    //we delete the disrupion before adding the new one
+    delete_disruption(chaos_disruption.id(), pt_data, meta);
+
+    const auto& disruption = make_disruption(chaos_disruption, pt_data);
+
+    apply_disruption(disruption, pt_data, meta);
+}
+}

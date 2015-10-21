@@ -35,15 +35,16 @@ www.navitia.io
 #include "type/chaos.pb.h"
 #include "type/gtfs-realtime.pb.h"
 #include "type/meta_data.h"
+#include <memory>
 
 namespace navitia {
 
 boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::VehicleJourney& vj);
 
-void add_disruption(const chaos::Disruption& chaos_disruption,
-                    navitia::type::PT_Data& pt_data,
-                    const navitia::type::MetaData& meta);
+void apply_disruption(const std::unique_ptr<type::new_disruption::Disruption>&,
+                      navitia::type::PT_Data&,
+                      const navitia::type::MetaData&);
 
 void delete_disruption(const std::string& disruption_id,
                        nt::PT_Data& pt_data,
