@@ -193,7 +193,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20131219T155000"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1, 10, 0, "network.uri=network:R", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
@@ -219,7 +219,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20131224T125000"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1, 10, 0, "network.uri=network:K", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
@@ -240,7 +240,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20131221T085000"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1 ,10 ,0 , "line.uri=line:S", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
@@ -265,7 +265,7 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20140101T0900"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -273,7 +273,7 @@ BOOST_FIXTURE_TEST_CASE(Test1, Params) {
 BOOST_FIXTURE_TEST_CASE(Test2, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20131226T0900"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE(Test4, Params) {
     std::cout << "bob 4?" << std::endl;
     std::vector<std::string> forbidden_uris;
     auto dt = "20130203T0900"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1 , 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -300,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(Test4, Params) {
 BOOST_FIXTURE_TEST_CASE(Test5, Params) {
     std::vector<std::string> forbidden_uris;
     auto dt = "20130212T0900"_pts;
-    pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
+    pbnavitia::Response resp = navitia::disruption::traffic_reports(*(b.data),
             dt, 1, 10, 0, "", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);

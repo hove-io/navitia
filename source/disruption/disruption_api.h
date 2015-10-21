@@ -35,11 +35,11 @@ www.navitia.io
 
 namespace navitia { namespace disruption {
 
-pbnavitia::Response disruptions(const navitia::type::Data& d,
-                                uint64_t now_dt,
-                                const size_t depth,
-                                size_t count,
-                                size_t start_page, const std::string& filter,
-                                const std::vector<std::string>& forbidden_uris);
+pbnavitia::Response traffic_reports(const navitia::type::Data& d,
+                                    uint64_t now_dt,
+                                    const size_t depth,
+                                    size_t count,
+                                    size_t start_page, const std::string& filter,
+                                    const std::vector<std::string>& forbidden_uris);
 }}
 

@@ -37,7 +37,7 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace disruption {
 
-pbnavitia::Response disruptions(const navitia::type::Data& d,
+pbnavitia::Response traffic_reports(const navitia::type::Data& d,
                                 uint64_t posix_now_dt,
                                 const size_t depth,
                                 size_t count,

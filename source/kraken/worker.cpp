@@ -216,7 +216,7 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
-    return navitia::disruption::disruptions(*data,
+    return navitia::disruption::traffic_reports(*data,
                                                 request._current_datetime(),
                                                 request.depth(),
                                                 request.count(),
