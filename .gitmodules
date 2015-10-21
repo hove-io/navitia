@@ -6,7 +6,7 @@
 	url = git@github.com:CanalTP/libosmpbfreader.git
 [submodule "source/third_party/SimpleAmqpClient"]
 	path = source/third_party/SimpleAmqpClient
-	url = git@github.com:kinnou02/SimpleAmqpClient.git
+	url = git@github.com:canaltp/SimpleAmqpClient.git
 [submodule "source/third_party/librabbitmq-c"]
 	path = source/third_party/librabbitmq-c
 	url = git@github.com:alanxz/rabbitmq-c.git
