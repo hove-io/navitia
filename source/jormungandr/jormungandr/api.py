@@ -60,7 +60,8 @@ def output_json(data, code, headers=None):
 @app.after_request
 def access_log(response, *args, **kwargs):
     logger = logging.getLogger('jormungandr.access')
-    logger.info('"%s %s" %s', request.method, request.full_path, response.status_code)
+    query_string = request.query_string.decode(request.url_charset, 'replace')
+    logger.info(u'"%s %s?%s" %s', request.method, request.path, query_string, response.status_code)
     return response
 
 
