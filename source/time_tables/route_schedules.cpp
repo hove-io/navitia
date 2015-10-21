@@ -48,12 +48,12 @@ namespace navitia { namespace timetables {
 
 std::vector<std::vector<datetime_stop_time> >
 get_all_route_stop_times(const nt::Route* route,
-                   const DateTime& date_time,
-                   const DateTime& max_datetime,
-                   const size_t max_stop_date_times,
-                   const type::Data& d,
-                   const type::RTLevel rt_level,
-                   const boost::optional<const std::string> calendar_id) {
+                         const DateTime& date_time,
+                         const DateTime& max_datetime,
+                         const size_t max_stop_date_times,
+                         const type::Data& d,
+                         const type::RTLevel rt_level,
+                         const boost::optional<const std::string> calendar_id) {
     std::vector<std::vector<datetime_stop_time> > result;
 
     const auto& journey_patterns =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
@@ -278,8 +278,8 @@ route_schedule(const std::string& filter,
     for (const auto& route_idx: routes_idx) {
         auto route = d.pt_data->routes[route_idx];
         auto stop_times = get_all_route_stop_times(route, handler.date_time,
-                                             handler.max_datetime, max_stop_date_times,
-                                             d, rt_level, calendar_id);
+                                                   handler.max_datetime, max_stop_date_times,
+                                                   d, rt_level, calendar_id);
         const auto& jps =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
         std::vector<vector_idx> stop_points;
         for (const auto& jp_idx : jps) {

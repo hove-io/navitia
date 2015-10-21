@@ -229,7 +229,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("routes/line:A:0/route_schedules?calendar=week_cal")
 
         assert "route_schedules" in response
-        # the route_schedule with calendar should not have avec date (only time)
+        # the route_schedule with calendar should not have with date (only time)
         is_valid_route_schedule(response["route_schedules"], only_time=True)
 
     def test_with_wrong_type(self):

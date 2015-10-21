@@ -212,7 +212,7 @@ struct route_schedule_calendar_fixture {
         save_cal(c4);
 
         auto a1 = new navitia::type::AssociatedCalendar;
-        a1->calendar = c2;
+        a1->calendar = c1;
         b.data->pt_data->associated_calendars.push_back(a1);
         auto a2 = new navitia::type::AssociatedCalendar;
         a2->calendar = c2;
@@ -244,7 +244,6 @@ struct route_schedule_calendar_fixture {
             BOOST_REQUIRE_EQUAL(get_vj(route_schedule, i), expected_vjs[i]);
         }
     }
-
 };
 
 BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
@@ -258,23 +257,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
     check_calendar_results(c4->uri, {});
 }
 
-#define BOOST_CHECK_EQUAL_RANGE(range1, range2) \
-    { \
-        const auto& r1 = range1; \
-        const auto& r2 = range2; \
-        BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
-    }
-
-struct AllRouteSTSorter {
-    // order of the get_all_route_stop_times is not important
-    // so we sort it for the check by first datetime
-    bool operator()(const std::vector<ntt::datetime_stop_time>& v1,
-                    const std::vector<ntt::datetime_stop_time>& v2) const {
-        // by construction vect cannot be empty
-        return v1.front().first < v2.front().first;
-    }
-};
-
 namespace ba = boost::adaptors;
 using vec_dt = std::vector<navitia::DateTime>;
 navitia::DateTime get_dt(const ntt::datetime_stop_time& p) { return p.first; }
@@ -286,13 +268,13 @@ navitia::DateTime get_dt(const ntt::datetime_stop_time& p) { return p.first; }
  *        VJ5     VJ6
  *    S1  10:00   11:00
  *    S2  10:30   11:30
- *    s3  11:00   12:00
+ *    S3  11:00   12:00
  * NOTE: this is in UTC and since we ask with a calendar we want local time
- * is schedule is:
+ * Thus the schedule is:
  *        VJ5     VJ6
  *    S1  12:00   13:00
  *    S2  12:30   13:30
- *    s3  13:00   14:00
+ *    S3  13:00   14:00
 */
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_calendar_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("B:0");
@@ -305,7 +287,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_c
                                                              {c2->uri});
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
-    boost::sort(res, AllRouteSTSorter());
+    boost::sort(res);
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"12:00"_t, "12:30"_t, "13:00"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
 }
@@ -318,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_c
  *    S2  12:30+1   13:30
  *    s3  13:00+1   14:00
  *
- * the +1 day is used so the folowing sort will sort the result in a correct way
+ * the +1 day is used so the following sort will sort the result in a correct way
  */
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_schedule_calendar_fixture) {
     const auto* route = b.data->pt_data->routes_map.at("B:0");
@@ -333,7 +315,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_s
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
     auto one_day = "24:00"_t;
-    boost::sort(res, AllRouteSTSorter());
+    boost::sort(res);
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
             vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
@@ -365,7 +347,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     auto one_day = "24:00"_t;
-    boost::sort(res, AllRouteSTSorter());
+    boost::sort(res);
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
             vec_dt({"13:00"_t, "13:37"_t, "14:00"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
@@ -384,7 +366,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  * S2  01:50  02:05  02:15
  * S3  02:50  03:05  03:15
  *
- * The small catch is that there is 2 hours UTC shift, thus vj1 and vj2 validity pattern's are shift the day before:
+ * The small catch is that there is 2 hours UTC shift, thus vj1 and vj2 validity pattern's are shifted the day before:
  *
  *      vj1    vj2    vj3
  * S1  22:50  23:05  23:15
@@ -435,7 +417,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp, CalWith
 
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
-    boost::sort(res, AllRouteSTSorter());
+    boost::sort(res);
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"00:50"_t, "01:50"_t, "02:50"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
@@ -453,7 +435,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     auto one_day = "24:00"_t;
-    boost::sort(res, AllRouteSTSorter());
+    boost::sort(res);
     //both are after the asked time (1h), so they are on the following day
     BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"01:05"_t, "02:05"_t, "03:05"_t}));
     BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:15"_t, "02:15"_t, "03:15"_t}));
