@@ -359,7 +359,8 @@ def test_similar_journeys_test3():
 
     journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
 
-    assert journey2 in journeys_gen(responses)
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' in journey2.tags
 
 
 def test_similar_journeys_different_transfer():
@@ -390,7 +391,33 @@ def test_similar_journeys_different_transfer():
 
     journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
 
-    assert journey2 in journeys_gen(responses)
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' in journey2.tags
+
+
+def test_similar_journeys_walking_bike():
+    """
+    If we have 2 direct path, one walking and one by bike, we should
+     not filter any journey
+    """
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.duration = 42
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Walking
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.duration = 42
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.STREET_NETWORK
+    journey2.sections[-1].street_network.mode = response_pb2.Bike
+
+    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' not in journey2.tags
 
 
 class MockInstance(object):
