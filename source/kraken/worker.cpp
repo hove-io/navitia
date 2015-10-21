@@ -39,7 +39,7 @@ www.navitia.io
 #include "time_tables/next_passages.h"
 #include "time_tables/previous_passages.h"
 #include "time_tables/departure_boards.h"
-#include "disruption/disruption_api.h"
+#include "disruption/traffic_reports_api.h"
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"

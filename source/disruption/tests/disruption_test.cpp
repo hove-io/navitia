@@ -31,7 +31,7 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_disruption
 #include <boost/test/unit_test.hpp>
-#include "disruption/disruption_api.h"
+#include "disruption/traffic_reports_api.h"
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include <boost/make_shared.hpp>
