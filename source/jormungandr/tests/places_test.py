@@ -50,6 +50,10 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(response['places'])
         assert(response['places'][0]['name'] == "42 rue kb (Condom)")
 
+    def test_places_invalid_encoding(self):
+        _, status = self.query_no_assert(b'/v1/coverage/main_routing_test/places/?q=ch\xe2teau')
+        assert(status != 500)
+
     def test_places_do_not_loose_precision(self):
         """do we have a good precision given back in the id"""
 
