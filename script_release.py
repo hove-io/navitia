@@ -144,9 +144,7 @@ class ReleaseManager:
                     has_excluded_label = False
                     label_query = pr['_links']['issue']['href'] + '/labels'
                     labels = requests.get(label_query, auth=self.auth).json()
-                    if any(label['name'] == "hotfix" for label in labels):
-                        has_excluded_label = True
-                    if any(label['name'] == "not_in_changelog" for label in labels):
+                    if any(label['name'] in ("hotfix", "not_in_changelog") for label in labels):
                         has_excluded_label = True
 
                     if not has_excluded_label:
@@ -283,6 +281,7 @@ class ReleaseManager:
 
         if self.release_type == "hotfix":
             print "now time to do your actual hotfix!"
+            print "PLEASE check that \"release\" COMPILES and TESTS!"
             print "Note: you'll have to merge/tag/push manually after your fix:"
             print "  git checkout release"
             print "  git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
