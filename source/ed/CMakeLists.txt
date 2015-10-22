@@ -15,13 +15,13 @@ SET(BOOST_LIBS ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
 FIND_LIBRARY(OSMPBF osmpbf)
 
 add_executable(osm2ed osm2ed.cpp)
-target_link_libraries(osm2ed transportation_data_import ed connectors types pq pqxx ${OSMPBF} pb_lib utils
-    ${BOOST_LIBS} log4cplus z protobuf)
+target_link_libraries(osm2ed transportation_data_import ed connectors types ${PQXX_LIB} ${OSMPBF}
+  pb_lib utils ${BOOST_LIBS} log4cplus z protobuf)
 
 add_subdirectory(tests)
 
 add_library(transportation_data_import ed_persistor.cpp)
-target_link_libraries(transportation_data_import ed fare types pq pqxx data utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(transportation_data_import ed fare types ${PQXX_LIB} data utils ${BOOST_LIBS} log4cplus)
 
 add_executable(gtfs2ed gtfs2ed.cpp)
 target_link_libraries(gtfs2ed transportation_data_import connectors)
@@ -33,7 +33,7 @@ add_executable(fare2ed fare2ed.cpp)
 target_link_libraries(fare2ed transportation_data_import connectors)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
-target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare pb_lib
+target_link_libraries(ed2nav types connectors ${PQXX_LIB} data georef routing fare pb_lib
     utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
 
 add_subdirectory(connectors)

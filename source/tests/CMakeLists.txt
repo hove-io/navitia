@@ -1,4 +1,4 @@
-SET(ALL_LIBS workers ed disruption_api calendar_api zmq time_tables types autocomplete proximitylist
+SET(ALL_LIBS workers ed disruption_api calendar_api time_tables types autocomplete proximitylist
     ptreferential time_tables data routing fare georef utils SimpleAmqpClient
     rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES} protobuf)
 
