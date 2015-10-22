@@ -273,7 +273,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return impact;
 }
 
-const std::unique_ptr<type::disruption::Disruption>&
+const type::disruption::Disruption&
 make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
@@ -308,7 +308,7 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, chaos_disruption.id() << " disruption added");
 
-    return holder.disruptions.back();
+    return *holder.disruptions.back();
 }
 
 void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,

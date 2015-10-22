@@ -258,10 +258,10 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, disruption_id << " disruption deleted");
 }
 
-void apply_disruption(const std::unique_ptr<type::disruption::Disruption>& disruption, nt::PT_Data& pt_data,
+void apply_disruption(const type::disruption::Disruption& disruption, nt::PT_Data& pt_data,
                     const navitia::type::MetaData &meta) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption->uri);
-    for (const auto& impact: disruption->get_impacts()) {
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption.uri);
+    for (const auto& impact: disruption.get_impacts()) {
         apply_impact(impact, pt_data, meta);
     }
 }

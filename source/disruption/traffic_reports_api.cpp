@@ -313,4 +313,4 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
     return pb_response;
 }
 
-}}//namespace
+}}//namespace navitia::disruption
