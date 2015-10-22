@@ -40,11 +40,11 @@ www.navitia.io
 
 namespace ng = navitia::georef;
 
-using navitia::type::new_disruption::Disruption;
-using navitia::type::new_disruption::Impact;
-using navitia::type::new_disruption::Tag;
-using navitia::type::new_disruption::Severity;
-using navitia::type::new_disruption::ChannelType;
+using navitia::type::disruption::Disruption;
+using navitia::type::disruption::Impact;
+using navitia::type::disruption::Tag;
+using navitia::type::disruption::Severity;
+using navitia::type::disruption::ChannelType;
 
 struct test_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
@@ -508,7 +508,7 @@ struct routing_api_data {
 
 
     void add_disruptions() {
-        nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+        nt::disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
         auto default_date = "20120801T000000"_dt;
         auto default_period = boost::posix_time::time_period(default_date, "20120901T120000"_dt);
 

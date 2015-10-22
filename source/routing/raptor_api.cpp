@@ -119,8 +119,8 @@ static void set_length(pbnavitia::Section* pb_section) {
 }
 
 static void
-_update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disruption,
-                     type::new_disruption::Effect new_val) {
+_update_max_severity(boost::optional<type::disruption::Effect>& worst_disruption,
+                     type::disruption::Effect new_val) {
 
     //the effect are sorted, the first one is the worst one
     if (! worst_disruption || static_cast<size_t>(new_val) < static_cast<size_t>(*worst_disruption)) {
@@ -129,14 +129,14 @@ _update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disrup
 }
 
 template <typename T>
-void _update_max_impact_severity(boost::optional<type::new_disruption::Effect>& max, const T& pb_obj) {
+void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max, const T& pb_obj) {
     for (const auto& disruption: pb_obj.disruptions()) {
-        _update_max_severity(max, type::new_disruption::from_string(disruption.severity().effect()));
+        _update_max_severity(max, type::disruption::from_string(disruption.severity().effect()));
     }
 }
 
 static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
-    boost::optional<type::new_disruption::Effect> max_severity = boost::none;
+    boost::optional<type::disruption::Effect> max_severity = boost::none;
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
@@ -152,7 +152,7 @@ static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
     }
 
     if (max_severity) {
-        pb_journey->set_most_serious_disruption_effect(type::new_disruption::to_string(*max_severity));
+        pb_journey->set_most_serious_disruption_effect(type::disruption::to_string(*max_severity));
     }
 }
 

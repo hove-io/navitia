@@ -28,12 +28,64 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "disruption.h"
+#include "traffic_reports_api.h"
+#include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
-#include "type/data.h"
-#include <boost/range/algorithm/find_if.hpp>
+#include "utils/logger.h"
+
+namespace bt = boost::posix_time;
 
 namespace navitia { namespace disruption {
+
+namespace { // anonymous namespace
+
+using DisruptionSet = std::set<boost::shared_ptr<type::disruption::Impact>, Less>;
+
+struct NetworkDisrupt {
+    type::idx_t idx;
+    const type::Network* network = nullptr;
+    DisruptionSet network_disruptions;
+    //we use a vector of pair because we need to sort by the priority of the impacts
+    std::vector<std::pair<const type::Line*, DisruptionSet>> lines;
+    std::vector<std::pair<const type::StopArea*, DisruptionSet>> stop_areas;
+};
+
+class TrafficReport {
+private:
+    std::vector<NetworkDisrupt> disrupts;
+    log4cplus::Logger logger;
+
+    NetworkDisrupt& find_or_create(const type::Network* network);
+    void add_stop_areas(const std::vector<type::idx_t>& network_idx,
+                      const std::string& filter,
+                      const std::vector<std::string>& forbidden_uris,
+                      const type::Data &d,
+                      const boost::posix_time::ptime now);
+
+    void add_networks(const std::vector<type::idx_t>& network_idx,
+                      const type::Data &d,
+                      const boost::posix_time::ptime now);
+    void add_lines(const std::string& filter,
+                      const std::vector<std::string>& forbidden_uris,
+                      const type::Data &d,
+                      const boost::posix_time::ptime now);
+    void sort_disruptions();
+public:
+    TrafficReport(): logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))) {}
+
+    void disruptions_list(const std::string& filter,
+                    const std::vector<std::string>& forbidden_uris,
+                    const type::Data &d,
+                    const boost::posix_time::ptime now);
+
+    const std::vector<NetworkDisrupt>& get_disrupts() const {
+        return this->disrupts;
+    }
+
+    size_t get_disrupts_size() {
+        return this->disrupts.size();
+    }
+};
 
 static int min_priority(const DisruptionSet& disruptions){
     int min = std::numeric_limits<int>::max();
@@ -47,22 +99,22 @@ static int min_priority(const DisruptionSet& disruptions){
 }
 
 
-Disrupt& Disruption::find_or_create(const type::Network* network){
-    auto find_predicate = [&](const Disrupt& network_disrupt) {
+NetworkDisrupt& TrafficReport::find_or_create(const type::Network* network){
+    auto find_predicate = [&](const NetworkDisrupt& network_disrupt) {
         return network == network_disrupt.network;
     };
     auto it = boost::find_if(this->disrupts, find_predicate);
     if(it == this->disrupts.end()){
-        Disrupt dist;
+        NetworkDisrupt dist;
         dist.network = network;
         dist.idx = this->disrupts.size();
-        this->disrupts.push_back(dist);
+        this->disrupts.push_back(std::move(dist));
         return disrupts.back();
     }
     return *it;
 }
 
-void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
+void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data& d,
@@ -93,7 +145,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                 v.insert(v.end(), vsp.begin(), vsp.end());
             }
             if (!v.empty()){
-                Disrupt& dist = this->find_or_create(network);
+                NetworkDisrupt& dist = this->find_or_create(network);
                 auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
                     return item.first == stop_area;
                 };
@@ -108,7 +160,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
     }
 }
 
-void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
+void TrafficReport::add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
                       const boost::posix_time::ptime now){
 
@@ -122,13 +174,13 @@ void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
     }
 }
 
-void Disruption::add_lines(const std::string& filter,
+void TrafficReport::add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data& d,
                       const boost::posix_time::ptime now){
 
     std::vector<type::idx_t> line_list;
-    try{
+    try {
         line_list  = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
     } catch(const ptref::parsing_error &parse_error) {
         LOG4CPLUS_WARN(logger, "Disruption::add_lines : Unable to parse filter " + parse_error.more);
@@ -143,7 +195,7 @@ void Disruption::add_lines(const std::string& filter,
             v.insert(v.end(), vr.begin(), vr.end());
         }
         if (!v.empty()){
-            Disrupt& dist = this->find_or_create(line->network);
+            NetworkDisrupt& dist = this->find_or_create(line->network);
             auto find_predicate = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
                 return line == item.first;
             };
@@ -157,9 +209,8 @@ void Disruption::add_lines(const std::string& filter,
     }
 }
 
-void Disruption::sort_disruptions(){
-
-    auto sort_disruption = [&](const Disrupt& d1, const Disrupt& d2){
+void TrafficReport::sort_disruptions(){
+    auto sort_disruption = [&](const NetworkDisrupt& d1, const NetworkDisrupt& d2){
             return d1.network->idx < d2.network->idx;
     };
 
@@ -183,7 +234,7 @@ void Disruption::sort_disruptions(){
 
 }
 
-void Disruption::disruptions_list(const std::string& filter,
+void TrafficReport::disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data& d,
                         const boost::posix_time::ptime now){
@@ -195,12 +246,71 @@ void Disruption::disruptions_list(const std::string& filter,
     add_stop_areas(network_idx, filter, forbidden_uris, d, now);
     sort_disruptions();
 }
-const std::vector<Disrupt>& Disruption::get_disrupts() const{
-    return this->disrupts;
+
+} // anonymous namespace
+
+pbnavitia::Response traffic_reports(const navitia::type::Data& d,
+                                uint64_t posix_now_dt,
+                                const size_t depth,
+                                size_t count,
+                                size_t start_page,
+                                const std::string& filter,
+                                const std::vector<std::string>& forbidden_uris) {
+    pbnavitia::Response pb_response;
+
+    bt::ptime now_dt = bt::from_time_t(posix_now_dt);
+    auto action_period = bt::time_period(now_dt, bt::seconds(1));
+
+    TrafficReport result;
+    try {
+        result.disruptions_list(filter, forbidden_uris, d, now_dt);
+    } catch(const ptref::parsing_error& parse_error) {
+        fill_pb_error(pbnavitia::Error::unable_to_parse,
+                "Unable to parse filter" + parse_error.more, pb_response.mutable_error());
+        return pb_response;
+    } catch(const ptref::ptref_error& ptref_error) {
+        fill_pb_error(pbnavitia::Error::bad_filter,
+                "ptref : "  + ptref_error.more, pb_response.mutable_error());
+        return pb_response;
+    }
+
+    size_t total_result = result.get_disrupts_size();
+    std::vector<NetworkDisrupt> disrupts = paginate(result.get_disrupts(), count, start_page);
+    for (const NetworkDisrupt& dist: disrupts) {
+        pbnavitia::Disruptions* pb_disruption = pb_response.add_disruptions();
+        pbnavitia::Network* pb_network = pb_disruption->mutable_network();
+        for(const auto& impact: dist.network_disruptions){
+            fill_message(*impact, d, pb_network, depth-1, now_dt, action_period);
+        }
+        navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
+        for (const auto& line_item: dist.lines) {
+            pbnavitia::Line* pb_line = pb_disruption->add_lines();
+            navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
+            for(const auto& impact: line_item.second){
+                fill_message(*impact, d, pb_line, depth-1, now_dt, action_period);
+            }
+        }
+        for (const auto& sa_item: dist.stop_areas) {
+            pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
+            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
+                                    bt::not_a_date_time, action_period, false);
+            for(const auto& impact: sa_item.second){
+                fill_message(*impact, d, pb_stop_area, depth-1, now_dt, action_period);
+            }
+        }
+    }
+    auto pagination = pb_response.mutable_pagination();
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(pb_response.disruptions_size());
+
+    if (pb_response.disruptions_size() == 0) {
+        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this disruption",
+        pb_response.mutable_error());
+        pb_response.set_response_type(pbnavitia::NO_SOLUTION);
+    }
+    return pb_response;
 }
 
-size_t Disruption::get_disrupts_size(){
-    return this->disrupts.size();
-}
-
-}}
+}}//namespace navitia::disruption

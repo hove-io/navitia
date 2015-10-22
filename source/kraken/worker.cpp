@@ -39,7 +39,7 @@ www.navitia.io
 #include "time_tables/next_passages.h"
 #include "time_tables/previous_passages.h"
 #include "time_tables/departure_boards.h"
-#include "disruption/disruption_api.h"
+#include "disruption/traffic_reports_api.h"
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
@@ -216,7 +216,7 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
-    return navitia::disruption::disruptions(*data,
+    return navitia::disruption::traffic_reports(*data,
                                                 request._current_datetime(),
                                                 request.depth(),
                                                 request.count(),

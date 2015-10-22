@@ -1,14 +1,17 @@
-add_library(fill_disruption_from_chaos fill_disruption_from_chaos.cpp)
-target_link_libraries(fill_disruption_from_chaos data pb_lib protobuf)
+add_library(apply_disruption apply_disruption.cpp)
+target_link_libraries(apply_disruption data pb_lib protobuf)
+
+add_library(make_disruption_from_chaos make_disruption_from_chaos.cpp)
+target_link_libraries(make_disruption_from_chaos apply_disruption data pb_lib protobuf)
 
 add_library(rt_handling realtime.cpp)
 target_link_libraries(rt_handling data pb_lib protobuf)
 
 add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp)
-target_link_libraries(workers fill_disruption_from_chaos rt_handling pq pqxx SimpleAmqpClient disruption_api calendar_api ptreferential autocomplete georef
+target_link_libraries(workers apply_disruption make_disruption_from_chaos rt_handling pq pqxx SimpleAmqpClient disruption_api calendar_api ptreferential autocomplete georef
   routing time_tables tcmalloc)
 add_library(fill_disruption_from_database fill_disruption_from_database.cpp)
-target_link_libraries(fill_disruption_from_database fill_disruption_from_chaos data types pb_lib pq pqxx ${Boost_SERIALIZATION_LIBRARY} ${Boost_FORMAT_LIBRARY} protobuf)
+target_link_libraries(fill_disruption_from_database make_disruption_from_chaos data types pb_lib pq pqxx ${Boost_SERIALIZATION_LIBRARY} ${Boost_FORMAT_LIBRARY} protobuf)
 
 add_executable(kraken kraken_zmq.cpp)
 target_link_libraries(kraken workers zmq types proximitylist

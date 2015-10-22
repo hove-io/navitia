@@ -54,7 +54,7 @@ www.navitia.io
 
 namespace navitia { namespace type {
 
-namespace new_disruption {
+namespace disruption {
 
 enum class Effect {
   NO_SERVICE = 0,
