@@ -160,4 +160,4 @@ class TestOverlappingCoverage(AbstractTestFixture):
         """
         response, error_code = self.query_no_assert("/v1/coord/-0.9;-0.9", display=True)
         assert error_code == 404
-        assert set(response['regions']) == {"empty_routing_test", "main_routing_test"}
+        assert response['regions'] == ["empty_routing_test", "main_routing_test"]

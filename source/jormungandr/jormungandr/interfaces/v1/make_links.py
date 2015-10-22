@@ -93,17 +93,17 @@ class generate_links(object):
     def prepare_objetcs(self, objects, hasCollections=False):
         if isinstance(objects, tuple):
             objects = objects[0]
-        if "links" not in objects:
+        if not "links" in objects.keys():
             objects["links"] = []
         elif hasattr(self, "collections"):
             for link in objects["links"]:
-                if "type" in link:
+                if "type" in link.keys():
                     self.collections.remove(link["type"])
         return objects
 
     def prepare_kwargs(self, kwargs, objects):
-        if "region" not in kwargs and "lon" not in kwargs\
-           and "regions" in objects:
+        if not "region" in kwargs.keys() and not "lon" in kwargs.keys()\
+           and "regions" in objects.keys():
             kwargs["region"] = "{regions.id}"
 
         if "uri" in kwargs:
@@ -132,17 +132,17 @@ class add_pagination_links(object):
                     pagination = value
                 elif key in collections_to_resource_type.keys():
                     endpoint = "v1." + key + "."
-                    endpoint += "id" if "id" in kwargs else "collection"
+                    endpoint += "id" if "id" in kwargs.keys() else "collection"
                 elif key in ["journeys", "stop_schedules", "route_schedules",
                              "departures", "arrivals", "places_nearby", "calendars"]:
                     endpoint = "v1." + key
             if pagination and endpoint and "region" in kwargs:
                 pagination = data["pagination"]
-                if "start_page" in pagination and \
-                        "items_on_page" in pagination and \
-                        "items_per_page" in pagination and \
-                        "total_result" in pagination:
-                    if "links" not in data:
+                if "start_page" in pagination.keys() and \
+                        "items_on_page" in pagination.keys() and \
+                        "items_per_page" in pagination.keys() and \
+                        "total_result" in pagination.keys():
+                    if not "links" in data.keys():
                         data["links"] = []
                     start_page = int(pagination["start_page"])
                     items_per_page = int(pagination["items_per_page"])
@@ -261,18 +261,21 @@ class add_id_links(generate_links):
             data = self.prepare_objetcs(objects, True)
             kwargs = self.prepare_kwargs(kwargs, data)
             uri_id = None
-            if "id" in kwargs and\
-               "collection" in kwargs and \
-               kwargs["collection"] in data:
+            if "id" in kwargs.keys() and\
+               "collection" in kwargs.keys() and \
+               kwargs["collection"] in data.keys():
                 uri_id = kwargs["id"]
             for obj in self.data:
-                kwargs["collection"] = resource_type_to_collection.get(obj, obj)
-                if kwargs["collection"] in collections_to_resource_type:
+                if obj in resource_type_to_collection.keys():
+                    kwargs["collection"] = resource_type_to_collection[obj]
+                else:
+                    kwargs["collection"] = obj
+                if kwargs["collection"] in collections_to_resource_type.keys():
                     if not uri_id:
                         kwargs["id"] = "{" + obj + ".id}"
                     endpoint = "v1." + kwargs["collection"] + "."
-                    endpoint += "id" if "region" in kwargs or\
-                        "lon" in kwargs\
+                    endpoint += "id" if "region" in kwargs.keys() or\
+                        "lon" in kwargs.keys()\
                                         else "redirect"
                     collection = kwargs["collection"]
                     to_pass = {k:v for k,v in kwargs.iteritems() if k != "collection"}
@@ -287,8 +290,8 @@ class add_id_links(generate_links):
 
     def get_objets(self, data, collection_name=None):
         if hasattr(data, 'keys'):
-            if "id" in data \
-               and ("href" not in data) \
+            if "id" in data.keys() \
+               and (not "href" in data.keys()) \
                and collection_name:
                 self.data.add(collection_name)
             for key, value in data.iteritems():
@@ -310,7 +313,7 @@ class clean_links(object):
                     return data, code, header
             else:
                 data = response
-            if isinstance(data, OrderedDict) and "links" in data:
+            if isinstance(data, OrderedDict) and "links" in data.keys():
                 for link in data['links']:
                     link['href'] = link['href'].replace("%7B", "{")\
                                                .replace("%7D", "}")\

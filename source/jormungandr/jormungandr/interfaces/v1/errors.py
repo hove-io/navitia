@@ -79,9 +79,9 @@ class ManageError(object):
                 response_pb2.Error.no_solution: 200
             }
             if response.HasField("error") and\
-               response.error.id in errors:
+               response.error.id in errors.keys():
                 code = errors[response.error.id]
-                if code == 400 and "filter" not in request.args:
+                if code == 400 and "filter" not in request.args.keys():
                     response.error.id = response_pb2.Error.unknown_object
                     code = 404
 
