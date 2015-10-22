@@ -2,7 +2,7 @@ SET(BOOST_LIBS ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} )
 
 add_executable(cities cities.cpp)
-target_link_libraries(cities transportation_data_import connectors types pq pqxx ${OSMPBF} pb_lib utils
+target_link_libraries(cities transportation_data_import connectors types ${PQXX_LIB} ${OSMPBF} pb_lib utils
     ${BOOST_LIBS} log4cplus z protobuf)
 INSTALL_TARGETS(/usr/bin/ cities)
 
