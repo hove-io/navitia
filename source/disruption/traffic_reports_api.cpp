@@ -52,7 +52,6 @@ struct NetworkDisrupt {
 
 class TrafficReport {
 private:
-
     std::vector<NetworkDisrupt> disrupts;
     log4cplus::Logger logger;
 
@@ -109,7 +108,7 @@ NetworkDisrupt& TrafficReport::find_or_create(const type::Network* network){
         NetworkDisrupt dist;
         dist.network = network;
         dist.idx = this->disrupts.size();
-        this->disrupts.push_back(dist);
+        this->disrupts.push_back(std::move(dist));
         return disrupts.back();
     }
     return *it;
@@ -293,7 +292,8 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
         }
         for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
-            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1, bt::not_a_date_time, action_period, false);
+            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
+                                    bt::not_a_date_time, action_period, false);
             for(const auto& impact: sa_item.second){
                 fill_message(*impact, d, pb_stop_area, depth-1, now_dt, action_period);
             }

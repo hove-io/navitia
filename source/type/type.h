@@ -311,7 +311,8 @@ public:
     }
 
     void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
-        auto it = std::find_if(impacts.begin(), impacts.end(),[&impact](const boost::weak_ptr<disruption::Impact>& i) {
+        auto it = std::find_if(impacts.begin(), impacts.end(),
+                               [&impact](const boost::weak_ptr<disruption::Impact>& i) {
             return i.lock() == impact;
         });
         if (it != impacts.end()) {
