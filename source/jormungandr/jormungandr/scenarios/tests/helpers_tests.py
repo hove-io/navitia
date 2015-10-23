@@ -736,3 +736,16 @@ def bss_duration_test():
     eq_(bss_duration(get_bike_bss_journey()), 70)
 
     eq_(bss_duration(get_bike_car_journey()), 0)
+
+def fallback_mode_sort_test():
+    l = ['car', 'walking']
+    l.sort(fallback_mode_comparator)
+    eq_(l[0], 'walking')
+    eq_(l[1], 'car')
+
+    l = ['bss', 'bike', 'car', 'walking']
+    l.sort(fallback_mode_comparator)
+    eq_(l[0], 'walking')
+    eq_(l[1], 'bss')
+    eq_(l[2], 'bike')
+    eq_(l[3], 'car')
