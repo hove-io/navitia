@@ -213,3 +213,7 @@ def select_best_journey_by_duration(journeys, clockwise, fallback_modes):
     if not list_journeys:
         return None
     return min(list_journeys, key=attrgetter('duration'))
+
+fallback_mode_order = ['walking', 'bss', 'bike', 'car']
+def fallback_mode_comparator(a, b):
+    return fallback_mode_order.index(a) -  fallback_mode_order.index(b)

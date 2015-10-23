@@ -44,6 +44,7 @@ from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
 from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
+from jormungandr.scenarios.helpers import fallback_mode_comparator
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -142,7 +143,6 @@ class Scenario(simple.Scenario):
             for all combinaison of departure and arrival mode we call kraken
         """
         logger = logging.getLogger(__name__)
-        # filter walking if bss in mode ?
         for o_mode, d_mode in itertools.product(self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
             req.journeys.streetnetwork_params.destination_mode = d_mode
@@ -209,6 +209,14 @@ class Scenario(simple.Scenario):
         max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
         at_least_one_journey_found = False
         forbidden_uris = []
+
+        #call to kraken must be done with fallback mode in the right order:
+        #walking, then bss, then bike, and finally car
+        #in some case a car journey can be equivalent to a walking journey, typically when crowfly are used
+        #and only the first one is kept, and we want the walking one to be kept!
+        self.origin_modes.sort(fallback_mode_comparator)
+        self.destination_modes.sort(fallback_mode_comparator)
+
         while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.call_kraken(next_request, instance)
