@@ -36,29 +36,9 @@ www.navitia.io
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 
 namespace navitia {
-
-static void cancel_vj(type::MetaVehicleJourney* meta_vj,
-               const boost::gregorian::date& date,
-               const transit_realtime::TripUpdate& /*trip_update*/,
-               const type::Data& data) {
-    // we need to cancel all vj of the meta vj
-    for (const auto& vect_vj: {meta_vj->base_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
-        for (auto* vj: vect_vj) {
-            // the train is canceled on one day, we just need to unset its realtime validitypattern
-
-            if (! vj->rt_validity_pattern()->check(date)) { continue; }
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
-                           "canceling the vj " << vj->uri << " on " << date);
-
-            nt::ValidityPattern tmp_vp(*vj->rt_validity_pattern());
-            tmp_vp.remove(date);
-
-            vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
-        }
-    }
-}
 
 static boost::shared_ptr<nt::disruption::Severity>
 make_no_service_severity(const boost::posix_time::ptime& timestamp,
@@ -83,13 +63,18 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
 
 static boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
-    for (const auto* vj: mvj.base_vj) {
-        if (vj->base_validity_pattern()->check(date)) {
-            return execution_period(date, *vj);
+    boost::optional<boost::posix_time::time_period> res;
+    auto fun = [&](const nt::VehicleJourney& vj){
+        if (!res && vj.get_validity_pattern_at(type::RTLevel::Base)->check(date)) {
+            res = execution_period(date, vj);
         }
+    };
+    mvj.for_vjs_at_rt_level(type::RTLevel::Base, fun);
+    if (res) {
+        return res.get();
     }
     // should be dead code
-    return execution_period(date, *mvj.base_vj.front());
+    return execution_period(date, *mvj.get_first_vj_at(type::RTLevel::Base));
 }
 
 
@@ -157,7 +142,7 @@ void handle_realtime(const std::string& id,
     auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
 
     if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        cancel_vj(meta_vj, circulation_date, trip_update, data);
+        meta_vj->cancel_vj(type::RTLevel::RealTime, {circulation_date}, trip_update, data);
         return;
     }
 

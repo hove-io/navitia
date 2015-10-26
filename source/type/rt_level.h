@@ -30,7 +30,9 @@ www.navitia.io
 #pragma once
 #include <ostream>
 #include "utils/flat_enum_map.h"
-
+#include "utils/exception.h"
+#include <map>
+#include <boost/algorithm/string.hpp>
 namespace navitia {
 
 namespace type {
@@ -39,6 +41,18 @@ enum class RTLevel : char {
     Adapted, // adapted schedule (planned maintenance, strike, ...)
     RealTime
 };
+
+inline RTLevel get_rt_level_from_string(const std::string& level_str) {
+    const static std::map<std::string, RTLevel> level2string_map = { {"theoric", RTLevel::Base},
+                                                                     {"adapted", RTLevel::Adapted},
+                                                                     {"realtime", RTLevel::RealTime}};
+
+    auto it =  level2string_map.find(boost::algorithm::to_lower_copy(level_str));
+    if (it != std::end(level2string_map)){
+        return it->second;
+    }
+    throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
+}
 }
 
 template <>

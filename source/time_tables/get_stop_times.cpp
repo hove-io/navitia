@@ -152,13 +152,13 @@ get_all_stop_times(const routing::JourneyPattern& jp,
     for (const auto* vj: jp.discrete_vjs) { insert_meta_vj(*vj); }
     for (const auto* vj: jp.freq_vjs) { insert_meta_vj(*vj); }
     std::vector<const type::VehicleJourney*> vjs;
-    for (const auto meta_vj: meta_vjs) {
+    for (const auto* meta_vj: meta_vjs) {
         if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
             //meta vj not associated with the calender, we skip
             continue;
         }
         //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
-        vjs.push_back(meta_vj->base_vj.front());
+        vjs.push_back(meta_vj->get_first_vj_at(navitia::type::RTLevel::Base));
     }
     if (vjs.empty()) {
         return {};

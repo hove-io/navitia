@@ -109,9 +109,8 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
     void operator()(const nt::MetaVehicleJourney* mvj) {
         this->log_start_action(mvj->uri);
-        for (auto* vj: mvj->base_vj) { func_on_vj(*vj); }
-        for (auto* vj: mvj->adapted_vj) { func_on_vj(*vj); }
-        for (auto* vj: mvj->real_time_vj) { func_on_vj(*vj); }
+        auto func = [&](nt::VehicleJourney& vj){ func_on_vj(vj); };
+        mvj->for_all_vjs(func);
         this->log_end_action(mvj->uri);
     }
 

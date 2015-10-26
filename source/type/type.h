@@ -38,6 +38,7 @@ www.navitia.io
 #include "utils/exception.h"
 #include "utils/functions.h"
 #include "utils/idx_map.h"
+#include "type/gtfs-realtime.pb.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -54,6 +55,7 @@ www.navitia.io
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 namespace navitia { namespace georef {
  struct Admin;
@@ -704,10 +706,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
+    ValidityPattern* get_validity_pattern_at(RTLevel level) const { return validity_patterns[level]; }
+    
+    ValidityPattern* base_validity_pattern() const { return get_validity_pattern_at(RTLevel::Base); }
+    ValidityPattern* adapted_validity_pattern() const { return get_validity_pattern_at(RTLevel::Adapted); }
+    ValidityPattern* rt_validity_pattern() const { return get_validity_pattern_at(RTLevel::RealTime); }
 
-    ValidityPattern* base_validity_pattern() const { return validity_patterns[RTLevel::Base]; }
-    ValidityPattern* adapted_validity_pattern() const { return validity_patterns[RTLevel::Adapted]; }
-    ValidityPattern* rt_validity_pattern() const { return validity_patterns[RTLevel::RealTime]; }
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -980,18 +984,63 @@ struct Calendar : public Nameable, public Header {
  *
  */
 struct MetaVehicleJourney: public Header, HasMessages {
-    //TODO if needed use a flat_enum_map
-    std::vector<VehicleJourney*> base_vj;
-    std::vector<VehicleJourney*> adapted_vj;
-    std::vector<VehicleJourney*> real_time_vj;
+
 
     /// map of the calendars that nearly match union of the validity pattern
     /// of the theoric vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & base_vj & adapted_vj & real_time_vj & associated_calendars & impacts;
+        ar & idx & uri;
+        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+            ar & rt_vjs.second;
+        }
+        ar & associated_calendars & impacts;
     }
+
+    // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
+    //          have the ownership of vjs instead of data
+    VehicleJourney* create_vj(/*args,*/ RTLevel level);
+
+    void add_vj(VehicleJourney* vj, RTLevel level) {
+        rtlevel_to_vjs_map[level].push_back(vj);
+    }
+
+
+    VehicleJourney* get_first_vj_at(navitia::type::RTLevel level) const{
+        assert(!rtlevel_to_vjs_map[level].empty());
+        return rtlevel_to_vjs_map[level].front();
+    }
+
+    template<typename T>
+    void for_all_vjs(T fun) const{
+        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+            auto& vjs = rt_vjs.second;
+            boost::for_each(vjs, [&](VehicleJourney* vj){fun(*vj);});
+        }
+    }
+
+    template<typename T>
+    void for_vjs_at_rt_level(RTLevel level, T fun ) const{
+        boost::for_each(rtlevel_to_vjs_map[level], [&](VehicleJourney* vj){fun(*vj);});
+    }
+
+    bool has_no_vjs_at(RTLevel level ) const {
+        return rtlevel_to_vjs_map[level].empty();
+    }
+
+    void cancel_vj(RTLevel level,
+            const std::vector<boost::gregorian::date>& dates,
+            const transit_realtime::TripUpdate& /*trip_update*/,
+            const type::Data& data);
+
+    std::vector<VehicleJourney*>
+    get_vjs_running_at_date(RTLevel level, const boost::gregorian::date& date);
+    std::vector<VehicleJourney*>
+    get_vjs_running_in_periode(RTLevel level, const boost::gregorian::date_period& period);
+
+private:
+    navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;
 };
 
 struct static_data {
