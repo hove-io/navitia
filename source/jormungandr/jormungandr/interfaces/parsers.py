@@ -39,7 +39,6 @@ true_false = parser_args_type.true_false
 option_value = parser_args_type.option_value
 
 
-
 def parse_input_date(date):
     """
     datetime parse date seems broken, '155' with format '%H%M%S' is not
@@ -61,4 +60,5 @@ def date_time_format(value):
 
         return d
     except ValueError as e:
-        raise ValueError("Unable to parse datetime, {}".format(e.message))
+        # e.args[0] is portable, while e.message is not
+        raise ValueError("Unable to parse datetime, {}".format(e.args[0]))

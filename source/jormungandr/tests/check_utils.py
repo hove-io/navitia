@@ -952,3 +952,17 @@ def is_valid_stop_date_time(stop_date_time):
     get_not_null(stop_date_time, 'departure_date_time')
     assert get_valid_datetime(stop_date_time['departure_date_time'])
 
+
+def get_interpreter():
+    """
+    Return the current interpreter(python, pypy.... etc.)
+    It should only be used in unit tests.
+    :return: str
+    """
+    # sys.executable is the whole pah of the interpreter
+    exe = sys.executable
+
+    if 'python' in exe:
+        return 'python'
+    if 'pypy' in exe:
+        return 'pypy'

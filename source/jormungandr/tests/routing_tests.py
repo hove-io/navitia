@@ -212,7 +212,9 @@ class TestJourneys(AbstractTestFixture):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, unknown string format"
+        err_msg = response['message'].upper()
+        assert 'unable to parse datetime'.upper() in err_msg
+        assert 'unknown string format'.upper() in err_msg
 
     def test_journeys_date_invalid(self):
         """giving the date with mmsshh (56 45 12) should be a problem"""
@@ -264,7 +266,12 @@ class TestJourneys(AbstractTestFixture):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, year is out of range"
+
+        expected_messages = {'python': 'Unable to parse datetime, year is out of range',
+                             'pypy': 'Unable to parse datetime, year must be in 1..9999'}
+
+        assert response['message'] == expected_messages[get_interpreter()]
+
 
     def test_journeys_do_not_loose_precision(self):
         """do we have a good precision given back in the id"""
