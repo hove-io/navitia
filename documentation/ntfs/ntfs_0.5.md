@@ -227,7 +227,7 @@ physical_mode_id | chaine | Requis | Identifiant du mode physique obligatoiremen
 physical_mode_name | chaine | Requis | Nom du mode physique
 co2_emission | décimal | Optionnel | Taux d’émission de CO2 du mode physique par voyageur et par km.
 
-** Liste des modes physique disponible : **
+**Liste des modes physique disponible :**
 
 Il existe une hiérarchie des modes permettant de classer les zones d'arrêt par son mode de plus haut niveau (cf. norme [NeTEx](http://www.normes-donnees-tc.org/wp-content/uploads/2014/05/NF_Profil_NeTEx_pour_les_arrets-_F-_-_v2.pdf) , chapitre 6.2.3)
 
@@ -332,7 +332,7 @@ date_time_estimated | entier (2) | Optionnel | Précise si l'heure de passage es
         2 - Horaire sur réservation associé à un TAD (si un message est associé au TAD, voir la liaison avec comment_links.txt) 
 
     (2) La fiabilité peut prendre les valeurs suivantes :
-        0  - l'heure de passage est fiable
+        0 - l'heure de passage est fiable
         1 - l'heure de passage est estimée
         non spécifiée :
             s'il s'agit d'un horaire associé à une zone (stop de location_type de valeur 2 ou 3) : l'heure est estimée
@@ -428,7 +428,7 @@ object_system | chaine | Requis | Nom du système d'identification de l'objet  (
 object_code | chaine | Requis | Code d'identification de l'objet dans le système considéré.
 
 Kisio Digital fournit dans ce fichier :
-* les identifiants des objets dans l'ancien système Navitia pour les objets "network", "line", "route", "trip", "stop" avec pour object_system la chaine ** "navitia1" **.
+* les identifiants des objets dans l'ancien système Navitia pour les objets "network", "line", "route", "trip", "stop" avec pour object_system la chaine **"navitia1"**.
 * les identifiants des objets déclarés dans la source d'alimentation (NTFS ou GTFS par exemple) avec pour object_system la chaine **"source"**.
 
 ### admin_stations.txt (optionnel)
@@ -540,6 +540,7 @@ Si le besoin d'affiner cette gestion est validé, une évolution du format du fi
 
 ## Gestion de l'émission de CO2 par ligne ou véhicule
 L'émission de CO2 est gérée en France par mode de transport. Les valeurs sont spécifiées par l'ADEME. Le format NTFS permet d'échanger cette information au niveau du mode physique. En fonction des besoins rencontrés à l'avenir, un ajout de cette informaion au niveau de la ligne et/ou du véhicule est envisagée. Dans ce cas, un système de "surcharge" de l'inforamtion sera à mettre en place pour prendre en compte par priorité :
+
 1. le taux au niveau du véhicule s'il est disponible
 2. le taux au niveau de la ligne s'il est disponible
 3. le taux au niveau du mode s'il est disponible
@@ -558,7 +559,7 @@ Il est à également à noter qu'il est possible :
 * de faire du rabattement vers horaire en spécifiant bien un horaire à un point d'arrivé (et pas une zone) dans le ficheir stop_time,
 * de faire de la fréquence sur du TAD zonal en utilisant le fichier "frequencies.txt"
 
-** Attention, les coordonnées et les surfaces des zones ne sont pas cohérentes, c'est l'architecture des données dans les fichiers qui est importante ici. **
+**Attention, les coordonnées et les surfaces des zones ne sont pas cohérentes, c'est l'architecture des données dans les fichiers qui est importante ici.**
 
 Pour résumé, il suffit de connaitre les points suivants:
 * Les horaires sont portés par des « stop » (un stop est une ligne issue du fichier stop)
@@ -611,7 +612,7 @@ Le cas de la zone 2 ci-dessous est trivial: on définit cette zone à l'aide d'u
 Les zones de dessertes ne remontent pas en autocompletion: elles permettent de déterminer l'offre uniquement.
 On peut alimenter le fichier stop_times en mettant des horaires précis sur chacun des points d'arrêt pouvant appartenir à des zones d'arrêts différentes, avec des informations ITL manuelles:
 
-** Fichier stop: déclare les "arrêts" **
+**Fichier stop: déclare les "arrêts"**
 
 stop_id | stop_name | stop_lat | stop_lon | location_type | geometry_id | parent_station
 --- | --- | --- | --- | --- | --- | --- 
@@ -629,10 +630,10 @@ stop_area_E | A | 47.01 | 1.01 | 1 |  |
 stop_area_H | A | 47.01 | 1.01 | 1 |  | 
 zone_2 | Zone 1 | 47.01 | 1.01 | 2 | id_vers_POLYGON((1 1,5 1,5 5,1 5,1 1)) | 
 
-** Fichier stop_times: déclare les "horaires", estimés ou non **
+**Fichier stop_times: déclare les "horaires", estimés ou non**
 
 trip_id | stop_id | arrival_time | departure_time | stop_sequence | pickup_type | drop_off_type | date_time_estimated | zone_itl
---- | --- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | --- | --- | --- | --- 
 trip_1 | stop_point_A |  | 09:02:00 | 1 | 0 | 0 | 0 | 0
 trip_1 | stop_point_B | 09:15:00 | 09:05:00 | 2 | 2 | 2 | 1 | 1
 trip_1 | stop_point_C | 09:15:00 | 09:07:00 | 2 | 2 | 2 | 1 | 1
