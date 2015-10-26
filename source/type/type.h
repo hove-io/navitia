@@ -1031,13 +1031,12 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     void cancel_vj(RTLevel level,
             const std::vector<boost::gregorian::date>& dates,
-            const transit_realtime::TripUpdate& /*trip_update*/,
             const type::Data& data);
 
+    VehicleJourney*
+    get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const;
     std::vector<VehicleJourney*>
-    get_vjs_running_at_date(RTLevel level, const boost::gregorian::date& date);
-    std::vector<VehicleJourney*>
-    get_vjs_running_in_periode(RTLevel level, const boost::gregorian::date_period& period);
+    get_vjs_in_periode(RTLevel level, const boost::gregorian::date_period& period) const;
 
 private:
     navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;

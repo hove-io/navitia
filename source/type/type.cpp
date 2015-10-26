@@ -308,51 +308,48 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
 
 void MetaVehicleJourney::cancel_vj(RTLevel level,
         const std::vector<boost::gregorian::date>& dates,
-        const transit_realtime::TripUpdate& /*trip_update*/,
         const type::Data& data) {
-    auto func = [&](nt::VehicleJourney& vj){
-        for (const auto& date: dates){
-            // the train is canceled on one day, we just need to unset its realtime validitypattern
-            if (! vj.get_validity_pattern_at(level)->check(date)) { return; }
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
-                    "canceling the vj " << vj.uri << " on " << date);
-            nt::ValidityPattern tmp_vp(*vj.get_validity_pattern_at(level));
-            tmp_vp.remove(date);
-            vj.validity_patterns[level] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+    for (auto l = level; l >= RTLevel::Begin; --l) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            for (const auto& date: dates){
+                if (! vj->get_validity_pattern_at(level)->check(date)) { break; }
+                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
+                        "canceling the vj " << vj->uri << " on " << date);
+                nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
+                tmp_vp.remove(date);
+                vj->validity_patterns[level] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+            }
         }
-    };
+    }
+}
 
-    for_vjs_at_rt_level(RTLevel::Base, func);
-    // we need to cancel all vj of at asked level
-    for_vjs_at_rt_level(level, func);
+VehicleJourney*
+MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
+    for (auto l = level; l >= RTLevel::Begin; --l) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            if(vj->get_validity_pattern_at(l)->check(date)){
+                return vj;
+            };
+        }
+    }
+    return nullptr;
 }
 
 std::vector<VehicleJourney*>
-MetaVehicleJourney::get_vjs_running_at_date(RTLevel level, const boost::gregorian::date& date){
+MetaVehicleJourney::get_vjs_in_periode(RTLevel level, const boost::gregorian::date_period& period) const{
     std::vector<VehicleJourney*> res;
-
-    auto fun = [&](VehicleJourney& vj) {
-      if(vj.get_validity_pattern_at(level)->check(date)) {
-          res.push_back(&vj);
-      }
-    };
-    for_vjs_at_rt_level(level, fun);
-    return res;
-}
-
-std::vector<VehicleJourney*>
-MetaVehicleJourney::get_vjs_running_in_periode(RTLevel level, const boost::gregorian::date_period& period) {
-    std::vector<VehicleJourney*> res;
-
-    auto day_itr = boost::gregorian::day_iterator{period.begin()};
-    for (; day_itr < period.end(); ++day_itr) {
-        auto running_vjs = get_vjs_running_at_date(level, *day_itr);
-        res.insert(res.end(),
-                std::make_move_iterator(running_vjs.begin()),
-                std::make_move_iterator(running_vjs.end()));
+    for (auto l = level; l >= RTLevel::Begin; --l) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            auto day_itr = boost::gregorian::day_iterator{period.begin()};
+            for (; day_itr < period.end(); ++day_itr) {
+                if(vj->get_validity_pattern_at(l)->check(*day_itr)){
+                    res.push_back(vj);
+                    break;
+                };
+            }
+        }
     }
     return res;
-
 }
 
 

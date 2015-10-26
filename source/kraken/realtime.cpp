@@ -63,15 +63,9 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
 
 static boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
-    boost::optional<boost::posix_time::time_period> res;
-    auto fun = [&](const nt::VehicleJourney& vj){
-        if (!res && vj.get_validity_pattern_at(type::RTLevel::Base)->check(date)) {
-            res = execution_period(date, vj);
-        }
-    };
-    mvj.for_vjs_at_rt_level(type::RTLevel::Base, fun);
-    if (res) {
-        return res.get();
+    auto running_vj = mvj.get_vj_at_date(type::RTLevel::Base, date);
+    if (running_vj) {
+        return execution_period(date, *running_vj);
     }
     // should be dead code
     return execution_period(date, *mvj.get_first_vj_at(type::RTLevel::Base));
@@ -142,7 +136,7 @@ void handle_realtime(const std::string& id,
     auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
 
     if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        meta_vj->cancel_vj(type::RTLevel::RealTime, {circulation_date}, trip_update, data);
+        meta_vj->cancel_vj(type::RTLevel::RealTime, {circulation_date}, data);
         return;
     }
 
