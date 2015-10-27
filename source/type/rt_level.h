@@ -37,14 +37,10 @@ namespace navitia {
 
 namespace type {
 enum class RTLevel : char {
-    Begin = 0,
-    Base = Begin, // base schedule (theoretical, from the GTFS)
+    Base = 0, // base schedule (theoretical, from the GTFS)
     Adapted, // adapted schedule (planned maintenance, strike, ...)
-    RealTime,
-    End = RealTime
+    RealTime
 };
-inline
-RTLevel operator--(RTLevel& x){return x = static_cast<RTLevel>(std::underlying_type<RTLevel>::type(x) - 1);}
 
 inline RTLevel get_rt_level_from_string(const std::string& level_str) {
     const static std::map<std::string, RTLevel> level2string_map = { {"theoric", RTLevel::Base},
