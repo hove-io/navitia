@@ -67,8 +67,8 @@ execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourne
     if (running_vj) {
         return execution_period(date, *running_vj);
     }
-    // should be dead code
-    return execution_period(date, *mvj.get_first_vj_at(type::RTLevel::Base));
+    // If there is no running vj at this date, we return a null period (begin == end)
+    return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
 

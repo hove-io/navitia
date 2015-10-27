@@ -158,7 +158,7 @@ get_all_stop_times(const routing::JourneyPattern& jp,
             continue;
         }
         //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
-        vjs.push_back(meta_vj->get_first_vj_at(navitia::type::RTLevel::Base));
+        vjs.push_back(meta_vj->get_base_vj_range().front());
     }
     if (vjs.empty()) {
         return {};

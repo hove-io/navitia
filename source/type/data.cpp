@@ -341,18 +341,16 @@ void Data::complete(){
 
 static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney& meta_vj) {
     ValidityPattern validity;
-    auto fun = [&validity](VehicleJourney& vj){
+    for (const auto* vj: meta_vj.get_base_vj_range()) {
         if (validity.beginning_date.is_not_a_date()) {
-            validity.beginning_date = vj.base_validity_pattern()->beginning_date;
+            validity.beginning_date = vj->base_validity_pattern()->beginning_date;
         } else {
-            if (validity.beginning_date != vj.base_validity_pattern()->beginning_date) {
+            if (validity.beginning_date != vj->base_validity_pattern()->beginning_date) {
                 throw navitia::exception("the beginning date of the meta_vj are not all the same");
             }
         }
-        validity.days |= vj.base_validity_pattern()->days;
-    };
-    meta_vj.for_vjs_at_rt_level(type::RTLevel::Base, fun);
-
+        validity.days |= vj->base_validity_pattern()->days;
+    }
     return validity;
 }
 
@@ -362,8 +360,6 @@ void Data::build_associated_calendar() {
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
     for(auto& meta_vj : this->pt_data->meta_vjs) {
-        assert (! meta_vj.has_no_vjs_at(type::RTLevel::Base));
-
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
         // split because of dst (day saving time)
@@ -371,7 +367,7 @@ void Data::build_associated_calendar() {
         ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(*meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
-        auto* first_vj = meta_vj->get_first_vj_at(type::RTLevel::Base);
+        auto* first_vj = meta_vj->get_base_vj_range().front();
         const auto& calendar_list = first_vj->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");

@@ -38,7 +38,6 @@ www.navitia.io
 #include "utils/exception.h"
 #include "utils/functions.h"
 #include "utils/idx_map.h"
-#include "type/gtfs-realtime.pb.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -991,11 +990,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri;
-        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
-            ar & rt_vjs.second;
-        }
-        ar & associated_calendars & impacts;
+        ar & idx & uri & rtlevel_to_vjs_map & associated_calendars & impacts;
     }
 
     // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
@@ -1004,12 +999,6 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     void add_vj(VehicleJourney* vj, RTLevel level) {
         rtlevel_to_vjs_map[level].push_back(vj);
-    }
-
-
-    VehicleJourney* get_first_vj_at(navitia::type::RTLevel level) const{
-        assert(!rtlevel_to_vjs_map[level].empty());
-        return rtlevel_to_vjs_map[level].front();
     }
 
     template<typename T>
@@ -1025,8 +1014,11 @@ struct MetaVehicleJourney: public Header, HasMessages {
         boost::for_each(rtlevel_to_vjs_map[level], [&](VehicleJourney* vj){fun(*vj);});
     }
 
-    bool has_no_vjs_at(RTLevel level ) const {
-        return rtlevel_to_vjs_map[level].empty();
+
+    using VjIter = boost::iterator_range<std::vector<VehicleJourney*>::const_iterator>;
+
+    VjIter get_base_vj_range() const {
+        return boost::make_iterator_range(rtlevel_to_vjs_map[RTLevel::Base]);
     }
 
     void cancel_vj(RTLevel level,
@@ -1036,7 +1028,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     VehicleJourney*
     get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const;
     std::vector<VehicleJourney*>
-    get_vjs_in_periode(RTLevel level, const boost::gregorian::date_period& period) const;
+    get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const;
 
 private:
     navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;

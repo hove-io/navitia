@@ -336,7 +336,7 @@ MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& 
 }
 
 std::vector<VehicleJourney*>
-MetaVehicleJourney::get_vjs_in_periode(RTLevel level, const boost::gregorian::date_period& period) const{
+MetaVehicleJourney::get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const{
     std::vector<VehicleJourney*> res;
     for (auto l = level; l >= RTLevel::Begin; --l) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
