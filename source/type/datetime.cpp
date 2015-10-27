@@ -49,11 +49,21 @@ std::ostream & operator<<(std::ostream & os, const DateTime & dt){
 */
 std::string str(const DateTime & dt){
     std::stringstream os;
-    os << "D=" << DateTimeUtils::date(dt) << " " << DateTimeUtils::hour(dt)/(3600) << ":";
+    os << "D=" << DateTimeUtils::date(dt) << " ";
+    if((DateTimeUtils::hour(dt)/3600) < 10)
+        os << "0" << (DateTimeUtils::hour(dt)/3600);
+    else
+        os << (DateTimeUtils::hour(dt)/3600);
+    os << ":";
     if((DateTimeUtils::hour(dt)%3600)/60 < 10)
         os << "0" << (DateTimeUtils::hour(dt)%3600)/60;
     else
         os << (DateTimeUtils::hour(dt)%3600)/60;
+    os << ":";
+    if((DateTimeUtils::hour(dt)%60) < 10)
+        os << "0" << (DateTimeUtils::hour(dt)%60);
+    else
+        os << (DateTimeUtils::hour(dt)%60);
     return os.str();
 }
 
