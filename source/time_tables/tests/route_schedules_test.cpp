@@ -35,6 +35,10 @@ www.navitia.io
 #include "type/type.h"
 #include "tests/utils_test.h"
 #include "time_tables/route_schedules.h"
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/sort.hpp>
+
+namespace ntt = navitia::timetables;
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -169,38 +173,58 @@ struct route_schedule_calendar_fixture {
         boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
-        vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5")(S1_name, 10*3600)(S2_name, 10*3600 + 30*60)(S3_name, 11*3600).vj;
-        vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6")(S1_name, 11*3600)(S2_name, 11*3600 + 30*60)(S3_name, 12*3600).vj;
-        vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")(S1_name, 13*3600)(S2_name, 13*3600 + 37*60)(S3_name, 14*3600).vj;
+        vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5")
+                (S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name, "11:00"_t).vj;
+        vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6")
+                (S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t).vj;
+        vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")
+                (S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t).vj;
+
+        // we complicate things a bit, we say that the vjs have a utc offset
+        vj5->utc_to_local_offset = "02:00"_t;
+        vj6->utc_to_local_offset = "02:00"_t;
+        vj7->utc_to_local_offset = "02:00"_t;
+
+        auto save_cal = [&](navitia::type::Calendar* cal) {
+            b.data->pt_data->calendars.push_back(cal);
+            b.data->pt_data->calendars_map[cal->uri] = cal;
+        };
 
         c1 = new navitia::type::Calendar(begin);
         c1->uri = "C1";
         c1->active_periods.push_back({begin, end});
         c1->week_pattern = std::bitset<7>("1111100");
+        save_cal(c1);
         c2 = new navitia::type::Calendar(begin);
         c2->uri = "C2";
         c2->active_periods.push_back({begin, end});
         c2->week_pattern = std::bitset<7>("0000011");
+        save_cal(c2);
         c3 = new navitia::type::Calendar(begin);
         c3->uri = "C3";
         c3->active_periods.push_back({begin, end});
         c3->week_pattern = std::bitset<7>("1111111");
+        save_cal(c3);
         c4 = new navitia::type::Calendar(begin);
         c4->uri = "C4";
         c4->active_periods.push_back({begin, end});
         c4->week_pattern = std::bitset<7>("0000000");
+        save_cal(c4);
 
-        navitia::type::AssociatedCalendar a1;
-        a1.calendar = c1;
-        navitia::type::AssociatedCalendar a2;
-        a1.calendar = c2;
-        navitia::type::AssociatedCalendar a3;
-        a1.calendar = c3;
+        auto a1 = new navitia::type::AssociatedCalendar;
+        a1->calendar = c1;
+        b.data->pt_data->associated_calendars.push_back(a1);
+        auto a2 = new navitia::type::AssociatedCalendar;
+        a2->calendar = c2;
+        b.data->pt_data->associated_calendars.push_back(a2);
+        auto a3 = new navitia::type::AssociatedCalendar;
+        a3->calendar = c3;
+        b.data->pt_data->associated_calendars.push_back(a3);
 
-        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c1->uri, &a1});
-        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c2->uri, &a2});
-        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c2->uri, &a2});
-        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, &a3});
+        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c1->uri, a1});
+        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c2->uri, a2});
+        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c2->uri, a2});
+        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, a3});
 
         b.finish();
         b.data->pt_data->index();
@@ -232,6 +256,193 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
     // No results for calendar C4
     check_calendar_results(c4->uri, {});
 }
+
+namespace ba = boost::adaptors;
+using vec_dt = std::vector<navitia::DateTime>;
+navitia::DateTime get_dt(const ntt::datetime_stop_time& p) { return p.first; }
+
+/*
+ * Test get_all_route_stop_times with a calendar
+ *
+ * wich the C2 calendar, we should have the vj5 and vj6, thus we should have this schedule:
+ *        VJ5     VJ6
+ *    S1  10:00   11:00
+ *    S2  10:30   11:30
+ *    S3  11:00   12:00
+ * NOTE: this is in UTC and since we ask with a calendar we want local time
+ * Thus the schedule is:
+ *        VJ5     VJ6
+ *    S1  12:00   13:00
+ *    S2  12:30   13:30
+ *    S3  13:00   14:00
+*/
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_calendar_fixture) {
+    const auto* route = b.data->pt_data->routes_map.at("B:0");
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "00:00"_t,
+                                                             "00:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base,
+                                                             {c2->uri});
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    boost::sort(res);
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"12:00"_t, "12:30"_t, "13:00"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
+}
+
+/*
+ * Test get_all_route_stop_times with a calendar and with a custom time (used only for the sort)
+ * Schedule should be
+ *        VJ5        VJ6
+ *    S1  12:00+1   13:00
+ *    S2  12:30+1   13:30
+ *    s3  13:00+1   14:00
+ *
+ * the +1 day is used so the following sort will sort the result in a correct way
+ */
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_schedule_calendar_fixture) {
+    const auto* route = b.data->pt_data->routes_map.at("B:0");
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "12:37"_t,
+                                                             "12:37"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base,
+                                                             {c2->uri});
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+
+    auto one_day = "24:00"_t;
+    boost::sort(res);
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
+            vec_dt({"13:00"_t, "13:30"_t, "14:00"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
+            vec_dt({"12:00"_t + one_day, "12:30"_t + one_day, "13:00"_t + one_day}));
+}
+
+/*
+ * Test get_all_route_stop_times with not a calendar but only a dt (the classic route_schedule)
+ *
+ * Note: the returned dt should be in UTC, not local time
+ *
+ * thus the schedule after 11h37 should be:
+ *
+ *      VJ5       VJ6       VJ7
+ * S1  10:00+1   11:00+1   13:00
+ * S2  10:30+1   11:30+1   13:37
+ * s3  11:00+1   12:00+1   14:00
+ *
+ */
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_calendar_fixture) {
+    const auto* route = b.data->pt_data->routes_map.at("B:0");
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "11:37"_t,
+                                                             "11:37"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, {});
+
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    auto one_day = "24:00"_t;
+    boost::sort(res);
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt),
+            vec_dt({"13:00"_t, "13:37"_t, "14:00"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt),
+            vec_dt({"10:00"_t + one_day, "10:30"_t + one_day, "11:00"_t + one_day}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt),
+            vec_dt({"11:00"_t + one_day, "11:30"_t + one_day, "12:00"_t + one_day}));
+}
+
+/*
+ * Test with a dataset close to https://github.com/CanalTP/navitia/issues/1161
+ *
+ * The dataset in LOCAL TIME (france) is:
+ *
+ *      vj1    vj2    vj3
+ * S1  00:50  01:50  02:50
+ * S2  01:05  02:05  03:05
+ * S3  01:15  02:15  03:15
+ *
+ * The small catch is that there is 2 hours UTC shift, thus vj1 and vj2 validity pattern's are shifted the day before:
+ *
+ *      vj1    vj2    vj3
+ * S1  22:50  23:50  00:50
+ * S2  23:05  00:05  01:05
+ * S3  23:15  00:15  01:15
+ *
+ */
+struct CalWithDSTFixture {
+    ed::builder b = {"20150614"};
+
+    CalWithDSTFixture() {
+        auto normal_vp = "111111";
+        auto shifted_vp = "111110";
+        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t)
+                .vj->utc_to_local_offset = "02:00"_t;
+        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t)
+                .vj->utc_to_local_offset = "02:00"_t;
+        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t)
+                .vj->utc_to_local_offset = "02:00"_t;
+
+        auto cal = new navitia::type::Calendar();
+        cal->uri = "cal";
+        b.data->pt_data->calendars.push_back(cal);
+        b.data->pt_data->calendars_map[cal->uri] = cal;
+
+        auto a1 = new navitia::type::AssociatedCalendar;
+        a1->calendar = cal;
+        b.data->pt_data->associated_calendars.push_back(a1);
+
+        for (auto& mvj: b.data->pt_data->meta_vjs) {
+            mvj->associated_calendars.insert({cal->uri, a1});
+        }
+
+        b.finish();
+        b.data->pt_data->index();
+        b.data->build_raptor();
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp, CalWithDSTFixture) {
+    const auto* route = b.data->pt_data->routes.at(0);
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "00:00"_t,
+                                                             "00:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, std::string("cal"));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    boost::sort(res);
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"00:50"_t, "01:05"_t, "01:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"01:50"_t, "02:05"_t, "02:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt), vec_dt({"02:50"_t, "03:05"_t, "03:15"_t}));
+}
+
+BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour, CalWithDSTFixture) {
+    const auto* route = b.data->pt_data->routes.at(0);
+
+    auto res = navitia::timetables::get_all_route_stop_times(route,
+                                                             "01:00"_t,
+                                                             "01:00"_t + "24:00"_t,
+                                                             std::numeric_limits<size_t>::max(),
+                                                             *b.data, nt::RTLevel::Base, std::string("cal"));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    auto one_day = "24:00"_t;
+    boost::sort(res);
+    //both are after the asked time (1h), so they are on the following day
+    BOOST_CHECK_EQUAL_RANGE(res[0] | ba::transformed(get_dt), vec_dt({"01:50"_t, "02:05"_t, "02:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[1] | ba::transformed(get_dt), vec_dt({"02:50"_t, "03:05"_t, "03:15"_t}));
+    BOOST_CHECK_EQUAL_RANGE(res[2] | ba::transformed(get_dt),
+            vec_dt({"00:50"_t + one_day, "01:05"_t + one_day, "01:15"_t + one_day}));
+}
+
 
 // We want:
 //     C A B

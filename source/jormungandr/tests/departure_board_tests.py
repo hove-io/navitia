@@ -60,7 +60,7 @@ def check_departure_board(schedules, tester, only_time=False):
     check_links(schedule, tester, href_mandatory=False)
 
 
-def is_valid_route_schedule(schedules):
+def is_valid_route_schedule(schedules, only_time=False):
     assert len(schedules) == 1, "there should be only one elt"
     schedule = schedules[0]
     d = get_not_null(schedule, 'display_informations')
@@ -78,10 +78,14 @@ def is_valid_route_schedule(schedules):
 
     rows = get_not_null(table, 'rows')
     for row in rows:
-        for dt in get_not_null(row, 'date_times'):
-            assert "additional_informations" in dt
-            assert "links" in dt
-            get_valid_datetime(get_not_null(dt, "date_time"))
+        for dt_obj in get_not_null(row, 'date_times'):
+            assert "additional_informations" in dt_obj
+            assert "links" in dt_obj
+            dt = get_not_null(dt_obj, "date_time")
+            if only_time:
+                get_valid_time(dt)
+            else:
+                get_valid_datetime(dt)
 
         is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
 
@@ -217,6 +221,16 @@ class TestDepartureBoard(AbstractTestFixture):
 
         assert "route_schedules" in response
         is_valid_route_schedule(response["route_schedules"])
+
+    def test_routes_schedule_with_calendar(self):
+        """
+        departure board for a given calendar
+        """
+        response = self.query_region("routes/line:A:0/route_schedules?calendar=week_cal")
+
+        assert "route_schedules" in response
+        # the route_schedule with calendar should not have with date (only time)
+        is_valid_route_schedule(response["route_schedules"], only_time=True)
 
     def test_with_wrong_type(self):
         """

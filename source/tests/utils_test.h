@@ -61,3 +61,14 @@ std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
     return os << "}";
 }
 }
+
+/*
+ * BOOST_CHECK_EQUAL_COLLECTIONS does not work well with a temporary collection, thus this macro
+ * (and it's easier to use)
+ */
+#define BOOST_CHECK_EQUAL_RANGE(range1, range2) \
+    { \
+        const auto& r1 = range1; \
+        const auto& r2 = range2; \
+        BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
+    }
