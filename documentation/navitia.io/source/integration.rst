@@ -244,8 +244,9 @@ Error id                   Description
 ========================== ==========================================================================
 date_out_of_bounds         When the given date is out of bounds of the production dates of the region
 no_origin                  Couldn't find an origin for the journeys
-no_destination             Couldn't find an destination for the journeys
+no_destination             Couldn't find a destination for the journeys
 no_origin_nor_destination  Couldn't find an origin nor a destination for the journeys
+no_solution                Couldn't find a journey for known origin and destination
 unknown_object             As it's said
 ========================== ==========================================================================
 
