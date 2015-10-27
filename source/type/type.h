@@ -1009,12 +1009,6 @@ struct MetaVehicleJourney: public Header, HasMessages {
         }
     }
 
-    template<typename T>
-    void for_vjs_at_rt_level(RTLevel level, T fun ) const{
-        boost::for_each(rtlevel_to_vjs_map[level], [&](VehicleJourney* vj){fun(*vj);});
-    }
-
-
     const std::vector<VehicleJourney*>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
     }
