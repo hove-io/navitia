@@ -258,7 +258,7 @@ static void init_best_pts_snd_pass(const routing::map_stop_point_duration& depar
 }
 
 std::vector<Path>
-RAPTOR::compute_all(const map_stop_point_duration& departures_,
+RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const map_stop_point_duration& destinations,
                     const DateTime& departure_datetime,
                     const nt::RTLevel rt_level,
@@ -283,8 +283,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures_,
         solutions.add(j);
     }
 
-    const auto& calc_dep = clockwise ? departures_ : destinations;
-    const auto& calc_dest = clockwise ? destinations : departures_;
+    const auto& calc_dep = clockwise ? departures : destinations;
+    const auto& calc_dest = clockwise ? destinations : departures;
 
     first_raptor_loop(calc_dep, departure_datetime, rt_level,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
@@ -322,7 +322,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures_,
         const auto reader_results = read_solutions(*this,
                                                    !clockwise,
                                                    departure_datetime,
-                                                   departures_,
+                                                   departures,
                                                    destinations,
                                                    rt_level,
                                                    accessibilite_params);
