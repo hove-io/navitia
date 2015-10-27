@@ -341,7 +341,7 @@ void Data::complete(){
 
 static ValidityPattern get_union_validity_pattern(const MetaVehicleJourney& meta_vj) {
     ValidityPattern validity;
-    for (const auto* vj: meta_vj.get_base_vj_range()) {
+    for (const auto* vj: meta_vj.get_base_vj()) {
         if (validity.beginning_date.is_not_a_date()) {
             validity.beginning_date = vj->base_validity_pattern()->beginning_date;
         } else {
@@ -367,7 +367,7 @@ void Data::build_associated_calendar() {
         ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(*meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
-        auto* first_vj = meta_vj->get_base_vj_range().front();
+        auto* first_vj = meta_vj->get_base_vj().front();
         const auto& calendar_list = first_vj->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");

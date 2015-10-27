@@ -309,7 +309,7 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
 void MetaVehicleJourney::cancel_vj(RTLevel level,
         const std::vector<boost::gregorian::date>& dates,
         const type::Data& data) {
-    for (auto l : reverse_enum_range<RTLevel>()) {
+    for (auto l : reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
             for (const auto& date: dates){
                 if (! vj->get_validity_pattern_at(level)->check(date)) { continue; }
@@ -325,7 +325,7 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
 
 VehicleJourney*
 MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
-    for (auto l : reverse_enum_range<RTLevel>()){
+    for (auto l : reverse_enum_range_from<RTLevel>(level)){
         for (auto* vj: rtlevel_to_vjs_map[l]) {
             if(vj->get_validity_pattern_at(l)->check(date)){
                 return vj;
@@ -338,7 +338,7 @@ MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& 
 std::vector<VehicleJourney*>
 MetaVehicleJourney::get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const{
     std::vector<VehicleJourney*> res;
-    for (auto l : reverse_enum_range<RTLevel>()){
+    for (auto l : reverse_enum_range_from<RTLevel>(level)){
         for (auto* vj: rtlevel_to_vjs_map[l]) {
             auto day_itr = boost::gregorian::day_iterator{period.begin()};
             for (; day_itr < period.end(); ++day_itr) {

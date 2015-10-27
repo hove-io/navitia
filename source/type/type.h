@@ -1015,10 +1015,8 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
 
-    using VjIter = boost::iterator_range<std::vector<VehicleJourney*>::const_iterator>;
-
-    VjIter get_base_vj_range() const {
-        return boost::make_iterator_range(rtlevel_to_vjs_map[RTLevel::Base]);
+    const std::vector<VehicleJourney*>& get_base_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::Base];
     }
 
     void cancel_vj(RTLevel level,
