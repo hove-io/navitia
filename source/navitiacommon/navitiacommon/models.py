@@ -37,7 +37,7 @@ from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 
 from navitiacommon import default_values
 
@@ -46,7 +46,6 @@ db = SQLAlchemy()
 class TimestampMixin(object):
     created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
-
 
 # https://bitbucket.org/zzzeek/sqlalchemy/issues/3467/array-of-enums-does-not-allow-assigning
 class ArrayOfEnum(ARRAY):
@@ -384,9 +383,26 @@ class Job(db.Model, TimestampMixin):
     data_sets = db.relationship('DataSet', backref='job', lazy='dynamic',
                                 cascade='delete')
 
+    metrics = db.relationship('Metric', backref='job', lazy='dynamic',
+                                cascade='delete')
+
     def __repr__(self):
         return '<Job %r>' % self.id
 
+class Metric(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+
+    type = db.Column(db.Enum('ed2nav', 'fusio2ed', 'gtfs2ed', 'osm2ed', 'geopal2ed', 'synonym2ed', 'poi2ed',
+                             name='metric_type'), nullable=False)
+    dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=True)
+    duration = db.Column(INTERVAL)
+
+    dataset = db.relationship('DataSet', lazy='joined')
+
+
+    def __repr__(self):
+        return '<Metric {}>'.format(self.id)
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -394,7 +410,20 @@ class DataSet(db.Model):
     family_type = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
 
+    uid = db.Column(UUID, unique=True)
+
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
+
+    def __init__(self):
+        self.uid = str(uuid.uuid4())
+
+    @classmethod
+    def find_by_uid(cls, uid):
+        if not uid:
+            #old dataset don't have uid, we don't want to get one of them
+            return None
+        return cls.query.filter_by(uid=uid).first()
 
     def __repr__(self):
         return '<DataSet %r>' % self.id
+

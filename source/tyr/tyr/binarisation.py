@@ -47,7 +47,8 @@ from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
 from navitiacommon import models
-from tyr.helper import get_instance_logger
+from tyr.helper import get_instance_logger, get_named_arg
+from contextlib import contextmanager
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -78,11 +79,7 @@ class Lock(object):
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            job_id = None
-            if 'job_id' in kwargs:
-                job_id = kwargs['job_id']
-            else:
-                job_id = args[func.func_code.co_varnames.index('job_id')]
+            job_id = get_named_arg('job_id', func, args, kwargs)
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
             job = models.Job.query.get(job_id)
             logger = get_instance_logger(job.instance)
@@ -100,11 +97,28 @@ class Lock(object):
                     lock.release()
         return wrapper
 
+@contextmanager
+def collect_metric(task_type, job, dataset_uid):
+    begin = datetime.datetime.utcnow()
+    yield
+    end = datetime.datetime.utcnow()
+    try:
+        logger = logging.getLogger(__name__)
+        dataset = models.DataSet.find_by_uid(dataset_uid)
+        metric = models.Metric()
+        metric.job = job
+        metric.dataset = dataset
+        metric.type = task_type
+        metric.duration = end-begin
+        models.db.session.add(metric)
+        models.db.session.commit()
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('unable to persist Metrics data: ')
 
-#TODO bind task
 @celery.task(bind=True)
 @Lock(timeout=30*60)
-def fusio2ed(self, instance_config, filename, job_id):
+def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
@@ -129,7 +143,9 @@ def fusio2ed(self, instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("fusio2ed", params, logger)
+        res = None
+        with collect_metric('fusio2ed', job, dataset_uid):
+            res = launch_exec("fusio2ed", params, logger)
         if res != 0:
             raise ValueError('fusio2ed failed')
     except:
@@ -141,7 +157,7 @@ def fusio2ed(self, instance_config, filename, job_id):
 
 @celery.task(bind=True)
 @Lock(30*60)
-def gtfs2ed(self, instance_config, gtfs_filename, job_id):
+def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     """ Unzip gtfs file launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
@@ -166,7 +182,9 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("gtfs2ed", params, logger)
+        res = None
+        with collect_metric('gtfs2ed', job, dataset_uid):
+            res = launch_exec("gtfs2ed", params, logger)
         if res != 0:
             raise ValueError('gtfs2ed failed')
     except:
@@ -178,7 +196,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id):
 
 @celery.task(bind=True)
 @Lock(timeout=30*60)
-def osm2ed(self, instance_config, osm_filename, job_id):
+def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     """ launch osm2ed """
 
     job = models.Job.query.get(job_id)
@@ -187,9 +205,11 @@ def osm2ed(self, instance_config, osm_filename, job_id):
     logger = get_instance_logger(instance)
     try:
         connection_string = make_connection_string(instance_config)
-        res = launch_exec('osm2ed',
-                ["-i", osm_filename, "--connection-string", connection_string],
-                logger)
+        res = None
+        with collect_metric('osm2ed', job, dataset_uid):
+            res = launch_exec('osm2ed',
+                    ["-i", osm_filename, "--connection-string", connection_string],
+                    logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('osm2ed failed')
@@ -201,7 +221,7 @@ def osm2ed(self, instance_config, osm_filename, job_id):
 
 @celery.task(bind=True)
 @Lock(timeout=30*60)
-def geopal2ed(self, instance_config, filename, job_id):
+def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch geopal2ed """
 
     job = models.Job.query.get(job_id)
@@ -214,9 +234,11 @@ def geopal2ed(self, instance_config, filename, job_id):
         zip_file.extractall(path=working_directory)
 
         connection_string = make_connection_string(instance_config)
-        res = launch_exec('geopal2ed',
-                ["-i", working_directory, "--connection-string", connection_string],
-                logger)
+        res = None
+        with collect_metric('geopal2ed', job, dataset_uid):
+            res = launch_exec('geopal2ed',
+                    ["-i", working_directory, "--connection-string", connection_string],
+                    logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('geopal2ed failed')
@@ -228,7 +250,7 @@ def geopal2ed(self, instance_config, filename, job_id):
 
 @celery.task(bind=True)
 @Lock(timeout=10*60)
-def poi2ed(self, instance_config, filename, job_id):
+def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch poi2ed """
 
     job = models.Job.query.get(job_id)
@@ -241,9 +263,11 @@ def poi2ed(self, instance_config, filename, job_id):
         zip_file.extractall(path=working_directory)
 
         connection_string = make_connection_string(instance_config)
-        res = launch_exec('poi2ed',
-                ["-i", working_directory, "--connection-string", connection_string],
-                logger)
+        res = None
+        with collect_metric('poi2ed', job, dataset_uid):
+            res = launch_exec('poi2ed',
+                    ["-i", working_directory, "--connection-string", connection_string],
+                    logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('poi2ed failed')
@@ -255,7 +279,7 @@ def poi2ed(self, instance_config, filename, job_id):
 
 @celery.task(bind=True)
 @Lock(timeout=10*60)
-def synonym2ed(self, instance_config, filename, job_id):
+def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch synonym2ed """
 
     job = models.Job.query.get(job_id)
@@ -264,9 +288,11 @@ def synonym2ed(self, instance_config, filename, job_id):
     logger = get_instance_logger(instance)
     try:
         connection_string = make_connection_string(instance_config)
-        res = launch_exec('synonym2ed',
-                ["-i", filename, "--connection-string", connection_string],
-                logger)
+        res = None
+        with collect_metric('synonym2ed', job, dataset_uid):
+            res = launch_exec('synonym2ed',
+                    ["-i", filename, "--connection-string", connection_string],
+                    logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('synonym2ed failed')
@@ -357,7 +383,7 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
 
 @celery.task(bind=True)
 @Lock(timeout=10*60)
-def shape2ed(self, instance_config, filename, job_id):
+def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     """load a street network shape into ed"""
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -416,7 +442,9 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
 
-        res = launch_exec('ed2nav', argv, logger)
+        res = None
+        with collect_metric('ed2nav', job, None):
+            res = launch_exec('ed2nav', argv, logger)
         if res != 0:
             raise ValueError('ed2nav failed')
     except:
@@ -427,7 +455,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 
 @celery.task(bind=True)
 @Lock(timeout=10*60)
-def fare2ed(self, instance_config, filename, job_id):
+def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch fare2ed """
 
     job = models.Job.query.get(job_id)

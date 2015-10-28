@@ -103,7 +103,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
                                                    instance_config.backup_directory)
             else:
                 filename = _file
-            actions.append(task[dataset.type].si(instance_config, filename))
+            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             #unknown type, we skip it
             current_app.logger.debug("unknwn file type: {} for file {}"
