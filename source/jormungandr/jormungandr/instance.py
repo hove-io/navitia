@@ -78,7 +78,6 @@ class Instance(object):
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def _get_models(self):
-        # we use the id because sqlalchemy session keep a map of  {id => instance} so we don't do a request each time we want the model
         if app.config['DISABLE_DATABASE']:
             return None
         return models.Instance.get_by_name(self.name)
@@ -101,19 +100,15 @@ class Instance(object):
             g.scenario = scenario
             return scenario
 
-        if not self._scenario:
+
+        instance_db = self._get_models()
+        scenario_name = instance_db.scenario if instance_db else 'default'
+        if not self._scenario or scenario_name != self._scenario_name:
             logger = logging.getLogger(__name__)
-            instance_db = self._get_models()
-            if instance_db:
-                logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
-                self._scenario_name = instance_db.scenario
-                module = import_module('jormungandr.scenarios.{}'.format(instance_db.scenario))
-                self._scenario = module.Scenario()
-            else:
-                logger.warn('instance %s not found in db, we use the default script', self.name)
-                module = import_module('jormungandr.scenarios.default')
-                self._scenario_name = 'default'
-                self._scenario = module.Scenario()
+            logger.info('loading of scenario %s for instance %s', scenario_name, self.name)
+            self._scenario_name = scenario_name
+            module = import_module('jormungandr.scenarios.{}'.format(scenario_name))
+            self._scenario = module.Scenario()
 
         #we save the used scenario for futur use
         g.scenario = self._scenario
