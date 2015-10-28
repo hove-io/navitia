@@ -719,17 +719,20 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
         auto* route = route_map[const_it["route_id"].as<idx_t>()];
         navitia::type::VehicleJourney* vj = nullptr;
+        std::string vj_name;
+        const_it["name"].to(vj_name);
+        auto mvj = data.pt_data->meta_vjs.get_or_create(vj_name);
         if (const_it["is_frequency"].as<bool>()) {
-            route->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
-            auto& freq_vj = route->frequency_vehicle_journey_list.back();
-
-            const_it["start_time"].to(freq_vj->start_time);
-            const_it["end_time"].to(freq_vj->end_time);
-            const_it["headway_sec"].to(freq_vj->headway_secs);
-            vj = freq_vj.get();
+            auto f_vj = mvj->create_frequency_vj();
+            route->frequency_vehicle_journey_list.push_back(f_vj);
+            const_it["start_time"].to(f_vj->start_time);
+            const_it["end_time"].to(f_vj->end_time);
+            const_it["headway_sec"].to(f_vj->headway_secs);
+            vj = f_vj;
         } else {
-            route->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
-            vj = route->discrete_vehicle_journey_list.back().get();
+            auto d_vj =  mvj->create_discrete_vj();
+            route->discrete_vehicle_journey_list.push_back(d_vj);
+            vj = route->discrete_vehicle_journey_list.back();
         }
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);

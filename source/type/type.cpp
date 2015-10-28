@@ -349,11 +349,28 @@ static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_t
     return intersect;
 }
 
+FrequencyVehicleJourney* MetaVehicleJourney::create_frequency_vj(RTLevel level) {
+    auto f_vj = std::make_unique<FrequencyVehicleJourney>();
+    f_vj->meta_vj = this;
+    auto ret = f_vj.get();
+    rtlevel_to_vjs_map[level].emplace_back(std::move(f_vj));
+    return ret;
+};
+
+DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj(RTLevel level) {
+    auto f_vj = std::make_unique<DiscreteVehicleJourney>();
+    f_vj->meta_vj = this;
+    auto ret = f_vj.get();
+    rtlevel_to_vjs_map[level].emplace_back(std::move(f_vj));
+    return ret;
+};
+
+
 void MetaVehicleJourney::cancel_vj(RTLevel level,
         const std::vector<boost::posix_time::time_period>& periods,
         nt::PT_Data& pt_data, const nt::MetaData& meta, const Route* filtering_route) {
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
-        for (auto* vj: rtlevel_to_vjs_map[l]) {
+        for (auto& vj: rtlevel_to_vjs_map[l]) {
             // note: we might want to cancel only the vj of certain routes
             if (filtering_route && vj->route != filtering_route) { continue; }
             nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
@@ -372,9 +389,9 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
 VehicleJourney*
 MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
     for (auto l : reverse_enum_range_from<RTLevel>(level)){
-        for (auto* vj: rtlevel_to_vjs_map[l]) {
+        for (auto& vj: rtlevel_to_vjs_map[l]) {
             if(vj->get_validity_pattern_at(l)->check(date)){
-                return vj;
+                return vj.get();
             };
         }
     }
@@ -388,7 +405,7 @@ MetaVehicleJourney::get_vjs_in_period(RTLevel level,
                                       const Route* filtering_route) const {
     std::vector<VehicleJourney*> res;
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
-        for (auto* vj: rtlevel_to_vjs_map[l]) {
+        for (auto& vj: rtlevel_to_vjs_map[l]) {
             if (filtering_route && vj->route != filtering_route) { continue; }
             auto func = [] (const unsigned /*day*/) {
                 return false; // we want to stop as soon as we know the vj intersec the period

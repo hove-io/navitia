@@ -773,17 +773,18 @@ struct Route : public Header, Nameable, HasMessages {
     Line* line = nullptr;
     StopArea* destination = nullptr;
     MultiLineString shape;
-    std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
-    std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
+
+    std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
+    std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
 
     type::hasOdtProperties get_odt_properties() const;
 
     template<typename T>
     void for_each_vehicle_journey(const T func) const {
-        //call the functor for each vj.
+        // call the functor for each vj.
         // if func return false, we stop
-        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) { return; } }
-        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) { return; } }
+        for (auto* vj: discrete_vehicle_journey_list) { if (! func(*vj)) { return; } }
+        for (auto* vj: frequency_vehicle_journey_list) { if (! func(*vj)) { return; } }
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -996,23 +997,26 @@ struct MetaVehicleJourney: public Header, HasMessages {
            & impacted_by;
     }
 
-    // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
-    //          have the ownership of vjs instead of data
-    VehicleJourney* create_vj(/*args,*/ RTLevel level);
+    FrequencyVehicleJourney* create_frequency_vj(RTLevel level=RTLevel::Base);
+    DiscreteVehicleJourney* create_discrete_vj(RTLevel level=RTLevel::Base);
 
-    void add_vj(VehicleJourney* vj, RTLevel level) {
-        rtlevel_to_vjs_map[level].push_back(vj);
+    void add_vj(VehicleJourney* vj, RTLevel level=RTLevel::Base) {
+        rtlevel_to_vjs_map[level].emplace_back(vj);
+    }
+
+    void add_vj(std::unique_ptr<VehicleJourney>&& vj, RTLevel level=RTLevel::Base) {
+        rtlevel_to_vjs_map[level].emplace_back(std::move(vj));
     }
 
     template<typename T>
     void for_all_vjs(T fun) const{
         for (const auto& rt_vjs: rtlevel_to_vjs_map) {
             auto& vjs = rt_vjs.second;
-            boost::for_each(vjs, [&](VehicleJourney* vj){fun(*vj);});
+            boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj){fun(*vj);});
         }
     }
 
-    const std::vector<VehicleJourney*>& get_base_vj() const {
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
     }
 
@@ -1028,7 +1032,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
                       const MetaData& meta, const Route* filtering_route = nullptr) const;
 
 private:
-    navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;
+    navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
 };
 
 struct static_data {

@@ -92,7 +92,9 @@ public:
         vj->stop_time_list.emplace_back();
         vj->stop_time_list.back().stop_point = data.pt_data->stop_points.at(0);
         data.pt_data->vehicle_journeys.push_back(vj.get());
-        current_rt->discrete_vehicle_journey_list.push_back(std::move(vj));
+        auto mvj = data.pt_data->meta_vjs.get_or_create(vj->name);
+        current_rt->discrete_vehicle_journey_list.push_back(vj.get());
+        mvj->add_vj(std::move(vj), navitia::type::RTLevel::Base);
     }
     void set_estimated(const std::string& vj_name) {
         data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().set_date_time_estimated(true);

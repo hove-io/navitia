@@ -64,14 +64,37 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         route = it->second->route_list.front();
     }
 
+    nt::MetaVehicleJourney* mvj = nullptr;
+    std::string name;
+
     if (is_frequency) {
-        auto f_vj = std::make_unique<nt::FrequencyVehicleJourney>();
-        vj = f_vj.get();
-        route->frequency_vehicle_journey_list.push_back(std::move(f_vj));
+        // NOTE: the meta vj name should be the same as the vj's name
+        if (! meta_vj_name.empty()) {
+            name = meta_vj_name;
+        } else if (! uri.empty()) {
+            name = uri;
+        } else {
+            auto idx = pt_data.vehicle_journeys.size();
+            name = "vehicle_journey " + std::to_string(idx);
+        }
+        mvj = pt_data.meta_vjs.get_or_create(name);
+        auto f_vj = mvj->create_frequency_vj();
+        route->frequency_vehicle_journey_list.push_back(f_vj);
+        vj = f_vj;
     } else {
-        auto d_vj = std::make_unique<nt::DiscreteVehicleJourney>();
-        vj = d_vj.get();
-        route->discrete_vehicle_journey_list.push_back(std::move(d_vj));
+        if (! meta_vj_name.empty()) {
+            name = meta_vj_name;
+        } else if (! uri.empty()) {
+            name = uri;
+        } else {
+            auto idx = pt_data.vehicle_journeys.size();
+            name = "vehicle_journey " + std::to_string(idx);
+        }
+        mvj = pt_data.meta_vjs.get_or_create(name);
+        auto d_vj = mvj->create_discrete_vj();
+
+        route->discrete_vehicle_journey_list.push_back(d_vj);
+        vj = d_vj;
     }
     vj->route = route;
 
@@ -105,19 +128,6 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj->uri = "vj:" + line_name + ":" + std::to_string(vj->idx);
     }
 
-    // NOTE: the meta vj name should be the same as the vj's name
-    std::string name;
-    if (! meta_vj_name.empty()) {
-        name = meta_vj_name;
-    } else if (! uri.empty()) {
-        name = uri;
-    } else {
-        name = "vehicle_journey " + std::to_string(vj->idx);
-    }
-
-    nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
-    mvj->add_vj(vj, navitia::type::RTLevel::Base);
-    vj->meta_vj = mvj;
 
     pt_data.headsign_handler.change_name_and_register_as_headsign(
                                                 *vj, name);
