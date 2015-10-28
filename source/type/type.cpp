@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "type.h"
 #include "pt_data.h"
+#include "data.h"
 #include <iostream>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
@@ -304,6 +305,53 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
     else
         return !days[day-1] && !days[day] && !days[day+1];
 }
+
+void MetaVehicleJourney::cancel_vj(RTLevel level,
+        const std::vector<boost::gregorian::date>& dates,
+        const type::Data& data) {
+    for (auto l : reverse_enum_range_from<RTLevel>(level)) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            for (const auto& date: dates){
+                if (! vj->get_validity_pattern_at(level)->check(date)) { continue; }
+                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
+                        "canceling the vj " << vj->uri << " on " << date);
+                nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
+                tmp_vp.remove(date);
+                vj->validity_patterns[level] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
+            }
+        }
+    }
+}
+
+VehicleJourney*
+MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
+    for (auto l : reverse_enum_range_from<RTLevel>(level)){
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            if(vj->get_validity_pattern_at(l)->check(date)){
+                return vj;
+            };
+        }
+    }
+    return nullptr;
+}
+
+std::vector<VehicleJourney*>
+MetaVehicleJourney::get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const{
+    std::vector<VehicleJourney*> res;
+    for (auto l : reverse_enum_range_from<RTLevel>(level)){
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            auto day_itr = boost::gregorian::day_iterator{period.begin()};
+            for (; day_itr < period.end(); ++day_itr) {
+                if(vj->get_validity_pattern_at(l)->check(*day_itr)){
+                    res.push_back(vj);
+                    break;
+                };
+            }
+        }
+    }
+    return res;
+}
+
 
 static_data * static_data::instance = 0;
 static_data * static_data::get() {

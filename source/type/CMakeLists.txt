@@ -92,7 +92,7 @@ ADD_BOOST_TEST(datetime_test)
 
 
 add_executable(accessible_test tests/accessible.cpp)
-target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
+target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus utils)
 add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
 

@@ -4,7 +4,7 @@ SET(vptranslator_src
     block_pattern_to_pb.h
     block_pattern_to_pb.cpp)
 add_library(vptranslator ${vptranslator_src})
-target_link_libraries(vptranslator types ${Boost_DATE_TIME_LIBRARY} ${Boost_SERIALIZATION_LIBRARY})
+target_link_libraries(vptranslator types ${Boost_DATE_TIME_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} data)
 
 
 add_executable (vptranslator_test test.cpp)

@@ -876,15 +876,8 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         auto* vj = vj_it->second;
 
         const std::string vj_class = const_it["vj_class"].as<std::string>();
-        if (vj_class == "Theoric") {
-            meta_vj->base_vj.push_back(vj);
-        } else if (vj_class == "Adapted") {
-            meta_vj->adapted_vj.push_back(vj);
-        } else if (vj_class == "RealTime") {
-            meta_vj->real_time_vj.push_back(vj);
-        } else {
-            throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
-        }
+        auto level = navitia::type::get_rt_level_from_string(vj_class);
+        meta_vj->add_vj(vj, level);
         vj->meta_vj = meta_vj;
         data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
     }
