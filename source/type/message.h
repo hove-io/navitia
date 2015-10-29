@@ -142,9 +142,9 @@ struct UnknownPtObj {
     void serialize(Archive&, const unsigned int) {}
 };
 struct LineSection {
-    const Line* line = nullptr;
-    const StopArea* start_point = nullptr;
-    const StopArea* end_point = nullptr;
+    Line* line = nullptr;
+    StopArea* start_point = nullptr;
+    StopArea* end_point = nullptr;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & line & start_point & end_point;
@@ -152,13 +152,13 @@ struct LineSection {
 };
 typedef boost::variant<
     UnknownPtObj,
-    const Network *,
-    const StopArea *,
-    const StopPoint *,
+    Network*,
+    StopArea*,
+    StopPoint*,
     LineSection,
-    const Line *,
-    const Route *,
-    const MetaVehicleJourney *
+    Line*,
+    Route*,
+    MetaVehicleJourney*
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,

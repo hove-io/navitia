@@ -31,6 +31,7 @@ www.navitia.io
 #include "type.h"
 #include "pt_data.h"
 #include "data.h"
+#include "meta_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
@@ -41,6 +42,8 @@ www.navitia.io
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+
+namespace bt = boost::posix_time;
 
 namespace navitia { namespace type {
 
@@ -180,6 +183,21 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
     return validity_patterns[rt_level]->check(day);
+}
+
+boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
+    uint32_t first_departure = std::numeric_limits<uint32_t>::max();
+    uint32_t last_arrival = 0;
+    for (const auto& st: stop_time_list) {
+        if (st.pick_up_allowed() && first_departure > st.departure_time) {
+            first_departure = st.departure_time;
+        }
+        if (st.drop_off_allowed() && last_arrival < st.arrival_time) {
+            last_arrival = st.arrival_time;
+        }
+    }
+    return bt::time_period(bt::ptime(date, bt::seconds(first_departure)),
+            bt::ptime(date, bt::seconds(last_arrival)));
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
@@ -323,6 +341,35 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
     }
 }
 
+void MetaVehicleJourney::cancel_vj(RTLevel level,
+        const std::vector<boost::posix_time::time_period>& periods,
+        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+    for (auto l: reverse_enum_range_from<RTLevel>(level)) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            bool work_done(false);
+            nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
+            for (const auto& period: periods) {
+                //we can impact a vj with a departure the day before who past midnight
+                namespace bg = boost::gregorian;
+                bg::day_iterator titr(period.begin().date() - bg::days(1));
+                for (; titr <= period.end().date(); ++titr) {
+                    if (! meta.production_date.contains(*titr)) { continue; }
+
+                    auto day = (*titr - meta.production_date.begin()).days();
+                    if (! tmp_vp.check(day)) { continue; }
+
+                    if (period.intersects(vj->execution_period(*titr))) {
+                        tmp_vp.remove(day);
+                        work_done = true;
+                    }
+                }
+            }
+            if (! work_done) { continue; }
+            vj->validity_patterns[level] = pt_data.get_or_create_validity_pattern(tmp_vp);
+        }
+    }
+}
+
 VehicleJourney*
 MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
     for (auto l : reverse_enum_range_from<RTLevel>(level)){
@@ -336,17 +383,33 @@ MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& 
 }
 
 std::vector<VehicleJourney*>
-MetaVehicleJourney::get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const{
+MetaVehicleJourney::get_vjs_in_period(RTLevel level,
+                                      const std::vector<boost::posix_time::time_period>& periods,
+                                      const MetaData& meta) const {
+    //TODO refacto and merge cancel_vj with this (return a pair<VJ, validitypattern> ?
     std::vector<VehicleJourney*> res;
-    for (auto l : reverse_enum_range_from<RTLevel>(level)){
+    for (auto l: reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
-            auto day_itr = boost::gregorian::day_iterator{period.begin()};
-            for (; day_itr < period.end(); ++day_itr) {
-                if(vj->get_validity_pattern_at(l)->check(*day_itr)){
-                    res.push_back(vj);
-                    break;
-                };
+            bool work_done(false);
+            for (const auto& period: periods) {
+                //we can impact a vj with a departure the day before who past midnight
+                namespace bg = boost::gregorian;
+                bg::day_iterator titr(period.begin().date() - bg::days(1));
+                for (; titr <= period.end().date(); ++titr) {
+                    if (! meta.production_date.contains(*titr)) { continue; }
+
+                    auto day = (*titr - meta.production_date.begin()).days();
+                    if (! vj->get_validity_pattern_at(l)->check(day)) { continue; }
+
+                    if (period.intersects(vj->execution_period(*titr))) {
+                        work_done = true;
+                        break;
+                    }
+                }
+                if (work_done) { break; }
             }
+            if (! work_done) { continue; }
+            res.push_back(vj);
         }
     }
     return res;

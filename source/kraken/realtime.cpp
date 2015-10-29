@@ -65,7 +65,7 @@ static boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
     auto running_vj = mvj.get_vj_at_date(type::RTLevel::Base, date);
     if (running_vj) {
-        return execution_period(date, *running_vj);
+        return running_vj->execution_period(date);
     }
     // If there is no running vj at this date, we return a null period (begin == end)
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
