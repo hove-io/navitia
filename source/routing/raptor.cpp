@@ -35,6 +35,7 @@ www.navitia.io
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/fill.hpp>
+#include <chrono>
 
 namespace bt = boost::posix_time;
 
@@ -193,24 +194,47 @@ struct StartingPointSndPhase {
     unsigned count;
     DateTime end_dt;
     unsigned fallback_dur;
+    bool has_priority;
 };
 struct Dom {
     Dom(bool c): clockwise(c) {}
     bool clockwise;
-    typedef StartingPointSndPhase Arg;
+    typedef std::pair<size_t, StartingPointSndPhase> Arg;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
-        return lhs.count <= rhs.count
-            && (clockwise ? lhs.end_dt <= rhs.end_dt : lhs.end_dt >= rhs.end_dt)
-            && lhs.fallback_dur <= rhs.fallback_dur;
+        return lhs.second.count <= rhs.second.count
+            && (clockwise ? lhs.second.end_dt <= rhs.second.end_dt
+                          : lhs.second.end_dt >= rhs.second.end_dt)
+            && lhs.second.fallback_dur <= rhs.second.fallback_dur;
     }
 };
-ParetoFront<StartingPointSndPhase, Dom>
+struct CompSndPhase {
+    CompSndPhase(bool c): clockwise(c) {}
+    bool clockwise;
+    typedef StartingPointSndPhase Arg;
+    inline bool operator()(const Arg& lhs, const Arg& rhs) const {
+        if (lhs.has_priority != rhs.has_priority) {
+            return lhs.has_priority;
+        }
+        if (lhs.count != rhs.count) {
+            return lhs.count < rhs.count;
+        }
+        if (lhs.end_dt != rhs.end_dt) {
+            return (clockwise ? lhs.end_dt < rhs.end_dt : lhs.end_dt > rhs.end_dt);
+        }
+        if (lhs.fallback_dur != rhs.fallback_dur) {
+            return lhs.fallback_dur < rhs.fallback_dur;
+        }
+        return lhs.sp_idx < rhs.sp_idx; // just to avoid randomness
+    }
+};
+std::vector<StartingPointSndPhase>
 make_starting_points_snd_phase(const RAPTOR& raptor,
                                const routing::map_stop_point_duration& arrs,
                                const type::AccessibiliteParams& accessibilite_params,
                                const bool clockwise)
 {
-    auto res = ParetoFront<StartingPointSndPhase, Dom>(Dom(clockwise));
+    std::vector<StartingPointSndPhase> res;
+    auto overfilter = ParetoFront<std::pair<size_t, StartingPointSndPhase>, Dom>(Dom(clockwise));
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         const auto& working_labels = raptor.labels[count];
@@ -224,15 +248,81 @@ make_starting_points_snd_phase(const RAPTOR& raptor,
                 count,
                 (clockwise ? working_labels.dt_pt(a.first) + walking_t
                            : working_labels.dt_pt(a.first) - walking_t),
-                walking_t
+                walking_t,
+                false
             };
-            res.add(starting_point);
+            overfilter.add({res.size(), starting_point});
+            res.push_back(starting_point);
         }
     }
 
+    for (const auto& pair : overfilter) {
+        res[pair.first].has_priority = true;
+    }
+
+    std::sort(res.begin(), res.end(), CompSndPhase(clockwise)); // most interesting solutions first
+
     return res;
 }
+
+Journey convert_to_bound(const StartingPointSndPhase& sp,
+                         uint32_t lower_bound_fb,
+                         uint32_t lower_bound_conn,
+                         bool clockwise) {
+    Journey journey;
+    journey.sections.resize(sp.count);
+    journey.sn_dur = navitia::time_duration(0, 0, sp.fallback_dur + lower_bound_fb, 0);
+    uint32_t nb_conn = (sp.count >= 1 ? sp.count - 1 : 0);
+    if (clockwise) {
+        journey.arrival_dt = sp.end_dt;
+        journey.departure_dt = sp.end_dt - journey.sn_dur.seconds() - nb_conn * lower_bound_conn;
+    } else {
+        journey.arrival_dt = sp.end_dt + journey.sn_dur.seconds() + nb_conn * lower_bound_conn;
+        journey.departure_dt = sp.end_dt;
+    }
+
+    journey.transfer_dur = navitia::seconds(120 * sp.count + nb_conn * lower_bound_conn);
+    // provide best values on unknown criteria
+    journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
+    journey.nb_vj_extentions = 0;
+    return journey;
 }
+
+// To be used for debug purpose (see JourneyParetoFrontVisitor commented use in RAPTOR::compute_all)
+//
+//struct JourneyParetoFrontVisitor {
+//    JourneyParetoFrontVisitor() = default;
+//    JourneyParetoFrontVisitor(const JourneyParetoFrontVisitor&) = default;
+//    JourneyParetoFrontVisitor& operator=(const JourneyParetoFrontVisitor&) = default;
+//
+//    void is_dominated_by(const Journey& to_insert, const Journey& /*front_cur*/) {
+//        LOG4CPLUS_DEBUG(logger, "[  ]JourneyParetoFront " << to_insert);
+//        ++nb_is_dominated_by;
+//    }
+//    void dominates(const Journey& /*to_insert*/, const Journey& front_cur) {
+//        LOG4CPLUS_DEBUG(logger, "[--]JourneyParetoFront " << front_cur);
+//        ++nb_dominates;
+//    }
+//    void inserted(const Journey& to_insert) {
+//        LOG4CPLUS_DEBUG(logger, "[++]JourneyParetoFront " << to_insert);
+//        ++nb_inserted;
+//    }
+//
+//    ~JourneyParetoFrontVisitor() {
+//        LOG4CPLUS_DEBUG(logger, "JourneyParetoFront summary: nb_is_dominated_by = " << nb_is_dominated_by
+//                << ", nb_dominates = " << nb_dominates
+//                << ", nb_inserted = " << nb_inserted);
+//
+//    }
+//
+//private:
+//    size_t nb_is_dominated_by = 0;
+//    size_t nb_dominates = 0;
+//    size_t nb_inserted = 0;
+//    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+//};
+}
+
 // copy and do the off by one for strict comparison for the second pass.
 static IdxMap<type::StopPoint, DateTime>
 snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> best_labels) {
@@ -267,9 +357,11 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const type::AccessibiliteParams& accessibilite_params,
                     const std::vector<std::string>& forbidden_uri,
                     bool clockwise,
-                    const boost::optional<navitia::time_duration>& direct_path_dur) {
+                    const boost::optional<navitia::time_duration>& direct_path_dur,
+                    const size_t max_supplementary_2nd_pass) {
+    auto start_raptor = std::chrono::system_clock::now();
 
-    auto solutions = Solutions(Dominates(clockwise));
+    auto solutions = ParetoFront<Journey, Dominates/*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
     if (direct_path_dur) {
         Journey j;
         j.sn_dur = *direct_path_dur;
@@ -288,6 +380,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
 
     first_raptor_loop(calc_dep, departure_datetime, rt_level,
                       bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
+
+    auto end_first_pass = std::chrono::system_clock::now();
 
     // Now, we do the second pass.  In case of clockwise (resp
     // anticlockwise) search, the goal of the second pass is to find
@@ -308,7 +402,33 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
     auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
 
+    navitia::time_duration min_dur_to_sp(boost::date_time::pos_infin);
+    for (const auto& pair_sp_dt : calc_dep) {
+        min_dur_to_sp = std::min(min_dur_to_sp, pair_sp_dt.second);
+    }
+    unsigned lower_bound_fb = min_dur_to_sp.seconds();
+
+    navitia::DateTime min_conn_dur(std::numeric_limits<uint32_t>::max());
+    for (const auto& conns : data.dataRaptor->connections.forward_connections) {
+        for (const auto& conn : conns.second) {
+            min_conn_dur = std::min(min_conn_dur, conn.duration);
+        }
+    }
+
+    size_t nb_snd_pass, nb_useless, last_usefull_2nd_pass, supplementary_2nd_pass = 0;
     for (const auto& start: starting_points) {
+        Journey fake_journey = convert_to_bound(start, lower_bound_fb, min_conn_dur, clockwise);
+        if (solutions.is_dominated(fake_journey)) {
+            continue;
+        }
+
+        if (supplementary_2nd_pass > max_supplementary_2nd_pass) {
+            break;
+        }
+        if (!start.has_priority) {
+            ++supplementary_2nd_pass;
+        }
+
         const auto& working_labels = first_pass_labels[start.count];
 
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
@@ -326,8 +446,25 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                                                    destinations,
                                                    rt_level,
                                                    accessibilite_params);
-        for (const auto& s: reader_results) { solutions.add(s); }
+        bool has_added = false;
+        for (const auto& s: reader_results) { has_added = (solutions.add(s) || has_added); }
+        ++nb_snd_pass;
+        if (!has_added) {
+            ++nb_useless;
+        } else {
+            last_usefull_2nd_pass = nb_snd_pass;
+        }
     }
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = " << min_dur_to_sp
+            << ", lower bound connection duration = " << min_conn_dur);
+    LOG4CPLUS_DEBUG(logger, "[2nd pass] number of 2nd pass = " << nb_snd_pass << " / " << starting_points.size()
+            << " (nb useless = " << nb_useless << ", last usefull try = " << last_usefull_2nd_pass << ")");
+    auto end_raptor = std::chrono::system_clock::now();
+    LOG4CPLUS_DEBUG(logger, "[2nd pass] Run times: 1st pass = "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(end_first_pass - start_raptor).count()
+            << ", 2nd pass = "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(end_raptor - end_first_pass).count());
 
     std::vector<Path> result;
     for (const auto& s: solutions) {
