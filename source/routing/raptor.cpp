@@ -418,11 +418,11 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
             continue;
         }
 
-        if (supplementary_2nd_pass > max_supplementary_2nd_pass) {
-            break;
-        }
         if (!start.has_priority) {
             ++supplementary_2nd_pass;
+        }
+        if (supplementary_2nd_pass > max_supplementary_2nd_pass) {
+            break;
         }
 
         const auto& working_labels = first_pass_labels[start.count];
