@@ -83,8 +83,7 @@ create_disruption(const std::string& id,
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
-    auto disruption = std::make_unique<nt::disruption::Disruption>();
-    disruption->uri = id;
+    auto disruption = std::make_unique<nt::disruption::Disruption>(id, type::RTLevel::RealTime);
     disruption->reference = disruption->uri;
     disruption->publication_period = data.meta->production_period();
     disruption->created_at = timestamp;
