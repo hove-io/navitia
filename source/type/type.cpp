@@ -351,9 +351,11 @@ static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_t
 
 void MetaVehicleJourney::cancel_vj(RTLevel level,
         const std::vector<boost::posix_time::time_period>& periods,
-        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+        nt::PT_Data& pt_data, const nt::MetaData& meta, const Route* filtering_route) {
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
+            // note: we might want to cancel only the vj of certain routes
+            if (filtering_route && vj->route != filtering_route) { continue; }
             nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
             auto vp_modifier = [&tmp_vp] (const unsigned day) {
                 tmp_vp.remove(day);
@@ -382,10 +384,12 @@ MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& 
 std::vector<VehicleJourney*>
 MetaVehicleJourney::get_vjs_in_period(RTLevel level,
                                       const std::vector<boost::posix_time::time_period>& periods,
-                                      const MetaData& meta) const {
+                                      const MetaData& meta,
+                                      const Route* filtering_route) const {
     std::vector<VehicleJourney*> res;
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
+            if (filtering_route && vj->route != filtering_route) { continue; }
             auto func = [] (const unsigned /*day*/) {
                 return false; // we want to stop as soon as we know the vj intersec the period
             };
