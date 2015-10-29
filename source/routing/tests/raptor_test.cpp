@@ -2663,7 +2663,14 @@ BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
     auto res = raptor.compute_all(departures,
                                   arrivals,
                                   DateTimeUtils::set(2, "07:00"_t),
-                                  type::RTLevel::Base);
+                                  type::RTLevel::Base,
+                                  DateTimeUtils::inf,
+                                  10,
+                                  type::AccessibiliteParams(),
+                                  std::vector<std::string>(),
+                                  true,
+                                  boost::none,
+                                  10);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     using boost::posix_time::time_from_string;
