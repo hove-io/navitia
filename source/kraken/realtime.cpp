@@ -65,14 +65,14 @@ static boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
     auto running_vj = mvj.get_vj_at_date(type::RTLevel::Base, date);
     if (running_vj) {
-        return execution_period(date, *running_vj);
+        return running_vj->execution_period(date);
     }
     // If there is no running vj at this date, we return a null period (begin == end)
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
 
-static void
+static const type::disruption::Disruption&
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
@@ -83,8 +83,7 @@ create_disruption(const std::string& id,
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
-    auto disruption = std::make_unique<nt::disruption::Disruption>();
-    disruption->uri = id;
+    auto disruption = std::make_unique<nt::disruption::Disruption>(id, type::RTLevel::RealTime);
     disruption->reference = disruption->uri;
     disruption->publication_period = data.meta->production_period();
     disruption->created_at = timestamp;
@@ -108,6 +107,7 @@ create_disruption(const std::string& id,
 
     holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, "Disruption added");
+    return *holder.disruptions.back();
 }
 
 void handle_realtime(const std::string& id,
@@ -131,15 +131,9 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    create_disruption(id, timestamp, trip_update, data);
+    const auto& disruption = create_disruption(id, timestamp, trip_update, data);
 
-    auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
-
-    if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        meta_vj->cancel_vj(type::RTLevel::RealTime, {circulation_date}, data);
-        return;
-    }
-
+    apply_disruption(disruption, *data.pt_data, *data.meta);
 }
 
 }

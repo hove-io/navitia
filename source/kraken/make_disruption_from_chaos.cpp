@@ -71,24 +71,6 @@ make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& ho
 
 }
 
-
-//return the time period of circulation of a vj for one day
-boost::posix_time::time_period execution_period(const boost::gregorian::date& date,
-                                                const nt::VehicleJourney& vj) {
-    uint32_t first_departure = std::numeric_limits<uint32_t>::max();
-    uint32_t last_arrival = 0;
-    for(const auto& st: vj.stop_time_list){
-        if(st.pick_up_allowed() && first_departure > st.departure_time){
-            first_departure = st.departure_time;
-        }
-        if(st.drop_off_allowed() && last_arrival < st.arrival_time){
-            last_arrival = st.arrival_time;
-        }
-    }
-    return bt::time_period(bt::ptime(date, bt::seconds(first_departure)),
-            bt::ptime(date, bt::seconds(last_arrival)));
-}
-
 static boost::shared_ptr<nt::disruption::Severity>
 make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
     namespace tr = transit_realtime;
@@ -146,7 +128,7 @@ make_line_section(const chaos::PtObject& chaos_section,
                        << pb_section.line().uri() << " in LineSection invalid!");
         return boost::none;
     }
-    if (const auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
+    if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
         line_section.start_point = start;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
@@ -154,7 +136,7 @@ make_line_section(const chaos::PtObject& chaos_section,
                        << pb_section.start_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
-    if (const auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
+    if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
         line_section.end_point = end;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
@@ -280,10 +262,9 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto disruption = std::make_unique<nt::disruption::Disruption>();
-    disruption->uri = chaos_disruption.id();
+    auto disruption = std::make_unique<nt::disruption::Disruption>(chaos_disruption.id(), nt::RTLevel::Adapted);
 
-    if (chaos_disruption.has_contributor()){
+    if (chaos_disruption.has_contributor()) {
         disruption->contributor = chaos_disruption.contributor();
     }
 

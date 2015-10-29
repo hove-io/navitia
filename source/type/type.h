@@ -135,6 +135,8 @@ enum class OdtLevel_e {
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
 
 struct PT_Data;
+struct MetaData;
+
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
@@ -684,13 +686,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
     //associated meta vj
-    const MetaVehicleJourney* meta_vj = nullptr;
+    MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
-
-
-    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
-    // because it's not really on the vj
-    std::vector<boost::weak_ptr<disruption::Impact>> impacted_by;
 
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
@@ -711,6 +708,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     ValidityPattern* adapted_validity_pattern() const { return get_validity_pattern_at(RTLevel::Adapted); }
     ValidityPattern* rt_validity_pattern() const { return get_validity_pattern_at(RTLevel::RealTime); }
 
+    //return the time period of circulation of the vj for one day
+    boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -728,8 +727,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset
-            & impacted_by;
+            & meta_vj & utc_to_local_offset;
     }
 
     virtual ~VehicleJourney();
@@ -984,13 +982,18 @@ struct Calendar : public Nameable, public Header {
  */
 struct MetaVehicleJourney: public Header, HasMessages {
 
+    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
+    // because it's not really on the vj
+    std::vector<boost::weak_ptr<disruption::Impact>> impacted_by;
 
     /// map of the calendars that nearly match union of the validity pattern
     /// of the theoric vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & rtlevel_to_vjs_map & associated_calendars & impacts;
+        ar & idx & uri & rtlevel_to_vjs_map
+           & associated_calendars & impacts
+           & impacted_by;
     }
 
     // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
@@ -1014,13 +1017,15 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
     void cancel_vj(RTLevel level,
-            const std::vector<boost::gregorian::date>& dates,
-            const type::Data& data);
+            const std::vector<boost::posix_time::time_period>& periods,
+            PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
 
     VehicleJourney*
     get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const;
     std::vector<VehicleJourney*>
-    get_vjs_in_period(RTLevel level, const boost::gregorian::date_period& period) const;
+    get_vjs_in_period(RTLevel level,
+                      const std::vector<boost::posix_time::time_period>& period,
+                      const MetaData& meta, const Route* filtering_route = nullptr) const;
 
 private:
     navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;
