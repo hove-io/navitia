@@ -66,33 +66,24 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 
     nt::MetaVehicleJourney* mvj = nullptr;
     std::string name;
+    if (! meta_vj_name.empty()) {
+        name = meta_vj_name;
+    } else if (! uri.empty()) {
+        name = uri;
+    } else {
+        auto idx = pt_data.vehicle_journeys.size();
+        name = "vehicle_journey " + std::to_string(idx);
+    }
 
     if (is_frequency) {
         // NOTE: the meta vj name should be the same as the vj's name
-        if (! meta_vj_name.empty()) {
-            name = meta_vj_name;
-        } else if (! uri.empty()) {
-            name = uri;
-        } else {
-            auto idx = pt_data.vehicle_journeys.size();
-            name = "vehicle_journey " + std::to_string(idx);
-        }
         mvj = pt_data.meta_vjs.get_or_create(name);
         auto f_vj = mvj->create_frequency_vj();
         route->frequency_vehicle_journey_list.push_back(f_vj);
         vj = f_vj;
     } else {
-        if (! meta_vj_name.empty()) {
-            name = meta_vj_name;
-        } else if (! uri.empty()) {
-            name = uri;
-        } else {
-            auto idx = pt_data.vehicle_journeys.size();
-            name = "vehicle_journey " + std::to_string(idx);
-        }
         mvj = pt_data.meta_vjs.get_or_create(name);
         auto d_vj = mvj->create_discrete_vj();
-
         route->discrete_vehicle_journey_list.push_back(d_vj);
         vj = d_vj;
     }
@@ -129,8 +120,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
 
 
-    pt_data.headsign_handler.change_name_and_register_as_headsign(
-                                                *vj, name);
+    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, name);
 
     pt_data.vehicle_journeys.push_back(vj);
     pt_data.vehicle_journeys_map[vj->uri] = vj;

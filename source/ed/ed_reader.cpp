@@ -722,6 +722,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         std::string vj_name;
         const_it["name"].to(vj_name);
         auto mvj = data.pt_data->meta_vjs.get_or_create(vj_name);
+
         if (const_it["is_frequency"].as<bool>()) {
             auto f_vj = mvj->create_frequency_vj();
             route->frequency_vehicle_journey_list.push_back(f_vj);
@@ -865,9 +866,6 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             " WHERE meta.id = l.meta_vj";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        const std::string name = const_it["name"].as<std::string>();
-
-        nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_or_create(name);
 
         const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
         const auto vj_it = vehicle_journey_map.find(vj_idx);
@@ -877,11 +875,9 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             continue;
         }
         auto* vj = vj_it->second;
-
-        const std::string vj_class = const_it["vj_class"].as<std::string>();
-        auto level = navitia::type::get_rt_level_from_string(vj_class);
-        meta_vj->add_vj(vj, level);
-        vj->meta_vj = meta_vj;
+        auto level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
+        auto* meta_vj = data.pt_data->meta_vjs.get_or_create(vj->name);
+        meta_vj->move_vj_from(vj, navitia::type::RTLevel::Base, level);
         data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
     }
 

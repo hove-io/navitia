@@ -1000,13 +1000,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     FrequencyVehicleJourney* create_frequency_vj(RTLevel level=RTLevel::Base);
     DiscreteVehicleJourney* create_discrete_vj(RTLevel level=RTLevel::Base);
 
-    void add_vj(VehicleJourney* vj, RTLevel level=RTLevel::Base) {
-        rtlevel_to_vjs_map[level].emplace_back(vj);
-    }
-
-    void add_vj(std::unique_ptr<VehicleJourney>&& vj, RTLevel level=RTLevel::Base) {
-        rtlevel_to_vjs_map[level].emplace_back(std::move(vj));
-    }
+    void move_vj_from(VehicleJourney* vj, RTLevel from, RTLevel to);
 
     template<typename T>
     void for_all_vjs(T fun) const{
@@ -1033,6 +1027,8 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
 private:
     navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
+    template<typename VJ>
+    VJ* set_vj(std::unique_ptr<VJ>& vj_ptr, RTLevel level);
 };
 
 struct static_data {
