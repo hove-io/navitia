@@ -453,7 +453,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     }
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = " << min_dur_to_sp
-            << ", lower bound connection duration = " << min_conn_dur);
+            << ", lower bound connection duration = " << data.dataRaptor->min_connection_time);
     LOG4CPLUS_DEBUG(logger, "[2nd pass] number of 2nd pass = " << nb_snd_pass << " / " << starting_points.size()
             << " (nb useless = " << nb_useless << ", last usefull try = " << last_usefull_2nd_pass << ")");
     auto end_raptor = std::chrono::system_clock::now();
