@@ -341,31 +341,45 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
     }
 }
 
+template <typename F>
+static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_time::time_period>& periods,
+                      RTLevel lvl, const nt::MetaData& meta, const F& fun) {
+    bool intersect = false;
+    for (const auto& period: periods) {
+        //we can impact a vj with a departure the day before who past midnight
+        namespace bg = boost::gregorian;
+        bg::day_iterator titr(period.begin().date() - bg::days(1));
+        for (; titr <= period.end().date(); ++titr) {
+            if (! meta.production_date.contains(*titr)) { continue; }
+
+            auto day = (*titr - meta.production_date.begin()).days();
+            if (! vj->get_validity_pattern_at(lvl)->check(day)) { continue; }
+
+            if (period.intersects(vj->execution_period(*titr))) {
+                intersect = true;
+                if (! fun(day)) {
+                    return intersect;
+                }
+            }
+        }
+    }
+    return intersect;
+}
+
 void MetaVehicleJourney::cancel_vj(RTLevel level,
         const std::vector<boost::posix_time::time_period>& periods,
         nt::PT_Data& pt_data, const nt::MetaData& meta) {
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
-            bool work_done(false);
             nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
-            for (const auto& period: periods) {
-                //we can impact a vj with a departure the day before who past midnight
-                namespace bg = boost::gregorian;
-                bg::day_iterator titr(period.begin().date() - bg::days(1));
-                for (; titr <= period.end().date(); ++titr) {
-                    if (! meta.production_date.contains(*titr)) { continue; }
+            auto vp_modifier = [&tmp_vp] (const unsigned day) {
+                tmp_vp.remove(day);
+                return true; // we don't want to stop
+            };
 
-                    auto day = (*titr - meta.production_date.begin()).days();
-                    if (! tmp_vp.check(day)) { continue; }
-
-                    if (period.intersects(vj->execution_period(*titr))) {
-                        tmp_vp.remove(day);
-                        work_done = true;
-                    }
-                }
+            if (intersect(vj, periods, l, meta, vp_modifier)) {
+                vj->validity_patterns[level] = pt_data.get_or_create_validity_pattern(tmp_vp);
             }
-            if (! work_done) { continue; }
-            vj->validity_patterns[level] = pt_data.get_or_create_validity_pattern(tmp_vp);
         }
     }
 }
@@ -386,30 +400,15 @@ std::vector<VehicleJourney*>
 MetaVehicleJourney::get_vjs_in_period(RTLevel level,
                                       const std::vector<boost::posix_time::time_period>& periods,
                                       const MetaData& meta) const {
-    //TODO refacto and merge cancel_vj with this (return a pair<VJ, validitypattern> ?
     std::vector<VehicleJourney*> res;
     for (auto l: reverse_enum_range_from<RTLevel>(level)) {
         for (auto* vj: rtlevel_to_vjs_map[l]) {
-            bool work_done(false);
-            for (const auto& period: periods) {
-                //we can impact a vj with a departure the day before who past midnight
-                namespace bg = boost::gregorian;
-                bg::day_iterator titr(period.begin().date() - bg::days(1));
-                for (; titr <= period.end().date(); ++titr) {
-                    if (! meta.production_date.contains(*titr)) { continue; }
-
-                    auto day = (*titr - meta.production_date.begin()).days();
-                    if (! vj->get_validity_pattern_at(l)->check(day)) { continue; }
-
-                    if (period.intersects(vj->execution_period(*titr))) {
-                        work_done = true;
-                        break;
-                    }
-                }
-                if (work_done) { break; }
+            auto func = [] (const unsigned /*day*/) {
+                return false; // we want to stop as soon as we know the vj intersec the period
+            };
+            if (intersect(vj, periods, l, meta, func)) {
+                res.push_back(vj);
             }
-            if (! work_done) { continue; }
-            res.push_back(vj);
         }
     }
     return res;

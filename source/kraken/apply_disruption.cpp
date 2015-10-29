@@ -180,9 +180,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         }
         const auto& impact = this->impact;
         boost::range::remove_erase_if(mvj->impacted_by,
-                                      [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
-            auto spt = i.lock();
-            return (spt) ? spt == impact : true;
+            [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
+                auto spt = i.lock();
+                return (spt) ? spt == impact : true;
         });
 
         for (auto i: mvj->impacted_by) {
