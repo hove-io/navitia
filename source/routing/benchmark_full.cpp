@@ -147,8 +147,8 @@ int main(int argc, char** argv){
 
     desc.add_options()
             ("help", "Show this message")
-            ("interations,i", po::value<int>(&iterations)->default_value(100),
-                     "Number of iterations (10 calcuations par iteration)")
+            ("iterations,i", po::value<int>(&iterations)->default_value(100),
+                     "Number of iterations (10 requests by iteration)")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"),
                      "Path to data.nav.lz4")
             ("start,s", po::value<std::string>(&start),
@@ -156,9 +156,9 @@ int main(int argc, char** argv){
             ("target,t", po::value<std::string>(&target),
                     "Target of a particular journey")
             ("date,d", po::value<int>(&date)->default_value(-1),
-                    "Begginning date of a particular journey")
+                    "Beginning date of a particular journey")
             ("hour,h", po::value<int>(&hour)->default_value(-1),
-                    "Begginning hour of a particular journey")
+                    "Beginning hour of a particular journey")
             ("verbose,v", "Verbose debugging output")
             ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
@@ -210,7 +210,7 @@ int main(int argc, char** argv){
         std::mt19937 rng(31442);
         std::uniform_int_distribution<> gen(0,data.pt_data->stop_areas.size()-1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days({date != 1 ? unsigned(date) : 7});
+        std::vector<unsigned int> days({date != -1 ? unsigned(date) : 7});
         if(data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
             days.push_back(days.front() + 1);
         else
@@ -250,7 +250,7 @@ int main(int argc, char** argv){
     boost::progress_display show_progress(demands.size());
     Timer t("Calcul avec l'algorithme ");
     //ProfilerStart("bench.prof");
-    int nb_reponses = 0;
+    int nb_reponses = 0, nb_journeys = 0;
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_START_INSTRUMENTATION;
 #endif
@@ -290,6 +290,7 @@ int main(int argc, char** argv){
 
         if(resp.journeys_size() > 0) {
             ++ nb_reponses;
+            nb_journeys += resp.journeys_size();
 
             Result result(resp.journeys(0));
             result.time = t2.ms();
@@ -303,4 +304,5 @@ int main(int argc, char** argv){
 
     std::cout << "Number of requests: " << demands.size() << std::endl;
     std::cout << "Number of results with solution: " << nb_reponses << std::endl;
+    std::cout << "Number of journey found: " << nb_journeys << std::endl;
 }
