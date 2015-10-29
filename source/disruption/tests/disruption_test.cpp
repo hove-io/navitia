@@ -99,8 +99,7 @@ public:
     void add_disruption(DisruptionCreator disrupt, nt::PT_Data& pt_data) {
         nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = disrupt.uri;
+        auto disruption = std::make_unique<Disruption>(disrupt.uri, nt::RTLevel::Adapted);
         disruption->publication_period = disrupt.publication_period;
 
         auto impact = boost::make_shared<Impact>();

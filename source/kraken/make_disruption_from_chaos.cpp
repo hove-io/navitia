@@ -262,8 +262,7 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto disruption = std::make_unique<nt::disruption::Disruption>();
-    disruption->uri = chaos_disruption.id();
+    auto disruption = std::make_unique<nt::disruption::Disruption>(chaos_disruption.id(), nt::RTLevel::Adapted);
 
     if (chaos_disruption.has_contributor()) {
         disruption->contributor = chaos_disruption.contributor();

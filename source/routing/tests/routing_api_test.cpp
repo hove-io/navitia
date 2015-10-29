@@ -1878,8 +1878,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "info_on_stop_A";
+        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -1902,8 +1901,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "detour_on_line_2";
+        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -1982,8 +1980,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "info_on_stop_A";
+        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -2006,8 +2003,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "detour_on_line_2";
+        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";

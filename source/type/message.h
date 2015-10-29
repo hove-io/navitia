@@ -228,11 +228,15 @@ struct Tag {
 };
 
 struct Disruption {
+    Disruption() {}
+    Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+
     std::string uri;
     // Provider of the disruption
     std::string contributor;
     // it's the title of the disruption as shown in the backoffice
     std::string reference;
+    RTLevel rt_level = RTLevel::Adapted;
 
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
@@ -256,7 +260,7 @@ struct Disruption {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & reference & publication_period
+        ar & uri & reference & rt_level & publication_period
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 

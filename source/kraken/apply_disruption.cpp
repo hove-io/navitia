@@ -53,10 +53,11 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     nt::PT_Data& pt_data;
     const nt::MetaData& meta;
     std::string action;
+    nt::RTLevel rt_level; // level of the impacts
 
     apply_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action) :
-        impact(impact), pt_data(pt_data), meta(meta), action(action) {}
+            nt::PT_Data& pt_data, const nt::MetaData& meta, std::string action, nt::RTLevel l) :
+        impact(impact), pt_data(pt_data), meta(meta), action(action), rt_level(l) {}
 
     virtual ~apply_impacts_visitor() {}
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
@@ -117,8 +118,8 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        apply_impacts_visitor(impact, pt_data, meta, "add") {}
+            nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
+        apply_impacts_visitor(impact, pt_data, meta, "add", l) {}
 
     ~add_impacts_visitor() {}
     add_impacts_visitor(const add_impacts_visitor&) = default;
@@ -127,7 +128,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     void operator()(nt::MetaVehicleJourney* mvj) {
         log_start_action(mvj->uri);
-        mvj->cancel_vj(nt::RTLevel::Adapted, impact->application_periods, pt_data, meta);
+        mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta);
         mvj->impacted_by.push_back(impact);
         log_end_action(mvj->uri);
     }
@@ -152,7 +153,7 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact>impact,
     }
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                     "Adding impact: " << impact.get()->uri);
-    add_impacts_visitor v(impact, pt_data, meta);
+    add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                     impact.get()->uri << " impact added");
@@ -163,8 +164,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     size_t nb_vj_reassigned = 0;
 
     delete_impacts_visitor(boost::shared_ptr<nt::disruption::Impact> impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) :
-        apply_impacts_visitor(impact, pt_data, meta, "delete") {}
+            nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
+        apply_impacts_visitor(impact, pt_data, meta, "delete", l) {}
 
     ~delete_impacts_visitor() {}
 
@@ -173,8 +174,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     void operator()(nt::MetaVehicleJourney* mvj) {
-        for (auto* vj: mvj->get_vjs_in_period(nt::RTLevel::Adapted, impact->application_periods, meta)) {
-            vj->validity_patterns[nt::RTLevel::Adapted] = vj->validity_patterns[nt::RTLevel::Base];
+        for (auto* vj: mvj->get_vjs_in_period(rt_level, impact->application_periods, meta)) {
+            vj->validity_patterns[rt_level] = vj->validity_patterns[nt::RTLevel::Base];
             ++ nb_vj_reassigned;
         }
         const auto& impact = this->impact;
@@ -186,7 +187,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         for (auto i: mvj->impacted_by) {
             if (auto spt = i.lock()) {
-                auto v = add_impacts_visitor(spt, pt_data, meta);
+                auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
                 v(mvj);
             }
         }
@@ -211,7 +212,7 @@ void delete_impact(boost::shared_ptr<nt::disruption::Impact>impact,
     }
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting impact: " << impact.get()->uri);
-    delete_impacts_visitor v(impact, pt_data, meta);
+    delete_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
     LOG4CPLUS_DEBUG(log, impact.get()->uri << " deleted");
 }
