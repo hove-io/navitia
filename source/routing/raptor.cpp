@@ -252,7 +252,7 @@ make_starting_points_snd_phase(const RAPTOR& raptor,
                 false
             };
             overfilter.add({res.size(), starting_point});
-            res.push_back(starting_point);
+            res.push_back(std::move(starting_point));
         }
     }
 
@@ -265,6 +265,8 @@ make_starting_points_snd_phase(const RAPTOR& raptor,
     return res;
 }
 
+// creation of a fake journey from informations known after first pass
+// this journey aims at being the best we can hope from this StartingPointSndPhase
 Journey convert_to_bound(const StartingPointSndPhase& sp,
                          uint32_t lower_bound_fb,
                          uint32_t lower_bound_conn,
@@ -408,17 +410,11 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     }
     unsigned lower_bound_fb = min_dur_to_sp.seconds();
 
-    navitia::DateTime min_conn_dur(std::numeric_limits<uint32_t>::max());
-    for (const auto& conns : data.dataRaptor->connections.forward_connections) {
-        for (const auto& conn : conns.second) {
-            min_conn_dur = std::min(min_conn_dur, conn.duration);
-        }
-    }
-
-    size_t nb_snd_pass, nb_useless, last_usefull_2nd_pass, supplementary_2nd_pass = 0;
+    size_t nb_snd_pass = 0, nb_useless= 0, last_usefull_2nd_pass = 0, supplementary_2nd_pass = 0;
     for (const auto& start: starting_points) {
-        Journey fake_journey = convert_to_bound(start, lower_bound_fb, min_conn_dur, clockwise);
-        if (solutions.is_dominated(fake_journey)) {
+        Journey fake_journey = convert_to_bound(start, lower_bound_fb,
+                                                data.dataRaptor->min_connection_time, clockwise);
+        if (solutions.contains_better_than(fake_journey)) {
             continue;
         }
 

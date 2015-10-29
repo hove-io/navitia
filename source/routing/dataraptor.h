@@ -58,6 +58,7 @@ struct dataRAPTOR {
         IdxMap<type::StopPoint, std::vector<Connection>> backward_connections;
     };
     Connections connections;
+    DateTime min_connection_time;
 
     // cache friendly access to JourneyPatternPoints from a StopPoint
     struct JppsFromSp {

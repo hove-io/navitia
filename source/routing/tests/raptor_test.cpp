@@ -2665,7 +2665,7 @@ BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
                                   DateTimeUtils::set(2, "07:00"_t),
                                   type::RTLevel::Base);
 
-    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
     using boost::posix_time::time_from_string;
     BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 08:01:00"));
     BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 09:00:00"));
