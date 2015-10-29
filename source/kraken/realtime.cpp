@@ -72,7 +72,7 @@ execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourne
 }
 
 
-static void
+static const type::disruption::Disruption&
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
@@ -107,6 +107,7 @@ create_disruption(const std::string& id,
 
     holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, "Disruption added");
+    return *holder.disruptions.back();
 }
 
 void handle_realtime(const std::string& id,
@@ -130,15 +131,9 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    create_disruption(id, timestamp, trip_update, data);
+    const auto& disruption = create_disruption(id, timestamp, trip_update, data);
 
-    auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
-
-    if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        meta_vj->cancel_vj(type::RTLevel::RealTime, {circulation_date}, data);
-        return;
-    }
-
+    apply_disruption(disruption, *data.pt_data, *data.meta);
 }
 
 }

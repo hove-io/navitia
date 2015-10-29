@@ -324,23 +324,6 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
         return !days[day-1] && !days[day] && !days[day+1];
 }
 
-void MetaVehicleJourney::cancel_vj(RTLevel level,
-        const std::vector<boost::gregorian::date>& dates,
-        const type::Data& data) {
-    for (auto l : reverse_enum_range_from<RTLevel>(level)) {
-        for (auto* vj: rtlevel_to_vjs_map[l]) {
-            for (const auto& date: dates){
-                if (! vj->get_validity_pattern_at(level)->check(date)) { continue; }
-                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
-                        "canceling the vj " << vj->uri << " on " << date);
-                nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
-                tmp_vp.remove(date);
-                vj->validity_patterns[level] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
-            }
-        }
-    }
-}
-
 template <typename F>
 static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_time::time_period>& periods,
                       RTLevel lvl, const nt::MetaData& meta, const F& fun) {

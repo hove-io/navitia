@@ -1017,10 +1017,6 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
     void cancel_vj(RTLevel level,
-            const std::vector<boost::gregorian::date>& dates,
-            const type::Data& data);
-
-    void cancel_vj(RTLevel level,
             const std::vector<boost::posix_time::time_period>& periods,
             PT_Data& pt_data, const MetaData& meta);
 
