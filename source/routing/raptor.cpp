@@ -360,7 +360,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const std::vector<std::string>& forbidden_uri,
                     bool clockwise,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
-                    const size_t max_supplementary_2nd_pass) {
+                    const size_t max_extra_second_pass) {
     auto start_raptor = std::chrono::system_clock::now();
 
     auto solutions = ParetoFront<Journey, Dominates/*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
@@ -420,7 +420,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
         if (!start.has_priority) {
             ++supplementary_2nd_pass;
         }
-        if (supplementary_2nd_pass > max_supplementary_2nd_pass) {
+        if (supplementary_2nd_pass > max_extra_second_pass) {
             break;
         }
 

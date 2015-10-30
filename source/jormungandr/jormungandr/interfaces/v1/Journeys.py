@@ -565,6 +565,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
+        parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp

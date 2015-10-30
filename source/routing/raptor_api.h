@@ -61,7 +61,8 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::RTLevel rt_level,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                                  bool show_codes = false);
+                                  bool show_codes = false,
+                                  uint32_t max_extra_second_pass = 0);
 
 pbnavitia::Response make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                                      const std::vector<type::EntryPoint> &destinations,
