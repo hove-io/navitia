@@ -350,36 +350,21 @@ static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_t
 }
 
 template<typename VJ>
-VJ* MetaVehicleJourney::set_vj(std::unique_ptr<VJ>& vj_ptr, RTLevel level){
+VJ* MetaVehicleJourney::impl_create_vj(RTLevel level){
+    auto vj_ptr = std::make_unique<VJ>();
     auto ret = vj_ptr.get();
     vj_ptr->meta_vj = this;
+    vj_ptr->realtime_level = level;
     rtlevel_to_vjs_map[level].emplace_back(std::move(vj_ptr));
     return ret;
 }
 
 FrequencyVehicleJourney* MetaVehicleJourney::create_frequency_vj(RTLevel level) {
-    auto f_vj = std::make_unique<FrequencyVehicleJourney>();
-    return set_vj(f_vj, level);
+    return impl_create_vj<FrequencyVehicleJourney>(level);
 }
 
 DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj(RTLevel level) {
-    auto d_vj = std::make_unique<DiscreteVehicleJourney>();
-    return set_vj(d_vj, level);
-}
-
-void MetaVehicleJourney::move_vj_from(VehicleJourney* vj, RTLevel from, RTLevel to){
-    if (from == to) {
-        return;
-    }
-    auto it = boost::find_if(rtlevel_to_vjs_map[from], [&](const std::unique_ptr<VehicleJourney>& vj_ptr) {
-        return vj_ptr.get() == vj;
-    });
-    if (it == rtlevel_to_vjs_map[from].cend()) {
-        return;
-    }
-    rtlevel_to_vjs_map[to].emplace_back(std::move(*it));
-    std::swap(*it, rtlevel_to_vjs_map[from].back());
-    rtlevel_to_vjs_map[from].pop_back();
+    return impl_create_vj<DiscreteVehicleJourney>(level);
 }
 
 

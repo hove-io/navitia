@@ -55,6 +55,19 @@ inline RTLevel get_rt_level_from_string(const std::string& level_str) {
     }
     throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
 }
+
+inline std::string get_string_from_rt_level(RTLevel level) {
+    if (level == RTLevel::Base){
+        return "Theoric";
+    }
+    if (level == RTLevel::Adapted){
+        return "Adapted";
+    }
+    if (level == RTLevel::RealTime){
+        return "RealTime";
+    }
+    throw navitia::exception("technical error, vj class for meta vj should be either Base, Adapted or RealTime");
+}
 }
 
 template <>
