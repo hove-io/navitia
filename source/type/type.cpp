@@ -325,7 +325,7 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
 }
 
 template <typename F>
-static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_time::time_period>& periods,
+static bool intersect(const VehicleJourney& vj, const std::vector<boost::posix_time::time_period>& periods,
                       RTLevel lvl, const nt::MetaData& meta, const F& fun) {
     bool intersect = false;
     for (const auto& period: periods) {
@@ -336,9 +336,9 @@ static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_t
             if (! meta.production_date.contains(*titr)) { continue; }
 
             auto day = (*titr - meta.production_date.begin()).days();
-            if (! vj->get_validity_pattern_at(lvl)->check(day)) { continue; }
+            if (! vj.get_validity_pattern_at(lvl)->check(day)) { continue; }
 
-            if (period.intersects(vj->execution_period(*titr))) {
+            if (period.intersects(vj.execution_period(*titr))) {
                 intersect = true;
                 if (! fun(day)) {
                     return intersect;
@@ -381,7 +381,7 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
                 return true; // we don't want to stop
             };
 
-            if (intersect(vj, periods, l, meta, vp_modifier)) {
+            if (intersect(*vj, periods, l, meta, vp_modifier)) {
                 vj->validity_patterns[level] = pt_data.get_or_create_validity_pattern(tmp_vp);
             }
         }
@@ -412,8 +412,8 @@ MetaVehicleJourney::get_vjs_in_period(RTLevel level,
             auto func = [] (const unsigned /*day*/) {
                 return false; // we want to stop as soon as we know the vj intersec the period
             };
-            if (intersect(vj, periods, l, meta, func)) {
-                res.push_back(vj);
+            if (intersect(*vj, periods, l, meta, func)) {
+                res.push_back(vj.get());
             }
         }
     }

@@ -1025,7 +1025,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
 private:
     template<typename VJ>
-    VJ* set_vj(std::unique_ptr<VJ>& vj_ptr, RTLevel level);
+    VJ* impl_create_vj(RTLevel level);
 
     navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
 };
