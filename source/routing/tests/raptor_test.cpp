@@ -2670,7 +2670,7 @@ BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
                                   std::vector<std::string>(),
                                   true,
                                   boost::none,
-                                  10);
+                                  10); // only extra second passes can find that A-B has less sn
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     using boost::posix_time::time_from_string;
