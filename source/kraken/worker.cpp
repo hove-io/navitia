@@ -630,7 +630,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 rt_level, request.max_duration(),
-                request.max_transfers(), request.show_codes());
+                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
     }
 }
 

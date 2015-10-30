@@ -857,14 +857,19 @@ parse_datetimes(RAPTOR& raptor,
 }
 
 pbnavitia::Response
-make_response(RAPTOR &raptor, const type::EntryPoint& origin,
+make_response(RAPTOR &raptor,
+              const type::EntryPoint& origin,
               const type::EntryPoint& destination,
-              const std::vector<uint64_t>& timestamps, bool clockwise,
+              const std::vector<uint64_t>& timestamps,
+              bool clockwise,
               const type::AccessibiliteParams& accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               const type::RTLevel rt_level,
-              uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+              uint32_t max_duration,
+              uint32_t max_transfers,
+              bool show_codes,
+              uint32_t max_extra_second_pass) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     pbnavitia::Response response;
@@ -928,7 +933,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         }
         std::vector<Path> tmp = raptor.compute_all(
             departures, destinations, init_dt, rt_level, bound, max_transfers,
-            accessibilite_params, forbidden, clockwise, direct_path_dur);
+            accessibilite_params, forbidden, clockwise, direct_path_dur, max_extra_second_pass);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
