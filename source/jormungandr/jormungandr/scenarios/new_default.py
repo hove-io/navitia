@@ -125,6 +125,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     req.journeys.max_duration = request["max_duration"]
     req.journeys.max_transfers = request["max_transfers"]
+    if request["max_extra_second_pass"]:
+        req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
     req.journeys.wheelchair = request["wheelchair"]
     if request['data_freshness'] == 'realtime':
         req.journeys.realtime_level = request_pb2.REAL_TIME
