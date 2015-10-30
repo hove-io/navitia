@@ -120,8 +120,9 @@ struct FindAdminWithCities {
             const std::string uri = it["uri"].as<std::string>() + "extern";
             const std::string insee = it["insee"].as<std::string>();
             //we try to find the admin in georef by using it's insee code (only work in France)
-            navitia::georef::Admin*& admin = insee_admins_map[insee];
-            if (!admin) { admin = added_admins[uri];}
+            navitia::georef::Admin* admin = nullptr;
+            if (!insee.empty()) { admin = find_or_default(insee, insee_admins_map);}
+            if (!admin) { admin = find_or_default(uri, added_admins);}
             if (!admin) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
@@ -140,6 +141,7 @@ struct FindAdminWithCities {
                 if(!postal_code.empty()){
                     boost::split(admin->postal_codes, postal_code, boost::is_any_of("-"));
                 }
+                added_admins[uri] = admin;
             }
             res.push_back(admin);
         }
