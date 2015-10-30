@@ -272,7 +272,7 @@ Journey convert_to_bound(const StartingPointSndPhase& sp,
                          uint32_t lower_bound_conn,
                          bool clockwise) {
     Journey journey;
-    journey.sections.resize(sp.count);
+    journey.sections.resize(sp.count); // only the number of sections is part of the dominance function
     journey.sn_dur = navitia::time_duration(0, 0, sp.fallback_dur + lower_bound_fb, 0);
     uint32_t nb_conn = (sp.count >= 1 ? sp.count - 1 : 0);
     if (clockwise) {
@@ -404,11 +404,10 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
     auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
 
-    navitia::time_duration min_dur_to_sp(boost::date_time::pos_infin);
+    unsigned lower_bound_fb = std::numeric_limits<unsigned>::max();
     for (const auto& pair_sp_dt : calc_dep) {
-        min_dur_to_sp = std::min(min_dur_to_sp, pair_sp_dt.second);
+        lower_bound_fb = std::min(lower_bound_fb, unsigned(pair_sp_dt.second.seconds()));
     }
-    unsigned lower_bound_fb = min_dur_to_sp.seconds();
 
     size_t nb_snd_pass = 0, nb_useless= 0, last_usefull_2nd_pass = 0, supplementary_2nd_pass = 0;
     for (const auto& start: starting_points) {
@@ -443,7 +442,10 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                                                    rt_level,
                                                    accessibilite_params);
         bool has_added = false;
-        for (const auto& s: reader_results) { has_added = (solutions.add(s) || has_added); }
+        for (const auto& s: reader_results) {
+            const bool cur_added = solutions.add(s);
+            has_added = has_added || cur_added;
+        }
         ++nb_snd_pass;
         if (!has_added) {
             ++nb_useless;
@@ -452,8 +454,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
         }
     }
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = " << min_dur_to_sp
-            << ", lower bound connection duration = " << data.dataRaptor->min_connection_time);
+    LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = " << lower_bound_fb
+            << " s, lower bound connection duration = " << data.dataRaptor->min_connection_time << " s");
     LOG4CPLUS_DEBUG(logger, "[2nd pass] number of 2nd pass = " << nb_snd_pass << " / " << starting_points.size()
             << " (nb useless = " << nb_useless << ", last usefull try = " << last_usefull_2nd_pass << ")");
     auto end_raptor = std::chrono::system_clock::now();
