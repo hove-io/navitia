@@ -306,7 +306,8 @@ class Instance(object):
         req.place_code.type = type_to_pttype[type_]
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
-        return self.send_and_receive(req)
+        #we set the timeout to 1s
+        return self.send_and_receive(req, 1000)
 
     def has_external_code(self, type_, id_):
         """
