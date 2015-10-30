@@ -559,16 +559,26 @@ bool Journey::better_on_sn(const Journey& that, bool) const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Journey& j) {
-    os << "([" << j.departure_dt << ", " << j.arrival_dt << ", "
+    os << "([" << navitia::str(j.departure_dt) << ", " << navitia::str(j.arrival_dt) << ", "
        << j.min_waiting_dur << ", " << j.transfer_dur << "], ["
        << j.sections.size() << ", " << unsigned(j.nb_vj_extentions) << "], "
        << j.sn_dur << ") ";
     for (const auto& s: j.sections) {
-        os << "("
-           << s.get_in_st->vehicle_journey->route->line->uri << ": "
-           << s.get_in_st->stop_point->uri << "@"
-           << s.get_in_dt << ", "
-           << s.get_out_st->stop_point->uri << "@"
+        if (s.get_in_st) {
+            os << "("
+               << s.get_in_st->vehicle_journey->route->line->uri << ": "
+               << s.get_in_st->stop_point->uri;
+        } else {
+            os << "(NULL";
+        }
+        os << "@"
+           << s.get_in_dt << ", ";
+        if (s.get_out_st) {
+           os << s.get_out_st->stop_point->uri;
+        } else {
+            os << "NULL";
+        }
+        os << "@"
            << s.get_out_dt << ")";
     }
     return os;

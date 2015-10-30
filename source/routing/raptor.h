@@ -139,7 +139,8 @@ struct RAPTOR
                 const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string>& forbidden = std::vector<std::string>(),
                 bool clockwise = true,
-                const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
+                const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
+                const size_t max_supplementary_2nd_pass = 0);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs

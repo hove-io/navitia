@@ -109,6 +109,13 @@ void dataRAPTOR::load(const type::PT_Data& data)
             }
         }
     }
+
+    min_connection_time = std::numeric_limits<uint32_t>::max();
+    for (const auto& conns : connections.forward_connections) {
+        for (const auto& conn : conns.second) {
+            min_connection_time = std::min(min_connection_time, conn.duration);
+        }
+    }
 }
 
 }}
