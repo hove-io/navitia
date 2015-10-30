@@ -1878,47 +1878,39 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
-        disruption->publication_period = default_period;
+        auto& disruption = holder.make_disruption("info_on_stop_A", nt::RTLevel::Adapted);
+        disruption.publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
         tag->name = "tag name";
-        disruption->tags.push_back(tag);
+        disruption.tags.push_back(tag);
 
         auto impact = boost::make_shared<Impact>();
         impact->uri = "too_bad";
         impact->application_periods = {default_period};
 
         impact->severity = info_severity;
-
         impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "A", *b.data->pt_data, impact));
-
         impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
 
-        disruption->add_impact(impact);
-
-        holder.disruptions.push_back(std::move(disruption));
+        disruption.add_impact(impact);
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
-        disruption->publication_period = default_period;
+        auto& disruption = holder.make_disruption("detour_on_line_2", nt::RTLevel::Adapted);
+        disruption.publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
         tag->name = "tag name";
-        disruption->tags.push_back(tag);
+        disruption.tags.push_back(tag);
 
         auto impact = boost::make_shared<Impact>();
         impact->uri = "too_bad";
         impact->application_periods = {default_period};
 
         impact->severity = bad_severity;
-
         impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "l", *b.data->pt_data, impact));
-
-        disruption->add_impact(impact);
-
-        holder.disruptions.push_back(std::move(disruption));
+        disruption.add_impact(impact);
     }
 
     nr::RAPTOR raptor(*b.data);
@@ -1980,47 +1972,40 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
-        disruption->publication_period = default_period;
+        auto& disruption = holder.make_disruption("info_on_stop_A", nt::RTLevel::Adapted);
+        disruption.publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
         tag->name = "tag name";
-        disruption->tags.push_back(tag);
+        disruption.tags.push_back(tag);
 
         auto impact = boost::make_shared<Impact>();
         impact->uri = "too_bad";
         impact->application_periods = {default_period};
 
         impact->severity = info_severity;
-
         impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "A", *b.data->pt_data, impact));
-
         impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
 
-        disruption->add_impact(impact);
-
-        holder.disruptions.push_back(std::move(disruption));
+        disruption.add_impact(impact);
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
-        disruption->publication_period = default_period;
+        auto& disruption = holder.make_disruption("detour_on_line_2", nt::RTLevel::Adapted);
+        disruption.publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
         tag->name = "tag name";
-        disruption->tags.push_back(tag);
+        disruption.tags.push_back(tag);
 
         auto impact = boost::make_shared<Impact>();
         impact->uri = "too_bad";
         impact->application_periods = {default_period};
 
         impact->severity = bad_severity;
-
         impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
 
-        disruption->add_impact(impact);
-
-        holder.disruptions.push_back(std::move(disruption));
+        disruption.add_impact(impact);
     }
 
     nr::RAPTOR raptor(*b.data);

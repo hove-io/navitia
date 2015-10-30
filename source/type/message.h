@@ -230,6 +230,8 @@ struct Tag {
 struct Disruption {
     Disruption() {}
     Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+    Disruption& operator=(const Disruption&) = delete;
+    Disruption(const Disruption&) = delete;
 
     std::string uri;
     // Provider of the disruption
@@ -278,8 +280,11 @@ private:
     std::vector<boost::shared_ptr<Impact>> impacts;
 };
 
-struct DisruptionHolder {
-    std::vector<std::unique_ptr<Disruption>> disruptions;
+class DisruptionHolder {
+    std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
+public:
+    Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
+    std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
@@ -289,7 +294,7 @@ struct DisruptionHolder {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions & causes & severities & tags;
+        ar & disruptions_by_uri & causes & severities & tags;
     }
 };
 }

@@ -99,8 +99,8 @@ public:
     void add_disruption(DisruptionCreator disrupt, nt::PT_Data& pt_data) {
         nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-        auto disruption = std::make_unique<Disruption>(disrupt.uri, nt::RTLevel::Adapted);
-        disruption->publication_period = disrupt.publication_period;
+        auto& disruption = holder.make_disruption(disrupt.uri, nt::RTLevel::Adapted);
+        disruption.publication_period = disrupt.publication_period;
 
         auto impact = boost::make_shared<Impact>();
         impact->uri = disrupt.uri;
@@ -130,9 +130,7 @@ public:
             throw navitia::exception("not handled yet");
         }
 
-        disruption->add_impact(impact);
-
-        holder.disruptions.push_back(std::move(disruption));
+        disruption.add_impact(impact);
     }
 
     Params(): b("20120614"), end_date("20130614T000000"_pts) {

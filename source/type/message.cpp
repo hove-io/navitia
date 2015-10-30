@@ -132,4 +132,26 @@ bool Impact::operator<(const Impact& other){
     }
 }
 
+Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLevel lvl) {
+    auto disruption = std::make_unique<Disruption>(uri, lvl);
+    disruptions_by_uri[uri] = std::move(disruption);
+    return *disruptions_by_uri[uri];
+}
+
+/*
+ * remove the disruption (if it exists) from the collection
+ * transfer the ownership of the disruption
+ *
+ * If it does not exists return a nullptr
+ */
+std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& uri) {
+    const auto it = disruptions_by_uri.find(uri);
+    if (it == std::end(disruptions_by_uri)) {
+        return {nullptr};
+    }
+    auto res = std::move(it->second);
+    disruptions_by_uri.erase(it);
+    return std::move(res);
+}
+
 }}}//namespace

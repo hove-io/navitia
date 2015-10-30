@@ -78,20 +78,20 @@ create_disruption(const std::string& id,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
-    nt::disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
+    nt::disruption::DisruptionHolder& holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
-    auto disruption = std::make_unique<nt::disruption::Disruption>(id, type::RTLevel::RealTime);
-    disruption->reference = disruption->uri;
-    disruption->publication_period = data.meta->production_period();
-    disruption->created_at = timestamp;
-    disruption->updated_at = timestamp;
+    auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
+    disruption.reference = disruption.uri;
+    disruption.publication_period = data.meta->production_period();
+    disruption.created_at = timestamp;
+    disruption.updated_at = timestamp;
     // cause
     {// impact
         auto impact = boost::make_shared<nt::disruption::Impact>();
-        impact->uri = disruption->uri;
+        impact->uri = disruption.uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
         impact->application_periods.push_back(execution_period(circulation_date, mvj));
@@ -99,15 +99,14 @@ create_disruption(const std::string& id,
         impact->informed_entities.push_back(
             make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
         // messages
-        disruption->add_impact(std::move(impact));
+        disruption.add_impact(std::move(impact));
     }
     // localization
     // tags
     // note
 
-    holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, "Disruption added");
-    return *holder.disruptions.back();
+    return disruption;
 }
 
 void handle_realtime(const std::string& id,
