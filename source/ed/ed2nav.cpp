@@ -59,6 +59,7 @@ struct FindAdminWithCities {
     boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
     AdminMap added_admins;
+    AdminMap insee_admins_map;
     size_t nb_call = 0;
     size_t nb_uninitialized = 0;
     size_t nb_georef = 0;
@@ -87,7 +88,18 @@ struct FindAdminWithCities {
         }
     }
 
+    void init(){
+        for(auto* admin: georef.admins){
+            if(!admin->insee.empty()){
+                insee_admins_map[admin->insee] = admin;
+            }
+        }
+    }
+
     result_type operator()(const navitia::type::GeographicalCoord& c) {
+        if(nb_call == 0){
+            init();
+        }
         ++nb_call;
 
         if (!c.is_initialized()) {++nb_uninitialized; return {};}
@@ -106,14 +118,17 @@ struct FindAdminWithCities {
         result_type res;
         for (auto it = result.begin(); it != result.end(); ++it) {
             const std::string uri = it["uri"].as<std::string>() + "extern";
-            navitia::georef::Admin*& admin = added_admins[uri];
+            const std::string insee = it["insee"].as<std::string>();
+            //we try to find the admin in georef by using it's insee code (only work in France)
+            navitia::georef::Admin*& admin = insee_admins_map[insee];
+            if (!admin) { admin = added_admins[uri];}
             if (!admin) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
                 admin->comment = "from cities";
                 admin->uri = uri;
                 it["name"].to(admin->name);
-                it["insee"].to(admin->insee);
+                admin->insee = insee;
                 it["level"].to(admin->level);
                 admin->coord.set_lon(it["lon"].as<double>());
                 admin->coord.set_lat(it["lat"].as<double>());
