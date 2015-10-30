@@ -35,6 +35,9 @@ www.navitia.io
 #include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
 #include "type/meta_data.h"
+#include "type/message.h"
+#include "type/rt_level.h"
+#include <memory>
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -82,6 +85,34 @@ struct SA {
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
 };
 
+//     b.add_impact().name("bob").period("12d").severity(NoService).on(stop_1).on(line1);
+struct DisruptionCreator;
+
+struct Impacter {
+    Impacter(builder&, nt::disruption::Disruption&);
+    builder& b;
+    boost::shared_ptr<nt::disruption::Impact> real_impact;
+    Impacter& uri(const std::string& u) { real_impact->uri = u; return *this; }
+    Impacter& application_periods(boost::posix_time::time_period& p) {
+        real_impact->application_periods.push_back(p);
+        return *this;
+    }
+//    Impacter& effect(nt::disruption::Effect e) { real_impact->effect = e; return *this; }
+};
+
+struct DisruptionCreator {
+    builder& b;
+    DisruptionCreator(builder&, const std::string& uri, nt::RTLevel lvl);
+
+    Impacter& impact();
+    DisruptionCreator& publication_period(const boost::posix_time::time_period& p) {
+        disruption.publication_period = p;
+        return *this;
+    }
+
+    nt::disruption::Disruption& disruption;
+    std::vector<Impacter> impacts;
+};
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
@@ -142,6 +173,9 @@ struct builder {
           const bool create_sp = true, bool wheelchair_boarding = true) {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
     }
+
+    DisruptionCreator disrupt(const std::string& uri, nt::RTLevel lvl);
+    Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

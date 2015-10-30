@@ -264,6 +264,41 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     return *this;
 }
 
+DisruptionCreator::DisruptionCreator(builder& b, const std::string& uri, nt::RTLevel lvl):
+    b(b), disruption(b.data->pt_data->disruption_holder.make_disruption(uri, lvl)) {}
+
+Impacter& DisruptionCreator::impact() {
+    impacts.emplace_back(b, disruption);
+    return impacts.back();
+}
+
+Impacter::Impacter(builder& bu, nt::disruption::Disruption& disrup): b(bu) {
+    real_impact = boost::make_shared<nt::disruption::Impact>();
+
+    disrup.add_impact(real_impact);
+}
+
+DisruptionCreator builder::disrupt(const std::string& uri, nt::RTLevel lvl) {
+    return DisruptionCreator(*this, uri, lvl);
+}
+
+std::string get_random_id() {
+    boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    std::stringstream uuid_stream;
+    uuid_stream << uuid;
+    return uuid_stream.str();
+}
+
+/*
+ * helper to create a disruption with only one impact
+ */
+Impacter builder::impact(nt::RTLevel lvl, std::string disruption_uri) {
+    if (disruption_uri.empty()) {
+        disruption_uri = get_random_id();
+    }
+    auto& disruption = data->pt_data->disruption_holder.make_disruption(disruption_uri, lvl);
+    return Impacter(*this, disruption);
+}
 
 VJ builder::vj(const std::string& line_name,
                const std::string& validity_pattern,
