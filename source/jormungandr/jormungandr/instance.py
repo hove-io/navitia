@@ -47,6 +47,7 @@ from shapely import geometry
 from flask import g
 import json
 import flask
+import pybreaker
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -74,6 +75,7 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_up = True
+        self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
 
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
@@ -231,7 +233,17 @@ class Instance(object):
             if not socket.closed:
                 self._sockets.put(socket)
 
-    def send_and_receive(self,
+    def send_and_receive(self, *args, **kwargs):
+        """
+        encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
+        """
+        try:
+            return self.breaker.call(self._send_and_receive, *args, **kwargs)
+        except pybreaker.CircuitBreakerError, e:
+            raise DeadSocketException(self.name, self.socket_path)
+
+
+    def _send_and_receive(self,
                          request,
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False):
