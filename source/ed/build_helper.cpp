@@ -37,6 +37,13 @@ namespace dis = nt::disruption;
 
 namespace ed {
 
+std::string get_random_id() {
+    boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    std::stringstream uuid_stream;
+    uuid_stream << uuid;
+    return uuid_stream.str();
+}
+
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
        bool wheelchair_boarding, const std::string& uri,
@@ -270,7 +277,10 @@ DisruptionCreator::DisruptionCreator(builder& b, const std::string& uri, nt::RTL
 
 Impacter& DisruptionCreator::impact() {
     impacters.emplace_back(b, disruption);
-    return impacters.back();
+    // default uri is random
+    auto& i = impacters.back();
+    i.uri(get_random_id());
+    return i;
 }
 
 Impacter::Impacter(builder& bu, dis::Disruption& disrup): b(bu) {
@@ -291,12 +301,6 @@ DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
     return DisruptionCreator(*this, uri, lvl);
 }
 
-std::string get_random_id() {
-    boost::uuids::uuid uuid = boost::uuids::random_generator()();
-    std::stringstream uuid_stream;
-    uuid_stream << uuid;
-    return uuid_stream.str();
-}
 
 Impacter& Impacter::severity(dis::Effect e,
                              std::string uri,

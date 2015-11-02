@@ -52,27 +52,34 @@ struct SimpleDataset {
     }
 
     ed::builder b = ed::builder("20150928");
+    void apply(const nt::disruption::Disruption& dis) {
+        return navitia::apply_disruption(dis, *b.data->pt_data, *b.data->meta);
+    }
 };
 
 BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
-    b.disrupt(nt::RTLevel::Adapted, "bob").impact().uri("bobette"); //.severity(nt::disruption::se)
-    b.impact(nt::RTLevel::Adapted).uri("bobette").severity(nt::disruption::Effect::NO_SERVICE);
+    using btp = boost::posix_time::time_period;
+    const auto& disrup = b.impact(nt::RTLevel::RealTime)
+                     .severity(nt::disruption::Effect::NO_SERVICE)
+                     .on(nt::Type_e::VehicleJourney, "vj:A-1")
+                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
+                     .get_disruption();
 
-//     b.add_impact().name("bob").period("12d").severity(NoService).on(stop_1).on(line1);
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    const auto& vj = pt_data->vehicle_journeys_map.at("vj:A-1");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-//    transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
-//    const auto& pt_data = b.data->pt_data;
-//    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
-//    auto vj = pt_data->vehicle_journeys.front();
-//    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
-
-//    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    //TODO
+//    apply(*disrup);
 
 //    // we should not have created any objects save for one validity_pattern
-//    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
+//    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+//    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
 //    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
 //    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
 //    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
