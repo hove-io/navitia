@@ -73,9 +73,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         auto idx = pt_data.vehicle_journeys.size();
         name = "vehicle_journey " + std::to_string(idx);
     }
+    // NOTE: the meta vj name should be the same as the vj's name
     nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
+
     if (is_frequency) {
-        // NOTE: the meta vj name should be the same as the vj's name
         auto f_vj = mvj->create_frequency_vj();
         route->frequency_vehicle_journey_list.push_back(f_vj);
         vj = f_vj;
