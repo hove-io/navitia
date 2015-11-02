@@ -61,7 +61,7 @@ BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     using btp = boost::posix_time::time_period;
     const auto& disrup = b.impact(nt::RTLevel::RealTime)
                      .severity(nt::disruption::Effect::NO_SERVICE)
-                     .on(nt::Type_e::VehicleJourney, "vj:A-1")
+                     .on(nt::Type_e::MetaVehicleJourney, "vj:A-1")
                      .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                      .get_disruption();
 
@@ -74,27 +74,38 @@ BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     const auto& vj = pt_data->vehicle_journeys_map.at("vj:A-1");
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    //TODO
-//    apply(*disrup);
+    apply(disrup);
 
-//    // we should not have created any objects save for one validity_pattern
-//    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
-//    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
-//    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
-//    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+    // we should not have created any objects save for one validity_pattern
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-//    //the rt vp must be empty
-//    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, navitia::type::ValidityPattern::year_bitset());
+    //the rt vp must be empty
+    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, navitia::type::ValidityPattern::year_bitset());
 
-//    // we add a second time the realtime message, it should not change anything
-//    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    // we add a second time the realtime message, it should not change anything
+    apply(disrup);
 
-//    // we should not have created any objects save for one validity_pattern
-//    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-//    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
-//    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we delete the message
+    navitia::delete_disruption(disrup.uri, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    //no cleanup for the moment, but it would be nice
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // but the vp should be equals again
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 }
