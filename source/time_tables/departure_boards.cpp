@@ -193,19 +193,8 @@ departure_board(const std::string& request,
         if ( ! calendar_id) {
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         } else {
-            // for calendar we want to sort the result a quite a strange way
-            // we want the first stop time to start from handler.date_time
-            std::sort(stop_times.begin(), stop_times.end(),
-                      [&handler](datetime_stop_time dst1, datetime_stop_time dst2) {
-                auto is_before_start1 = (DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(handler.date_time));
-                auto is_before_start2 = (DateTimeUtils::hour(dst2.first) < DateTimeUtils::hour(handler.date_time));
-
-                if (is_before_start1 != is_before_start2) {
-                    //if one is before and one is after, we want the one after first
-                    return ! is_before_start1;
-                }
-                return DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(dst2.first);
-                });
+            // for calendar we want the first stop time to start from handler.date_time
+            std::sort(stop_times.begin(), stop_times.end(), CalendarScheduleSort(handler.date_time));
             if (stop_times.size() > max_date_times) {
                 stop_times.resize(max_date_times);
             }

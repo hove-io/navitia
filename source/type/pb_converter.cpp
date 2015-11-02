@@ -61,7 +61,7 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
 }
 
 static pbnavitia::ActiveStatus
-compute_disruption_status(const type::new_disruption::Impact& impact,
+compute_disruption_status(const type::disruption::Impact& impact,
                           const boost::posix_time::time_period& action_period) {
 
     bool is_future = false;
@@ -122,7 +122,7 @@ static void fill_property(const std::string& name,
 }
 
 template <typename T>
-void fill_message(const type::new_disruption::Impact& impact,
+void fill_message(const type::disruption::Impact& impact,
         const type::Data&, T pb_object, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period& action_period) {
     auto pb_disrution = pb_object->add_disruptions();
@@ -165,28 +165,28 @@ void fill_message(const type::new_disruption::Impact& impact,
         pb_channel->set_name(m.channel_name);
         for (const auto& type: m.channel_types){
             switch (type) {
-            case nt::new_disruption::ChannelType::web:
+            case nt::disruption::ChannelType::web:
                 pb_channel->add_channel_types(pbnavitia::Channel::web);
                 break;
-            case nt::new_disruption::ChannelType::sms:
+            case nt::disruption::ChannelType::sms:
                 pb_channel->add_channel_types(pbnavitia::Channel::sms);
                 break;
-            case nt::new_disruption::ChannelType::email:
+            case nt::disruption::ChannelType::email:
                 pb_channel->add_channel_types(pbnavitia::Channel::email);
                 break;
-            case nt::new_disruption::ChannelType::mobile:
+            case nt::disruption::ChannelType::mobile:
                 pb_channel->add_channel_types(pbnavitia::Channel::mobile);
                 break;
-            case nt::new_disruption::ChannelType::notification:
+            case nt::disruption::ChannelType::notification:
                 pb_channel->add_channel_types(pbnavitia::Channel::notification);
                 break;
-            case nt::new_disruption::ChannelType::twitter:
+            case nt::disruption::ChannelType::twitter:
                 pb_channel->add_channel_types(pbnavitia::Channel::twitter);
                 break;
-            case nt::new_disruption::ChannelType::facebook:
+            case nt::disruption::ChannelType::facebook:
                 pb_channel->add_channel_types(pbnavitia::Channel::facebook);
                 break;
-            case nt::new_disruption::ChannelType::unknown_type:
+            case nt::disruption::ChannelType::unknown_type:
                 pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
                 break;
             }

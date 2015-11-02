@@ -11,7 +11,7 @@ START_MONITORING_THREAD = True
 #URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
 
 DISABLE_DATABASE = False
 

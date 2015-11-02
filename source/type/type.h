@@ -54,6 +54,7 @@ www.navitia.io
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 namespace navitia { namespace georef {
  struct Admin;
@@ -66,7 +67,7 @@ typedef navitia::idx_t idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
-namespace new_disruption {
+namespace disruption {
 struct Impact;
 }
 
@@ -134,6 +135,8 @@ enum class OdtLevel_e {
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
 
 struct PT_Data;
+struct MetaData;
+
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
@@ -288,11 +291,11 @@ struct hasVehicleProperties {
 
 struct HasMessages{
 protected:
-    mutable std::vector<boost::weak_ptr<new_disruption::Impact>> impacts;
+    mutable std::vector<boost::weak_ptr<disruption::Impact>> impacts;
 public:
-    void add_impact(const boost::shared_ptr<new_disruption::Impact>& i) {impacts.push_back(i);}
+    void add_impact(const boost::shared_ptr<disruption::Impact>& i) {impacts.push_back(i);}
 
-    std::vector<boost::shared_ptr<new_disruption::Impact>> get_applicable_messages(
+    std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
             const boost::posix_time::time_period& action_period) const;
 
@@ -302,16 +305,17 @@ public:
 
     bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
 
-    std::vector<boost::shared_ptr<new_disruption::Impact>> get_publishable_messages(
+    std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
             const boost::posix_time::ptime& current_time) const;
 
 
-    std::vector<boost::weak_ptr<new_disruption::Impact>> get_impacts() const {
+    std::vector<boost::weak_ptr<disruption::Impact>> get_impacts() const {
         return impacts;
     }
 
-    void remove_impact(const boost::shared_ptr<new_disruption::Impact>& impact) {
-        auto it = std::find_if(impacts.begin(), impacts.end(),[&impact](const boost::weak_ptr<new_disruption::Impact>& i) {
+    void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
+        auto it = std::find_if(impacts.begin(), impacts.end(),
+                               [&impact](const boost::weak_ptr<disruption::Impact>& i) {
             return i.lock() == impact;
         });
         if (it != impacts.end()) {
@@ -682,13 +686,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
     //associated meta vj
-    const MetaVehicleJourney* meta_vj = nullptr;
+    MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
-
-
-    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
-    // because it's not really on the vj
-    std::vector<boost::weak_ptr<new_disruption::Impact>> impacted_by;
 
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
@@ -703,10 +702,14 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
+    ValidityPattern* get_validity_pattern_at(RTLevel level) const { return validity_patterns[level]; }
+    
+    ValidityPattern* base_validity_pattern() const { return get_validity_pattern_at(RTLevel::Base); }
+    ValidityPattern* adapted_validity_pattern() const { return get_validity_pattern_at(RTLevel::Adapted); }
+    ValidityPattern* rt_validity_pattern() const { return get_validity_pattern_at(RTLevel::RealTime); }
 
-    ValidityPattern* base_validity_pattern() const { return validity_patterns[RTLevel::Base]; }
-    ValidityPattern* adapted_validity_pattern() const { return validity_patterns[RTLevel::Adapted]; }
-    ValidityPattern* rt_validity_pattern() const { return validity_patterns[RTLevel::RealTime]; }
+    //return the time period of circulation of the vj for one day
+    boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -724,8 +727,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset
-            & impacted_by;
+            & meta_vj & utc_to_local_offset;
     }
 
     virtual ~VehicleJourney();
@@ -979,18 +981,54 @@ struct Calendar : public Nameable, public Header {
  *
  */
 struct MetaVehicleJourney: public Header, HasMessages {
-    //TODO if needed use a flat_enum_map
-    std::vector<VehicleJourney*> base_vj;
-    std::vector<VehicleJourney*> adapted_vj;
-    std::vector<VehicleJourney*> real_time_vj;
+
+    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
+    // because it's not really on the vj
+    std::vector<boost::weak_ptr<disruption::Impact>> impacted_by;
 
     /// map of the calendars that nearly match union of the validity pattern
     /// of the theoric vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & base_vj & adapted_vj & real_time_vj & associated_calendars & impacts;
+        ar & idx & uri & rtlevel_to_vjs_map
+           & associated_calendars & impacts
+           & impacted_by;
     }
+
+    // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
+    //          have the ownership of vjs instead of data
+    VehicleJourney* create_vj(/*args,*/ RTLevel level);
+
+    void add_vj(VehicleJourney* vj, RTLevel level) {
+        rtlevel_to_vjs_map[level].push_back(vj);
+    }
+
+    template<typename T>
+    void for_all_vjs(T fun) const{
+        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+            auto& vjs = rt_vjs.second;
+            boost::for_each(vjs, [&](VehicleJourney* vj){fun(*vj);});
+        }
+    }
+
+    const std::vector<VehicleJourney*>& get_base_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::Base];
+    }
+
+    void cancel_vj(RTLevel level,
+            const std::vector<boost::posix_time::time_period>& periods,
+            PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
+
+    VehicleJourney*
+    get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const;
+    std::vector<VehicleJourney*>
+    get_vjs_in_period(RTLevel level,
+                      const std::vector<boost::posix_time::time_period>& period,
+                      const MetaData& meta, const Route* filtering_route = nullptr) const;
+
+private:
+    navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;
 };
 
 struct static_data {

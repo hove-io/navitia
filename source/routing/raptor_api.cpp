@@ -119,8 +119,8 @@ static void set_length(pbnavitia::Section* pb_section) {
 }
 
 static void
-_update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disruption,
-                     type::new_disruption::Effect new_val) {
+_update_max_severity(boost::optional<type::disruption::Effect>& worst_disruption,
+                     type::disruption::Effect new_val) {
 
     //the effect are sorted, the first one is the worst one
     if (! worst_disruption || static_cast<size_t>(new_val) < static_cast<size_t>(*worst_disruption)) {
@@ -129,14 +129,14 @@ _update_max_severity(boost::optional<type::new_disruption::Effect>& worst_disrup
 }
 
 template <typename T>
-void _update_max_impact_severity(boost::optional<type::new_disruption::Effect>& max, const T& pb_obj) {
+void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max, const T& pb_obj) {
     for (const auto& disruption: pb_obj.disruptions()) {
-        _update_max_severity(max, type::new_disruption::from_string(disruption.severity().effect()));
+        _update_max_severity(max, type::disruption::from_string(disruption.severity().effect()));
     }
 }
 
 static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
-    boost::optional<type::new_disruption::Effect> max_severity = boost::none;
+    boost::optional<type::disruption::Effect> max_severity = boost::none;
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
@@ -152,7 +152,7 @@ static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
     }
 
     if (max_severity) {
-        pb_journey->set_most_serious_disruption_effect(type::new_disruption::to_string(*max_severity));
+        pb_journey->set_most_serious_disruption_effect(type::disruption::to_string(*max_severity));
     }
 }
 
@@ -857,14 +857,19 @@ parse_datetimes(RAPTOR& raptor,
 }
 
 pbnavitia::Response
-make_response(RAPTOR &raptor, const type::EntryPoint& origin,
+make_response(RAPTOR &raptor,
+              const type::EntryPoint& origin,
               const type::EntryPoint& destination,
-              const std::vector<uint64_t>& timestamps, bool clockwise,
+              const std::vector<uint64_t>& timestamps,
+              bool clockwise,
               const type::AccessibiliteParams& accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               const type::RTLevel rt_level,
-              uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+              uint32_t max_duration,
+              uint32_t max_transfers,
+              bool show_codes,
+              uint32_t max_extra_second_pass) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     pbnavitia::Response response;
@@ -928,7 +933,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
         }
         std::vector<Path> tmp = raptor.compute_all(
             departures, destinations, init_dt, rt_level, bound, max_transfers,
-            accessibilite_params, forbidden, clockwise, direct_path_dur);
+            accessibilite_params, forbidden, clockwise, direct_path_dur, max_extra_second_pass);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 

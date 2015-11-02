@@ -89,18 +89,18 @@ def _get_worst_similar_vjs(j1, j2, request):
     """
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
-            return j1 if j1.arrival_date_time < j2.arrival_date_time else j2
+            return j1 if j1.arrival_date_time > j2.arrival_date_time else j2
     else:
         if j1.departure_date_time != j2.departure_date_time:
-            return j1 if j1.departure_date_time > j2.departure_date_time else j2
+            return j1 if j1.departure_date_time < j2.departure_date_time else j2
 
     fallback1 = fallback_duration(j1)
     fallback2 = fallback_duration(j2)
 
     if fallback1 != fallback2:
-        return j1 if fallback1 < fallback2 else j2
+        return j1 if fallback1 > fallback2 else j2
 
-    return j1 if j1.duration < j2.duration else j2
+    return j1 if j1.duration > j2.duration else j2
 
 
 def _to_be_deleted(journey):
@@ -201,7 +201,9 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
 def similar_journeys_generator(journey):
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield s.pt_display_informations.uris.vehicle_journey
+            yield "pt:" + s.pt_display_informations.uris.vehicle_journey
+        elif s.type == response_pb2.STREET_NETWORK:
+            yield "sn:" + str(s.street_network.mode)
 
 
 def fallback_duration(journey):

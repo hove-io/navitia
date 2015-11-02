@@ -41,8 +41,8 @@ www.navitia.io
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
-using navitia::type::new_disruption::Impact;
-using navitia::type::new_disruption::Disruption;
+using navitia::type::disruption::Impact;
+using navitia::type::disruption::Disruption;
 
 #define BOOST_CHECK_NOT(value) BOOST_CHECK(!value)
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(projection) {
 
 
 struct disruption_fixture {
-    disruption_fixture() : disruption(std::make_unique<Disruption>()) {
+    disruption_fixture() : disruption(std::make_unique<Disruption>("bob", navitia::type::RTLevel::Adapted)) {
         disruption->add_impact(boost::make_shared<Impact>());
 
         disruption->publication_period = pt::time_period(

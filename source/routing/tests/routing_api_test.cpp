@@ -50,7 +50,7 @@ namespace nr = navitia::routing;
 namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ng = navitia::georef;
-using navitia::type::new_disruption::ChannelType;
+using navitia::type::disruption::ChannelType;
 
 
 static void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
@@ -1856,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     b.data->build_uri();
     std::set<ChannelType> channel_types;
 
-    nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+    nt::disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
     auto default_date = "20150314T000000"_dt;
     auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
 
@@ -1865,7 +1865,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     info_severity->wording = "information severity";
     info_severity->color = "#FFFF00";
     info_severity->priority = 25;
-    info_severity->effect = nt::new_disruption::Effect::MODIFIED_SERVICE;
+    info_severity->effect = nt::disruption::Effect::MODIFIED_SERVICE;
     holder.severities[info_severity->uri] = info_severity;
 
     auto bad_severity = boost::make_shared<Severity>();
@@ -1873,13 +1873,12 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     bad_severity->wording = "bad severity";
     bad_severity->color = "#FFFFF0";
     bad_severity->priority = 0;
-    bad_severity->effect = nt::new_disruption::Effect::DETOUR;
+    bad_severity->effect = nt::disruption::Effect::DETOUR;
     holder.severities[bad_severity->uri] = bad_severity;
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "info_on_stop_A";
+        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -1902,8 +1901,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "detour_on_line_2";
+        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -1959,7 +1957,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     b.data->build_raptor();
     b.data->build_uri();
 
-    nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+    nt::disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
     auto default_date = "20150314T000000"_dt;
     auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
 
@@ -1968,7 +1966,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     info_severity->wording = "information severity";
     info_severity->color = "#FFFF00";
     info_severity->priority = 0;
-    info_severity->effect = nt::new_disruption::Effect::MODIFIED_SERVICE;
+    info_severity->effect = nt::disruption::Effect::MODIFIED_SERVICE;
     holder.severities[info_severity->uri] = info_severity;
 
     auto bad_severity = boost::make_shared<Severity>();
@@ -1976,14 +1974,13 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     bad_severity->wording = "bad severity";
     bad_severity->color = "#FFFFF0";
     bad_severity->priority = 0;
-    bad_severity->effect = nt::new_disruption::Effect::DETOUR;
+    bad_severity->effect = nt::disruption::Effect::DETOUR;
     holder.severities[bad_severity->uri] = bad_severity;
     std::set<ChannelType> channel_types;
 
     {
         //we create one disruption on stop A
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "info_on_stop_A";
+        auto disruption = std::make_unique<Disruption>("info_on_stop_A", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";
@@ -2006,8 +2003,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     }
     {
         //we create one disruption on line 2
-        auto disruption = std::make_unique<Disruption>();
-        disruption->uri = "detour_on_line_2";
+        auto disruption = std::make_unique<Disruption>("detour_on_line_2", nt::RTLevel::Adapted);
         disruption->publication_period = default_period;
         auto tag = boost::make_shared<Tag>();
         tag->uri = "tag";

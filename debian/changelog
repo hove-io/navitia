@@ -1,3 +1,27 @@
+navitia2 (1.29.0) unstable; urgency=low
+
+  * All: extra second pass param  <https://github.com/CanalTP/navitia/pull/1245>
+  * RT: connect apply disruption to the new VJs methods  <https://github.com/CanalTP/navitia/pull/1240>
+  * Raptor: add second passes  <https://github.com/CanalTP/navitia/pull/1239>
+  * ed2nav: when using cities we try to use an admin already there  <https://github.com/CanalTP/navitia/pull/1243>
+  * jormun: add a circuit breaker for not calling dead kraken each time   <https://github.com/CanalTP/navitia/pull/1242>
+  * Kraken: refactor mvj  <https://github.com/CanalTP/navitia/pull/1237>
+  * tyr: keeping trace of ed's job duration  <https://github.com/CanalTP/navitia/pull/1233>
+  * Jormun: change scenario if the scenario has been updated in db  <https://github.com/CanalTP/navitia/pull/1234>
+  * TimeTable: Fix route schedule with calendar  <https://github.com/CanalTP/navitia/pull/1218>
+  * Doc: Initialization of the NTFS documentation with version 0.5  <https://github.com/CanalTP/navitia/pull/1235>
+  * cmake: check the existance of gperftools/malloc_extension.h as really needed  <https://github.com/CanalTP/navitia/pull/1236>
+  * jormungandr: fix a bug depending of the order of the parameter  <https://github.com/CanalTP/navitia/pull/1232>
+  * all: CMakeLists.txt cleanups  <https://github.com/CanalTP/navitia/pull/1230>
+  * RT: Split disruption from chaos  <https://github.com/CanalTP/navitia/pull/1228>
+  * jormungandr: fix _filter_similar_journeys  <https://github.com/CanalTP/navitia/pull/1229>
+  * Jormungandr: fix requirements flask-restful  <https://github.com/CanalTP/navitia/pull/1224>
+  * ed2nav: optimisation in headsign handler  <https://github.com/CanalTP/navitia/pull/1223>
+  * Jormungandr: use max_nb_journeys in isochrone  <https://github.com/CanalTP/navitia/pull/1220>
+  * Jormungandr: Added info_response stat function  <https://github.com/CanalTP/navitia/pull/1219>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 02 Nov 2015 08:11:40 +0100
+
 navitia2 (1.28.2) unstable; urgency=low
 
   * Kraken: update librabbitmq-c and SimpleAmqpClient  <https://github.com/CanalTP/navitia/pull/1227>

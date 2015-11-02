@@ -30,6 +30,8 @@ www.navitia.io
 
 #include "type.h"
 #include "pt_data.h"
+#include "data.h"
+#include "meta_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
@@ -40,6 +42,8 @@ www.navitia.io
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+
+namespace bt = boost::posix_time;
 
 namespace navitia { namespace type {
 
@@ -58,10 +62,10 @@ std::string VehicleJourney::get_direction() const {
     return "";
 }
 
-std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
+std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);
@@ -80,9 +84,9 @@ std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_applicab
 
 }
 
-std::vector<boost::shared_ptr<new_disruption::Impact>> HasMessages::get_publishable_messages(
+std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_messages(
             const boost::posix_time::ptime& current_time) const{
-    std::vector<boost::shared_ptr<new_disruption::Impact>> result;
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
     clean_up_weak_ptr(impacts);
@@ -179,6 +183,21 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
     return validity_patterns[rt_level]->check(day);
+}
+
+boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
+    uint32_t first_departure = std::numeric_limits<uint32_t>::max();
+    uint32_t last_arrival = 0;
+    for (const auto& st: stop_time_list) {
+        if (st.pick_up_allowed() && first_departure > st.departure_time) {
+            first_departure = st.departure_time;
+        }
+        if (st.drop_off_allowed() && last_arrival < st.arrival_time) {
+            last_arrival = st.arrival_time;
+        }
+    }
+    return bt::time_period(bt::ptime(date, bt::seconds(first_departure)),
+            bt::ptime(date, bt::seconds(last_arrival)));
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
@@ -304,6 +323,84 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
     else
         return !days[day-1] && !days[day] && !days[day+1];
 }
+
+template <typename F>
+static bool intersect(const VehicleJourney* vj, const std::vector<boost::posix_time::time_period>& periods,
+                      RTLevel lvl, const nt::MetaData& meta, const F& fun) {
+    bool intersect = false;
+    for (const auto& period: periods) {
+        //we can impact a vj with a departure the day before who past midnight
+        namespace bg = boost::gregorian;
+        bg::day_iterator titr(period.begin().date() - bg::days(1));
+        for (; titr <= period.end().date(); ++titr) {
+            if (! meta.production_date.contains(*titr)) { continue; }
+
+            auto day = (*titr - meta.production_date.begin()).days();
+            if (! vj->get_validity_pattern_at(lvl)->check(day)) { continue; }
+
+            if (period.intersects(vj->execution_period(*titr))) {
+                intersect = true;
+                if (! fun(day)) {
+                    return intersect;
+                }
+            }
+        }
+    }
+    return intersect;
+}
+
+void MetaVehicleJourney::cancel_vj(RTLevel level,
+        const std::vector<boost::posix_time::time_period>& periods,
+        nt::PT_Data& pt_data, const nt::MetaData& meta, const Route* filtering_route) {
+    for (auto l: reverse_enum_range_from<RTLevel>(level)) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            // note: we might want to cancel only the vj of certain routes
+            if (filtering_route && vj->route != filtering_route) { continue; }
+            nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(l));
+            auto vp_modifier = [&tmp_vp] (const unsigned day) {
+                tmp_vp.remove(day);
+                return true; // we don't want to stop
+            };
+
+            if (intersect(vj, periods, l, meta, vp_modifier)) {
+                vj->validity_patterns[level] = pt_data.get_or_create_validity_pattern(tmp_vp);
+            }
+        }
+    }
+}
+
+VehicleJourney*
+MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
+    for (auto l : reverse_enum_range_from<RTLevel>(level)){
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            if(vj->get_validity_pattern_at(l)->check(date)){
+                return vj;
+            };
+        }
+    }
+    return nullptr;
+}
+
+std::vector<VehicleJourney*>
+MetaVehicleJourney::get_vjs_in_period(RTLevel level,
+                                      const std::vector<boost::posix_time::time_period>& periods,
+                                      const MetaData& meta,
+                                      const Route* filtering_route) const {
+    std::vector<VehicleJourney*> res;
+    for (auto l: reverse_enum_range_from<RTLevel>(level)) {
+        for (auto* vj: rtlevel_to_vjs_map[l]) {
+            if (filtering_route && vj->route != filtering_route) { continue; }
+            auto func = [] (const unsigned /*day*/) {
+                return false; // we want to stop as soon as we know the vj intersec the period
+            };
+            if (intersect(vj, periods, l, meta, func)) {
+                res.push_back(vj);
+            }
+        }
+    }
+    return res;
+}
+
 
 static_data * static_data::instance = 0;
 static_data * static_data::get() {

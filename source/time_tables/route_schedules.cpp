@@ -46,15 +46,17 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-static std::vector<std::vector<datetime_stop_time> >
-get_all_stop_times(const std::vector<routing::JpIdx>& journey_patterns,
-                   const DateTime& dateTime,
-                   const DateTime& max_datetime,
-                   const size_t max_stop_date_times,
-                   const type::Data& d,
-                   const type::RTLevel rt_level,
-                   const boost::optional<const std::string> calendar_id) {
+std::vector<std::vector<datetime_stop_time> >
+get_all_route_stop_times(const nt::Route* route,
+                         const DateTime& date_time,
+                         const DateTime& max_datetime,
+                         const size_t max_stop_date_times,
+                         const type::Data& d,
+                         const type::RTLevel rt_level,
+                         const boost::optional<const std::string> calendar_id) {
     std::vector<std::vector<datetime_stop_time> > result;
+
+    const auto& journey_patterns =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
 
     // We take the first journey pattern points from every journey_pattern
     std::vector<routing::JppIdx> first_journey_pattern_points;
@@ -65,31 +67,55 @@ get_all_stop_times(const std::vector<routing::JpIdx>& journey_patterns,
     }
 
     std::vector<datetime_stop_time> first_dt_st;
-    if(!calendar_id) {
+    if (! calendar_id) {
         // If there is no calendar we get all stop times in
         // the desired timeframe
         first_dt_st = get_stop_times(routing::StopEvent::pick_up, first_journey_pattern_points,
-                                     dateTime, max_datetime, max_stop_date_times, d, rt_level);
-    }
-    else {
+                                     date_time, max_datetime, max_stop_date_times, d, rt_level);
+    } else {
         // Otherwise we only take stop_times in a vehicle_journey associated to
         // the desired calendar and in the timeframe
-        first_dt_st = get_stop_times(first_journey_pattern_points, DateTimeUtils::hour(dateTime),
+        first_dt_st = get_stop_times(first_journey_pattern_points, DateTimeUtils::hour(date_time),
                                      DateTimeUtils::hour(max_datetime), d, *calendar_id);
     }
 
-    //On va chercher tous les prochains horaires
-    for(auto ho : first_dt_st) {
+    // we need to load the next datetimes for each jp
+    for (const auto& ho : first_dt_st) {
         result.push_back(std::vector<datetime_stop_time>());
         DateTime dt = ho.first;
-        for(const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
-            if(!stop_time.is_frequency()) {
-                dt = DateTimeUtils::shift(dt, stop_time.departure_time);
+        for (const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
+            if (! stop_time.is_frequency()) {
+                if (! calendar_id) {
+                    dt = DateTimeUtils::shift(dt, stop_time.departure_time);
+                } else {
+                    // for calendar, we need to shift the time to local time
+                    const auto utc_to_local_offset = stop_time.vehicle_journey->utc_to_local_offset;
+                    // we don't care about the date and about the overmidnight cases
+                    dt = DateTimeUtils::hour(stop_time.departure_time + utc_to_local_offset);
+                }
             } else {
                 // for frequencies, we only need to add the stoptime offset to the first stoptime
                 dt = ho.first + stop_time.departure_time;
+                // NOTE: for calendar, we don't need to add again the utc offset, since for frequency
+                // vj all stop_times are relative to the start of the vj (and the UTC offset has  already
+                // been included in the first stop time)
             }
             result.back().push_back(std::make_pair(dt, &stop_time));
+        }
+    }
+
+    if (calendar_id) {
+        // for calendar's schedule we need to sort the datetimes in a different way
+        // we add 24h for each vj's dt that starts before 'date_time' so the vj will be sorted
+        // at the end (with the complex score of the route schedule)
+        for (auto& vjs_stops: result) {
+            //by construction the vector cannot be empty
+            if (DateTimeUtils::hour(vjs_stops.front().first) >= DateTimeUtils::hour(date_time)) {
+                continue;
+            }
+            for (auto& dt_st: vjs_stops) {
+                dt_st.first += DateTimeUtils::SECONDS_PER_DAY;
+            }
         }
     }
     return result;
@@ -236,9 +262,9 @@ route_schedule(const std::string& filter,
                uint32_t duration, size_t max_stop_date_times,
                const uint32_t max_depth, int count, int start_page,
                const type::Data &d, const type::RTLevel rt_level, const bool show_codes) {
-    RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
+    RequestHandle handler(filter, forbidden_uris, datetime, duration, d, calendar_id);
 
-    if(handler.pb_response.has_error()) {
+    if (handler.pb_response.has_error()) {
         return handler.pb_response;
     }
     auto now = pt::second_clock::universal_time();
@@ -251,10 +277,10 @@ route_schedule(const std::string& filter,
     routes_idx = paginate(routes_idx, count, start_page);
     for (const auto& route_idx: routes_idx) {
         auto route = d.pt_data->routes[route_idx];
+        auto stop_times = get_all_route_stop_times(route, handler.date_time,
+                                                   handler.max_datetime, max_stop_date_times,
+                                                   d, rt_level, calendar_id);
         const auto& jps =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
-        auto stop_times = get_all_stop_times(jps, handler.date_time,
-                                             handler.max_datetime, max_stop_date_times,
-                                             d, rt_level, calendar_id);
         std::vector<vector_idx> stop_points;
         for (const auto& jp_idx : jps) {
             const auto& jp = d.dataRaptor->jp_container.get(jp_idx);
@@ -303,7 +329,7 @@ route_schedule(const std::string& filter,
 
                 auto pb_dt = row->add_date_times();
                 fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
-                               now, action_period, dt_stop_time.first);
+                               now, action_period, dt_stop_time.first, calendar_id);
             }
         }
         fill_pb_object(route->shape, schedule->mutable_geojson());

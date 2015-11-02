@@ -54,7 +54,7 @@ www.navitia.io
 
 namespace navitia { namespace type {
 
-namespace new_disruption {
+namespace disruption {
 
 enum class Effect {
   NO_SERVICE = 0,
@@ -142,9 +142,9 @@ struct UnknownPtObj {
     void serialize(Archive&, const unsigned int) {}
 };
 struct LineSection {
-    const Line* line = nullptr;
-    const StopArea* start_point = nullptr;
-    const StopArea* end_point = nullptr;
+    Line* line = nullptr;
+    StopArea* start_point = nullptr;
+    StopArea* end_point = nullptr;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & line & start_point & end_point;
@@ -152,13 +152,13 @@ struct LineSection {
 };
 typedef boost::variant<
     UnknownPtObj,
-    const Network *,
-    const StopArea *,
-    const StopPoint *,
+    Network*,
+    StopArea*,
+    StopPoint*,
     LineSection,
-    const Line *,
-    const Route *,
-    const MetaVehicleJourney *
+    Line*,
+    Route*,
+    MetaVehicleJourney*
     > PtObj;
 
 PtObj make_pt_obj(Type_e type,
@@ -228,11 +228,15 @@ struct Tag {
 };
 
 struct Disruption {
+    Disruption() {}
+    Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+
     std::string uri;
     // Provider of the disruption
     std::string contributor;
     // it's the title of the disruption as shown in the backoffice
     std::string reference;
+    RTLevel rt_level = RTLevel::Adapted;
 
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
@@ -256,7 +260,7 @@ struct Disruption {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & reference & publication_period
+        ar & uri & reference & rt_level & publication_period
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 

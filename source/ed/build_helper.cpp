@@ -116,7 +116,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
 
     nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
-    mvj->base_vj.push_back(vj);
+    mvj->add_vj(vj, navitia::type::RTLevel::Base);
     vj->meta_vj = mvj;
 
     pt_data.headsign_handler.change_name_and_register_as_headsign(

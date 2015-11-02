@@ -126,20 +126,19 @@ bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj,
 
 std::vector<const VehicleJourney*>
 HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
-    std::vector<const VehicleJourney*> res;
+
     const auto& it_vj_set = headsign_mvj.find(headsign);
     if (it_vj_set == headsign_mvj.end()) {
-        return res;
+        return {};
     }
 
+    std::vector<const VehicleJourney*> res;
     for (const MetaVehicleJourney* mvj: it_vj_set->second) {
-        for (const auto& vect_vj: {mvj->base_vj, mvj->adapted_vj, mvj->real_time_vj}) {
-            for (const VehicleJourney* vj: vect_vj) {
-                if (has_headsign_or_name(*vj, headsign)) {
-                    res.push_back(vj);
-                }
+        mvj->for_all_vjs([&](const VehicleJourney& vj){
+            if (has_headsign_or_name(vj, headsign)) {
+                res.push_back(&vj);
             }
-        }
+        });
     }
     return res;
 }

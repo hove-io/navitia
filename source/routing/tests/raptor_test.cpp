@@ -2631,3 +2631,51 @@ BOOST_AUTO_TEST_CASE(begin_different_zone3) {
     // don't have a good solution and this case should not happen
     // often.
 }
+
+// test that raptor is able to find "hidden" pathes (improving sn, but only because of the departure)
+//
+//                                        9h10
+//       __________ A ===================> B ______________
+//      /   1 min            vj 1              3 min       \
+//     /                                               arrival
+// departure                                 9h00         /
+//    \_________________ C ==================> D ________/
+//           10 min              vj 2            1 min
+//
+BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "8:00"_t, "8:00"_t)("B", "9:10"_t, "9:10"_t);
+    b.vj("2")("C", "8:00"_t, "8:01"_t)("D", "9:00"_t, "9:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 1_min;
+    departures[SpIdx(*d.stop_areas_map.at("C")->stop_point_list.front())] = 10_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 3_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front())] = 1_min;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "07:00"_t),
+                                  type::RTLevel::Base,
+                                  DateTimeUtils::inf,
+                                  10,
+                                  type::AccessibiliteParams(),
+                                  std::vector<std::string>(),
+                                  true,
+                                  boost::none,
+                                  10); // only extra second passes can find that A-B has less sn
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 08:01:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 09:00:00"));
+    BOOST_CHECK_EQUAL(res.at(1).items.front().departure, time_from_string("2015-01-03 08:00:00"));
+    BOOST_CHECK_EQUAL(res.at(1).items.back().arrival, time_from_string("2015-01-03 09:10:00"));
+}

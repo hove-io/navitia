@@ -83,7 +83,7 @@ struct PT_Data : boost::noncopyable{
     proximitylist::ProximityList<idx_t> stop_point_proximity_list;
 
     //Message
-    new_disruption::DisruptionHolder disruption_holder;
+    disruption::DisruptionHolder disruption_holder;
 
     // rtree for zonal stop_points
     MultiPolygonMap<const StopPoint*> stop_points_by_area;

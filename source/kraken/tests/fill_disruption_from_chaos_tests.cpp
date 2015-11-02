@@ -37,7 +37,8 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "routing/raptor.h"
 #include "type/data.h"
-#include "kraken/fill_disruption_from_chaos.h"
+#include "kraken/make_disruption_from_chaos.h"
+#include "kraken/apply_disruption.h"
 #include "type/chaos.pb.h"
 #include "type/gtfs-realtime.pb.h"
 #include <boost/range/algorithm/for_each.hpp>
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     app_period->set_end(ntest::to_posix_timestamp("20120616T123200"));
 
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
     app_period->set_end(ntest::to_posix_timestamp("20120618T123200"));
 
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
@@ -301,10 +302,10 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"), vj->adapted_validity_pattern()->days);
     };
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     check(*b.data);
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     check(*b.data);
 
     navitia::delete_disruption(disruption.id(), *b.data->pt_data, *b.data->meta);
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     app_period->set_end(ntest::to_posix_timestamp("20120618T123200"));
 
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
@@ -388,7 +389,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     app_period->set_end(ntest::to_posix_timestamp("20120615T120000"));
 
 
-    navitia::add_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);

@@ -47,6 +47,7 @@ from shapely import geometry
 from flask import g
 import json
 import flask
+import pybreaker
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -74,11 +75,11 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_up = True
+        self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
 
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def _get_models(self):
-        # we use the id because sqlalchemy session keep a map of  {id => instance} so we don't do a request each time we want the model
         if app.config['DISABLE_DATABASE']:
             return None
         return models.Instance.get_by_name(self.name)
@@ -101,19 +102,15 @@ class Instance(object):
             g.scenario = scenario
             return scenario
 
-        if not self._scenario:
+
+        instance_db = self._get_models()
+        scenario_name = instance_db.scenario if instance_db else 'default'
+        if not self._scenario or scenario_name != self._scenario_name:
             logger = logging.getLogger(__name__)
-            instance_db = self._get_models()
-            if instance_db:
-                logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
-                self._scenario_name = instance_db.scenario
-                module = import_module('jormungandr.scenarios.{}'.format(instance_db.scenario))
-                self._scenario = module.Scenario()
-            else:
-                logger.warn('instance %s not found in db, we use the default script', self.name)
-                module = import_module('jormungandr.scenarios.default')
-                self._scenario_name = 'default'
-                self._scenario = module.Scenario()
+            logger.info('loading of scenario %s for instance %s', scenario_name, self.name)
+            self._scenario_name = scenario_name
+            module = import_module('jormungandr.scenarios.{}'.format(scenario_name))
+            self._scenario = module.Scenario()
 
         #we save the used scenario for futur use
         g.scenario = self._scenario
@@ -236,7 +233,17 @@ class Instance(object):
             if not socket.closed:
                 self._sockets.put(socket)
 
-    def send_and_receive(self,
+    def send_and_receive(self, *args, **kwargs):
+        """
+        encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
+        """
+        try:
+            return self.breaker.call(self._send_and_receive, *args, **kwargs)
+        except pybreaker.CircuitBreakerError, e:
+            raise DeadSocketException(self.name, self.socket_path)
+
+
+    def _send_and_receive(self,
                          request,
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False):
@@ -299,7 +306,8 @@ class Instance(object):
         req.place_code.type = type_to_pttype[type_]
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
-        return self.send_and_receive(req)
+        #we set the timeout to 1s
+        return self.send_and_receive(req, 1000)
 
     def has_external_code(self, type_, id_):
         """

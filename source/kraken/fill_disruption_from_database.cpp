@@ -158,7 +158,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
 void DisruptionDatabaseReader::finalize() {
     if (disruption && disruption->id() != "") {
-        add_disruption(*disruption, pt_data, meta);
+        make_and_apply_disruption(*disruption, pt_data, meta);
     }
 }
 

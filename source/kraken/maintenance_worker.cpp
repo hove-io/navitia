@@ -30,7 +30,8 @@ www.navitia.io
 
 #include "maintenance_worker.h"
 
-#include "fill_disruption_from_chaos.h"
+#include "make_disruption_from_chaos.h"
+#include "apply_disruption.h"
 #include "realtime.h"
 #include "type/task.pb.h"
 #include "type/pt_data.h"
@@ -179,7 +180,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 delete_disruption(entity.id(), *data->pt_data, *data->meta);
             } else if(entity.HasExtension(chaos::disruption)) {
                 LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
-                add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
+                make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if(entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
                 handle_realtime(entity.id(),

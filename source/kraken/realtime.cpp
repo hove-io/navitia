@@ -32,50 +32,30 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
-#include "kraken/fill_disruption_from_chaos.h"
+#include "kraken/apply_disruption.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 
 namespace navitia {
 
-static void cancel_vj(type::MetaVehicleJourney* meta_vj,
-               const boost::gregorian::date& date,
-               const transit_realtime::TripUpdate& /*trip_update*/,
-               const type::Data& data) {
-    // we need to cancel all vj of the meta vj
-    for (const auto& vect_vj: {meta_vj->base_vj, meta_vj->adapted_vj, meta_vj->real_time_vj}) {
-        for (auto* vj: vect_vj) {
-            // the train is canceled on one day, we just need to unset its realtime validitypattern
-
-            if (! vj->rt_validity_pattern()->check(date)) { continue; }
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("realtime"),
-                           "canceling the vj " << vj->uri << " on " << date);
-
-            nt::ValidityPattern tmp_vp(*vj->rt_validity_pattern());
-            tmp_vp.remove(date);
-
-            vj->validity_patterns[type::RTLevel::RealTime] = data.pt_data->get_or_create_validity_pattern(tmp_vp);
-        }
-    }
-}
-
-static boost::shared_ptr<nt::new_disruption::Severity>
+static boost::shared_ptr<nt::disruption::Severity>
 make_no_service_severity(const boost::posix_time::ptime& timestamp,
-                         nt::new_disruption::DisruptionHolder& holder) {
+                         nt::disruption::DisruptionHolder& holder) {
     // Yeah, that's quite hardcodded...
     const std::string id = "kraken:rt:no_service";
     auto& weak_severity = holder.severities[id];
     if (auto severity = weak_severity.lock()) { return severity; }
 
-    auto severity = boost::make_shared<nt::new_disruption::Severity>();
+    auto severity = boost::make_shared<nt::disruption::Severity>();
     severity->uri = id;
     severity->wording = "trip canceled!";
     severity->created_at = timestamp;
     severity->updated_at = timestamp;
     severity->color = "#000000";
     severity->priority = 42;
-    severity->effect = nt::new_disruption::Effect::NO_SERVICE;
+    severity->effect = nt::disruption::Effect::NO_SERVICE;
 
     weak_severity = severity;
     return severity;
@@ -83,36 +63,34 @@ make_no_service_severity(const boost::posix_time::ptime& timestamp,
 
 static boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
-    for (const auto* vj: mvj.base_vj) {
-        if (vj->base_validity_pattern()->check(date)) {
-            return execution_period(date, *vj);
-        }
+    auto running_vj = mvj.get_vj_at_date(type::RTLevel::Base, date);
+    if (running_vj) {
+        return running_vj->execution_period(date);
     }
-    // should be dead code
-    return execution_period(date, *mvj.base_vj.front());
+    // If there is no running vj at this date, we return a null period (begin == end)
+    return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
 
-static void
+static const type::disruption::Disruption&
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
-    nt::new_disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
+    nt::disruption::DisruptionHolder &holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
-    auto disruption = std::make_unique<nt::new_disruption::Disruption>();
-    disruption->uri = id;
+    auto disruption = std::make_unique<nt::disruption::Disruption>(id, type::RTLevel::RealTime);
     disruption->reference = disruption->uri;
     disruption->publication_period = data.meta->production_period();
     disruption->created_at = timestamp;
     disruption->updated_at = timestamp;
     // cause
     {// impact
-        auto impact = boost::make_shared<nt::new_disruption::Impact>();
+        auto impact = boost::make_shared<nt::disruption::Impact>();
         impact->uri = disruption->uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
@@ -129,6 +107,7 @@ create_disruption(const std::string& id,
 
     holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, "Disruption added");
+    return *holder.disruptions.back();
 }
 
 void handle_realtime(const std::string& id,
@@ -152,15 +131,9 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    create_disruption(id, timestamp, trip_update, data);
+    const auto& disruption = create_disruption(id, timestamp, trip_update, data);
 
-    auto circulation_date = boost::gregorian::from_undelimited_string(trip.start_date());
-
-    if (trip.schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        cancel_vj(meta_vj, circulation_date, trip_update, data);
-        return;
-    }
-
+    apply_disruption(disruption, *data.pt_data, *data.meta);
 }
 
 }

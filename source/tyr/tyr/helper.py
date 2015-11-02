@@ -178,3 +178,13 @@ def get_instance_logger(instance):
 
     logger.propagate = False
     return logger
+
+def get_named_arg(arg_name, func, args, kwargs):
+    if kwargs and arg_name in kwargs:
+        return kwargs[arg_name]
+    else:
+        idx = func.func_code.co_varnames.index(arg_name)
+        if args and idx < len(args):
+            return args[idx]
+        else:
+            return None
