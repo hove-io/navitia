@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/range/algorithm/find_if.hpp>
 
 namespace pt = boost::posix_time;
+namespace dis = nt::disruption;
 
 namespace ed {
 
@@ -268,17 +269,25 @@ DisruptionCreator::DisruptionCreator(builder& b, const std::string& uri, nt::RTL
     b(b), disruption(b.data->pt_data->disruption_holder.make_disruption(uri, lvl)) {}
 
 Impacter& DisruptionCreator::impact() {
-    impacts.emplace_back(b, disruption);
-    return impacts.back();
+    impacters.emplace_back(b, disruption);
+    return impacters.back();
 }
 
-Impacter::Impacter(builder& bu, nt::disruption::Disruption& disrup): b(bu) {
-    real_impact = boost::make_shared<nt::disruption::Impact>();
+Impacter::Impacter(builder& bu, dis::Disruption& disrup): b(bu) {
+    impact = boost::make_shared<dis::Impact>();
 
-    disrup.add_impact(real_impact);
+    disrup.add_impact(impact);
 }
 
-DisruptionCreator builder::disrupt(const std::string& uri, nt::RTLevel lvl) {
+DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
+    auto tag = boost::make_shared<dis::Tag>();
+    tag->uri = t;
+    tag->name = t + " name";
+    disruption.tags.push_back(tag);
+    return *this;
+}
+
+DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
     return DisruptionCreator(*this, uri, lvl);
 }
 
@@ -287,6 +296,75 @@ std::string get_random_id() {
     std::stringstream uuid_stream;
     uuid_stream << uuid;
     return uuid_stream.str();
+}
+
+Impacter& Impacter::severity(dis::Effect e,
+                             std::string uri,
+                             const std::string& wording,
+                             const std::string& color,
+                             int priority) {
+    if (uri.empty()) {
+        // we get the effect
+        uri = to_string(e);
+    }
+    auto& sev_map = b.data->pt_data->disruption_holder.severities;
+    auto it = sev_map.find(uri);
+    if (it != std::end(sev_map)) {
+        impact->severity = it->second.lock();
+        return *this;
+    }
+    auto severity = boost::make_shared<dis::Severity>();
+    severity->uri = uri;
+    if (! wording.empty()) {
+        severity->wording = wording;
+    } else {
+        severity->wording = uri + " severity";
+    }
+    severity->color = color;
+    severity->priority = priority;
+    severity->effect = e;
+    sev_map[severity->uri] = severity;
+    impact->severity = severity;
+    return *this;
+}
+
+Impacter& Impacter::severity(const std::string& uri) {
+    auto& sev_map = b.data->pt_data->disruption_holder.severities;
+    auto it = sev_map.find(uri);
+    if (it == std::end(sev_map)) {
+        throw navitia::exception("unknown severity " + uri + ", create it first");
+    }
+    impact->severity = it->second.lock();
+    return *this;
+}
+
+Impacter& Impacter::informed_entities(nt::Type_e type, const std::string& uri) {
+    impact->informed_entities.push_back(dis::make_pt_obj(type, uri, *b.data->pt_data, impact));
+    return *this;
+}
+
+Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
+    return informed_entities(type, uri);
+}
+
+Impacter& Impacter::msg(const dis::Message& m) {
+    impact->messages.push_back(m);
+    return *this;
+}
+
+Impacter& Impacter::msg(const std::string& text, nt::disruption::ChannelType c) {
+    dis::Message m;
+    auto str = to_string(c);
+    m.text = text;
+    m.channel_id = str;
+    m.channel_id = str;
+    m.channel_name = str + " channel";
+    m.channel_content_type = "content type";
+    m.created_at = boost::posix_time::ptime(b.data->meta->production_date.begin(),
+                                            boost::posix_time::minutes(0));
+
+    m.channel_types.insert(c);
+    return msg(m);
 }
 
 /*

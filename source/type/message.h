@@ -68,7 +68,7 @@ enum class Effect {
   STOP_MOVED
 };
 
-enum class ChannelType{
+enum class ChannelType {
     web = 0,
     sms,
     email,
@@ -106,6 +106,22 @@ inline Effect from_string(const std::string& str) {
     if (str == "UNKNOWN_EFFECT") { return Effect::UNKNOWN_EFFECT; }
     if (str == "STOP_MOVED") { return Effect::STOP_MOVED; }
     throw navitia::exception("unhandled effect case");
+}
+
+inline std::string to_string(ChannelType ct) {
+    switch (ct) {
+    case ChannelType::web: return "web";
+    case ChannelType::sms: return "sms";
+    case ChannelType::email: return "email";
+    case ChannelType::mobile: return "mobile";
+    case ChannelType::notification: return "notification";
+    case ChannelType::twitter: return "twitter";
+    case ChannelType::facebook: return "facebook";
+    case ChannelType::unknown_type: return "unknown_type";
+    default:
+        throw navitia::exception("unhandled channeltype case");
+    }
+
 }
 
 struct Cause {

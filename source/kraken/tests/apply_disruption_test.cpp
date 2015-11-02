@@ -55,8 +55,8 @@ struct SimpleDataset {
 };
 
 BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
-    b.disrupt("bob", nt::RTLevel::Adapted).impact().uri("bobette"); //.severity(nt::disruption::se)
-    b.impact(nt::RTLevel::Adapted).uri("bobette"); //.severity(nt::disruption::se)
+    b.disrupt(nt::RTLevel::Adapted, "bob").impact().uri("bobette"); //.severity(nt::disruption::se)
+    b.impact(nt::RTLevel::Adapted).uri("bobette").severity(nt::disruption::Effect::NO_SERVICE);
 
 //     b.add_impact().name("bob").period("12d").severity(NoService).on(stop_1).on(line1);
 

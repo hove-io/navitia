@@ -134,6 +134,13 @@ bool Impact::operator<(const Impact& other){
 
 Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLevel lvl) {
     auto disruption = std::make_unique<Disruption>(uri, lvl);
+    auto it = disruptions_by_uri.find(uri);
+    if (it != std::end(disruptions_by_uri)) {
+        // we cannot just replace the old one, the model needs to be updated accordingly, so we stop
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "disruption " << uri
+                       << " already exists, delete it first");
+        throw navitia::exception("disruption already exists");
+    }
     disruptions_by_uri[uri] = std::move(disruption);
     return *disruptions_by_uri[uri];
 }

@@ -91,13 +91,28 @@ struct DisruptionCreator;
 struct Impacter {
     Impacter(builder&, nt::disruption::Disruption&);
     builder& b;
-    boost::shared_ptr<nt::disruption::Impact> real_impact;
-    Impacter& uri(const std::string& u) { real_impact->uri = u; return *this; }
-    Impacter& application_periods(boost::posix_time::time_period& p) {
-        real_impact->application_periods.push_back(p);
+    boost::shared_ptr<nt::disruption::Impact> impact;
+    Impacter& uri(const std::string& u) { impact->uri = u; return *this; }
+    Impacter& application_periods(const boost::posix_time::time_period& p) {
+        impact->application_periods.push_back(p);
         return *this;
     }
-//    Impacter& effect(nt::disruption::Effect e) { real_impact->effect = e; return *this; }
+    Impacter& severity(nt::disruption::Effect,
+                       std::string uri = "",
+                       const std::string& wording = "",
+                       const std::string& color = "#FFFF00",
+                       int priority = 0);
+
+    Impacter& severity(const std::string& uri); // link to existing severity
+    Impacter& informed_entities(nt::Type_e type, const std::string& uri);
+    Impacter& on(nt::Type_e type, const std::string& uri); // syntaxic sugar to informed_entities
+    Impacter& msg(const nt::disruption::Message&);
+    Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& publish(const boost::posix_time::time_period& p) {
+        //to ease use without a DisruptionCreator
+        impact->disruption->publication_period = p;
+        return *this;
+    }
 };
 
 struct DisruptionCreator {
@@ -109,9 +124,14 @@ struct DisruptionCreator {
         disruption.publication_period = p;
         return *this;
     }
+    DisruptionCreator& contributor(const std::string& c) {
+        disruption.contributor = c;
+        return *this;
+    }
+    DisruptionCreator& tag(const std::string& t);
 
     nt::disruption::Disruption& disruption;
-    std::vector<Impacter> impacts;
+    std::vector<Impacter> impacters;
 };
 
 struct builder {
@@ -174,7 +194,7 @@ struct builder {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
     }
 
-    DisruptionCreator disrupt(const std::string& uri, nt::RTLevel lvl);
+    DisruptionCreator disrupt(nt::RTLevel lvl, const std::string& uri);
     Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
     /// Crée une connexion
