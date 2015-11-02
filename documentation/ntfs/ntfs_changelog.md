@@ -27,3 +27,7 @@
 * Version 0.5 du 25/10/2015 (version technique, pas de modification effective de format)
     * Gestion du champ line_text_color
     * Gestion du fichier equipments.txt
+* Version 0.6 du 02/112015
+    * ajout de la gestion des services (fichier frames.txt) et modification des contributeurs 
+    * Modification de l'identifiant des calendriers et des calendrier de période
+    * ajout de la gestion des données de grèves (dans feed_info.txt une clé "revised_networks" listant les réseaux impactés)
