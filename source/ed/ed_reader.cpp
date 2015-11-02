@@ -702,6 +702,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.headway_sec as headway_sec,"
         "vj.utc_to_local_offset as utc_to_local_offset, "
         "vj.is_frequency as is_frequency, "
+        "vj.meta_vj_name as meta_vj_name, "
+        "vj.vj_class as vj_class, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -719,17 +721,28 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
         auto* route = route_map[const_it["route_id"].as<idx_t>()];
         navitia::type::VehicleJourney* vj = nullptr;
+        std::string vj_name;
+        const_it["name"].to(vj_name);
+        std::string mvj_name;
+        const_it["meta_vj_name"].to(mvj_name);
+        if (mvj_name == "") {
+            mvj_name = vj_name;
+        }
+        auto mvj = data.pt_data->meta_vjs.get_or_create(mvj_name);
+        std::string rt_level_str;
+        const_it["vj_class"].to(rt_level_str);
+        auto rt_level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
         if (const_it["is_frequency"].as<bool>()) {
-            route->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
-            auto& freq_vj = route->frequency_vehicle_journey_list.back();
-
-            const_it["start_time"].to(freq_vj->start_time);
-            const_it["end_time"].to(freq_vj->end_time);
-            const_it["headway_sec"].to(freq_vj->headway_secs);
-            vj = freq_vj.get();
+            auto f_vj = mvj->create_frequency_vj(rt_level);
+            route->frequency_vehicle_journey_list.push_back(f_vj);
+            const_it["start_time"].to(f_vj->start_time);
+            const_it["end_time"].to(f_vj->end_time);
+            const_it["headway_sec"].to(f_vj->headway_secs);
+            vj = f_vj;
         } else {
-            route->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
-            vj = route->discrete_vehicle_journey_list.back().get();
+            auto d_vj =  mvj->create_discrete_vj(rt_level);
+            route->discrete_vehicle_journey_list.push_back(d_vj);
+            vj = route->discrete_vehicle_journey_list.back();
         }
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);
@@ -796,6 +809,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
         }
 
+        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
         data.pt_data->vehicle_journeys.push_back(vj);
         vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
     }
@@ -855,40 +869,13 @@ void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
-    //then we fill the links
-    std::string request = "SELECT l.meta_vj as metavj, "
-            " l.vehicle_journey as vehicle_journey, l.vj_class as vj_class, meta.name as name"
-            " from navitia.meta_vj as meta, navitia.rel_metavj_vj as l"
-            " WHERE meta.id = l.meta_vj";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        const std::string name = const_it["name"].as<std::string>();
-
-        nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_or_create(name);
-
-        const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
-        const auto vj_it = vehicle_journey_map.find(vj_idx);
-
-        if ( vj_it == vehicle_journey_map.end()) {
-            LOG4CPLUS_ERROR(log, "Impossible to find the vj " << vj_idx << ", we won't add it in a meta vj");
-            continue;
-        }
-        auto* vj = vj_it->second;
-
-        const std::string vj_class = const_it["vj_class"].as<std::string>();
-        auto level = navitia::type::get_rt_level_from_string(vj_class);
-        meta_vj->add_vj(vj, level);
-        vj->meta_vj = meta_vj;
-        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
-    }
-
     //then we fill the links between a metavj and its associated calendars
-    request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
+    const std::string request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
             " c.uri as associated_calendar_name"
             " from navitia.rel_metavj_associated_calendar as meta, navitia.meta_vj as l,"
             " navitia.associated_calendar as l2, navitia.calendar c"
             " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id and c.id = l2.calendar_id";
-    result = work.exec(request);
+    const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
         nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_mut(name);

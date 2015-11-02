@@ -275,6 +275,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     VehicleJourney* prev_vj = nullptr;
     VehicleJourney* next_vj = nullptr;
 
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+
     bool operator<(const VehicleJourney& other) const;
 };
 

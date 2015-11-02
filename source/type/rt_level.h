@@ -43,15 +43,30 @@ enum class RTLevel : char {
 };
 
 inline RTLevel get_rt_level_from_string(const std::string& level_str) {
-    const static std::map<std::string, RTLevel> level2string_map = { {"theoric", RTLevel::Base},
-                                                                     {"adapted", RTLevel::Adapted},
-                                                                     {"realtime", RTLevel::RealTime}};
-
-    auto it =  level2string_map.find(boost::algorithm::to_lower_copy(level_str));
-    if (it != std::end(level2string_map)){
-        return it->second;
+    auto lower_str = boost::algorithm::to_lower_copy(level_str);
+    if (lower_str == "theoric"){
+        return RTLevel::Base;
+    }
+    if (lower_str == "adapted"){
+        return RTLevel::Adapted;
+    }
+    if (lower_str == "realtime"){
+        return RTLevel::RealTime;
     }
     throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
+}
+
+inline std::string get_string_from_rt_level(RTLevel level) {
+    if (level == RTLevel::Base){
+        return "Theoric";
+    }
+    if (level == RTLevel::Adapted){
+        return "Adapted";
+    }
+    if (level == RTLevel::RealTime){
+        return "RealTime";
+    }
+    throw navitia::exception("technical error, vj class for meta vj should be either Base, Adapted or RealTime");
 }
 }
 
