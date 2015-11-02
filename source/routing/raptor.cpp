@@ -270,6 +270,7 @@ make_starting_points_snd_phase(const RAPTOR& raptor,
 Journey convert_to_bound(const StartingPointSndPhase& sp,
                          uint32_t lower_bound_fb,
                          uint32_t lower_bound_conn,
+                         const navitia::time_duration& transfer_penalty,
                          bool clockwise) {
     Journey journey;
     journey.sections.resize(sp.count); // only the number of sections is part of the dominance function
@@ -283,7 +284,7 @@ Journey convert_to_bound(const StartingPointSndPhase& sp,
         journey.departure_dt = sp.end_dt;
     }
 
-    journey.transfer_dur = navitia::seconds(120 * sp.count + nb_conn * lower_bound_conn);
+    journey.transfer_dur = transfer_penalty * sp.count + navitia::seconds(nb_conn * lower_bound_conn);
     // provide best values on unknown criteria
     journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
     journey.nb_vj_extentions = 0;
@@ -360,7 +361,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const std::vector<std::string>& forbidden_uri,
                     bool clockwise,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
-                    const size_t max_extra_second_pass) {
+                    const size_t max_extra_second_pass,
+                    const navitia::time_duration& transfer_penalty) {
     auto start_raptor = std::chrono::system_clock::now();
 
     auto solutions = ParetoFront<Journey, Dominates/*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
@@ -411,8 +413,11 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
 
     size_t nb_snd_pass = 0, nb_useless= 0, last_usefull_2nd_pass = 0, supplementary_2nd_pass = 0;
     for (const auto& start: starting_points) {
-        Journey fake_journey = convert_to_bound(start, lower_bound_fb,
-                                                data.dataRaptor->min_connection_time, clockwise);
+        Journey fake_journey = convert_to_bound(start,
+                                                lower_bound_fb,
+                                                data.dataRaptor->min_connection_time,
+                                                transfer_penalty,
+                                                clockwise);
         if (solutions.contains_better_than(fake_journey)) {
             continue;
         }
@@ -440,7 +445,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                                                    departures,
                                                    destinations,
                                                    rt_level,
-                                                   accessibilite_params);
+                                                   accessibilite_params,
+                                                   transfer_penalty);
         bool has_added = false;
         for (const auto& s: reader_results) {
             const bool cur_added = solutions.add(s);

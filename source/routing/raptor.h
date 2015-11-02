@@ -140,7 +140,8 @@ struct RAPTOR
                 const std::vector<std::string>& forbidden = std::vector<std::string>(),
                 bool clockwise = true,
                 const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
-                const size_t max_extra_second_pass = 0);
+                const size_t max_extra_second_pass = 0,
+                const navitia::time_duration& transfer_penalty = 2_min); // "les 2 minutes du peuple"
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
