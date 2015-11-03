@@ -345,7 +345,7 @@ struct RaptorSolutionReader {
     const routing::map_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
     const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
-    navitia::time_duration transfer_penalty;
+    const navitia::time_duration transfer_penalty;
     Solutions solutions;
 
     size_t nb_sol_added = 0;
