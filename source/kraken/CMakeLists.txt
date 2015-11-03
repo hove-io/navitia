@@ -1,8 +1,8 @@
 add_library(apply_disruption apply_disruption.cpp)
-target_link_libraries(apply_disruption types data pb_lib protobuf)
+target_link_libraries(apply_disruption data pb_lib protobuf)
 
 add_library(make_disruption_from_chaos make_disruption_from_chaos.cpp)
-target_link_libraries(make_disruption_from_chaos types apply_disruption data pb_lib protobuf)
+target_link_libraries(make_disruption_from_chaos apply_disruption data pb_lib protobuf)
 
 add_library(rt_handling realtime.cpp)
 target_link_libraries(rt_handling data pb_lib protobuf)

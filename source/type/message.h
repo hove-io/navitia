@@ -121,7 +121,6 @@ inline std::string to_string(ChannelType ct) {
     default:
         throw navitia::exception("unhandled channeltype case");
     }
-
 }
 
 struct Cause {

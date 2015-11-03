@@ -342,17 +342,13 @@ Impacter& Impacter::severity(const std::string& uri) {
     return *this;
 }
 
-Impacter& Impacter::informed_entities(nt::Type_e type, const std::string& uri) {
+Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
     impact->informed_entities.push_back(dis::make_pt_obj(type, uri, *b.data->pt_data, impact));
     return *this;
 }
 
-Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
-    return informed_entities(type, uri);
-}
-
-Impacter& Impacter::msg(const dis::Message& m) {
-    impact->messages.push_back(m);
+Impacter& Impacter::msg(dis::Message m) {
+    impact->messages.push_back(std::move(m));
     return *this;
 }
 
@@ -368,7 +364,7 @@ Impacter& Impacter::msg(const std::string& text, nt::disruption::ChannelType c) 
                                             boost::posix_time::minutes(0));
 
     m.channel_types.insert(c);
-    return msg(m);
+    return msg(std::move(m));
 }
 
 /*

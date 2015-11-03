@@ -234,7 +234,7 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-     // the disruptin is deleted by RAII
+    // the disruption is deleted by RAII
     std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
     if (disruption) {
         std::vector<nt::disruption::PtObj> informed_entities;

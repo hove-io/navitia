@@ -85,7 +85,6 @@ struct SA {
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
 };
 
-//     b.add_impact().name("bob").period("12d").severity(NoService).on(stop_1).on(line1);
 struct DisruptionCreator;
 
 struct Impacter {
@@ -107,9 +106,8 @@ struct Impacter {
                        int priority = 0);
 
     Impacter& severity(const std::string& uri); // link to existing severity
-    Impacter& informed_entities(nt::Type_e type, const std::string& uri);
-    Impacter& on(nt::Type_e type, const std::string& uri); // syntaxic sugar to informed_entities
-    Impacter& msg(const nt::disruption::Message&);
+    Impacter& on(nt::Type_e type, const std::string& uri); // add elt in informed_entities
+    Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p) {
         //to ease use without a DisruptionCreator
