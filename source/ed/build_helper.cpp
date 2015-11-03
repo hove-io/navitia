@@ -33,8 +33,16 @@ www.navitia.io
 #include <boost/range/algorithm/find_if.hpp>
 
 namespace pt = boost::posix_time;
+namespace dis = nt::disruption;
 
 namespace ed {
+
+std::string get_random_id() {
+    boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    std::stringstream uuid_stream;
+    uuid_stream << uuid;
+    return uuid_stream.str();
+}
 
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
        bool is_frequency,
@@ -264,6 +272,111 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     return *this;
 }
 
+DisruptionCreator::DisruptionCreator(builder& b, const std::string& uri, nt::RTLevel lvl):
+    b(b), disruption(b.data->pt_data->disruption_holder.make_disruption(uri, lvl)) {}
+
+Impacter& DisruptionCreator::impact() {
+    impacters.emplace_back(b, disruption);
+    // default uri is random
+    auto& i = impacters.back();
+    i.uri(get_random_id());
+    return i;
+}
+
+Impacter::Impacter(builder& bu, dis::Disruption& disrup): b(bu) {
+    impact = boost::make_shared<dis::Impact>();
+
+    disrup.add_impact(impact);
+}
+
+DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
+    auto tag = boost::make_shared<dis::Tag>();
+    tag->uri = t;
+    tag->name = t + " name";
+    disruption.tags.push_back(tag);
+    return *this;
+}
+
+DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
+    return DisruptionCreator(*this, uri, lvl);
+}
+
+
+Impacter& Impacter::severity(dis::Effect e,
+                             std::string uri,
+                             const std::string& wording,
+                             const std::string& color,
+                             int priority) {
+    if (uri.empty()) {
+        // we get the effect
+        uri = to_string(e);
+    }
+    auto& sev_map = b.data->pt_data->disruption_holder.severities;
+    auto it = sev_map.find(uri);
+    if (it != std::end(sev_map)) {
+        impact->severity = it->second.lock();
+        return *this;
+    }
+    auto severity = boost::make_shared<dis::Severity>();
+    severity->uri = uri;
+    if (! wording.empty()) {
+        severity->wording = wording;
+    } else {
+        severity->wording = uri + " severity";
+    }
+    severity->color = color;
+    severity->priority = priority;
+    severity->effect = e;
+    sev_map[severity->uri] = severity;
+    impact->severity = severity;
+    return *this;
+}
+
+Impacter& Impacter::severity(const std::string& uri) {
+    auto& sev_map = b.data->pt_data->disruption_holder.severities;
+    auto it = sev_map.find(uri);
+    if (it == std::end(sev_map)) {
+        throw navitia::exception("unknown severity " + uri + ", create it first");
+    }
+    impact->severity = it->second.lock();
+    return *this;
+}
+
+Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
+    impact->informed_entities.push_back(dis::make_pt_obj(type, uri, *b.data->pt_data, impact));
+    return *this;
+}
+
+Impacter& Impacter::msg(dis::Message m) {
+    impact->messages.push_back(std::move(m));
+    return *this;
+}
+
+Impacter& Impacter::msg(const std::string& text, nt::disruption::ChannelType c) {
+    dis::Message m;
+    auto str = to_string(c);
+    m.text = text;
+    m.channel_id = str;
+    m.channel_id = str;
+    m.channel_name = str + " channel";
+    m.channel_content_type = "content type";
+    m.created_at = boost::posix_time::ptime(b.data->meta->production_date.begin(),
+                                            boost::posix_time::minutes(0));
+
+    m.channel_types.insert(c);
+    return msg(std::move(m));
+}
+
+/*
+ * helper to create a disruption with only one impact
+ */
+Impacter builder::impact(nt::RTLevel lvl, std::string disruption_uri) {
+    if (disruption_uri.empty()) {
+        disruption_uri = get_random_id();
+    }
+    auto& disruption = data->pt_data->disruption_holder.make_disruption(disruption_uri, lvl);
+    return Impacter(*this, disruption);
+}
 
 VJ builder::vj(const std::string& line_name,
                const std::string& validity_pattern,

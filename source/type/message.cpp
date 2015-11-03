@@ -132,4 +132,32 @@ bool Impact::operator<(const Impact& other){
     }
 }
 
+Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLevel lvl) {
+    auto it = disruptions_by_uri.find(uri);
+    if (it != std::end(disruptions_by_uri)) {
+        // we cannot just replace the old one, the model needs to be updated accordingly, so we stop
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "disruption " << uri
+                       << " already exists, delete it first");
+        throw navitia::exception("disruption already exists");
+    }
+    auto disruption = std::make_unique<Disruption>(uri, lvl);
+    return *(disruptions_by_uri[uri] = std::move(disruption));
+}
+
+/*
+ * remove the disruption (if it exists) from the collection
+ * transfer the ownership of the disruption
+ *
+ * If it does not exists return a nullptr
+ */
+std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& uri) {
+    const auto it = disruptions_by_uri.find(uri);
+    if (it == std::end(disruptions_by_uri)) {
+        return {nullptr};
+    }
+    auto res = std::move(it->second);
+    disruptions_by_uri.erase(it);
+    return res;
+}
+
 }}}//namespace

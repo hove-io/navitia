@@ -35,6 +35,9 @@ www.navitia.io
 #include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
 #include "type/meta_data.h"
+#include "type/message.h"
+#include "type/rt_level.h"
+#include <memory>
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -82,6 +85,55 @@ struct SA {
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
 };
 
+struct DisruptionCreator;
+
+struct Impacter {
+    Impacter(builder&, nt::disruption::Disruption&);
+    builder& b;
+    boost::shared_ptr<nt::disruption::Impact> impact;
+    const nt::disruption::Disruption& get_disruption() const {
+        return *impact->disruption;
+    }
+    Impacter& uri(const std::string& u) { impact->uri = u; return *this; }
+    Impacter& application_periods(const boost::posix_time::time_period& p) {
+        impact->application_periods.push_back(p);
+        return *this;
+    }
+    Impacter& severity(nt::disruption::Effect,
+                       std::string uri = "",
+                       const std::string& wording = "",
+                       const std::string& color = "#FFFF00",
+                       int priority = 0);
+
+    Impacter& severity(const std::string& uri); // link to existing severity
+    Impacter& on(nt::Type_e type, const std::string& uri); // add elt in informed_entities
+    Impacter& msg(nt::disruption::Message);
+    Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& publish(const boost::posix_time::time_period& p) {
+        //to ease use without a DisruptionCreator
+        impact->disruption->publication_period = p;
+        return *this;
+    }
+};
+
+struct DisruptionCreator {
+    builder& b;
+    DisruptionCreator(builder&, const std::string& uri, nt::RTLevel lvl);
+
+    Impacter& impact();
+    DisruptionCreator& publication_period(const boost::posix_time::time_period& p) {
+        disruption.publication_period = p;
+        return *this;
+    }
+    DisruptionCreator& contributor(const std::string& c) {
+        disruption.contributor = c;
+        return *this;
+    }
+    DisruptionCreator& tag(const std::string& t);
+
+    nt::disruption::Disruption& disruption;
+    std::vector<Impacter> impacters;
+};
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
@@ -142,6 +194,9 @@ struct builder {
           const bool create_sp = true, bool wheelchair_boarding = true) {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
     }
+
+    DisruptionCreator disrupt(nt::RTLevel lvl, const std::string& uri);
+    Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

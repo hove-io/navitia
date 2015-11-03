@@ -68,7 +68,7 @@ enum class Effect {
   STOP_MOVED
 };
 
-enum class ChannelType{
+enum class ChannelType {
     web = 0,
     sms,
     email,
@@ -106,6 +106,21 @@ inline Effect from_string(const std::string& str) {
     if (str == "UNKNOWN_EFFECT") { return Effect::UNKNOWN_EFFECT; }
     if (str == "STOP_MOVED") { return Effect::STOP_MOVED; }
     throw navitia::exception("unhandled effect case");
+}
+
+inline std::string to_string(ChannelType ct) {
+    switch (ct) {
+    case ChannelType::web: return "web";
+    case ChannelType::sms: return "sms";
+    case ChannelType::email: return "email";
+    case ChannelType::mobile: return "mobile";
+    case ChannelType::notification: return "notification";
+    case ChannelType::twitter: return "twitter";
+    case ChannelType::facebook: return "facebook";
+    case ChannelType::unknown_type: return "unknown_type";
+    default:
+        throw navitia::exception("unhandled channeltype case");
+    }
 }
 
 struct Cause {
@@ -230,6 +245,8 @@ struct Tag {
 struct Disruption {
     Disruption() {}
     Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+    Disruption& operator=(const Disruption&) = delete;
+    Disruption(const Disruption&) = delete;
 
     std::string uri;
     // Provider of the disruption
@@ -278,8 +295,11 @@ private:
     std::vector<boost::shared_ptr<Impact>> impacts;
 };
 
-struct DisruptionHolder {
-    std::vector<std::unique_ptr<Disruption>> disruptions;
+class DisruptionHolder {
+    std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
+public:
+    Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
+    std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
@@ -289,7 +309,7 @@ struct DisruptionHolder {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions & causes & severities & tags;
+        ar & disruptions_by_uri & causes & severities & tags;
     }
 };
 }

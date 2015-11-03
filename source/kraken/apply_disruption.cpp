@@ -234,19 +234,16 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
-            [&disruption_id](const std::unique_ptr<nt::disruption::Disruption>& disruption){
-                return disruption->uri == disruption_id;
-            });
-    if (it != holder.disruptions.end()) {
+    // the disruption is deleted by RAII
+    std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
+    if (disruption) {
         std::vector<nt::disruption::PtObj> informed_entities;
-        for (const auto& impact : (*it)->get_impacts()) {
+        for (const auto& impact : disruption->get_impacts()) {
             informed_entities.insert(informed_entities.end(),
                               impact->informed_entities.begin(),
                               impact->informed_entities.end());
             delete_impact(impact, pt_data, meta);
         }
-        holder.disruptions.erase(it);
     }
     LOG4CPLUS_DEBUG(log, disruption_id << " disruption deleted");
 }
