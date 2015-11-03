@@ -88,7 +88,8 @@ read_solutions(const RAPTOR& raptor,
                const routing::map_stop_point_duration& deps,
                const routing::map_stop_point_duration& arrs,
                const type::RTLevel rt_level,
-               const type::AccessibiliteParams& accessibilite_params);
+               const type::AccessibiliteParams& accessibilite_params,
+               const navitia::time_duration& transfer_penalty);
 
 Path make_path(const Journey& journey, const type::Data& data);
 
