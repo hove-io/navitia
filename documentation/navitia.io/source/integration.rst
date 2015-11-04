@@ -935,9 +935,11 @@ Other parameters
 | nop      | max_nb_tranfers       | int       | Maximum of number transfers               | 10              |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | disruption_active     | boolean   | For compatibility use only.               | False           |
-|          |                       |           | If true the algorithm take the disruptions| False           |
+|          |                       |           | If true the algorithm take the disruptions|                 |
 |          |                       |           | into account, and thus avoid disrupted    |                 |
 |          |                       |           | public transport.                         |                 |
+|          |                       |           | Rq: "disruption_active=true" =            |                 |
+|          |                       |           |     "data_freshness=real_time"            |                 |
 |          |                       |           | Use "data_freshness" parameter instead    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
