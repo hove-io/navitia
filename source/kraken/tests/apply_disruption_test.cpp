@@ -46,12 +46,12 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 
 struct SimpleDataset {
-    SimpleDataset() {
+    SimpleDataset(): b("20150928") {
         b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
         b.vj("A", "000001", "", true, "vj:A-2")("stop1", "08:00"_t)("stop2", "09:00"_t);
     }
 
-    ed::builder b = ed::builder("20150928");
+    ed::builder b;
     void apply(const nt::disruption::Disruption& dis) {
         return navitia::apply_disruption(dis, *b.data->pt_data, *b.data->meta);
     }
