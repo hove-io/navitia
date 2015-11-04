@@ -44,36 +44,48 @@ www.navitia.io
 #include <boost/optional.hpp>
 
 template<typename Data>
+void data_deleter(const Data* data){
+    delete data;
+#ifndef NO_FORCE_MEMORY_RELEASE
+    //we might want to force the system to release the memory after the destruction of data
+    //to reduce the memory foot print
+    MallocExtension::instance()->ReleaseFreeMemory();
+#endif
+}
+
+template<typename Data>
 class DataManager{
     boost::shared_ptr<const Data> current_data;
     std::atomic_size_t data_identifier;
+
+
+private:
+    boost::shared_ptr<Data> create_data(size_t id){
+        return boost::shared_ptr<Data>(new Data(id), data_deleter<Data>);
+    }
+
+    boost::shared_ptr<const Data> create_ptr(const Data* d){
+        return boost::shared_ptr<const Data>(d, data_deleter<Data>);
+    }
+
 public:
 
-    DataManager() : current_data(boost::make_shared<const Data>()){
+    DataManager() : current_data(create_data(0)){
         data_identifier = 0;
     }
 
-    void set_data(const Data* d) { set_data(boost::shared_ptr<const Data>(d)); }
+    void set_data(const Data* d) { set_data(create_ptr(d)); }
     void set_data(boost::shared_ptr<const Data>&& data) {
         if (!data) { throw navitia::exception("Giving a null Data to DataManager::set_data"); }
         data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
         current_data = std::move(data);
-        release_memory();
     }
     boost::shared_ptr<const Data> get_data() const { return current_data; }
     boost::shared_ptr<Data> get_data_clone() {
         ++ data_identifier;
-        auto data = boost::make_shared<Data>(data_identifier.load());
+        auto data = create_data(data_identifier.load());
         time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
         return std::move(data);
-    }
-
-    void release_memory(){
-#ifndef NO_FORCE_MEMORY_RELEASE
-        //we might want to force the system to release the memory after the swap
-        //to reduce the memory foot print
-        MallocExtension::instance()->ReleaseFreeMemory();
-#endif
     }
 
     bool load(const std::string& database,
@@ -81,12 +93,10 @@ public:
               const std::vector<std::string>& contributors = {}){
         bool success;
         ++ data_identifier;
-        auto data = boost::make_shared<Data>(data_identifier.load());
+        auto data = create_data(data_identifier.load());
         success = data->load(database, chaos_database, contributors);
         if (success) {
             set_data(std::move(data));
-        } else {
-            release_memory();
         }
         return success;
     }
