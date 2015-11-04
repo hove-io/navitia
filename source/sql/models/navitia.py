@@ -242,7 +242,7 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('headway_sec', INTEGER(), primary_key=False),
     Column('utc_to_local_offset', INTEGER(), primary_key=False),
     Column('is_frequency', BOOLEAN(), primary_key=False),
-    Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), primary_key=False, nullable=False),
+    Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), server_default=u'Theoric', default=u'Theoric', primary_key=False, nullable=False),
     Column('meta_vj_name', TEXT(), primary_key=False),
     ForeignKeyConstraint(['vehicle_properties_id'], [u'navitia.vehicle_properties.id'], name=u'vehicle_journey_vehicle_properties_id_fkey'),
     ForeignKeyConstraint(['validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_validity_pattern_id_fkey'),
