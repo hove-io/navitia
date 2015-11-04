@@ -861,6 +861,14 @@ Main parameters
 | nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
 |          |                       |           | networks, etc.                            |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | data_freshness        | enum      | Define the freshness of data to use to    | base_schedule   |
+|          |                       |           | compute journeys                          |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | * real_time                               |                 |
+|          |                       |           | * base_schedule                           |                 |
+|          |                       |           |                                           |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+
 
 Other parameters
 ################
@@ -926,9 +934,13 @@ Other parameters
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers       | int       | Maximum of number transfers               | 10              |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | disruption_active     | boolean   | If true the algorithm take the disruptions| False           |
+| nop      | disruption_active     | boolean   | For compatibility use only.               | False           |
+|          |                       |           | If true the algorithm take the disruptions|                 |
 |          |                       |           | into account, and thus avoid disrupted    |                 |
-|          |                       |           | public transport                          |                 |
+|          |                       |           | public transport.                         |                 |
+|          |                       |           | Rq: "disruption_active=true" =            |                 |
+|          |                       |           |     "data_freshness=real_time"            |                 |
+|          |                       |           | Use "data_freshness" parameter instead    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
 |          |                       |           | be using a wheelchair, thus only          |                 |
@@ -1194,6 +1206,13 @@ Parameters
 |          |                     |           | columns per                  |               |
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
+| nop      | data_freshness      | enum      | Define the freshness of data | base_schedule |
+|          |                     |           | to use                       |               |
+|          |                     |           |                              |               |
+|          |                     |           | * real_time                  |               |
+|          |                     |           | * base_schedule              |               |
+|          |                     |           |                              |               |
++----------+---------------------+-----------+------------------------------+---------------+
 
 Objects
 #######
@@ -1264,16 +1283,23 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 Parameters
 ##########
 
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| Required | Name                | Type                            | Description                  | Default Value |
-+==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date-time`_                    | The date_time from           |               |
-|          |                     |                                 | which you want the schedules |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
-|          |                     |                                 | between from_datetime        |               |
-|          |                     |                                 | and the retrieved datetimes. |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
++----------+---------------------+---------------+---------------------------------------+---------------+
+| Required | Name                | Type          | Description                           | Default Value |
++==========+=====================+===============+=======================================+===============+
+| yep      | from_datetime       | `date-time`_  | The date_time from                    |               |
+|          |                     |               | which you want the schedules          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
+|          |                     |               | between from_datetime                 |               |
+|          |                     |               | and the retrieved datetimes.          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum          | Define the freshness of data to use   | base_schedule |
+|          |                     |               | to compute journeys                   |               |
+|          |                     |               |                                       |               |
+|          |                     |               | * real_time                           |               |
+|          |                     |               | * base_schedule                       |               |
+|          |                     |               |                                       |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
 
 Stop_schedule object
 ####################
@@ -1296,16 +1322,23 @@ Departures are ordered chronologically in ascending order.
 Parameters
 ##########
 
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| Required | Name                | Type                            | Description                  | Default Value |
-+==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date-time`_                    | The date_time from           |               |
-|          |                     |                                 | which you want the schedules |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
-|          |                     |                                 | between from_datetime        |               |
-|          |                     |                                 | and the retrieved datetimes. |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
++----------+---------------------+---------------+---------------------------------------+---------------+
+| Required | Name                | Type          | Description                           | Default Value |
++==========+=====================+===============+=======================================+===============+
+| yep      | from_datetime       | `date-time`_  | The date_time from                    |               |
+|          |                     |               | which you want the schedules          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
+|          |                     |               | between from_datetime                 |               |
+|          |                     |               | and the retrieved datetimes.          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum          | Define the freshness of data to use   | real_time     |
+|          |                     |               | to compute journeys                   |               |
+|          |                     |               |                                       |               |
+|          |                     |               | * real_time                           |               |
+|          |                     |               | * base_schedule                       |               |
+|          |                     |               |                                       |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
 
 Departure objects
 #################
