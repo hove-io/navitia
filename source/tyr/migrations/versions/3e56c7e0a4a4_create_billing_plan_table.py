@@ -22,7 +22,7 @@ def upgrade():
             primary_key=True,
             nullable=False
         ),
-        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('name', sa.Text, nullable=False),
         sa.Column('max_request_count', sa.Integer(), nullable=True),
         sa.Column('max_object_count', sa.Integer(), nullable=True),
         sa.Column('default', sa.Boolean(), nullable=False)
