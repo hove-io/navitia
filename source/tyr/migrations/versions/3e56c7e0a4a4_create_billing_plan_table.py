@@ -17,14 +17,18 @@ from sqlalchemy.types import Enum
 def upgrade():
 
     op.create_table('billing_plan',
-    sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
-    sa.Column('name', sa.String(255), nullable=False),
-    sa.Column('max_request_count', sa.Integer(), nullable=True),
-    sa.Column('max_object_count', sa.Integer(), nullable=True),
-    sa.Column('default', sa.Boolean(), nullable=False)
+        sa.Column(
+            'id', sa.Integer(),
+            primary_key=True,
+            nullable=False
+        ),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('max_request_count', sa.Integer(), nullable=True),
+        sa.Column('max_object_count', sa.Integer(), nullable=True),
+        sa.Column('default', sa.Boolean(), nullable=False)
     )
 
-    op.execute("INSERT INTO billing_plan VALUES (1,'Developpeur',3000,3000,true),(2,'Entreprise',NULL,NULL,false);")
+    op.execute("INSERT INTO billing_plan (name, max_request_count, max_object_count, \"default\") VALUES ('Developpeur (3000 requetes max)',3000,3000,true),('Entreprise (requetes illimitees)',NULL,NULL,false);")
 
     op.add_column(u'user', sa.Column('billing_plan_id', sa.Integer(), nullable=True))
     op.create_foreign_key(
