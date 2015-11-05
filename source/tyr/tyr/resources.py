@@ -54,58 +54,73 @@ class FieldDate(fields.Raw):
         else:
             return 'null'
 
-end_point_fields = {'id': fields.Raw,
-                    'name': fields.Raw,
-                    'default': fields.Raw,
-                    'hostnames': fields.List(fields.String),
-                   }
-
-key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
-
-instance_fields = {'id': fields.Raw,
-                   'name': fields.Raw,
-                   'is_free': fields.Raw,
-                   'scenario': fields.Raw,
-                   'journey_order': fields.Raw,
-                   'max_walking_duration_to_pt': fields.Raw,
-                   'max_bike_duration_to_pt': fields.Raw,
-                   'max_bss_duration_to_pt': fields.Raw,
-                   'max_car_duration_to_pt': fields.Raw,
-                   'max_nb_transfers': fields.Raw,
-                   'walking_speed': fields.Raw,
-                   'bike_speed': fields.Raw,
-                   'bss_speed': fields.Raw,
-                   'car_speed': fields.Raw,
-                   'min_bike': fields.Raw,
-                   'min_bss': fields.Raw,
-                   'min_car': fields.Raw,
-                   'min_tc_with_bike': fields.Raw,
-                   'min_tc_with_bss': fields.Raw,
-                   'min_tc_with_car': fields.Raw,
-                   'max_duration_criteria': fields.Raw,
-                   'max_duration_fallback_mode': fields.Raw,
+end_point_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'default': fields.Raw,
+    'hostnames': fields.List(fields.String)
 }
 
-api_fields = {'id': fields.Raw, 'name': fields.Raw}
+key_fields = {
+    'id': fields.Raw,
+    'app_name': fields.Raw,
+    'token': fields.Raw,
+    'valid_until': FieldDate
+}
 
-user_fields = {'id': fields.Raw,
-               'login': fields.Raw,
-               'email': fields.Raw,
-               'type': fields.Raw(),
-                'end_point': fields.Nested(end_point_fields),
-            }
-user_fields_full = {'id': fields.Raw,
-                    'login': fields.Raw,
-                    'email': fields.Raw,
-                    'type': fields.Raw(),
-                    'keys': fields.List(fields.Nested(key_fields)),
-                    'authorizations': fields.List(fields.Nested(
-                        {'instance': fields.Nested(instance_fields),
-                         'api': fields.Nested(api_fields)})),
-                    'end_point': fields.Nested(end_point_fields),
-                }
+instance_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'is_free': fields.Raw,
+    'scenario': fields.Raw,
+    'journey_order': fields.Raw,
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'max_nb_transfers': fields.Raw,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'min_bike': fields.Raw,
+    'min_bss': fields.Raw,
+    'min_car': fields.Raw,
+    'min_tc_with_bike': fields.Raw,
+    'min_tc_with_bss': fields.Raw,
+    'min_tc_with_car': fields.Raw,
+    'max_duration_criteria': fields.Raw,
+    'max_duration_fallback_mode': fields.Raw
+}
 
-jobs_fields = {'jobs': fields.List(fields.Nested({
+api_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw
+}
+
+user_fields = {
+    'id': fields.Raw,
+    'login': fields.Raw,
+    'email': fields.Raw,
+    'type': fields.Raw(),
+    'end_point': fields.Nested(end_point_fields)
+}
+
+user_fields_full = {
+    'id': fields.Raw,
+    'login': fields.Raw,
+    'email': fields.Raw,
+    'type': fields.Raw(),
+    'keys': fields.List(fields.Nested(key_fields)),
+    'authorizations': fields.List(fields.Nested({
+        'instance': fields.Nested(instance_fields),
+        'api': fields.Nested(api_fields)
+    })),
+    'end_point': fields.Nested(end_point_fields)
+}
+
+jobs_fields = {
+    'jobs': fields.List(fields.Nested({
         'id': fields.Raw,
         'state': fields.Raw,
         'created_at': FieldDate,
@@ -115,7 +130,8 @@ jobs_fields = {'jobs': fields.List(fields.Nested({
             'name': fields.Raw
         })),
         'instance': fields.Nested(instance_fields)
-}))}
+    }))
+}
 
 traveler_profile = {
     'traveler_type': fields.String,
@@ -133,6 +149,13 @@ traveler_profile = {
     'error': fields.String,
 }
 
+plan_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw
+}
+
 
 class Api(flask_restful.Resource):
     def __init__(self):
@@ -146,6 +169,7 @@ class Index(flask_restful.Resource):
     def get(self):
         return {'jobs': {'href': url_for('jobs', _external=True)}}
 
+
 class Job(flask_restful.Resource):
     @marshal_with(jobs_fields)
     def get(self, instance_name=None):
@@ -154,6 +178,7 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
 
 class Instance(flask_restful.Resource):
     def __init__(self):
@@ -274,7 +299,6 @@ class Instance(flask_restful.Resource):
             logging.exception("fail")
             raise
         return marshal(instance, instance_fields)
-
 
 
 class User(flask_restful.Resource):
@@ -509,6 +533,7 @@ class Authorization(flask_restful.Resource):
             raise
         return marshal(user, user_fields_full)
 
+
 class EndPoint(flask_restful.Resource):
 
     @marshal_with(end_point_fields)
@@ -701,3 +726,16 @@ class TravelerProfile(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+
+
+class Plan(flask_restful.Resource):
+    def __init__(self):
+        pass
+
+    def get(self, plan_id=None):
+        if plan_id:
+            plan = models.Plan.query.get_or_404(plan_id)
+            return marshal(plan, plan_fields)
+        else:
+            plans = models.Plan.query.all()
+            return marshal(plans, plan_fields)
