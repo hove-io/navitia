@@ -28,7 +28,7 @@ def upgrade():
         sa.Column('default', sa.Boolean(), nullable=False)
     )
 
-    op.execute("INSERT INTO billing_plan (name, max_request_count, max_object_count, \"default\") VALUES ('Developpeur (3000 requetes max)',3000,3000,true),('Entreprise (requetes illimitees)',NULL,NULL,false);")
+    op.execute("INSERT INTO billing_plan (name, max_request_count, max_object_count, \"default\") VALUES ('developer_billing_plan',3000,3000,true),('enterprise_billing_plan',NULL,NULL,false);")
 
     op.add_column(u'user', sa.Column('billing_plan_id', sa.Integer(), nullable=True))
     op.create_foreign_key(
