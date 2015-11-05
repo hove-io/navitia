@@ -435,8 +435,9 @@ class DataSet(db.Model):
         return '<DataSet %r>' % self.id
 
 
-class Plan(db.Model):
+class BillingPlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     max_request_count = db.Column(db.Integer, nullable=False)
     max_object_count = db.Column(db.Integer, nullable=False)
+    default = db.Column(db.Boolean, nullable=False, default=False)

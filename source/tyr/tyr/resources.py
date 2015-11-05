@@ -149,11 +149,12 @@ traveler_profile = {
     'error': fields.String,
 }
 
-plan_fields = {
+billing_plan_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
     'max_request_count': fields.Raw,
-    'max_object_count': fields.Raw
+    'max_object_count': fields.Raw,
+    'default': fields.Raw
 }
 
 
@@ -302,9 +303,6 @@ class Instance(flask_restful.Resource):
 
 
 class User(flask_restful.Resource):
-    def __init__(self):
-        pass
-
     def get(self, user_id=None):
         if user_id:
             user = models.User.query.get_or_404(user_id)
@@ -728,17 +726,14 @@ class TravelerProfile(flask_restful.Resource):
             raise
 
 
-class Plan(flask_restful.Resource):
-    def __init__(self):
-        pass
-
-    def get(self, plan_id=None):
-        if plan_id:
-            plan = models.Plan.query.get_or_404(plan_id)
-            return marshal(plan, plan_fields)
+class BillingPlan(flask_restful.Resource):
+    def get(self, billing_plan_id=None):
+        if billing_plan_id:
+            billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
+            return marshal(billing_plan, billing_plan_fields)
         else:
-            plans = models.Plan.query.all()
-            return marshal(plans, plan_fields)
+            billing_plans = models.BillingPlan.query.all()
+            return marshal(billing_plans, billing_plan_fields)
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -746,46 +741,51 @@ class Plan(flask_restful.Resource):
                             case_sensitive=False, help='name is required',
                             location=('json', 'values'))
         parser.add_argument('max_request_count', type=int, required=False,
-                            help='max request count for this plan', location=('json', 'values'))
+                            help='max request count for this billing plan', location=('json', 'values'))
         parser.add_argument('max_object_count', type=int, required=False,
-                            help='max object count for this plan', location=('json', 'values'))
+                            help='max object count for this billing plan', location=('json', 'values'))
+        parser.add_argument('default', type=bool, required=False, default=True,
+                            help='if this plan is the default one', location=('json', 'values'))
         args = parser.parse_args()
 
         try:
-            plan = models.Plan(name=args['name'], max_request_count=args['max_request_count'],
-                               max_object_count=args['max_object_count'])
-            db.session.add(plan)
+            billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
+                                              max_object_count=args['max_object_count'])
+            db.session.add(billing_plan)
             db.session.commit()
-            return marshal(plan, plan_fields)
+            return marshal(billing_plan, billing_plan_fields)
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, plan_id=None):
-        plan = models.Plan.query.get_or_404(plan_id)
+    def put(self, billing_plan_id=None):
+        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=False, default=plan.name,
+        parser.add_argument('name', type=unicode, required=False, default=billing_plan.name,
                             case_sensitive=False, location=('json', 'values'))
-        parser.add_argument('max_request_count', type=int, required=False, default=plan.max_request_count,
-                            help='max request count for this plan', location=('json', 'values'))
-        parser.add_argument('max_object_count', type=int, required=False, default=plan.max_object_count,
-                            help='max object count for this plan', location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False, default=billing_plan.max_request_count,
+                            help='max request count for this billing plan', location=('json', 'values'))
+        parser.add_argument('max_object_count', type=int, required=False, default=billing_plan.max_object_count,
+                            help='max object count for this billing plan', location=('json', 'values'))
+        parser.add_argument('default', type=bool, required=False, default=billing_plan.default,
+                            help='if this plan is the default one', location=('json', 'values'))
         args = parser.parse_args()
 
         try:
-            plan.name = args['name']
-            plan.max_request_count = args['max_request_count']
-            plan.max_object_count = args['max_object_count']
+            billing_plan.name = args['name']
+            billing_plan.max_request_count = args['max_request_count']
+            billing_plan.max_object_count = args['max_object_count']
+            billing_plan.default = args['default']
             db.session.commit()
-            return marshal(plan, plan_fields)
+            return marshal(billing_plan, billing_plan_fields)
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self, plan_id=None):
-        plan = models.Plan.query.get_or_404(plan_id)
+    def delete(self, billing_plan_id=None):
+        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         try:
-            db.session.delete(plan)
+            db.session.delete(billing_plan)
             db.session.commit()
         except Exception:
             logging.exception("fail")
