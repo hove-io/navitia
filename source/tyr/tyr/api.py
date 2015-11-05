@@ -59,8 +59,8 @@ api.add_resource(resources.TravelerProfile,
                  '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>')
 
 api.add_resource(resources.BillingPlan,
-                 '/v0/billing-plans/',
-                 '/v0/billing-plans/<int:billing_plan_id>')
+                 '/v0/billing_plans/',
+                 '/v0/billing_plans/<int:billing_plan_id>')
 
 @app.errorhandler(Exception)
 def error_handler(exception):
