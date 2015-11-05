@@ -739,3 +739,56 @@ class Plan(flask_restful.Resource):
         else:
             plans = models.Plan.query.all()
             return marshal(plans, plan_fields)
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=True,
+                            case_sensitive=False, help='name is required',
+                            location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False,
+                            help='max request count for this plan', location=('json', 'values'))
+        parser.add_argument('max_object_count', type=int, required=False,
+                            help='max object count for this plan', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            plan = models.Plan(name=args['name'], max_request_count=args['max_request_count'],
+                               max_object_count=args['max_object_count'])
+            db.session.add(plan)
+            db.session.commit()
+            return marshal(plan, plan_fields)
+        except Exception:
+            logging.exception("fail")
+            raise
+
+    def put(self, plan_id=None):
+        plan = models.Plan.query.get_or_404(plan_id)
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=True,
+                            case_sensitive=False, help='name is required',
+                            location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False,
+                            help='max request count for this plan', location=('json', 'values'))
+        parser.add_argument('max_object_count', type=int, required=False,
+                            help='max object count for this plan', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            plan.name = args['name']
+            plan.max_request_count = args['max_request_count']
+            plan.max_object_count = args['max_object_count']
+            db.session.commit()
+            return marshal(plan, plan_fields)
+        except Exception:
+            logging.exception("fail")
+            raise
+
+    def delete(self, plan_id=None):
+        plan = models.Plan.query.get_or_404(plan_id)
+        try:
+            db.session.delete(plan)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return ({}, 204)
