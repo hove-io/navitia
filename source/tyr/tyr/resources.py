@@ -764,12 +764,11 @@ class Plan(flask_restful.Resource):
     def put(self, plan_id=None):
         plan = models.Plan.query.get_or_404(plan_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True,
-                            case_sensitive=False, help='name is required',
-                            location=('json', 'values'))
-        parser.add_argument('max_request_count', type=int, required=False,
+        parser.add_argument('name', type=unicode, required=False, default=plan.name,
+                            case_sensitive=False, location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False, default=plan.max_request_count,
                             help='max request count for this plan', location=('json', 'values'))
-        parser.add_argument('max_object_count', type=int, required=False,
+        parser.add_argument('max_object_count', type=int, required=False, default=plan.max_object_count,
                             help='max object count for this plan', location=('json', 'values'))
         args = parser.parse_args()
 
