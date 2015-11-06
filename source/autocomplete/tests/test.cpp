@@ -409,6 +409,7 @@ BOOST_AUTO_TEST_CASE(Faute_de_frappe_One){
         std::initializer_list<unsigned> best_res = {1, 4}; // they are equivalent
         BOOST_CHECK(in(res1.at(0).idx, best_res));
         BOOST_CHECK(in(res1.at(1).idx, best_res));
+        BOOST_CHECK_NE(res1.at(0).idx, res1.at(1).idx);
         BOOST_CHECK_EQUAL(res1.at(2).idx, 0);
         BOOST_CHECK_EQUAL(res1.at(0).quality, 94);
     }
