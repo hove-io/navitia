@@ -232,4 +232,24 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(vj_ab1_dst2->next_vj->uri, "vehicle_journey:BFC1_dst_2");
     // and ab1 should be the previous vj of it
     BOOST_CHECK_EQUAL(vj_ab1_dst2->next_vj->prev_vj, vj_ab1_dst2);
+
+    // check that STBA is a frequency vj
+    const auto* vj_stba = pt_data.vehicle_journeys_map.at("vehicle_journey:STBA_dst_1");
+    const auto* vj_stba_freq = dynamic_cast<const nt::FrequencyVehicleJourney*>(vj_stba);
+    BOOST_REQUIRE(vj_stba_freq);
+    BOOST_CHECK_EQUAL(vj_stba_freq->start_time, "14:00"_t);
+    BOOST_CHECK_EQUAL(vj_stba_freq->end_time, "30:00"_t);
+    BOOST_CHECK_EQUAL(vj_stba_freq->headway_secs, 1800);
+    for (const auto& st: vj_stba->stop_time_list) {
+        BOOST_CHECK(st.is_frequency());
+    }
+    vj_stba = pt_data.vehicle_journeys_map.at("vehicle_journey:STBA_dst_2");
+    vj_stba_freq = dynamic_cast<const nt::FrequencyVehicleJourney*>(vj_stba);
+    BOOST_REQUIRE(vj_stba_freq);
+    BOOST_CHECK_EQUAL(vj_stba_freq->start_time, "13:00"_t);
+    BOOST_CHECK_EQUAL(vj_stba_freq->end_time, "29:00"_t);
+    BOOST_CHECK_EQUAL(vj_stba_freq->headway_secs, 1800);
+    for (const auto& st: vj_stba->stop_time_list) {
+        BOOST_CHECK(st.is_frequency());
+    }
 }

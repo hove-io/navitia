@@ -2635,8 +2635,8 @@ BOOST_AUTO_TEST_CASE(begin_different_zone3) {
 // test that raptor is able to find "hidden" pathes (improving sn, but only because of the departure)
 //
 //                                        9h10
-//       __________ A ===================> B ______________
-//      /   1 min            vj 1              3 min       \
+//       __________ A ===================> B ________________
+//      /   1 min            vj 1              3 min        /
 //     /                                               arrival
 // departure                                 9h00         /
 //    \_________________ C ==================> D ________/
