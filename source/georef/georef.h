@@ -37,7 +37,7 @@ www.navitia.io
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/set.hpp>
 #include <map>

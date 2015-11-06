@@ -63,7 +63,7 @@
  *       in binary floating point serialization as desired by some boost users.
  *       Instead we support only the most widely used IEEE 754 format and try to
  *       detect when requirements are not met and hence our approach must fail.
- *       Contributions we made by Johan Rade and Ákos Maróy.
+ *       Contributions we made by Johan Rade and ï¿½kos Marï¿½y.
  *
  * \note Version 2.0 fixes a serious bug that effectively transformed most
  *       of negative integral values into positive values! For example the two
@@ -89,7 +89,7 @@
 #include <boost/archive/basic_binary_iprimitive.hpp>
 #include <boost/archive/basic_binary_iarchive.hpp>
 
-#if BOOST_VERSION >= 103500
+#if BOOST_VERSION >= 103500 && BOOST_VERSION <= 105600
 #include <boost/archive/shared_ptr_helper.hpp>
 #endif
 
@@ -186,12 +186,11 @@ namespace eos {
 
 		// the example derives from common_oarchive but that lacks the
 		// load_override functions so we chose to stay one level higher
-		, public boost::archive::basic_binary_iarchive<portable_iarchive>
-
-	#if BOOST_VERSION >= 103500
-		// mix-in helper class for serializing shared_ptr
-		, public boost::archive::detail::shared_ptr_helper
-	#endif
+                , public boost::archive::basic_binary_iarchive<portable_iarchive>
+        #if BOOST_VERSION >= 103500 && BOOST_VERSION <= 105600
+                // mix-in helper class for serializing shared_ptr
+                , public boost::archive::detail::shared_ptr_helper
+        #endif
 	{
 		// only needed for Robert's hack in basic_binary_iarchive::init
 		friend class boost::archive::basic_binary_iarchive<portable_iarchive>;

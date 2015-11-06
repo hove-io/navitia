@@ -66,7 +66,7 @@
  *       in binary floating point serialization as desired by some boost users.
  *       Instead we support only the most widely used IEEE 754 format and try to
  *       detect when requirements are not met and hence our approach must fail.
- *       Contributions we made by Johan Rade and Ákos Maróy.
+ *       Contributions we made by Johan Rade and ï¿½kos Marï¿½y.
  *
  * \note Version 2.0 fixes a serious bug that effectively transformed most
  *       of negative integral values into positive values! For example the two
@@ -92,7 +92,7 @@
 #include <boost/archive/basic_binary_oprimitive.hpp>
 #include <boost/archive/basic_binary_oarchive.hpp>
 
-#if BOOST_VERSION >= 103500
+#if BOOST_VERSION >= 103500 && BOOST_VERSION <= 105600
 #include <boost/archive/shared_ptr_helper.hpp>
 #endif
 
@@ -161,6 +161,7 @@ namespace endian = boost::spirit::detail;
 #error "VAX floating point format is not supported!"
 #endif
 
+
 namespace eos {
 
 	// forward declaration
@@ -192,12 +193,11 @@ namespace eos {
 
 		// the example derives from common_oarchive but that lacks the
 		// save_override functions so we chose to stay one level higher
-		, public boost::archive::basic_binary_oarchive<portable_oarchive>
-
-	#if BOOST_VERSION >= 103500
-		// mix-in helper class for serializing shared_ptr
-		, public boost::archive::detail::shared_ptr_helper
-	#endif
+                , public boost::archive::basic_binary_oarchive<portable_oarchive>
+        #if BOOST_VERSION >= 103500 && BOOST_VERSION <= 105600
+                // mix-in helper class for serializing shared_ptr
+                , public boost::archive::detail::shared_ptr_helper
+        #endif
 	{
 		// workaround for gcc: use a dummy struct
 		// as additional argument type for overloading
@@ -391,7 +391,7 @@ namespace eos {
 			case FP_NAN: bits = traits::exponent | traits::mantissa; break;
 			case FP_INFINITE: bits = traits::exponent | (t<0) * traits::sign; break;
 			case FP_SUBNORMAL: assert(std::numeric_limits<T>::has_denorm); // pass
-			case FP_ZERO: // note that floats can be ±0.0
+			case FP_ZERO: // note that floats can be ï¿½0.0
 			case FP_NORMAL: traits::get_bits(t, bits); break;
 			default: throw portable_archive_exception(t);
 			}

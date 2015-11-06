@@ -758,5 +758,7 @@ std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
 
 }} //namespace navitia::type
 
+#if BOOST_VERSION <= 105700
 BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
 BOOST_CLASS_EXPORT_GUID(navitia::type::FrequencyVehicleJourney, "FrequencyVehicleJourney")
+##endif
