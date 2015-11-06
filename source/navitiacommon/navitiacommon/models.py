@@ -109,6 +109,9 @@ class User(db.Model):
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
 
+    billing_plan_id = db.Column(db.Integer, db.ForeignKey('billing_plan.id'), nullable=False)
+    billing_plan = db.relationship('BillingPlan', lazy='joined', cascade='save-update, merge')
+
     keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
 
     authorizations = db.relationship('Authorization', backref='user',

@@ -98,12 +98,20 @@ api_fields = {
     'name': fields.Raw
 }
 
+billing_plan_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw,
+    'default': fields.Raw
+}
+
 user_fields = {
     'id': fields.Raw,
     'login': fields.Raw,
     'email': fields.Raw,
     'type': fields.Raw(),
-    'end_point': fields.Nested(end_point_fields)
+    'end_point': fields.Nested(end_point_fields),
 }
 
 user_fields_full = {
@@ -116,7 +124,8 @@ user_fields_full = {
         'instance': fields.Nested(instance_fields),
         'api': fields.Nested(api_fields)
     })),
-    'end_point': fields.Nested(end_point_fields)
+    'end_point': fields.Nested(end_point_fields),
+    'billing_plan': fields.Nested(billing_plan_fields)
 }
 
 jobs_fields = {
@@ -147,14 +156,6 @@ traveler_profile = {
     'first_section_mode': fields.List(fields.String),
     'last_section_mode': fields.List(fields.String),
     'error': fields.String,
-}
-
-billing_plan_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'max_request_count': fields.Raw,
-    'max_object_count': fields.Raw,
-    'default': fields.Raw
 }
 
 
