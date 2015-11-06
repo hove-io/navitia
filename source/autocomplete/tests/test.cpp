@@ -406,14 +406,12 @@ BOOST_AUTO_TEST_CASE(Faute_de_frappe_One){
 
         auto res1 = ac.find_partial_with_pattern("gare patea", word_weight, nbmax, [](int){return true;}, ghostwords);
         BOOST_REQUIRE_EQUAL(res1.size(), 3);
-        BOOST_CHECK_EQUAL(res1.at(0).idx, 4);
-        BOOST_CHECK_EQUAL(res1.at(1).idx, 1);
+        std::initializer_list<unsigned> best_res = {1, 4}; // they are equivalent
+        BOOST_CHECK(in(res1.at(0).idx, best_res));
+        BOOST_CHECK(in(res1.at(1).idx, best_res));
         BOOST_CHECK_EQUAL(res1.at(2).idx, 0);
         BOOST_CHECK_EQUAL(res1.at(0).quality, 94);
-
-
     }
-
 
 /*
     > Le fonctionnement normal :> On prends que les autocomplete si tous les mots dans la recherche existent
