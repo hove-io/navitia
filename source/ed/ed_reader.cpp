@@ -65,8 +65,11 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_routes(data, work);
     this->fill_validity_patterns(data, work);
 
-    //the comments are loaded before the stop time to reduce the memory foot print
+    //the comments are loaded before the stop time (and thus the vj)
+    //to reduce the memory foot print
     this->fill_comments(data, work);
+    // the stop times are loaded before the vj as create_vj need the
+    // list of stop times
     this->fill_stop_times(data, work);
     this->fill_vehicle_journeys(data, work);
     this->finish_stop_times(data);
