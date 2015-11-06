@@ -284,7 +284,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_c
                                                              "00:00"_t + "24:00"_t,
                                                              std::numeric_limits<size_t>::max(),
                                                              *b.data, nt::RTLevel::Base,
-                                                             {c2->uri});
+                                                             boost::optional<const std::string>(c2->uri));
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     boost::sort(res);
@@ -310,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_s
                                                              "12:37"_t + "24:00"_t,
                                                              std::numeric_limits<size_t>::max(),
                                                              *b.data, nt::RTLevel::Base,
-                                                             {c2->uri});
+                                                             boost::optional<const std::string>(c2->uri));
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
