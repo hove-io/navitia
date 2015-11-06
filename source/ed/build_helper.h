@@ -64,7 +64,7 @@ struct VJ {
     const uint32_t start_time;
     const uint32_t end_time;
     const uint32_t headway_secs;
-    std::vector<nt::StopTime> sts;
+    std::vector<nt::StopTime> stop_times;
     nt::VehicleJourney* vj = nullptr;
 
     /// Construit un nouveau vehicle journey
@@ -86,7 +86,7 @@ struct VJ {
     VJ& operator=(VJ&&) = delete;
     VJ(const VJ&) = delete;
     VJ& operator=(const VJ&) = delete;
-    ~VJ() { make(); }
+    ~VJ() { make(); } // The destructor create the vj as we need the stop times to create it.
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -108,6 +108,7 @@ struct VJ {
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
 
+    // create the vj
     nt::VehicleJourney* make();
 };
 

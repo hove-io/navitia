@@ -135,14 +135,14 @@ nt::VehicleJourney* VJ::make() {
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, route, sts, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, sts, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
     }
 
     //add physical mode
@@ -185,11 +185,11 @@ nt::VehicleJourney* VJ::make() {
 
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(shape.size() >= 2);
-    assert(sts.size() >= 2);
-    assert(sts.back().stop_point->coord == shape.back());
-    assert(sts.at(vj->stop_time_list.size() - 2).stop_point->coord
+    assert(stop_times.size() >= 2);
+    assert(stop_times.back().stop_point->coord == shape.back());
+    assert(stop_times.at(vj->stop_time_list.size() - 2).stop_point->coord
            == shape.front());
-    sts.back().shape_from_prev = b.data->pt_data->shape_manager.get(shape);
+    stop_times.back().shape_from_prev = b.data->pt_data->shape_manager.get(shape);
     return *this;
 }
 
@@ -248,7 +248,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     st.set_drop_off_allowed(drop_off_allowed);
     st.set_pick_up_allowed(pick_up_allowed);
 
-    sts.push_back(st);
+    stop_times.push_back(st);
     return *this;
 }
 
