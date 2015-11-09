@@ -38,7 +38,7 @@ www.navitia.io
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/serialization/bitset.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/map.hpp>
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>

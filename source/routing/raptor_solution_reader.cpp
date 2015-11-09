@@ -68,7 +68,8 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
               const JourneyPatternContainer& jp_container)
 {
     DateTime cur_dt = in_st_dt.second;
-    for (const auto& st: raptor_visitor().st_range(*in_st_dt.first).advance_begin(1)) {
+    auto st_range = raptor_visitor().st_range(*in_st_dt.first);
+    for (const auto& st: st_range.advance_begin(1)) {
         cur_dt = st.section_end(cur_dt, true);
         if (jp_container.get_jpp(st) == target_jpp) {
             // check if the get_out is valid?
@@ -440,9 +441,13 @@ struct RaptorSolutionReader {
             //for frequency, we need cur_dt to be the begin in the stoptime
             cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
         }
-        for (const auto& end_st: v.st_range(*begin_st_dt.first).advance_begin(1)) {
+        // Note: We keep a ref on the range because the advance_begin return a ref on the object
+        // and some gcc version optimize out the inner range
+        auto r = v.st_range(*begin_st_dt.first);
+        for (const auto& end_st: r.advance_begin(1)) {
             cur_dt = end_st.section_end(cur_dt, v.clockwise());
         }
+
         return cur_dt;
     }
 
