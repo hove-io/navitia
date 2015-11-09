@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import sys
+
 from flask.ext.restful import Resource
 from jormungandr.modules_loader import ModulesLoader
 from jormungandr.interfaces.v1.make_links import create_external_link
@@ -38,7 +40,7 @@ def index(api):
 
 class Index(Resource):
     def get(self):
-        resp = {"versions": []}
+        resp = {"versions": [{'python': sys.version}]}
         for module_name, module in ModulesLoader.modules.iteritems():
             mod = {
                 'value': module_name,
