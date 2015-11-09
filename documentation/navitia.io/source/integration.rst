@@ -45,7 +45,7 @@ Some easy examples
     * https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro
     * Response contain one network, one mode, and many lines
 
-* Let's try some filtering (see `pt_referential`_)
+* Let's try some filtering (see `ptreferential`_)
 
     * filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
     * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/
@@ -343,7 +343,7 @@ https://api.navitia.io/v1/coverage/fr-idf/
             ]
     }
 
-.. _pt_referential:
+.. _ptreferential:
 
 Public transportation objects exploration (/networks or /lines or /routes...)
 *****************************************************************************
@@ -1018,6 +1018,23 @@ ______________
 | tags                | array of string          | List of tags on the journey. The tags add additional         |
 |                     |                          | information on the journey beside the journey type.          |
 |                     |                          | See for example `multiple_journeys`_.                        |
++---------------------+--------------------------+--------------------------------------------------------------+
+| status              | *enum*                   | Status from the whole journey taking into acount the most    |
+|                     |                          | disturbing information retrieved on every object used.       |
+|                     |                          | Can be:                                                      |
+|                     |                          |                                                              |
+|                     |                          | * NO_SERVICE                                                 |
+|                     |                          | * REDUCED_SERVICE                                            |
+|                     |                          | * SIGNIFICANT_DELAYS                                         |
+|                     |                          | * DETOUR                                                     |
+|                     |                          | * ADDITIONAL_SERVICE                                         |
+|                     |                          | * MODIFIED_SERVICE                                           |
+|                     |                          | * OTHER_EFFECT                                               |
+|                     |                          | * UNKNOWN_EFFECT                                             |
+|                     |                          | * STOP_MOVED                                                 |
+|                     |                          |                                                              |
+|                     |                          | In order to get a undisrupted journey, you just have to add  |
+|                     |                          | a "&data_freshness=real_time" parameter                      |
 +---------------------+--------------------------+--------------------------------------------------------------+
 
 
