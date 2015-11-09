@@ -60,6 +60,10 @@ type_to_pttype = {
       "calendar" : request_pb2.PlaceCodeRequest.Calendar
 }
 
+@app.before_request
+def _init_g():
+    g.instances_model = {}
+
 class Instance(object):
 
     def __init__(self, context, name):
@@ -77,6 +81,10 @@ class Instance(object):
         self.is_up = True
         self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
 
+    def get_models(self):
+        if self.name not in g.instances_model:
+            g.instances_model[self.name] = self._get_models()
+        return g.instances_model[self.name]
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def _get_models(self):
@@ -103,7 +111,7 @@ class Instance(object):
             return scenario
 
 
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         scenario_name = instance_db.scenario if instance_db else 'default'
         if not self._scenario or scenario_name != self._scenario_name:
             logger = logging.getLogger(__name__)
@@ -118,102 +126,102 @@ class Instance(object):
 
     @property
     def journey_order(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('journey_order', instance_db, self.name)
 
     @property
     def max_walking_duration_to_pt(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_walking_duration_to_pt', instance_db, self.name)
 
     @property
     def max_bss_duration_to_pt(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_bss_duration_to_pt', instance_db, self.name)
 
     @property
     def max_bike_duration_to_pt(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_bike_duration_to_pt', instance_db, self.name)
 
     @property
     def max_car_duration_to_pt(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_car_duration_to_pt', instance_db, self.name)
 
     @property
     def walking_speed(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('walking_speed', instance_db, self.name)
 
     @property
     def bss_speed(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('bss_speed', instance_db, self.name)
 
     @property
     def bike_speed(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('bike_speed', instance_db, self.name)
 
     @property
     def car_speed(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('car_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_nb_transfers', instance_db, self.name)
 
     @property
     def min_tc_with_car(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_tc_with_car', instance_db, self.name)
 
     @property
     def min_tc_with_bike(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_tc_with_bike', instance_db, self.name)
 
     @property
     def min_tc_with_bss(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_tc_with_bss', instance_db, self.name)
 
     @property
     def min_bike(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_bike', instance_db, self.name)
 
     @property
     def min_bss(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_bss', instance_db, self.name)
 
     @property
     def min_car(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_car', instance_db, self.name)
 
     @property
     def factor_too_long_journey(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('factor_too_long_journey', instance_db, self.name)
 
     @property
     def min_duration_too_long_journey(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('min_duration_too_long_journey', instance_db, self.name)
 
     @property
     def max_duration_criteria(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_duration_criteria', instance_db, self.name)
 
     @property
     def max_duration_fallback_mode(self):
-        instance_db = self._get_models()
+        instance_db = self.get_models()
         return get_value_or_default('max_duration_fallback_mode', instance_db, self.name)
 
     @contextmanager
