@@ -37,14 +37,22 @@ Some easy examples
 * Networks available? (see what network_ is)
 
     * https://api.navitia.io/v1/coverage/fr-idf/networks
+    * pwooo, many networks on this coverage ;)
 
-* RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
-* Too many lines, let's use physical mode filtering
+* Is there any Metro lines or networks? 
 
-    * physical modes managed by RATP 
-    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+    * there is an api for that. See `pt_objects`_ 
+    * https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro
+    * Response contain one network, one mode, and many lines
+
+* Let's try some filtering (see `pt_referential`_)
+
+    * filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/
+    * physical modes managed by this network
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes
     * metro lines 
-    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines
 
 * By the way, what stuff are close to me?
 
@@ -190,7 +198,7 @@ you will find a *links* section:
 	}
 
 You have to put one line id instead of "{lines.id}". For example:
-https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
+https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:043043001:N1OIF658/stop_schedules
 
 .. _inner-reference:
 
@@ -335,6 +343,7 @@ https://api.navitia.io/v1/coverage/fr-idf/
             ]
     }
 
+.. _pt_referential:
 
 Public transportation objects exploration (/networks or /lines or /routes...)
 *****************************************************************************
@@ -372,25 +381,25 @@ Here is some examples around "metro line 1" from the Parisian network:
 * Get "line 1" id 
 
 	* https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201
-	* The id is "line:RTP:1197611"
+	* The id is "line:OIF:100110001:1OIF439"
 
 * Get routes for this line 
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes
 
 * Want to get a tiny response? Just add "depth=0"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=0
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=0
 	* The response is lighter (parent lines disappear for example)
 
 * Want more informations, just add "depth=2"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=2
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=2
 	* The response is a little more verbose (with some geojson appear in response)
 
 * Wanna fat more informations, let's try "depth=3"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=3
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=3
 	* Big response: all stop_points are shown
 
 * Wanna spam the internet bandwidth? Try "depth=42"
@@ -531,18 +540,13 @@ Other examples
 
     * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
+.. _pt_objects:
 
 Public Transport objects autocomplete (/pt_objects)
 ***************************************************
 
 This api search in public transport objects via their names. It's a kind of magical autocomplete on public transport data.
 It returns, in addition of classic objects, a collection of places_ .
-
-+------------------------------------------+
-| *Warning*                                |
-|                                          |
-|    There is no pagination for this api   |
-+------------------------------------------+
 
 How does it works
 #################
@@ -604,6 +608,12 @@ Parameters
 +---------+---------------+----------------------------+------------------------------------+-----------------------------+
 
 
++------------------------------------------+
+| *Warning*                                |
+|                                          |
+|    There is no pagination for this api   |
++------------------------------------------+
+
 Example
 #######
 
@@ -612,7 +622,7 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bu
 .. code-block:: json
 
     {
-    "places": [
+    "pt_objects": [
         {
             {
 
@@ -620,8 +630,8 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bu
                 "line": {
                     ...
                 },
-                "id": "line:RTP:1258386",
-                "name": " RATP Bus 39 (Gare du Nord - Issy Frères Voisin)"
+                "id": "line:OIF:100100091:91OIF442",
+                "name": "RATP Bus 91 (MOBILIEN 91)"
 
             },
                     },
