@@ -43,6 +43,8 @@ namespace nt = navitia::type;
 namespace ng = navitia::georef;
 namespace nf = navitia::fare;
 
+template<typename T> static void release(T& a) { T b; a.swap(b); }
+
 void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio){
 
     pqxx::work work(*conn, "loading ED");
@@ -738,7 +740,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                                                  rt_level,
                                                  vp,
                                                  route,
-                                                 sts_from_vj[vj_id],
+                                                 std::move(sts_from_vj[vj_id]),
                                                  *data.pt_data);
             const_it["start_time"].to(f_vj->start_time);
             const_it["end_time"].to(f_vj->end_time);
@@ -749,7 +751,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                                          rt_level,
                                          vp,
                                          route,
-                                         sts_from_vj[vj_id],
+                                         std::move(sts_from_vj[vj_id]),
                                          *data.pt_data);
         }
         const_it["name"].to(vj->name);
@@ -823,6 +825,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     for(auto vjid_vj: next_vjs) {
         vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
     }
+    release(sts_from_vj);
 }
 
 void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
@@ -975,6 +978,9 @@ void EdReader::finish_stop_times(nt::Data& data) {
             data.pt_data->comments.add(get_st(comments.first), comment);
         }
     }
+    release(id_to_stop_time_key);
+    release(stop_time_headsigns);
+    release(stop_time_comments);
 }
 
 template <typename Map>
