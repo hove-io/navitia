@@ -759,11 +759,19 @@ class BillingPlan(flask_restful.Resource):
                             help='max object count for this billing plan', location=('json', 'values'))
         parser.add_argument('default', type=bool, required=False, default=True,
                             help='if this plan is the default one', location=('json', 'values'))
+        parser.add_argument('end_point_id', type=int, required=False,
+                            help='id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
+
+        if args['end_point_id']:
+            end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        else:
+            end_point = models.EndPoint.get_default()
 
         try:
             billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
                                               max_object_count=args['max_object_count'])
+            billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
             return marshal(billing_plan, billing_plan_fields)
@@ -782,13 +790,18 @@ class BillingPlan(flask_restful.Resource):
                             help='max object count for this billing plan', location=('json', 'values'))
         parser.add_argument('default', type=bool, required=False, default=billing_plan.default,
                             help='if this plan is the default one', location=('json', 'values'))
+        parser.add_argument('end_point_id', type=int, default=billing_plan.end_point_id,
+                            help='id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
+
+        end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
 
         try:
             billing_plan.name = args['name']
             billing_plan.max_request_count = args['max_request_count']
             billing_plan.max_object_count = args['max_object_count']
             billing_plan.default = args['default']
+            billing_plan.end_point = end_point
             db.session.commit()
             return marshal(billing_plan, billing_plan_fields)
         except Exception:
