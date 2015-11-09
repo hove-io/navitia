@@ -131,8 +131,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
             mvj->impacted_by.push_back(impact);
+        } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
+            LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
+
         } else {
-            LOG4CPLUS_DEBUG(log, "unhandled add action on " << mvj->uri);
+            LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
         log_end_action(mvj->uri);
     }

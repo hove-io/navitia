@@ -40,22 +40,41 @@ www.navitia.io
 
 namespace navitia {
 
+static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
+    // Case 1: the trip is cancelled
+    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+        return true;
+    }
+    // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's departure is
+    // brought foward), we check the size of stop_time_update because we can't find a proper enum in gtfs-rt proto to
+    // express this idea
+    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED &&
+            trip_update.stop_time_update_size()) {
+        return true;
+    }
+    return false;
+}
+
+
 static boost::shared_ptr<nt::disruption::Severity>
-make_no_service_severity(const boost::posix_time::ptime& timestamp,
-                         nt::disruption::DisruptionHolder& holder) {
+make_severity(std::string id,
+              std::string wording,
+              nt::disruption::Effect effect,
+              const boost::posix_time::ptime& timestamp,
+              nt::disruption::DisruptionHolder& holder) {
     // Yeah, that's quite hardcodded...
-    const std::string id = "kraken:rt:no_service";
+    // const std::string id = "kraken:rt:no_service";
     auto& weak_severity = holder.severities[id];
     if (auto severity = weak_severity.lock()) { return severity; }
 
     auto severity = boost::make_shared<nt::disruption::Severity>();
-    severity->uri = id;
-    severity->wording = "trip canceled!";
+    severity->uri = std::move(id);
+    severity->wording = std::move(wording);
     severity->created_at = timestamp;
     severity->updated_at = timestamp;
     severity->color = "#000000";
     severity->priority = 42;
-    severity->effect = nt::disruption::Effect::NO_SERVICE;
+    severity->effect = effect;
 
     weak_severity = severity;
     return severity;
@@ -95,7 +114,23 @@ create_disruption(const std::string& id,
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
         impact->application_periods.push_back(execution_period(circulation_date, mvj));
-        impact->severity = make_no_service_severity(timestamp, holder);
+        for (auto st: trip_update.stop_time_update()) {
+            impact->aux_info.stop_times.emplace_back(st.arrival().time(), st.departure().time());
+       }
+        std::string id, wording;
+        nt::disruption::Effect effect;
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+            id = "kraken:rt:no_service";
+            wording = "trip canceled!";
+            effect = nt::disruption::Effect::NO_SERVICE;
+        }
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+                && trip_update.stop_time_update_size()) {
+            id = "kraken:rt:service_is_modified";
+            wording = "trip modified";
+            effect = nt::disruption::Effect::MODIFIED_SERVICE;
+        }
+        impact->severity = make_severity(std::move(id), std::move(wording), effect, timestamp, holder);
         impact->informed_entities.push_back(
             make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
         // messages
@@ -115,17 +150,15 @@ void handle_realtime(const std::string& id,
                      const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
-    const auto& trip = trip_update.trip();
 
-    // for the moment we handle only trip cancelation
-    if (trip.schedule_relationship() != transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+    if (! is_handleable(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
     }
 
-    auto meta_vj = data.pt_data->meta_vjs.get_mut(trip.trip_id());
+    auto meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
     if (! meta_vj) {
-        LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip.trip_id());
+        LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip_update.trip().trip_id());
         // TODO for trip().ADDED, we'll need to create a new VJ
         return;
     }

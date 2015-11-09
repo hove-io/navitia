@@ -55,6 +55,35 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     return trip_update;
 }
 
+/*
+template<typename T>
+struct TypeChecker;
+*/
+int64_t to_int64(const std::string& date) {
+    return (pt::from_iso_string(date) - pt::from_time_t(0)).ticks();
+}
+static transit_realtime::TripUpdate
+make_delay_message(const std::string& vj_uri,
+        const std::string& date,
+        const std::vector<std::pair<std::string, std::string>>& delayed_time_stops) {
+    transit_realtime::TripUpdate trip_update;
+    auto trip = trip_update.mutable_trip();
+    trip->set_trip_id(vj_uri);
+    trip->set_start_date(date);
+    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
+    auto st_update = trip_update.mutable_stop_time_update();
+
+    for (const auto& delayed_st: delayed_time_stops) {
+        auto stop_time = st_update->Add();
+        auto arrival = stop_time->mutable_arrival();
+        auto departure = stop_time->mutable_departure();
+        // TypeChecker<decltype(pt::duration_from_string(delayed_st.first).total_seconds())>();
+        arrival->set_time(to_int64(delayed_st.first));
+        departure->set_time(to_int64(delayed_st.second));
+    }
+
+    return trip_update;
+}
 BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
@@ -189,3 +218,47 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0930"_dt);
 }
+
+
+/*
+BOOST_AUTO_TEST_CASE(train_delayed) {
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+
+    transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    {"20150928T0810", "20150928T0910"},
+                    {"20150928T0910", "20150928T0910"}
+            });
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+}
+*/
