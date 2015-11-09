@@ -342,6 +342,8 @@ class User(flask_restful.Resource):
                 case_sensitive=False, help='email is required', location=('json', 'values'))
         parser.add_argument('end_point_id', type=int, required=False,
                             help='id of the end_point', location=('json', 'values'))
+        parser.add_argument('billing_plan_id', type=int, required=False,
+                            help='id of the billing_plan', location=('json', 'values'))
         parser.add_argument('type', type=str, required=False, default='with_free_instances',
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
@@ -359,10 +361,16 @@ class User(flask_restful.Resource):
         else:
             end_point = models.EndPoint.get_default()
 
+        if args['billing_plan_id']:
+            billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
+        else:
+            billing_plan = models.BillingPlan.get_default(end_point)
+
         try:
             user = models.User(login=args['login'], email=args['email'])
             user.type = args['type']
             user.end_point = end_point
+            user.billing_plan = billing_plan
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
@@ -382,6 +390,8 @@ class User(flask_restful.Resource):
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
         parser.add_argument('end_point_id', type=int, default=user.end_point_id,
                             help='id of the end_point', location=('json', 'values'))
+        parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
+                            help='billing id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -390,11 +400,13 @@ class User(flask_restful.Resource):
             return ({'error': 'email invalid'}, 400)
 
         end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
 
         try:
             user.email = args['email']
             user.type = args['type']
             user.end_point = end_point
+            user.billing_plan = billing_plan
             db.session.commit()
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):

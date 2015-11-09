@@ -444,3 +444,10 @@ class BillingPlan(db.Model):
     max_request_count = db.Column(db.Integer, nullable=False)
     max_object_count = db.Column(db.Integer, nullable=False)
     default = db.Column(db.Boolean, nullable=False, default=False)
+
+    end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
+    end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
+
+    @classmethod
+    def get_default(cls, end_point):
+        return cls.query.filter_by(default=True, end_point=end_point).first()
