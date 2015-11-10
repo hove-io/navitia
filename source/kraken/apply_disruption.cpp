@@ -63,7 +63,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     virtual ~apply_impacts_visitor() {}
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
 
-    virtual void operator()(nt::MetaVehicleJourney*, const nt::Route* = nullptr) = 0;
+    virtual void operator()(nt::MetaVehicleJourney*, nt::Route* = nullptr) = 0;
 
     void log_start_action(std::string uri) {
         LOG4CPLUS_TRACE(log, "Start to " << action << " impact " << impact.get()->uri << " on object " << uri);
@@ -115,6 +115,19 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 };
 
+static type::ValidityPattern compute_vp(const boost::posix_time::time_period& period,
+        const boost::gregorian::date_period& production_period) {
+        type::ValidityPattern vp; // bitset are all initialised to 0
+        // we may impact vj's passed midnight
+        bg::day_iterator titr(period.begin().date() - bg::days(1));
+        for (; titr <= period.end().date(); ++titr) {
+            if (! production_period.contains(*titr)) { continue; }
+            auto day = (*titr - production_period.begin()).days();
+            vp.add(day);
+        }
+        return vp;
+}
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -125,7 +138,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     using apply_impacts_visitor::operator();
 
-    void operator()(nt::MetaVehicleJourney* mvj, const nt::Route* r = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
@@ -133,6 +146,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
+            auto vp = compute_vp(impact->disruption->publication_period, meta.production_date);
+            mvj->create_discrete_vj(mvj->uri,
+                type::RTLevel::RealTime,
+                vp,
+                r,
+                impact->aux_info.stop_times,
+                pt_data);
 
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
@@ -182,7 +202,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
-    void operator()(nt::MetaVehicleJourney* mvj, const nt::Route* r = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             for (auto* vj: mvj->get_vjs_in_period(rt_level, impact->application_periods, meta, r)) {
                 vj->validity_patterns[rt_level] = vj->validity_patterns[nt::RTLevel::Base];
