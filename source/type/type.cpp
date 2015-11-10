@@ -349,22 +349,69 @@ static bool intersect(const VehicleJourney& vj, const std::vector<boost::posix_t
     return intersect;
 }
 
+namespace {
+template<typename VJ> std::vector<VJ*>& get_vjs(Route* r);
+template<> std::vector<DiscreteVehicleJourney*>& get_vjs(Route* r) {
+    return r->discrete_vehicle_journey_list;
+}
+template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
+    return r->frequency_vehicle_journey_list;
+}
+}// anonymous namespace
+
 template<typename VJ>
-VJ* MetaVehicleJourney::impl_create_vj(RTLevel level){
+VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
+                                       const RTLevel level,
+                                       const ValidityPattern& vp,
+                                       Route* route,
+                                       std::vector<StopTime> sts,
+                                       nt::PT_Data& pt_data) {
     auto vj_ptr = std::make_unique<VJ>();
-    auto ret = vj_ptr.get();
+    VJ* ret = vj_ptr.get();
     vj_ptr->meta_vj = this;
+    vj_ptr->uri = uri;
+    vj_ptr->idx = pt_data.vehicle_journeys.size();
     vj_ptr->realtime_level = level;
+    auto* new_vp = pt_data.get_or_create_validity_pattern(vp);
+    for (const auto l: enum_range<RTLevel>()) {
+        if (l < level) {
+            auto* empty_vp = pt_data.get_or_create_validity_pattern(ValidityPattern(vp.beginning_date));
+            vj_ptr->validity_patterns[l] = empty_vp;
+        } else {
+            vj_ptr->validity_patterns[l] = new_vp;
+        }
+    }
+    vj_ptr->route = route;
+    for (auto& st: sts) {
+        st.vehicle_journey = ret;
+        st.set_is_frequency(std::is_same<VJ, FrequencyVehicleJourney>::value);
+    }
+    vj_ptr->stop_time_list = std::move(sts);
+    pt_data.vehicle_journeys.push_back(ret);
+    pt_data.vehicle_journeys_map[ret->uri] = ret;
+    get_vjs<VJ>(route).push_back(ret);
     rtlevel_to_vjs_map[level].emplace_back(std::move(vj_ptr));
     return ret;
 }
 
-FrequencyVehicleJourney* MetaVehicleJourney::create_frequency_vj(RTLevel level) {
-    return impl_create_vj<FrequencyVehicleJourney>(level);
+FrequencyVehicleJourney*
+MetaVehicleJourney::create_frequency_vj(const std::string& uri,
+                                        const RTLevel level,
+                                        const ValidityPattern& vp,
+                                        Route* route,
+                                        std::vector<StopTime> sts,
+                                        nt::PT_Data& pt_data) {
+    return impl_create_vj<FrequencyVehicleJourney>(uri, level, vp, route, std::move(sts), pt_data);
 }
 
-DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj(RTLevel level) {
-    return impl_create_vj<DiscreteVehicleJourney>(level);
+DiscreteVehicleJourney*
+MetaVehicleJourney::create_discrete_vj(const std::string& uri,
+                                       const RTLevel level,
+                                       const ValidityPattern& vp,
+                                       Route* route,
+                                       std::vector<StopTime> sts,
+                                       nt::PT_Data& pt_data) {
+    return impl_create_vj<DiscreteVehicleJourney>(uri, level, vp, route, std::move(sts), pt_data);
 }
 
 

@@ -51,26 +51,65 @@ struct builder;
 
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
-    builder & b;
-    nt::VehicleJourney* vj;
+    builder& b;
+    const std::string network_name;
+    const std::string line_name;
+    const std::string validity_pattern;
+    const std::string block_id;
+    const bool is_frequency;
+    const bool wheelchair_boarding;
+    const std::string uri;
+    const std::string meta_vj_name;
+    const std::string physical_mode;
+    const uint32_t start_time;
+    const uint32_t end_time;
+    const uint32_t headway_secs;
+    std::vector<nt::StopTime> stop_times;
+    nt::VehicleJourney* vj = nullptr;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
-       bool is_frequency,
-       bool wheelchair_boarding = true, const std::string& uri="",
-       const std::string& meta_vj_name = "", const std::string& physical_mode = "");
+    VJ(builder& b,
+       const std::string& network_name,
+       const std::string& line_name,
+       const std::string& validity_pattern,
+       const std::string& block_id,
+       const bool is_frequency,
+       const bool wheelchair_boarding = true,
+       const std::string& uri="",
+       const std::string& meta_vj_name = "",
+       const std::string& physical_mode = "",
+       const uint32_t start_time = 0,
+       const uint32_t end_time = 0,
+       const uint32_t headway_secs = 0);
+
+    VJ(VJ&&) = default;
+    VJ& operator=(VJ&&) = delete;
+    VJ(const VJ&) = delete;
+    VJ& operator=(const VJ&) = delete;
+    ~VJ() { make(); } // The destructor create the vj as we need the stop times to create it.
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
-    VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1, uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
-                   bool drop_off_allowed = true, bool pick_up_allowed = true);
+    VJ& operator()(const std::string& stopPoint,
+                   int arrivee,
+                   int depart = -1,
+                   uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
+                   bool drop_off_allowed = true,
+                   bool pick_up_allowed = true);
 
-    VJ& operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
-            uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(), bool drop_off_allowed = true, bool pick_up_allowed = true);
+    VJ& operator()(const std::string& stopPoint,
+                   const std::string& arrivee,
+                   const std::string& depart,
+                   uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
+                   bool drop_off_allowed = true,
+                   bool pick_up_allowed = true);
 
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
+
+    // create the vj
+    nt::VehicleJourney* make();
 };
 
 struct SA {
@@ -167,19 +206,22 @@ struct builder {
           const std::string& physical_mode = "");
 
     VJ vj_with_network(const std::string& network_name,
-          const std::string& line_name,
-          const std::string& validity_pattern = "11111111",
-          const std::string& block_id="",
-          const bool wheelchair_boarding = true,
-          const std::string& uri="",
-          const std::string& meta_vj="",
-          const std::string& physical_mode = "",
-          bool is_frequency=false);
+                       const std::string& line_name,
+                       const std::string& validity_pattern = "11111111",
+                       const std::string& block_id="",
+                       const bool wheelchair_boarding = true,
+                       const std::string& uri="",
+                       const std::string& meta_vj="",
+                       const std::string& physical_mode = "",
+                       const bool is_frequency=false,
+                       const uint32_t start_time = 0,
+                       const uint32_t end_time = 0,
+                       const uint32_t headway_secs = 0);
 
     VJ frequency_vj(const std::string& line_name,
-                    uint32_t start_time,
-                    uint32_t end_time,
-                    uint32_t headway_secs,
+                    const uint32_t start_time,
+                    const uint32_t end_time,
+                    const uint32_t headway_secs,
                     const std::string& network_name = "default_network",
                     const std::string& validity_pattern = "11111111",
                     const std::string& block_id="",

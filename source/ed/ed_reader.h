@@ -77,8 +77,15 @@ private:
     std::unordered_map<idx_t, navitia::type::ValidityPattern*> validity_pattern_map;
     std::unordered_map<idx_t, navitia::type::VehicleJourney*> vehicle_journey_map;
 
+    // stop_times by vj idx
+    std::unordered_map<idx_t, std::vector<navitia::type::StopTime>> sts_from_vj;
+
     //we need a temporary structure to store the comments on the stop times
     std::unordered_map<idx_t, std::vector<std::string>> stop_time_comments;
+    std::unordered_map<idx_t, std::vector<std::string>> vehicle_journey_comments;
+    std::unordered_map<idx_t, std::string> stop_time_headsigns;
+    using StKey = std::pair<idx_t, uint16_t>;// idx ed vj, order stop time
+    std::unordered_map<idx_t, StKey> id_to_stop_time_key;
 
     //map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;
@@ -115,6 +122,7 @@ private:
     void fill_meta_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
 
     void fill_stop_times(navitia::type::Data& data, pqxx::work& work);
+    void finish_stop_times(navitia::type::Data& data);
 
     void fill_comments(navitia::type::Data& data, pqxx::work& work);
 
