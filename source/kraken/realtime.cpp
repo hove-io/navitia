@@ -57,18 +57,17 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
 
 
 static boost::shared_ptr<nt::disruption::Severity>
-make_severity(std::string id,
+make_severity(const std::string& id,
               std::string wording,
               nt::disruption::Effect effect,
               const boost::posix_time::ptime& timestamp,
               nt::disruption::DisruptionHolder& holder) {
     // Yeah, that's quite hardcodded...
-    // const std::string id = "kraken:rt:no_service";
     auto& weak_severity = holder.severities[id];
     if (auto severity = weak_severity.lock()) { return severity; }
 
     auto severity = boost::make_shared<nt::disruption::Severity>();
-    severity->uri = std::move(id);
+    severity->uri = id;
     severity->wording = std::move(wording);
     severity->created_at = timestamp;
     severity->updated_at = timestamp;
@@ -118,23 +117,21 @@ create_disruption(const std::string& id,
             auto stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
             impact->aux_info.stop_times.emplace_back(st.arrival().time(), st.departure().time(), stop_point_ptr);
        }
-        std::string id, wording;
+        std::string wording;
         nt::disruption::Effect effect;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-            id = "kraken:rt:no_service";
             wording = "trip canceled!";
             effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
-            id = "kraken:rt:service_is_modified";
             wording = "trip modified!";
             effect = nt::disruption::Effect::MODIFIED_SERVICE;
         }else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
             throw navitia::exception("Effect of disruption is unknown");
         }
-        impact->severity = make_severity(std::move(id), std::move(wording), effect, timestamp, holder);
+        impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
         impact->informed_entities.push_back(
             make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
         // messages

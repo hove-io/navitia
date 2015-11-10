@@ -55,13 +55,10 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     return trip_update;
 }
 
-/*
-template<typename T>
-struct TypeChecker;
-*/
 int64_t to_int64(const std::string& date) {
-    return (pt::from_iso_string(date) - pt::from_time_t(0)).ticks();
+    return (pt::from_iso_string(date) - pt::from_time_t(0)).total_seconds();
 }
+
 static transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& date,
@@ -79,8 +76,8 @@ make_delay_message(const std::string& vj_uri,
         auto departure = stop_time->mutable_departure();
         // TypeChecker<decltype(pt::duration_from_string(delayed_st.first).total_seconds())>();
         stop_time->set_stop_id(delayed_st[0]);
-        arrival->set_time(to_int64(delayed_st[1]));
-        departure->set_time(to_int64(delayed_st[2]));
+        arrival->set_time(navitia::test::to_posix_timestamp(delayed_st[1]));
+        departure->set_time(navitia::test::to_posix_timestamp(delayed_st[2]));
     }
 
     return trip_update;
