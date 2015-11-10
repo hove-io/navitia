@@ -770,7 +770,7 @@ class BillingPlan(flask_restful.Resource):
 
         try:
             billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
-                                              max_object_count=args['max_object_count'])
+                                              max_object_count=args['max_object_count'], default=args['default'])
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
