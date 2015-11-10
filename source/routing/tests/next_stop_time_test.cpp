@@ -114,6 +114,36 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
     }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp1,
+                                                        sp1_departure - 1, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp1,
+                                                        sp1_departure - 1, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp1,
+                                                        sp1_departure, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp1,
+                                                        sp1_departure, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp1,
+                                                        sp1_departure + 1, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp1,
+                                                        sp1_departure + 1, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
     //SP2
     {
         std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, jpp2,
@@ -139,6 +169,36 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
         std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::pick_up, jpp2,
                                                         sp2_arrival + 1, nt::RTLevel::Base, false);
         std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::drop_off, jpp2,
+                                                        sp2_arrival + 1, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp2,
+                                                        sp2_departure - 1, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp2,
+                                                        sp2_departure - 1, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp2,
+                                                        sp2_departure, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp2,
+                                                        sp2_departure, nt::RTLevel::Base, false);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
+        BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
+        BOOST_REQUIRE(st1 == nullptr);
+        BOOST_CHECK(st2 == nullptr);
+    }
+    {
+        std::tie(st1, dt1) = next_st.earliest_stop_time(StopEvent::drop_off, jpp2,
+                                                        sp2_arrival + 1, nt::RTLevel::Base, false);
+        std::tie(st2, dt2) = next_st.tardiest_stop_time(StopEvent::pick_up, jpp2,
                                                         sp2_arrival + 1, nt::RTLevel::Base, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
