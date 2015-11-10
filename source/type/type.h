@@ -834,7 +834,8 @@ struct StopTime {
     const LineString* shape_from_prev = nullptr;
 
     StopTime() = default;
-    StopTime(uint32_t arr_time, uint32_t dep_time):arrival_time{arr_time}, departure_time{dep_time}{}
+    StopTime(uint32_t arr_time, uint32_t dep_time, StopPoint* stop_point):
+        arrival_time{arr_time}, departure_time{dep_time}, stop_point{stop_point}{}
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}

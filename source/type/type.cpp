@@ -403,7 +403,9 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     // inserting the vj in the model
     pt_data.vehicle_journeys.push_back(ret);
     pt_data.vehicle_journeys_map[ret->uri] = ret;
-    get_vjs<VJ>(route).push_back(ret);
+    if (route) {
+        get_vjs<VJ>(route).push_back(ret);
+    }
     rtlevel_to_vjs_map[level].emplace_back(std::move(vj_ptr));
     return ret;
 }

@@ -114,8 +114,9 @@ create_disruption(const std::string& id,
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
         impact->application_periods.push_back(execution_period(circulation_date, mvj));
-        for (auto st: trip_update.stop_time_update()) {
-            impact->aux_info.stop_times.emplace_back(st.arrival().time(), st.departure().time());
+        for (const auto& st: trip_update.stop_time_update()) {
+            auto stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
+            impact->aux_info.stop_times.emplace_back(st.arrival().time(), st.departure().time(), stop_point_ptr);
        }
         std::string id, wording;
         nt::disruption::Effect effect;
@@ -124,11 +125,14 @@ create_disruption(const std::string& id,
             wording = "trip canceled!";
             effect = nt::disruption::Effect::NO_SERVICE;
         }
-        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+        else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
             id = "kraken:rt:service_is_modified";
-            wording = "trip modified";
+            wording = "trip modified!";
             effect = nt::disruption::Effect::MODIFIED_SERVICE;
+        }else {
+            LOG4CPLUS_ERROR(log, "unhandled real time message");
+            throw navitia::exception("Effect of disruption is unknown");
         }
         impact->severity = make_severity(std::move(id), std::move(wording), effect, timestamp, holder);
         impact->informed_entities.push_back(

@@ -115,9 +115,10 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 };
 
-static type::ValidityPattern compute_vp(const boost::posix_time::time_period& period,
+static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::time_period>& periods,
         const boost::gregorian::date_period& production_period) {
-        type::ValidityPattern vp; // bitset are all initialised to 0
+    type::ValidityPattern vp; // bitset are all initialised to 0
+    for (const auto& period: periods){
         // we may impact vj's passed midnight
         bg::day_iterator titr(period.begin().date() - bg::days(1));
         for (; titr <= period.end().date(); ++titr) {
@@ -125,7 +126,8 @@ static type::ValidityPattern compute_vp(const boost::posix_time::time_period& pe
             auto day = (*titr - production_period.begin()).days();
             vp.add(day);
         }
-        return vp;
+    }
+    return vp;
 }
 
 struct add_impacts_visitor : public apply_impacts_visitor {
@@ -146,7 +148,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
-            auto vp = compute_vp(impact->disruption->publication_period, meta.production_date);
+            auto vp = compute_vp(impact->application_periods, meta.production_date);
             mvj->create_discrete_vj(mvj->uri,
                 type::RTLevel::RealTime,
                 vp,

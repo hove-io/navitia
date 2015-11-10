@@ -65,7 +65,7 @@ int64_t to_int64(const std::string& date) {
 static transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& date,
-        const std::vector<std::pair<std::string, std::string>>& delayed_time_stops) {
+        const std::vector<std::array<std::string, 3>>& delayed_time_stops) {
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
@@ -78,8 +78,9 @@ make_delay_message(const std::string& vj_uri,
         auto arrival = stop_time->mutable_arrival();
         auto departure = stop_time->mutable_departure();
         // TypeChecker<decltype(pt::duration_from_string(delayed_st.first).total_seconds())>();
-        arrival->set_time(to_int64(delayed_st.first));
-        departure->set_time(to_int64(delayed_st.second));
+        stop_time->set_stop_id(delayed_st[0]);
+        arrival->set_time(to_int64(delayed_st[1]));
+        departure->set_time(to_int64(delayed_st[2]));
     }
 
     return trip_update;
@@ -228,8 +229,8 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
             "20150928",
             {
-                    {"20150928T0810", "20150928T0910"},
-                    {"20150928T0910", "20150928T0910"}
+                    {"stop1", "20150928T0810", "20150928T0910"},
+                    {"stop2", "20150928T0910", "20150928T0910"}
             });
 
     const auto& pt_data = b.data->pt_data;
