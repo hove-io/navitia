@@ -28,11 +28,14 @@ Les données sont formatées de la manière suivante :
 * Les identifiants des objets ne doivent pas contenir le type de l'objet. Ce dernier sera ajouté directement dans l'API navitia
 
 # Liste des fichiers du format
-## Fichiers réservés
+## Fichiers spéciaux
+    Ces fichiers permettent de décrire précisément d'où viennent les données dans le cas d'un référentiel agrégeant plusieurs sources de données. La notion de _contributor_ correspond à une source de données (un exploitant peut nécessiter l'utilisation de plusieurs contributeurs). La notion de _frame_ correspond à un jeu de données provenant d'un contributeur.
+    Les autres fichiers peuvent référencer un _contributor_id_ et/ou un _frame_id_. Dans le cas où les deux notions sont spécifiées, c'est la notion de _frame_ qui sera prédominante.
+
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-contributors.txt | Réservé | Ce fichier contient les contributeurs. Si ce fichier est fourni, il sera ignoré.
-frames.txt | Réservé | Ce fichier contient les sources de données d'un contributeur.
+contributors.txt | Optionnel | Ce fichier contient les contributeurs. Si ce fichier est fourni, il sera ignoré.
+frames.txt | Optionnel | Ce fichier contient les sources de données d'un contributeur.
 
 ## Fichiers de base
 Fichier | Contrainte | Commentaire
@@ -222,7 +225,7 @@ line_text_color | couleur | Optionnel | Couleur du code de la ligne
 line_sort_order | entier | Optionnel | Clé de trie de la ligne au sein du réseau. Les indices les plus petits sont retournés en premier.
 network_id | chaine | Requis | Identifiant du réseau principal de la ligne (lien vers le fichier networks)
 commercial_mode_id | chaine | Requis | Identifiant du mode commercial (lien vers le fichier  commercial_modes)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la ligne (lien vers le fichier geometries)
 line_opening_time | heure | Optionnel | Heure de début de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée.
 line_closing_time | heure | Optionnel | Heure de fin de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée. Spécifier une heure superieure à 24 pour indiquer une heure sur le jour d'après.
@@ -234,7 +237,7 @@ route_id | chaine | Requis | Identifiant du parcours
 route_name | chaine | Requis | Nom du parcours
 is_forward | entier | Requis | (1)
 line_id | chaine | Requis | Identifiant de la ligne commerciale (lien vers le fichier lines)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant le parcours (lien vers le fichier geometries)
 destination_id | chaine | Optionnel | Identifiant de la destination principale (lien vers le fichier stops.txt de type zone d'arrêt)
 
@@ -327,7 +330,7 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Requis | Identifiant du contributeur. Cette valeur peut être vide dans le cas de la déclaration d'une zone administrative (location_type=2)
+contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est nécessairement vide dans le cas de la déclaration d'une zone administrative (location_type=3)
 frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni l'arrêt (lien vers le fichier frames). Un arrêt pouvant être partagé entre plusieurs jeux de données (d'un ou plusieurs contributeurs), le premier frame_id est retourné.
 
     (1) Type de l'arrêt ou de la zone :
@@ -382,11 +385,17 @@ visual_announcement | entier (1) | Optionnel | Le véhicule dispose d'annonces v
 audible_announcement | entier (1) | Optionnel | Le véhicule dispose d'annonces sonores
 appropriate_escort | entier (1) | Optionnel | Un service d'accompagnement à bord est possible (à la montée et à la descente)
 appropriate_signage | entier (1) | Optionnel | L'affichage à bord est est claire et adapté aux personnes en déficience mentale
+school_vehicle_type | entier (2) | Optionnel | Type de transport scolaire
 
     (1) Les valeurs possibles sont :
         0 ou non spécifié - aucune information disponible
         1 - l'équipement est disponible
         2 - l'équipement n'est pas disponible
+
+    (2) Type de transport scolaire :
+        0 ou non spécifié  : transport régulier (non scolaire)
+        1 : transport scolaire exclusif
+        2 : transport mixte (scolaire et régulier)
 
 ### trips.txt (requis)
 Colonne | Type | Contrainte | Commentaire
@@ -396,19 +405,13 @@ service_id | chaine | Requis | Identifiant dues jours de fonctionnements
 trip_id | chaine | Requis | Identifiant de la circulation
 trip_headsign | chaine | Optionnel | Nom de la circulation
 block_id | chaine | Optionnel | Identifiant du prolongement de service
-school_vehicle_type | entier (1) | Optionnel | Type de transport scolaire
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames)
 base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
-
-    (1) Type de transport scolaire :
-        0 ou non spécifié  : transport régulier (non scolaire)
-        1 : transport scolaire exclusif
-        2 : transport mixte (scolaire et régulier)
 
     Pour préciser si la circulation est sur réservation (tout ou partie), il faut :
         Indiquer au niveau de l'horaire (fichier stop_times.txt) si la montée et/ou la descente est à réservation
