@@ -879,12 +879,12 @@ Main parameters
 |          |                       |           |                                           |                 |
 |          |                       |           | when using the following parameter        |                 |
 |          |                       |           |      "&data_freshness=base_schedule"      |                 |
-|          |                       |           | you can get disrupted journeys in         |                 |
+|          |                       |           | you can get disrupted journeys in the     |                 |
 |          |                       |           | response.                                 |                 |
 |          |                       |           | You can then display the disruption       |                 |
 |          |                       |           | message to the traveler and make a        |                 |
 |          |                       |           | real_time request to get a new            |                 |
-|          |                       |           | indisrupted solution.                     |                 |
+|          |                       |           | undisrupted solution.                     |                 |
 |          |                       |           |                                           |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 
