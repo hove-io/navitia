@@ -1151,8 +1151,11 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
         vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
         vj_it->second->end_time = to_utc(row[end_time_c], utc_offset);
         vj_it->second->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
+        int first_st_gap = vj_it->second->start_time - vj_it->second->stop_time_list.front()->arrival_time;
         for(auto st: vj_it->second->stop_time_list) {
             st->is_frequency = true;
+            st->arrival_time += first_st_gap;
+            st->departure_time += first_st_gap;
         }
     }
 }
