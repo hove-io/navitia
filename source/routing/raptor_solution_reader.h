@@ -81,15 +81,17 @@ typedef ParetoFront<Journey, Dominates> Solutions;
 
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).
-Solutions
+void
 read_solutions(const RAPTOR& raptor,
+               Solutions& solutions, //all raptor solutions, modified by side effects
                const bool clockwise,
                const DateTime& departure_datetime,
                const routing::map_stop_point_duration& deps,
                const routing::map_stop_point_duration& arrs,
                const type::RTLevel rt_level,
                const type::AccessibiliteParams& accessibilite_params,
-               const navitia::time_duration& transfer_penalty);
+               const navitia::time_duration& transfer_penalty,
+               const StartingPointSndPhase& end_point);
 
 Path make_path(const Journey& journey, const type::Data& data);
 
