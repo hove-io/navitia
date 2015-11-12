@@ -458,6 +458,7 @@ struct RaptorSolutionReader {
         for (const auto& conn: cnx_list[sp_idx]) {
             const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
             const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
+            if (! raptor.labels[count].pt_is_initialized(conn.sp_idx)) { continue; }
             if (v.comp(transfer_limit, transfer_end)) { continue; }
 
             // transfer is OK
@@ -573,7 +574,6 @@ void read_solutions(const RAPTOR& raptor,
                                         transfer_penalty,
                                         v.clockwise());
             if (reader.solutions.contains_better_than(j)) {
-                ++filtered_journeys;
                 continue;
             }
             try {
@@ -581,10 +581,6 @@ void read_solutions(const RAPTOR& raptor,
             } catch (stop_search&) {}
         }
     }
-    return std::move(reader.solutions);
-//    if (filtered_journeys) {
-//        LOG4CPLUS_DEBUG(logger, "[reader] filtering from the begining " << filtered_journeys << " journeys");
-//    }
 }
 
 } // anonymous namespace
