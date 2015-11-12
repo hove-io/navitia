@@ -117,7 +117,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
 static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::time_period>& periods,
         const boost::gregorian::date_period& production_period) {
-    type::ValidityPattern vp; // bitset are all initialised to 0
+    type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
     for (const auto& period: periods){
         // we may impact vj's passed midnight
         bg::day_iterator titr(period.begin().date() - bg::days(1));
@@ -149,12 +149,20 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto vp = compute_vp(impact->application_periods, meta.production_date);
-            mvj->create_discrete_vj(mvj->uri,
+            if (! r && ! mvj->get_base_vj().empty()) {
+                r = mvj->get_base_vj().at(0)->route;
+            }
+            auto* vj = mvj->create_discrete_vj(mvj->uri + ":modified:" + std::to_string(pt_data.vehicle_journeys.size()),
                 type::RTLevel::RealTime,
                 vp,
                 r,
                 std::move(impact->aux_info.stop_times),
                 pt_data);
+            if (! mvj->get_base_vj().empty()) {
+                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                vj->physical_mode->vehicle_journey_list.push_back(vj);
+                vj->name = mvj->get_base_vj().at(0)->name; 
+            }
             mvj->impacted_by.push_back(impact);
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
@@ -205,14 +213,22 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
-        if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-            for (auto* vj: mvj->get_vjs_in_period(rt_level, impact->application_periods, meta, r)) {
-                vj->validity_patterns[rt_level] = vj->validity_patterns[nt::RTLevel::Base];
-                ++ nb_vj_reassigned;
-            }
-        } else {
-            LOG4CPLUS_DEBUG(log, "unhandled delete action on " << mvj->uri);
+        for (auto& vj: mvj->get_base_vj()) {
+            vj->validity_patterns[type::RTLevel::RealTime] =
+                    vj->validity_patterns[type::RTLevel::Adapted] =
+                            vj->validity_patterns[type::RTLevel::Base];
         }
+        auto* vp_ptr = pt_data.get_or_create_validity_pattern({meta.production_date.begin()});
+
+        auto set_empty_vp = [vp_ptr](const std::unique_ptr<type::VehicleJourney>& vj){
+            vj->validity_patterns[type::RTLevel::RealTime] =
+                    vj->validity_patterns[type::RTLevel::Adapted] =
+                            vj->validity_patterns[type::RTLevel::Base] = vp_ptr;
+        };
+
+        boost::for_each(mvj->get_adapted_vj(), set_empty_vp);
+        boost::for_each(mvj->get_rt_vj(), set_empty_vp);
+
         const auto& impact = this->impact;
         boost::range::remove_erase_if(mvj->impacted_by,
             [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {

@@ -1026,6 +1026,12 @@ struct MetaVehicleJourney: public Header, HasMessages {
     const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
     }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_adapted_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::Adapted];
+    }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_rt_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::RealTime];
+    }
 
     void cancel_vj(RTLevel level,
             const std::vector<boost::posix_time::time_period>& periods,

@@ -114,8 +114,13 @@ create_disruption(const std::string& id,
         impact->updated_at = timestamp;
         impact->application_periods.push_back(execution_period(circulation_date, mvj));
         for (const auto& st: trip_update.stop_time_update()) {
-            auto stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
-            impact->aux_info.stop_times.emplace_back(st.arrival().time(), st.departure().time(), stop_point_ptr);
+            auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
+            type::StopTime stop_time{static_cast<uint32_t>(st.arrival().time()),
+                static_cast<uint32_t>(st.departure().time()),
+                stop_point_ptr};
+            stop_time.set_pick_up_allowed(st.departure().has_time());
+            stop_time.set_drop_off_allowed(st.arrival().has_time());
+            impact->aux_info.stop_times.emplace_back(std::move(stop_time));
        }
         std::string wording;
         nt::disruption::Effect effect;
