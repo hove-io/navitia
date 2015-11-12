@@ -130,7 +130,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
         """ 
-	Some new tests...
+    	Some new tests...
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(_get_arrivals(new_response), ['20120614T083000', '20120614T180222'])

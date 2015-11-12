@@ -153,7 +153,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 type::RTLevel::RealTime,
                 vp,
                 r,
-                impact->aux_info.stop_times,
+                std::move(impact->aux_info.stop_times),
                 pt_data);
 
         } else {
