@@ -43,6 +43,9 @@ namespace nt = navitia::type;
 namespace ng = navitia::georef;
 namespace nf = navitia::fare;
 
+// A function to release the memory of a collection. For a vector, it
+// is equivalent to `a.clear(); a.shrink_to_fit();` but some
+// collections don't have these methods.
 template<typename T> static void release(T& a) { T b; a.swap(b); }
 
 void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio){
