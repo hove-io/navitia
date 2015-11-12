@@ -155,7 +155,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 r,
                 std::move(impact->aux_info.stop_times),
                 pt_data);
-
+            mvj->impacted_by.push_back(impact);
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
