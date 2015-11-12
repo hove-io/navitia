@@ -103,7 +103,8 @@ billing_plan_fields = {
     'name': fields.Raw,
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
-    'default': fields.Raw
+    'default': fields.Raw,
+    'end_point': fields.Nested(end_point_fields)
 }
 
 user_fields = {
