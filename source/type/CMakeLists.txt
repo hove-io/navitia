@@ -122,3 +122,7 @@ ADD_BOOST_TEST(code_container_test)
 add_executable(headsign_test tests/headsign_test.cpp)
 target_link_libraries(headsign_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(headsign_test)
+
+add_executable(create_vj_test tests/create_vj_test.cpp)
+target_link_libraries(create_vj_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(create_vj_test)
