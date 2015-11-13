@@ -156,7 +156,9 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 6)  # <--- vj nb SHOULD be 5
+        # No vj cleaning for the moment, vj nb SHOULD be 5, the first vj created for the first
+        # disruption is useless
+        eq_(len(pt_response['vehicle_journeys']), 6)
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)

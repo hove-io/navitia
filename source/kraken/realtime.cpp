@@ -45,11 +45,11 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
         return true;
     }
-    // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's departure is
-    // brought foward), we check the size of stop_time_update because we can't find a proper enum in gtfs-rt proto to
-    // express this idea
-    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED &&
-            trip_update.stop_time_update_size()) {
+    // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
+    // departure is brought foward), we check the size of stop_time_update because we can't find a proper
+    // enum in gtfs-rt proto to express this idea
+    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+            && trip_update.stop_time_update_size()) {
         return true;
     }
     return false;
@@ -62,7 +62,6 @@ make_severity(const std::string& id,
               nt::disruption::Effect effect,
               const boost::posix_time::ptime& timestamp,
               nt::disruption::DisruptionHolder& holder) {
-    // Yeah, that's quite hardcodded...
     auto& weak_severity = holder.severities[id];
     if (auto severity = weak_severity.lock()) { return severity; }
 
@@ -96,6 +95,8 @@ create_disruption(const std::string& id,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
     auto log = log4cplus::Logger::getInstance("realtime");
+    LOG4CPLUS_DEBUG(log, "Creating disruption");
+
     nt::disruption::DisruptionHolder& holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
@@ -116,13 +117,18 @@ create_disruption(const std::string& id,
         std::string wording;
         nt::disruption::Effect effect;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+            LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
+            // Yeah, that's quite hardcodded...
             wording = "trip canceled!";
             effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
+            LOG4CPLUS_TRACE(log, "Disruption has MODIFIED_SERVICE effect");
+            // Yeah, that's quite hardcodded...
             wording = "trip modified!";
             effect = nt::disruption::Effect::MODIFIED_SERVICE;
+            LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
                 auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
                 type::StopTime stop_time{static_cast<uint32_t>(st.arrival().time()),
@@ -164,7 +170,7 @@ void handle_realtime(const std::string& id,
 
     auto meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
     if (! meta_vj) {
-        LOG4CPLUS_INFO(log, "unknown vehicle journey " << trip_update.trip().trip_id());
+        LOG4CPLUS_ERROR(log, "unknown vehicle journey " << trip_update.trip().trip_id());
         // TODO for trip().ADDED, we'll need to create a new VJ
         return;
     }
