@@ -209,7 +209,7 @@ class StatManager(object):
             stat_request.client = request.headers.getlist("X-Forwarded-For")[0]
         stat_request.path = request.path
 
-        stat_request.response_size = sys.getsizeof(call_result[0])
+        stat_request.response_size = 4242
 
         self.fill_info_response(stat_request.info_response, call_result)
 

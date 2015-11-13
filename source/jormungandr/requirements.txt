@@ -17,7 +17,7 @@ mock==1.0.1
 nose==1.3.1
 protobuf
 psycopg2
-pyzmq==2.1.11
+pyzmq==14.7.0
 redis==2.9.1
 six>=1.7.0
 wsgiref==0.1.2
@@ -28,7 +28,7 @@ pytz==2013.9
 retrying==1.2.3
 aniso8601==0.82
 elasticsearch==1.4.0
-ujson==1.33
+simplejson==3.7.3
 urllib3==1.10.1
 numpy==1.9
 pybreaker==0.2.3
