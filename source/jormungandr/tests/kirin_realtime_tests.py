@@ -126,7 +126,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 0)
 
-        self.send_mock("vjA", "20120614", 'delayed')
+        self.send_mock("vjA", "20120614", 'delayed',
+                       [("stop_point:stopB", 28862, 28862), ("stop_point:stopA", 28864, 28864)])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -151,7 +152,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
 
 
-def make_mock_kirin_item(vj_id, date, status='canceled'):
+def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -169,17 +170,11 @@ def make_mock_kirin_item(vj_id, date, status='canceled'):
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED
     elif status == 'delayed':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.SCHEDULED
-        # delay on stopA
-        stop_time_update = trip_update.stop_time_update.add()
-        stop_time_update.stop_id = "stop_point:stopB"
-        stop_time_update.arrival.time = 28862
-        stop_time_update.departure.time = 28862
-
-        stop_time_update = trip_update.stop_time_update.add()
-        stop_time_update.stop_id = "stop_point:stopA"
-        stop_time_update.arrival.time = 28864
-        stop_time_update.departure.time = 28864
-
+        for st in new_stop_time_list:
+            stop_time_update = trip_update.stop_time_update.add()
+            stop_time_update.stop_id = st[0]
+            stop_time_update.arrival.time = st[1]
+            stop_time_update.departure.time = st[2]
     else:
         #TODO
         pass
