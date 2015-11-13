@@ -366,6 +366,7 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
+    // creating the vj
     auto vj_ptr = std::make_unique<VJ>();
     VJ* ret = vj_ptr.get();
     vj_ptr->meta_vj = this;
@@ -387,6 +388,19 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
         st.set_is_frequency(std::is_same<VJ, FrequencyVehicleJourney>::value);
     }
     vj_ptr->stop_time_list = std::move(sts);
+
+    // Desactivating the other vjs. The last creation has priority on
+    // all the already existing vjs.
+    const auto mask = ~vp.days;
+    for_all_vjs([&] (VehicleJourney& vj) {
+            for (const auto l: enum_range_from(level)) {
+                auto new_vp = *vj.validity_patterns[l];
+                new_vp.days &= mask;
+                vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
+             }
+        });
+
+    // inserting the vj in the model
     pt_data.vehicle_journeys.push_back(ret);
     pt_data.vehicle_journeys_map[ret->uri] = ret;
     get_vjs<VJ>(route).push_back(ret);
