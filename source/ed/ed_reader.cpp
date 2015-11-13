@@ -924,46 +924,56 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "FROM navitia.stop_time as st "
         "ORDER BY st.vehicle_journey_id, st.\"order\"";
 
-    pqxx::result result = work.exec(request);
+    pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
+        cursor( work, request, "stcursor", false );
+    size_t current_idx = 0;
+    size_t chunk_limit = 100000;
+    size_t nb_rows = cursor.size();
 
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
-        auto& sts = sts_from_vj[vj_id];
-        sts.emplace_back();
-        nt::StopTime& stop = sts.back();
+    while(current_idx < nb_rows) {
+        pqxx::result result = cursor.retrieve( current_idx, std::min(current_idx + chunk_limit, nb_rows));
 
-        const_it["arrival_time"].to(stop.arrival_time);
-        const_it["departure_time"].to(stop.departure_time);
-        if (!const_it["local_traffic_zone"].is_null()){
-            const_it["local_traffic_zone"].to(stop.local_traffic_zone);
-        }
-        stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
-        stop.set_odt(const_it["odt"].as<bool>());
-        stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
-        stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
-        stop.set_is_frequency(const_it["is_frequency"].as<bool>());
+        for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+            const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
+            auto& sts = sts_from_vj[vj_id];
+            sts.emplace_back();
+            nt::StopTime& stop = sts.back();
 
-        stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
+            const_it["arrival_time"].to(stop.arrival_time);
+            const_it["departure_time"].to(stop.departure_time);
+            if (!const_it["local_traffic_zone"].is_null()){
+                const_it["local_traffic_zone"].to(stop.local_traffic_zone);
+            }
+            stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
+            stop.set_odt(const_it["odt"].as<bool>());
+            stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
+            stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
+            stop.set_is_frequency(const_it["is_frequency"].as<bool>());
 
-        nt::LineString shape_from_prev;
-        boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"), shape_from_prev);
-        stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
+            stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
-        const auto st_id = const_it["id"].as<nt::idx_t>();
-        const StKey st_key = {vj_id, sts.size() - 1};
+            nt::LineString shape_from_prev;
+            boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"), shape_from_prev);
+            stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
 
-        if (!const_it["headsign"].is_null()){
-            std::string headsign = const_it["headsign"].as<std::string>();
-            if (!headsign.empty()) {
-                stop_time_headsigns[st_id] = headsign;
+            const auto st_id = const_it["id"].as<nt::idx_t>();
+            const StKey st_key = {vj_id, sts.size() - 1};
+
+            if (!const_it["headsign"].is_null()){
+                std::string headsign = const_it["headsign"].as<std::string>();
+                if (!headsign.empty()) {
+                    stop_time_headsigns[st_id] = headsign;
+                    id_to_stop_time_key[st_id] = st_key;
+                }
+            }
+
+            // we check if we have some comments
+            if (stop_time_comments.count(st_id)) {
                 id_to_stop_time_key[st_id] = st_key;
             }
         }
 
-        // we check if we have some comments
-        if (stop_time_comments.count(st_id)) {
-            id_to_stop_time_key[st_id] = st_key;
-        }
+        current_idx += chunk_limit;
     }
 }
 
