@@ -37,7 +37,7 @@ namespace dis = nt::disruption;
 
 namespace ed {
 
-std::string get_random_id() {
+static std::string get_random_id() {
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
     std::stringstream uuid_stream;
     uuid_stream << uuid;

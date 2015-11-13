@@ -339,6 +339,8 @@ struct GeoRef {
     type::Mode_e get_mode(vertex_t vertex) const;
     PathItem::TransportCaracteristic get_caracteristic(edge_t edge) const;
     ~GeoRef();
+    GeoRef() = default;
+    GeoRef(const GeoRef& other) = default;
 };
 
 /** When given a coordinate, we have to associate it with the street network.
