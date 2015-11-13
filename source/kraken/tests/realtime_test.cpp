@@ -234,7 +234,6 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->stop_points_map.size(), 2);
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
@@ -253,7 +252,10 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     // we add a second time the realtime message, it should not change anything
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
+    /*****************Expected Failure********************/
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2); // Current size is 3, hopefully it should be 2
+    /*****************************************************/
+
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
