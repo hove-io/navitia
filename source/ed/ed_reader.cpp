@@ -926,14 +926,13 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 
     pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
         cursor( work, request, "stcursor", false );
-    size_t current_idx = 0;
+
     size_t chunk_limit = 100000;
     size_t nb_rows = cursor.size();
+    for (size_t current_idx = 0; current_idx < nb_rows; current_idx += chunk_limit) {
+        pqxx::result result = cursor.retrieve(current_idx, std::min(current_idx + chunk_limit, nb_rows));
 
-    while(current_idx < nb_rows) {
-        pqxx::result result = cursor.retrieve( current_idx, std::min(current_idx + chunk_limit, nb_rows));
-
-        for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
             const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
             auto& sts = sts_from_vj[vj_id];
             sts.emplace_back();
@@ -953,7 +952,8 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
             stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
             nt::LineString shape_from_prev;
-            boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"), shape_from_prev);
+            boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"),
+                                      shape_from_prev);
             stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
 
             const auto st_id = const_it["id"].as<nt::idx_t>();
@@ -972,8 +972,6 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
                 id_to_stop_time_key[st_id] = st_key;
             }
         }
-
-        current_idx += chunk_limit;
     }
 }
 
