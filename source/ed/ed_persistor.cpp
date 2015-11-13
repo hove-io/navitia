@@ -972,7 +972,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(is_frequency));
         
         // meta_vj's name is the same as the one of vj
-        values.push_back(vj->name); 
+        values.push_back(vj->meta_vj_name); 
         // vj_class
         values.push_back(navitia::type::get_string_from_rt_level(vj->realtime_level));
 
