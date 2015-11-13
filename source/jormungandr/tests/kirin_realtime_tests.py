@@ -134,7 +134,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(len(pt_response['vehicle_journeys']), 5)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vjA:modified:4' in vj_ids
+        assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -143,13 +143,34 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(_get_arrivals(new_response), ['20120614T080224', '20120614T080435'])
-        eq_(_get_used_vj(new_response), [['vjA:modified:4'], []])
+        eq_(_get_used_vj(new_response), [['vjA:modified:0:96231_2015-07-28_0'], []])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
         eq_(_get_used_vj(new_base), [['vjA'], []])
 
+        # We send again the same disruption
+        self.send_mock("vjA", "20120614", 'delayed',
+                       [("stop_point:stopB", 28862, 28862), ("stop_point:stopA", 28864, 28864)])
+
+        # A new vj is created
+        pt_response = self.query_region('vehicle_journeys')
+        eq_(len(pt_response['vehicle_journeys']), 6)  # <--- vj nb SHOULD be 5
+
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+
+        # so the first real-time vj created for the first disruption should be deactivated
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        eq_(_get_arrivals(new_response), ['20120614T080224', '20120614T080435'])
+        eq_(_get_used_vj(new_response), [['vjA:modified:1:96231_2015-07-28_0'], []])
+
+        # it should not have changed anything for the theoric
+        new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
+        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(new_base), [['vjA'], []])
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):

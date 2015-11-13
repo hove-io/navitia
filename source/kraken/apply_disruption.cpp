@@ -152,7 +152,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
             }
-            auto* vj = mvj->create_discrete_vj(mvj->uri + ":modified:" + std::to_string(pt_data.vehicle_journeys.size()),
+            auto nb_rt_vj = mvj->get_rt_vj().size();
+            std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
                 vp,
                 r,
