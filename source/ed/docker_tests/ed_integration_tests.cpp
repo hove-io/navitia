@@ -104,12 +104,13 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     // check stop_time headsigns
     const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     auto& vj_vec = data.pt_data->vehicle_journeys;
+    BOOST_REQUIRE_EQUAL(vj_vec.size(), 8);
     // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
     check_headsigns(data, "N1", 0, 1, 0, 2);
     check_headsigns(data, "N2", 0, 1, 3, 4);
-    // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4 & 5 are named vehiclejourney3
+    // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4-7 are named vehiclejourney3
     check_headsigns(data, "vehiclejourney2", 2, 3);
-    check_headsigns(data, "vehiclejourney3", 4, 5);
+    check_headsigns(data, "vehiclejourney3", 4, 7);
     // check vj from headsign
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
@@ -123,11 +124,13 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 4);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[6]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[7]));
 
-    BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 3);
+    BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 4);
     for (auto& mvj : data.pt_data->meta_vjs) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
