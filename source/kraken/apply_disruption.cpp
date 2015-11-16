@@ -120,7 +120,7 @@ static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::tim
     type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
     for (const auto& period: periods){
         // we may impact vj's passed midnight
-        bg::day_iterator titr(period.begin().date() - bg::days(1));
+        bg::day_iterator titr(period.begin().date());
         for (; titr <= period.end().date(); ++titr) {
             if (! production_period.contains(*titr)) { continue; }
             auto day = (*titr - production_period.begin()).days();

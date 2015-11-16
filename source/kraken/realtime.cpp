@@ -131,9 +131,43 @@ create_disruption(const std::string& id,
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
                 auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
-                type::StopTime stop_time{static_cast<uint32_t>(st.arrival().time()),
-                    static_cast<uint32_t>(st.departure().time()),
-                    stop_point_ptr};
+                assert(stop_point_ptr);
+                uint32_t arrival_time = st.arrival().time();
+                uint32_t departure_time = st.departure().time();
+                LOG4CPLUS_TRACE(log, "arrival_time: " + std::to_string(arrival_time));
+                LOG4CPLUS_TRACE(log, "has_arrival_time: " + std::to_string(st.arrival().has_time()));
+
+                LOG4CPLUS_TRACE(log, "departure_time: " + std::to_string(departure_time));
+                LOG4CPLUS_TRACE(log, "has_departure_time: " + std::to_string(st.departure().has_time()));
+
+                /***********************************************************/
+                /*
+                 * When st.arrival().has_time() is false, st.arrival().time() will return 0, which, for kraken, is
+                 * considered as 00:00(midnight), This is not good. So we set manually arrival_time to  departure_time.
+                 *
+                 * AND
+                 *
+                 * Sometimes we got st.arrival().has_time() is true, but st.arrival().time() returns 0. That's not good
+                 * either.
+                 *
+                 * Same reasoning for departure_time.
+                 *
+                 *
+                 * TODO: And this check should be done on Kirin's side...
+                 * */
+                if (! st.arrival().has_time() && st.departure().has_time()){
+                    arrival_time = departure_time = st.departure().time();
+                }
+                if (st.arrival().has_time() && ! st.departure().has_time()){
+                    departure_time = arrival_time =st.arrival().time();
+                }
+                /***********************************************************/
+
+                auto arrival_seconds = boost::posix_time::from_time_t(arrival_time).time_of_day().total_seconds();
+                auto departure_seconds = boost::posix_time::from_time_t(departure_time).time_of_day().total_seconds();
+
+                type::StopTime stop_time{static_cast<uint32_t>(arrival_seconds),
+                    static_cast<uint32_t>(departure_seconds), stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
                 impact->aux_info.stop_times.emplace_back(std::move(stop_time));
