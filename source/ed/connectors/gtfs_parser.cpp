@@ -1046,6 +1046,10 @@ void StopTimeGtfsHandler::finish(Data& data) {
                 return st1->order < st2->order;
             });
 
+        for (size_t it_st = 0; it_st < vj->stop_time_list.size(); ++it_st) {
+            vj->stop_time_list[it_st]->order =  it_st;
+        }
+
         if (vj->stop_time_list.size() < 2) {
             continue;
         }

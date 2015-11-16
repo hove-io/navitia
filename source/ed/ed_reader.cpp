@@ -920,9 +920,9 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "st.id as id,"
         "st.headsign as headsign,"
         "st.stop_point_id as stop_point_id,"
+        "st.\"order\" as st_order,"
         "ST_AsText(st.shape_from_prev) as shape_from_prev "
-        "FROM navitia.stop_time as st "
-        "ORDER BY st.vehicle_journey_id, st.\"order\"";
+        "FROM navitia.stop_time as st ";
 
     pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
         cursor( work, request, "stcursor", false );
@@ -935,8 +935,11 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
             const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
             auto& sts = sts_from_vj[vj_id];
-            sts.emplace_back();
-            nt::StopTime& stop = sts.back();
+            size_t order = const_it["st_order"].as<idx_t>();
+            if (order + 1 > sts.size()) {
+                sts.resize(order + 1);
+            }
+            nt::StopTime& stop = sts[order];
 
             const_it["arrival_time"].to(stop.arrival_time);
             const_it["departure_time"].to(stop.departure_time);
