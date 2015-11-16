@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <chrono>
 
 namespace navitia {
 
@@ -163,23 +164,28 @@ create_disruption(const std::string& id,
                     }
                 }
                 auto first_day_of_impact = get_first_day_of_imapct(*impact);
-
                 auto arrival_seconds = boost::posix_time::from_time_t(arrival_time).time_of_day().total_seconds();
                 auto departure_seconds = boost::posix_time::from_time_t(departure_time).time_of_day().total_seconds();
+                
+                // If the arrival/depature time's date is later than the first day of impact, this means
+                // the VJ passes the midnight, it's pickup/dropoff time should add 86400 seconds(one day)
+                // Ex:
+                // the first day of impact is 1st, Jan, the stoptime's base arrival_time is 23:50 on 1st Jan, 
+                // and the new arrival_time is tommorow monrning at 00:10. The new arrival is computed as
+                // 10*60 + 86400 seconds.
+                auto get_diff_days = [&](uint32_t time){
+                    return (boost::posix_time::from_time_t(time).date() - first_day_of_impact).days();
+                };
+                auto one_day_seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours{24}).count();
 
-                if (boost::posix_time::from_time_t(arrival_time).date() > first_day_of_impact){
-                    arrival_seconds += boost::posix_time::time_duration(24,0,0).total_seconds();
-                }
-
-                if (boost::posix_time::from_time_t(departure_time).date() > first_day_of_impact) {
-                    departure_seconds += boost::posix_time::time_duration(24,0,0).total_seconds();
-                }
+                arrival_seconds +=  get_diff_days(arrival_time) * one_day_seconds;
+                departure_seconds += get_diff_days(departure_time) * one_day_seconds;
 
                 type::StopTime stop_time{static_cast<uint32_t>(arrival_seconds),
                     static_cast<uint32_t>(departure_seconds), stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
-                impact->aux_info.stop_times.emplace_back(stop_time);
+                impact->aux_info.stop_times.emplace_back(std::move(stop_time));
            }
         }else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");

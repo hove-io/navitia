@@ -42,6 +42,7 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 
 static const std::string feed_id = "42";
+static const std::string feed_id_1 = "44";
 static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
@@ -213,9 +214,6 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0930"_dt);
 }
 
-
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(train_delayed, 1)
-
 BOOST_AUTO_TEST_CASE(train_delayed) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
@@ -223,8 +221,12 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "08:10"_t, "08:10"_t),
-                    std::make_tuple("stop2", "09:10"_t, "09:10"_t)
+                    std::make_tuple("stop1",
+                            navitia::test::to_posix_timestamp("20150928T0810"),
+                            navitia::test::to_posix_timestamp("20150928T0810")),
+                    std::make_tuple("stop2",
+                            navitia::test::to_posix_timestamp("20150928T0910"),
+                            navitia::test::to_posix_timestamp("20150928T0910"))
             });
     b.data->build_uri();
 
@@ -252,9 +254,6 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     // we add a second time the realtime message, it should not change anything
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
-    /*****************Expected Failure********************/
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2); // Current size is 3, hopefully it should be 2
-    /*****************************************************/
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -281,6 +280,193 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
+}
+
+BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(train_delayed_expected_failure, 1)
+
+BOOST_AUTO_TEST_CASE(train_delayed_expected_failure) {
+
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1",
+                            navitia::test::to_posix_timestamp("20150928T0810"),
+                            navitia::test::to_posix_timestamp("20150928T0810")),
+                    std::make_tuple("stop2",
+                            navitia::test::to_posix_timestamp("20150928T0910"),
+                            navitia::test::to_posix_timestamp("20150928T0910"))
+            });
+    b.data->build_uri();
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+
+    /*****************Expected Failure********************/
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2); // Current size is 3, hopefully it should be 2
+    /*****************************************************/
 
 }
 
+BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
+
+    transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1",
+                            navitia::test::to_posix_timestamp("20150928T2330"),
+                            navitia::test::to_posix_timestamp("20150928T2330")),
+                    std::make_tuple("stop2",
+                            navitia::test::to_posix_timestamp("20150929T0025"),
+                            navitia::test::to_posix_timestamp("20150929T0025"))
+            });
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2355"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0025"_dt);
+}
+
+BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
+    b.vj("B", "000001", "", true, "vj:2")("stop3", "22:00"_t)("stop4", "22:30"_t);
+
+    transit_realtime::TripUpdate trip_update_A = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1",
+                            navitia::test::to_posix_timestamp("20150928T2330"),
+                            navitia::test::to_posix_timestamp("20150928T2330")),
+                    std::make_tuple("stop2",
+                            navitia::test::to_posix_timestamp("20150929T0025"),
+                            navitia::test::to_posix_timestamp("20150929T0025"))
+            });
+
+    transit_realtime::TripUpdate trip_update_B = make_delay_message("vj:2",
+            "20150928",
+            {
+                    std::make_tuple("stop3",
+                            navitia::test::to_posix_timestamp("20150928T2230"),
+                            navitia::test::to_posix_timestamp("20150928T2230")),
+                    std::make_tuple("stop4",
+                            navitia::test::to_posix_timestamp("20150928T2300"),
+                            navitia::test::to_posix_timestamp("20150928T2300"))
+            });
+
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj_A = pt_data->vehicle_journeys.at(0);
+    BOOST_CHECK_EQUAL(vj_A->base_validity_pattern(), vj_A->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, trip_update_A, *b.data);
+
+    // We should have 3 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 2);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj_A->base_validity_pattern(), vj_A->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, trip_update_B, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    auto vj_B = pt_data->vehicle_journeys.at(0);
+    BOOST_CHECK_NE(vj_B->base_validity_pattern(), vj_B->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return [&](const std::string& from, const std::string& to){
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                                          "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+        };
+    };
+    auto compute_base = compute(nt::RTLevel::Base);
+    auto compute_rt = compute(nt::RTLevel::RealTime);
+
+    auto res = compute_base("stop1", "stop2");
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2355"_dt);
+
+    res = compute_rt("stop1", "stop2");
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0025"_dt);
+
+
+    res = compute_base("stop3", "stop4");
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2230"_dt);
+
+    res = compute_rt("stop3", "stop4");
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2300"_dt);
+
+}

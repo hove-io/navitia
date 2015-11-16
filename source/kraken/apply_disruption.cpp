@@ -167,9 +167,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 type::RTLevel::RealTime,
                 vp,
                 r,
-                std::move(impact->aux_info.stop_times),
+                impact->aux_info.stop_times,
                 pt_data);
-            LOG4CPLUS_TRACE(log, vj->validity_patterns[2]->str());
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
