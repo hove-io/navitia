@@ -134,6 +134,12 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->headsign, "N2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->headsign, "N2");
 
+    for (const auto vj : data.vehicle_journeys) {
+        for (size_t position = 0; position < vj->stop_time_list.size(); ++position) {
+            BOOST_CHECK_EQUAL(vj->stop_time_list[position]->order, position);
+        }
+    }
+
     // feed_info
     std::map<std::string, std::string> feed_info_test ={
         {"feed_start_date","20150325"},
