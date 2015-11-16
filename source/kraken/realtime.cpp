@@ -57,6 +57,40 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     return false;
 }
 
+static std::ostream& operator<<(std::ostream& s, const nt::StopTime& st) {
+    // Note: do not use st.order, as the stoptime might not yet be part of the VJ
+    return s << "ST " << (st.vehicle_journey ? st.vehicle_journey->uri : "Null")
+             << " dep " << st.departure_time << " arr " << st.arrival_time;
+}
+
+/**
+  * Check if a disruption is valid
+  *
+  * We check that all stop times are correctly ordered
+  * And that the departure/arrival are correct too
+ */
+static bool check_disruption(const nt::disruption::Disruption& disruption) {
+    auto log = log4cplus::Logger::getInstance("realtime");
+    for (const auto& impact: disruption.get_impacts()) {
+        boost::optional<const nt::StopTime&> last_st;
+        for (const auto& st: impact->aux_info.stop_times) {
+            if (last_st) {
+                if (last_st->departure_time > st.arrival_time) {
+                    LOG4CPLUS_WARN(log, "stop time " << *last_st
+                                   << " and " << st << " are not correctly ordered");
+                    return false;
+                }
+                if (st.departure_time < st.arrival_time) {
+                    LOG4CPLUS_WARN(log, "For the st " << st << " departure is before the arrival");
+                    return false;
+                }
+            }
+            last_st = st;
+        }
+    }
+    return true;
+}
+
 
 static boost::shared_ptr<nt::disruption::Severity>
 make_severity(const std::string& id,
@@ -182,7 +216,7 @@ create_disruption(const std::string& id,
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
                 impact->aux_info.stop_times.emplace_back(std::move(stop_time));
            }
-        }else {
+        } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
         impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
@@ -219,6 +253,12 @@ void handle_realtime(const std::string& id,
     }
 
     const auto& disruption = create_disruption(id, timestamp, trip_update, data);
+
+    if (! check_disruption(disruption)) {
+        LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
+        delete_disruption(id, *data.pt_data, *data.meta);
+        return;
+    }
 
     apply_disruption(disruption, *data.pt_data, *data.meta);
 }
