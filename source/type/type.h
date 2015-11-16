@@ -309,7 +309,7 @@ public:
             const boost::posix_time::ptime& current_time) const;
 
 
-    std::vector<boost::weak_ptr<disruption::Impact>> get_impacts() const {
+    const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
         return impacts;
     }
 
