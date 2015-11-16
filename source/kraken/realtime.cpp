@@ -80,17 +80,22 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
                                    << " and " << st << " are not correctly ordered");
                     return false;
                 }
-                if (st.departure_time < st.arrival_time) {
-                    LOG4CPLUS_WARN(log, "For the st " << st << " departure is before the arrival");
+            } else {
+                //we want the first stoptime to be in [0, 24h[
+                if (st.departure_time > DateTimeUtils::SECONDS_PER_DAY) {
+                    LOG4CPLUS_WARN(log, "stop time " << st << " departure is too late");
                     return false;
                 }
+            }
+            if (st.departure_time < st.arrival_time) {
+                LOG4CPLUS_WARN(log, "For the st " << st << " departure is before the arrival");
+                return false;
             }
             last_st = st;
         }
     }
     return true;
 }
-
 
 static boost::shared_ptr<nt::disruption::Severity>
 make_severity(const std::string& id,
