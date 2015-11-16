@@ -125,6 +125,7 @@ static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::tim
             if (! production_period.contains(*titr)) { continue; }
             auto day = (*titr - production_period.begin()).days();
             vp.add(day);
+            break;
         }
     }
     return vp;
@@ -168,6 +169,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = mvj->get_base_vj().at(0)->name; 
+            }else {
+                // If we set nothing for physical_mode, it'll crash when building raptor
+                vj->physical_mode = pt_data.physical_modes[0];
+                vj->physical_mode->vehicle_journey_list.push_back(vj);
+                vj->name = new_vj_uri;
+
             }
             mvj->impacted_by.push_back(impact);
         } else {
@@ -220,18 +227,20 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // other disruptions after
     void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
         for (auto& vj: mvj->get_base_vj()) {
+            // Time to reset the vj
+            // We re-activate base vj for every realtime level by reseting base vj's vp to base
             vj->validity_patterns[type::RTLevel::RealTime] =
                     vj->validity_patterns[type::RTLevel::Adapted] =
                             vj->validity_patterns[type::RTLevel::Base];
         }
-        auto* vp_ptr = pt_data.get_or_create_validity_pattern({meta.production_date.begin()});
+        auto* empty_vp_ptr = pt_data.get_or_create_validity_pattern({meta.production_date.begin()});
 
-        auto set_empty_vp = [vp_ptr](const std::unique_ptr<type::VehicleJourney>& vj){
+        auto set_empty_vp = [empty_vp_ptr](const std::unique_ptr<type::VehicleJourney>& vj){
             vj->validity_patterns[type::RTLevel::RealTime] =
                     vj->validity_patterns[type::RTLevel::Adapted] =
-                            vj->validity_patterns[type::RTLevel::Base] = vp_ptr;
+                            vj->validity_patterns[type::RTLevel::Base] = empty_vp_ptr;
         };
-
+        // We deactivate adapted/realtime vj by setting vp to empty vp
         boost::for_each(mvj->get_adapted_vj(), set_empty_vp);
         boost::for_each(mvj->get_rt_vj(), set_empty_vp);
 

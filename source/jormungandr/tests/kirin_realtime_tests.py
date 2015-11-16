@@ -127,7 +127,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(len(pt_response['disruptions']), 0)
 
         self.send_mock("vjA", "20120614", 'delayed',
-                       [("stop_point:stopB", 28862, 28862), ("stop_point:stopA", 28864, 28864)])
+                       [("stop_point:stopB", 1339660944, 1339660944),
+                        ("stop_point:stopA", 1339661040, 1339661040)])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -142,8 +143,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(_get_arrivals(new_response), ['20120614T080224', '20120614T080435'])
-        eq_(_get_used_vj(new_response), [['vjA:modified:0:96231_2015-07-28_0'], []])
+        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(_get_used_vj(new_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
@@ -152,7 +153,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',
-                       [("stop_point:stopB", 28862, 28862), ("stop_point:stopA", 28864, 28864)])
+                       [("stop_point:stopB", 1339660944, 1339660944),
+                        ("stop_point:stopA", 1339661040, 1339661040)])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -166,8 +168,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # so the first real-time vj created for the first disruption should be deactivated
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(_get_arrivals(new_response), ['20120614T080224', '20120614T080435'])
-        eq_(_get_used_vj(new_response), [['vjA:modified:1:96231_2015-07-28_0'], []])
+        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(_get_used_vj(new_response), [[], ['vjA:modified:1:96231_2015-07-28_0']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
