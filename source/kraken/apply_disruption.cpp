@@ -125,6 +125,12 @@ static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::tim
             if (! production_period.contains(*titr)) { continue; }
             auto day = (*titr - production_period.begin()).days();
             vp.add(day);
+            // Why break here?
+            // There'll be a problem with VJ passes midnight.
+            // Ex:
+            // We'd like to delay a train on 1st, Jan which will pass midnight, without 'break',
+            // the impact will be applied on 1st, Jan AND 2nd, Jan. So the VJ will be de activated on 1st AND 2nd Jan,
+            // which may not be wanted
             break;
         }
     }
