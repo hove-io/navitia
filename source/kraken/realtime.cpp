@@ -139,30 +139,23 @@ create_disruption(const std::string& id,
 
                 LOG4CPLUS_TRACE(log, "departure_time: " + std::to_string(departure_time));
                 LOG4CPLUS_TRACE(log, "has_departure_time: " + std::to_string(st.departure().has_time()));
-
-                /***********************************************************/
-                /*
-                 * When st.arrival().has_time() is false, st.arrival().time() will return 0, which, for kraken, is
-                 * considered as 00:00(midnight), This is not good. So we set manually arrival_time to  departure_time.
-                 *
-                 * AND
-                 *
-                 * Sometimes we got st.arrival().has_time() is true, but st.arrival().time() returns 0. That's not good
-                 * either.
-                 *
-                 * Same reasoning for departure_time.
-                 *
-                 *
-                 * TODO: And this check should be done on Kirin's side...
-                 * */
-                if (! st.arrival().has_time() && st.departure().has_time()){
-                    arrival_time = departure_time = st.departure().time();
+                {
+                    /*
+                     * When st.arrival().has_time() is false, st.arrival().time() will return 0, which, for kraken, is
+                     * considered as 00:00(midnight), This is not good. So we set manually arrival_time to  departure_time.
+                     *
+                     * Same reasoning for departure_time.
+                     *
+                     *
+                     * TODO: And this check should be done on Kirin's side...
+                     * */
+                    if (! st.arrival().has_time() && st.departure().has_time()){
+                        arrival_time = departure_time = st.departure().time();
+                    }
+                    if (st.arrival().has_time() && ! st.departure().has_time()){
+                        departure_time = arrival_time =st.arrival().time();
+                    }
                 }
-                if (st.arrival().has_time() && ! st.departure().has_time()){
-                    departure_time = arrival_time =st.arrival().time();
-                }
-                /***********************************************************/
-
                 auto arrival_seconds = boost::posix_time::from_time_t(arrival_time).time_of_day().total_seconds();
                 auto departure_seconds = boost::posix_time::from_time_t(departure_time).time_of_day().total_seconds();
 
@@ -174,7 +167,6 @@ create_disruption(const std::string& id,
            }
         }else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
-            throw navitia::exception("Effect of disruption is unknown");
         }
         impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
         impact->informed_entities.push_back(
