@@ -39,6 +39,11 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "kraken/apply_disruption.h"
 
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
+
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 
@@ -56,7 +61,6 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
 
     return trip_update;
 }
-
 
 static transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
@@ -628,7 +632,6 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    pt_data->vehicle_journeys[2]->base_validity_pattern()->str();
     pt_data->index();
     b.finish();
     b.data->build_raptor();
@@ -648,4 +651,62 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
     }
+}
+
+BOOST_AUTO_TEST_CASE(invalid_delay) {
+    // we add a non valid delay, it shoudl be rejected and no disruption added
+    ed::builder b("20150928");
+    auto vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t).make();
+    b.data->build_uri();
+
+    transit_realtime::TripUpdate wrong_st_order = make_delay_message("vj:1",
+            "20150928",
+            {
+                    //stop1 is after stop2, it's not valid
+                    std::make_tuple("stop1", "10:10"_t, "10:10"_t),
+                    std::make_tuple("stop2", "09:10"_t, "09:10"_t)
+            });
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
+
+    navitia::handle_realtime(feed_id, timestamp, wrong_st_order, *b.data);
+
+    //there should be no disruption added
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
+
+    // we test with a wrongly formated stoptime
+    transit_realtime::TripUpdate dep_before_arr = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "08:10"_t, "08:10"_t),
+                    //departure is before arrival, it's not valid too
+                    std::make_tuple("stop2", "09:10"_t, "09:00"_t)
+            });
+
+    navitia::handle_realtime(feed_id, timestamp, dep_before_arr, *b.data);
+
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
+
+    //we test with a first stop time not in [0, 24h[
+    transit_realtime::TripUpdate wrong_first_st = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "08:10"_t, "26:10"_t),
+                    //departure is before arrival, it's not valid too
+                    std::make_tuple("stop2", "27:10"_t, "28:00"_t)
+            });
+
+    navitia::handle_realtime(feed_id, timestamp, wrong_first_st, *b.data);
+
+    //there should be no disruption added
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
 }

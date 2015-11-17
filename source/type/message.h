@@ -308,6 +308,7 @@ class DisruptionHolder {
 public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
+    size_t nb_disruptions() const { return disruptions_by_uri.size(); }
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
