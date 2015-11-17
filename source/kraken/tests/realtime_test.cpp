@@ -219,8 +219,6 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0930"_dt);
 }
 
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(train_delayed, 1)
-
 BOOST_AUTO_TEST_CASE(train_delayed) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
@@ -228,8 +226,8 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "08:10"_t, "08:10"_t),
-                    std::make_tuple("stop2", "09:10"_t, "09:10"_t)
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
             });
     b.data->build_uri();
 
