@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    pt_data->vehicle_journeys[2]->base_validity_pattern()->str();
+
     pt_data->index();
     b.finish();
     b.data->build_raptor();
