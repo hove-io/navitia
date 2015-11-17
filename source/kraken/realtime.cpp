@@ -156,10 +156,10 @@ create_disruption(const std::string& id,
                      *
                      * TODO: And this check should be done on Kirin's side...
                      * */
-                    if (! st.arrival().has_time() && st.departure().has_time()){
+                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()){
                         arrival_time = departure_time = st.departure().time();
                     }
-                    if (st.arrival().has_time() && ! st.departure().has_time()){
+                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()){
                         departure_time = arrival_time =st.arrival().time();
                     }
                 }
