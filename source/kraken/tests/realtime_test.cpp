@@ -351,18 +351,16 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
-        auto compute = [&](nt::RTLevel level) {
-            return [&](const std::string& from, const std::string& to){
-                return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
-                                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
-            };
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
         };
 
-        auto res = compute(nt::RTLevel::Base)("stop1", "stop2");
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-        res = compute(nt::RTLevel::RealTime)("stop1", "stop2");
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
 
@@ -384,26 +382,24 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
-        auto compute = [&](nt::RTLevel level) {
-            return [&](const std::string& from, const std::string& to){
-                return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
-                                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
-            };
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
         };
 
-        auto res = compute(nt::RTLevel::Base)("stop1", "stop2");
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-        res = compute(nt::RTLevel::RealTime)("stop1", "stop2");
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
 
-        res = compute(nt::RTLevel::Base)("stop1", "stop3");
+        res = compute(nt::RTLevel::Base, "stop1", "stop3");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T1001"_dt);
 
-        res = compute(nt::RTLevel::RealTime)("stop1", "stop3");
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop3");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T1030"_dt);
     }
@@ -532,29 +528,25 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
-        return [&](const std::string& from, const std::string& to){
-            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
-                                          "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
-        };
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+        return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
     };
-    auto compute_base = compute(nt::RTLevel::Base);
-    auto compute_rt = compute(nt::RTLevel::RealTime);
 
-    auto res = compute_base("stop1", "stop2");
+    auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2355"_dt);
 
-    res = compute_rt("stop1", "stop2");
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0025"_dt);
 
 
-    res = compute_base("stop3", "stop4");
+    res = compute(nt::RTLevel::Base, "stop3", "stop4");
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2230"_dt);
 
-    res = compute_rt("stop3", "stop4");
+    res = compute(nt::RTLevel::RealTime, "stop3", "stop4");
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T2300"_dt);
 
@@ -613,20 +605,16 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
-        auto compute = [&](nt::RTLevel level) {
-            return [&](const std::string& from, const std::string& to){
-                return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
-                        "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
-            };
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
         };
-        auto compute_base = compute(nt::RTLevel::Base);
-        auto compute_rt = compute(nt::RTLevel::RealTime);
 
-        auto res = compute_base("stop1", "stop2");
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 
-        res = compute_rt("stop1", "stop2");
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 0); // <-- No VJ is availble
     }
 
@@ -640,27 +628,23 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-
+    pt_data->vehicle_journeys[2]->base_validity_pattern()->str();
     pt_data->index();
     b.finish();
     b.data->build_raptor();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
-        auto compute = [&](nt::RTLevel level) {
-            return [&](const std::string& from, const std::string& to){
-                return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
-                        "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
-            };
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
         };
-        auto compute_base = compute(nt::RTLevel::Base);
-        auto compute_rt = compute(nt::RTLevel::RealTime);
 
-        auto res = compute_base("stop1", "stop2");
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 
-        res = compute_rt("stop1", "stop2");
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
     }

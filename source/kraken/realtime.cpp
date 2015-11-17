@@ -123,7 +123,7 @@ create_disruption(const std::string& id,
         impact->updated_at = timestamp;
         impact->application_periods.push_back(execution_period(circulation_date, mvj));
         std::string wording;
-        nt::disruption::Effect effect;
+        nt::disruption::Effect effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcodded...
