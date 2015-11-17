@@ -222,12 +222,8 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     transit_realtime::TripUpdate trip_update = make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1",
-                            navitia::test::to_posix_timestamp("20150928T0810"),
-                            navitia::test::to_posix_timestamp("20150928T0810")),
-                    std::make_tuple("stop2",
-                            navitia::test::to_posix_timestamp("20150928T0910"),
-                            navitia::test::to_posix_timestamp("20150928T0910"))
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
             });
     b.data->build_uri();
 
@@ -644,7 +640,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-
+    pt_data->vehicle_journeys[2]->base_validity_pattern()->str();
     pt_data->index();
     b.finish();
     b.data->build_raptor();
