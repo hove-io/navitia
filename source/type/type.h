@@ -833,6 +833,9 @@ struct StopTime {
     StopPoint* stop_point = nullptr;
     const LineString* shape_from_prev = nullptr;
 
+    StopTime() = default;
+    StopTime(uint32_t arr_time, uint32_t dep_time, StopPoint* stop_point):
+        arrival_time{arr_time}, departure_time{dep_time}, stop_point{stop_point}{}
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
@@ -1022,6 +1025,12 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
+    }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_adapted_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::Adapted];
+    }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_rt_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::RealTime];
     }
 
     void cancel_vj(RTLevel level,

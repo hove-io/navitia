@@ -201,6 +201,12 @@ struct Message {
     }
 };
 
+namespace detail {
+struct AuxInfoForMetaVJ {
+  std::vector<navitia::type::StopTime> stop_times;
+};
+}
+
 struct Impact {
     std::string uri;
     boost::posix_time::ptime created_at;
@@ -214,6 +220,8 @@ struct Impact {
     std::vector<PtObj> informed_entities;
 
     std::vector<Message> messages;
+
+    detail::AuxInfoForMetaVJ aux_info;
 
     //link to the parent disruption
     //Note: it is a raw pointer because an Impact is owned by it's disruption
