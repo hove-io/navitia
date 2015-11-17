@@ -35,6 +35,9 @@ www.navitia.io
 #include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
 #include "type/meta_data.h"
+#include "type/message.h"
+#include "type/rt_level.h"
+#include <memory>
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -48,26 +51,65 @@ struct builder;
 
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
-    builder & b;
-    nt::VehicleJourney* vj;
+    builder& b;
+    const std::string network_name;
+    const std::string line_name;
+    const std::string validity_pattern;
+    const std::string block_id;
+    const bool is_frequency;
+    const bool wheelchair_boarding;
+    const std::string uri;
+    const std::string meta_vj_name;
+    const std::string physical_mode;
+    const uint32_t start_time;
+    const uint32_t end_time;
+    const uint32_t headway_secs;
+    std::vector<nt::StopTime> stop_times;
+    nt::VehicleJourney* vj = nullptr;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
-       bool is_frequency,
-       bool wheelchair_boarding = true, const std::string& uri="",
-       const std::string& meta_vj_name = "", const std::string& physical_mode = "");
+    VJ(builder& b,
+       const std::string& network_name,
+       const std::string& line_name,
+       const std::string& validity_pattern,
+       const std::string& block_id,
+       const bool is_frequency,
+       const bool wheelchair_boarding = true,
+       const std::string& uri="",
+       const std::string& meta_vj_name = "",
+       const std::string& physical_mode = "",
+       const uint32_t start_time = 0,
+       const uint32_t end_time = 0,
+       const uint32_t headway_secs = 0);
+
+    VJ(VJ&&) = default;
+    VJ& operator=(VJ&&) = delete;
+    VJ(const VJ&) = delete;
+    VJ& operator=(const VJ&) = delete;
+    ~VJ() { make(); } // The destructor create the vj as we need the stop times to create it.
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
-    VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1, uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
-                   bool drop_off_allowed = true, bool pick_up_allowed = true);
+    VJ& operator()(const std::string& stopPoint,
+                   int arrivee,
+                   int depart = -1,
+                   uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
+                   bool drop_off_allowed = true,
+                   bool pick_up_allowed = true);
 
-    VJ& operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
-            uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(), bool drop_off_allowed = true, bool pick_up_allowed = true);
+    VJ& operator()(const std::string& stopPoint,
+                   const std::string& arrivee,
+                   const std::string& depart,
+                   uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
+                   bool drop_off_allowed = true,
+                   bool pick_up_allowed = true);
 
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
+
+    // create the vj
+    nt::VehicleJourney* make();
 };
 
 struct SA {
@@ -82,6 +124,55 @@ struct SA {
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
 };
 
+struct DisruptionCreator;
+
+struct Impacter {
+    Impacter(builder&, nt::disruption::Disruption&);
+    builder& b;
+    boost::shared_ptr<nt::disruption::Impact> impact;
+    const nt::disruption::Disruption& get_disruption() const {
+        return *impact->disruption;
+    }
+    Impacter& uri(const std::string& u) { impact->uri = u; return *this; }
+    Impacter& application_periods(const boost::posix_time::time_period& p) {
+        impact->application_periods.push_back(p);
+        return *this;
+    }
+    Impacter& severity(nt::disruption::Effect,
+                       std::string uri = "",
+                       const std::string& wording = "",
+                       const std::string& color = "#FFFF00",
+                       int priority = 0);
+
+    Impacter& severity(const std::string& uri); // link to existing severity
+    Impacter& on(nt::Type_e type, const std::string& uri); // add elt in informed_entities
+    Impacter& msg(nt::disruption::Message);
+    Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& publish(const boost::posix_time::time_period& p) {
+        //to ease use without a DisruptionCreator
+        impact->disruption->publication_period = p;
+        return *this;
+    }
+};
+
+struct DisruptionCreator {
+    builder& b;
+    DisruptionCreator(builder&, const std::string& uri, nt::RTLevel lvl);
+
+    Impacter& impact();
+    DisruptionCreator& publication_period(const boost::posix_time::time_period& p) {
+        disruption.publication_period = p;
+        return *this;
+    }
+    DisruptionCreator& contributor(const std::string& c) {
+        disruption.contributor = c;
+        return *this;
+    }
+    DisruptionCreator& tag(const std::string& t);
+
+    nt::disruption::Disruption& disruption;
+    std::vector<Impacter> impacters;
+};
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
@@ -115,19 +206,22 @@ struct builder {
           const std::string& physical_mode = "");
 
     VJ vj_with_network(const std::string& network_name,
-          const std::string& line_name,
-          const std::string& validity_pattern = "11111111",
-          const std::string& block_id="",
-          const bool wheelchair_boarding = true,
-          const std::string& uri="",
-          const std::string& meta_vj="",
-          const std::string& physical_mode = "",
-          bool is_frequency=false);
+                       const std::string& line_name,
+                       const std::string& validity_pattern = "11111111",
+                       const std::string& block_id="",
+                       const bool wheelchair_boarding = true,
+                       const std::string& uri="",
+                       const std::string& meta_vj="",
+                       const std::string& physical_mode = "",
+                       const bool is_frequency=false,
+                       const uint32_t start_time = 0,
+                       const uint32_t end_time = 0,
+                       const uint32_t headway_secs = 0);
 
     VJ frequency_vj(const std::string& line_name,
-                    uint32_t start_time,
-                    uint32_t end_time,
-                    uint32_t headway_secs,
+                    const uint32_t start_time,
+                    const uint32_t end_time,
+                    const uint32_t headway_secs,
                     const std::string& network_name = "default_network",
                     const std::string& validity_pattern = "11111111",
                     const std::string& block_id="",
@@ -142,6 +236,9 @@ struct builder {
           const bool create_sp = true, bool wheelchair_boarding = true) {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
     }
+
+    DisruptionCreator disrupt(nt::RTLevel lvl, const std::string& uri);
+    Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

@@ -37,7 +37,7 @@ www.navitia.io
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/utility.hpp>
 
 namespace navitia { namespace fare {

@@ -43,6 +43,11 @@ namespace nt = navitia::type;
 namespace ng = navitia::georef;
 namespace nf = navitia::fare;
 
+// A function to release the memory of a collection. For a vector, it
+// is equivalent to `a.clear(); a.shrink_to_fit();` but some
+// collections don't have these methods.
+template<typename T> static void release(T& a) { T b; a.swap(b); }
+
 void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio){
 
     pqxx::work work(*conn, "loading ED");
@@ -63,12 +68,16 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_lines(data, work);
     this->fill_line_groups(data, work);
     this->fill_routes(data, work);
-
     this->fill_validity_patterns(data, work);
-    this->fill_vehicle_journeys(data, work);
 
-    //the comments are loaded before the stop time to reduce the memory foot print
+    //the comments are loaded before the stop time (and thus the vj)
+    //to reduce the memory foot print
     this->fill_comments(data, work);
+    // the stop times are loaded before the vj as create_vj need the
+    // list of stop times
+    this->fill_stop_times(data, work);
+    this->fill_vehicle_journeys(data, work);
+    this->finish_stop_times(data);
 
     /// grid calendar
     this->fill_calendars(data, work);
@@ -80,10 +89,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_associated_calendar(data, work);
     this->fill_meta_vehicle_journeys(data, work);
 
-    this->fill_stop_times(data, work);
-
     this->fill_admins(data, work);
-
     this->fill_admins_postal_codes(data, work);
     this->fill_admin_stop_areas(data, work);
     this->fill_object_codes(data, work);
@@ -97,7 +103,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
     this->fill_graph(data, work);
-//    this->clean_graph(data, work);
 
     // we need the proximity_list to build bss and parking edges
     data.geo_ref->build_proximity_list();
@@ -702,6 +707,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.headway_sec as headway_sec,"
         "vj.utc_to_local_offset as utc_to_local_offset, "
         "vj.is_frequency as is_frequency, "
+        "vj.meta_vj_name as meta_vj_name, "
+        "vj.vj_class as vj_class, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -719,27 +726,43 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
         auto* route = route_map[const_it["route_id"].as<idx_t>()];
         navitia::type::VehicleJourney* vj = nullptr;
-        if (const_it["is_frequency"].as<bool>()) {
-            route->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
-            auto& freq_vj = route->frequency_vehicle_journey_list.back();
-
-            const_it["start_time"].to(freq_vj->start_time);
-            const_it["end_time"].to(freq_vj->end_time);
-            const_it["headway_sec"].to(freq_vj->headway_secs);
-            vj = freq_vj.get();
-        } else {
-            route->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
-            vj = route->discrete_vehicle_journey_list.back().get();
+        std::string vj_name;
+        const_it["name"].to(vj_name);
+        std::string mvj_name;
+        const_it["meta_vj_name"].to(mvj_name);
+        if (mvj_name == "") {
+            mvj_name = vj_name;
         }
-        const_it["uri"].to(vj->uri);
+        auto mvj = data.pt_data->meta_vjs.get_or_create(mvj_name);
+        auto rt_level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
+        const auto& vp = *validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
+        const auto uri = const_it["uri"].as<std::string>();
+        const auto vj_id = const_it["id"].as<idx_t>();
+        if (const_it["is_frequency"].as<bool>()) {
+            auto f_vj = mvj->create_frequency_vj(uri,
+                                                 rt_level,
+                                                 vp,
+                                                 route,
+                                                 std::move(sts_from_vj[vj_id]),
+                                                 *data.pt_data);
+            const_it["start_time"].to(f_vj->start_time);
+            const_it["end_time"].to(f_vj->end_time);
+            const_it["headway_sec"].to(f_vj->headway_secs);
+            vj = f_vj;
+        } else {
+            vj = mvj->create_discrete_vj(uri,
+                                         rt_level,
+                                         vp,
+                                         route,
+                                         std::move(sts_from_vj[vj_id]),
+                                         *data.pt_data);
+        }
         const_it["name"].to(vj->name);
         const_it["odt_message"].to(vj->odt_message);
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
-        vj->route = route;
-
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
         assert (vj->company);
@@ -754,15 +777,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                 == vj->company->line_list.end()) {
                 vj->company->line_list.push_back(vj->route->line);
             }
-        }
-        using navitia::type::RTLevel;
-        vj->validity_patterns[RTLevel::Adapted] =
-                validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
-
-        if(!const_it["validity_pattern_id"].is_null()){
-            vj->validity_patterns[RTLevel::Base] =
-                    validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
-            vj->validity_patterns[RTLevel::RealTime] = vj->validity_patterns[RTLevel::Base];
         }
 
         if (const_it["wheelchair_accessible"].as<bool>()){
@@ -796,8 +810,16 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
         }
 
-        data.pt_data->vehicle_journeys.push_back(vj);
-        vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
+        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
+        vehicle_journey_map[vj_id] = vj;
+
+        // we check if we have some comments
+        const auto& it_comments = vehicle_journey_comments.find(vj_id);
+        if (it_comments != vehicle_journey_comments.end()) {
+            for (const auto& comment: it_comments->second) {
+                data.pt_data->comments.add(vj, comment);
+            }
+        }
     }
 
     for(auto vjid_vj: prev_vjs) {
@@ -806,6 +828,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     for(auto vjid_vj: next_vjs) {
         vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
     }
+    release(sts_from_vj);
 }
 
 void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
@@ -855,40 +878,13 @@ void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
-    //then we fill the links
-    std::string request = "SELECT l.meta_vj as metavj, "
-            " l.vehicle_journey as vehicle_journey, l.vj_class as vj_class, meta.name as name"
-            " from navitia.meta_vj as meta, navitia.rel_metavj_vj as l"
-            " WHERE meta.id = l.meta_vj";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        const std::string name = const_it["name"].as<std::string>();
-
-        nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_or_create(name);
-
-        const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
-        const auto vj_it = vehicle_journey_map.find(vj_idx);
-
-        if ( vj_it == vehicle_journey_map.end()) {
-            LOG4CPLUS_ERROR(log, "Impossible to find the vj " << vj_idx << ", we won't add it in a meta vj");
-            continue;
-        }
-        auto* vj = vj_it->second;
-
-        const std::string vj_class = const_it["vj_class"].as<std::string>();
-        auto level = navitia::type::get_rt_level_from_string(vj_class);
-        meta_vj->add_vj(vj, level);
-        vj->meta_vj = meta_vj;
-        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
-    }
-
     //then we fill the links between a metavj and its associated calendars
-    request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
+    const std::string request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
             " c.uri as associated_calendar_name"
             " from navitia.rel_metavj_associated_calendar as meta, navitia.meta_vj as l,"
             " navitia.associated_calendar as l2, navitia.calendar c"
             " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id and c.id = l2.calendar_id";
-    result = work.exec(request);
+    const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
         nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_mut(name);
@@ -928,62 +924,74 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "FROM navitia.stop_time as st "
         "ORDER BY st.vehicle_journey_id, st.\"order\"";
 
-    pqxx::result result = work.exec(request);
+    pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
+        cursor( work, request, "stcursor", false );
 
-    size_t cpt_comment_found(0);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        auto it = vehicle_journey_map.find(const_it["vehicle_journey_id"].as<idx_t>());
-        if (it == vehicle_journey_map.end()) {
-            throw navitia::exception("impossible to find vj "
-                                     + std::to_string(const_it["vehicle_journey_id"].as<idx_t>())
-                    + " for a stop time, we skip the stoptime ");
-        }
+    size_t chunk_limit = 100000;
+    size_t nb_rows = cursor.size();
+    for (size_t current_idx = 0; current_idx < nb_rows; current_idx += chunk_limit) {
+        pqxx::result result = cursor.retrieve(current_idx, std::min(current_idx + chunk_limit, nb_rows));
 
-        auto vj = it->second;
-        vj->stop_time_list.emplace_back();
-        nt::StopTime& stop = vj->stop_time_list.back();
+        for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+            const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
+            auto& sts = sts_from_vj[vj_id];
+            sts.emplace_back();
+            nt::StopTime& stop = sts.back();
 
-        const_it["arrival_time"].to(stop.arrival_time);
-        const_it["departure_time"].to(stop.departure_time);
-        if (!const_it["local_traffic_zone"].is_null()){
-            const_it["local_traffic_zone"].to(stop.local_traffic_zone);
-        }
-        stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
-        stop.set_odt(const_it["odt"].as<bool>());
-        stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
-        stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
-        stop.set_is_frequency(const_it["is_frequency"].as<bool>());
+            const_it["arrival_time"].to(stop.arrival_time);
+            const_it["departure_time"].to(stop.departure_time);
+            if (!const_it["local_traffic_zone"].is_null()){
+                const_it["local_traffic_zone"].to(stop.local_traffic_zone);
+            }
+            stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
+            stop.set_odt(const_it["odt"].as<bool>());
+            stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
+            stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
+            stop.set_is_frequency(const_it["is_frequency"].as<bool>());
 
-        stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
-        stop.vehicle_journey = vj;
+            stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
-        nt::LineString shape_from_prev;
-        boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"), shape_from_prev);
-        stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
+            nt::LineString shape_from_prev;
+            boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"),
+                                      shape_from_prev);
+            stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
 
-        if (!const_it["headsign"].is_null()){
-            std::string headsign = const_it["headsign"].as<std::string>();
-            if (!headsign.empty()) {
-                data.pt_data->headsign_handler.affect_headsign_to_stop_time(stop, headsign);
+            const auto st_id = const_it["id"].as<nt::idx_t>();
+            const StKey st_key = {vj_id, sts.size() - 1};
+
+            if (!const_it["headsign"].is_null()){
+                std::string headsign = const_it["headsign"].as<std::string>();
+                if (!headsign.empty()) {
+                    stop_time_headsigns[st_id] = headsign;
+                    id_to_stop_time_key[st_id] = st_key;
+                }
+            }
+
+            // we check if we have some comments
+            if (stop_time_comments.count(st_id)) {
+                id_to_stop_time_key[st_id] = st_key;
             }
         }
+    }
+}
 
-        // we check if we have some comments
-        const auto& it_comments = stop_time_comments.find(const_it["id"].as<nt::idx_t>());
-        if (it_comments != stop_time_comments.end()) {
-
-            for (const auto& comment: it_comments->second) {
-                data.pt_data->comments.add(stop, comment);
-            }
-            cpt_comment_found++;
+void EdReader::finish_stop_times(nt::Data& data) {
+    auto get_st = [&](const idx_t id) -> const nt::StopTime& {
+        const auto& st_key = id_to_stop_time_key.at(id);
+        return vehicle_journey_map.at(st_key.first)->stop_time_list.at(st_key.second);
+    };
+    for (const auto& headsign: stop_time_headsigns) {
+        data.pt_data->headsign_handler.affect_headsign_to_stop_time(get_st(headsign.first),
+                                                                    headsign.second);
+    }
+    for (const auto& comments: stop_time_comments) {
+        for (const auto& comment: comments.second) {
+            data.pt_data->comments.add(get_st(comments.first), comment);
         }
     }
-
-    if (cpt_comment_found != stop_time_comments.size()) {
-        LOG4CPLUS_WARN(log, stop_time_comments.size() - cpt_comment_found
-                            << " / " << stop_time_comments.size()
-                            << " stoptimes comment have not found their stoptime");
-    }
+    release(id_to_stop_time_key);
+    release(stop_time_headsigns);
+    release(stop_time_comments);
 }
 
 template <typename Map>
@@ -1037,12 +1045,14 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             cpt_not_found += add_comment(data, obj_id, stop_area_map, comment);
         } else if (type_str == "stop_point") {
             cpt_not_found += add_comment(data, obj_id, stop_point_map, comment);
-        } else if (type_str == "trip") {
-            cpt_not_found += add_comment(data, obj_id, vehicle_journey_map, comment);
         } else if (type_str == "stop_time") {
-            //for stop time we store the comment on a temporary map and we will store them when the stop time is read
+            //for stop time we store the comment on a temporary map
+            // and we will store them when the stop time is read.
             // this way we don't have to store all stoptimes in a map
             stop_time_comments[obj_id].push_back(*comment);
+        } else if (type_str == "trip") {
+            // as we need to create vjs after stop times, we need to store the comments
+            vehicle_journey_comments[obj_id].push_back(*comment);
         } else {
             LOG4CPLUS_WARN(log, "invalid type, skipping object comment: " << obj_id << "(" << type_str << ")");
         }

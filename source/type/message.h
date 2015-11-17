@@ -38,7 +38,7 @@ www.navitia.io
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/serialization/bitset.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/map.hpp>
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>
@@ -68,7 +68,7 @@ enum class Effect {
   STOP_MOVED
 };
 
-enum class ChannelType{
+enum class ChannelType {
     web = 0,
     sms,
     email,
@@ -106,6 +106,21 @@ inline Effect from_string(const std::string& str) {
     if (str == "UNKNOWN_EFFECT") { return Effect::UNKNOWN_EFFECT; }
     if (str == "STOP_MOVED") { return Effect::STOP_MOVED; }
     throw navitia::exception("unhandled effect case");
+}
+
+inline std::string to_string(ChannelType ct) {
+    switch (ct) {
+    case ChannelType::web: return "web";
+    case ChannelType::sms: return "sms";
+    case ChannelType::email: return "email";
+    case ChannelType::mobile: return "mobile";
+    case ChannelType::notification: return "notification";
+    case ChannelType::twitter: return "twitter";
+    case ChannelType::facebook: return "facebook";
+    case ChannelType::unknown_type: return "unknown_type";
+    default:
+        throw navitia::exception("unhandled channeltype case");
+    }
 }
 
 struct Cause {
@@ -186,6 +201,12 @@ struct Message {
     }
 };
 
+namespace detail {
+struct AuxInfoForMetaVJ {
+  std::vector<navitia::type::StopTime> stop_times;
+};
+}
+
 struct Impact {
     std::string uri;
     boost::posix_time::ptime created_at;
@@ -199,6 +220,8 @@ struct Impact {
     std::vector<PtObj> informed_entities;
 
     std::vector<Message> messages;
+
+    detail::AuxInfoForMetaVJ aux_info;
 
     //link to the parent disruption
     //Note: it is a raw pointer because an Impact is owned by it's disruption
@@ -230,6 +253,8 @@ struct Tag {
 struct Disruption {
     Disruption() {}
     Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+    Disruption& operator=(const Disruption&) = delete;
+    Disruption(const Disruption&) = delete;
 
     std::string uri;
     // Provider of the disruption
@@ -278,8 +303,12 @@ private:
     std::vector<boost::shared_ptr<Impact>> impacts;
 };
 
-struct DisruptionHolder {
-    std::vector<std::unique_ptr<Disruption>> disruptions;
+class DisruptionHolder {
+    std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
+public:
+    Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
+    std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
+    size_t nb_disruptions() const { return disruptions_by_uri.size(); }
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
@@ -289,7 +318,7 @@ struct DisruptionHolder {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions & causes & severities & tags;
+        ar & disruptions_by_uri & causes & severities & tags;
     }
 };
 }

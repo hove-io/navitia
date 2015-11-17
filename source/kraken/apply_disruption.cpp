@@ -63,7 +63,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     virtual ~apply_impacts_visitor() {}
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
 
-    virtual void operator()(nt::MetaVehicleJourney*, const nt::Route* = nullptr) = 0;
+    virtual void operator()(nt::MetaVehicleJourney*, nt::Route* = nullptr) = 0;
 
     void log_start_action(std::string uri) {
         LOG4CPLUS_TRACE(log, "Start to " << action << " impact " << impact.get()->uri << " on object " << uri);
@@ -115,6 +115,28 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 };
 
+static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::time_period>& periods,
+        const boost::gregorian::date_period& production_period) {
+    type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
+    for (const auto& period: periods){
+        // we may impact vj's passed midnight
+        bg::day_iterator titr(period.begin().date());
+        for (; titr <= period.end().date(); ++titr) {
+            if (! production_period.contains(*titr)) { continue; }
+            auto day = (*titr - production_period.begin()).days();
+            vp.add(day);
+            // Why break here?
+            // There'll be a problem with VJ passes midnight.
+            // Ex:
+            // We'd like to delay a train on 1st, Jan which will pass midnight, without 'break',
+            // the impact will be applied on 1st, Jan AND 2nd, Jan. So the VJ will be de activated on 1st AND 2nd Jan,
+            // which may not be wanted
+            break;
+        }
+    }
+    return vp;
+}
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -125,14 +147,42 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     using apply_impacts_visitor::operator();
 
-    void operator()(nt::MetaVehicleJourney* mvj, const nt::Route* r = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
             mvj->impacted_by.push_back(impact);
+        } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
+            LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
+            auto vp = compute_vp(impact->application_periods, meta.production_date);
+            if (! r && ! mvj->get_base_vj().empty()) {
+                r = mvj->get_base_vj().at(0)->route;
+            }
+            auto nb_rt_vj = mvj->get_rt_vj().size();
+            std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
+                    + impact->disruption->uri;
+            auto* vj = mvj->create_discrete_vj(new_vj_uri,
+                type::RTLevel::RealTime,
+                vp,
+                r,
+                impact->aux_info.stop_times,
+                pt_data);
+            LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
+            if (! mvj->get_base_vj().empty()) {
+                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                vj->physical_mode->vehicle_journey_list.push_back(vj);
+                vj->name = mvj->get_base_vj().at(0)->name; 
+            }else {
+                // If we set nothing for physical_mode, it'll crash when building raptor
+                vj->physical_mode = pt_data.physical_modes[0];
+                vj->physical_mode->vehicle_journey_list.push_back(vj);
+                vj->name = new_vj_uri;
+
+            }
+            mvj->impacted_by.push_back(impact);
         } else {
-            LOG4CPLUS_DEBUG(log, "unhandled add action on " << mvj->uri);
+            LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
         log_end_action(mvj->uri);
     }
@@ -179,15 +229,26 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
-    void operator()(nt::MetaVehicleJourney* mvj, const nt::Route* r = nullptr) {
-        if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-            for (auto* vj: mvj->get_vjs_in_period(rt_level, impact->application_periods, meta, r)) {
-                vj->validity_patterns[rt_level] = vj->validity_patterns[nt::RTLevel::Base];
-                ++ nb_vj_reassigned;
-            }
-        } else {
-            LOG4CPLUS_DEBUG(log, "unhandled delete action on " << mvj->uri);
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
+        mvj->remove_impact(impact);
+        for (auto& vj: mvj->get_base_vj()) {
+            // Time to reset the vj
+            // We re-activate base vj for every realtime level by reseting base vj's vp to base
+            vj->validity_patterns[type::RTLevel::RealTime] =
+                    vj->validity_patterns[type::RTLevel::Adapted] =
+                            vj->validity_patterns[type::RTLevel::Base];
         }
+        auto* empty_vp_ptr = pt_data.get_or_create_validity_pattern({meta.production_date.begin()});
+
+        auto set_empty_vp = [empty_vp_ptr](const std::unique_ptr<type::VehicleJourney>& vj){
+            vj->validity_patterns[type::RTLevel::RealTime] =
+                    vj->validity_patterns[type::RTLevel::Adapted] =
+                            vj->validity_patterns[type::RTLevel::Base] = empty_vp_ptr;
+        };
+        // We deactivate adapted/realtime vj by setting vp to empty vp
+        boost::for_each(mvj->get_adapted_vj(), set_empty_vp);
+        boost::for_each(mvj->get_rt_vj(), set_empty_vp);
+
         const auto& impact = this->impact;
         boost::range::remove_erase_if(mvj->impacted_by,
             [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
@@ -203,17 +264,34 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         }
     }
 
-    void operator()(const nt::StopPoint* stop_point) {
+    void operator()(nt::StopPoint* stop_point) {
+        stop_point->remove_impact(impact);
         LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_point->uri << " is not handled");
 
     }
 
-    void operator()(const nt::StopArea* stop_area) {
+    void operator()(nt::StopArea* stop_area) {
+        stop_area->remove_impact(impact);
         LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_area->uri << " is not handled");
+    }
+
+    void operator()(nt::Network* network) {
+        network->remove_impact(impact);
+        apply_impacts_visitor::operator()(network);
+    }
+
+    void operator()(nt::Line* line) {
+        line->remove_impact(impact);
+        apply_impacts_visitor::operator()(line);
+    }
+
+    void operator()(nt::Route* route) {
+        route->remove_impact(impact);
+        apply_impacts_visitor::operator()(route);
     }
 };
 
-void delete_impact(boost::shared_ptr<nt::disruption::Impact>impact,
+void delete_impact(boost::shared_ptr<nt::disruption::Impact> impact,
                           nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
@@ -234,21 +312,18 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
-            [&disruption_id](const std::unique_ptr<nt::disruption::Disruption>& disruption){
-                return disruption->uri == disruption_id;
-            });
-    if (it != holder.disruptions.end()) {
+    // the disruption is deleted by RAII
+    std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
+    if (disruption) {
         std::vector<nt::disruption::PtObj> informed_entities;
-        for (const auto& impact : (*it)->get_impacts()) {
+        for (const auto& impact : disruption->get_impacts()) {
             informed_entities.insert(informed_entities.end(),
                               impact->informed_entities.begin(),
                               impact->informed_entities.end());
             delete_impact(impact, pt_data, meta);
         }
-        holder.disruptions.erase(it);
     }
-    LOG4CPLUS_DEBUG(log, disruption_id << " disruption deleted");
+    LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 
 void apply_disruption(const type::disruption::Disruption& disruption, nt::PT_Data& pt_data,

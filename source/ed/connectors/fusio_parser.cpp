@@ -827,6 +827,11 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
                         "  file has more than one commercial mode and no commercial_mode_id column");
         throw InvalidHeaders(csv.filename);
     }
+    if (! has_col(name_c, row)) {
+        LOG4CPLUS_WARN(logger, "invalid line on " << csv.filename <<
+                        "  commercial mode " << row[id_c] << " is missing a name");
+        return;
+    }
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];

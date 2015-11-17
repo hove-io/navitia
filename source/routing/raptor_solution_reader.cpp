@@ -68,7 +68,8 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
               const JourneyPatternContainer& jp_container)
 {
     DateTime cur_dt = in_st_dt.second;
-    for (const auto& st: raptor_visitor().st_range(*in_st_dt.first).advance_begin(1)) {
+    auto st_range = raptor_visitor().st_range(*in_st_dt.first);
+    for (const auto& st: st_range.advance_begin(1)) {
         cur_dt = st.section_end(cur_dt, true);
         if (jp_container.get_jpp(st) == target_jpp) {
             // check if the get_out is valid?
@@ -224,7 +225,7 @@ Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& r
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
-    j.transfer_dur = navitia::seconds(2 * 60 * j.sections.size());
+    j.transfer_dur = reader.transfer_penalty * j.sections.size();
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
         const auto first_transfer_waiting = get_transfer_waiting(data, j.sections[0], j.sections[1]);
@@ -325,7 +326,8 @@ struct RaptorSolutionReader {
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
-                         const type::AccessibiliteParams& access):
+                         const type::AccessibiliteParams& access,
+                         const navitia::time_duration& transfer_penalty):
         raptor(r),
         v(vis),
         departure_datetime(departure_dt),
@@ -333,6 +335,7 @@ struct RaptorSolutionReader {
         sp_dur_arrs(arrs),
         rt_level(rt_level),
         accessibilite_params(access),
+        transfer_penalty(transfer_penalty),
         // Dominates need request_clockwise (the same as reader's visitor)
         solutions(Dominates(v.clockwise()))
     {}
@@ -343,6 +346,7 @@ struct RaptorSolutionReader {
     const routing::map_stop_point_duration& sp_dur_arrs;// arrivals (not clockwise dependent)
     const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
+    const navitia::time_duration transfer_penalty;
     Solutions solutions;
 
     size_t nb_sol_added = 0;
@@ -437,9 +441,13 @@ struct RaptorSolutionReader {
             //for frequency, we need cur_dt to be the begin in the stoptime
             cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
         }
-        for (const auto& end_st: v.st_range(*begin_st_dt.first).advance_begin(1)) {
+        // Note: We keep a ref on the range because the advance_begin return a ref on the object
+        // and some gcc version optimize out the inner range
+        auto r = v.st_range(*begin_st_dt.first);
+        for (const auto& end_st: r.advance_begin(1)) {
             cur_dt = end_st.section_end(cur_dt, v.clockwise());
         }
+
         return cur_dt;
     }
 
@@ -510,10 +518,11 @@ Solutions read_solutions(const RAPTOR& raptor,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
-                         const type::AccessibiliteParams& accessibilite_params)
+                         const type::AccessibiliteParams& accessibilite_params,
+                         const navitia::time_duration& transfer_penalty)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, v, departure_datetime, deps, arrs, rt_level, accessibilite_params);
+        raptor, v, departure_datetime, deps, arrs, rt_level, accessibilite_params, transfer_penalty);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -590,14 +599,15 @@ Solutions read_solutions(const RAPTOR& raptor,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
-                         const type::AccessibiliteParams& accessibilite_params)
+                         const type::AccessibiliteParams& accessibilite_params,
+                         const navitia::time_duration& transfer_penalty)
 {
     if (clockwise) {
         return read_solutions(raptor, raptor_reverse_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params);
+                              rt_level, accessibilite_params, transfer_penalty);
     } else {
         return read_solutions(raptor, raptor_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params);
+                              rt_level, accessibilite_params, transfer_penalty);
     }
 }
 

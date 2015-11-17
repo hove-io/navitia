@@ -47,10 +47,10 @@ struct aggregate_odt_fixture {
 
     aggregate_odt_fixture() : b("20140210"){
         {// possible in none type
-            regular_vj = b.vj("none")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+            regular_vj = b.vj("none")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
 
             virtual_with_stop_time_vj =
-                b.vj("none")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+                b.vj("none")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
             for (auto& st: virtual_with_stop_time_vj->stop_time_list) { st.set_odt(true); }
         }
 
@@ -58,18 +58,18 @@ struct aggregate_odt_fixture {
             b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000);
 
             auto* vj =
-                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
             for (auto& st: vj->stop_time_list) { st.set_odt(true); }
 
             virtual_without_stop_time_vj =
-                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
             for (auto& st: virtual_without_stop_time_vj->stop_time_list) {
                 st.set_odt(true);
                 st.set_date_time_estimated(true);
             }
 
             stop_point_to_stop_point_vj =
-                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000).vj;
+                b.vj("mixed")("1", 8000, 8000)("2", 9000, 9000).make();
             for (auto& st: stop_point_to_stop_point_vj->stop_time_list) {
                 st.set_odt(true);
                 st.set_date_time_estimated(true);
@@ -80,30 +80,30 @@ struct aggregate_odt_fixture {
             b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000);
 
             auto* vj =
-                b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+                b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
             for (auto& st: vj->stop_time_list) { st.set_odt(true); }
 
-            vj = b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).vj;
+            vj = b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000)("3", 10000, 10000).make();
             for (auto& st: vj->stop_time_list) {
                 st.set_odt(true);
                 st.set_date_time_estimated(true);
             }
 
-            vj = b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000).vj;
+            vj = b.vj("zonal")("1", 8000, 8000)("2", 9000, 9000).make();
             for (auto& st: vj->stop_time_list) {
                 st.set_odt(true);
                 st.set_date_time_estimated(true);
             }
 
             address_to_stop_point_vj =
-                b.vj("zonal")("zone1", 8000, 8000)("2", 9000, 9000).vj;
+                b.vj("zonal")("zone1", 8000, 8000)("2", 9000, 9000).make();
             address_to_stop_point_vj->stop_time_list.at(0).set_odt(true);
             address_to_stop_point_vj->stop_time_list.at(0).set_date_time_estimated(true);
             address_to_stop_point_vj->stop_time_list.at(0).set_odt(true);
             address_to_stop_point_vj->stop_time_list.at(0).set_date_time_estimated(true);
 
             odt_point_to_point_vj =
-                b.vj("zonal")("zone1", 8000, 8000)("zone2", 9000, 9000).vj;
+                b.vj("zonal")("zone1", 8000, 8000)("zone2", 9000, 9000).make();
             odt_point_to_point_vj->stop_time_list.at(0).set_odt(true);
             odt_point_to_point_vj->stop_time_list.at(0).set_date_time_estimated(true);
             odt_point_to_point_vj->stop_time_list.at(1).set_odt(true);

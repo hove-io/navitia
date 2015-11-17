@@ -37,7 +37,7 @@ www.navitia.io
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/set.hpp>
 #include <map>
@@ -339,6 +339,8 @@ struct GeoRef {
     type::Mode_e get_mode(vertex_t vertex) const;
     PathItem::TransportCaracteristic get_caracteristic(edge_t edge) const;
     ~GeoRef();
+    GeoRef() = default;
+    GeoRef(const GeoRef& other) = default;
 };
 
 /** When given a coordinate, we have to associate it with the street network.

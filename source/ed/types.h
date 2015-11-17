@@ -275,6 +275,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     VehicleJourney* prev_vj = nullptr;
     VehicleJourney* next_vj = nullptr;
 
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+
     bool operator<(const VehicleJourney& other) const;
 };
 
@@ -317,8 +319,8 @@ struct StopTime {
 
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {
-        arrival_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
-        departure_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        arrival_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+        departure_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         assert(arrival_time >= 0 && departure_time >= 0);
     }
 };

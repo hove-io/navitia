@@ -135,7 +135,13 @@ class InstanceManager(object):
 
     def _clear_cache(self):
         logging.getLogger(__name__).info('clear cache')
-        cache.delete_memoized(self._all_keys_of_id)
+        try:
+            cache.delete_memoized(self._all_keys_of_id)
+        except RuntimeError:
+            #if there is an error with cache, flask want to access to the app, this will fail at startup
+            #with a "working outside of application context"
+            logger = logging.getLogger(__name__)
+            logger.exception('there seem to be some kind of problems with the cache')
 
     def dispatch(self, arguments, api, instance_name=None):
         if instance_name not in self.instances:

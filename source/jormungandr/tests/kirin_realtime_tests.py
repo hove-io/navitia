@@ -106,8 +106,78 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         #eq_(len(new_base['disruptions']), 1)
         assert new_base['journeys'] == response['journeys']
 
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
+    def test_vj_delay(self):
+        """
+        send a mock kirin vj delay and test that the vj is not taken
+        """
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
 
-def make_mock_kirin_item(vj_id, date, status='delayed'):
+        # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
+        eq_(_get_arrivals(response), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(response), [['vjA'], []])
+
+        pt_response = self.query_region('vehicle_journeys')
+        eq_(len(pt_response['vehicle_journeys']), 4)
+
+        # no disruption yet
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 0)
+
+        self.send_mock("vjA", "20120614", 'delayed',
+                       [("stop_point:stopB", 1339660944, 1339660944),
+                        ("stop_point:stopA", 1339661040, 1339661040)])
+
+        # A new vj is created
+        pt_response = self.query_region('vehicle_journeys')
+        eq_(len(pt_response['vehicle_journeys']), 5)
+
+        vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
+        assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
+
+        # we should see the disruption
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(_get_used_vj(new_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
+
+        # it should not have changed anything for the theoric
+        new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
+        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(new_base), [['vjA'], []])
+
+        # We send again the same disruption
+        self.send_mock("vjA", "20120614", 'delayed',
+                       [("stop_point:stopB", 1339660944, 1339660944),
+                        ("stop_point:stopA", 1339661040, 1339661040)])
+
+        # A new vj is created
+        pt_response = self.query_region('vehicle_journeys')
+        # No vj cleaning for the moment, vj nb SHOULD be 5, the first vj created for the first
+        # disruption is useless
+        eq_(len(pt_response['vehicle_journeys']), 6)
+
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+
+        # so the first real-time vj created for the first disruption should be deactivated
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(_get_used_vj(new_response), [[], ['vjA:modified:1:96231_2015-07-28_0']])
+
+        # it should not have changed anything for the theoric
+        new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
+        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(_get_used_vj(new_base), [['vjA'], []])
+
+
+def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -123,6 +193,13 @@ def make_mock_kirin_item(vj_id, date, status='delayed'):
 
     if status == 'canceled':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED
+    elif status == 'delayed':
+        trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.SCHEDULED
+        for st in new_stop_time_list:
+            stop_time_update = trip_update.stop_time_update.add()
+            stop_time_update.stop_id = st[0]
+            stop_time_update.arrival.time = st[1]
+            stop_time_update.departure.time = st[2]
     else:
         #TODO
         pass

@@ -19,3 +19,7 @@ ADD_BOOST_TEST(worker_test)
 add_executable(realtime_test realtime_test.cpp)
 target_link_libraries(realtime_test ed workers data types pb_lib utils log4cplus tcmalloc ${Boost_LIBRARIES} ${Boost_DATE_TIME_LIBRARY} protobuf)
 ADD_BOOST_TEST(realtime_test)
+
+add_executable(apply_disruption_test apply_disruption_test.cpp)
+target_link_libraries(apply_disruption_test make_disruption_from_chaos apply_disruption ed workers data types pb_lib utils log4cplus tcmalloc ${Boost_LIBRARIES} ${Boost_DATE_TIME_LIBRARY} protobuf)
+ADD_BOOST_TEST(apply_disruption_test)

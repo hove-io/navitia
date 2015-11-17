@@ -47,7 +47,7 @@ www.navitia.io
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/bitset.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 #include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
@@ -309,7 +309,7 @@ public:
             const boost::posix_time::ptime& current_time) const;
 
 
-    std::vector<boost::weak_ptr<disruption::Impact>> get_impacts() const {
+    const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
         return impacts;
     }
 
@@ -773,17 +773,18 @@ struct Route : public Header, Nameable, HasMessages {
     Line* line = nullptr;
     StopArea* destination = nullptr;
     MultiLineString shape;
-    std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
-    std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
+
+    std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
+    std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
 
     type::hasOdtProperties get_odt_properties() const;
 
     template<typename T>
     void for_each_vehicle_journey(const T func) const {
-        //call the functor for each vj.
+        // call the functor for each vj.
         // if func return false, we stop
-        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) { return; } }
-        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) { return; } }
+        for (auto* vj: discrete_vehicle_journey_list) { if (! func(*vj)) { return; } }
+        for (auto* vj: frequency_vehicle_journey_list) { if (! func(*vj)) { return; } }
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -832,6 +833,9 @@ struct StopTime {
     StopPoint* stop_point = nullptr;
     const LineString* shape_from_prev = nullptr;
 
+    StopTime() = default;
+    StopTime(uint32_t arr_time, uint32_t dep_time, StopPoint* stop_point):
+        arrival_time{arr_time}, departure_time{dep_time}, stop_point{stop_point}{}
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
@@ -996,24 +1000,37 @@ struct MetaVehicleJourney: public Header, HasMessages {
            & impacted_by;
     }
 
-    // TODO XL: this function should be called in places where add_vj is called, because MetaVehicleJourney will
-    //          have the ownership of vjs instead of data
-    VehicleJourney* create_vj(/*args,*/ RTLevel level);
-
-    void add_vj(VehicleJourney* vj, RTLevel level) {
-        rtlevel_to_vjs_map[level].push_back(vj);
-    }
+    FrequencyVehicleJourney*
+    create_frequency_vj(const std::string& uri,
+                        const RTLevel,
+                        const ValidityPattern&,
+                        Route*,
+                        std::vector<StopTime>,
+                        PT_Data&);
+    DiscreteVehicleJourney*
+    create_discrete_vj(const std::string& uri,
+                       const RTLevel,
+                       const ValidityPattern&,
+                       Route*,
+                       std::vector<StopTime>,
+                       PT_Data&);
 
     template<typename T>
     void for_all_vjs(T fun) const{
         for (const auto& rt_vjs: rtlevel_to_vjs_map) {
             auto& vjs = rt_vjs.second;
-            boost::for_each(vjs, [&](VehicleJourney* vj){fun(*vj);});
+            boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj){fun(*vj);});
         }
     }
 
-    const std::vector<VehicleJourney*>& get_base_vj() const {
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
+    }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_adapted_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::Adapted];
+    }
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_rt_vj() const {
+        return rtlevel_to_vjs_map[RTLevel::RealTime];
     }
 
     void cancel_vj(RTLevel level,
@@ -1028,7 +1045,15 @@ struct MetaVehicleJourney: public Header, HasMessages {
                       const MetaData& meta, const Route* filtering_route = nullptr) const;
 
 private:
-    navitia::flat_enum_map<RTLevel, std::vector<VehicleJourney*>> rtlevel_to_vjs_map;
+    template<typename VJ>
+    VJ* impl_create_vj(const std::string& uri,
+                       const RTLevel,
+                       const ValidityPattern&,
+                       Route*,
+                       std::vector<StopTime>,
+                       PT_Data&);
+
+    navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
 };
 
 struct static_data {

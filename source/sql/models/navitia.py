@@ -89,16 +89,6 @@ validity_pattern = Table('validity_pattern', metadata,*[
     Column('days', BIT(length=400, varying=True), primary_key=False, nullable=False),],
     schema='navitia')
 
-
-rel_metavj_vj = Table('rel_metavj_vj', metadata,*[
-    Column('meta_vj', BIGINT(), primary_key=False),
-    Column('vehicle_journey', BIGINT(), primary_key=False),
-    Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['vehicle_journey'], [u'navitia.vehicle_journey.id'], name=u'rel_metavj_vj_vehicle_journey_fkey'),
-    ForeignKeyConstraint(['meta_vj'], [u'navitia.meta_vj.id'], name=u'rel_metavj_vj_meta_vj_fkey'),
-    ],
-    schema='navitia')
-
 associated_calendar = Table('associated_calendar', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".associated_calendar_id_seq\'::regclass)')),
     Column('calendar_id', BIGINT(), primary_key=False, nullable=False),
@@ -252,6 +242,8 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('headway_sec', INTEGER(), primary_key=False),
     Column('utc_to_local_offset', INTEGER(), primary_key=False),
     Column('is_frequency', BOOLEAN(), primary_key=False),
+    Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), server_default=u'Theoric', default=u'Theoric', primary_key=False, nullable=False),
+    Column('meta_vj_name', TEXT(), primary_key=False),
     ForeignKeyConstraint(['vehicle_properties_id'], [u'navitia.vehicle_properties.id'], name=u'vehicle_journey_vehicle_properties_id_fkey'),
     ForeignKeyConstraint(['validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['previous_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_previous_vehicle_journey_id_fkey'),

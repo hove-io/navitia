@@ -43,9 +43,11 @@ from navitiacommon import default_values
 
 db = SQLAlchemy()
 
+
 class TimestampMixin(object):
     created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
+
 
 # https://bitbucket.org/zzzeek/sqlalchemy/issues/3467/array-of-enums-does-not-allow-assigning
 class ArrayOfEnum(ARRAY):
@@ -84,6 +86,7 @@ class EndPoint(db.Model):
     def get_default(cls):
         return cls.query.filter(cls.default == True).first_or_404()
 
+
 class Host(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.Text, nullable=False)
@@ -95,6 +98,7 @@ class Host(db.Model):
     def __unicode__(self):
         return self.value
 
+
 class User(db.Model):
     __table_args__ = (UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
                       UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'))
@@ -104,6 +108,9 @@ class User(db.Model):
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
+
+    billing_plan_id = db.Column(db.Integer, db.ForeignKey('billing_plan.id'), nullable=False)
+    billing_plan = db.relationship('BillingPlan', lazy='joined', cascade='save-update, merge')
 
     keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
 
@@ -184,6 +191,7 @@ class Key(db.Model):
     @classmethod
     def get_by_token(cls, token):
         return cls.query.filter_by(token=token).first()
+
 
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -389,6 +397,7 @@ class Job(db.Model, TimestampMixin):
     def __repr__(self):
         return '<Job %r>' % self.id
 
+
 class Metric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
@@ -403,6 +412,7 @@ class Metric(db.Model):
 
     def __repr__(self):
         return '<Metric {}>'.format(self.id)
+
 
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -427,3 +437,17 @@ class DataSet(db.Model):
     def __repr__(self):
         return '<DataSet %r>' % self.id
 
+
+class BillingPlan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    max_request_count = db.Column(db.Integer, nullable=False)
+    max_object_count = db.Column(db.Integer, nullable=False)
+    default = db.Column(db.Boolean, nullable=False, default=False)
+
+    end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
+    end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
+
+    @classmethod
+    def get_default(cls, end_point):
+        return cls.query.filter_by(default=True, end_point=end_point).first()

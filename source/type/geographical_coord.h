@@ -40,7 +40,7 @@ www.navitia.io
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/serialization/vector.hpp>
+#include "utils/serialization_vector.h"
 
 namespace navitia { namespace type {
 

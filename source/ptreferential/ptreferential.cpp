@@ -45,7 +45,12 @@ www.navitia.io
 #include <boost/spirit/include/phoenix1_binders.hpp>
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 105700
+#include <boost/phoenix/object/construct.hpp>
+#else
 #include <boost/spirit/home/phoenix/object/construct.hpp>
+#endif
 #include <boost/date_time/time_duration.hpp>
 #include "type/pt_data.h"
 #include "type/meta_data.h"

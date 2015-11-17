@@ -510,7 +510,8 @@ struct routing_api_data {
     void add_disruptions() {
         nt::disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
         auto default_date = "20120801T000000"_dt;
-        auto default_period = boost::posix_time::time_period(default_date, "20120901T120000"_dt);
+        using btp = boost::posix_time::time_period;
+        auto default_period = btp(default_date, "20120901T120000"_dt);
 
         auto info_severity = boost::make_shared<Severity>();
         info_severity->uri = "info";
@@ -532,218 +533,115 @@ struct routing_api_data {
         foo_severity->color = "#FFFFF0";
         foo_severity->priority = 50;
         holder.severities[foo_severity->uri] = foo_severity;
-        std::set<ChannelType> channel_types;
 
-        {
-            //we create one disruption on stop A
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_on_stop_A";
-            //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
-            disruption->publication_period = default_period;
-            std::cout << "disruption publication periode " << disruption->publication_period << std::endl;
-            auto tag = boost::make_shared<Tag>();
-            tag->uri = "tag";
-            tag->name = "tag name";
-            disruption->tags.push_back(tag);
+        //we create one disruption on stop A
+        b.disrupt(nt::RTLevel::Adapted, "disruption_on_stop_A")
+                .publication_period(default_period)
+                .tag("tag")
+                .impact()
+                    .uri("too_bad")
+                    .application_periods(default_period)
+                    .severity("info")
+                    .on(nt::Type_e::StopArea, "stopA")
+                    .msg("no luck", nt::disruption::ChannelType::sms)
+                    .msg("try again", nt::disruption::ChannelType::sms);
 
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad";
-            impact->application_periods = {default_period};
+        //we create one disruption on line A
+        b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A")
+                .publication_period(default_period)
+                .contributor("contrib")
+                .impact()
+                    .uri("too_bad_again")
+                    .application_periods(default_period)
+                    .severity("disruption")
+                    .on(nt::Type_e::Line, "A")
+                    .on(nt::Type_e::Network, "base_network")
+                    .msg("sad message", nt::disruption::ChannelType::sms)
+                    .msg("too sad message", nt::disruption::ChannelType::sms);
 
-            impact->severity = info_severity;
+        //we create another disruption on line A, but with
+        //different date to test the period filtering
+        b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A_but_later")
+                .publication_period(default_period)
+                .impact()
+                    .uri("later_impact")
+                    .application_periods(btp("20121001T000000"_dt, "20121015T120000"_dt))
+                    .application_periods(btp("20121201T000000"_dt, "20121215T120000"_dt))
+                    .severity("info")
+                    .on(nt::Type_e::Line, "A")
+                    .on(nt::Type_e::Network, "base_network")
+                    .msg("sad message", nt::disruption::ChannelType::sms)
+                    .msg("too sad message", nt::disruption::ChannelType::sms);
 
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
 
-            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"try again", "email", "email", "content type", default_date, default_date, channel_types});
+        //we create another disruption on line A, but not publish at the same date as the other ones
+        //this one is published from the 28th
+        b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A_but_publish_later")
+                .publication_period(btp("20120828T120000"_dt, "20120901T120000"_dt))
+                .impact()
+                    .uri("impact_published_later")
+                    .application_periods(default_period)
+                    .severity("info")
+                    .on(nt::Type_e::Line, "A")
+                    //add another pt impacted object just to test with several
+                    .on(nt::Type_e::Network, "base_network")
+                    .msg("sad message", nt::disruption::ChannelType::sms)
+                    .msg("too sad message", nt::disruption::ChannelType::sms);
 
-            disruption->add_impact(impact);
+        auto dis_proper_period = boost::posix_time::time_period("20120614T060000"_dt, "20120614T120000"_dt);
+        b.disrupt(nt::RTLevel::Adapted, "disruption_all_lines_at_proper_time")
+                .publication_period(dis_proper_period)
+                .impact()
+                    .uri("too_bad_all_lines")
+                    .application_periods(dis_proper_period)
+                    .severity("info")
+                    .on(nt::Type_e::Line, "A")
+                    .on(nt::Type_e::Line, "B")
+                    .on(nt::Type_e::Line, "C")
+                    .msg("no luck", nt::disruption::ChannelType::sms)
+                    .msg("try again", nt::disruption::ChannelType::sms);
 
-            holder.disruptions.push_back(std::move(disruption));
-        }
+        auto route_period = boost::posix_time::time_period("20130226T060000"_dt, "20130228T120000"_dt);
+        //we create one disruption on route A:0
+        b.disrupt(nt::RTLevel::Adapted, "disruption_route_A:0")
+                .publication_period(route_period)
+                .impact()
+                    .uri("too_bad_route_A:0")
+                    .application_periods(route_period)
+                    .severity("info")
+                    .on(nt::Type_e::Route, "A:0")
+                    .msg({"no luck", "sms", "sms", "content type", default_date, default_date,
+                          {ChannelType::web, ChannelType::sms}})
+                    .msg({"try again", "email", "email", "content type", default_date, default_date,
+                          {ChannelType::web, ChannelType::email}});
 
-        {
-            //we create one disruption on line A
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_on_line_A";
-            disruption->publication_period = default_period;
-            disruption->contributor = "contrib";
+        //we create one disruption on route A:0
+        auto dis_maker_period = boost::posix_time::time_period("20130426T060000"_dt, "20130430T120000"_dt);
+        auto disruption_maker = b.disrupt(nt::RTLevel::Adapted, "disruption_route_A:0_and_line")
+                                          .publication_period(dis_maker_period);
 
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_again";
-            impact->application_periods = {default_period};
-            impact->severity = bad_severity;
+        disruption_maker.impact()
+                .uri("too_bad_route_A:0_and_line")
+                .application_periods(dis_maker_period)
+                .severity("info")
+                .on(nt::Type_e::Route, "A:0")
+                .on(nt::Type_e::Line, "A")
+                .msg("no luck", nt::disruption::ChannelType::sms)
+                .msg("try again", nt::disruption::ChannelType::sms);
 
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
-            //add another pt impacted object just to test with several
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+        disruption_maker.impact()
+                .uri("too_bad_line_B")
+                .application_periods(dis_maker_period)
+                .severity("disruption")
+                .on(nt::Type_e::Line, "B")
+                .msg("try again", nt::disruption::ChannelType::sms);
 
-            impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-
-        {
-            //we create another disruption on line A, but with
-            //different date to test the period filtering
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_on_line_A_but_later";
-            disruption->publication_period = default_period;
-
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "later_impact";
-            impact->application_periods = {
-                boost::posix_time::time_period("20121001T000000"_dt, "20121015T120000"_dt),
-                boost::posix_time::time_period("20121201T000000"_dt, "20121215T120000"_dt)};
-
-            impact->severity = info_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
-            //add another pt impacted object just to test with several
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-        {
-            //we create another disruption on line A, but not publish at the same date as the other ones
-            //this one is published from the 28th
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_on_line_A_but_publish_later";
-            disruption->publication_period = boost::posix_time::time_period("20120828T120000"_dt, "20120901T120000"_dt);;
-
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "impact_published_later";
-            impact->application_periods = {default_period};
-            impact->severity = info_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
-            //add another pt impacted object just to test with several
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"too sad message", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-
-        {
-            auto period = boost::posix_time::time_period("20120614T060000"_dt, "20120614T120000"_dt);
-            //we create one disruption on line A
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_all_lines_at_proper_time";
-            disruption->publication_period = period;
-            auto tag = boost::make_shared<Tag>();
-            tag->uri = "tag";
-            tag->name = "tag name";
-            disruption->tags.push_back(tag);
-
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_all_lines";
-            impact->application_periods = {period};
-
-            impact->severity = info_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-
-        {
-            auto period = boost::posix_time::time_period("20130226T060000"_dt, "20130228T120000"_dt);
-            //we create one disruption on line A
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_route_A:0";
-            disruption->publication_period = period;
-            auto tag = boost::make_shared<Tag>();
-            tag->uri = "tag";
-            tag->name = "tag name";
-            disruption->tags.push_back(tag);
-
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_route_A:0";
-            impact->application_periods = {period};
-
-            impact->severity = info_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, {ChannelType::web, ChannelType::sms}});
-            impact->messages.push_back({"try again", "email", "email", "content type", default_date, default_date, {ChannelType::web, ChannelType::email}});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-
-        {
-            auto period = boost::posix_time::time_period("20130426T060000"_dt, "20130430T120000"_dt);
-            //we create one disruption on line A
-            auto disruption = std::make_unique<Disruption>();
-            disruption->uri = "disruption_route_A:0_and_line";
-            disruption->publication_period = period;
-            auto tag = boost::make_shared<Tag>();
-            tag->uri = "tag";
-            tag->name = "tag name";
-            disruption->tags.push_back(tag);
-
-            auto impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_route_A:0_and_line";
-            impact->application_periods = {period};
-
-            impact->severity = info_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, "A:0", *b.data->pt_data, impact));
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"no luck", "sms", "sms", "content type", default_date, default_date, channel_types});
-            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_line_B";
-            impact->application_periods = {period};
-
-            impact->severity = bad_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "B", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            impact = boost::make_shared<Impact>();
-            impact->uri = "too_bad_line_C";
-            impact->application_periods = {period};
-
-            impact->severity = foo_severity;
-
-            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "C", *b.data->pt_data, impact));
-
-            impact->messages.push_back({"try again", "sms", "sms", "content type", default_date, default_date, channel_types});
-
-            disruption->add_impact(impact);
-
-            holder.disruptions.push_back(std::move(disruption));
-        }
-
+        disruption_maker.impact()
+                .uri("too_bad_line_C")
+                .application_periods(dis_maker_period)
+                .severity("foo")
+                .on(nt::Type_e::Line, "C")
+                .msg("try again", nt::disruption::ChannelType::sms);
     }
 
     int AA = 0;

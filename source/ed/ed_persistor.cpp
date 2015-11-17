@@ -469,7 +469,7 @@ void EdPersistor::clean_db(){
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
         "navitia.week_pattern, "
-        "navitia.meta_vj, navitia.rel_metavj_vj, navitia.object_properties, navitia.object_code, "
+        "navitia.meta_vj, navitia.object_properties, navitia.object_code, "
         "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
 		"navitia.line_group, navitia.line_group_link"
         " CASCADE");
@@ -926,7 +926,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "route_id", "physical_mode_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message", "utc_to_local_offset", "is_frequency"});
+             "odt_type_id", "odt_message", "utc_to_local_offset", "is_frequency", "meta_vj_name", "vj_class"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -970,6 +970,11 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
         bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
         values.push_back(std::to_string(is_frequency));
+        
+        // meta_vj's name is the same as the one of vj
+        values.push_back(vj->meta_vj_name);
+        // vj_class
+        values.push_back(navitia::type::get_string_from_rt_level(vj->realtime_level));
 
         this->lotus.insert(values);
     }
@@ -1003,30 +1008,6 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
     size_t cpt(0);
     for (const auto& meta_vj_pair: meta_vjs) {
         this->lotus.insert({std::to_string(cpt), meta_vj_pair.first});
-        cpt++;
-    }
-    this->lotus.finish_bulk_insert();
-
-    //then the links between meta vj and vj
-    this->lotus.prepare_bulk_insert("navitia.rel_metavj_vj", {"meta_vj", "vehicle_journey", "vj_class"});
-    cpt = 0;
-    for (const auto& meta_vj_pair: meta_vjs) {
-        const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
-        const std::vector<std::pair<std::string, const std::vector<types::VehicleJourney*>& > > list_vj = {
-            {"Theoric", meta_vj.theoric_vj},
-            {"Adapted", meta_vj.adapted_vj},
-            {"RealTime", meta_vj.real_time_vj}
-        };
-
-        for (const auto& name_list: list_vj) {
-            for (const types::VehicleJourney* vj: name_list.second) {
-
-                this->lotus.insert({std::to_string(cpt),
-                                    std::to_string(vj->idx),
-                                    name_list.first
-                                   });
-            }
-        }
         cpt++;
     }
     this->lotus.finish_bulk_insert();

@@ -262,34 +262,33 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
-    auto disruption = std::make_unique<nt::disruption::Disruption>(chaos_disruption.id(), nt::RTLevel::Adapted);
+    auto& disruption = holder.make_disruption(chaos_disruption.id(), nt::RTLevel::Adapted);
 
     if (chaos_disruption.has_contributor()) {
-        disruption->contributor = chaos_disruption.contributor();
+        disruption.contributor = chaos_disruption.contributor();
     }
 
-    disruption->reference = chaos_disruption.reference();
-    disruption->publication_period = {
+    disruption.reference = chaos_disruption.reference();
+    disruption.publication_period = {
         from_posix(chaos_disruption.publication_period().start()),
         from_posix(chaos_disruption.publication_period().end())
     };
-    disruption->created_at = from_posix(chaos_disruption.created_at());
-    disruption->updated_at = from_posix(chaos_disruption.updated_at());
-    disruption->cause = make_cause(chaos_disruption.cause(), holder);
+    disruption.created_at = from_posix(chaos_disruption.created_at());
+    disruption.updated_at = from_posix(chaos_disruption.updated_at());
+    disruption.cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
         auto impact = make_impact(chaos_impact, pt_data);
-        disruption->add_impact(impact);
+        disruption.add_impact(impact);
     }
-    disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
+    disruption.localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
-        disruption->tags.push_back(make_tag(chaos_tag, holder));
+        disruption.tags.push_back(make_tag(chaos_tag, holder));
     }
-    disruption->note = chaos_disruption.note();
+    disruption.note = chaos_disruption.note();
 
-    holder.disruptions.push_back(std::move(disruption));
     LOG4CPLUS_DEBUG(log, chaos_disruption.id() << " disruption added");
 
-    return *holder.disruptions.back();
+    return disruption;
 }
 
 void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,

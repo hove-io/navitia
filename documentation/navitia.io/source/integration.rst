@@ -37,14 +37,22 @@ Some easy examples
 * Networks available? (see what network_ is)
 
     * https://api.navitia.io/v1/coverage/fr-idf/networks
+    * pwooo, many networks on this coverage ;)
 
-* RATP network lines? > https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines 
-* Too many lines, let's use physical mode filtering
+* Is there any Metro lines or networks? 
 
-    * physical modes managed by RATP 
-    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes
+    * there is an api for that. See `pt_objects`_ 
+    * https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro
+    * Response contain one network, one mode, and many lines
+
+* Let's try some filtering (see `ptreferential`_)
+
+    * filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/
+    * physical modes managed by this network
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes
     * metro lines 
-    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/physical_modes/physical_mode:Metro/lines
+    * https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines
 
 * By the way, what stuff are close to me?
 
@@ -190,7 +198,7 @@ you will find a *links* section:
 	}
 
 You have to put one line id instead of "{lines.id}". For example:
-https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
+https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:043043001:N1OIF658/stop_schedules
 
 .. _inner-reference:
 
@@ -335,6 +343,7 @@ https://api.navitia.io/v1/coverage/fr-idf/
             ]
     }
 
+.. _ptreferential:
 
 Public transportation objects exploration (/networks or /lines or /routes...)
 *****************************************************************************
@@ -372,25 +381,25 @@ Here is some examples around "metro line 1" from the Parisian network:
 * Get "line 1" id 
 
 	* https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201
-	* The id is "line:RTP:1197611"
+	* The id is "line:OIF:100110001:1OIF439"
 
 * Get routes for this line 
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes
 
 * Want to get a tiny response? Just add "depth=0"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=0
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=0
 	* The response is lighter (parent lines disappear for example)
 
 * Want more informations, just add "depth=2"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=2
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=2
 	* The response is a little more verbose (with some geojson appear in response)
 
 * Wanna fat more informations, let's try "depth=3"
 
-	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:RTP:1197611/routes?depth=3
+	* https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=3
 	* Big response: all stop_points are shown
 
 * Wanna spam the internet bandwidth? Try "depth=42"
@@ -531,18 +540,13 @@ Other examples
 
     * https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
 
+.. _pt_objects:
 
 Public Transport objects autocomplete (/pt_objects)
 ***************************************************
 
 This api search in public transport objects via their names. It's a kind of magical autocomplete on public transport data.
 It returns, in addition of classic objects, a collection of places_ .
-
-+------------------------------------------+
-| *Warning*                                |
-|                                          |
-|    There is no pagination for this api   |
-+------------------------------------------+
 
 How does it works
 #################
@@ -604,6 +608,12 @@ Parameters
 +---------+---------------+----------------------------+------------------------------------+-----------------------------+
 
 
++------------------------------------------+
+| *Warning*                                |
+|                                          |
+|    There is no pagination for this api   |
++------------------------------------------+
+
 Example
 #######
 
@@ -612,7 +622,7 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bu
 .. code-block:: json
 
     {
-    "places": [
+    "pt_objects": [
         {
             {
 
@@ -620,8 +630,8 @@ Response example for : https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bu
                 "line": {
                     ...
                 },
-                "id": "line:RTP:1258386",
-                "name": " RATP Bus 39 (Gare du Nord - Issy Frères Voisin)"
+                "id": "line:OIF:100100091:91OIF442",
+                "name": "RATP Bus 91 (MOBILIEN 91)"
 
             },
                     },
@@ -861,6 +871,23 @@ Main parameters
 | nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
 |          |                       |           | networks, etc.                            |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | data_freshness        | enum      | Define the freshness of data to use to    | base_schedule   |
+|          |                       |           | compute journeys                          |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | * real_time                               |                 |
+|          |                       |           | * base_schedule                           |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | when using the following parameter        |                 |
+|          |                       |           |      "&data_freshness=base_schedule"      |                 |
+|          |                       |           | you can get disrupted journeys in the     |                 |
+|          |                       |           | response.                                 |                 |
+|          |                       |           | You can then display the disruption       |                 |
+|          |                       |           | message to the traveler and make a        |                 |
+|          |                       |           | real_time request to get a new            |                 |
+|          |                       |           | undisrupted solution.                     |                 |
+|          |                       |           |                                           |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+
 
 Other parameters
 ################
@@ -926,9 +953,13 @@ Other parameters
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers       | int       | Maximum of number transfers               | 10              |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | disruption_active     | boolean   | If true the algorithm take the disruptions| False           |
+| nop      | disruption_active     | boolean   | For compatibility use only.               | False           |
+|          |                       |           | If true the algorithm take the disruptions|                 |
 |          |                       |           | into account, and thus avoid disrupted    |                 |
-|          |                       |           | public transport                          |                 |
+|          |                       |           | public transport.                         |                 |
+|          |                       |           | Rq: "disruption_active=true" =            |                 |
+|          |                       |           |     "data_freshness=real_time"            |                 |
+|          |                       |           | Use "data_freshness" parameter instead    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
 |          |                       |           | be using a wheelchair, thus only          |                 |
@@ -996,6 +1027,23 @@ ______________
 | tags                | array of string          | List of tags on the journey. The tags add additional         |
 |                     |                          | information on the journey beside the journey type.          |
 |                     |                          | See for example `multiple_journeys`_.                        |
++---------------------+--------------------------+--------------------------------------------------------------+
+| status              | *enum*                   | Status from the whole journey taking into acount the most    |
+|                     |                          | disturbing information retrieved on every object used.       |
+|                     |                          | Can be:                                                      |
+|                     |                          |                                                              |
+|                     |                          | * NO_SERVICE                                                 |
+|                     |                          | * REDUCED_SERVICE                                            |
+|                     |                          | * SIGNIFICANT_DELAYS                                         |
+|                     |                          | * DETOUR                                                     |
+|                     |                          | * ADDITIONAL_SERVICE                                         |
+|                     |                          | * MODIFIED_SERVICE                                           |
+|                     |                          | * OTHER_EFFECT                                               |
+|                     |                          | * UNKNOWN_EFFECT                                             |
+|                     |                          | * STOP_MOVED                                                 |
+|                     |                          |                                                              |
+|                     |                          | In order to get a undisrupted journey, you just have to add  |
+|                     |                          | a "&data_freshness=real_time" parameter                      |
 +---------------------+--------------------------+--------------------------------------------------------------+
 
 
@@ -1194,6 +1242,13 @@ Parameters
 |          |                     |           | columns per                  |               |
 |          |                     |           | schedule.                    |               |
 +----------+---------------------+-----------+------------------------------+---------------+
+| nop      | data_freshness      | enum      | Define the freshness of data | base_schedule |
+|          |                     |           | to use                       |               |
+|          |                     |           |                              |               |
+|          |                     |           | * real_time                  |               |
+|          |                     |           | * base_schedule              |               |
+|          |                     |           |                              |               |
++----------+---------------------+-----------+------------------------------+---------------+
 
 Objects
 #######
@@ -1264,16 +1319,23 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 Parameters
 ##########
 
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| Required | Name                | Type                            | Description                  | Default Value |
-+==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date-time`_                    | The date_time from           |               |
-|          |                     |                                 | which you want the schedules |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
-|          |                     |                                 | between from_datetime        |               |
-|          |                     |                                 | and the retrieved datetimes. |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
++----------+---------------------+---------------+---------------------------------------+---------------+
+| Required | Name                | Type          | Description                           | Default Value |
++==========+=====================+===============+=======================================+===============+
+| yep      | from_datetime       | `date-time`_  | The date_time from                    |               |
+|          |                     |               | which you want the schedules          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
+|          |                     |               | between from_datetime                 |               |
+|          |                     |               | and the retrieved datetimes.          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum          | Define the freshness of data to use   | base_schedule |
+|          |                     |               | to compute journeys                   |               |
+|          |                     |               |                                       |               |
+|          |                     |               | * real_time                           |               |
+|          |                     |               | * base_schedule                       |               |
+|          |                     |               |                                       |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
 
 Stop_schedule object
 ####################
@@ -1296,16 +1358,23 @@ Departures are ordered chronologically in ascending order.
 Parameters
 ##########
 
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| Required | Name                | Type                            | Description                  | Default Value |
-+==========+=====================+=================================+==============================+===============+
-| yep      | from_datetime       | `date-time`_                    | The date_time from           |               |
-|          |                     |                                 | which you want the schedules |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
-| nop      | duration            | int                             | Maximum duration in seconds  | 86400         |
-|          |                     |                                 | between from_datetime        |               |
-|          |                     |                                 | and the retrieved datetimes. |               |
-+----------+---------------------+---------------------------------+------------------------------+---------------+
++----------+---------------------+---------------+---------------------------------------+---------------+
+| Required | Name                | Type          | Description                           | Default Value |
++==========+=====================+===============+=======================================+===============+
+| yep      | from_datetime       | `date-time`_  | The date_time from                    |               |
+|          |                     |               | which you want the schedules          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
+|          |                     |               | between from_datetime                 |               |
+|          |                     |               | and the retrieved datetimes.          |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum          | Define the freshness of data to use   | real_time     |
+|          |                     |               | to compute journeys                   |               |
+|          |                     |               |                                       |               |
+|          |                     |               | * real_time                           |               |
+|          |                     |               | * base_schedule                       |               |
+|          |                     |               |                                       |               |
++----------+---------------------+---------------+---------------------------------------+---------------+
 
 Departure objects
 #################

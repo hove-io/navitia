@@ -511,9 +511,6 @@ static type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& reques
             throw navitia::exception("unhandled realtime level");
         }
     }
-    if (request.disruption_active()) {
-        return type::RTLevel::Adapted;
-    }
     return type::RTLevel::Base;
 }
 

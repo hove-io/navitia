@@ -174,11 +174,11 @@ struct route_schedule_calendar_fixture {
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
         vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5")
-                (S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name, "11:00"_t).vj;
+                (S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name, "11:00"_t).make();
         vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6")
-                (S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t).vj;
+                (S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t).make();
         vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")
-                (S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t).vj;
+                (S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t).make();
 
         // we complicate things a bit, we say that the vjs have a utc offset
         vj5->utc_to_local_offset = "02:00"_t;
@@ -284,7 +284,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal, route_schedule_c
                                                              "00:00"_t + "24:00"_t,
                                                              std::numeric_limits<size_t>::max(),
                                                              *b.data, nt::RTLevel::Base,
-                                                             {c2->uri});
+                                                             boost::optional<const std::string>(c2->uri));
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     boost::sort(res);
@@ -310,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_cal_and_time, route_s
                                                              "12:37"_t + "24:00"_t,
                                                              std::numeric_limits<size_t>::max(),
                                                              *b.data, nt::RTLevel::Base,
-                                                             {c2->uri});
+                                                             boost::optional<const std::string>(c2->uri));
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
@@ -381,11 +381,11 @@ struct CalWithDSTFixture {
         auto normal_vp = "111111";
         auto shifted_vp = "111110";
         b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t)
-                .vj->utc_to_local_offset = "02:00"_t;
+            .make()->utc_to_local_offset = "02:00"_t;
         b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t)
-                .vj->utc_to_local_offset = "02:00"_t;
+            .make()->utc_to_local_offset = "02:00"_t;
         b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t)
-                .vj->utc_to_local_offset = "02:00"_t;
+            .make()->utc_to_local_offset = "02:00"_t;
 
         auto cal = new navitia::type::Calendar();
         cal->uri = "cal";

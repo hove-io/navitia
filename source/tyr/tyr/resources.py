@@ -54,58 +54,83 @@ class FieldDate(fields.Raw):
         else:
             return 'null'
 
-end_point_fields = {'id': fields.Raw,
-                    'name': fields.Raw,
-                    'default': fields.Raw,
-                    'hostnames': fields.List(fields.String),
-                   }
-
-key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
-
-instance_fields = {'id': fields.Raw,
-                   'name': fields.Raw,
-                   'is_free': fields.Raw,
-                   'scenario': fields.Raw,
-                   'journey_order': fields.Raw,
-                   'max_walking_duration_to_pt': fields.Raw,
-                   'max_bike_duration_to_pt': fields.Raw,
-                   'max_bss_duration_to_pt': fields.Raw,
-                   'max_car_duration_to_pt': fields.Raw,
-                   'max_nb_transfers': fields.Raw,
-                   'walking_speed': fields.Raw,
-                   'bike_speed': fields.Raw,
-                   'bss_speed': fields.Raw,
-                   'car_speed': fields.Raw,
-                   'min_bike': fields.Raw,
-                   'min_bss': fields.Raw,
-                   'min_car': fields.Raw,
-                   'min_tc_with_bike': fields.Raw,
-                   'min_tc_with_bss': fields.Raw,
-                   'min_tc_with_car': fields.Raw,
-                   'max_duration_criteria': fields.Raw,
-                   'max_duration_fallback_mode': fields.Raw,
+end_point_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'default': fields.Raw,
+    'hostnames': fields.List(fields.String)
 }
 
-api_fields = {'id': fields.Raw, 'name': fields.Raw}
+key_fields = {
+    'id': fields.Raw,
+    'app_name': fields.Raw,
+    'token': fields.Raw,
+    'valid_until': FieldDate
+}
 
-user_fields = {'id': fields.Raw,
-               'login': fields.Raw,
-               'email': fields.Raw,
-               'type': fields.Raw(),
-                'end_point': fields.Nested(end_point_fields),
-            }
-user_fields_full = {'id': fields.Raw,
-                    'login': fields.Raw,
-                    'email': fields.Raw,
-                    'type': fields.Raw(),
-                    'keys': fields.List(fields.Nested(key_fields)),
-                    'authorizations': fields.List(fields.Nested(
-                        {'instance': fields.Nested(instance_fields),
-                         'api': fields.Nested(api_fields)})),
-                    'end_point': fields.Nested(end_point_fields),
-                }
+instance_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'is_free': fields.Raw,
+    'scenario': fields.Raw,
+    'journey_order': fields.Raw,
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'max_nb_transfers': fields.Raw,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'min_bike': fields.Raw,
+    'min_bss': fields.Raw,
+    'min_car': fields.Raw,
+    'min_tc_with_bike': fields.Raw,
+    'min_tc_with_bss': fields.Raw,
+    'min_tc_with_car': fields.Raw,
+    'max_duration_criteria': fields.Raw,
+    'max_duration_fallback_mode': fields.Raw
+}
 
-jobs_fields = {'jobs': fields.List(fields.Nested({
+api_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw
+}
+
+billing_plan_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw,
+    'default': fields.Raw,
+    'end_point': fields.Nested(end_point_fields)
+}
+
+user_fields = {
+    'id': fields.Raw,
+    'login': fields.Raw,
+    'email': fields.Raw,
+    'type': fields.Raw(),
+    'end_point': fields.Nested(end_point_fields),
+}
+
+user_fields_full = {
+    'id': fields.Raw,
+    'login': fields.Raw,
+    'email': fields.Raw,
+    'type': fields.Raw(),
+    'keys': fields.List(fields.Nested(key_fields)),
+    'authorizations': fields.List(fields.Nested({
+        'instance': fields.Nested(instance_fields),
+        'api': fields.Nested(api_fields)
+    })),
+    'end_point': fields.Nested(end_point_fields),
+    'billing_plan': fields.Nested(billing_plan_fields)
+}
+
+jobs_fields = {
+    'jobs': fields.List(fields.Nested({
         'id': fields.Raw,
         'state': fields.Raw,
         'created_at': FieldDate,
@@ -115,7 +140,8 @@ jobs_fields = {'jobs': fields.List(fields.Nested({
             'name': fields.Raw
         })),
         'instance': fields.Nested(instance_fields)
-}))}
+    }))
+}
 
 traveler_profile = {
     'traveler_type': fields.String,
@@ -146,6 +172,7 @@ class Index(flask_restful.Resource):
     def get(self):
         return {'jobs': {'href': url_for('jobs', _external=True)}}
 
+
 class Job(flask_restful.Resource):
     @marshal_with(jobs_fields)
     def get(self, instance_name=None):
@@ -154,6 +181,7 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
 
 class Instance(flask_restful.Resource):
     def __init__(self):
@@ -276,11 +304,7 @@ class Instance(flask_restful.Resource):
         return marshal(instance, instance_fields)
 
 
-
 class User(flask_restful.Resource):
-    def __init__(self):
-        pass
-
     def get(self, user_id=None):
         if user_id:
             user = models.User.query.get_or_404(user_id)
@@ -319,6 +343,8 @@ class User(flask_restful.Resource):
                 case_sensitive=False, help='email is required', location=('json', 'values'))
         parser.add_argument('end_point_id', type=int, required=False,
                             help='id of the end_point', location=('json', 'values'))
+        parser.add_argument('billing_plan_id', type=int, required=False,
+                            help='id of the billing_plan', location=('json', 'values'))
         parser.add_argument('type', type=str, required=False, default='with_free_instances',
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
@@ -336,10 +362,16 @@ class User(flask_restful.Resource):
         else:
             end_point = models.EndPoint.get_default()
 
+        if args['billing_plan_id']:
+            billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
+        else:
+            billing_plan = models.BillingPlan.get_default(end_point)
+
         try:
             user = models.User(login=args['login'], email=args['email'])
             user.type = args['type']
             user.end_point = end_point
+            user.billing_plan = billing_plan
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
@@ -359,6 +391,8 @@ class User(flask_restful.Resource):
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
         parser.add_argument('end_point_id', type=int, default=user.end_point_id,
                             help='id of the end_point', location=('json', 'values'))
+        parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
+                            help='billing id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -367,11 +401,13 @@ class User(flask_restful.Resource):
             return ({'error': 'email invalid'}, 400)
 
         end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
 
         try:
             user.email = args['email']
             user.type = args['type']
             user.end_point = end_point
+            user.billing_plan = billing_plan
             db.session.commit()
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
@@ -508,6 +544,7 @@ class Authorization(flask_restful.Resource):
             logging.exception("fail")
             raise
         return marshal(user, user_fields_full)
+
 
 class EndPoint(flask_restful.Resource):
 
@@ -701,3 +738,83 @@ class TravelerProfile(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+
+
+class BillingPlan(flask_restful.Resource):
+    def get(self, billing_plan_id=None):
+        if billing_plan_id:
+            billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
+            return marshal(billing_plan, billing_plan_fields)
+        else:
+            billing_plans = models.BillingPlan.query.all()
+            return marshal(billing_plans, billing_plan_fields)
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=True,
+                            case_sensitive=False, help='name is required',
+                            location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False,
+                            help='max request count for this billing plan', location=('json', 'values'))
+        parser.add_argument('max_object_count', type=int, required=False,
+                            help='max object count for this billing plan', location=('json', 'values'))
+        parser.add_argument('default', type=bool, required=False, default=True,
+                            help='if this plan is the default one', location=('json', 'values'))
+        parser.add_argument('end_point_id', type=int, required=False,
+                            help='id of the end_point', location=('json', 'values'))
+        args = parser.parse_args()
+
+        if args['end_point_id']:
+            end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        else:
+            end_point = models.EndPoint.get_default()
+
+        try:
+            billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
+                                              max_object_count=args['max_object_count'], default=args['default'])
+            billing_plan.end_point = end_point
+            db.session.add(billing_plan)
+            db.session.commit()
+            return marshal(billing_plan, billing_plan_fields)
+        except Exception:
+            logging.exception("fail")
+            raise
+
+    def put(self, billing_plan_id=None):
+        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=False, default=billing_plan.name,
+                            case_sensitive=False, location=('json', 'values'))
+        parser.add_argument('max_request_count', type=int, required=False, default=billing_plan.max_request_count,
+                            help='max request count for this billing plan', location=('json', 'values'))
+        parser.add_argument('max_object_count', type=int, required=False, default=billing_plan.max_object_count,
+                            help='max object count for this billing plan', location=('json', 'values'))
+        parser.add_argument('default', type=bool, required=False, default=billing_plan.default,
+                            help='if this plan is the default one', location=('json', 'values'))
+        parser.add_argument('end_point_id', type=int, default=billing_plan.end_point_id,
+                            help='id of the end_point', location=('json', 'values'))
+        args = parser.parse_args()
+
+        end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+
+        try:
+            billing_plan.name = args['name']
+            billing_plan.max_request_count = args['max_request_count']
+            billing_plan.max_object_count = args['max_object_count']
+            billing_plan.default = args['default']
+            billing_plan.end_point = end_point
+            db.session.commit()
+            return marshal(billing_plan, billing_plan_fields)
+        except Exception:
+            logging.exception("fail")
+            raise
+
+    def delete(self, billing_plan_id=None):
+        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
+        try:
+            db.session.delete(billing_plan)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return ({}, 204)
