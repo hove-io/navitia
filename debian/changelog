@@ -1,3 +1,30 @@
+navitia2 (1.30.0) unstable; urgency=low
+
+  * RT: filter non consistent realtime messages  <https://github.com/CanalTP/navitia/pull/1275>
+  * Kraken: fill ntfs object and create disruption from kirin  <https://github.com/CanalTP/navitia/pull/1265>
+  * docker tests: test meta_vjs by trip_id and not name  <https://github.com/CanalTP/navitia/pull/1274>
+  * Ed: retrieving stop_times by chunks  <https://github.com/CanalTP/navitia/pull/1272>
+  * fix meta_vj_name in ed_persistor  <https://github.com/CanalTP/navitia/pull/1273>
+  * type: deactivate the other vj of the metavj when we create a new vj  <https://github.com/CanalTP/navitia/pull/1269>
+  * Tyr: Fixed missing default argument in billing_plans creation method (post)  <https://github.com/CanalTP/navitia/pull/1268>
+  * doc: brief description of using data_freshness parameter and status property  <https://github.com/CanalTP/navitia/pull/1261>
+  * Tests: correct unit and docker tests in debug  <https://github.com/CanalTP/navitia/pull/1270>
+  * Tyr: fix backup directory creation  <https://github.com/CanalTP/navitia/pull/1264>
+  * Build: patches for Ubuntu 15.10  <https://github.com/CanalTP/navitia/pull/1257>
+  * type: MVJ::create_{discrete,frequency}_vj with stop time list given  <https://github.com/CanalTP/navitia/pull/1258>
+  * jormun: don't call redis each time we need the model for the same request  <https://github.com/CanalTP/navitia/pull/1262>
+  * jormun: don't fail at startup if redis is not available  <https://github.com/CanalTP/navitia/pull/1260>
+  * Tyr: New plan API  <https://github.com/CanalTP/navitia/pull/1256>
+  * doc: update integration.rst with new example with great new STIF data  <https://github.com/CanalTP/navitia/pull/1259>
+  * doc: document realtime  <https://github.com/CanalTP/navitia/pull/1252>
+  * kraken: force tcmalloc to release memory after Data deletion  <https://github.com/CanalTP/navitia/pull/1253>
+  * RT: Disruption helper  <https://github.com/CanalTP/navitia/pull/1249>
+  * Raptor: centralize definition of transfer penalty  <https://github.com/CanalTP/navitia/pull/1246>
+  * autocomplete: Multiplication factor modified to 10 for nbmax  <https://github.com/CanalTP/navitia/pull/1251>
+  * Kraken: Implement create vj in mvj  <https://github.com/CanalTP/navitia/pull/1241>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Tue, 17 Nov 2015 18:11:03 +0100
+
 navitia2 (1.29.0) unstable; urgency=low
 
   * All: extra second pass param  <https://github.com/CanalTP/navitia/pull/1245>
