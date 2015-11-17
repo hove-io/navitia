@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
+#include "type/datetime.h"
 #include "kraken/apply_disruption.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -141,11 +142,6 @@ create_disruption(const std::string& id,
                 assert(stop_point_ptr);
                 uint32_t arrival_time = st.arrival().time();
                 uint32_t departure_time = st.departure().time();
-                LOG4CPLUS_TRACE(log, "arrival_time: " << arrival_time);
-                LOG4CPLUS_TRACE(log, "has_arrival_time: " << st.arrival().has_time());
-
-                LOG4CPLUS_TRACE(log, "departure_time: " << departure_time);
-                LOG4CPLUS_TRACE(log, "has_departure_time: "<< st.departure().has_time());
                 {
                     /*
                      * When st.arrival().has_time() is false, st.arrival().time() will return 0, which, for kraken, is
@@ -176,10 +172,9 @@ create_disruption(const std::string& id,
                 auto get_diff_days = [&](uint32_t time){
                     return (boost::posix_time::from_time_t(time).date() - first_day_of_impact).days();
                 };
-                auto one_day_seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours{24}).count();
 
-                arrival_seconds +=  get_diff_days(arrival_time) * one_day_seconds;
-                departure_seconds += get_diff_days(departure_time) * one_day_seconds;
+                arrival_seconds +=  get_diff_days(arrival_time) * navitia::DateTimeUtils::SECONDS_PER_DAY;
+                departure_seconds += get_diff_days(departure_time) * navitia::DateTimeUtils::SECONDS_PER_DAY;
 
                 type::StopTime stop_time{static_cast<uint32_t>(arrival_seconds),
                     static_cast<uint32_t>(departure_seconds), stop_point_ptr};

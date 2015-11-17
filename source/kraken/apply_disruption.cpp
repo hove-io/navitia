@@ -158,7 +158,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto vp = compute_vp(impact->application_periods, meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
-                LOG4CPLUS_TRACE(log, mvj->get_base_vj().at(0)->validity_patterns[0]->str());
             }
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
