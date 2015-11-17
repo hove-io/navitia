@@ -570,12 +570,8 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     transit_realtime::TripUpdate trip_update_A = make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1",
-                            navitia::test::to_posix_timestamp("20150928T0810"),
-                            navitia::test::to_posix_timestamp("20150928T0810")),
-                    std::make_tuple("stop2",
-                            navitia::test::to_posix_timestamp("20150928T0910"),
-                            navitia::test::to_posix_timestamp("20150928T0910"))
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
             });
     b.data->build_uri();
 
