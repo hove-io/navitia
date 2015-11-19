@@ -346,6 +346,7 @@ line = Table('line', metadata,*[
     Column('shape', Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), primary_key=False),
     Column('opening_time', TIME(), primary_key=False),
     Column('closing_time', TIME(), primary_key=False),
+    Column('text_color', TEXT(), primary_key=False),
     ForeignKeyConstraint(['commercial_mode_id'], [u'navitia.commercial_mode.id'], name=u'line_commercial_mode_id_fkey'),
     ForeignKeyConstraint(['network_id'], [u'navitia.network.id'], name=u'line_network_id_fkey'),],
     schema='navitia')
