@@ -115,24 +115,17 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 };
 
-static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::time_period>& periods,
+// Computes the vp corresponding to the days where base vj's are disrupted
+static type::ValidityPattern compute_base_disrupted_vp(
+        const std::vector<boost::posix_time::time_period>& disrupted_vj_periods,
         const boost::gregorian::date_period& production_period) {
     type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
-    for (const auto& period: periods){
-        // we may impact vj's passed midnight
-        bg::day_iterator titr(period.begin().date());
-        for (; titr <= period.end().date(); ++titr) {
-            if (! production_period.contains(*titr)) { continue; }
-            auto day = (*titr - production_period.begin()).days();
-            vp.add(day);
-            // Why break here?
-            // There'll be a problem with VJ passes midnight.
-            // Ex:
-            // We'd like to delay a train on 1st, Jan which will pass midnight, without 'break',
-            // the impact will be applied on 1st, Jan AND 2nd, Jan. So the VJ will be de activated on 1st AND 2nd Jan,
-            // which may not be wanted
-            break;
-        }
+    for (const auto& period: disrupted_vj_periods) {
+        auto start_date = period.begin().date();
+        if (! production_period.contains(start_date)) { continue; }
+        // we may impact vj's passing midnight but all we care is start date
+        auto day = (start_date - production_period.begin()).days();
+        vp.add(day);
     }
     return vp;
 }
@@ -155,7 +148,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
-            auto vp = compute_vp(impact->application_periods, meta.production_date);
+            auto new_vp = compute_base_disrupted_vp(impact->application_periods, meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
             }
@@ -164,7 +157,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     + impact->disruption->uri;
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
-                vp,
+                new_vp,
                 r,
                 impact->aux_info.stop_times,
                 pt_data);
