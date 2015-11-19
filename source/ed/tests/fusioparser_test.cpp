@@ -48,6 +48,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 const std::string ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/ntfs";
+const std::string sync_ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/sync_ntfs";
 
 BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     using namespace ed;
@@ -315,4 +316,28 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
     BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 27),
                                                       boost::gregorian::date(2015, 8, 27)));
+}
+
+
+BOOST_AUTO_TEST_CASE(sync_ntfs) {
+    ed::Data data;
+
+    ed::connectors::FusioParser parser(sync_ntfs_path);
+    parser.fill(data, "20150327");
+
+    //we check that the data have been correctly loaded
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+
+    for (int i = 1; i < 8; i++){
+        BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
+    }
 }
