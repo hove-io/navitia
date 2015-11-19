@@ -281,6 +281,32 @@ class TestJourneys(AbstractTestFixture):
             assert(j['sections'][-1]['to']['id'] == id)
             assert(j['sections'][-1]['to']['address']['id'] == id)
 
+    def test_journeys_wheelchair_profile(self):
+        """
+        Test a query with a wheelchair profile.
+        We want to go from S to R after 8h as usual, but between S and R, the first VJ is not accessible,
+        so we have to wait for the bus at 18h to leave
+        """
+
+        response = self.query_region(journey_basic_query + "&traveler_type=wheelchair")
+        assert(len(response['journeys']) == 2)
+        #Note: we do not test order, because that can change depending on the scenario
+        eq_(sorted(get_used_vj(response)), sorted([[], ['vj:B:1']]))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080611', '20120614T180222']))
+
+        # same response if we just give the wheelchair=True
+        response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=True")
+        assert(len(response['journeys']) == 2)
+        eq_(sorted(get_used_vj(response)), sorted([[], ['vj:B:1']]))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080611', '20120614T180222']))
+
+        # but with the wheelchair profile, if we explicitly accept non accessible solutions (not very
+        # consistent, but anyway), we should take the non accessible bus that arrive at 08h
+        response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=False")
+        assert(len(response['journeys']) == 2)
+        eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080222', '20120614T080611']))
+
 
 @dataset([])
 class TestJourneysNoRegion(AbstractTestFixture):
