@@ -595,6 +595,7 @@ void LineFusioHandler::init(Data &){
     geometry_id_c = csv.get_pos_col("geometry_id");
     opening_c = csv.get_pos_col("line_opening_time");
     closing_c = csv.get_pos_col("line_closing_time");
+    text_color_c = csv.get_pos_col("line_text_color");
 }
 void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(id_c, row)) {
@@ -608,6 +609,9 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     if (is_valid(code_c, row)) {
         line->code = row[code_c];
+    }
+    if (is_valid(text_color_c, row)) {
+        line->text_color = row[text_color_c];
     }
     if (is_valid(forward_name_c, row)) {
         line->forward_name = row[forward_name_c];
