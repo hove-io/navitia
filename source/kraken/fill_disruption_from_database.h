@@ -66,10 +66,11 @@ namespace navitia {
         chaos::Message* message = nullptr;
         chaos::Channel* channel = nullptr;
 
-        std::string last_message_id = "",
-                    last_ptobject_id = "",
-                    last_period_id = "",
+        std::string last_period_id = "",
                     last_channel_type_id = "";
+
+        std::set<std::string> message_ids;
+        std::set<std::string> pt_object_ids;
         type::PT_Data& pt_data;
         const type::MetaData& meta;
 
@@ -93,25 +94,27 @@ namespace navitia {
                     impact->id() != const_it["impact_id"].template as<std::string>())) {
                 fill_impact(const_it);
                 last_period_id = "";
-                last_ptobject_id = "";
-                last_message_id = "";
                 last_channel_type_id = "";
                 message = nullptr;
                 channel = nullptr;
+                pt_object_ids.clear();
+                message_ids.clear();
             }
 
             if (impact && (last_period_id != const_it["application_id"].template as<std::string>())) {
                 fill_application_period(const_it);
             }
-            if (impact && (last_ptobject_id != const_it["ptobject_id"].template as<std::string>())) {
+            if (impact && (!pt_object_ids.count(const_it["ptobject_id"].template as<std::string>()))) {
                 fill_pt_object(const_it);
+                pt_object_ids.insert(const_it["ptobject_id"].template as<std::string>());
             }
             if (impact && !const_it["message_id"].is_null() &&
-                    (last_message_id != const_it["message_id"].template as<std::string>())) {
+                    (!message_ids.count(const_it["message_id"].template as<std::string>()))) {
                 message = impact->add_messages();
                 fill_message(const_it, message);
                 channel = message->mutable_channel();
                 fill_channel(const_it, channel);
+                message_ids.insert(const_it["message_id"].template as<std::string>());
             }
             if (impact && channel &&
                     (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
@@ -250,7 +253,6 @@ namespace navitia {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
                 }
             }
-            last_ptobject_id = const_it["ptobject_id"].template as<std::string>();
         }
 
         template<typename T>
@@ -258,7 +260,6 @@ namespace navitia {
             FILL_REQUIRED(message, text, std::string)
             FILL_NULLABLE(message, created_at, uint64_t)
             FILL_NULLABLE(message, updated_at, uint64_t)
-            last_message_id = const_it["message_id"].template as<std::string>();
         }
 
         template<typename T>
