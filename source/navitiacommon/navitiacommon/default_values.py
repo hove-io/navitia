@@ -36,11 +36,11 @@ This parameters can be used directly by jormungandr if the instance is not known
 import logging
 import sys
 
-max_walking_duration_to_pt = 15*60
+max_walking_duration_to_pt = 30*60
 
-max_bike_duration_to_pt = 15*60
+max_bike_duration_to_pt = 30*60
 
-max_bss_duration_to_pt = 15*60
+max_bss_duration_to_pt = 30*60
 
 max_car_duration_to_pt = 30*60
 
