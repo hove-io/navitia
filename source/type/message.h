@@ -305,6 +305,7 @@ private:
 
 class DisruptionHolder {
     std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
+    std::vector<boost::weak_ptr<Impact>> weak_impacts;
 public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
