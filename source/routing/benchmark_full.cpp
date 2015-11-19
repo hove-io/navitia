@@ -274,11 +274,11 @@ int main(int argc, char** argv){
 
         origin.streetnetwork_params.mode = demand.start_mode;
         origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
-        origin.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        origin.streetnetwork_params.max_duration = navitia::seconds(30*60);
         origin.streetnetwork_params.speed_factor = 1;
         destination.streetnetwork_params.mode = demand.target_mode;
         destination.streetnetwork_params.offset = data.geo_ref->offsets[demand.target_mode];
-        destination.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        destination.streetnetwork_params.max_duration = navitia::seconds(30*60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
         auto resp = make_response(router, origin, destination,
