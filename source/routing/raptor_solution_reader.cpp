@@ -35,6 +35,7 @@ www.navitia.io
 
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/container/flat_map.hpp>
 
 namespace navitia { namespace routing {
 
@@ -179,8 +180,8 @@ get_transfer_waiting(const type::PT_Data& data,
 }
 
 template<typename Visitor>
-Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader) {
-    Journey j;
+const Journey& make_journey(const PathElt& path, RaptorSolutionReader<Visitor>& reader) {
+    Journey& j = reader.journey_cache.get();
 
     // constructing sections
     for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
@@ -318,7 +319,24 @@ struct RaptorSolutionReader {
                 && lhs.transfer_dur <= rhs.transfer_dur;
         }
     };
-    typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+    // A small structure to reuse the memory. A c.get(id) give a
+    // default initialized structure reusing memory from previous
+    // calls. Such a call should not be done when the structure given
+    // by the previous call is still in use (else, bad things
+    // happen...). id must be small, as this is the index of a deque.
+    template<typename T> struct Cache {
+        T& get(const size_t level = 0) {
+            static const T empty = T();
+            if (level >= v.size()) { v.resize(level + 1); }
+            v[level] = empty;
+            return v[level];
+        }
+    private:
+        std::deque<T> v;
+    };
+    typedef boost::container::flat_map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+    Cache<Transfers> transfers_cache;
+    Cache<Journey> journey_cache;
 
     RaptorSolutionReader(const RAPTOR& r,
                          const Visitor& vis,// 3rd pass visitor
@@ -351,10 +369,10 @@ struct RaptorSolutionReader {
 
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
-        Journey j = make_journey(path, *this);
+        const Journey& j = make_journey(path, *this);
         if (! is_valid(*this, j)) { return; }
         ++nb_sol_added;
-        solutions.add(std::move(j));
+        solutions.add(j);
         if (nb_sol_added > 1000) {
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "raptor_solution_reader: too much solutions, stopping...");
@@ -362,11 +380,11 @@ struct RaptorSolutionReader {
         }
     }
 
-    Transfers
+    const Transfers&
     create_transfers(const unsigned count,
                      const PathElt* path,
                      const StDt& begin_st_dt) {
-        Transfers transfers;
+        Transfers& transfers = transfers_cache.get(count);
         auto cur_dt = begin_st_dt.second;
         if (begin_st_dt.first->is_frequency()) {
             //for frequency, we need cur_dt to be the begin in the stoptime
@@ -480,7 +498,7 @@ struct RaptorSolutionReader {
     }
 
     void step(const unsigned count, const PathElt* path, const StDt& begin_st_dt) {
-        const auto transfers = create_transfers(count, path, begin_st_dt);
+        const auto& transfers = create_transfers(count, path, begin_st_dt);
         for (const auto& pareto: transfers) {
             for (const auto& tr: pareto.second) {
                 const PathElt new_path(*begin_st_dt.first,
