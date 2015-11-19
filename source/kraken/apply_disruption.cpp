@@ -202,17 +202,19 @@ static bool is_modifying_effect(nt::disruption::Effect e) {
                   nt::disruption::Effect::MODIFIED_SERVICE});
 }
 
-void apply_impact(boost::shared_ptr<nt::disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
     }
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "Adding impact: " << impact.get()->uri);
+                    "Adding impact: " << impact->uri);
+
     add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+    pt_data.disruption_holder.add_weak_impact(impact);
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " impact added");
+                    impact->uri << " impact added");
 }
 
 
@@ -303,6 +305,18 @@ void delete_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     LOG4CPLUS_DEBUG(log, impact.get()->uri << " deleted");
 }
 
+class Finally{
+public:
+    Finally(std::function<void()> f):_f(f) {}
+    ~Finally(){_f();}
+    Finally(const Finally&) = delete;
+    Finally(Finally&&) = delete;
+    void operator =(const Finally&) = delete;
+    void operator =(Finally&&) = delete;
+private:
+    std::function<void()> _f;
+};
+
 } // anonymous namespace
 
 void delete_disruption(const std::string& disruption_id,
@@ -310,16 +324,16 @@ void delete_disruption(const std::string& disruption_id,
                        const nt::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
-    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
+    Finally finally{[&](){
+        pt_data.disruption_holder.clean_weak_impacts();
+    }};
+
+    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
     // the disruption is deleted by RAII
     std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
     if (disruption) {
-        std::vector<nt::disruption::PtObj> informed_entities;
         for (const auto& impact : disruption->get_impacts()) {
-            informed_entities.insert(informed_entities.end(),
-                              impact->informed_entities.begin(),
-                              impact->informed_entities.end());
             delete_impact(impact, pt_data, meta);
         }
     }

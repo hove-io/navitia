@@ -160,4 +160,11 @@ std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& 
     return res;
 }
 
+void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
+    weak_impacts.push_back(weak_impact);
+}
+
+void DisruptionHolder::clean_weak_impacts(){
+    clean_up_weak_ptr(weak_impacts);
+}
 }}}//namespace

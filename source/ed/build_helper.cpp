@@ -312,7 +312,7 @@ Impacter& DisruptionCreator::impact() {
 
 Impacter::Impacter(builder& bu, dis::Disruption& disrup): b(bu) {
     impact = boost::make_shared<dis::Impact>();
-
+    impact->uri = get_random_id();
     disrup.add_impact(impact);
 }
 
@@ -341,8 +341,9 @@ Impacter& Impacter::severity(dis::Effect e,
     auto& sev_map = b.data->pt_data->disruption_holder.severities;
     auto it = sev_map.find(uri);
     if (it != std::end(sev_map)) {
-        impact->severity = it->second.lock();
-        return *this;
+        if (impact->severity = it->second.lock()) {
+            return *this;
+        };
     }
     auto severity = boost::make_shared<dis::Severity>();
     severity->uri = uri;

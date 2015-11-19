@@ -33,6 +33,7 @@ www.navitia.io
 #include "data.h"
 #include "meta_data.h"
 #include <iostream>
+#include <set>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
 #include "utils/logger.h"
@@ -46,6 +47,28 @@ www.navitia.io
 namespace bt = boost::posix_time;
 
 namespace navitia { namespace type {
+
+static std::vector<idx_t>
+get_impacts_idx(std::vector<boost::weak_ptr<disruption::Impact>>& impacts,
+        const std::vector<boost::weak_ptr<disruption::Impact>>& impacts_pool) {
+    std::vector<idx_t> result;
+    clean_up_weak_ptr(impacts);
+    std::set<std::string> impact_str_set;
+    boost::for_each(impacts, [&](const boost::weak_ptr<disruption::Impact>& impact_wptr){
+        auto impact_sptr = impact_wptr.lock();
+        impact_str_set.insert(impact_sptr->uri);
+    });
+    idx_t i = 0;
+    for (const auto& impact: impacts_pool) {
+        auto impact_sptr = impact.lock();
+        assert(impact_sptr);
+        if (navitia::contains(impact_str_set, impact_sptr->uri)){
+            result.push_back(i);
+        }
+        ++i;
+    }
+    return result;
+}
 
 std::string VehicleJourney::get_direction() const {
     if (! this->stop_time_list.empty()) {
@@ -612,15 +635,18 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
         }
     }
         break;
+    case Type_e::Impact: return get_impacts_idx(impacts, data.disruption_holder.get_weak_impacts());
+
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> Network::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> Network::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
+    case Type_e::Impact: return get_impacts_idx(impacts, data.disruption_holder.get_weak_impacts());
     default: break;
     }
     return result;
@@ -659,7 +685,7 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     return result;
 }
 
-std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
+std::vector<idx_t> Line::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::CommercialMode: result.push_back(commercial_mode->idx); break;
@@ -668,6 +694,7 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     case Type_e::Route: return indexes(route_list);
     case Type_e::Calendar: return indexes(calendar_list);
     case Type_e::LineGroup: return indexes(line_group_list);
+    case Type_e::Impact: return get_impacts_idx(impacts, data.disruption_holder.get_weak_impacts());
     default: break;
     }
     return result;
@@ -692,7 +719,7 @@ std::vector<idx_t> LineGroup::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
-std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> Route::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Line: result.push_back(line->idx); break;
@@ -702,6 +729,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
                 return true;
             });
         break;
+    case Type_e::Impact: return get_impacts_idx(impacts, data.disruption_holder.get_weak_impacts());
     default: break;
     }
     return result;
@@ -735,7 +763,7 @@ VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 
-std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data&) const {
+std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area->idx); break;
@@ -744,6 +772,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data&) const {
         for (const StopPointConnection* stop_cnx : stop_point_connection_list)
             result.push_back(stop_cnx->idx);
         break;
+    case Type_e::Impact: return get_impacts_idx(impacts, data.disruption_holder.get_weak_impacts());
     default: break;
     }
     return result;

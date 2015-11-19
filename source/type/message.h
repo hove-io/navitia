@@ -309,7 +309,10 @@ public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
     size_t nb_disruptions() const { return disruptions_by_uri.size(); }
-
+    void add_weak_impact(boost::weak_ptr<Impact>);
+    void clean_weak_impacts();
+    const std::vector<boost::weak_ptr<Impact>>&
+    get_weak_impacts() const{ return weak_impacts;}
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
     std::map<std::string, boost::weak_ptr<Cause>> causes; //to be wrapped
