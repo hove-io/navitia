@@ -126,7 +126,11 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
 void StopsFusioHandler::init(Data& data) {
         StopsGtfsHandler::init(data);
         ext_code_c = csv.get_pos_col("external_code");
+        // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
         property_id_c = csv.get_pos_col("property_id");
+        if (property_id_c == -1){
+            property_id_c = csv.get_pos_col("equipment_id");
+         }
         comment_id_c =  csv.get_pos_col("comment_id");
         visible_c =  csv.get_pos_col("visible");
         geometry_id_c = csv.get_pos_col("geometry_id");
@@ -268,6 +272,10 @@ void TransfersFusioHandler::init(Data& d) {
     TransfersGtfsHandler::init(d);
     real_time_c = csv.get_pos_col("real_min_transfer_time"),
             property_id_c = csv.get_pos_col("property_id");
+    // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
+    if (property_id_c == -1){
+        property_id_c = csv.get_pos_col("equipment_id");
+     }
 }
 
 void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const {
