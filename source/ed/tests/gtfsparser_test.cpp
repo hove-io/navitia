@@ -362,7 +362,7 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 0);
 
     BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
-    BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");    
     BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
     BOOST_REQUIRE(data.lines[0]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
@@ -473,6 +473,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     parser.fill(data);
 
     check_gtfs_google_example(data, parser);
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
 }
 
 
