@@ -68,6 +68,11 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 45.0296, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), 0.5881, 0.1);
 
+    // Check website, license of contributor
+    BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
+
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
