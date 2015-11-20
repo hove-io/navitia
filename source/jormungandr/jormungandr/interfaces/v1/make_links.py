@@ -260,25 +260,27 @@ class add_id_links(generate_links):
             self.get_objets(data)
             data = self.prepare_objetcs(objects, True)
             kwargs = self.prepare_kwargs(kwargs, data)
+
+            if 'region' not in kwargs and 'lon' not in kwargs:
+                # we don't know how to put links on this object, there is no coverage, we don't add links
+                return objects
+
             uri_id = None
-            if "id" in kwargs and\
-               "collection" in kwargs and \
-               kwargs["collection"] in data:
+            if "id" in kwargs and "collection" in kwargs and kwargs["collection"] in data:
                 uri_id = kwargs["id"]
             for obj in self.data:
                 kwargs["collection"] = resource_type_to_collection.get(obj, obj)
                 if kwargs["collection"] in collections_to_resource_type:
                     if not uri_id:
                         kwargs["id"] = "{" + obj + ".id}"
-                    endpoint = "v1." + kwargs["collection"] + "."
-                    endpoint += "id" if "region" in kwargs or\
-                        "lon" in kwargs\
-                                        else "redirect"
+
+                    endpoint = "v1." + kwargs["collection"] + ".id"
+
                     collection = kwargs["collection"]
-                    to_pass = {k:v for k,v in kwargs.iteritems() if k != "collection"}
+                    to_pass = {k: v for k, v in kwargs.iteritems() if k != "collection"}
                     data["links"].append(create_external_link(url=endpoint, rel=collection,
                                                               _type=obj, templated=True,
-                                                             **to_pass))
+                                                              **to_pass))
             if isinstance(objects, tuple):
                 return data, code, header
             else:

@@ -142,10 +142,6 @@ class V1Routing(AModule):
                               region + '<uri:uri>/' + collection + '/<id:id>',
                               coord + '<uri:uri>/' + collection + '/<id:id>',
                               endpoint=collection + '.id')
-            self.add_url_rule(
-                '/coverage/' + collection + '/<string:id>',
-                collection + '.redirect',
-                Uri.Redirect)
 
         collecs = ["routes", "lines", "line_groups", "networks", "stop_areas", "stop_points",
                    "vehicle_journeys"]

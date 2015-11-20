@@ -29,9 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from flask.globals import g
 from jormungandr import i_manager, authentication
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, line_group, \
@@ -558,13 +556,3 @@ def coords(is_collection):
         """ Not implemented yet"""
         pass
     return Coords
-
-
-def Redirect(*args, **kwargs):
-    id_ = kwargs["id"]
-    collection = kwargs["collection"]
-    region = i_manager.get_region(object_id=id_)
-    if not region:
-        region = "{region.id}"
-    url = url_for("v1.uri", region=region, collection=collection, id=id_)
-    return redirect(url, 303)
