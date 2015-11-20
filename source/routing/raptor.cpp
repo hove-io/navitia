@@ -158,6 +158,7 @@ void RAPTOR::init(const map_stop_point_duration& dep,
         const DateTime sn_dur = sp_dt.second.total_seconds();
         const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
         labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
+        best_labels_transfers[sp_dt.first] = begin_dt;
         for (const auto jpp: jpps_from_sp[sp_dt.first]) {
             if (clockwise && Q[jpp.jp_idx] > jpp.order) {
                 Q[jpp.jp_idx] = jpp.order;
@@ -429,10 +430,10 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
         map_stop_point_duration init_map;
         init_map[start.sp_idx] = 0_s;
-        init(init_map, working_labels.dt_pt(start.sp_idx),
-             !clockwise, accessibilite_params.properties);
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
+        init(init_map, working_labels.dt_pt(start.sp_idx),
+             !clockwise, accessibilite_params.properties);
         boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
         read_solutions(*this,
                        solutions,
