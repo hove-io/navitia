@@ -561,6 +561,8 @@ void TripsFusioHandler::finish(Data&) {
 void ContributorFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("contributor_id");
     name_c = csv.get_pos_col("contributor_name");
+    website_c = csv.get_pos_col("contributor_website");
+    license_c = csv.get_pos_col("contributor_license");
 }
 
 void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -576,6 +578,15 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
         contributor->uri = "default_contributor";
     }
     contributor->name = row[name_c];
+
+    if (is_valid(website_c, row)) {
+        contributor->website = row[website_c];
+    }
+
+    if (is_valid(license_c, row)) {
+        contributor->license = row[license_c];
+    }
+
     contributor->idx = data.contributors.size() + 1;
     data.contributors.push_back(contributor);
     gtfs_data.contributor_map[contributor->uri] = contributor;
