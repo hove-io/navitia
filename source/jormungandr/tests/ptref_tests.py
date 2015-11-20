@@ -376,6 +376,10 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
         assert len(lines) == 1
         assert 'A' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'external_code']
 
+    def test_invalid_url(self):
+        """the following bad url was causing internal errors, it should only be a 404"""
+        _, status = self.query_no_assert("v1/coverage/lines/bob")
+        eq_(status, 404)
 
 @dataset(["main_routing_test"])
 class TestPtRefRoutingCov(AbstractTestFixture):
