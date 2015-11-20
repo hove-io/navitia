@@ -292,6 +292,33 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     throw navitia::recoverable_exception("impossible to rebuild path");
 }
 
+Journey make_bound_journey(DateTime beg,
+                           navitia::time_duration beg_sn_dur,
+                           DateTime end,
+                           navitia::time_duration end_sn_dur,
+                         unsigned count,
+                         uint32_t lower_bound_conn,
+                         navitia::time_duration transfer_penalty,
+                         bool clockwise) {
+    Journey journey;
+    journey.sections.resize(count); // only the number of sections is part of the dominance function
+    journey.sn_dur = beg_sn_dur + end_sn_dur;
+    if (clockwise) {
+        journey.departure_dt = beg - beg_sn_dur.total_seconds();
+        journey.arrival_dt = end + end_sn_dur.total_seconds();
+    } else {
+        journey.departure_dt = end + end_sn_dur.total_seconds();
+        journey.arrival_dt = beg - beg_sn_dur.total_seconds();
+    }
+
+    // for the rest KPI, we don't know yet the accurate values, so we'll provide the best lb possible
+    uint32_t nb_conn = (count >= 1 ? count - 1 : 0);
+    journey.transfer_dur = transfer_penalty * nb_conn + navitia::seconds(nb_conn * lower_bound_conn);
+    journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
+    journey.nb_vj_extentions = 0;
+    return journey;
+}
+
 struct stop_search {};
 
 template<typename Visitor>
@@ -321,13 +348,15 @@ struct RaptorSolutionReader {
     typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
 
     RaptorSolutionReader(const RAPTOR& r,
+                         Solutions& solutions,
                          const Visitor& vis,// 3rd pass visitor
                          const DateTime& departure_dt,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& access,
-                         const navitia::time_duration& transfer_penalty):
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point):
         raptor(r),
         v(vis),
         departure_datetime(departure_dt),
@@ -336,8 +365,8 @@ struct RaptorSolutionReader {
         rt_level(rt_level),
         accessibilite_params(access),
         transfer_penalty(transfer_penalty),
-        // Dominates need request_clockwise (the same as reader's visitor)
-        solutions(Dominates(v.clockwise()))
+        end_point(end_point),
+        solutions(solutions)
     {}
     const RAPTOR& raptor;
     const Visitor& v;
@@ -347,7 +376,8 @@ struct RaptorSolutionReader {
     const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
     const navitia::time_duration transfer_penalty;
-    Solutions solutions;
+    const StartingPointSndPhase& end_point;
+    Solutions& solutions; //raptor's solutions pool
 
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
@@ -428,6 +458,7 @@ struct RaptorSolutionReader {
         for (const auto& conn: cnx_list[sp_idx]) {
             const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
             const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
+            if (! raptor.labels[count].pt_is_initialized(conn.sp_idx)) { continue; }
             if (v.comp(transfer_limit, transfer_end)) { continue; }
 
             // transfer is OK
@@ -511,18 +542,21 @@ struct RaptorSolutionReader {
     }
 };
 
+
 template <typename Visitor>
-Solutions read_solutions(const RAPTOR& raptor,
+void read_solutions(const RAPTOR& raptor,
+                         Solutions& solutions,
                          const Visitor& v,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params,
-                         const navitia::time_duration& transfer_penalty)
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, v, departure_datetime, deps, arrs, rt_level, accessibilite_params, transfer_penalty);
+        raptor, solutions, v, departure_datetime, deps, arrs, rt_level, accessibilite_params, transfer_penalty, end_point);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -530,12 +564,23 @@ Solutions read_solutions(const RAPTOR& raptor,
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
             if (! raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) { continue; }
             reader.nb_sol_added = 0;
+            // we check that it's worth to explore this possible journey
+            auto j = make_bound_journey(working_labels.dt_pt(a.first),
+                                        a.second,
+                                        working_labels.dt_transfer(end_point.sp_idx),
+                                        navitia::seconds(end_point.fallback_dur),
+                                        count,
+                                        raptor.data.dataRaptor->min_connection_time,
+                                        transfer_penalty,
+                                        v.clockwise());
+            if (reader.solutions.contains_better_than(j)) {
+                continue;
+            }
             try {
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             } catch (stop_search&) {}
         }
     }
-    return std::move(reader.solutions);
 }
 
 } // anonymous namespace
@@ -593,21 +638,23 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
     return os;
 }
 
-Solutions read_solutions(const RAPTOR& raptor,
+void read_solutions(const RAPTOR& raptor,
+                         Solutions& solutions,
                          const bool clockwise,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params,
-                         const navitia::time_duration& transfer_penalty)
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point)
 {
     if (clockwise) {
-        return read_solutions(raptor, raptor_reverse_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params, transfer_penalty);
+        return read_solutions(raptor, solutions, raptor_reverse_visitor(), departure_datetime, deps, arrs,
+                              rt_level, accessibilite_params, transfer_penalty, end_point);
     } else {
-        return read_solutions(raptor, raptor_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params, transfer_penalty);
+        return read_solutions(raptor, solutions, raptor_visitor(), departure_datetime, deps, arrs,
+                              rt_level, accessibilite_params, transfer_penalty, end_point);
     }
 }
 
