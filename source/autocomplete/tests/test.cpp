@@ -1638,5 +1638,55 @@ BOOST_AUTO_TEST_CASE(synonyms_with_capital_and_non_ascii){
 
     auto res1 = ac.find_complete("cpam", nbmax, [](int){return true;}, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+}
 
+/*
+ * Test the admin filtering
+ *
+ * We have 2 stops:
+ *   * bob in BobBille
+ *   * bobette' not in 'BobVille'
+ *
+ * If we autocomplete for "bob", we should have BobVille + bob + bobette
+ *
+ * If we autocomplete for "bob" but only for places in Bobville, we should have BobVille + bob
+ */
+BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
+    ed::builder b("20140614");
+
+    Admin* bobville = new Admin;
+    bobville->name = "BobVille";
+    bobville->uri = "BobVille";
+    bobville->level = 8;
+    bobville->postal_codes.push_back("29000");
+    bobville->idx = 0;
+    b.data->geo_ref->admins.push_back(bobville);
+
+    auto* bob = b.sa("bob", 0, 0).sa;
+    bob->admin_list.push_back(bobville);
+    b.sa("bobette", 0, 0).sa;
+
+    b.data->pt_data->index();
+    b.build_autocomplete();
+
+    std::vector<navitia::type::Type_e> type_filter {
+        navitia::type::Type_e::StopArea,
+        navitia::type::Type_e::Admin
+    };
+
+    std::vector<std::string> admins = {""}; // no filtering on the admin
+    auto resp = navitia::autocomplete::autocomplete("bob", type_filter, 1, 10, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "BobVille");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "bobette");
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "bob");
+
+    admins = {"BobVille"};
+    resp = navitia::autocomplete::autocomplete("bob", type_filter, 1, 10, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
+    // we should only find the admin and bob
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "BobVille");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "bob");
 }

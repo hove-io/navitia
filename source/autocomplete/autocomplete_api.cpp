@@ -147,6 +147,20 @@ static int get_embedded_type_order(pbnavitia::NavitiaType type){
     }
 }
 
+namespace {
+/*
+ * An admin is not attached to itself, so for the admin we need to
+ * explictly check if the wanted admin is not oneself
+ */
+template <typename T>
+bool self_admin_check(const T*, const georef::Admin* admin) { return false; }
+
+bool self_admin_check(const georef::Admin* obj, const georef::Admin* admin) {
+    return obj->uri == admin->uri;
+}
+
+}
+
 template<class T>
 struct ValidAdminPtr {
     const std::vector<T*>& objects;
@@ -157,15 +171,15 @@ struct ValidAdminPtr {
                 objects(objects), required_admins(required_admins) {}
 
     bool operator()(type::idx_t idx) const {
-        const T* object = objects[idx];
         if (required_admins.empty()){
             return true;
         }
+        const T* object = objects[idx];
 
         for(const georef::Admin* admin : required_admins) {
             const auto & admin_list = object->admin_list;
-            if(std::find(admin_list.begin(), admin_list.end(), admin) != admin_list.end())
-                return true;
+            if(std::find(admin_list.begin(), admin_list.end(), admin) != admin_list.end()) { return true; }
+            if (self_admin_check(object, admin)) { return true; }
         }
 
         return false;
