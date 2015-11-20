@@ -31,6 +31,7 @@ www.navitia.io
 #include "fusio_parser.h"
 
 #include <boost/geometry.hpp>
+#include <boost/filesystem.hpp>
 
 namespace ed { namespace connectors {
 
@@ -887,6 +888,10 @@ void OdtConditionsFusioHandler::handle_line(Data& , const csv_row& row, bool is_
 
 void StopPropertiesFusioHandler::init(Data&){
     id_c = csv.get_pos_col("property_id");
+    // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
+    if (id_c ==-1 ){
+        id_c = csv.get_pos_col("equipment_id");
+    }
     wheelchair_boarding_c = csv.get_pos_col("wheelchair_boarding");
     sheltered_c = csv.get_pos_col("sheltered");
     elevator_c = csv.get_pos_col("elevator");
@@ -1485,7 +1490,13 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
     parse<LineFusioHandler>(data, "lines.txt");
     parse<LineGroupFusioHandler>(data, "line_groups.txt");
     parse<LineGroupLinksFusioHandler>(data, "line_group_links.txt");
-    parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
+
+    // TODO equipments NTFSv0.4: remove stop_properties when we stop to support NTFSv0.3
+    if (boost::filesystem::exists(this->path + "/equipments.txt")){
+        parse<StopPropertiesFusioHandler>(data, "equipments.txt");
+    }else{
+        parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
+    }
     parse<StopsFusioHandler>(data, "stops.txt", true);
     parse<RouteFusioHandler>(data, "routes.txt", true);
     parse<TransfersFusioHandler>(data, "transfers.txt");
