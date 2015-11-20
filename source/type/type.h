@@ -510,9 +510,11 @@ struct Network : public Header, HasMessages {
 
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
+    std::string website;
+    std::string license;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri;
+        ar & idx & name & uri & website & license;
     }
     bool operator<(const Contributor & other) const { return this < &other; }
 };
