@@ -560,12 +560,14 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
 
 void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& contributors){
     this->lotus.prepare_bulk_insert("navitia.contributor",
-            {"id", "uri", "name"});
+            {"id", "uri", "name", "website", "license"});
     for(types::Contributor* contributor : contributors){
         std::vector<std::string> values;
         values.push_back(std::to_string(contributor->idx));
         values.push_back(navitia::encode_uri(contributor->uri));
         values.push_back(contributor->name);
+        values.push_back(contributor->website);
+        values.push_back(contributor->license);
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
