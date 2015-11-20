@@ -362,10 +362,12 @@ template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
 template<typename VJ>
 VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        const RTLevel level,
-                                       const ValidityPattern& vp,
+                                       const ValidityPattern& model_new_vp,
+                                       const ValidityPattern& mask_disrupted_vp,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
+    namespace ndtu = navitia::DateTimeUtils;
     // creating the vj
     auto vj_ptr = std::make_unique<VJ>();
     VJ* ret = vj_ptr.get();
@@ -373,10 +375,10 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     vj_ptr->uri = uri;
     vj_ptr->idx = pt_data.vehicle_journeys.size();
     vj_ptr->realtime_level = level;
-    auto* new_vp = pt_data.get_or_create_validity_pattern(vp);
+    auto* new_vp = pt_data.get_or_create_validity_pattern(model_new_vp);
     for (const auto l: enum_range<RTLevel>()) {
         if (l < level) {
-            auto* empty_vp = pt_data.get_or_create_validity_pattern(ValidityPattern(vp.beginning_date));
+            auto* empty_vp = pt_data.get_or_create_validity_pattern(ValidityPattern(new_vp->beginning_date));
             vj_ptr->validity_patterns[l] = empty_vp;
         } else {
             vj_ptr->validity_patterns[l] = new_vp;
@@ -388,10 +390,29 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
         st.set_is_frequency(std::is_same<VJ, FrequencyVehicleJourney>::value);
     }
     vj_ptr->stop_time_list = std::move(sts);
+    // as date management is taken care of in validity pattern,
+    // we have to contain first stop_time in [00:00 ; 24:00[ (and propagate to other st)
+    if (!vj_ptr->stop_time_list.empty()) {
+        int day_offset = vj_ptr->stop_time_list.front().arrival_time / (ndtu::SECONDS_PER_DAY);
+        // cannot happen as arrival_time is unsigned, but in order to advance vj,
+        // it should be possible to have first stop_time negative
+        if (vj_ptr->stop_time_list.front().arrival_time < 0) {
+            --day_offset;
+        }
+        for (nt::StopTime& st: vj_ptr->stop_time_list) {
+            st.arrival_time -= ndtu::SECONDS_PER_DAY * day_offset;
+            st.departure_time -= ndtu::SECONDS_PER_DAY * day_offset;
+            // a vj cannot be longer than 24h and its start is contained in [00:00 ; 24:00[
+            assert(st.arrival_time >= 0);
+            assert(st.arrival_time < ndtu::SECONDS_PER_DAY * 2);
+            assert(st.departure_time >= 0);
+            assert(st.departure_time < ndtu::SECONDS_PER_DAY * 2);
+        }
+    }
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
-    const auto mask = ~vp.days;
+    const auto mask = ~mask_disrupted_vp.days;
     for_all_vjs([&] (VehicleJourney& vj) {
             for (const auto l: enum_range_from(level)) {
                 auto new_vp = *vj.validity_patterns[l];
@@ -413,21 +434,25 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 FrequencyVehicleJourney*
 MetaVehicleJourney::create_frequency_vj(const std::string& uri,
                                         const RTLevel level,
-                                        const ValidityPattern& vp,
+                                        const ValidityPattern& model_new_vp,
+                                        const ValidityPattern& mask_disrupted_vp,
                                         Route* route,
                                         std::vector<StopTime> sts,
                                         nt::PT_Data& pt_data) {
-    return impl_create_vj<FrequencyVehicleJourney>(uri, level, vp, route, std::move(sts), pt_data);
+    return impl_create_vj<FrequencyVehicleJourney>(uri, level, model_new_vp, mask_disrupted_vp,
+                                                   route, std::move(sts), pt_data);
 }
 
 DiscreteVehicleJourney*
 MetaVehicleJourney::create_discrete_vj(const std::string& uri,
                                        const RTLevel level,
-                                       const ValidityPattern& vp,
+                                       const ValidityPattern& model_new_vp,
+                                       const ValidityPattern& mask_disrupted_vp,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
-    return impl_create_vj<DiscreteVehicleJourney>(uri, level, vp, route, std::move(sts), pt_data);
+    return impl_create_vj<DiscreteVehicleJourney>(uri, level, model_new_vp, mask_disrupted_vp,
+                                                  route, std::move(sts), pt_data);
 }
 
 

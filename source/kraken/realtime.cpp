@@ -43,18 +43,56 @@ www.navitia.io
 namespace navitia {
 
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
+    namespace bpt = boost::posix_time;
+
+    auto log = log4cplus::Logger::getInstance("realtime");
     // Case 1: the trip is cancelled
     if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
         return true;
     }
     // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
-    // departure is brought foward), we check the size of stop_time_update because we can't find a proper
+    // departure is brought forward), we check the size of stop_time_update because we can't find a proper
     // enum in gtfs-rt proto to express this idea
     if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
             && trip_update.stop_time_update_size()) {
+        auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+        auto start_first_day_of_impact = bpt::ptime(start_date, bpt::time_duration(0, 0, 0, 0));
+        for (const auto& st: trip_update.stop_time_update()) {
+            auto ptime_arrival = bpt::from_time_t(st.arrival().time());
+            auto ptime_departure = bpt::from_time_t(st.departure().time());
+            if (ptime_arrival < start_first_day_of_impact
+                    || ptime_departure < start_first_day_of_impact) {
+                LOG4CPLUS_WARN(log, "Stop time " << st.stop_id() << " is before the day of impact");
+                return false;
+            }
+        }
         return true;
     }
     return false;
+}
+
+static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
+    auto log = log4cplus::Logger::getInstance("realtime");
+    if (trip_update.trip().schedule_relationship() ==
+                                transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+            && trip_update.stop_time_update_size()) {
+        uint32_t last_st_dep = std::numeric_limits<uint32_t>::max();
+        for (const auto& st: trip_update.stop_time_update()) {
+            uint32_t arrival_time = st.arrival().time();
+            uint32_t departure_time = st.departure().time();
+            if (last_st_dep != std::numeric_limits<uint32_t>::max()
+                    && last_st_dep > arrival_time) {
+                LOG4CPLUS_WARN(log, "Stop time " << st.stop_id() << " is not correctly ordered");
+                return false;
+            }
+            if (arrival_time > departure_time) {
+                LOG4CPLUS_WARN(log, "For the st " << st.stop_id() << " departure is before the arrival");
+                return false;
+            }
+            last_st_dep = departure_time;
+        }
+    }
+    return true;
 }
 
 static std::ostream& operator<<(std::ostream& s, const nt::StopTime& st) {
@@ -78,12 +116,6 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
                 if (last_st->departure_time > st.arrival_time) {
                     LOG4CPLUS_WARN(log, "stop time " << *last_st
                                    << " and " << st << " are not correctly ordered");
-                    return false;
-                }
-            } else {
-                //we want the first stoptime to be in [0, 24h[
-                if (st.departure_time > DateTimeUtils::SECONDS_PER_DAY) {
-                    LOG4CPLUS_WARN(log, "stop time " << st << " departure is too late");
                     return false;
                 }
             }
@@ -131,7 +163,7 @@ execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourne
 
 
 static boost::gregorian::date
-get_first_day_of_imapct(const nt::disruption::Impact& impact){
+get_first_day_of_impact(const nt::disruption::Impact& impact) {
     auto first_period = impact.application_periods.at(0);
     return first_period.begin().date();
 }
@@ -141,6 +173,8 @@ create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
+    namespace bpt = boost::posix_time;
+
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_DEBUG(log, "Creating disruption");
 
@@ -198,25 +232,14 @@ create_disruption(const std::string& id,
                         departure_time = arrival_time =st.arrival().time();
                     }
                 }
-                auto first_day_of_impact = get_first_day_of_imapct(*impact);
-                auto arrival_seconds = boost::posix_time::from_time_t(arrival_time).time_of_day().total_seconds();
-                auto departure_seconds = boost::posix_time::from_time_t(departure_time).time_of_day().total_seconds();
-                
-                // If the arrival/depature time's date is later than the first day of impact, this means
-                // the VJ passes the midnight, it's pickup/dropoff time should add 86400 seconds(one day)
-                // Ex:
-                // the first day of impact is 1st, Jan, the stoptime's base arrival_time is 23:50 on 1st Jan, 
-                // and the new arrival_time is tommorow monrning at 00:10. The new arrival is computed as
-                // 10*60 + 86400 seconds.
-                auto get_diff_days = [&](uint32_t time){
-                    return (boost::posix_time::from_time_t(time).date() - first_day_of_impact).days();
-                };
+                auto start_first_day_of_impact = bpt::ptime(get_first_day_of_impact(*impact),
+                                                            bpt::time_duration(0, 0, 0, 0));
+                auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
+                auto ptime_departure = bpt::from_time_t(departure_time) - start_first_day_of_impact;
 
-                arrival_seconds +=  get_diff_days(arrival_time) * navitia::DateTimeUtils::SECONDS_PER_DAY;
-                departure_seconds += get_diff_days(departure_time) * navitia::DateTimeUtils::SECONDS_PER_DAY;
-
-                type::StopTime stop_time{static_cast<uint32_t>(arrival_seconds),
-                    static_cast<uint32_t>(departure_seconds), stop_point_ptr};
+                type::StopTime stop_time{static_cast<uint32_t>(ptime_arrival.total_seconds()),
+                                         static_cast<uint32_t>(ptime_departure.total_seconds()),
+                                         stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
                 impact->aux_info.stop_times.emplace_back(std::move(stop_time));
@@ -245,7 +268,8 @@ void handle_realtime(const std::string& id,
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
-    if (! is_handleable(trip_update)) {
+    if (! is_handleable(trip_update)
+            || ! check_trip_update(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
     }

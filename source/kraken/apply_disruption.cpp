@@ -43,6 +43,7 @@ www.navitia.io
 namespace navitia {
 
 namespace nt = navitia::type;
+namespace ndtu = navitia::DateTimeUtils;
 namespace bt = boost::posix_time;
 namespace bg = boost::gregorian;
 
@@ -130,6 +131,30 @@ static type::ValidityPattern compute_base_disrupted_vp(
     return vp;
 }
 
+// Computes the vp corresponding to the the new vj (i.e. realtime vj)
+static type::ValidityPattern compute_new_vp(
+        const nt::disruption::Impact& impact,
+        const boost::gregorian::date_period& production_period) {
+    type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
+    for (const auto& period: impact.application_periods) {
+        auto start_date = period.begin().date();
+        if (! production_period.contains(start_date)
+                || impact.aux_info.stop_times.empty()) {
+            continue;
+        }
+        // we may impact vj's passing midnight but all we care is start date
+        auto day = (start_date - production_period.begin()).days();
+        int day_offset = impact.aux_info.stop_times.front().arrival_time / ndtu::SECONDS_PER_DAY;
+        // cannot happen as arrival_time is unsigned, but in order to advance vj,
+        // it should be possible to have first stop_time negative
+        if (impact.aux_info.stop_times.front().arrival_time < 0) {
+            --day_offset;
+        }
+        vp.add(day + day_offset);
+    }
+    return vp;
+}
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -148,7 +173,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
-            auto new_vp = compute_base_disrupted_vp(impact->application_periods, meta.production_date);
+            auto mask_disrupted_vp = compute_base_disrupted_vp(impact->application_periods,
+                                                               meta.production_date);
+            auto new_vp = compute_new_vp(*impact, meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
             }
@@ -158,6 +185,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
                 new_vp,
+                mask_disrupted_vp,
                 r,
                 impact->aux_info.stop_times,
                 pt_data);
