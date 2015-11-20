@@ -82,6 +82,15 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lon(), 0.5881, 0.1);
     BOOST_CHECK_EQUAL(data.stop_points[0]->stop_area, data.stop_areas[0]);
 
+    // check stops properties
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+
+    for (int i = 1; i < 8; i++){
+        BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
+    }
+
     //we should have one zonal stop point
     BOOST_REQUIRE_EQUAL(boost::count_if(data.stop_points, [](const types::StopPoint* sp) {
                             return sp->is_zonal && sp->name == "Beleymas" && sp->area;
