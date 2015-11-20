@@ -40,7 +40,9 @@ meta_vj = Table('meta_vj', metadata,*[
 contributor = Table('contributor', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),],
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('website', TEXT(), primary_key=False, nullable=True),
+    Column('license', TEXT(), primary_key=False, nullable=True),],
     schema='navitia')
 
 
