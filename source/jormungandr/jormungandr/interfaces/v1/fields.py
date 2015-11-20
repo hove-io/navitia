@@ -379,7 +379,7 @@ class DisruptionLinks(fields.Raw):
     """
     def output(self, key, obj):
         return [create_internal_link(_type="disruption", rel="disruptions", id=d.uri)
-                for d in obj.disruptions]
+                for d in obj.impacts]
 
 
 class FieldDateTime(fields.Raw):
@@ -466,21 +466,21 @@ class DisruptionsField(fields.Raw):
     """
 
     def output(self, key, obj):
-        all_disruptions = {}
+        all_impacts = {}
 
-        def get_all_disruptions(_, val):
-            if not hasattr(val, 'disruptions'):
+        def get_all_impacts(_, val):
+            if not hasattr(val, 'impacts'):
                 return
-            disruptions = val.disruptions
-            if not disruptions or not hasattr(disruptions[0], 'uri'):
+            impacts = val.impacts
+            if not impacts or not hasattr(impacts[0], 'uri'):
                 return
 
-            for d in disruptions:
-                all_disruptions[d.uri] = d
+            for impact in impacts:
+                all_impacts[impact.uri] = impact
 
-        utils.walk_protobuf(obj, get_all_disruptions)
+        utils.walk_protobuf(obj, get_all_impacts)
 
-        return [marshal(d, disruption_marshaller, display_null=False) for d in all_disruptions.values()]
+        return [marshal(d, disruption_marshaller, display_null=False) for d in all_impacts.values()]
 
 display_informations_route = {
     "network": fields.String(attribute="network"),

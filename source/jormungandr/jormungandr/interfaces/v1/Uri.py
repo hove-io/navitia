@@ -541,6 +541,28 @@ def networks(is_collection):
     return Networks
 
 
+def disruptions(is_collection):
+
+    class Disruptions(Uri):
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "disruptions")
+            self.collections = [
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
+    return Disruptions
+
+
 def addresses(is_collection):
     class Addresses(Coord):
 

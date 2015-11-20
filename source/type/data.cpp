@@ -548,6 +548,9 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
     case Type_e::Connection:
         num_elements = this->pt_data->stop_point_connections.size(); break;
+    case Type_e::Impact:
+        num_elements = pt_data->disruption_holder.get_weak_impacts().size();
+        break;
     default:  break;
     }
     std::vector<idx_t> indexes(num_elements);

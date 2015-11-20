@@ -71,14 +71,15 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
-    def disruptions(self, request, instance):
+    def traffic_reports(self, request, instance):
         req = request_pb2.Request()
-        req.requested_api = type_pb2.disruptions
-        req.disruptions.depth = request['depth']
-        req.disruptions.filter = request['filter']
-        req.disruptions.count = request['count']
-        req.disruptions.start_page = request['start_page']
-        req.disruptions._current_datetime = date_to_timestamp(request['_current_datetime'])
+        print type_pb2.traffic_reports
+        req.requested_api = type_pb2.traffic_reports
+        req.traffic_reports.depth = request['depth']
+        req.traffic_reports.filter = request['filter']
+        req.traffic_reports.count = request['count']
+        req.traffic_reports.start_page = request['start_page']
+        req.traffic_reports._current_datetime = date_to_timestamp(request['_current_datetime'])
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -289,6 +290,9 @@ class Scenario(object):
 
     def poi_types(self, request, instance):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request, instance)
+
+    def disruptions(self, request, instance):
+        return self.__on_ptref("impact", type_pb2.IMPACT, request, instance)
 
     def journeys(self, request, instance):
         raise NotImplementedError()

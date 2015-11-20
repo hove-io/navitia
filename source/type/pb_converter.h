@@ -290,6 +290,8 @@ void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &da
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes=false);
 
+void fill_impacts(const type::disruption::Impact& impact, const type::Data &data, pbnavitia::Response& response);
+
 /**
  * get_label() is a function that returns:
  * * the label (or a function get_label()) if the object has it
