@@ -574,7 +574,7 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
 # a supprimer
         parser_get.add_argument("max_duration", type=int, default=3600*24)
-        parser_get.add_argument("wheelchair", type=boolean, default=False)
+        parser_get.add_argument("wheelchair", type=boolean, default=None)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
         # for retrocompatibility purpose, we duplicate (without []):

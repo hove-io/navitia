@@ -952,3 +952,26 @@ def is_valid_stop_date_time(stop_date_time):
     get_not_null(stop_date_time, 'departure_date_time')
     assert get_valid_datetime(stop_date_time['departure_date_time'])
 
+
+def get_used_vj(response):
+    """
+    return for each journeys the list of taken vj
+    """
+    journeys_vj = []
+    for j in get_not_null(response, 'journeys'):
+        vjs = []
+        for s in get_not_null(j, 'sections'):
+            for l in s.get('links', []):
+                if l['type'] == 'vehicle_journey':
+                    vjs.append(l['id'])
+                    break
+        journeys_vj.append(vjs)
+
+    return journeys_vj
+
+
+def get_arrivals(response):
+    """
+    return a list with the journeys arrival times
+    """
+    return [j['arrival_date_time'] for j in get_not_null(response, 'journeys')]

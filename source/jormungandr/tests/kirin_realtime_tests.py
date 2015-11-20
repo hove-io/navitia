@@ -34,7 +34,8 @@ from tests.tests_mechanism import dataset
 
 from jormungandr import utils
 from tests import gtfs_realtime_pb2
-from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query
+from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, get_used_vj, \
+    get_arrivals
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
 
@@ -46,30 +47,6 @@ class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
         return make_mock_kirin_item(*args, **kwargs)
 
 
-def _get_arrivals(response):
-    """
-    return a list with the journeys arrival times
-    """
-    return [j['arrival_date_time'] for j in get_not_null(response, 'journeys')]
-
-
-def _get_used_vj(response):
-    """
-    return for each journeys the list of taken vj
-    """
-    journeys_vj = []
-    for j in get_not_null(response, 'journeys'):
-        vjs = []
-        for s in get_not_null(j, 'sections'):
-            for l in s.get('links', []):
-                if l['type'] == 'vehicle_journey':
-                    vjs.append(l['id'])
-                    break
-        journeys_vj.append(vjs)
-
-    return journeys_vj
-
-
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
 class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
     def test_vj_deletion(self):
@@ -79,8 +56,8 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         response = self.query_region(journey_basic_query + "&data_freshness=realtime")
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
-        eq_(_get_arrivals(response), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(response), [['vjA'], []])
+        eq_(get_arrivals(response), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(response), [['vjA'], []])
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -94,13 +71,13 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
-        eq_(_get_used_vj(new_response), [[], ['vj:B:1']])
+        eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
+        eq_(get_used_vj(new_response), [[], ['vj:B:1']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(new_base), [['vjA'], []])
+        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(new_base), [['vjA'], []])
         # see http://jira.canaltp.fr/browse/NAVP-266,
         # _current_datetime is needed to make it working
         #eq_(len(new_base['disruptions']), 1)
@@ -116,8 +93,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
-        eq_(_get_arrivals(response), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(response), [['vjA'], []])
+        eq_(get_arrivals(response), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(response), [['vjA'], []])
 
         pt_response = self.query_region('vehicle_journeys')
         eq_(len(pt_response['vehicle_journeys']), 4)
@@ -143,13 +120,13 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
-        eq_(_get_used_vj(new_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
+        eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(get_used_vj(new_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(new_base), [['vjA'], []])
+        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(new_base), [['vjA'], []])
 
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',
@@ -168,13 +145,13 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # so the first real-time vj created for the first disruption should be deactivated
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(_get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
-        eq_(_get_used_vj(new_response), [[], ['vjA:modified:1:96231_2015-07-28_0']])
+        eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
+        eq_(get_used_vj(new_response), [[], ['vjA:modified:1:96231_2015-07-28_0']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(_get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
-        eq_(_get_used_vj(new_base), [['vjA'], []])
+        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(new_base), [['vjA'], []])
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
