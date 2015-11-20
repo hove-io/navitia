@@ -745,6 +745,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             auto f_vj = mvj->create_frequency_vj(uri,
                                                  rt_level,
                                                  vp,
+                                                 vp,
                                                  route,
                                                  std::move(sts_from_vj[vj_id]),
                                                  *data.pt_data);
@@ -755,6 +756,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         } else {
             vj = mvj->create_discrete_vj(uri,
                                          rt_level,
+                                         vp,
                                          vp,
                                          route,
                                          std::move(sts_from_vj[vj_id]),
