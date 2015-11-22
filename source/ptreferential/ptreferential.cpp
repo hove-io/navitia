@@ -140,13 +140,32 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 
 
+template<typename T, typename C>
+struct CluaseTestHelper {
+    static bool is_clause_tested(const T e, const C & clause){
+        return clause(*e);
+    };
+};
 
+using impact_wptr = boost::weak_ptr<navitia::type::disruption::Impact>;
+
+// Partial specialization for boost::weak_ptr<navitia::type::disruption::Impact>
+template<typename C>
+struct CluaseTestHelper<impact_wptr, C> {
+    static bool is_clause_tested(const impact_wptr e, const C & clause){
+        auto impact_sptr = e.lock();
+        if (impact_sptr) {
+            return clause(*impact_sptr);
+        }
+        return false;
+    };
+};
 
 template<typename T, typename C>
 std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
     std::vector<idx_t> result;
     for(size_t i = 0; i < data.size(); ++i){
-        if(clause(*data[i]))
+        if(CluaseTestHelper<T, C>::is_clause_tested(data[i], clause))
             result.push_back(i);
     }
     return result;
@@ -465,6 +484,9 @@ std::vector<idx_t> make_query(const Type_e requested_type,
             break;
         case Type_e::Connection:
             indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data);
+            break;
+        case Type_e::Impact:
+            indexes = get_indexes<type::disruption::Impact>(filter, requested_type, data);
             break;
         default:
             throw parsing_error(parsing_error::partial_error,

@@ -533,7 +533,8 @@ static_data * static_data::get() {
                 (Type_e::POI, "poi")
                 (Type_e::POIType, "poi_type")
                 (Type_e::Contributor, "contributor")
-                (Type_e::Calendar, "calendar");
+                (Type_e::Calendar, "calendar")
+                (Type_e::Impact, "disruption");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")

@@ -534,6 +534,10 @@ Data::get_data<routing::JourneyPatternPoint>() const {
     return res;
 }
 
+template<> const std::vector<boost::weak_ptr<type::disruption::Impact>>&
+Data::get_data<type::disruption::Impact>() const {
+    return pt_data->disruption_holder.get_weak_impacts();
+}
 
 std::vector<idx_t> Data::get_all_index(Type_e type) const {
     size_t num_elements = 0;

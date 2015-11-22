@@ -198,8 +198,7 @@ void fill_message(const type::disruption::Impact& impact,
 }
 
 void fill_impacts(const type::disruption::Impact& impact, const type::Data &data, pbnavitia::Response& response) {
-    //auto* disruption = response.add_disruptions();
-
+    fill_message(impact, data, &response);
 }
 
 
