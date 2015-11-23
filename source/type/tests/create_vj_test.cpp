@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(create_vj_test) {
     sts.at(1).departure_time = 8200;
     auto vp = *base_vj->base_validity_pattern();
     vp.days = year("0000100" "0000100");
-    const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, vp, base_vj->route, sts, pt_data);
+    const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, base_vj->route, sts, pt_data);
 
     BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("0011111" "0011111"));
     BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("0011011" "0011011"));
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(create_vj_test) {
     sts.at(1).arrival_time = 8300;
     sts.at(1).departure_time = 8300;
     vp.days = year("0000000" "0000110");
-    const auto* rt_vj = mvj->create_discrete_vj("rt", nt::RTLevel::RealTime, vp, vp, base_vj->route, sts, pt_data);
+    const auto* rt_vj = mvj->create_discrete_vj("rt", nt::RTLevel::RealTime, vp, base_vj->route, sts, pt_data);
     
     BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("0011111" "0011111"));
     BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("0011011" "0011011"));

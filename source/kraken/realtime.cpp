@@ -180,6 +180,7 @@ create_disruption(const std::string& id,
 
     nt::disruption::DisruptionHolder& holder = data.pt_data->disruption_holder;
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+    auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 
     delete_disruption(id, *data.pt_data, *data.meta);
@@ -232,8 +233,6 @@ create_disruption(const std::string& id,
                         departure_time = arrival_time =st.arrival().time();
                     }
                 }
-                auto start_first_day_of_impact = bpt::ptime(get_first_day_of_impact(*impact),
-                                                            bpt::time_duration(0, 0, 0, 0));
                 auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
                 auto ptime_departure = bpt::from_time_t(departure_time) - start_first_day_of_impact;
 

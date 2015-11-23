@@ -92,7 +92,6 @@ public:
         auto vj = mvj->create_discrete_vj(vj_name,
                                           nt::RTLevel::Base,
                                           nt::ValidityPattern(),
-                                          nt::ValidityPattern(),
                                           current_rt,
                                           std::move(sts),
                                           *data.pt_data);
