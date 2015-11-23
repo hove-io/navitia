@@ -322,7 +322,7 @@ public:
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions_by_uri & causes & severities & tags;
+        ar & disruptions_by_uri & causes & severities & tags & weak_impacts;
     }
 };
 }

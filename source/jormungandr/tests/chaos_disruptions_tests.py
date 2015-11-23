@@ -331,6 +331,15 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         self.send_mock("blocking_network_disruption",
                        "base_network", "network", blocking=True)
 
+        # Test disruption API
+        response = self.query_region('disruptions')
+        disruptions = response.get('disruptions')
+        assert disruptions
+        assert len(disruptions) == 2
+        is_valid_disruption(disruptions[0])
+        assert set([d['disruption_uri'] for d in disruptions]) == \
+               set(["blocking_line_disruption", "blocking_network_disruption"])
+
         response = self.query_region(journey_basic_query + "&disruption_active=true")
 
         assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
