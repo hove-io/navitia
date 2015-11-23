@@ -138,7 +138,8 @@ public:
 
     friend class boost::serialization::access;
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq & is_realtime_loaded;
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
+           & is_realtime_loaded;
     }
     template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
@@ -147,7 +148,8 @@ public:
             auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
             throw wrong_version(msg.str());
         }
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
+           & is_realtime_loaded;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 

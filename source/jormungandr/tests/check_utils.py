@@ -872,6 +872,7 @@ def is_valid_region_status(status):
     is_valid_date(get_not_null(status, 'start_production_date'))
     get_valid_datetime(get_not_null(status, 'last_load_at'), possible_errors=True)
     get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
+    get_not_null(status, 'is_realtime_loaded')
 
 
 # for () are mandatory for the label even if is reality it is not
