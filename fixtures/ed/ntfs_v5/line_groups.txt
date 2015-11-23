@@ -1,0 +1,4 @@
+line_group_id,line_group_name,main_line_id
+lg1,"B lines group",l2
+lg2,"Bn line only group",l3
+lg3,"Unknown group",unknownlineidtotestifitiscorrectlyignored
