@@ -1664,7 +1664,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
 
     auto* bob = b.sa("bob", 0, 0).sa;
     bob->admin_list.push_back(bobville);
-    b.sa("bobette", 0, 0).sa;
+    b.sa("bobette", 0, 0);
 
     b.data->pt_data->index();
     b.build_autocomplete();

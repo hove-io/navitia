@@ -32,7 +32,7 @@
 from nose.tools.trivial import eq_
 from tests.tests_mechanism import dataset
 
-from jormungandr import utils
+from jormungandr.utils import str_to_time_stamp
 from tests import gtfs_realtime_pb2
 from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, get_used_vj, \
     get_arrivals
@@ -104,8 +104,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(len(pt_response['disruptions']), 0)
 
         self.send_mock("vjA", "20120614", 'delayed',
-                       [("stop_point:stopB", 1339660944, 1339660944),
-                        ("stop_point:stopA", 1339661040, 1339661040)])
+           [("stop_point:stopB", str_to_time_stamp("20120614T080224"), str_to_time_stamp("20120614T080224")),
+            ("stop_point:stopA", str_to_time_stamp("20120614T080400"), str_to_time_stamp("20120614T080400"))])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -130,8 +130,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',
-                       [("stop_point:stopB", 1339660944, 1339660944),
-                        ("stop_point:stopA", 1339661040, 1339661040)])
+           [("stop_point:stopB", str_to_time_stamp("20120614T080224"), str_to_time_stamp("20120614T080224")),
+            ("stop_point:stopA", str_to_time_stamp("20120614T080400"), str_to_time_stamp("20120614T080400"))])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -152,6 +152,73 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
         eq_(get_used_vj(new_base), [['vjA'], []])
+
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
+    def test_vj_delay_day_after(self):
+        """
+        send a mock kirin vj delaying on day after and test that the vj is not taken
+        """
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+
+        # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
+        eq_(get_arrivals(response), ['20120614T080222', '20120614T080435']) # pt_walk + vj 08:01
+        eq_(get_used_vj(response), [['vjA'], []])
+
+        pt_response = self.query_region('vehicle_journeys')
+        eq_(len(pt_response['vehicle_journeys']), 4)
+
+        # check that we have the next vj
+        s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
+        r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
+        journey_later_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080500")
+        later_response = self.query_region(journey_later_query + "&data_freshness=realtime")
+        eq_(get_arrivals(later_response), ['20120614T080935', '20120614T180222']) # pt_walk + vj 18:01
+        eq_(get_used_vj(later_response), [[], ['vj:B:1']])
+
+
+        # no disruption yet
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 0)
+
+        self.send_mock("vjA", "20120614", 'delayed',
+           [("stop_point:stopB", str_to_time_stamp("20120615T070224"), str_to_time_stamp("20120615T070224")),
+            ("stop_point:stopA", str_to_time_stamp("20120615T070400"), str_to_time_stamp("20120615T070400"))])
+
+        # A new vj is created
+        pt_response = self.query_region('vehicle_journeys')
+        eq_(len(pt_response['vehicle_journeys']), 5)
+
+        vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
+        assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
+
+        # we should see the disruption
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222']) # pt_walk + vj 18:01
+        eq_(get_used_vj(new_response), [[], ['vj:B:1']])
+
+        # it should not have changed anything for the theoric
+        new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
+        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
+        eq_(get_used_vj(new_base), [['vjA'], []])
+
+        # the day after, we can use the delayed vj
+        journey_day_after_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord=s_coord, to_coord=r_coord, datetime="20120615T070000")
+        day_after_response = self.query_region(journey_day_after_query + "&data_freshness=realtime")
+        eq_(get_arrivals(day_after_response), ['20120615T070435', '20120615T070520']) # pt_walk + rt 07:02:24
+        eq_(get_used_vj(day_after_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
+
+        # it should not have changed anything for the theoric the day after
+        day_after_base = self.query_region(journey_day_after_query + "&data_freshness=base_schedule")
+        eq_(get_arrivals(day_after_base), ['20120615T070435', '20120615T080222'])
+        eq_(get_used_vj(day_after_base), [[], ['vjA']])
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
