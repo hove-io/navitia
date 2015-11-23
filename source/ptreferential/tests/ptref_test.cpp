@@ -326,9 +326,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
     auto indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
-    auto expected = std::vector<size_t>{0};
-    BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(indexes), std::end(indexes),
-            std::begin(expected), std::end(expected));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
 
     navitia::delete_disruption("Disruption 1", *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
@@ -342,9 +340,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_2, *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
-    expected = std::vector<size_t>{0};
-    BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(indexes), std::end(indexes),
-            std::begin(expected), std::end(expected));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
 
     const auto& disrup_3 = b.impact(nt::RTLevel::RealTime, "Disruption 3")
                      .severity(nt::disruption::Effect::NO_SERVICE)
@@ -354,9 +350,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
-    expected = std::vector<size_t>{0, 1};
-    BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(indexes), std::end(indexes),
-            std::begin(expected), std::end(expected));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0, 1});
 }
 
 
