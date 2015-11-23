@@ -320,7 +320,7 @@ void delete_disruption(const std::string& disruption_id,
             delete_impact(impact, pt_data, meta);
         }
     }
-    pt_data.disruption_holder.clean_weak_impacts();
+    holder.clean_weak_impacts();
     LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 

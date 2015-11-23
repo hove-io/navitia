@@ -341,7 +341,8 @@ Impacter& Impacter::severity(dis::Effect e,
     auto& sev_map = b.data->pt_data->disruption_holder.severities;
     auto it = sev_map.find(uri);
     if (it != std::end(sev_map)) {
-        if (impact->severity = it->second.lock()) {
+        impact->severity = it->second.lock();
+        if (impact->severity) {
             return *this;
         };
     }
