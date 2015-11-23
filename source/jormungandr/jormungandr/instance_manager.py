@@ -155,8 +155,7 @@ class InstanceManager(object):
 
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if resp.HasField("publication_date") and\
-          instance.publication_date != resp.publication_date:
+        if resp.HasField("publication_date") and instance.publication_date != resp.publication_date:
             self._clear_cache()
             instance.publication_date = resp.publication_date
         return resp
@@ -165,11 +164,11 @@ class InstanceManager(object):
         """
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.METADATAS
+        purge_cache_needed = False
         for instance in self.instances.itervalues():
-            if instance.init():
-                self._clear_cache()
+            purge_cache_needed = instance.init() or purge_cache_needed
+        if purge_cache_needed:
+            self._clear_cache()
 
     def thread_ping(self, timer=10):
         """
