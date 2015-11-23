@@ -137,6 +137,7 @@ struct data_set {
         cmp->uri = "CMP1";
         b.lines["line:A"]->company_list.push_back(cmp);
 
+        b.lines["line:A"]->text_color = "FFD700";
         // LineGroup added
         navitia::type::LineGroup* lg = new navitia::type::LineGroup();
         lg->name = "A group";

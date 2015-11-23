@@ -131,6 +131,8 @@ class TestPtRef(AbstractTestFixture):
         l = lines[0]
 
         is_valid_line(l, depth_check=1)
+
+        assert l["text_color"] == 'FFD700'
         #we know we have a geojson for this test so we can check it
         geo = get_not_null(l, 'geojson')
         shape(geo)
