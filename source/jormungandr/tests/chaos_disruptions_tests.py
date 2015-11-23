@@ -522,6 +522,15 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
+        # Test disruption API
+        response = self.query_region('disruptions')
+        disruptions = response.get('disruptions')
+        assert disruptions
+        assert len(disruptions) == 1
+        is_valid_disruption(disruptions[0])
+        assert disruptions[0]['disruption_id'] == disruption_id
+
+
         # query on journey, we should find some since the disruption is not blocking for real
         journey_query = journey_basic_query + "&disruption_active=true"
         response = self.query_region(journey_query)

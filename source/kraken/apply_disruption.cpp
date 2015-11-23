@@ -305,18 +305,6 @@ void delete_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     LOG4CPLUS_DEBUG(log, impact.get()->uri << " deleted");
 }
 
-class Finally{
-public:
-    Finally(std::function<void()> f):_f(f) {}
-    ~Finally(){_f();}
-    Finally(const Finally&) = delete;
-    Finally(Finally&&) = delete;
-    void operator =(const Finally&) = delete;
-    void operator =(Finally&&) = delete;
-private:
-    std::function<void()> _f;
-};
-
 } // anonymous namespace
 
 void delete_disruption(const std::string& disruption_id,
@@ -325,18 +313,14 @@ void delete_disruption(const std::string& disruption_id,
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
 
-    Finally finally{[&](){
-        pt_data.disruption_holder.clean_weak_impacts();
-    }};
-
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
     // the disruption is deleted by RAII
-    std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
-    if (disruption) {
+    if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
             delete_impact(impact, pt_data, meta);
         }
     }
+    pt_data.disruption_holder.clean_weak_impacts();
     LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 

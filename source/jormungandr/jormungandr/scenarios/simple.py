@@ -73,7 +73,6 @@ class Scenario(object):
 
     def traffic_reports(self, request, instance):
         req = request_pb2.Request()
-        print type_pb2.traffic_reports
         req.requested_api = type_pb2.traffic_reports
         req.traffic_reports.depth = request['depth']
         req.traffic_reports.filter = request['filter']

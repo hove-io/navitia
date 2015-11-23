@@ -141,7 +141,7 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 
 template<typename T, typename C>
-struct CluaseTestHelper {
+struct CluaseType {
     static bool is_clause_tested(const T e, const C & clause){
         return clause(*e);
     };
@@ -151,7 +151,7 @@ using impact_wptr = boost::weak_ptr<navitia::type::disruption::Impact>;
 
 // Partial specialization for boost::weak_ptr<navitia::type::disruption::Impact>
 template<typename C>
-struct CluaseTestHelper<impact_wptr, C> {
+struct CluaseType<impact_wptr, C> {
     static bool is_clause_tested(const impact_wptr e, const C & clause){
         auto impact_sptr = e.lock();
         if (impact_sptr) {
@@ -165,7 +165,7 @@ template<typename T, typename C>
 std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
     std::vector<idx_t> result;
     for(size_t i = 0; i < data.size(); ++i){
-        if(CluaseTestHelper<T, C>::is_clause_tested(data[i], clause))
+        if(CluaseType<T, C>::is_clause_tested(data[i], clause))
             result.push_back(i);
     }
     return result;
