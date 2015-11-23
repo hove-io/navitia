@@ -713,6 +713,8 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
 
 /* testing that a vj delayed to the day after is accepted and correctly handled
  * (only passing same disruption 2 times)
+ * Disruptions sent:
+ * D0: +1 day (two times)
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     ed::builder b("20150928");
@@ -780,6 +782,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
 
 /* testing that a vj delayed to the day after and passing midnight is accepted and correctly handled
  * (only passing same disruption 2 times)
+ * Disruptions sent:
+ * D0: +1 day pass-midnight (two times)
  */
 BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     ed::builder b("20150928");
@@ -843,4 +847,390 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150930T0110"_dt);
+}
+
+/* testing a vj delayed to the day after (1 day late)
+ * then a second disruption on the same day is pushed, bringing back the vj to just 1 hour late
+ * testing all is accepted and correctly handled
+ * Disruptions sent:
+ * D0: +1 day
+ * D0: +1 hour
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
+    ed::builder b("20150928");
+    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate first_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
+                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+            });
+    transit_realtime::TripUpdate second_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0901"_pts, "20150928T0901"_pts),
+                    std::make_tuple("stop2", "20150928T1001"_pts, "20150928T1001"_pts)
+            });
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, first_trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, second_trip_update, *b.data);
+
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T1001"_dt);
+
+    res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+            "06:00"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, true);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
+}
+
+/* testing a vj delayed to the day after (1 day late)
+ * then a second disruption on the same day is pushed, bringing back the vj to normal
+ * testing all is accepted and correctly handled
+ * Disruptions sent:
+ * D0: +1 day
+ * D0: back to normal
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
+    ed::builder b("20150928");
+    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate first_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
+                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+            });
+    transit_realtime::TripUpdate second_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
+                    std::make_tuple("stop2", "20150928T0901"_pts, "20150928T0901"_pts)
+            });
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, first_trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, second_trip_update, *b.data);
+
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 1);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+            "06:00"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, true);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
+}
+
+/* testing that a vj delayed to the day after (1 day late)
+ * then a second disruption on the day after is pushed, delaying the vj of D+1 of 1 hour
+ * testing all is accepted and correctly handled
+ * Disruptions sent:
+ * D0: +1 day
+ * D1: +1 hour
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
+    ed::builder b("20150928");
+    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate first_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
+                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+            });
+    transit_realtime::TripUpdate second_trip_update = make_delay_message("vj:1",
+            "20150929",
+            {
+                    std::make_tuple("stop1", "20150929T0901"_pts, "20150929T0901"_pts),
+                    std::make_tuple("stop2", "20150929T1001"_pts, "20150929T1001"_pts)
+            });
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, first_trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, second_trip_update, *b.data);
+
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 3);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[1].arrival, "20150929T1001"_dt);
+}
+
+/* testing that a vj delayed to the day after (1 day late)
+ * then a second disruption on the same day is pushed, canceling the vj
+ * testing all is accepted and correctly handled
+ * Disruptions sent:
+ * D0: +1 day
+ * D0: cancel
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
+    ed::builder b("20150928");
+    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate first_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
+                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+            });
+    transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, first_trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, second_trip_update, *b.data);
+
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 1);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
+}
+
+/* testing that a vj delayed to the day after (1 day late)
+ * then a second disruption on the day after is pushed, canceling the vj
+ * testing all is accepted and correctly handled
+ * Disruptions sent:
+ * D0: +1 day
+ * D1: cancel
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
+    ed::builder b("20150928");
+    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+
+    transit_realtime::TripUpdate first_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
+                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+            });
+    transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150929");
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, first_trip_update, *b.data);
+
+    // We should have 2 vj
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    // We should have two vp
+    // a vp for the current vj, and an empty vp
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime(feed_id_1, timestamp, second_trip_update, *b.data);
+
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_GE(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, true);
+    };
+
+    auto res = compute(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    res = compute(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
 }
