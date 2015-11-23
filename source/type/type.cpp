@@ -377,11 +377,6 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     int day_offset = 0;
     if (!sts.empty()) {
         day_offset = sts.front().arrival_time / (ndtu::SECONDS_PER_DAY);
-        // cannot happen as arrival_time is unsigned, but in order to advance vj,
-        // it should be possible to have first stop_time negative
-        if (sts.front().arrival_time < 0) {
-            --day_offset;
-        }
     }
     ValidityPattern model_new_vp{disrupted_vp};
     if (day_offset >= 0) {

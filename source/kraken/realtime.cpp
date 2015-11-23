@@ -161,13 +161,6 @@ execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourne
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
-
-static boost::gregorian::date
-get_first_day_of_impact(const nt::disruption::Impact& impact) {
-    auto first_period = impact.application_periods.at(0);
-    return first_period.begin().date();
-}
-
 static const type::disruption::Disruption&
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
