@@ -48,7 +48,6 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 const std::string ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/ntfs";
-const std::string sync_ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/sync_ntfs";
 
 BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     using namespace ed;
@@ -331,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
 BOOST_AUTO_TEST_CASE(sync_ntfs) {
     ed::Data data;
 
-    ed::connectors::FusioParser parser(sync_ntfs_path);
+    ed::connectors::FusioParser parser(ntfs_path + "_v5");
     parser.fill(data, "20150327");
 
     //we check that the data have been correctly loaded
