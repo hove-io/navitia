@@ -153,7 +153,7 @@ namespace {
  * explictly check if the wanted admin is not oneself
  */
 template <typename T>
-bool self_admin_check(const T*, const georef::Admin* admin) { return false; }
+bool self_admin_check(const T*, const georef::Admin*) { return false; }
 
 bool self_admin_check(const georef::Admin* obj, const georef::Admin* admin) {
     return obj->uri == admin->uri;
