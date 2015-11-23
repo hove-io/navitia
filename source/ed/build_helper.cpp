@@ -135,14 +135,14 @@ nt::VehicleJourney* VJ::make() {
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, vp, route, stop_times, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, vp, route, stop_times, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
     }
 
     //add physical mode
