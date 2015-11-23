@@ -1,0 +1,6 @@
+"trip_id","arrival_time","departure_time","stop_id","stop_sequence","stop_headsign","pickup_type","drop_off_type","shape_dist_traveled"
+trip1,"6:00:00","6:00:01","frpno:metro4",1,,,,
+trip1,"6:20:00","6:20:01","frpes:metro4",2,,,,
+trip1,"6:40:00","6:40:01","chatelet:4",3,,,,
+trip1,"7:00:00","7:00:01","montparnasse:4",4,,,,
+
