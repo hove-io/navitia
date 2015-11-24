@@ -362,7 +362,7 @@ template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
 template<typename VJ>
 VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        const RTLevel level,
-                                       const ValidityPattern& disrupted_vp,
+                                       const ValidityPattern& canceled_vp,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
@@ -378,7 +378,7 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     if (!sts.empty()) {
         day_offset = sts.front().arrival_time / (ndtu::SECONDS_PER_DAY);
     }
-    ValidityPattern model_new_vp{disrupted_vp};
+    ValidityPattern model_new_vp{canceled_vp};
     if (day_offset >= 0) {
         model_new_vp.days <<= size_t(day_offset);
     } else {
@@ -413,7 +413,7 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
-    const auto mask = ~disrupted_vp.days;
+    const auto mask = ~canceled_vp.days;
     for_all_vjs([&] (VehicleJourney& vj) {
             for (const auto l: enum_range_from(level)) {
                 auto new_vp = *vj.validity_patterns[l];
@@ -435,21 +435,21 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 FrequencyVehicleJourney*
 MetaVehicleJourney::create_frequency_vj(const std::string& uri,
                                         const RTLevel level,
-                                        const ValidityPattern& disrupted_vp,
+                                        const ValidityPattern& canceled_vp,
                                         Route* route,
                                         std::vector<StopTime> sts,
                                         nt::PT_Data& pt_data) {
-    return impl_create_vj<FrequencyVehicleJourney>(uri, level, disrupted_vp, route, std::move(sts), pt_data);
+    return impl_create_vj<FrequencyVehicleJourney>(uri, level, canceled_vp, route, std::move(sts), pt_data);
 }
 
 DiscreteVehicleJourney*
 MetaVehicleJourney::create_discrete_vj(const std::string& uri,
                                        const RTLevel level,
-                                       const ValidityPattern& disrupted_vp,
+                                       const ValidityPattern& canceled_vp,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
-    return impl_create_vj<DiscreteVehicleJourney>(uri, level, disrupted_vp, route, std::move(sts), pt_data);
+    return impl_create_vj<DiscreteVehicleJourney>(uri, level, canceled_vp, route, std::move(sts), pt_data);
 }
 
 
