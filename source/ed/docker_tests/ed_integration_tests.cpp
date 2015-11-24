@@ -135,6 +135,9 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
     }
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
