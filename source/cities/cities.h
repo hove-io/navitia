@@ -49,6 +49,8 @@ typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
 
 namespace navitia { namespace cities {
 
+typedef uint64_t OSMId;
+
 struct Rect{
     double min[2];
     double max[2];
@@ -98,6 +100,12 @@ struct OSMNode {
         return double(this->ilat) / factor;
     }
 
+    bool almost_equal(const OSMNode& other) const {
+        // check if the nodes are quite at the same location
+        auto distance = 10; // about 0.5m
+        return std::abs(this->ilon - other.ilon) < distance && std::abs(this->ilat - other.ilat) < distance;
+    }
+
     std::string coord_to_string() const {
         std::stringstream geog;
         geog << std::setprecision(10) << lon() << " " << lat();
@@ -128,15 +136,15 @@ struct OSMRelation {
     void set_centre(float lon, float lat) {
         centre = point(lon, lat);
     }
-    void build_geometry(OSMCache& cache);
-    void build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids = std::set<u_int64_t>());
+    void build_geometry(OSMCache& cache, OSMId);
+    void build_polygon(OSMCache& cache, OSMId);
 };
 
 struct OSMWay {
     /// Properties of a way : can we use it
-    std::vector<std::unordered_map<uint64_t, OSMNode>::const_iterator> nodes;
+    std::vector<std::unordered_map<OSMId, OSMNode>::const_iterator> nodes;
 
-    void add_node(std::unordered_map<uint64_t, OSMNode>::const_iterator node) {
+    void add_node(std::unordered_map<OSMId, OSMNode>::const_iterator node) {
         nodes.push_back(node);
     }
 
@@ -156,9 +164,9 @@ typedef std::set<OSMRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
 
 struct OSMCache {
-    std::unordered_map<uint64_t, OSMRelation> relations;
-    std::unordered_map<uint64_t, OSMNode> nodes;
-    std::unordered_map<uint64_t, OSMWay> ways;
+    std::unordered_map<OSMId, OSMRelation> relations;
+    std::unordered_map<OSMId, OSMNode> nodes;
+    std::unordered_map<OSMId, OSMWay> ways;
     RTree<OSMRelation*, double, 2> admin_tree;
 
     Lotus lotus;
@@ -176,9 +184,9 @@ struct ReadRelationsVisitor {
     OSMCache& cache;
     ReadRelationsVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
-    void relation_callback(uint64_t osm_id, const CanalTP::Tags & tags, const CanalTP::References & refs);
-    void way_callback(uint64_t , const CanalTP::Tags& , const std::vector<uint64_t>&) {}
+    void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
+    void relation_callback(OSMId, const CanalTP::Tags & tags, const CanalTP::References & refs);
+    void way_callback(OSMId, const CanalTP::Tags&, const std::vector<OSMId>&) {}
 };
 struct ReadWaysVisitor {
     // Read references and set if a node is used by a way
@@ -187,9 +195,9 @@ struct ReadWaysVisitor {
 
     ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
-    void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
-    void way_callback(uint64_t osm_id, const CanalTP::Tags& tags, const std::vector<uint64_t>& nodes);
+    void node_callback(OSMId , double, double, const CanalTP::Tags&) {}
+    void relation_callback(OSMId , const CanalTP::Tags&, const CanalTP::References&) {}
+    void way_callback(OSMId, const CanalTP::Tags& tags, const std::vector<OSMId>& nodes);
 };
 
 

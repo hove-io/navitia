@@ -57,8 +57,8 @@ namespace navitia { namespace cities {
  * Stores admins relations and initializes nodes and ways associated to it.
  * Stores relations for associatedStreet, also initializes nodes and ways.
  */
-void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tags &tags, const CanalTP::References &refs) {
-    auto logger = log4cplus::Logger::getInstance("log");
+void ReadRelationsVisitor::relation_callback(OSMId osm_id, const CanalTP::Tags &tags,
+                                             const CanalTP::References &refs) {
     const auto boundary = tags.find("boundary");
     if (boundary == tags.end() || (boundary->second != "administrative" && boundary->second != "multipolygon")) {
         return;
@@ -93,7 +93,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const std::vector<uint64_t>& nodes_refs) {
+void ReadWaysVisitor::way_callback(OSMId osm_id, const CanalTP::Tags &, const std::vector<OSMId>& nodes_refs) {
     auto it_way = cache.ways.find(osm_id);
     if (it_way == cache.ways.end()) {
         return;
@@ -107,8 +107,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const
 /*
  * We fill needed nodes with their coordinates
  */
-void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
-        const CanalTP::Tags& tags) {
+void ReadNodesVisitor::node_callback(OSMId osm_id, double lon, double lat, const CanalTP::Tags& tags) {
     auto node_it = cache.nodes.find(osm_id);
     if (node_it != cache.nodes.end()) {
         node_it->second.set_coord(lon, lat);
@@ -121,7 +120,7 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
  */
 void OSMCache::build_relations_geometries() {
     for (auto& relation : relations) {
-        relation.second.build_geometry(*this);
+        relation.second.build_geometry(*this, relation.first);
         if (relation.second.polygon.empty()) { continue; }
         boost::geometry::model::box<point> box;
         boost::geometry::envelope(relation.second.polygon, box);
@@ -232,7 +231,8 @@ std::string OSMRelation::postal_code() const{
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) {
+void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
+    std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && in(r.role, {"outer", "enclave", ""});
@@ -252,7 +252,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
             break;
         }
         auto first_node = it_first_way->second.nodes.front()->first;
-        auto next_node = it_first_way->second.nodes.back()->first;
+        auto next_node = it_first_way->second.nodes.back();
         explored_ids.insert(ref->member_id);
         polygon_type tmp_polygon;
         for (auto node : it_first_way->second.nodes) {
@@ -264,7 +264,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         }
 
         // We try to find a closed ring
-        while (first_node != next_node) {
+        while (first_node != next_node->first) {
             // We look for a way that begin or end by the last node
             ref = boost::find_if(references,
                     [&](CanalTP::Reference& r) {
@@ -274,15 +274,15 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
                         auto it = cache.ways.find(r.member_id);
                         return it != cache.ways.end() &&
                                 !it->second.nodes.empty() &&
-                            (it->second.nodes.front()->first == next_node ||
-                             it->second.nodes.back()->first == next_node );
+                            (it->second.nodes.front()->first == next_node->first ||
+                             it->second.nodes.back()->first == next_node->first );
                     });
             if (ref == references.end()) {
                 break;
             }
             explored_ids.insert(ref->member_id);
             auto next_way = cache.ways[ref->member_id];
-            if (next_way.nodes.front()->first != next_node) {
+            if (next_way.nodes.front()->first != next_node->first) {
                 boost::reverse(next_way.nodes);
             }
             for (auto node : next_way.nodes) {
@@ -292,9 +292,23 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
                 const auto p = point(float(node->second.lon()), float(node->second.lat()));
                 tmp_polygon.outer().push_back(p);
             }
-            next_node = next_way.nodes.back()->first;
+            next_node = next_way.nodes.back();
         }
         if (tmp_polygon.outer().size() < 2 || ref == references.end()) {
+            // add some logs
+            // some admins are at the boundary of the osm data, so their own boundary may be incomplete
+            // some other admins have a split boundary and it is impossible to compute it.
+            // to check if the boundary is likely to be split we look for a very near point
+            // The admin can also be checked with: http://ra.osmsurround.org/index
+            auto log = log4cplus::Logger::getInstance("log");
+            for (const auto& node: cache.nodes) {
+                if (node.first != next_node->first && node.second.almost_equal(next_node->second)) {
+                    LOG4CPLUS_WARN(log, "Impossible to close the boundary of the admin " << name << " (osmid= "
+                                   << osm_id << "). The end node " << node.first << " is almost the same as "
+                                   << next_node->first << " it's likely that they are wrong dupplicate");
+                    break;
+                }
+            }
             break;
         }
         const auto front = tmp_polygon.outer().front();
@@ -315,7 +329,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     }
 }
 
-void OSMRelation::build_geometry(OSMCache& cache) {
+void OSMRelation::build_geometry(OSMCache& cache, OSMId osm_id) {
     for (CanalTP::Reference ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
@@ -332,7 +346,7 @@ void OSMRelation::build_geometry(OSMCache& cache) {
             }
         }
     }
-    build_polygon(cache);
+    build_polygon(cache, osm_id);
 }
 }}
 

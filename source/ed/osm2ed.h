@@ -75,6 +75,12 @@ struct OSMNode {
         return this->osm_id < other.osm_id;
     }
 
+    bool almost_equal(const OSMNode& other) const {
+        // check if the nodes are quite at the same location
+        auto distance = 10; // about 0.5m
+        return std::abs(this->ilon - other.ilon) < distance && std::abs(this->ilat - other.ilat) < distance;
+    }
+
     // Even if it's const, it modifies the variable used_more_than_once,
     // cause it's mutable, and doesn't affect the operator <
     void set_used_more_than_once() const {
@@ -155,7 +161,7 @@ struct OSMRelation {
     }
 
     void build_geometry(OSMCache& cache) const;
-    void build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids = std::set<u_int64_t>()) const;
+    void build_polygon(OSMCache& cache) const;
 };
 
 struct OSMWay {
