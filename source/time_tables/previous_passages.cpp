@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #include "previous_passages.h"
-#include "get_stop_times.h"
+#include "routing/get_stop_times.h"
 #include "request_handle.h"
 #include "type/datetime.h"
 #include "ptreferential/ptreferential.h"

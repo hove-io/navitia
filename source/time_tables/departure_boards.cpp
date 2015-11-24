@@ -30,7 +30,7 @@ www.navitia.io
 
 #include "departure_boards.h"
 #include "request_handle.h"
-#include "get_stop_times.h"
+#include "routing/get_stop_times.h"
 #include "type/pb_converter.h"
 #include "routing/dataraptor.h"
 #include "boost/lexical_cast.hpp"
@@ -146,7 +146,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     // On veut en effet afficher les départs regroupés par route
     // (une route étant une vague direction commerciale
     for(auto sp_route : sps_routes) {
-        std::vector<datetime_stop_time> stop_times;
+        std::vector<routing::datetime_stop_time> stop_times;
         const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first];
         const auto sp_idx = routing::SpIdx(*stop_point);
         const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second];
@@ -158,13 +158,13 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
             if (jp.route_idx != route_idx) { continue; }
 
-            std::vector<datetime_stop_time> tmp;
+            std::vector<routing::datetime_stop_time> tmp;
             if (! calendar_id) {
-                tmp = get_stop_times(routing::StopEvent::pick_up, {jpp_idx}, handler.date_time,
-                                     handler.max_datetime, max_date_times, pb_creator.data, rt_level);
+                tmp = routing::get_stop_times(routing::StopEvent::pick_up, {jpp_idx}, handler.date_time,
+                                     handler.max_datetime, max_date_times, data, rt_level);
             } else {
-                tmp = get_stop_times({jpp_idx}, DateTimeUtils::hour(handler.date_time),
-                                     DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
+                tmp = routing::get_stop_times({jpp_idx}, DateTimeUtils::hour(handler.date_time),
+                                     DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
@@ -183,7 +183,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         } else {
             // for calendar we want the first stop time to start from handler.date_time
-            std::sort(stop_times.begin(), stop_times.end(), CalendarScheduleSort(handler.date_time));
+            std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(handler.date_time));
             if (stop_times.size() > max_date_times) {
                 stop_times.resize(max_date_times);
             }
