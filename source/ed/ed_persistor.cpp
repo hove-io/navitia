@@ -697,7 +697,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
             {"id", "uri", "name", "color", "code",
-             "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time"});
+             "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time", "text_color"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
@@ -731,6 +731,8 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
         values.push_back(line->opening_time ? boost::posix_time::to_simple_string(*line->opening_time) : "NULL");
         values.push_back(line->closing_time ? boost::posix_time::to_simple_string(*line->closing_time) : "NULL");
+
+        values.push_back(line->text_color);
 
         this->lotus.insert(values);
     }

@@ -211,6 +211,7 @@ struct Line : public Header, Nameable {
 
     std::string additional_data;
     std::string color;
+    std::string text_color;
     int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode = nullptr;

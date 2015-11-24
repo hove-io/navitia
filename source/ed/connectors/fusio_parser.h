@@ -167,7 +167,8 @@ struct LineFusioHandler : public GenericHandler{
         contributor_c,
         geometry_id_c,
         opening_c,
-        closing_c;
+        closing_c,
+        text_color_c;
     void init(Data &);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_id"}; }
@@ -255,7 +256,6 @@ struct StopPropertiesFusioHandler: public GenericHandler{
     appropriate_signage_c;
     void init(Data&);
     void handle_line(Data&, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"property_id"}; }
 };
 
 struct ObjectPropertiesFusioHandler: public GenericHandler{

@@ -1,0 +1,3 @@
+equipment_id,wheelchair_boarding,sheltered,elevator,escalator,bike_accepted,bike_depot,visual_announcement,audible_announcement,appropriate_escort,appropriate_signage
+EQ1,1,0,0,0,0,0,0,0,0,0
+

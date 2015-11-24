@@ -274,7 +274,7 @@ struct RouteGtfsHandler : public GenericHandler {
     int id_c, short_name_c,
     long_name_c, type_c,
     desc_c,
-    color_c, agency_c;
+    color_c, text_color_c, agency_c;
     int ignored = 0;
     void init(Data&);
     void finish(Data& data);

@@ -603,6 +603,7 @@ struct Line : public Header, Nameable, HasMessages {
 
     std::string additional_data;
     std::string color;
+    std::string text_color;
     int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode = nullptr;
@@ -622,7 +623,7 @@ struct Line : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
-                & additional_data & color & sort & commercial_mode
+                & additional_data & color & text_color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & shape & closing_time
                 & opening_time & properties & line_group_list;

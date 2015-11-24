@@ -702,3 +702,28 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_3) {
                         boost::gregorian::date_period(boost::gregorian::date(2010, 01, 17),
                                                       boost::gregorian::date(2010, 12, 27)));
 }
+
+
+BOOST_AUTO_TEST_CASE(parse_gtfs_revision_201502){
+    /*
+     * use import the raw google gtfs revision February 2, 2015
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir)
+                                      + gtfs_path + "_revision_201502");
+    parser.fill(data);
+
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), false);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->accessible(has_properties.properties()), true);
+
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 1);
+    navitia::type::hasVehicleProperties has_vehicleproperties;
+    has_vehicleproperties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    has_vehicleproperties.set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->accessible(has_vehicleproperties.vehicles()), true);
+}
+

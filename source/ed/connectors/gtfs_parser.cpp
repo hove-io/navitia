@@ -562,7 +562,8 @@ void RouteGtfsHandler::init(Data&) {
     id_c = csv.get_pos_col("route_id"), short_name_c = csv.get_pos_col("route_short_name"),
             long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
             desc_c = csv.get_pos_col("route_desc"),
-            color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id");
+            color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id"),
+            text_color_c = csv.get_pos_col("route_text_color");
 }
 
 nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -582,6 +583,9 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     if(has_col(color_c, row)) {
         line->color = row[color_c];
+    }
+    if(is_valid(text_color_c, row)) {
+        line->text_color = row[text_color_c];
     }
     line->additional_data = row[long_name_c];
 

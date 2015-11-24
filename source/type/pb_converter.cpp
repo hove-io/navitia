@@ -407,6 +407,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         line->set_code(l->code);
     if(l->color != "")
         line->set_color(l->color);
+
+    if(! l->text_color.empty())
+        line->set_text_color(l->text_color);
+
     line->set_name(l->name);
     line->set_uri(l->uri);
     if (l->opening_time) {
