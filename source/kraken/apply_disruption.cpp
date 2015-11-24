@@ -149,7 +149,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
-            auto disrupted_vp = compute_base_disrupted_vp(impact->application_periods,
+            auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
                                                                meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
@@ -159,7 +159,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     + impact->disruption->uri;
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
-                disrupted_vp,
+                canceled_vp,
                 r,
                 impact->aux_info.stop_times,
                 pt_data);
