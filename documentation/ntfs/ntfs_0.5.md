@@ -217,8 +217,8 @@ destination_id | chaine | Optionnel | Identifiant de la destination principale (
 
 (1) Spécifie le sens du parcours :
 
-* 1 - le parcours est en sens aller
-* 2 - le parcours est en sens retour
+* 0 - le parcours est en sens aller
+* 1 - le parcours est en sens retour
 
 ### physical_modes.txt (requis)
 Colonne | Type | Contrainte | Commentaire
