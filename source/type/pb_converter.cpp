@@ -520,6 +520,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
+    route->set_direction_type(r->direction_type);
+
     if (r->destination != nullptr){
         fill_pb_placemark(r->destination, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
     }
