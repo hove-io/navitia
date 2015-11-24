@@ -132,6 +132,7 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 comment_id | chaine | Requis | Identifiant du commentaire
 comment_type | chaine | Optionnel | (1)
+comment_label | chaine | Optionnel | Caractère de renvoi associé au commentaire. Si celui-ci n'est pas précisé, il sera généré automatiquement.
 comment_name | chaine | Requis | Texte du commentaire
 comment_url | chaine | Optionnel | URL associé à la note et permettant d'avoir plus d'info, comme par exemple un lien vers la page de description du service de TAD.
 
@@ -235,16 +236,17 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 route_id | chaine | Requis | Identifiant du parcours
 route_name | chaine | Requis | Nom du parcours
-is_forward | entier | Requis | (1)
+direction_type | chaine (1) | Optionnel | Description de la direction de la route. Ce champ est libre, mais il est préconisé d'utiliser un des éléments recommandés ci-dessous.
 line_id | chaine | Requis | Identifiant de la ligne commerciale (lien vers le fichier lines)
 contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant le parcours (lien vers le fichier geometries)
 destination_id | chaine | Optionnel | Identifiant de la destination principale (lien vers le fichier stops.txt de type zone d'arrêt)
 
-(1) Spécifie le sens du parcours :
+(1) Liste des valeurs recommandées pour le champ _direction_type_ :
 
-* 1 - le parcours est en sens aller
-* 2 - le parcours est en sens retour
+* Pour des sens aller et retour : _forward_ et _backward_
+* Pour des parcours en boucle : _clockwise_ et _anticlockwise_
+* Pour des parcours entrant et sortants : _inbound_ et _outbound_
 
 ### physical_modes.txt (requis)
 Colonne | Type | Contrainte | Commentaire
