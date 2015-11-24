@@ -374,16 +374,12 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     vj_ptr->uri = uri;
     vj_ptr->idx = pt_data.vehicle_journeys.size();
     vj_ptr->realtime_level = level;
-    int day_offset = 0;
+    size_t day_offset = 0;
     if (!sts.empty()) {
         day_offset = sts.front().arrival_time / (ndtu::SECONDS_PER_DAY);
     }
     ValidityPattern model_new_vp{canceled_vp};
-    if (day_offset >= 0) {
-        model_new_vp.days <<= size_t(day_offset);
-    } else {
-        model_new_vp.days >>= size_t(-day_offset);
-    }
+    model_new_vp.days <<= day_offset; // shift validity pattern
     auto* new_vp = pt_data.get_or_create_validity_pattern(model_new_vp);
     for (const auto l: enum_range<RTLevel>()) {
         if (l < level) {
