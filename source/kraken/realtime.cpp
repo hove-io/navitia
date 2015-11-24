@@ -62,7 +62,8 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
             auto ptime_departure = bpt::from_time_t(st.departure().time());
             if (ptime_arrival < start_first_day_of_impact
                     || ptime_departure < start_first_day_of_impact) {
-                LOG4CPLUS_WARN(log, "Stop time " << st.stop_id() << " is before the day of impact");
+                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                    << st.stop_id() << " is before the day of impact");
                 return false;
             }
         }
@@ -82,11 +83,13 @@ static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
             uint32_t departure_time = st.departure().time();
             if (last_st_dep != std::numeric_limits<uint32_t>::max()
                     && last_st_dep > arrival_time) {
-                LOG4CPLUS_WARN(log, "Stop time " << st.stop_id() << " is not correctly ordered");
+                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                    << st.stop_id() << " is not correctly ordered");
                 return false;
             }
             if (arrival_time > departure_time) {
-                LOG4CPLUS_WARN(log, "For the st " << st.stop_id() << " departure is before the arrival");
+                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": For the Stop Time "
+                                    << st.stop_id() << " departure is before the arrival");
                 return false;
             }
             last_st_dep = departure_time;
@@ -229,8 +232,8 @@ create_disruption(const std::string& id,
                 auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
                 auto ptime_departure = bpt::from_time_t(departure_time) - start_first_day_of_impact;
 
-                type::StopTime stop_time{static_cast<uint32_t>(ptime_arrival.total_seconds()),
-                                         static_cast<uint32_t>(ptime_departure.total_seconds()),
+                type::StopTime stop_time{uint32_t(ptime_arrival.total_seconds()),
+                                         uint32_t(ptime_departure.total_seconds()),
                                          stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());

@@ -183,6 +183,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 0)
 
+        # sending disruption delaying VJ to the next day
         self.send_mock("vjA", "20120614", 'delayed',
            [("stop_point:stopB", str_to_time_stamp("20120615T070224"), str_to_time_stamp("20120615T070224")),
             ("stop_point:stopA", str_to_time_stamp("20120615T070400"), str_to_time_stamp("20120615T070400"))])
