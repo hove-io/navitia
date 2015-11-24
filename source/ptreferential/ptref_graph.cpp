@@ -121,6 +121,8 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map[Type_e::LineGroup], vertex_map[Type_e::Line], g);
     boost::add_edge(vertex_map[Type_e::Line], vertex_map[Type_e::LineGroup], g);
 
+    // edges for the impacts. for the moment we only need unilateral links,
+    // we don't need from an impact all the impacted objects
     const auto objects_having_impacts = {Type_e::StopPoint, Type_e::Line, Type_e::Route, Type_e::StopArea,
             Type_e::Network};
     for (auto object: objects_having_impacts) {

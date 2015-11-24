@@ -344,7 +344,7 @@ Impacter& Impacter::severity(dis::Effect e,
         impact->severity = it->second.lock();
         if (impact->severity) {
             return *this;
-        };
+        }
     }
     auto severity = boost::make_shared<dis::Severity>();
     severity->uri = uri;

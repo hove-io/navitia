@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0, 1});
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({0, 1}));
 }
 
 

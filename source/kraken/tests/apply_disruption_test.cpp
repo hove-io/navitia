@@ -98,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we delete the message
-    navitia::delete_disruption(disrup.uri, *b.data->pt_data, *b.data->meta);
+    navitia::delete_disruption(std::string(disrup.uri), *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 2);

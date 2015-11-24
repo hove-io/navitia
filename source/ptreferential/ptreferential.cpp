@@ -164,9 +164,10 @@ struct ClauseType<impact_wptr, C> {
 template<typename T, typename C>
 std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
     std::vector<idx_t> result;
-    for(size_t i = 0; i < data.size(); ++i){
-        if(ClauseType<T, C>::is_clause_tested(data[i], clause))
+    for (size_t i = 0; i < data.size(); ++i) {
+        if (ClauseType<T, C>::is_clause_tested(data[i], clause)) {
             result.push_back(i);
+        }
     }
     return result;
 }
