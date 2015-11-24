@@ -597,6 +597,7 @@ route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+route["direction_type"] = fields.String
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = MultiLineString(attribute="geojson")
