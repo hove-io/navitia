@@ -35,7 +35,7 @@ www.navitia.io
 #include <queue>
 
 
-namespace navitia { namespace timetables {
+namespace navitia { namespace routing {
 typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
 
 /**

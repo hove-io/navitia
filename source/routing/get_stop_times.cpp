@@ -34,7 +34,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include <functional>
 
-namespace navitia { namespace timetables {
+namespace navitia { namespace routing {
 
 std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_event,
                                                const std::vector<routing::JppIdx>& journey_pattern_points,
