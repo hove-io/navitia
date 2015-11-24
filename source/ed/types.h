@@ -245,6 +245,7 @@ struct Route : public Header, Nameable{
     Line * line;
     nt::MultiLineString shape;
     StopArea* destination = nullptr;
+    std::string direction_type;
 
     bool operator<(const Route& other) const;
 };
