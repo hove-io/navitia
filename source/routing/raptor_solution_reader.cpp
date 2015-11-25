@@ -297,10 +297,10 @@ Journey make_bound_journey(DateTime beg,
                            navitia::time_duration beg_sn_dur,
                            DateTime end,
                            navitia::time_duration end_sn_dur,
-                         unsigned count,
-                         uint32_t lower_bound_conn,
-                         navitia::time_duration transfer_penalty,
-                         bool clockwise) {
+                           unsigned count,
+                           uint32_t lower_bound_conn,
+                           navitia::time_duration transfer_penalty,
+                           bool clockwise) {
     Journey journey;
     journey.sections.resize(count); // only the number of sections is part of the dominance function
     journey.sn_dur = beg_sn_dur + end_sn_dur;
@@ -572,7 +572,8 @@ void read_solutions(const RAPTOR& raptor,
                          const StartingPointSndPhase& end_point)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, solutions, v, departure_datetime, deps, arrs, rt_level, accessibilite_params, transfer_penalty, end_point);
+        raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
+        accessibilite_params, transfer_penalty, end_point);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
