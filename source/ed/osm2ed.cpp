@@ -586,12 +586,17 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
             // to check if the boundary is likely to be split we look for a very near point
             // The admin can also be checked with: http://ra.osmsurround.org/index
             auto log = log4cplus::Logger::getInstance("log");
-            for (const auto& node: cache.nodes) {
-                if (node.osm_id != next_node->osm_id && node.almost_equal(*next_node)) {
-                    LOG4CPLUS_WARN(log, "Impossible to close the boundary of the admin " << name << " (osmid= "
-                                   << osm_id << "). The end node " << node.osm_id << " is almost the same as "
-                                   << next_node->osm_id << " it's likely that they are wrong dupplicate");
-                    break;
+            for (const auto& r: references) {
+                if (! is_outer_way(r)) { continue; }
+                auto it_way = cache.ways.find(r.member_id);
+                if (it_way == cache.ways.end()) { continue; }
+                for (const auto& node: it_way->nodes) {
+                    if (node->osm_id != next_node->osm_id && node->almost_equal(*next_node)) {
+                        LOG4CPLUS_WARN(log, "Impossible to close the boundary of the admin " << name << " (osmid= "
+                                       << osm_id << "). The end node " << node->osm_id << " is almost the same as "
+                                       << next_node->osm_id << " it's likely that they are wrong duplicate");
+                        break;
+                    }
                 }
             }
             break;
