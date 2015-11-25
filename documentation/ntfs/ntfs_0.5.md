@@ -358,11 +358,18 @@ visual_announcement | entier (1) | Optionnel | Le véhicule dispose d'annonces v
 audible_announcement | entier (1) | Optionnel | Le véhicule dispose d'annonces sonores
 appropriate_escort | entier (1) | Optionnel | Un service d'accompagnement à bord est possible (à la montée et à la descente)
 appropriate_signage | entier (1) | Optionnel | L'affichage à bord est est claire et adapté aux personnes en déficience mentale
+school_vehicle_type | entier (2) | Optionnel | Type de transport scolaire
 
     (1) Les valeurs possibles sont :
         0 ou non spécifié - aucune information disponible
         1 - l'équipement est disponible
         2 - l'équipement n'est pas disponible
+
+    (2) Type de transport scolaire :
+        0 ou non spécifié  : transport régulier (non scolaire)
+        1 : transport scolaire exclusif
+        2 : transport mixte (scolaire et régulier)
+
 
 ### trips.txt (requis)
 Colonne | Type | Contrainte | Commentaire
@@ -372,17 +379,11 @@ service_id | chaine | Requis | Identifiant dues jours de fonctionnements
 trip_id | chaine | Requis | Identifiant de la circulation
 trip_headsign | chaine | Optionnel | Nom de la circulation
 block_id | chaine | Optionnel | Identifiant du prolongement de service
-school_vehicle_type | entier (1) | Optionnel | Type de transport scolaire
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
 contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributor)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
-
-    (1) Type de transport scolaire :
-        0 ou non spécifié  : transport régulier (non scolaire)
-        1 : transport scolaire exclusif
-        2 : transport mixte (scolaire et régulier)
 
     Pour préciser si la circulation est sur réservation (tout ou partie), il faut :
         Indiquer au niveau de l'horaire (fichier stop_times.txt) si la montée et/ou la descente est à réservation
@@ -665,5 +666,4 @@ Les zones n'ont pas de valeur dans le NTFS: la prise des passagers se fait sur d
 * G>H>I
     * montée interdite
     * 10h10 partout
-
 
