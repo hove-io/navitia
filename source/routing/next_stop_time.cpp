@@ -160,9 +160,9 @@ next_valid_frequency(const StopEvent stop_event,
     for (const auto& freq_vj: jp.freq_vjs) {
         const auto& st = freq_vj->stop_time_list[jpp.order];
 
-        if (! st.valid_begin(true) || ! freq_vj->accessible(vehicle_props)) {
-            continue;
-        }
+        if (! freq_vj->accessible(vehicle_props)) { continue; }
+        if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
+        if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
         const auto next_dt = get_next_stop_time(stop_event, dt, *freq_vj, st, rt_level);
 
@@ -176,9 +176,9 @@ next_valid_frequency(const StopEvent stop_event,
         for (const auto& freq_vj: jp.freq_vjs) {
             const auto& st = freq_vj->stop_time_list[jpp.order];
 
-            if (! st.valid_begin(true) || ! freq_vj->accessible(vehicle_props)) {
-                continue;
-            }
+            if (! freq_vj->accessible(vehicle_props)) { continue; }
+            if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
+            if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
             const auto next_dt = get_next_stop_time(stop_event, next_date, *freq_vj, st, rt_level);
 
@@ -203,9 +203,9 @@ previous_valid_frequency(const StopEvent stop_event,
     for (const auto& freq_vj: jp.freq_vjs) {
         const auto& st = freq_vj->stop_time_list[jpp.order];
 
-        if (! st.valid_begin(false) || ! freq_vj->accessible(vehicle_props)) {
-            continue;
-        }
+        if (! freq_vj->accessible(vehicle_props)) { continue; }
+        if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
+        if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
         const auto previous_dt = get_previous_stop_time(stop_event, dt, *freq_vj, st, rt_level);
 
@@ -226,9 +226,9 @@ previous_valid_frequency(const StopEvent stop_event,
         for (const auto& freq_vj: jp.freq_vjs) {
             const auto& st = freq_vj->stop_time_list[jpp.order];
 
-            if (! st.valid_begin(false) || ! freq_vj->accessible(vehicle_props)) {
-                continue;
-            }
+            if (! freq_vj->accessible(vehicle_props)) { continue; }
+            if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
+            if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
             const auto previous_dt = get_previous_stop_time(stop_event, previous_date, *freq_vj,
                                                             st, rt_level);
