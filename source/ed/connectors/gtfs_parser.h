@@ -49,6 +49,7 @@ namespace ed { namespace connectors {
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
+nt::RTLevel get_rtlevel_enum(const std::string& str);
 
 /**
  * handle all tz specific stuff

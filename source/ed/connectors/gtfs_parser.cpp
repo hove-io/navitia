@@ -70,6 +70,17 @@ nt::Type_e get_type_enum(const std::string& str) {
     LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unkown navitia type: " << str);
     return nt::Type_e::Unknown;
 }
+
+nt::RTLevel get_rtlevel_enum(const std::string& str){
+    if (str == "1"){
+        return nt::RTLevel::Adapted;
+    }
+    if (str == "2"){
+        return nt::RTLevel::RealTime;
+    }
+    return nt::RTLevel::Base;
+}
+
 /**
  * add a comment.
  * create an id for the comment if needed since the comments are handled by ID in fusio2ed
@@ -1269,6 +1280,7 @@ boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std
         return boost::gregorian::date_period(b_date, e_date);
     }
 }
+
 
 boost::gregorian::date_period GenericGtfsParser::find_production_date(const std::string& beginning_date) {
     std::string filename = path + "/stop_times.txt";
