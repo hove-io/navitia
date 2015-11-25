@@ -317,6 +317,7 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
 
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
+
     // the disruption is deleted by RAII
     if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
