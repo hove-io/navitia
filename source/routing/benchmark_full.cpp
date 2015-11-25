@@ -281,14 +281,15 @@ int main(int argc, char** argv){
         destination.streetnetwork_params.max_duration = navitia::seconds(30*60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
+        const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
         auto resp = make_response(router, origin, destination,
-              {DateTimeUtils::set(date.days(), demand.hour)}, true,
+              {departure_datetime}, true,
               accessibilite_params,
               {},
               georef_worker,
               type::RTLevel::Base,
               2_min,
-              std::numeric_limits<int>::max(),
+              departure_datetime + DateTimeUtils::SECONDS_PER_DAY,
               10,
               false,
               nb_second_pass);
