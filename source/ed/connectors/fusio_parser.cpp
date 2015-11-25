@@ -595,6 +595,73 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
     gtfs_data.contributor_map[contributor->uri] = contributor;
 }
 
+void FrameFusioHandler::init(Data&){
+    id_c = csv.get_pos_col("frame_id");
+    contributor_c = csv.get_pos_col("contributor_id");
+    start_date_c = csv.get_pos_col("frame_start_date");
+    end_date_c = csv.get_pos_col("frame_end_date");
+    type_c = csv.get_pos_col("frame_type");
+    desc_c = csv.get_pos_col("frame_desc");
+    system_c = csv.get_pos_col("frame_system");
+}
+
+void FrameFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
+
+    boost::gregorian::date start_date(boost::gregorian::not_a_date_time),
+            end_date(boost::gregorian::not_a_date_time);
+    std::string error;
+    if(! is_first_line && ! is_valid(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has more than one frame and no frame_id column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto contributor = gtfs_data.contributor_map.find(row[contributor_c]);
+    if (contributor == gtfs_data.contributor_map.end()) {
+        error = "FrameFusioHandler, contributor_id invalid: " + row[contributor_c];
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    try{
+        start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
+    }catch(const std::exception& e) {
+        error = "FrameFusioHandler, frame_start_date invalid: "
+                        + row[start_date_c] + ", Error: " + std::string(e.what());
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    try{
+        end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
+    }catch(const std::exception& e) {
+        error = "FrameFusioHandler, frame_end_date invalid: "
+                        + row[end_date_c] + ", Error: " + std::string(e.what());
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    ed::types::Frame * frame = new ed::types::Frame();
+    frame->contributor = contributor->second;
+    frame->uri = row[id_c];
+    frame->validation_date = boost::gregorian::date_period(start_date, end_date);
+
+    if (is_valid(type_c, row)){
+        frame->realtime_level = get_rtlevel_enum(row[type_c]);
+    }
+
+    if (is_valid(desc_c, row)){
+        frame->desc = row[desc_c];
+    }
+    if (is_valid(system_c, row)){
+        frame->system = row[system_c];
+    }
+
+    frame->idx = data.frames.size() + 1;
+    data.frames.push_back(frame);
+    gtfs_data.frame_map[frame->uri] = frame;
+}
+
 void LineFusioHandler::init(Data &){
     id_c = csv.get_pos_col("line_id");
     external_code_c = csv.get_pos_col("external_code");
@@ -1492,7 +1559,8 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
         parse<AgencyFusioHandler>(data, "agency.txt", true);
     }
 
-    parse<ContributorFusioHandler>(data, "contributors.txt");
+    parse<ContributorFusioHandler>(data, "contributors.txt");    
+    parse<FrameFusioHandler>(data, "frames.txt");
 
     if (! parse<CompanyFusioHandler>(data, "companies.txt")) {
         parse<CompanyFusioHandler>(data, "company.txt");
