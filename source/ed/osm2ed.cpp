@@ -845,11 +845,11 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         return;
 
     std::string ref_tag = "";
-    if (tags.find("amenity") != tags.end()) {
-            ref_tag = "amenity";
-    }
-    if (tags.find("leisure") != tags.end()) {
-            ref_tag = "leisure";
+    for(auto tags_type: tags_types){
+        if(tags.find(tags_type) != tags.end()){
+            ref_tag = tags_type;
+            break;
+        }
     }
     if (ref_tag.empty()) {
         return;
@@ -907,11 +907,42 @@ void OSMCache::flag_nodes() {
 
 }}
 
+std::map<std::string, std::string> parse_poi_types(const std::vector<std::string>& poi_types){
+    std::map<std::string, std::string> result;
+    for(auto type: poi_types){
+        std::vector<std::string> strs;
+        boost::algorithm::split(strs, type, boost::is_any_of("="));
+        if(strs.size() == 1){
+            result[strs[0]] = strs[0];
+        }else if(strs.size() == 2){
+            result[strs[0]] = strs[1];
+        }else{
+            std::cout << "poi_type: \"" << type << "\" ignored!" << std::endl;
+        }
+    }
+    return result;
+}
+
 int main(int argc, char** argv) {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
     std::string input, connection_string;
+    std::vector<std::string> poi_types;
+    std::vector<std::string> default_poi_types = {
+            "amenity:college=école",
+            "amenity:university=université",
+            "amenity:theatre=théâtre",
+            "amenity:hospital=hôpital",
+            "amenity:post_office=bureau de poste",
+            "amenity:bicycle_rental=station vls",
+            "amenity:bicycle_parking=Parking vélo",
+            "amenity:parking=Parking",
+            "amenity:police=Police, Gendarmerie",
+            "amenity:townhall=Mairie",
+            "leisure:garden=Jardin",
+            "leisure:park=Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
+    };
     po::options_description desc("Allowed options");
     desc.add_options()
         ("version,v", "Show version")
@@ -919,7 +950,10 @@ int main(int argc, char** argv) {
         ("input,i", po::value<std::string>(&input)->required(), "Input file (must be an OSM one)")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
              "Database connection parameters: host=localhost user=navitia"
-             " dbname=navitia password=navitia");
+             " dbname=navitia password=navitia")
+        ("poi-type,p", po::value<std::vector<std::string>>(&poi_types)->default_value(default_poi_types, ""),
+                       "a poi_type like amenity:college with optionally a name separated with an equals, "
+                       "ex: amenity:college=école");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -963,7 +997,7 @@ int main(int argc, char** argv) {
     cache.insert_rel_way_admins();
 
     ed::Georef data;
-    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois);
+    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois, parse_poi_types(poi_types));
     CanalTP::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");

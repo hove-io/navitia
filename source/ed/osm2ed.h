@@ -378,25 +378,23 @@ struct PoiHouseNumberVisitor {
     std::set<std::string> properties_to_ignore;
     size_t n_inserted_pois = 0;
     size_t n_inserted_house_numbers = 0;
+    std::set<std::string> tags_types;
 
     PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
-            Georef& data, const bool parse_pois) :
+            Georef& data, const bool parse_pois, const std::map<std::string, std::string>& poi_types) :
         persistor(persistor), cache(cache), data(data), parse_pois(parse_pois)  {
-        data.poi_types =
-         {
-            {"amenity:college" , new ed::types::PoiType(0,  "école")},
-            {"amenity:university" , new ed::types::PoiType(1, "université")},
-            {"amenity:theatre" , new ed::types::PoiType(2, "théâtre")},
-            {"amenity:hospital" , new ed::types::PoiType(3, "hôpital")},
-            {"amenity:post_office" , new ed::types::PoiType(4, "bureau de poste")},
-            {"amenity:bicycle_rental" , new ed::types::PoiType(5, "station vls")},
-            {"amenity:bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
-            {"amenity:parking" , new ed::types::PoiType(7, "Parking")},
-            {"amenity:police" , new ed::types::PoiType(8, "Police, Gendarmerie")},
-            {"amenity:townhall" , new ed::types::PoiType(9, "Mairie")},
-            {"leisure:garden" , new ed::types::PoiType(10, "Jardin")},
-            {"leisure:park" , new ed::types::PoiType(11, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
-        };
+        uint32_t idx = 0;
+        for(auto type: poi_types){
+            data.poi_types[type.first] = new ed::types::PoiType(idx, type.second);
+            ++idx;
+        }
+        for(auto tag: data.poi_types){
+            std::vector<std::string> strs;
+            boost::algorithm::split(strs, tag.first, boost::is_any_of(":"));
+            if(strs.size() > 1){
+                tags_types.insert(strs[0]);
+            }
+        }
         properties_to_ignore.insert("name");
         properties_to_ignore.insert("amenity");
         properties_to_ignore.insert("leisure");
