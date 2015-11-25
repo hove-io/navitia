@@ -84,7 +84,8 @@ struct Impact;
     FUN(Company, companies)\
     FUN(Route, routes)\
     FUN(Contributor, contributors)\
-    FUN(Calendar, calendars)
+    FUN(Calendar, calendars)\
+    FUN(Frame, frames)
 
 enum class Type_e {
     ValidityPattern                 = 0,
@@ -115,7 +116,8 @@ enum class Type_e {
     Calendar                        = 24,
     LineGroup                       = 25,
     MetaVehicleJourney              = 26,
-    Impact                          = 27
+	Impact                          = 27,
+    Frame                           = 28
 };
 
 enum class Mode_e {
@@ -514,6 +516,22 @@ struct Contributor : public Header, Nameable{
         ar & idx & name & uri & website & license;
     }
     bool operator<(const Contributor & other) const { return this < &other; }
+};
+
+struct Frame : public Header{
+    const static Type_e type = Type_e::Frame;
+    Contributor* contributor=nullptr;
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+    boost::gregorian::date_period validation_date;
+    std::string desc;
+    std::string system;
+
+    Frame(): validation_date(boost::gregorian::date(), boost::gregorian::date()){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & idx & uri & contributor & realtime_level & validation_date & desc & system;
+    }
+    bool operator<(const Frame & other) const { return this < &other; }
 };
 
 struct Company : public Header, Nameable {
