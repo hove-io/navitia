@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(pam_veille) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop2"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+    auto res1 = raptor.compute(d.stop_areas_map["stop2"], d.stop_areas_map["stop3"], 50*60, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
@@ -2044,7 +2044,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
     // reverse clockwise
     res = raptor.compute_all(departures,
                              arrivals,
-                             DateTimeUtils::set(2, "08:03"_t),
+                             DateTimeUtils::set(2, "08:05"_t),
                              type::RTLevel::Base,
                              2_min,
                              0,
@@ -2057,7 +2057,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
 
     res = raptor.compute_all(departures,
                              arrivals,
-                             DateTimeUtils::set(2, "08:03"_t),
+                             DateTimeUtils::set(2, "08:05"_t),
                              type::RTLevel::Base,
                              2_min,
                              0,

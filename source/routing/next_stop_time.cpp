@@ -31,6 +31,7 @@ www.navitia.io
 #include "next_stop_time.h"
 
 #include "dataraptor.h"
+#include "get_stop_times.h"
 #include "type/data.h"
 #include "type/pt_data.h"
 #include <boost/range/algorithm/sort.hpp>
@@ -337,6 +338,64 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
 
     return first_discrete_st_pair;
 }
+
+void CachedNextStopTime::load(const type::Data& data,
+                              const DateTime from,
+                              const DateTime to,
+                              const type::RTLevel rt_level,
+                              const type::AccessibiliteParams& accessibilite_params) {
+    const auto& jp_container = data.dataRaptor->jp_container;
+    departure.assign(jp_container.get_jpps_values());
+    arrival.assign(jp_container.get_jpps_values());
+    for (auto d: departure) {
+        d.second = get_stop_times(StopEvent::pick_up,
+                                  {d.first},
+                                  from,
+                                  to,
+                                  std::numeric_limits<size_t>::max(),
+                                  data,
+                                  rt_level,
+                                  accessibilite_params);
+    }
+    for (auto a: arrival) {
+        a.second = get_stop_times(StopEvent::drop_off,
+                                  {a.first},
+                                  from,
+                                  to,
+                                  std::numeric_limits<size_t>::max(),
+                                  data,
+                                  rt_level,
+                                  accessibilite_params);
+    }
+}
+
+std::pair<const type::StopTime*, DateTime>
+CachedNextStopTime::next_stop_time(const StopEvent stop_event,
+                                   const JppIdx jpp_idx,
+                                   const DateTime dt,
+                                   const bool clockwise) const {
+    const auto& v = stop_event == StopEvent::pick_up ? departure[jpp_idx] : arrival[jpp_idx];
+    const type::StopTime* null_st = nullptr;
+    decltype(v.begin()) search;
+    if (clockwise) {
+        auto cmp = [](const DtSt& a, const DtSt& b) { return a.first < b.first; };
+        search = boost::lower_bound(v, std::make_pair(dt, null_st), cmp);
+    } else {
+        auto cmp = [](const DtSt& a, const DtSt& b) { return a.first < b.first; };
+        search = boost::upper_bound(v, std::make_pair(dt, null_st), cmp);
+        if (search == v.begin()) {
+            search = v.end();
+        } else if (!v.empty()) {
+            --search;
+        }
+    }
+    if (search != v.end()) {
+        return {search->second, search->first};
+    }
+    return {nullptr, 0};
+}
+
+
 
 inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
     return val >= bound.first && val <= bound.second;
