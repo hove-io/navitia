@@ -145,7 +145,7 @@ struct StopTimeFusioHandler : public StopTimeGtfsHandler {
 
 struct ContributorFusioHandler : public GenericHandler {
     ContributorFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, name_c;
+    int id_c, name_c, website_c, license_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"contributor_name", "contributor_id"}; }

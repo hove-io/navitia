@@ -156,6 +156,8 @@ struct StopArea : public Header, Nameable, hasProperties{
 
 struct Contributor : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Contributor;
+    std::string website;
+    std::string license;
     Contributor() {}
 
     bool operator<(const Contributor& other)const{ return this->name < other.name;}

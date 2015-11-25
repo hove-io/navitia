@@ -341,13 +341,15 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.contributor";
+    std::string request = "SELECT id, name, uri, website, license FROM navitia.contributor";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Contributor* contributor = new nt::Contributor();
         const_it["uri"].to(contributor->uri);
         const_it["name"].to(contributor->name);
+        const_it["website"].to(contributor->website);
+        const_it["license"].to(contributor->license);
 
         contributor->idx = data.pt_data->contributors.size();
 
