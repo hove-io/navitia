@@ -353,4 +353,11 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     for (int i = 1; i < 8; i++){
         BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
     }
+
+    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_CHECK_EQUAL(data.frames[0]->desc, "frame_test");
+    BOOST_CHECK_EQUAL(data.frames[0]->uri, "f1");
+    BOOST_CHECK_EQUAL(data.frames[0]->validation_date, boost::gregorian::date_period("20150826"_d, "20150926"_d));
+    BOOST_CHECK_EQUAL(data.frames[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.frames[0]->system, "obiti");
 }
