@@ -70,7 +70,7 @@ struct RAPTOR
 {
     const navitia::type::Data& data;
 
-    NextStopTime next_st;
+    CachedNextStopTime next_st;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
@@ -93,7 +93,6 @@ struct RAPTOR
 
     explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
-        next_st(data),
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
@@ -192,8 +191,7 @@ struct RAPTOR
                               const nt::RTLevel rt_level);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
-                      bool clockwise,
+    void boucleRAPTOR(bool clockwise,
                       const nt::RTLevel rt_level,
                       const uint32_t max_transfers);
 
@@ -210,7 +208,6 @@ struct RAPTOR
     ///Main loop
     template<typename Visitor>
     void raptor_loop(Visitor visitor,
-                     const type::AccessibiliteParams& accessibilite_params,
                      const nt::RTLevel rt_level,
                      uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
