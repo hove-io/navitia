@@ -163,6 +163,18 @@ struct Contributor : public Header, Nameable{
     bool operator<(const Contributor& other)const{ return this->name < other.name;}
 };
 
+struct Frame : public Header{
+    const static nt::Type_e type = nt::Type_e::Frame;
+    Contributor* contributor=nullptr;
+    boost::gregorian::date_period validation_date;
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+    std::string desc;
+    std::string system;
+    bool operator<(const Frame& other)const{ return this->desc < other.desc;}
+    Frame():validation_date(boost::gregorian::date(), boost::gregorian::date()) {}
+
+};
+
 struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
