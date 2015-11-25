@@ -250,6 +250,8 @@ struct Tag {
     }
 };
 
+class DisruptionHolder;
+
 struct Disruption {
     Disruption() {}
     Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
@@ -289,7 +291,7 @@ struct Disruption {
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 
-    void add_impact(const boost::shared_ptr<Impact>& impact);
+    void add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder);
     const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
         return impacts;
     }

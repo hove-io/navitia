@@ -75,9 +75,11 @@ bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) co
     return false;
 }
 
-void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
+void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder){
     impact->disruption = this;
     impacts.push_back(impact);
+    // we register the impact in it's factory
+    holder.add_weak_impact(impact);
 }
 
 namespace {

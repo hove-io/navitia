@@ -313,7 +313,7 @@ Impacter& DisruptionCreator::impact() {
 Impacter::Impacter(builder& bu, dis::Disruption& disrup): b(bu) {
     impact = boost::make_shared<dis::Impact>();
     impact->uri = get_random_id();
-    disrup.add_impact(impact);
+    disrup.add_impact(impact, b.data->pt_data->disruption_holder);
 }
 
 DisruptionCreator& DisruptionCreator::tag(const std::string& t) {

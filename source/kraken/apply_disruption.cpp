@@ -207,14 +207,11 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
     }
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "Adding impact: " << impact->uri);
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Adding impact: " << impact->uri);
 
     add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    pt_data.disruption_holder.add_weak_impact(impact);
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    impact->uri << " impact added");
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), impact->uri << " impact added");
 }
 
 
