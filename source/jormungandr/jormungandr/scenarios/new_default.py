@@ -72,8 +72,8 @@ def get_kraken_calls(request):
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
     if not res:
-        abort(404, 'the asked first_section_mode[] ({}) and last_section_mode[] '
-                   '({}) combination is not yet supported'.format(dep_modes, arr_modes))
+        abort(404, message='the asked first_section_mode[] ({}) and last_section_mode[] '
+                           '({}) combination is not yet supported'.format(dep_modes, arr_modes))
 
     return res
 
