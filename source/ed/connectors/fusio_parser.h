@@ -125,7 +125,9 @@ struct TripsFusioHandler : public GenericHandler {
         odt_condition_id_c,
         physical_mode_c,
         ext_code_c,
-        geometry_id_c;
+        geometry_id_c,
+        contributor_id_c,
+        frame_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;

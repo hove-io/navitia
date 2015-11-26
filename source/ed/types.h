@@ -231,6 +231,7 @@ struct Line : public Header, Nameable {
     CommercialMode* commercial_mode = nullptr;
     Network* network = nullptr;
     Company* company = nullptr;
+    Contributor* contributor = nullptr;
     nt::MultiLineString shape;
     boost::optional<boost::posix_time::time_duration> opening_time,
                                                       closing_time;
@@ -255,6 +256,7 @@ struct LineGroupLink {
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     Line * line;
+    Contributor* contributor = nullptr;
     nt::MultiLineString shape;
     StopArea* destination = nullptr;
     std::string direction_type;
@@ -267,6 +269,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Route* route = nullptr;
     Company* company = nullptr;
     PhysicalMode* physical_mode = nullptr;
+    Frame* frame = nullptr;
     //Vehicle* vehicle;
     bool wheelchair_boarding = false;
     navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;

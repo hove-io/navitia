@@ -45,6 +45,60 @@ typename C::mapped_type get_object(const C& map, const std::string& obj_id, cons
     }
     return o;
 }
+/*
+Add default frame for all contributor without frame
+*/
+static void default_frames(GtfsData& gdata, Data& data){
+    for(auto contributor: data.contributors){
+        bool exist = false;
+        for(const auto frame : data.frames){
+            if (frame->contributor->uri == contributor->uri){
+                exist = true;
+                break;
+            }
+        }
+        if (! exist){
+            ed::types::Frame* to_return = new ed::types::Frame();
+            to_return->contributor = contributor;
+            to_return->uri = "default_frame:" + contributor->uri;
+            to_return->validation_date = gdata.production_date;
+            to_return->desc = "default frame: " + contributor->name;
+            to_return->idx = data.frames.size() + 1;
+            data.frames.push_back(to_return);
+            gdata.frame_map[to_return->uri] = to_return;
+        }
+    }
+}
+
+static ed::types::Frame* get_first_frame_by_contributor(const Data& data,
+                                                  const std::string& contributor_id){
+    ed::types::Frame* to_return = nullptr;
+    for(const auto frame : data.frames){
+        if(frame->contributor->uri == contributor_id){
+            to_return = frame;
+            break;
+        }
+    }
+    return to_return;
+}
+
+static ed::types::Frame* get_frame(GtfsData& gdata, Data& data,
+                                   const std::string& contributor_id,
+                                   const std::string& frame_id = ""){
+
+    ed::types::Frame* to_return = nullptr;
+    if(!frame_id.empty()){
+        auto it_frame = gdata.frame_map.find(frame_id);
+        if (it_frame != gdata.frame_map.end()) {
+            to_return = it_frame->second;
+        }
+    }
+    if (to_return == nullptr){
+        to_return = get_first_frame_by_contributor(data, contributor_id);
+    }
+
+    return to_return;
+}
 
 void FeedInfoFusioHandler::init(Data&) {
     feed_info_param_c = csv.get_pos_col("feed_info_param");
@@ -206,6 +260,7 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
             LOG4CPLUS_WARN(logger, "geometry_id " << row.at(geometry_id_c) << " not found");
         }
     }
+
     return return_wrapper;
 }
 
@@ -238,6 +293,12 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         return;
     }
     ed::types::Route* ed_route = new ed::types::Route();
+    if (is_valid(contributor_id_c, row)){
+        const auto it_contributor = gtfs_data.contributor_map.find(row[contributor_id_c]);
+        if (it_contributor != gtfs_data.contributor_map.end()){
+            ed_route->contributor = it_contributor->second;
+        }
+    }
     ed_route->line = ed_line;
     ed_route->uri = row[route_id_c];
 
@@ -398,6 +459,8 @@ void TripsFusioHandler::init(Data& d) {
     physical_mode_c = csv.get_pos_col("physical_mode_id");
     ext_code_c = csv.get_pos_col("external_code");
     geometry_id_c = csv.get_pos_col("geometry_id");
+    contributor_id_c = csv.get_pos_col("contributor_id");
+    frame_id_c = csv.get_pos_col("frame_id");
 }
 
 std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool){
@@ -490,12 +553,22 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         return;
     }
 
+    ed::types::Frame* frame = nullptr;
+    if (is_valid(contributor_id_c, row)){
+        if (is_valid(frame_id_c, row)){
+            frame = get_frame(gtfs_data, data, row[contributor_id_c], row[frame_id_c]);
+        }else{
+            frame = get_frame(gtfs_data, data, row[contributor_id_c]);
+        }
+    }
+
     //the vj might have been split over the dst,thus we loop over all split vj
     for (auto vj: split_vj) {
         if (is_valid(ext_code_c, row)) {
             data.add_object_code(vj, row[ext_code_c]);
         }
 
+        vj->frame = frame;
         //if a physical_mode is given we override the value
         vj->physical_mode = nullptr;
         if (is_valid(physical_mode_c, row)){
@@ -678,7 +751,10 @@ void LineFusioHandler::init(Data &){
     opening_c = csv.get_pos_col("line_opening_time");
     closing_c = csv.get_pos_col("line_closing_time");
     text_color_c = csv.get_pos_col("line_text_color");
+    contributor_c = csv.get_pos_col("contributor_id");
 }
+
+
 void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
@@ -760,6 +836,13 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(external_code_c, row)) {
         data.add_object_code(line, row[external_code_c]);
         gtfs_data.line_map_by_external_code[row[external_code_c]] = line;
+    }
+
+    if (is_valid(contributor_c, row)){
+        const auto it_contributor = gtfs_data.contributor_map.find(row[contributor_c]);
+        if (it_contributor != gtfs_data.contributor_map.end()){
+            line->contributor = it_contributor->second;
+        }
     }
 
     data.lines.push_back(line);
@@ -1559,8 +1642,10 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
         parse<AgencyFusioHandler>(data, "agency.txt", true);
     }
 
-    parse<ContributorFusioHandler>(data, "contributors.txt");    
+    parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<FrameFusioHandler>(data, "frames.txt");
+
+    default_frames(gtfs_data, data);
 
     if (! parse<CompanyFusioHandler>(data, "companies.txt")) {
         parse<CompanyFusioHandler>(data, "company.txt");
