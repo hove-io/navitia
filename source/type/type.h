@@ -704,13 +704,16 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     RTLevel realtime_level = RTLevel::Base;
 
+    // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted)
+    size_t shift = 0;
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
     ValidityPattern* get_validity_pattern_at(RTLevel level) const { return validity_patterns[level]; }
-    
     ValidityPattern* base_validity_pattern() const { return get_validity_pattern_at(RTLevel::Base); }
     ValidityPattern* adapted_validity_pattern() const { return get_validity_pattern_at(RTLevel::Adapted); }
     ValidityPattern* rt_validity_pattern() const { return get_validity_pattern_at(RTLevel::RealTime); }
+    // base-schedule validity pattern canceled by this vj (to get corresponding vjs, use meta-vj)
+    ValidityPattern get_base_canceled_validity_pattern() const;
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
@@ -731,7 +734,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset;
+            & meta_vj & utc_to_local_offset & shift;
     }
 
     virtual ~VehicleJourney();
@@ -1043,10 +1046,6 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     VehicleJourney*
     get_vj_circulating_at_date(RTLevel level, const boost::gregorian::date& date) const;
-    std::vector<VehicleJourney*>
-    get_vjs_circulating_in_period(RTLevel level,
-                      const std::vector<boost::posix_time::time_period>& period,
-                      const MetaData& meta, const Route* filtering_route = nullptr) const;
 
 private:
     template<typename VJ>

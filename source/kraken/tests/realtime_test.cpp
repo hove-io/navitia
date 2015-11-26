@@ -985,7 +985,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 1);
     // The base VP is different from realtime VP
-    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
     pt_data->index();
@@ -1086,9 +1086,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
     res = compute(nt::RTLevel::RealTime);
-    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
-    BOOST_CHECK_EQUAL(res[0].items[1].arrival, "20150929T1001"_dt);
+
+    res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
+            "09:00"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, true);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T1001"_dt);
+
 }
 
 /* testing that a vj delayed to the day after (1 day late)
