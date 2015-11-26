@@ -61,6 +61,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_physical_modes(data, work);
     this->fill_companies(data, work);
     this->fill_contributors(data, work);
+    this->fill_frames(data, work);
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
@@ -358,6 +359,31 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
     }
 }
 
+void EdReader::fill_frames(nt::Data& data, pqxx::work& work){
+    std::string request = "SELECT id, uri, description, system, start_date, end_date, "
+                          "contributor_id FROM navitia.frame";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::Frame* frame = new nt::Frame();
+        const_it["uri"].to(frame->uri);
+        const_it["description"].to(frame->desc);
+        const_it["system"].to(frame->system);
+        boost::gregorian::date start(bg::from_string(const_it["start_date"].as<std::string>()));
+        boost::gregorian::date end(bg::from_string(const_it["end_date"].as<std::string>()));
+        frame->validation_date = bg::date_period(start, end);
+
+        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+        if(contributor_it != this->contributor_map.end()) {
+            frame->contributor = contributor_it->second;
+        }
+        frame->idx = data.pt_data->frames.size();
+
+        data.pt_data->frames.push_back(frame);
+        this->frame_map[const_it["id"].as<idx_t>()] = frame;
+    }
+}
+
 void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, website FROM navitia.company";
 
@@ -510,7 +536,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, code, color, text_color,"
         "network_id, commercial_mode_id, sort, ST_AsText(shape) AS shape, "
-        "opening_time, closing_time "
+        "opening_time, closing_time, contributor_id "
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
@@ -538,6 +564,10 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
                                   line->shape);
 
+        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+        if(contributor_it != this->contributor_map.end()) {
+            line->contributor = contributor_it->second;
+        }
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
@@ -599,6 +629,11 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 
         if (!const_it["destination_stop_area_id"].is_null()) {
             route->destination = stop_area_map[const_it["destination_stop_area_id"].as<idx_t>()];
+        }
+
+        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+        if(contributor_it != this->contributor_map.end()) {
+            route->contributor = contributor_it->second;
         }
 
         data.pt_data->routes.push_back(route);
@@ -720,7 +755,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vp.audible_announcement as audible_announcement,"
         "vp.appropriate_escort as appropriate_escort,"
         "vp.appropriate_signage as appropriate_signage,"
-        "vp.school_vehicle as school_vehicle "
+        "vp.school_vehicle as school_vehicle, "
+        "vp.frame_id as frame_id "
         "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
         "WHERE vj.vehicle_properties_id = vp.id";
 
@@ -823,6 +859,10 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             for (const auto& comment: it_comments->second) {
                 data.pt_data->comments.add(vj, comment);
             }
+        }
+        auto frame_it = this->frame_map.find(const_it["frame_id"].as<idx_t>());
+        if(frame_it != this->frame_map.end()) {
+            vj->frame = frame_it->second;
         }
     }
 
