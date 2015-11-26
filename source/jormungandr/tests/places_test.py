@@ -75,3 +75,21 @@ class TestPlaces(AbstractTestFixture):
 
         assert(len(response['places_nearby']) > 0)
         is_valid_places(response['places_nearby'])
+
+    def test_wrong_places_nearby(self):
+        """test that a wrongly formated query do not work on places_neaby"""
+
+        lon = 10. / 111319.9
+        lat = 100. / 111319.9
+        response, status = self.query_region("bob/{};{}/places_nearby".format(lon, lat), check=False)
+
+        eq_(status, 404)
+        #Note: it's not a canonical Navitia error with an Id and a message, but it don't seems to be
+        # possible to do this with 404 (handled by flask)
+        assert(get_not_null(response, 'message'))
+
+        # same with a line (it has no meaning)
+        response, status = self.query_region("lines/A/places_nearby".format(lon, lat), check=False)
+
+        eq_(status, 404)
+        assert(get_not_null(response, 'message'))

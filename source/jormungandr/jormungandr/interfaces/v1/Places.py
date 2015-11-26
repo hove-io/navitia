@@ -281,6 +281,8 @@ places_nearby = {
     "disruptions": DisruptionsField,
 }
 
+places_types = {'stop_areas', 'stop_points', 'pois',
+                'addresses', 'coords', 'places'}  # add admins when possible
 
 class PlacesNearby(ResourceUri):
     parsers = {}
@@ -320,8 +322,12 @@ class PlacesNearby(ResourceUri):
             if uri[-1] == '/':
                 uri = uri[:-1]
             uris = uri.split("/")
-            if len(uris) > 1:
+            if len(uris) >= 2:
                 args["uri"] = transform_id(uris[-1])
+                # for coherence we check the type of the object
+                obj_type = uris[-2]
+                if obj_type not in places_types:
+                    abort(404, message='places_nearby api not available for {}'.format(obj_type))
             else:
                 abort(404)
         elif lon and lat:
