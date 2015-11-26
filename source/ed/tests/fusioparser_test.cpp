@@ -73,6 +73,14 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
+    // Check frames
+    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->uri, "default_frame:" + data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->desc, "default frame: " + data.contributors[0]->name);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->contributor->uri, data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->validation_date, parser.gtfs_data.production_date);
+
+
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
@@ -355,6 +363,8 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     }
 
     BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors[0], data.frames[0]->contributor);
     BOOST_CHECK_EQUAL(data.frames[0]->desc, "frame_test");
     BOOST_CHECK_EQUAL(data.frames[0]->uri, "f1");
     BOOST_CHECK_EQUAL(data.frames[0]->validation_date, boost::gregorian::date_period("20150826"_d, "20150926"_d));
