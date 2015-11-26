@@ -144,7 +144,7 @@ template<typename T, typename C>
 struct ClauseType {
     static bool is_clause_tested(const T e, const C & clause){
         return clause(*e);
-    };
+    }
 };
 
 using impact_wptr = boost::weak_ptr<navitia::type::disruption::Impact>;
@@ -158,7 +158,7 @@ struct ClauseType<impact_wptr, C> {
             return clause(*impact_sptr);
         }
         return false;
-    };
+    }
 };
 
 template<typename T, typename C>
