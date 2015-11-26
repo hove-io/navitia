@@ -41,6 +41,8 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "tests/utils_test.h"
 
+#include "kraken/apply_disruption.h"
+
 namespace navitia{namespace ptref {
 template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
 }}
@@ -301,6 +303,56 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     BOOST_CHECK_EQUAL(indexes[1], 1);
 }
 
+BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
+    ed::builder b("201303011T1739");
+    b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->pt_data->build_uri();
+
+    using btp = boost::posix_time::time_period;
+    const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
+                     .severity(nt::disruption::Effect::NO_SERVICE)
+                     .on(nt::Type_e::Line, "A")
+                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
+                     .get_disruption();
+
+    Filter filter;
+    filter.navitia_type = Type_e::Line;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "A";
+
+    navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
+    auto indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
+
+    navitia::delete_disruption("Disruption 1", *b.data->pt_data, *b.data->meta);
+    indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 0);
+
+    const auto& disrup_2 = b.impact(nt::RTLevel::RealTime, "Disruption 2")
+                     .severity(nt::disruption::Effect::NO_SERVICE)
+                     .on(nt::Type_e::Line, "A")
+                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
+                     .get_disruption();
+
+    navitia::apply_disruption(disrup_2, *b.data->pt_data, *b.data->meta);
+    indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
+
+    const auto& disrup_3 = b.impact(nt::RTLevel::RealTime, "Disruption 3")
+                     .severity(nt::disruption::Effect::NO_SERVICE)
+                     .on(nt::Type_e::Line, "A")
+                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
+                     .get_disruption();
+
+    navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
+    indexes = get_indexes<navitia::type::Line>(filter, Type_e::Impact, *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({0, 1}));
+}
+
 
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
@@ -420,7 +472,7 @@ BOOST_AUTO_TEST_CASE(find_path_test){
         // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin, de même pour POI et POIType
         if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern &&
                 node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType &&
-                node_pred.first != Type_e::Contributor)
+                node_pred.first != Type_e::Contributor && node_pred.first != Type_e::Impact)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
@@ -430,9 +482,9 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     Jointures j;
     std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 3);
-    num =  boost::strong_components(j.g, &component[0]);
     BOOST_CHECK_EQUAL(num, 4);
+    num =  boost::strong_components(j.g, &component[0]);
+    BOOST_CHECK_EQUAL(num, 5);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(navitia::type::Type_e::Unknown), ptref_error);

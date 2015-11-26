@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
         BOOST_REQUIRE_EQUAL(res.size(), 0); // <-- No VJ is availble
     }
 
-    navitia::delete_disruption(disrup.uri, *b.data->pt_data, *b.data->meta);
+    navitia::delete_disruption(std::string(disrup.uri), *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
     BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);

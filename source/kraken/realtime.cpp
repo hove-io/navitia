@@ -228,7 +228,7 @@ create_disruption(const std::string& id,
         impact->informed_entities.push_back(
             make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data, impact));
         // messages
-        disruption.add_impact(std::move(impact));
+        disruption.add_impact(std::move(impact), holder);
     }
     // localization
     // tags

@@ -114,7 +114,8 @@ enum class Type_e {
     POIType                         = 23,
     Calendar                        = 24,
     LineGroup                       = 25,
-    MetaVehicleJourney              = 26
+    MetaVehicleJourney              = 26,
+    Impact                          = 27
 };
 
 enum class Mode_e {

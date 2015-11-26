@@ -130,8 +130,8 @@ _update_max_severity(boost::optional<type::disruption::Effect>& worst_disruption
 
 template <typename T>
 void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max, const T& pb_obj) {
-    for (const auto& disruption: pb_obj.disruptions()) {
-        _update_max_severity(max, type::disruption::from_string(disruption.severity().effect()));
+    for (const auto& impact: pb_obj.impacts()) {
+        _update_max_severity(max, type::disruption::from_string(impact.severity().effect()));
     }
 }
 

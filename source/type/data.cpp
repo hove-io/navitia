@@ -63,7 +63,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 50; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 51; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -534,6 +534,10 @@ Data::get_data<routing::JourneyPatternPoint>() const {
     return res;
 }
 
+template<> const std::vector<boost::weak_ptr<type::disruption::Impact>>&
+Data::get_data<type::disruption::Impact>() const {
+    return pt_data->disruption_holder.get_weak_impacts();
+}
 
 std::vector<idx_t> Data::get_all_index(Type_e type) const {
     size_t num_elements = 0;
@@ -548,6 +552,9 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
     case Type_e::Connection:
         num_elements = this->pt_data->stop_point_connections.size(); break;
+    case Type_e::Impact:
+        num_elements = pt_data->disruption_holder.get_weak_impacts().size();
+        break;
     default:  break;
     }
     std::vector<idx_t> indexes(num_elements);

@@ -202,17 +202,16 @@ static bool is_modifying_effect(nt::disruption::Effect e) {
                   nt::disruption::Effect::MODIFIED_SERVICE});
 }
 
-void apply_impact(boost::shared_ptr<nt::disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
     }
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "Adding impact: " << impact.get()->uri);
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Adding impact: " << impact->uri);
+
     add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " impact added");
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), impact->uri << " impact added");
 }
 
 
@@ -310,19 +309,15 @@ void delete_disruption(const std::string& disruption_id,
                        const nt::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
-    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
+    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
     // the disruption is deleted by RAII
-    std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
-    if (disruption) {
-        std::vector<nt::disruption::PtObj> informed_entities;
+    if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
-            informed_entities.insert(informed_entities.end(),
-                              impact->informed_entities.begin(),
-                              impact->informed_entities.end());
             delete_impact(impact, pt_data, meta);
         }
     }
+    holder.clean_weak_impacts();
     LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 

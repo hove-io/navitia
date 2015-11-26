@@ -118,6 +118,11 @@ static pbnavitia::Response extract_data(const type::Data& data,
             fill_pb_object(data.pt_data->calendars[idx], data,
                            result.add_calendars(), depth, current_time, action_period, show_codes);
             break;
+        case Type_e::Impact:{
+            auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
+            fill_impacts(*impact, data, result);
+            break;
+        }
         default: break;
         }
     }

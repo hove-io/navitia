@@ -323,13 +323,26 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         assert "journeys" in response
         disruptions = self.get_disruptions(response)
-        #no disruptions for the moment
+        #no disruptions on the journey for the moment
         assert not disruptions
+
+        # some disruption are loaded on the dataset though
+        nb_pre_loaded_disruption = len(get_not_null(self.query_region('disruptions'), 'disruptions'))
+        assert nb_pre_loaded_disruption == 9
 
         self.send_mock("blocking_line_disruption", "A",
                        "line", blocking=True)
         self.send_mock("blocking_network_disruption",
                        "base_network", "network", blocking=True)
+
+        # Test disruption API
+        response = self.query_region('disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) - nb_pre_loaded_disruption == 2
+        for d in disruptions:
+            is_valid_disruption(d)
+        assert {"blocking_line_disruption", "blocking_network_disruption"}.\
+            issubset(set([d['disruption_uri'] for d in disruptions]))
 
         response = self.query_region(journey_basic_query + "&disruption_active=true")
 

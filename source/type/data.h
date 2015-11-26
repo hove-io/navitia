@@ -65,6 +65,18 @@ struct wrong_version : public navitia::exception {
     virtual ~wrong_version() noexcept;
 };
 
+template<typename T>
+struct DataTraitHelper {
+  typedef T* type;
+};
+
+// specialization for impact
+// Instead of pure pointer, we can only get a weak_ptr when requesting impacts 
+template<>
+struct DataTraitHelper<type::disruption::Impact> {
+  typedef boost::weak_ptr<type::disruption::Impact> type;
+};
+
 /** Contient toutes les données théoriques du référentiel transport en communs
   *
   * Il existe trois formats de stockage : texte, binaire, binaire compressé
@@ -99,7 +111,7 @@ public:
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
     /** Retourne la structure de données associée au type */
-    template<typename T> const std::vector<T*>& get_data() const;
+    template<typename T> const std::vector<typename DataTraitHelper<T>::type>& get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *

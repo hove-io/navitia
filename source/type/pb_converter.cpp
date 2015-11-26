@@ -125,39 +125,39 @@ template <typename T>
 void fill_message(const type::disruption::Impact& impact,
         const type::Data&, T pb_object, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period& action_period) {
-    auto pb_disrution = pb_object->add_disruptions();
+    auto pb_impact = pb_object->add_impacts();
 
-    pb_disrution->set_disruption_uri(impact.disruption->uri);
+    pb_impact->set_disruption_uri(impact.disruption->uri);
 
     if (!impact.disruption->contributor.empty()){
-        pb_disrution->set_contributor(impact.disruption->contributor);
+        pb_impact->set_contributor(impact.disruption->contributor);
     }
 
-    pb_disrution->set_uri(impact.uri);
+    pb_impact->set_uri(impact.uri);
     for (const auto& app_period: impact.application_periods) {
-        auto p = pb_disrution->add_application_periods();
+        auto p = pb_impact->add_application_periods();
         p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
         p->set_end(navitia::to_posix_timestamp(app_period.last()));
     }
 
     //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
-    pb_disrution->set_updated_at(navitia::to_posix_timestamp(impact.updated_at));
+    pb_impact->set_updated_at(navitia::to_posix_timestamp(impact.updated_at));
 
-    auto pb_severity = pb_disrution->mutable_severity();
+    auto pb_severity = pb_impact->mutable_severity();
     pb_severity->set_name(impact.severity->wording);
     pb_severity->set_color(impact.severity->color);
     pb_severity->set_effect(to_string(impact.severity->effect));
     pb_severity->set_priority(impact.severity->priority);
 
     for (const auto& t: impact.disruption->tags) {
-        pb_disrution->add_tags(t->name);
+        pb_impact->add_tags(t->name);
     }
     if (impact.disruption->cause) {
-        pb_disrution->set_cause(impact.disruption->cause->wording);
+        pb_impact->set_cause(impact.disruption->cause->wording);
     }
 
     for (const auto& m: impact.messages) {
-        auto pb_m = pb_disrution->add_messages();
+        auto pb_m = pb_impact->add_messages();
         pb_m->set_text(m.text);
         auto pb_channel = pb_m->mutable_channel();
         pb_channel->set_content_type(m.channel_content_type);
@@ -194,8 +194,13 @@ void fill_message(const type::disruption::Impact& impact,
     }
 
     //we need to compute the active status
-    pb_disrution->set_status(compute_disruption_status(impact, action_period));
+    pb_impact->set_status(compute_disruption_status(impact, action_period));
 }
+
+void fill_impacts(const type::disruption::Impact& impact, const type::Data &data, pbnavitia::Response& response) {
+    fill_message(impact, data, &response);
+}
+
 
 void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
                     pbnavitia::Properties* properties, int,
