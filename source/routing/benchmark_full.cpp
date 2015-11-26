@@ -140,7 +140,7 @@ int main(int argc, char** argv){
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output, stop_input_file, start, target;
-    int iterations, date, hour;
+    int iterations, date, hour, nb_second_pass;
 
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
@@ -160,6 +160,7 @@ int main(int argc, char** argv){
             ("hour,h", po::value<int>(&hour)->default_value(-1),
                     "Beginning hour of a particular journey")
             ("verbose,v", "Verbose debugging output")
+            ("nb_second_pass", po::value<int>(&nb_second_pass)->default_value(0), "nb second pass")
             ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
                      "Output file");
@@ -254,11 +255,11 @@ int main(int argc, char** argv){
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_START_INSTRUMENTATION;
 #endif
-    for(auto demand : demands){
+    for (auto demand: demands) {
         ++show_progress;
         Timer t2;
         auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1) - boost::gregorian::date(1970, 1, 1);
-        if (verbose){
+        if (verbose) {
             std::cout << demand.start
                       << ", " << demand.start
                       << ", " << demand.target
@@ -273,11 +274,11 @@ int main(int argc, char** argv){
 
         origin.streetnetwork_params.mode = demand.start_mode;
         origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
-        origin.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        origin.streetnetwork_params.max_duration = navitia::seconds(30*60);
         origin.streetnetwork_params.speed_factor = 1;
         destination.streetnetwork_params.mode = demand.target_mode;
         destination.streetnetwork_params.offset = data.geo_ref->offsets[demand.target_mode];
-        destination.streetnetwork_params.max_duration = navitia::seconds(15*60);
+        destination.streetnetwork_params.max_duration = navitia::seconds(30*60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
         auto resp = make_response(router, origin, destination,
@@ -286,9 +287,12 @@ int main(int argc, char** argv){
               {},
               georef_worker,
               type::RTLevel::Base,
-              std::numeric_limits<int>::max(), 10, false);
+              std::numeric_limits<int>::max(),
+              10,
+              false,
+              nb_second_pass);
 
-        if(resp.journeys_size() > 0) {
+        if (resp.journeys_size() > 0) {
             ++ nb_reponses;
             nb_journeys += resp.journeys_size();
 

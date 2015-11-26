@@ -45,6 +45,14 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+struct StartingPointSndPhase {
+    SpIdx sp_idx;
+    unsigned count;
+    DateTime end_dt;
+    unsigned fallback_dur;
+    bool has_priority;
+};
+
 /*
  * Use to save routing test to launch stay_in
  */
