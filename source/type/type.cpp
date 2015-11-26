@@ -493,7 +493,7 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
 }
 
 VehicleJourney*
-MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const{
+MetaVehicleJourney::get_vj_circulating_at_date(RTLevel level, const boost::gregorian::date& date) const{
     for (auto l : reverse_enum_range_from<RTLevel>(level)){
         for (auto& vj: rtlevel_to_vjs_map[l]) {
             if(vj->get_validity_pattern_at(l)->check(date)){
@@ -505,7 +505,7 @@ MetaVehicleJourney::get_vj_at_date(RTLevel level, const boost::gregorian::date& 
 }
 
 std::vector<VehicleJourney*>
-MetaVehicleJourney::get_vjs_in_period(RTLevel level,
+MetaVehicleJourney::get_vjs_circulating_in_period(RTLevel level,
                                       const std::vector<boost::posix_time::time_period>& periods,
                                       const MetaData& meta,
                                       const Route* filtering_route) const {

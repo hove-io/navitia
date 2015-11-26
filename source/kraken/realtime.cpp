@@ -155,8 +155,8 @@ make_severity(const std::string& id,
 }
 
 static boost::posix_time::time_period
-execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
-    auto running_vj = mvj.get_vj_at_date(type::RTLevel::Base, date);
+base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
+    auto running_vj = mvj.get_vj_circulating_at_date(type::RTLevel::Base, date);
     if (running_vj) {
         return running_vj->execution_period(date);
     }
@@ -191,7 +191,7 @@ create_disruption(const std::string& id,
         impact->uri = disruption.uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
-        impact->application_periods.push_back(execution_period(circulation_date, mvj));
+        impact->application_periods.push_back(base_execution_period(circulation_date, mvj));
         std::string wording;
         nt::disruption::Effect effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {

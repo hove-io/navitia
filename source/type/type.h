@@ -1042,9 +1042,9 @@ struct MetaVehicleJourney: public Header, HasMessages {
             PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
 
     VehicleJourney*
-    get_vj_at_date(RTLevel level, const boost::gregorian::date& date) const;
+    get_vj_circulating_at_date(RTLevel level, const boost::gregorian::date& date) const;
     std::vector<VehicleJourney*>
-    get_vjs_in_period(RTLevel level,
+    get_vjs_circulating_in_period(RTLevel level,
                       const std::vector<boost::posix_time::time_period>& period,
                       const MetaData& meta, const Route* filtering_route = nullptr) const;
 
