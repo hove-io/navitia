@@ -637,13 +637,14 @@ struct Line : public Header, Nameable, HasMessages {
     std::map<std::string,std::string> properties;
 
     std::vector<LineGroup*> line_group_list;
+    Contributor* contributor=nullptr;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & text_color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & shape & closing_time
-                & opening_time & properties & line_group_list;
+                & opening_time & properties & line_group_list & contributor;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -736,6 +737,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
+    Frame* frame = nullptr;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -754,7 +756,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset & shift;
+            & meta_vj & utc_to_local_offset & shift & frame;
     }
 
     virtual ~VehicleJourney();
@@ -817,7 +819,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape & direction_type;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type & contributor;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
