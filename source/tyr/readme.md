@@ -501,3 +501,20 @@ For updating a poi_type (only the name can be change) you have to do the same th
 Finally if you want to delete a poi_type you just have to use the DELETE action:
 
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:bar' -X DELETE
+
+
+A little help if you want to add a new POI type and keep all the default ones:
+
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:college?name=école' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:university?name=université' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:theatre?name=théâtre' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:hospital?name=hôpital' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:post_office?name=bureau+de+poste' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_rental?name=station+vls' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_parking?name=Parking+vélo' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:parking?name=Parking' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:police?name=Police,+Gendarmerie' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:townhall?name=Mairie' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:garden?name=Jardin' -X POST
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:park?name=Zone+Parc.+Zone+verte+ouverte,+pour+déambuler.+habituellement+municipale' -X POST
+
