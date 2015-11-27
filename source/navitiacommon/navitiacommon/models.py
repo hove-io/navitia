@@ -200,6 +200,11 @@ class PoiType(db.Model):
     __tablename__ = 'poi_type'
     __table_args__ = (db.PrimaryKeyConstraint('instance_id', 'uri'), )
 
+    def __init__(self, uri, name=None, instance=None):
+        self.uri = uri
+        self.name = name
+        self.instance = instance
+
 
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)

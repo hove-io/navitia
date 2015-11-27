@@ -448,3 +448,56 @@ Use the id in the next query
 }
 
 ```
+
+#### PoiTypes
+It is possible to define what type of POI should be extracted from OSM for a specific instance.
+
+A type of poi is characterised by an uri and a name.
+
+If nothing if configured, default POI are extracted, at this time the list is as follow:
+     - uri: "amenity:college" name: "école"
+     - uri: "amenity:university" name: "université"
+     - uri: "amenity:theatre" name: "théâtre"
+     - uri: "amenity:hospital" name: "hôpital"
+     - uri: "amenity:post_office" name: "bureau de poste"
+     - uri: "amenity:bicycle_rental" name: "station vls"
+     - uri: "amenity:bicycle_parking" name: "Parking vélo"
+     - uri: "amenity:parking" name: "Parking"
+     - uri: "amenity:police" name: "Police, Gendarmerie"
+     - uri: "amenity:townhall" name: "Mairie"
+     - uri: "leisure:garden" name: "Jardin"
+     - uri: "leisure:park" name: "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
+
+Let say you want to see all type of poi for the instance fr-bre, you have to call the PoiTypes endpoint for this
+instance:
+
+    curl -X POST "http://localhost:5000/v0/instances/fr-bre/poi_types"
+```json
+{
+    "poi_types": [
+        {
+            "name": "foo",
+            "uri": "foo:ba"
+        },
+        {
+            "name": "foo\u00e9",
+            "uri": "foo:baff"
+        }
+    ]
+}
+
+```
+
+If you want to add a poi type for an instance you have to POST it:
+
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:baff?name=foo' -X POST
+
+The name of a poi type is optional and can also be pass in a json like this:
+
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:json' -X POST -H 'content-type: application/json' -d '{"name": "json"}'
+
+For updating a poi_type (only the name can be change) you have to do the same thing with a PUT.
+
+Finally if you want to delete a poi_type you just have to use the DELETE action:
+
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:bar' -X DELETE
