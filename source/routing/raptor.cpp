@@ -188,11 +188,12 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
                                bool clockwise) {
 
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden_uri,
-                         rt_level);
+    const auto valid_jpps = set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+                                                 accessibilite_params,
+                                                 forbidden_uri,
+                                                 rt_level);
     next_st.load(data,
+                 valid_jpps,
                  clockwise ? departure_datetime : bound,
                  clockwise ? bound : departure_datetime,
                  rt_level,
@@ -492,11 +493,12 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                   bool clockwise,
                   const nt::RTLevel rt_level) {
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden,
-                         rt_level);
+    const auto valid_jpps = set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+                                                 accessibilite_params,
+                                                 forbidden,
+                                                 rt_level);
     next_st.load(data,
+                 valid_jpps,
                  clockwise ? departure_datetime : bound,
                  clockwise ? bound : departure_datetime,
                  rt_level,
@@ -508,8 +510,8 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
     boucleRAPTOR(clockwise, rt_level, max_transfers);
 }
 
-
-void RAPTOR::set_valid_jp_and_jpp(
+// Returns valid_jpps
+boost::dynamic_bitset<> RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams& accessibilite_params,
     const std::vector<std::string>& forbidden,
@@ -617,6 +619,8 @@ void RAPTOR::set_valid_jp_and_jpp(
     // feasible ones.
     jpps_from_sp = data.dataRaptor->jpps_from_sp;
     jpps_from_sp.filter_jpps(valid_journey_pattern_points);
+
+    return std::move(valid_journey_pattern_points);
 }
 
 template<typename Visitor>
