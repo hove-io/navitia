@@ -171,10 +171,10 @@ create_disruption(const std::string& id,
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
-            LOG4CPLUS_TRACE(log, "Disruption has MODIFIED_SERVICE effect");
+            LOG4CPLUS_TRACE(log, "Disruption has SIGNIFICANT_DELAYS effect");
             // Yeah, that's quite hardcodded...
-            wording = "trip modified!";
-            effect = nt::disruption::Effect::MODIFIED_SERVICE;
+            wording = "trip delayed";
+            effect = nt::disruption::Effect::SIGNIFICANT_DELAYS;
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
                 auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];

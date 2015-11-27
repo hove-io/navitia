@@ -103,21 +103,21 @@ public:
                 .uri("mess1")
                 .publish(btp("20131219T123200"_dt, "20131221T123201"_dt))
                 .application_periods(btp("20131220T123200"_dt, "20131221T123201"_dt))
-                .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+                .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                 .on(nt::Type_e::Line, "line:A");
 
         b.impact(nt::RTLevel::Adapted)
                 .uri("mess0")
                 .publish(btp("20131221T083200"_dt, "20131221T123201"_dt))
                 .application_periods(btp("20131221T083200"_dt, "20131221T123201"_dt))
-                .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+                .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                 .on(nt::Type_e::Line, "line:S");
 
         b.impact(nt::RTLevel::Adapted)
                 .uri("mess2")
                 .application_periods(btp("20131223T123200"_dt, "20131225T123201"_dt))
                 .publish(btp("20131224T123200"_dt, "20131226T123201"_dt))
-                .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+                .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                 .on(nt::Type_e::Network, "network:K");
     }
 };
