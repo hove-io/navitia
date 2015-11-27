@@ -443,6 +443,40 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
             vec_dt({"00:50"_t + one_day, "01:05"_t + one_day, "01:15"_t + one_day}));
 }
 
+// We want: (for a end of service at 2h00)
+//      A      B      C
+// S1 23:30  23:50  00:10
+// S2 23:40  00:00  00:20
+// S3 23:50  00:10  00:30
+BOOST_AUTO_TEST_CASE(test_get_all_route_stop_times_with_different_vp_over_midnight) {
+    ed::builder b = {"20151127"};
+    b.vj("L", "111111", "", true, "A", "A")
+        ("st1", "23:30"_t)
+        ("st2", "23:40"_t)
+        ("st3", "23:50"_t);
+    b.vj("L", "111111", "", true, "B", "B")
+        ("st1", "23:50"_t)
+        ("st2", "0:00"_t)
+        ("st3", "0:10"_t);
+    b.vj("L", "111110", "", true, "C", "C")
+        ("st1", "0:10"_t)
+        ("st2", "0:20"_t)
+        ("st3", "0:30"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule(
+        "line.uri=L", {}, {}, d("20151127T020000"), 86400, 100,
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+}
 
 // We want:
 //     C A B
