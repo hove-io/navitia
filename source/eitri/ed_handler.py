@@ -109,7 +109,12 @@ def update_db(db_params):
     cnx_string = db_params.cnx_string()
 
     #we need to enable postgis on the db
-    cnx = psycopg2.connect(cnx_string)
+    cnx = psycopg2.connect(
+        database=db_params.dbname,
+        user=db_params.user,
+        password=db_params.password,
+        host=db_params.host
+    )
     c = cnx.cursor()
     c.execute("create extension postgis;")
     c.close()
