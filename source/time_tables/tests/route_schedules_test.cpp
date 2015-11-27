@@ -448,8 +448,13 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
 // S1 23:30  23:50  00:10
 // S2 23:40  00:00  00:20
 // S3 23:50  00:10  00:30
-BOOST_AUTO_TEST_CASE(test_get_all_route_stop_times_with_different_vp_over_midnight) {
+BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     ed::builder b = {"20151127"};
+    navitia::type::Calendar *c1;
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150101");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20160101");
+
     b.vj("L", "111111", "", true, "A", "A")
         ("st1", "23:30"_t)
         ("st2", "23:40"_t)
@@ -463,12 +468,31 @@ BOOST_AUTO_TEST_CASE(test_get_all_route_stop_times_with_different_vp_over_midnig
         ("st2", "0:20"_t)
         ("st3", "0:30"_t);
 
+    auto save_cal = [&](navitia::type::Calendar* cal) {
+        b.data->pt_data->calendars.push_back(cal);
+        b.data->pt_data->calendars_map[cal->uri] = cal;
+    };
+
+    c1 = new navitia::type::Calendar(begin);
+    c1->uri = "C1";
+    c1->active_periods.push_back({begin, end});
+    c1->week_pattern = std::bitset<7>("1111111");
+    save_cal(c1);
+
+    auto a1 = new navitia::type::AssociatedCalendar;
+    a1->calendar = c1;
+    b.data->pt_data->associated_calendars.push_back(a1);
+
+    b.data->pt_data->meta_vjs.get_mut("A")->associated_calendars.insert({c1->uri, a1});
+    b.data->pt_data->meta_vjs.get_mut("B")->associated_calendars.insert({c1->uri, a1});
+    b.data->pt_data->meta_vjs.get_mut("C")->associated_calendars.insert({c1->uri, a1});
+
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 
     pbnavitia::Response resp = navitia::timetables::route_schedule(
-        "line.uri=L", {}, {}, d("20151127T020000"), 86400, 100,
+        "line.uri=L", c1->uri, {}, d("20151201T020000"), 86400, 100,
         3, 10, 0, *b.data, nt::RTLevel::Base, false);
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
