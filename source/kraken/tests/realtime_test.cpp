@@ -743,8 +743,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 3);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -812,8 +810,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 3);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -889,8 +885,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 4);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -971,8 +965,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 4);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -1053,8 +1045,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 4);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -1130,8 +1120,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 4);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
@@ -1201,8 +1189,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
-    // We should have two vp
-    // a vp for the current vj, and an empty vp
     BOOST_CHECK_GE(pt_data->validity_patterns.size(), 4);
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
