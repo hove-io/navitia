@@ -1861,7 +1861,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
             .uri("too_bad")
             .publish(default_period)
             .application_periods(default_period)
-            .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+            .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::StopArea, "A")
             .msg("no luck");
 
@@ -1892,7 +1892,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
     const auto& j = resp.journeys(0);
-    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR");
+    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "SIGNIFICANT_DELAYS");
 
     BOOST_REQUIRE_EQUAL(j.sections_size(), 1);
 }
@@ -1916,7 +1916,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
             .uri("too_bad")
             .publish(default_period)
             .application_periods(default_period)
-            .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+            .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::StopArea, "A")
             .msg("no luck");
 
@@ -1944,7 +1944,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
     const auto& j = resp.journeys(0);
-    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "DETOUR"); //we should have the network's disruption's effect
+    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "SIGNIFICANT_DELAYS"); //we should have the network's disruption's effect
 }
 
 BOOST_AUTO_TEST_CASE(journey_with_forbidden) {

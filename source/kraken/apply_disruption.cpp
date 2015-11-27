@@ -147,7 +147,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
             mvj->impacted_by.push_back(impact);
-        } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
+        } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
                                                          meta.production_date);
@@ -194,7 +194,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 static bool is_modifying_effect(nt::disruption::Effect e) {
     // check is the effect needs to modify the model
     return in(e, {nt::disruption::Effect::NO_SERVICE,
-                  nt::disruption::Effect::MODIFIED_SERVICE});
+                  nt::disruption::Effect::SIGNIFICANT_DELAYS});
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
