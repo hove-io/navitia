@@ -99,6 +99,9 @@ struct calendar_fixture {
             r->destination = b.sas.find("stop2")->second;
         }
 
+        // and add a comment on a line
+        pt_data.comments.add(b.lines["line:A"], "walk the line");
+
         auto it_sa = b.sas.find("Tstop3");
         auto it_rt = pt_data.routes_map.find("A:1");
         it_rt->second->destination = it_sa->second;

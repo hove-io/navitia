@@ -723,6 +723,8 @@ class UrisToLinks():
 
         for value in display_info.notes:
             response.append({"type": 'notes',
+                            # Note: type should be 'note' but for retrocompatibility, we can't change it
+                             "rel": 'notes',
                              "id": value.uri,
                              'value': value.note,
                              'internal': True})

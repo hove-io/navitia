@@ -1426,7 +1426,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj->uri);
-    if (vj->route) {
+    if (max_depth > 0 && vj->route) {
         fill_pb_object(vj->route, data, pt_display_info,max_depth,now,action_period);
         uris->set_route(vj->route->uri);
         const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
@@ -1435,7 +1435,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     for (const auto& message : vj->meta_vj->get_applicable_messages(now, action_period)) {
         fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
     }
-    if(origin != nullptr) {
+    if (origin != nullptr) {
         pt_display_info->set_headsign(data.pt_data->headsign_handler.get_headsign(*origin));
     }
     pt_display_info->set_direction(vj->get_direction());
@@ -1445,11 +1445,11 @@ void fill_pb_object(const nt::VehicleJourney* vj,
     }
     pt_display_info->set_description(vj->odt_message);
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
-    if(origin && destination){
+    if (origin && destination) {
         fill_pb_object(vj, data, has_equipments, origin->stop_point,
                        destination->stop_point,  max_depth-1, now,
                        action_period);
-    }else{
+    } else {
         fill_pb_object(vj, data, has_equipments, max_depth-1, now, action_period);
     }
     for (const auto& comment: data.pt_data->comments.get(vj)) {

@@ -60,9 +60,24 @@ def check_departure_board(schedules, tester, only_time=False):
     check_links(schedule, tester, href_mandatory=False)
 
 
-def is_valid_route_schedule(schedules, only_time=False):
-    assert len(schedules) == 1, "there should be only one elt"
-    schedule = schedules[0]
+def is_valid_route_schedule_header(header):
+    get_not_null(header, 'display_informations')
+
+    links = get_not_null(header, 'links')
+
+    #we should have at least:
+    # physical mode and vj link
+    # and some optional notes
+    links_by_type = {l['type'] for l in links}
+
+    mandatory_fields = {'vehicle_journey', 'physical_mode'}
+    optional_fields = {'notes'}
+
+    assert mandatory_fields.issubset(links_by_type)
+    assert mandatory_fields.union(optional_fields).issuperset(links_by_type)
+
+
+def is_valid_route_schedule(schedule, only_time=False):
     d = get_not_null(schedule, 'display_informations')
 
     get_not_null(d, 'direction')
@@ -74,7 +89,8 @@ def is_valid_route_schedule(schedules, only_time=False):
     table = get_not_null(schedule, 'table')
 
     headers = get_not_null(table, 'headers')
-    #TODO check headers
+    for h in headers:
+        is_valid_route_schedule_header(h)
 
     rows = get_not_null(table, 'rows')
     for row in rows:
@@ -99,7 +115,6 @@ def is_valid_departure(departure):
     get_not_null(d, 'physical_mode')
     get_not_null(d, 'headsign')
 
-
     route = get_not_null(departure, 'route')
     is_valid_route(route)
 
@@ -108,6 +123,11 @@ def is_valid_departure(departure):
 
     stop_date_time = get_not_null(departure, 'stop_date_time')
     is_valid_stop_date_time(stop_date_time)
+
+
+def get_real_notes(obj, full_response):
+    real_notes = {n['id']: n for n in get_not_null(full_response, 'notes')}
+    return [real_notes[n['id']] for n in get_not_null(obj, 'links') if n['type'] == 'notes']
 
 
 @dataset(["departure_board_test"])
@@ -219,8 +239,41 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
 
-        assert "route_schedules" in response
-        is_valid_route_schedule(response["route_schedules"])
+        schedules = get_not_null(response, 'route_schedules')
+
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
+        is_valid_route_schedule(schedule)
+
+        # check the links
+        schedule_links = {(l['type'], l['id']): l for l in get_not_null(schedule, 'links')}
+        assert ('line', 'line:A') in schedule_links
+        assert ('route', 'line:A:0') in schedule_links
+        assert ('network', 'base_network') in schedule_links
+
+        schedule_notes = get_real_notes(schedule, response)
+        assert len(schedule_notes) == 1
+        assert schedule_notes[0]['value'] == 'walk the line'
+
+        headers = get_not_null(get_not_null(schedule, 'table'), 'headers')
+        #there is 4 vjs
+        assert len(headers) == 4
+
+        # we get them by vj to check the vj that have a note
+        headers_by_vj = {h['display_informations']['headsign']: h for h in headers}
+
+        assert 'week' in headers_by_vj
+        assert 'week_bis' in headers_by_vj
+        assert 'all' in headers_by_vj
+        assert 'wednesday' in headers_by_vj
+
+        all_vj = headers_by_vj['all']
+        all_vj_links = {(l['type'], l['id']): l for l in get_not_null(all_vj, 'links')}
+        assert ('vehicle_journey', 'all') in all_vj_links
+        assert ('physical_mode', 'physical_mode:0') in all_vj_links
+        all_vj_notes = get_real_notes(all_vj, response)
+        assert len(all_vj_notes) == 1
+        assert all_vj_notes[0]['value'] == 'vj comment'
 
     def test_routes_schedule_with_calendar(self):
         """
@@ -228,9 +281,12 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("routes/line:A:0/route_schedules?calendar=week_cal")
 
-        assert "route_schedules" in response
+        schedules = get_not_null(response, 'route_schedules')
+
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
         # the route_schedule with calendar should not have with date (only time)
-        is_valid_route_schedule(response["route_schedules"], only_time=True)
+        is_valid_route_schedule(schedule, only_time=True)
 
     def test_with_wrong_type(self):
         """
@@ -269,7 +325,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert 'error' not in response
         assert 'stop_schedules' in response
         assert len(response["stop_schedules"]) == 1
-        assert len(response["notes"]) == 1
+        assert len(response["notes"]) == 2
         assert len(response["stop_schedules"][0]["date_times"]) == 4
 
         for date_time in response["stop_schedules"][0]["date_times"]:
@@ -284,7 +340,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert 'error' not in response
         assert 'route_schedules' in response
         assert len(response["route_schedules"]) == 1
-        assert len(response["notes"]) == 1
+        assert len(response["notes"]) == 2
         assert len(response["route_schedules"][0]["table"]["headers"]) == 4
 
         for header in response["route_schedules"][0]["table"]["headers"]:
@@ -294,7 +350,7 @@ class TestDepartureBoard(AbstractTestFixture):
             assert(len(vj_link) == 0 or len(notes_link) == 1)
 
         for row in response["route_schedules"][0]["table"]["rows"]:
-           for date_time in row["date_times"]:
+            for date_time in row["date_times"]:
                 vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
                 notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
                 # assert that if it's the 'all' vj there is no note
