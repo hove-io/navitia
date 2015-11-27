@@ -368,6 +368,11 @@ inline std::string to_string(OsmObjectType t) {
     }
 }
 
+struct poi_type_comp{
+    std::vector<std::string> order = {"amenity", "tourism", "leisure", "aeroway", "railway", "shop"};
+    bool operator()(const std::string& a, const std::string& b);
+};
+
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;
     ed::EdPersistor& persistor;
@@ -378,7 +383,7 @@ struct PoiHouseNumberVisitor {
     std::set<std::string> properties_to_ignore;
     size_t n_inserted_pois = 0;
     size_t n_inserted_house_numbers = 0;
-    std::set<std::string> tags_types;
+    std::set<std::string, poi_type_comp> tags_types;
 
     PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
             Georef& data, const bool parse_pois, const std::map<std::string, std::string>& poi_types) :

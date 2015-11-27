@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/range/algorithm/find.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/reverse.hpp>
 
@@ -52,6 +53,21 @@ namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 namespace ed { namespace connectors {
+
+bool poi_type_comp::operator()(const std::string& a, const std::string& b){
+    auto it_a = boost::range::find(order, a);
+    auto it_b = boost::range::find(order, b);
+    if(it_a != order.end() && it_b != order.end()){
+        return it_a < it_b;
+    }
+    if(it_a == order.end() && it_b != order.end()){
+        return false;
+    }
+    if(it_b == order.end() && it_a != order.end()){
+        return true;
+    }
+    return a < b;
+}
 
 /*
  * Read relations
@@ -845,7 +861,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         return;
 
     std::string ref_tag = "";
-    for(auto tags_type: tags_types){
+    for(const auto& tags_type: tags_types){
         if(tags.find(tags_type) != tags.end()){
             ref_tag = tags_type;
             break;
