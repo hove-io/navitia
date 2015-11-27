@@ -277,21 +277,21 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
     size_t total_result = result.get_disrupts_size();
     std::vector<NetworkDisrupt> disrupts = paginate(result.get_disrupts(), count, start_page);
     for (const NetworkDisrupt& dist: disrupts) {
-        pbnavitia::Disruptions* pb_disruption = pb_response.add_disruptions();
-        pbnavitia::Network* pb_network = pb_disruption->mutable_network();
+        auto* pb_traffic_reports = pb_response.add_traffic_reports();
+        pbnavitia::Network* pb_network = pb_traffic_reports->mutable_network();
         for(const auto& impact: dist.network_disruptions){
             fill_message(*impact, d, pb_network, depth-1, now_dt, action_period);
         }
         navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
         for (const auto& line_item: dist.lines) {
-            pbnavitia::Line* pb_line = pb_disruption->add_lines();
+            pbnavitia::Line* pb_line = pb_traffic_reports->add_lines();
             navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
             for(const auto& impact: line_item.second){
                 fill_message(*impact, d, pb_line, depth-1, now_dt, action_period);
             }
         }
         for (const auto& sa_item: dist.stop_areas) {
-            pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
+            pbnavitia::StopArea* pb_stop_area = pb_traffic_reports->add_stop_areas();
             navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
                                     bt::not_a_date_time, action_period, false);
             for(const auto& impact: sa_item.second){
@@ -303,9 +303,9 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
     pagination->set_totalresult(total_result);
     pagination->set_startpage(start_page);
     pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(pb_response.disruptions_size());
+    pagination->set_itemsonpage(pb_response.traffic_reports_size());
 
-    if (pb_response.disruptions_size() == 0) {
+    if (pb_response.traffic_reports_size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this disruption",
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);

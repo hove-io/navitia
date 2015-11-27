@@ -29,9 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from flask.globals import g
 from jormungandr import i_manager, authentication
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, line_group, \
@@ -543,6 +541,28 @@ def networks(is_collection):
     return Networks
 
 
+def disruptions(is_collection):
+
+    class Disruptions(Uri):
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "disruptions")
+            self.collections = [
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
+    return Disruptions
+
+
 def addresses(is_collection):
     class Addresses(Coord):
 
@@ -558,13 +578,3 @@ def coords(is_collection):
         """ Not implemented yet"""
         pass
     return Coords
-
-
-def Redirect(*args, **kwargs):
-    id_ = kwargs["id"]
-    collection = kwargs["collection"]
-    region = i_manager.get_region(object_id=id_)
-    if not region:
-        region = "{region.id}"
-    url = url_for("v1.uri", region=region, collection=collection, id=id_)
-    return redirect(url, 303)

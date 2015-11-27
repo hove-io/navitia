@@ -133,7 +133,8 @@ BOOST_AUTO_TEST_CASE(projection) {
 
 struct disruption_fixture {
     disruption_fixture() : disruption(std::make_unique<Disruption>("bob", navitia::type::RTLevel::Adapted)) {
-        disruption->add_impact(boost::make_shared<Impact>());
+        navitia::type::disruption::DisruptionHolder holder;
+        disruption->add_impact(boost::make_shared<Impact>(), holder);
 
         disruption->publication_period = pt::time_period(
                     pt::time_from_string("2013-02-22 12:32:00"),

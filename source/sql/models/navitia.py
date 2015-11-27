@@ -40,7 +40,9 @@ meta_vj = Table('meta_vj', metadata,*[
 contributor = Table('contributor', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),],
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('website', TEXT(), primary_key=False, nullable=True),
+    Column('license', TEXT(), primary_key=False, nullable=True),],
     schema='navitia')
 
 
@@ -346,6 +348,7 @@ line = Table('line', metadata,*[
     Column('shape', Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), primary_key=False),
     Column('opening_time', TIME(), primary_key=False),
     Column('closing_time', TIME(), primary_key=False),
+    Column('text_color', TEXT(), primary_key=False),
     ForeignKeyConstraint(['commercial_mode_id'], [u'navitia.commercial_mode.id'], name=u'line_commercial_mode_id_fkey'),
     ForeignKeyConstraint(['network_id'], [u'navitia.network.id'], name=u'line_network_id_fkey'),],
     schema='navitia')

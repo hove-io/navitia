@@ -131,6 +131,8 @@ class TestPtRef(AbstractTestFixture):
         l = lines[0]
 
         is_valid_line(l, depth_check=1)
+
+        assert l["text_color"] == 'FFD700'
         #we know we have a geojson for this test so we can check it
         geo = get_not_null(l, 'geojson')
         shape(geo)
@@ -376,6 +378,10 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
         assert len(lines) == 1
         assert 'A' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'external_code']
 
+    def test_invalid_url(self):
+        """the following bad url was causing internal errors, it should only be a 404"""
+        _, status = self.query_no_assert("v1/coverage/lines/bob")
+        eq_(status, 404)
 
 @dataset(["main_routing_test"])
 class TestPtRefRoutingCov(AbstractTestFixture):
@@ -588,3 +594,31 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
         assert any(vj['name'] == "vehicle_journey 1" and vj['trip']['id'] == "vehicle_journey 1" for vj in vjs)
+
+    def test_disruptions(self):
+        """test the /disruptions api"""
+        response = self.query_region('disruptions')
+
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 9
+        for d in disruptions:
+            is_valid_disruption(d)
+
+        # we test that we can access a specific disruption
+        response = self.query_region('disruptions/too_bad_line_C')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+
+        # we can also display all disruptions of an object
+        response = self.query_region('lines/C/disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 2
+        disruptions_uris = set([d['uri'] for d in disruptions])
+        eq_({"too_bad_line_C", "too_bad_all_lines"}, disruptions_uris)
+
+        # we can't access object from the disruption though (we don't think it to be useful for the moment)
+        response, status = self.query_region('disruptions/too_bad_line_C/lines', check=False)
+        eq_(status, 404)
+        e = get_not_null(response, 'error')
+        assert e['id'] == 'unknown_object'
+        assert e['message'] == 'ptref : Filters: Unable to find object'

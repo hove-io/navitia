@@ -206,7 +206,7 @@ class Instance(db.Model):
     # params for jormungandr
     # ============================================================
     #the scenario used by jormungandr, by default we use the default scenario (clever isn't it?)
-    scenario = db.Column(db.Text, nullable=False, default='default')
+    scenario = db.Column(db.Text, nullable=False, default='new_default')
 
     #order of the journey, this order is for clockwise request, else it is reversed
     journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'),

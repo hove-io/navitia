@@ -1,0 +1,5 @@
+"route_id","agency_id","route_short_name","route_long_name","route_desc","route_type","route_url","route_color","route_text_color"
+1,"ratp",1,"Ligne 1",,1,,,FFD700
+1,"ratp",1,"Ligne 1",,1,,,
+2,"ratp",1,"Ligne 2",,1,,,
+ARR|10534,"ratp",534,Middelharnis - Oostplaat,,3,,,,

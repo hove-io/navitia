@@ -312,7 +312,15 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600);
     BOOST_REQUIRE(data.stops[0]->stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->stop_point->uri, "STAGECOACH");
-    BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+    BOOST_CHECK_EQUAL(data.stops[0]->order, 0);
+
+    BOOST_REQUIRE(data.stops[1]->vehicle_journey != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA");
+    BOOST_CHECK_EQUAL(data.stops[1]->arrival_time, 6*3600 + 20*60);
+    BOOST_CHECK_EQUAL(data.stops[1]->departure_time, 6*3600 + 20*60);
+    BOOST_REQUIRE(data.stops[1]->stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[1]->stop_point->uri, "BEATTY_AIRPORT");
+    BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
 
     data.complete();
 }
@@ -438,7 +446,7 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600 + 480*60); //for los angeles is -480 minutes
     BOOST_REQUIRE(data.stops[0]->stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->stop_point->uri, "STAGECOACH");
-    BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+    BOOST_CHECK_EQUAL(data.stops[0]->order, 0);
 
     BOOST_REQUIRE(data.stops[1]->vehicle_journey != nullptr);
     BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA_dst_2");
@@ -446,7 +454,7 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     BOOST_CHECK_EQUAL(data.stops[1]->departure_time, 6*3600 + 420*60); //for los angeles is -420 minutes
     BOOST_REQUIRE(data.stops[1]->stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[1]->stop_point->uri, "STAGECOACH");
-    BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
+    BOOST_CHECK_EQUAL(data.stops[1]->order, 0);
 
     for (auto st : data.stops) {
         BOOST_CHECK(st->departure_time > 0);
@@ -694,3 +702,28 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_3) {
                         boost::gregorian::date_period(boost::gregorian::date(2010, 01, 17),
                                                       boost::gregorian::date(2010, 12, 27)));
 }
+
+
+BOOST_AUTO_TEST_CASE(parse_gtfs_revision_201502){
+    /*
+     * use import the raw google gtfs revision February 2, 2015
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir)
+                                      + gtfs_path + "_revision_201502");
+    parser.fill(data);
+
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), false);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->accessible(has_properties.properties()), true);
+
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 1);
+    navitia::type::hasVehicleProperties has_vehicleproperties;
+    has_vehicleproperties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    has_vehicleproperties.set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->accessible(has_vehicleproperties.vehicles()), true);
+}
+

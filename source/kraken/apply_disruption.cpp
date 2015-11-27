@@ -43,6 +43,7 @@ www.navitia.io
 namespace navitia {
 
 namespace nt = navitia::type;
+namespace ndtu = navitia::DateTimeUtils;
 namespace bt = boost::posix_time;
 namespace bg = boost::gregorian;
 
@@ -115,24 +116,17 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 };
 
-static type::ValidityPattern compute_vp(const std::vector<boost::posix_time::time_period>& periods,
+// Computes the vp corresponding to the days where base vj's are disrupted
+static type::ValidityPattern compute_base_disrupted_vp(
+        const std::vector<boost::posix_time::time_period>& disrupted_vj_periods,
         const boost::gregorian::date_period& production_period) {
     type::ValidityPattern vp{production_period.begin()}; // bitset are all initialised to 0
-    for (const auto& period: periods){
-        // we may impact vj's passed midnight
-        bg::day_iterator titr(period.begin().date());
-        for (; titr <= period.end().date(); ++titr) {
-            if (! production_period.contains(*titr)) { continue; }
-            auto day = (*titr - production_period.begin()).days();
-            vp.add(day);
-            // Why break here?
-            // There'll be a problem with VJ passes midnight.
-            // Ex:
-            // We'd like to delay a train on 1st, Jan which will pass midnight, without 'break',
-            // the impact will be applied on 1st, Jan AND 2nd, Jan. So the VJ will be de activated on 1st AND 2nd Jan,
-            // which may not be wanted
-            break;
-        }
+    for (const auto& period: disrupted_vj_periods) {
+        auto start_date = period.begin().date();
+        if (! production_period.contains(start_date)) { continue; }
+        // we may impact vj's passing midnight but all we care is start date
+        auto day = (start_date - production_period.begin()).days();
+        vp.add(day);
     }
     return vp;
 }
@@ -153,9 +147,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
             mvj->impacted_by.push_back(impact);
-        } else if (impact->severity->effect == nt::disruption::Effect::MODIFIED_SERVICE) {
+        } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
-            auto vp = compute_vp(impact->application_periods, meta.production_date);
+            auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
+                                                         meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
             }
@@ -164,7 +159,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     + impact->disruption->uri;
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
-                vp,
+                canceled_vp,
                 r,
                 impact->aux_info.stop_times,
                 pt_data);
@@ -199,20 +194,19 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 static bool is_modifying_effect(nt::disruption::Effect e) {
     // check is the effect needs to modify the model
     return in(e, {nt::disruption::Effect::NO_SERVICE,
-                  nt::disruption::Effect::MODIFIED_SERVICE});
+                  nt::disruption::Effect::SIGNIFICANT_DELAYS});
 }
 
-void apply_impact(boost::shared_ptr<nt::disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
                          nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
     }
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "Adding impact: " << impact.get()->uri);
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Adding impact: " << impact->uri);
+
     add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    impact.get()->uri << " impact added");
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), impact->uri << " impact added");
 }
 
 
@@ -229,7 +223,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
-    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* /*r*/ = nullptr) {
         mvj->remove_impact(impact);
         for (auto& vj: mvj->get_base_vj()) {
             // Time to reset the vj
@@ -310,19 +304,15 @@ void delete_disruption(const std::string& disruption_id,
                        const nt::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting disruption: " << disruption_id);
-    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
+    nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
     // the disruption is deleted by RAII
-    std::unique_ptr<nt::disruption::Disruption> disruption = holder.pop_disruption(disruption_id);
-    if (disruption) {
-        std::vector<nt::disruption::PtObj> informed_entities;
+    if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
-            informed_entities.insert(informed_entities.end(),
-                              impact->informed_entities.begin(),
-                              impact->informed_entities.end());
             delete_impact(impact, pt_data, meta);
         }
     }
+    holder.clean_weak_impacts();
     LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 

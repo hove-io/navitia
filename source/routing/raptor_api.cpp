@@ -130,8 +130,8 @@ _update_max_severity(boost::optional<type::disruption::Effect>& worst_disruption
 
 template <typename T>
 void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max, const T& pb_obj) {
-    for (const auto& disruption: pb_obj.disruptions()) {
-        _update_max_severity(max, type::disruption::from_string(disruption.severity().effect()));
+    for (const auto& impact: pb_obj.impacts()) {
+        _update_max_severity(max, type::disruption::from_string(impact.severity().effect()));
     }
 }
 
@@ -160,20 +160,20 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         const std::vector<const type::StopTime*>& stop_times, const nt::Data & d,
         bt::ptime now, bt::time_period action_period) {
 
-    if (vj->has_boarding()){
+    if (vj->has_boarding()) {
         pb_section->set_type(pbnavitia::boarding);
         return;
     }
-    if (vj->has_landing()){
+    if (vj->has_landing()) {
         pb_section->set_type(pbnavitia::landing);
         return;
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
-    if(! stop_times.empty()){
+    if (! stop_times.empty()) {
         fill_pb_object(vj, d, vj_pt_display_information, stop_times.front(), stop_times.back()
-                       , 0, now, action_period);
-    }else{
-        fill_pb_object(vj, d, vj_pt_display_information, nullptr, nullptr, 0, now, action_period);
+                       , 1, now, action_period);
+    } else {
+        fill_pb_object(vj, d, vj_pt_display_information, nullptr, nullptr, 1, now, action_period);
     }
 
     fill_shape(pb_section, stop_times);

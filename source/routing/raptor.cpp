@@ -158,6 +158,7 @@ void RAPTOR::init(const map_stop_point_duration& dep,
         const DateTime sn_dur = sp_dt.second.total_seconds();
         const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
         labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
+        best_labels_transfers[sp_dt.first] = begin_dt;
         for (const auto jpp: jpps_from_sp[sp_dt.first]) {
             if (clockwise && Q[jpp.jp_idx] > jpp.order) {
                 Q[jpp.jp_idx] = jpp.order;
@@ -189,13 +190,6 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
 }
 
 namespace {
-struct StartingPointSndPhase {
-    SpIdx sp_idx;
-    unsigned count;
-    DateTime end_dt;
-    unsigned fallback_dur;
-    bool has_priority;
-};
 struct Dom {
     Dom(bool c): clockwise(c) {}
     bool clockwise;
@@ -227,6 +221,7 @@ struct CompSndPhase {
         return lhs.sp_idx < rhs.sp_idx; // just to avoid randomness
     }
 };
+
 std::vector<StartingPointSndPhase>
 make_starting_points_snd_phase(const RAPTOR& raptor,
                                const routing::map_stop_point_duration& arrs,
@@ -366,6 +361,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     auto start_raptor = std::chrono::system_clock::now();
 
     auto solutions = ParetoFront<Journey, Dominates/*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
+
     if (direct_path_dur) {
         Journey j;
         j.sn_dur = *direct_path_dur;
@@ -434,30 +430,23 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
         map_stop_point_duration init_map;
         init_map[start.sp_idx] = 0_s;
-        init(init_map, working_labels.dt_pt(start.sp_idx),
-             !clockwise, accessibilite_params.properties);
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
+        init(init_map, working_labels.dt_pt(start.sp_idx),
+             !clockwise, accessibilite_params.properties);
         boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
-        const auto reader_results = read_solutions(*this,
-                                                   !clockwise,
-                                                   departure_datetime,
-                                                   departures,
-                                                   destinations,
-                                                   rt_level,
-                                                   accessibilite_params,
-                                                   transfer_penalty);
-        bool has_added = false;
-        for (const auto& s: reader_results) {
-            const bool cur_added = solutions.add(s);
-            has_added = has_added || cur_added;
-        }
+        read_solutions(*this,
+                       solutions,
+                       !clockwise,
+                       departure_datetime,
+                       departures,
+                       destinations,
+                       rt_level,
+                       accessibilite_params,
+                       transfer_penalty,
+                       start);
+
         ++nb_snd_pass;
-        if (!has_added) {
-            ++nb_useless;
-        } else {
-            last_usefull_2nd_pass = nb_snd_pass;
-        }
     }
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = " << lower_bound_fb

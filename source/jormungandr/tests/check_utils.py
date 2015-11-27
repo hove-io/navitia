@@ -872,6 +872,7 @@ def is_valid_region_status(status):
     is_valid_date(get_not_null(status, 'start_production_date'))
     get_valid_datetime(get_not_null(status, 'last_load_at'), possible_errors=True)
     get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
+    get_not_null(status, 'is_realtime_loaded')
 
 
 # for () are mandatory for the label even if is reality it is not
@@ -952,3 +953,26 @@ def is_valid_stop_date_time(stop_date_time):
     get_not_null(stop_date_time, 'departure_date_time')
     assert get_valid_datetime(stop_date_time['departure_date_time'])
 
+
+def get_used_vj(response):
+    """
+    return for each journeys the list of taken vj
+    """
+    journeys_vj = []
+    for j in get_not_null(response, 'journeys'):
+        vjs = []
+        for s in get_not_null(j, 'sections'):
+            for l in s.get('links', []):
+                if l['type'] == 'vehicle_journey':
+                    vjs.append(l['id'])
+                    break
+        journeys_vj.append(vjs)
+
+    return journeys_vj
+
+
+def get_arrivals(response):
+    """
+    return a list with the journeys arrival times
+    """
+    return [j['arrival_date_time'] for j in get_not_null(response, 'journeys')]

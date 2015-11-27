@@ -68,6 +68,11 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 45.0296, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), 0.5881, 0.1);
 
+    // Check website, license of contributor
+    BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
+
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
@@ -80,6 +85,15 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lat(), 45.0296, 0.1);
     BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lon(), 0.5881, 0.1);
     BOOST_CHECK_EQUAL(data.stop_points[0]->stop_area, data.stop_areas[0]);
+
+    // check stops properties
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+
+    for (int i = 1; i < 8; i++){
+        BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
+    }
 
     //we should have one zonal stop point
     BOOST_REQUIRE_EQUAL(boost::count_if(data.stop_points, [](const types::StopPoint* sp) {
@@ -133,6 +147,12 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2]->headsign, "N1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->headsign, "N2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->headsign, "N2");
+
+    for (const auto vj : data.vehicle_journeys) {
+        for (size_t position = 0; position < vj->stop_time_list.size(); ++position) {
+            BOOST_CHECK_EQUAL(vj->stop_time_list[position]->order, position);
+        }
+    }
 
     // feed_info
     std::map<std::string, std::string> feed_info_test ={
@@ -309,4 +329,28 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
     BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 27),
                                                       boost::gregorian::date(2015, 8, 27)));
+}
+
+
+BOOST_AUTO_TEST_CASE(sync_ntfs) {
+    ed::Data data;
+
+    ed::connectors::FusioParser parser(ntfs_path + "_v5");
+    parser.fill(data, "20150327");
+
+    //we check that the data have been correctly loaded
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+
+    for (int i = 1; i < 8; i++){
+        BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
+    }
 }

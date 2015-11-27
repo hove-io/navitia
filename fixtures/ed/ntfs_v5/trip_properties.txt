@@ -1,0 +1,2 @@
+trip_property_id,wheelchair_accessible,bike_accepted,air_conditioned,visual_announcement,audible_announcement,appropriate_escort,appropriate_signage,school_vehicle
+0,0,0,0,0,0,0,0,0

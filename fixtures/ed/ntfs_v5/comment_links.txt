@@ -1,0 +1,11 @@
+object_id,object_type,comment_id
+StopTime:4,stop_time,bob
+StopTime:4,stop_time,bobette
+StopTime:7,stop_time,bob
+route_1,route,bob
+trip_3,trip,bobette
+SA:C,stop_area,bob
+24034,stop_point,bobette
+24034,stop_point,wrong_comment_id
+wrong_stop_point,stop_point,bobette
+trip_3,wrong_type,bobette

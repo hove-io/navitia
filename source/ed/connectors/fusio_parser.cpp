@@ -31,6 +31,7 @@ www.navitia.io
 #include "fusio_parser.h"
 
 #include <boost/geometry.hpp>
+#include <boost/filesystem.hpp>
 
 namespace ed { namespace connectors {
 
@@ -126,7 +127,11 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
 void StopsFusioHandler::init(Data& data) {
         StopsGtfsHandler::init(data);
         ext_code_c = csv.get_pos_col("external_code");
+        // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
         property_id_c = csv.get_pos_col("property_id");
+        if (property_id_c == -1){
+            property_id_c = csv.get_pos_col("equipment_id");
+         }
         comment_id_c =  csv.get_pos_col("comment_id");
         visible_c =  csv.get_pos_col("visible");
         geometry_id_c = csv.get_pos_col("geometry_id");
@@ -268,6 +273,10 @@ void TransfersFusioHandler::init(Data& d) {
     TransfersGtfsHandler::init(d);
     real_time_c = csv.get_pos_col("real_min_transfer_time"),
             property_id_c = csv.get_pos_col("property_id");
+    // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
+    if (property_id_c == -1){
+        property_id_c = csv.get_pos_col("equipment_id");
+     }
 }
 
 void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const {
@@ -552,6 +561,8 @@ void TripsFusioHandler::finish(Data&) {
 void ContributorFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("contributor_id");
     name_c = csv.get_pos_col("contributor_name");
+    website_c = csv.get_pos_col("contributor_website");
+    license_c = csv.get_pos_col("contributor_license");
 }
 
 void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -567,6 +578,15 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
         contributor->uri = "default_contributor";
     }
     contributor->name = row[name_c];
+
+    if (is_valid(website_c, row)) {
+        contributor->website = row[website_c];
+    }
+
+    if (is_valid(license_c, row)) {
+        contributor->license = row[license_c];
+    }
+
     contributor->idx = data.contributors.size() + 1;
     data.contributors.push_back(contributor);
     gtfs_data.contributor_map[contributor->uri] = contributor;
@@ -587,6 +607,7 @@ void LineFusioHandler::init(Data &){
     geometry_id_c = csv.get_pos_col("geometry_id");
     opening_c = csv.get_pos_col("line_opening_time");
     closing_c = csv.get_pos_col("line_closing_time");
+    text_color_c = csv.get_pos_col("line_text_color");
 }
 void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(id_c, row)) {
@@ -600,6 +621,9 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     if (is_valid(code_c, row)) {
         line->code = row[code_c];
+    }
+    if (is_valid(text_color_c, row)) {
+        line->text_color = row[text_color_c];
     }
     if (is_valid(forward_name_c, row)) {
         line->forward_name = row[forward_name_c];
@@ -875,6 +899,10 @@ void OdtConditionsFusioHandler::handle_line(Data& , const csv_row& row, bool is_
 
 void StopPropertiesFusioHandler::init(Data&){
     id_c = csv.get_pos_col("property_id");
+    // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
+    if (id_c ==-1 ){
+        id_c = csv.get_pos_col("equipment_id");
+    }
     wheelchair_boarding_c = csv.get_pos_col("wheelchair_boarding");
     sheltered_c = csv.get_pos_col("sheltered");
     elevator_c = csv.get_pos_col("elevator");
@@ -1473,7 +1501,13 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
     parse<LineFusioHandler>(data, "lines.txt");
     parse<LineGroupFusioHandler>(data, "line_groups.txt");
     parse<LineGroupLinksFusioHandler>(data, "line_group_links.txt");
-    parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
+
+    // TODO equipments NTFSv0.4: remove stop_properties when we stop to support NTFSv0.3
+    if (boost::filesystem::exists(this->path + "/equipments.txt")){
+        parse<StopPropertiesFusioHandler>(data, "equipments.txt");
+    }else{
+        parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
+    }
     parse<StopsFusioHandler>(data, "stops.txt", true);
     parse<RouteFusioHandler>(data, "routes.txt", true);
     parse<TransfersFusioHandler>(data, "transfers.txt");

@@ -1,0 +1,11 @@
+feed_info_param,feed_info_value
+ntfs_version,0.3
+feed_start_date,20150325
+feed_end_date,20150826
+feed_creation_date,20150415
+feed_creation_time,15:32:34
+feed_publisher_name,Ile de France open data
+feed_publisher_url,http://www.canaltp.fr
+feed_license,ODBL
+fusio_url,
+fusio_version,

@@ -1,0 +1,17 @@
+"stop_id","stop_name","stop_desc","stop_lat","stop_lon","zone_id","stop_url","location_type","parent_station","wheelchair_boarding"
+"doublon_sa", "Doublon",,"1","0",,,1,,
+"doublon_sa", "Doublon",,"1","0",,,1,,
+"doublon_sp", "Doublon",,"1","0",,,0,,
+"doublon_sp", "Doublon",,"1","0",,,0,,
+"sa_avant","Stop Area avant",,"48.880342","2.355022",,,1,,
+"sa_avant:sp1","StopPoint apres sa 1",,"48.880531","2.355381",,,0,"sa_avant",1
+"sa_avant:sp2","StopPoint apres sa 2",,"48.880191","2.354786",,,0,"sa_avant",
+"sa_apres:sp1","Stop Point avant sa 1",,"48.880531","2.355381",,,0,"sa_apres",
+"sa_apres:sp2","Stop Point avant sa 2",,"48.880191","2.354786",,,0,"sa_apres",
+"sa_apres","Stop Area apres",,"48.880342","2.355022",,,1,,
+"sa_seul","Stop area seul",,"48.880342","2.355022",,,1,,
+"sp_seul","Stop point seul",,"48.880342","2.355022",,,0,,
+"sp_wheelchair","Sp wheelchair",,"4","2",,,0,,1
+"sa_wheelchair","Stop area wheelchair",,"48.880342","2.355022",,,1,,1
+"sa_wheelchair:sp1","Stop point inherits",,"48.880342","2.355022",,,0,"sa_wheelchair",0
+"sa_wheelchair:sp2","Stop point change",,"48.880342","2.355022",,,0,"sa_wheelchair",2

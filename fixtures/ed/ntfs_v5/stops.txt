@@ -1,0 +1,16 @@
+stop_id,visible,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,stop_timezone,equipment_id,contributor_id,geometry_id
+SA:A,1,"Arrêt A",45.0296,0.5881,,1,,,,,
+SA:B,1,"Arrêt B",45.0245,0.5725,,1,,,,,
+SA:C,1,"Arrêt C",45.0211,0.5469,,1,,,,,
+SA:D,1,"Arrêt D",44.9518,0.4572,,1,,,,,
+SP:A,1,"Arrêt A",45.0296,0.5881,,0,SA:A,,EQ1,,
+SP:B,1,"Arrêt B",45.0245,0.5725,,0,SA:B,,,,
+SP:C,1,"Arrêt C",45.0211,0.5469,,0,SA:C,,,,
+24034,1,"Beleymas",44.993469,0.504929,,2,,,,,ADMIN:24034
+SP:D,1,"Arrêt D",44.9518,0.4572,,0,SA:D,,,,
+SA:E,1,"Arrêt E",45.0379,0.6040,,1,,,,,
+SA:F,1,"Arrêt F",45.0534,0.5962,,1,,,,,
+SA:J,1,"Arrêt J",45.0614,0.6155,,1,,,,,
+SP:E,1,"Arrêt E",45.0379,0.6040,,0,,,,,
+SP:F,1,"Arrêt F",45.0534,0.5962,,0,,,,,
+SP:J,1,"Arrêt J",45.0614,0.6155,,0,,,,,

@@ -250,6 +250,8 @@ struct Tag {
     }
 };
 
+class DisruptionHolder;
+
 struct Disruption {
     Disruption() {}
     Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
@@ -289,7 +291,7 @@ struct Disruption {
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
     }
 
-    void add_impact(const boost::shared_ptr<Impact>& impact);
+    void add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder);
     const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
         return impacts;
     }
@@ -305,11 +307,15 @@ private:
 
 class DisruptionHolder {
     std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
+    std::vector<boost::weak_ptr<Impact>> weak_impacts;
 public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
     size_t nb_disruptions() const { return disruptions_by_uri.size(); }
-
+    void add_weak_impact(boost::weak_ptr<Impact>);
+    void clean_weak_impacts();
+    const std::vector<boost::weak_ptr<Impact>>&
+    get_weak_impacts() const{ return weak_impacts;}
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
     std::map<std::string, boost::weak_ptr<Cause>> causes; //to be wrapped
@@ -318,7 +324,7 @@ public:
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions_by_uri & causes & severities & tags;
+        ar & disruptions_by_uri & causes & severities & tags & weak_impacts;
     }
 };
 }

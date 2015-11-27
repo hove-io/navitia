@@ -35,6 +35,7 @@ www.navitia.io
 
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/container/flat_map.hpp>
 
 namespace navitia { namespace routing {
 
@@ -179,8 +180,8 @@ get_transfer_waiting(const type::PT_Data& data,
 }
 
 template<typename Visitor>
-Journey make_journey(const PathElt& path, const RaptorSolutionReader<Visitor>& reader) {
-    Journey j;
+const Journey& make_journey(const PathElt& path, RaptorSolutionReader<Visitor>& reader) {
+    Journey& j = reader.journey_cache.get();
 
     // constructing sections
     for (const PathElt* elt = &path; elt != nullptr; elt = elt->prev) {
@@ -292,6 +293,32 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     throw navitia::recoverable_exception("impossible to rebuild path");
 }
 
+Journey make_bound_journey(DateTime beg,
+                           navitia::time_duration beg_sn_dur,
+                           DateTime end,
+                           navitia::time_duration end_sn_dur,
+                           unsigned count,
+                           uint32_t lower_bound_conn,
+                           navitia::time_duration transfer_penalty,
+                           bool clockwise) {
+    Journey journey;
+    journey.sections.resize(count); // only the number of sections is part of the dominance function
+    journey.sn_dur = beg_sn_dur + end_sn_dur;
+    if (clockwise) {
+        journey.departure_dt = beg - beg_sn_dur.total_seconds();
+        journey.arrival_dt = end + end_sn_dur.total_seconds();
+    } else {
+        journey.departure_dt = end + end_sn_dur.total_seconds();
+        journey.arrival_dt = beg - beg_sn_dur.total_seconds();
+    }
+
+    // for the rest KPI, we don't know yet the accurate values, so we'll provide the best lb possible
+    journey.transfer_dur = transfer_penalty * count + navitia::seconds((count - 1) * lower_bound_conn);
+    journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
+    journey.nb_vj_extentions = 0;
+    return journey;
+}
+
 struct stop_search {};
 
 template<typename Visitor>
@@ -318,16 +345,35 @@ struct RaptorSolutionReader {
                 && lhs.transfer_dur <= rhs.transfer_dur;
         }
     };
-    typedef std::map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+    // A small structure to reuse the memory. A c.get(id) give a
+    // default initialized structure reusing memory from previous
+    // calls. Such a call should not be done when the structure given
+    // by the previous call is still in use (else, bad things
+    // happen...). id must be small, as this is the index of a deque.
+    template<typename T> struct Cache {
+        T& get(const size_t level = 0) {
+            static const T empty = T();
+            if (level >= v.size()) { v.resize(level + 1); }
+            v[level] = empty;
+            return v[level];
+        }
+    private:
+        std::deque<T> v;
+    };
+    typedef boost::container::flat_map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+    Cache<Transfers> transfers_cache;
+    Cache<Journey> journey_cache;
 
     RaptorSolutionReader(const RAPTOR& r,
+                         Solutions& solutions,
                          const Visitor& vis,// 3rd pass visitor
                          const DateTime& departure_dt,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& access,
-                         const navitia::time_duration& transfer_penalty):
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point):
         raptor(r),
         v(vis),
         departure_datetime(departure_dt),
@@ -336,8 +382,8 @@ struct RaptorSolutionReader {
         rt_level(rt_level),
         accessibilite_params(access),
         transfer_penalty(transfer_penalty),
-        // Dominates need request_clockwise (the same as reader's visitor)
-        solutions(Dominates(v.clockwise()))
+        end_point(end_point),
+        solutions(solutions)
     {}
     const RAPTOR& raptor;
     const Visitor& v;
@@ -347,14 +393,15 @@ struct RaptorSolutionReader {
     const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
     const navitia::time_duration transfer_penalty;
-    Solutions solutions;
+    const StartingPointSndPhase& end_point;
+    Solutions& solutions; //raptor's solutions pool
 
     size_t nb_sol_added = 0;
     void handle_solution(const PathElt& path) {
-        Journey j = make_journey(path, *this);
+        const Journey& j = make_journey(path, *this);
         if (! is_valid(*this, j)) { return; }
         ++nb_sol_added;
-        solutions.add(std::move(j));
+        solutions.add(j);
         if (nb_sol_added > 1000) {
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "raptor_solution_reader: too much solutions, stopping...");
@@ -362,11 +409,11 @@ struct RaptorSolutionReader {
         }
     }
 
-    Transfers
+    const Transfers&
     create_transfers(const unsigned count,
                      const PathElt* path,
                      const StDt& begin_st_dt) {
-        Transfers transfers;
+        Transfers& transfers = transfers_cache.get(count);
         auto cur_dt = begin_st_dt.second;
         if (begin_st_dt.first->is_frequency()) {
             //for frequency, we need cur_dt to be the begin in the stoptime
@@ -480,7 +527,7 @@ struct RaptorSolutionReader {
     }
 
     void step(const unsigned count, const PathElt* path, const StDt& begin_st_dt) {
-        const auto transfers = create_transfers(count, path, begin_st_dt);
+        const auto& transfers = create_transfers(count, path, begin_st_dt);
         for (const auto& pareto: transfers) {
             for (const auto& tr: pareto.second) {
                 const PathElt new_path(*begin_st_dt.first,
@@ -511,18 +558,22 @@ struct RaptorSolutionReader {
     }
 };
 
+
 template <typename Visitor>
-Solutions read_solutions(const RAPTOR& raptor,
+void read_solutions(const RAPTOR& raptor,
+                         Solutions& solutions,
                          const Visitor& v,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params,
-                         const navitia::time_duration& transfer_penalty)
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point)
 {
     auto reader = RaptorSolutionReader<Visitor>(
-        raptor, v, departure_datetime, deps, arrs, rt_level, accessibilite_params, transfer_penalty);
+        raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
+        accessibilite_params, transfer_penalty, end_point);
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -530,12 +581,21 @@ Solutions read_solutions(const RAPTOR& raptor,
             if (! working_labels.pt_is_initialized(a.first)) { continue; }
             if (! raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) { continue; }
             reader.nb_sol_added = 0;
+            // we check that it's worth to explore this possible journey
+            auto j = make_bound_journey(working_labels.dt_pt(a.first),
+                                        a.second,
+                                        raptor.labels[0].dt_transfer(end_point.sp_idx),
+                                        navitia::seconds(end_point.fallback_dur),
+                                        count,
+                                        raptor.data.dataRaptor->min_connection_time,
+                                        transfer_penalty,
+                                        v.clockwise());
+            if (reader.solutions.contains_better_than(j)) { continue; }
             try {
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             } catch (stop_search&) {}
         }
     }
-    return std::move(reader.solutions);
 }
 
 } // anonymous namespace
@@ -580,34 +640,34 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
         } else {
             os << "(NULL";
         }
-        os << "@"
-           << s.get_in_dt << ", ";
+        os << "@" << navitia::str(s.get_in_dt) << ", ";
         if (s.get_out_st) {
            os << s.get_out_st->stop_point->uri;
         } else {
             os << "NULL";
         }
-        os << "@"
-           << s.get_out_dt << ")";
+        os << "@" << navitia::str(s.get_out_dt) << ")";
     }
     return os;
 }
 
-Solutions read_solutions(const RAPTOR& raptor,
+void read_solutions(const RAPTOR& raptor,
+                         Solutions& solutions,
                          const bool clockwise,
                          const DateTime& departure_datetime,
                          const routing::map_stop_point_duration& deps,
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& accessibilite_params,
-                         const navitia::time_duration& transfer_penalty)
+                         const navitia::time_duration& transfer_penalty,
+                         const StartingPointSndPhase& end_point)
 {
     if (clockwise) {
-        return read_solutions(raptor, raptor_reverse_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params, transfer_penalty);
+        return read_solutions(raptor, solutions, raptor_reverse_visitor(), departure_datetime, deps, arrs,
+                              rt_level, accessibilite_params, transfer_penalty, end_point);
     } else {
-        return read_solutions(raptor, raptor_visitor(), departure_datetime, deps, arrs,
-                              rt_level, accessibilite_params, transfer_penalty);
+        return read_solutions(raptor, solutions, raptor_visitor(), departure_datetime, deps, arrs,
+                              rt_level, accessibilite_params, transfer_penalty, end_point);
     }
 }
 

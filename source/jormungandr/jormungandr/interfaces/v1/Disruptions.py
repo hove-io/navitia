@@ -50,7 +50,7 @@ disruption = {
 }
 
 traffic = {
-    "traffic_reports": NonNullList(NonNullNested(disruption), attribute='disruptions'),
+    "traffic_reports": NonNullList(NonNullNested(disruption)),
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": DisruptionsField,
@@ -94,6 +94,6 @@ class TrafficReport(ResourceUri):
         else:
             args["filter"] = ""
 
-        response = i_manager.dispatch(args, "disruptions", instance_name=self.region)
+        response = i_manager.dispatch(args, "traffic_reports", instance_name=self.region)
 
         return response

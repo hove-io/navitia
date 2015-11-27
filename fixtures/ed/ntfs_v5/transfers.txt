@@ -1,0 +1,2 @@
+from_stop_id,to_stop_id,min_transfer_time,real_min_transfer_time,equipment_id
+SA:A,SA:B,10,15,EQ1

@@ -70,6 +70,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::POITYPE: return nt::Type_e::POIType;
     case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin;
     case pbnavitia::CALENDAR: return nt::Type_e::Calendar;
+    case pbnavitia::IMPACT: return nt::Type_e::Impact;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -130,6 +131,7 @@ pbnavitia::Response Worker::status() {
     status->set_nb_threads(conf.nb_thread());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
     status->set_status(get_string_status(d));
+    status->set_is_realtime_loaded(d->is_realtime_loaded);
     if (d->loaded) {
         status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
@@ -211,7 +213,7 @@ pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request
             vector_of_admins(request), request.search_type(), *data);
 }
 
-pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
+pbnavitia::Response Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
@@ -688,7 +690,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: response = proximity_list(request.places_nearby()); break;
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref()); break;
-        case pbnavitia::disruptions : response = disruptions(request.disruptions()); break;
+        case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports()); break;
         case pbnavitia::calendars : response = calendars(request.calendars()); break;
         case pbnavitia::place_code : response = place_code(request.place_code()); break;
         default:

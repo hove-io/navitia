@@ -341,13 +341,15 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.contributor";
+    std::string request = "SELECT id, name, uri, website, license FROM navitia.contributor";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Contributor* contributor = new nt::Contributor();
         const_it["uri"].to(contributor->uri);
         const_it["name"].to(contributor->name);
+        const_it["website"].to(contributor->website);
+        const_it["license"].to(contributor->license);
 
         contributor->idx = data.pt_data->contributors.size();
 
@@ -506,7 +508,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, code, color, "
+    std::string request = "SELECT id, name, uri, code, color, text_color,"
         "network_id, commercial_mode_id, sort, ST_AsText(shape) AS shape, "
         "opening_time, closing_time "
         "FROM navitia.line";
@@ -518,6 +520,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         const_it["name"].to(line->name);
         const_it["code"].to(line->code);
         const_it["color"].to(line->color);
+        const_it["text_color"].to(line->text_color);
         const_it["sort"].to(line->sort);
         if (!const_it["opening_time"].is_null()) {
             line->opening_time = boost::posix_time::duration_from_string(const_it["opening_time"].as<std::string>());
@@ -920,9 +923,9 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "st.id as id,"
         "st.headsign as headsign,"
         "st.stop_point_id as stop_point_id,"
+        "st.\"order\" as st_order,"
         "ST_AsText(st.shape_from_prev) as shape_from_prev "
-        "FROM navitia.stop_time as st "
-        "ORDER BY st.vehicle_journey_id, st.\"order\"";
+        "FROM navitia.stop_time as st ";
 
     pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
         cursor( work, request, "stcursor", false );
@@ -935,8 +938,11 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
             const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
             auto& sts = sts_from_vj[vj_id];
-            sts.emplace_back();
-            nt::StopTime& stop = sts.back();
+            size_t order = const_it["st_order"].as<idx_t>();
+            if (order + 1 > sts.size()) {
+                sts.resize(order + 1);
+            }
+            nt::StopTime& stop = sts[order];
 
             const_it["arrival_time"].to(stop.arrival_time);
             const_it["departure_time"].to(stop.departure_time);

@@ -560,12 +560,14 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
 
 void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& contributors){
     this->lotus.prepare_bulk_insert("navitia.contributor",
-            {"id", "uri", "name"});
+            {"id", "uri", "name", "website", "license"});
     for(types::Contributor* contributor : contributors){
         std::vector<std::string> values;
         values.push_back(std::to_string(contributor->idx));
         values.push_back(navitia::encode_uri(contributor->uri));
         values.push_back(contributor->name);
+        values.push_back(contributor->website);
+        values.push_back(contributor->license);
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -697,7 +699,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
             {"id", "uri", "name", "color", "code",
-             "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time"});
+             "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time", "text_color"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
@@ -731,6 +733,8 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
         values.push_back(line->opening_time ? boost::posix_time::to_simple_string(*line->opening_time) : "NULL");
         values.push_back(line->closing_time ? boost::posix_time::to_simple_string(*line->closing_time) : "NULL");
+
+        values.push_back(line->text_color);
 
         this->lotus.insert(values);
     }

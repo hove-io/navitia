@@ -72,7 +72,8 @@ class PostgresDocker(object):
         self.docker = docker.Client(base_url='unix://var/run/docker.sock')
 
         log.info("building the temporary docker image")
-        self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True)
+        for build_output in self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True):
+            log.debug(build_output)
 
         self.container_id = self.docker.create_container(POSTGIS_CONTAINER_NAME).get('Id')
 

@@ -72,8 +72,8 @@ def get_kraken_calls(request):
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
     if not res:
-        abort(404, 'the asked first_section_mode[] ({}) and last_section_mode[] '
-                   '({}) combination is not yet supported'.format(dep_modes, arr_modes))
+        abort(404, message='the asked first_section_mode[] ({}) and last_section_mode[] '
+                           '({}) combination is not yet supported'.format(dep_modes, arr_modes))
 
     return res
 
@@ -127,7 +127,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     req.journeys.max_transfers = request["max_transfers"]
     if request["max_extra_second_pass"]:
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
-    req.journeys.wheelchair = request["wheelchair"]
+    req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
     if request['data_freshness'] == 'realtime':
         req.journeys.realtime_level = request_pb2.REAL_TIME
     elif request['data_freshness'] == 'adapted_schedule':

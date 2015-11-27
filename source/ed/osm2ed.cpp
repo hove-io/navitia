@@ -367,6 +367,7 @@ void OSMCache::insert_relations() {
     auto logger = log4cplus::Logger::getInstance("log");
     lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;
+    size_t nb_admins = 0;
     for (auto relation : relations) {
         if(!relation.polygon.empty()){
             std::stringstream polygon_stream;
@@ -377,6 +378,7 @@ void OSMCache::insert_relations() {
             lotus.insert({std::to_string(relation.osm_id), relation.name, relation.insee,
                           std::to_string(relation.level), coord, polygon_str,
                           "admin:"+std::to_string(relation.osm_id)});
+            ++nb_admins;
         } else {
             LOG4CPLUS_WARN(logger, "admin " << relation.name << " id: " << relation.osm_id << " of level "
                                   << relation.level << " won't be inserted since it has an empty polygon");
@@ -384,8 +386,8 @@ void OSMCache::insert_relations() {
         }
     }
     lotus.finish_bulk_insert();
-    LOG4CPLUS_INFO(logger, "Ignored " << std::to_string(nb_empty_polygons) 
-            << " admins because their polygons were empty");
+    LOG4CPLUS_INFO(logger, nb_admins << " admins added, " << nb_empty_polygons
+            << " admins ignore because their polygons were empty");
 }
 
 /*
@@ -513,7 +515,8 @@ void OSMCache::fusion_ways() {
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) const{
+void OSMRelation::build_polygon(OSMCache& cache) const {
+    std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && in(r.role, {"outer", "enclave", ""});
@@ -532,6 +535,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         if (it_first_way == cache.ways.end() || it_first_way->nodes.empty()) {
             break;
         }
+
         auto first_node = it_first_way->nodes.front();
         auto next_node = it_first_way->nodes.back();
         explored_ids.insert(ref->member_id);
@@ -576,6 +580,25 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
             next_node = next_way->nodes.back();
         }
         if (tmp_polygon.outer().size() < 2 || ref == references.end()) {
+            // add some logs
+            // some admins are at the boundary of the osm data, so their own boundary may be incomplete
+            // some other admins have a split boundary and it is impossible to compute it.
+            // to check if the boundary is likely to be split we look for a very near point
+            // The admin can also be checked with: http://ra.osmsurround.org/index
+            auto log = log4cplus::Logger::getInstance("log");
+            for (const auto& r: references) {
+                if (! is_outer_way(r)) { continue; }
+                auto it_way = cache.ways.find(r.member_id);
+                if (it_way == cache.ways.end()) { continue; }
+                for (const auto& node: it_way->nodes) {
+                    if (node->osm_id != next_node->osm_id && node->almost_equal(*next_node)) {
+                        LOG4CPLUS_WARN(log, "Impossible to close the boundary of the admin " << name << " (osmid= "
+                                       << osm_id << "). The end node " << node->osm_id << " is almost the same as "
+                                       << next_node->osm_id << " it's likely that they are wrong duplicate");
+                        break;
+                    }
+                }
+            }
             break;
         }
         const auto front = tmp_polygon.outer().front();

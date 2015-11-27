@@ -278,7 +278,7 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     disruption.cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
         auto impact = make_impact(chaos_impact, pt_data);
-        disruption.add_impact(impact);
+        disruption.add_impact(impact, holder);
     }
     disruption.localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
