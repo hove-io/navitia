@@ -156,7 +156,7 @@ make_severity(const std::string& id,
 
 static boost::posix_time::time_period
 base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
-    auto running_vj = mvj.get_vj_circulating_at_date(type::RTLevel::Base, date);
+    auto running_vj = mvj.get_base_vj_circulating_at_date(date);
     if (running_vj) {
         return running_vj->execution_period(date);
     }

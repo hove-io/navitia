@@ -1045,7 +1045,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
             PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
 
     VehicleJourney*
-    get_vj_circulating_at_date(RTLevel level, const boost::gregorian::date& date) const;
+    get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
 
 private:
     template<typename VJ>
