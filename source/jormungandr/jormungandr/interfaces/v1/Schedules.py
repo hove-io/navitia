@@ -52,15 +52,6 @@ from copy import deepcopy
 from navitiacommon import response_pb2
 
 
-class RouteSchedulesLinkField(fields.Raw):
-
-    def output(self, key, obj):
-        response = []
-        if obj.HasField('pt_display_informations'):
-            for value in obj.pt_display_informations.notes:
-                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
-        return response
-
 class Schedules(ResourceUri, ResourceUtc):
     parsers = {}
 
@@ -180,7 +171,7 @@ route_schedule_fields = {
     "table": PbField(table_field),
     "display_informations": PbField(display_informations_route,
                                     attribute='pt_display_informations'),
-    "links": RouteSchedulesLinkField(attribute='pt_display_informations'),
+    "links": UrisToLinks(),
     "geojson": MultiLineString()
 }
 
