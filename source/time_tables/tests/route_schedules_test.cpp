@@ -448,6 +448,8 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
 // S1 23:30  23:50  00:10
 // S2 23:40  00:00  00:20
 // S3 23:50  00:10  00:30
+//
+// Detail in associated PR https://github.com/CanalTP/navitia/pull/1304
 BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     ed::builder b = {"20151127"};
     navitia::type::Calendar *c1;
