@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/upper_bound.hpp>
 #include <boost/optional.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 namespace navitia {
 
@@ -200,6 +201,7 @@ struct CachedNextStopTime {
     explicit CachedNextStopTime() {}
 
     void load(const type::Data& d,
+              const boost::dynamic_bitset<>& valid_jpps,
               const DateTime from,
               const DateTime to,
               const type::RTLevel rt_level,

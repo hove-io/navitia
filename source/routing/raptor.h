@@ -185,10 +185,10 @@ struct RAPTOR
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_valid_jp_and_jpp(uint32_t date,
-                              const type::AccessibiliteParams& accessibilite_params,
-                              const std::vector<std::string>& forbidden,
-                              const nt::RTLevel rt_level);
+    boost::dynamic_bitset<> set_valid_jp_and_jpp(uint32_t date,
+                                                 const type::AccessibiliteParams&,
+                                                 const std::vector<std::string>& forbidden,
+                                                 const nt::RTLevel rt_level);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(bool clockwise,

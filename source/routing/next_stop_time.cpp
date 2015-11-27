@@ -121,7 +121,7 @@ next_valid_discrete(const StopEvent stop_event,
                     const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
+        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -133,7 +133,7 @@ next_valid_discrete(const StopEvent stop_event,
     //if none was found, we try again the next day
     date++;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
+        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
@@ -255,7 +255,7 @@ previous_valid_discrete(const StopEvent stop_event,
                         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event)) {
-        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
+        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
@@ -270,7 +270,7 @@ previous_valid_discrete(const StopEvent stop_event,
 
     --date;
     for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event)) {
-        BOOST_ASSERT(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
+        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
         const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->departure_time : st->arrival_time;
         const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
         if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
@@ -340,6 +340,7 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
 }
 
 void CachedNextStopTime::load(const type::Data& data,
+                              const boost::dynamic_bitset<>& valid_jpps,
                               const DateTime from,
                               const DateTime to,
                               const type::RTLevel rt_level,
@@ -347,25 +348,25 @@ void CachedNextStopTime::load(const type::Data& data,
     const auto& jp_container = data.dataRaptor->jp_container;
     departure.assign(jp_container.get_jpps_values());
     arrival.assign(jp_container.get_jpps_values());
-    for (auto d: departure) {
-        d.second = get_stop_times(StopEvent::pick_up,
-                                  {d.first},
-                                  from,
-                                  to,
-                                  std::numeric_limits<size_t>::max(),
-                                  data,
-                                  rt_level,
-                                  accessibilite_params);
-    }
-    for (auto a: arrival) {
-        a.second = get_stop_times(StopEvent::drop_off,
-                                  {a.first},
-                                  from,
-                                  to,
-                                  std::numeric_limits<size_t>::max(),
-                                  data,
-                                  rt_level,
-                                  accessibilite_params);
+
+    for (auto idx = valid_jpps.find_first(); idx != boost::dynamic_bitset<>::npos; idx = valid_jpps.find_next(idx)) {
+        const auto jpp_idx = JppIdx(idx);
+        departure[jpp_idx] = get_stop_times(StopEvent::pick_up,
+                                            {jpp_idx},
+                                            from,
+                                            to,
+                                            std::numeric_limits<size_t>::max(),
+                                            data,
+                                            rt_level,
+                                            accessibilite_params);
+        arrival[jpp_idx] = get_stop_times(StopEvent::drop_off,
+                                          {jpp_idx},
+                                          from,
+                                          to,
+                                          std::numeric_limits<size_t>::max(),
+                                          data,
+                                          rt_level,
+                                          accessibilite_params);
     }
 }
 
