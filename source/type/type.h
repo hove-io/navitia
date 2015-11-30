@@ -806,6 +806,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
+    Contributor* contributor=nullptr;
 
     type::hasOdtProperties get_odt_properties() const;
 

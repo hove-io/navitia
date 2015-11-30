@@ -564,9 +564,11 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
                                   line->shape);
 
-        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
-        if(contributor_it != this->contributor_map.end()) {
-            line->contributor = contributor_it->second;
+        if (! const_it["contributor_id"].is_null()) {
+            auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+            if(contributor_it != this->contributor_map.end()) {
+                line->contributor = contributor_it->second;
+            }
         }
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
@@ -631,9 +633,11 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
             route->destination = stop_area_map[const_it["destination_stop_area_id"].as<idx_t>()];
         }
 
-        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
-        if(contributor_it != this->contributor_map.end()) {
-            route->contributor = contributor_it->second;
+        if (! const_it["contributor_id"].is_null()) {
+            auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+            if(contributor_it != this->contributor_map.end()) {
+                route->contributor = contributor_it->second;
+            }
         }
 
         data.pt_data->routes.push_back(route);
@@ -748,6 +752,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.is_frequency as is_frequency, "
         "vj.meta_vj_name as meta_vj_name, "
         "vj.vj_class as vj_class, "
+        "vj.frame_id as frame_id, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -755,8 +760,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vp.audible_announcement as audible_announcement,"
         "vp.appropriate_escort as appropriate_escort,"
         "vp.appropriate_signage as appropriate_signage,"
-        "vp.school_vehicle as school_vehicle, "
-        "vp.frame_id as frame_id "
+        "vp.school_vehicle as school_vehicle "
         "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
         "WHERE vj.vehicle_properties_id = vp.id";
 
@@ -860,9 +864,11 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                 data.pt_data->comments.add(vj, comment);
             }
         }
-        auto frame_it = this->frame_map.find(const_it["frame_id"].as<idx_t>());
-        if(frame_it != this->frame_map.end()) {
-            vj->frame = frame_it->second;
+        if (! const_it["frame_id"].is_null()) {
+            auto frame_it = this->frame_map.find(const_it["frame_id"].as<idx_t>());
+            if(frame_it != this->frame_map.end()) {
+                vj->frame = frame_it->second;
+            }
         }
     }
 
