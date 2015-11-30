@@ -34,7 +34,7 @@ Les données sont formatées de la manière suivante :
 
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-contributors.txt | Optionnel | Ce fichier contient les contributeurs. Si ce fichier est fourni, il sera ignoré.
+contributors.txt | Optionnel | Ce fichier contient les contributeurs. 
 frames.txt | Optionnel | Ce fichier contient les sources de données d'un contributeur.
 
 ## Fichiers de base
@@ -316,7 +316,7 @@ appropriate_signage | entier (1) | Optionnel | Information claire à l'arrêt
         2 - l'équipement n'est pas disponible
 
 ### stops.txt (requis)
-Une ligne du fichier "stops.txt" représente un horaire d'arrivée et un horaire de départ à un point ou une zone.
+Une ligne du fichier "stops.txt" représente un point ou une zone où un véhicule dépose ou fait monter des voyageurs.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
