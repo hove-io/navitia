@@ -463,12 +463,12 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
         ("st3", "23:50"_t);
     b.vj("L", "111111", "", true, "B", "B")
         ("st1", "23:50"_t)
-        ("st2", "0:00"_t)
-        ("st3", "0:10"_t);
+        ("st2", "24:00"_t)
+        ("st3", "24:10"_t);
     b.vj("L", "111110", "", true, "C", "C")
-        ("st1", "0:10"_t)
-        ("st2", "0:20"_t)
-        ("st3", "0:30"_t);
+        ("st1", "24:10"_t)
+        ("st2", "24:20"_t)
+        ("st3", "24:30"_t);
 
     auto save_cal = [&](navitia::type::Calendar* cal) {
         b.data->pt_data->calendars.push_back(cal);
