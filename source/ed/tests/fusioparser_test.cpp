@@ -353,6 +353,12 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
     BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+
+    BOOST_CHECK_EQUAL(data.lines[0]->contributor->uri, "C1");
+
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
+    BOOST_CHECK_EQUAL(data.routes[0]->contributor->uri, "C1");
+
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
     BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
