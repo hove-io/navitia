@@ -30,12 +30,12 @@
 from jormungandr.interfaces.v1.Calendars import calendar
 from jormungandr.interfaces.v1 import fields
 from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, NonNullProtobufNested, PbField, FirstComment, \
-    comment
+    comment, DisruptionLinks
 
 vehicle_journey = {
     "id": fields.fields.String(attribute="uri"),
     "name": fields.fields.String(),
-    "disruptions": NonNullList(NonNullNested(fields.disruption_marshaller)),
+    "disruptions": DisruptionLinks(),
     "journey_pattern": PbField(fields.journey_pattern),
     "stop_times": NonNullList(NonNullNested(fields.stop_time)),
     "comment": FirstComment(),

@@ -70,6 +70,11 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(len(pt_response['disruptions']), 1)
         eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
 
+        # and we should be able to query for the vj's disruption
+        disrup_response = self.query_region('vehicle_journeys/vjA/disruptions')
+        eq_(len(disrup_response['disruptions']), 1)
+        eq_(disrup_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
         eq_(get_used_vj(new_response), [[], ['vj:B:1']])
