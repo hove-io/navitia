@@ -615,7 +615,7 @@ void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
-        "ST_AsText(shape) AS shape, direction_type FROM navitia.route";
+        "ST_AsText(shape) AS shape, direction_type, contributor_id FROM navitia.route";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){

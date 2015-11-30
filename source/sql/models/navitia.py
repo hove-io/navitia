@@ -146,7 +146,7 @@ route = Table('route', metadata,*[
     Column('destination_stop_area_id', BIGINT(), primary_key=False, nullable=True),
     Column('contributor_id', BIGINT(), primary_key=False, nullable=True),
     Column('direction_type', TEXT(), primary_key=False, nullable=True),
-    ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'route_line_id_fkey'),],
+    ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'route_line_id_fkey'),
 	ForeignKeyConstraint(['contributor_id'], [u'navitia.contributor.id'], name=u'route_contributor_id_fkey'),],
     schema='navitia')
 
