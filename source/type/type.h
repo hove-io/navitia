@@ -324,6 +324,9 @@ public:
         }
     }
 
+    std::vector<idx_t>
+    get_impacts_idx(const std::vector<boost::weak_ptr<disruption::Impact>>& impacts_pool) const ;
+
 };
 
 enum class ConnectionType {
