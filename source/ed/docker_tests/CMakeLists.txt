@@ -26,6 +26,7 @@ endmacro()
 
 generate_nav("ntfs")
 generate_nav("gtfs_google_example")
+generate_nav("ntfs_v5")
 
 # == create a target with all generated files ==
 # we add dependencies to all data import components used during nav file creation

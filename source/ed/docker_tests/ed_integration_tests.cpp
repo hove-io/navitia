@@ -282,3 +282,29 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     check_unsound_pickup_dropoff(data);
 }
+
+
+BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
+    const auto input_file = input_file_paths.at("ntfs_v5_file");
+    nt::Data data;
+
+    const auto res = data.load(input_file);
+
+    BOOST_REQUIRE(res);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);
+    BOOST_CHECK_EQUAL(data.pt_data->lines[0]->contributor->uri, "C1");
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 3);
+    BOOST_CHECK_EQUAL(data.pt_data->routes[0]->contributor->uri, "C1");
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->frames[0]->contributor);
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->desc, "frame_test");
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->uri, "f1");
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->validation_date,
+            boost::gregorian::date_period("20150826"_d, "20150926"_d));
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
+}
