@@ -246,7 +246,9 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     ed_route->name = row[route_name_c];
-    ed_route->direction_type = row[direction_type_c];
+    if (is_valid(direction_type_c, row)) {
+        ed_route->direction_type = row[direction_type_c];
+    }
 
     if (is_valid(comment_id_c, row)) {
         auto it_comment = data.comment_by_id.find(row[comment_id_c]);
