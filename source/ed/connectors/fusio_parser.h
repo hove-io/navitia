@@ -78,7 +78,7 @@ struct RouteFusioHandler : public GenericHandler {
     int route_id_c,
         ext_code_c,
         route_name_c,
-        is_forward_c,
+        direction_type_c,
         line_id_c,
         comment_id_c,
         commercial_mode_id_c,

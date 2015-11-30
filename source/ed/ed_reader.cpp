@@ -583,13 +583,14 @@ void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
-        "ST_AsText(shape) AS shape FROM navitia.route";
+        "ST_AsText(shape) AS shape, direction_type FROM navitia.route";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::Route* route = new nt::Route();
         const_it["uri"].to(route->uri);
         const_it["name"].to(route->name);
+        const_it["direction_type"].to(route->direction_type);
         boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
                                   route->shape);
 

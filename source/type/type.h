@@ -780,6 +780,7 @@ struct Route : public Header, Nameable, HasMessages {
     Line* line = nullptr;
     StopArea* destination = nullptr;
     MultiLineString shape;
+    std::string direction_type;
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
@@ -796,7 +797,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;

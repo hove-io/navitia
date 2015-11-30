@@ -213,7 +213,7 @@ void RouteFusioHandler::init(Data& ) {
     ext_code_c = csv.get_pos_col("external_code");
     route_id_c = csv.get_pos_col("route_id");
     route_name_c = csv.get_pos_col("route_name");
-    is_forward_c = csv.get_pos_col("is_forward");
+    direction_type_c = csv.get_pos_col("direction_type");
     line_id_c = csv.get_pos_col("line_id");
     comment_id_c = csv.get_pos_col("comment_id");
     contributor_id_c = csv.get_pos_col("contributor_id");
@@ -246,6 +246,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     ed_route->name = row[route_name_c];
+    ed_route->direction_type = row[direction_type_c];
 
     if (is_valid(comment_id_c, row)) {
         auto it_comment = data.comment_by_id.find(row[comment_id_c]);

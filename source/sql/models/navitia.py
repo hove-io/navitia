@@ -133,6 +133,7 @@ route = Table('route', metadata,*[
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('shape', Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), primary_key=False),
     Column('destination_stop_area_id', BIGINT(), primary_key=False, nullable=True),
+    Column('direction_type', TEXT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'route_line_id_fkey'),],
     schema='navitia')
 
