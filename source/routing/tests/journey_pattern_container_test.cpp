@@ -247,3 +247,47 @@ BOOST_AUTO_TEST_CASE(lightly_overtaking2) {
     BOOST_CHECK_EQUAL(jps.nb_jps(), 2);
 }
 
+// two vjs must not overtake together according to utc offset
+BOOST_AUTO_TEST_CASE(offset_no_overtaking) {
+    ed::builder b("20150101");
+    navitia::type::VehicleJourney *vj1, *vj2;
+
+    vj1 = b.vj("1", "000111","", true, "VJ1", "MVJ1")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t).make();
+    vj2 = b.vj("1", "000111","", true, "VJ2", "MVJ2")("A", "8:00"_t, "8:00"_t)("B", "8:05"_t, "8:05"_t)("C", "8:10"_t, "8:10"_t).make();
+
+    vj1->utc_to_local_offset = "01:00"_t;
+    vj2->utc_to_local_offset = "02:00"_t;
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    const nt::PT_Data& d = *b.data->pt_data;
+
+    nr::JourneyPatternContainer jps;
+    jps.load(d);
+    BOOST_CHECK_EQUAL(jps.nb_jps(), 1);
+}
+
+// two vjs must overtake together according to utc offset
+BOOST_AUTO_TEST_CASE(offset_overtaking) {
+    ed::builder b("20150101");
+    navitia::type::VehicleJourney *vj1, *vj2;
+
+    vj1 = b.vj("1", "000111","", true, "VJ1", "MVJ1")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t).make();
+    vj2 = b.vj("1", "000111","", true, "VJ2", "MVJ2")("A", "8:50"_t, "8:50"_t)("B", "9:20"_t, "9:20"_t)("C", "9:40"_t, "9:40"_t).make();
+
+    vj1->utc_to_local_offset = "02:00"_t;
+    vj2->utc_to_local_offset = "01:00"_t;
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    const nt::PT_Data& d = *b.data->pt_data;
+
+    nr::JourneyPatternContainer jps;
+    jps.load(d);
+    BOOST_CHECK_EQUAL(jps.nb_jps(), 2);
+}
+
