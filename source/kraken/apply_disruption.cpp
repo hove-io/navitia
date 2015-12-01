@@ -256,7 +256,11 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 return (spt) ? spt == impact : true;
         });
 
-        for (auto i: mvj->impacted_by) {
+        // add_impacts_visitor populate mvj->impacted_by, thus we swap
+        // it with an empty vector.
+        decltype(mvj->impacted_by) impacted_by_moved;
+        boost::swap(impacted_by_moved, mvj->impacted_by);
+        for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
                 auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
                 v(mvj);
