@@ -1,3 +1,9 @@
+navitia2 (1.31.1) unstable; urgency=low
+
+  * RT: fix disruption API for vehicle_journey  <https://github.com/CanalTP/navitia/pull/1308> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 01 Dec 2015 11:12:47 +0100
+
 navitia2 (1.31.0) unstable; urgency=low
 
   * RT: change delay enum  <https://github.com/CanalTP/navitia/pull/1303>
