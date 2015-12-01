@@ -120,7 +120,9 @@ static bool st_are_equals(const nt::VehicleJourney& vj1, const nt::VehicleJourne
     for (auto it1 = vj1.stop_time_list.begin(), it2 = vj2.stop_time_list.begin();
          it1 !=  vj1.stop_time_list.end() && it2 !=  vj2.stop_time_list.end();
          ++it1, ++it2) {
-        if (it1->arrival_time != it2->arrival_time || it1->departure_time != it2->departure_time) {
+        // Comparaison is done on local time
+        if (it1->arrival_time + vj1.utc_to_local_offset != it2->arrival_time + vj2.utc_to_local_offset ||
+            it1->departure_time + vj1.utc_to_local_offset != it2->departure_time + vj2.utc_to_local_offset) {
             return false;
         }
     }
@@ -145,15 +147,17 @@ overtake(const VJ& vj, const std::vector<const VJ*>& vjs) {
         // if the stop times are the same, they don't overtake
         if (st_are_equals(vj, *cur_vj)) { continue; }
 
+        // Comparaisons are done on local time
         const bool vj_is_first =
-            vj.stop_time_list.front().departure_time < cur_vj->stop_time_list.front().departure_time;
+            vj.stop_time_list.front().departure_time + vj.utc_to_local_offset 
+            < cur_vj->stop_time_list.front().departure_time + cur_vj->utc_to_local_offset;
         const VJ& vj1 = vj_is_first ? vj : *cur_vj;
         const VJ& vj2 = vj_is_first ? *cur_vj : vj;
         for (auto it1 = vj1.stop_time_list.begin(), it2 = vj2.stop_time_list.begin();
              it1 !=  vj1.stop_time_list.end() && it2 !=  vj2.stop_time_list.end();
              ++it1, ++it2) {
-            if (it1->arrival_time >= it2->arrival_time ||
-                it1->departure_time >= it2->departure_time) {
+            if (it1->arrival_time + vj1.utc_to_local_offset >= it2->arrival_time + vj2.utc_to_local_offset ||
+                it1->departure_time + vj1.utc_to_local_offset >= it2->departure_time + vj2.utc_to_local_offset) {
                 return true;
             }            
         }
