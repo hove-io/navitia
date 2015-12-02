@@ -33,3 +33,4 @@
     * Ajout de la gestion des données de grèves (dans feed_info.txt une clé "revised_networks" listant les réseaux impactés)
     * Ajout d'un label optionnel aux commentaires
     * Remplacement du champ "is_forward" par "direction_type" de type chaine au niveau du fichier routes.txt
+    * Changement du nom de la colonne "comment_name" en "comment_value"

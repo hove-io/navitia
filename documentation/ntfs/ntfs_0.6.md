@@ -133,7 +133,7 @@ Colonne | Type | Contrainte | Commentaire
 comment_id | chaine | Requis | Identifiant du commentaire
 comment_type | chaine | Optionnel | (1)
 comment_label | chaine | Optionnel | Caractère de renvoi associé au commentaire. Si celui-ci n'est pas précisé, il sera généré automatiquement.
-comment_name | chaine | Requis | Texte du commentaire
+comment_value | chaine | Requis | Texte du commentaire
 comment_url | chaine | Optionnel | URL associé à la note et permettant d'avoir plus d'info, comme par exemple un lien vers la page de description du service de TAD.
 
 (1) Catégorie de commentaire afin de pouvoir les différentier à l'affichage. Les valeurs possibles sont :
@@ -209,7 +209,6 @@ trip_id | chaine | Requis | Identifiant de la circulation
 start_time | heure | Requis | Heure de début de la fréquence
 end_time | heure | Requis | Heure de fin de la fréquence. Spécifier 26:00:00 pour 2h du matin du jour considéré.
 headway_secs | entier | Requis | Fréquence de départ en secondes
-frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames)
 
 ### lines.txt (requis)
 Colonne | Type | Contrainte | Commentaire
