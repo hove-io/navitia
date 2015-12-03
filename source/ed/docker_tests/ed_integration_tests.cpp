@@ -136,12 +136,12 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
     }
 
-    auto& routes = data.pt_data->routes;
-    BOOST_REQUIRE_EQUAL(routes.size(), 3);
+    auto& routes_map = data.pt_data->routes_map;
+    BOOST_REQUIRE_EQUAL(routes_map.size(), 3);
 
-    BOOST_CHECK_EQUAL(routes[0]->direction_type, "forward");
-    BOOST_CHECK_EQUAL(routes[1]->direction_type, "backward");
-    BOOST_CHECK_EQUAL(routes[2]->direction_type, "");
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_1")->direction_type, "forward");
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_2")->direction_type, "backward");
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_3")->direction_type, "");
 
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
