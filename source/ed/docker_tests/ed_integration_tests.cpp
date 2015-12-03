@@ -89,6 +89,17 @@ static void check_headsigns(const nt::Data& data, const std::string& headsign,
     }
 }
 
+static void check_unsound_pickup_dropoff(const nt::Data& data) {
+    for (const auto* vj: data.pt_data->vehicle_journeys) {
+        if (! vj->prev_vj) {
+            BOOST_CHECK(! vj->stop_time_list.front().drop_off_allowed());
+        }
+        if (! vj->next_vj) {
+            BOOST_CHECK(! vj->stop_time_list.back().pick_up_allowed());
+        }
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     const auto input_file = input_file_paths.at("ntfs_file");
     nt::Data data;
@@ -146,6 +157,8 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
+
+    check_unsound_pickup_dropoff(data);
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
@@ -266,4 +279,6 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     for (const auto& st: vj_stba->stop_time_list) {
         BOOST_CHECK(st.is_frequency());
     }
+
+    check_unsound_pickup_dropoff(data);
 }

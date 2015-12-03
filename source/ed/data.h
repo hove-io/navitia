@@ -155,6 +155,7 @@ public:
 
     void build_block_id();
     void build_shape_from_prev();
+    void pick_up_drop_of_on_borders();
 
     void normalize_uri();
     /**
