@@ -35,7 +35,6 @@ import zmq
 from threading import Thread, Event
 from navitiacommon import type_pb2, request_pb2, models
 import glob
-from jormungandr.singleton import singleton
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
@@ -80,7 +79,6 @@ def choose_best_instance(instances):
             best = i
     return best
 
-@singleton
 class InstanceManager(object):
 
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
