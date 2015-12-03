@@ -255,6 +255,7 @@ void Data::build_route_destination(){
 void Data::complete(){
     build_block_id();
     build_shape_from_prev();
+    pick_up_drop_of_on_borders();
 
     build_grid_validity_pattern();
     build_associated_calendar();
@@ -507,6 +508,18 @@ void Data::build_shape_from_prev() {
                 }
             }
             prev_coord = &stop_time->stop_point->coord;
+        }
+    }
+}
+
+void Data::pick_up_drop_of_on_borders() {
+    for (auto* vj: vehicle_journeys) {
+        if (vj->stop_time_list.empty()) { continue; }
+        if (! vj->prev_vj) {
+            vj->stop_time_list.front()->drop_off_allowed = false;
+        }
+        if (! vj->next_vj) {
+            vj->stop_time_list.back()->pick_up_allowed = false;
         }
     }
 }
