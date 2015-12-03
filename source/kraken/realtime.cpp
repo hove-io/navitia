@@ -114,7 +114,8 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
     auto log = log4cplus::Logger::getInstance("realtime");
     for (const auto& impact: disruption.get_impacts()) {
         boost::optional<const nt::StopTime&> last_st;
-        for (const auto& st: impact->aux_info.stop_times) {
+        for (const auto& stu: impact->aux_info.stop_times) {
+            const auto& st = stu.stop_time;
             if (last_st) {
                 if (last_st->departure_time > st.arrival_time) {
                     LOG4CPLUS_WARN(log, "stop time " << *last_st
@@ -222,11 +223,11 @@ create_disruption(const std::string& id,
                      *
                      * TODO: And this check should be done on Kirin's side...
                      * */
-                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()){
+                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()) {
                         arrival_time = departure_time = st.departure().time();
                     }
-                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()){
-                        departure_time = arrival_time =st.arrival().time();
+                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()) {
+                        departure_time = arrival_time = st.arrival().time();
                     }
                 }
                 auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
@@ -237,8 +238,9 @@ create_disruption(const std::string& id,
                                          stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
-                impact->aux_info.stop_times.emplace_back(std::move(stop_time));
-           }
+                type::disruption::StopTimeUpdate st_update{std::move(stop_time)};
+                impact->aux_info.stop_times.emplace_back(st_update);
+            }
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
