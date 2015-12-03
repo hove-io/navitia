@@ -946,7 +946,7 @@ void OSMCache::flag_nodes() {
 
 }}
 
-std::map<std::string, std::string> parse_poi_types(const std::vector<std::string>& poi_types){
+static std::map<std::string, std::string> parse_poi_types(const std::vector<std::string>& poi_types){
     std::map<std::string, std::string> result;
     for(auto type: poi_types){
         std::vector<std::string> strs;
