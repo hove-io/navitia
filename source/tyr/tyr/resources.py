@@ -143,6 +143,13 @@ jobs_fields = {
     }))
 }
 
+poi_types_fields = {
+    'poi_types': fields.List(fields.Nested({
+        'uri': fields.Raw,
+        'name': fields.Raw,
+    }))
+}
+
 traveler_profile = {
     'traveler_type': fields.String,
     'walking_speed': fields.Raw,
@@ -181,6 +188,61 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+class PoiType(flask_restful.Resource):
+    @marshal_with(poi_types_fields)
+    def get(self, instance_name):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def post(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode,  case_sensitive=False,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type = models.PoiType(uri, args['name'], instance)
+            db.session.add(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}, 201
+
+    @marshal_with(poi_types_fields)
+    def put(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type.name = args['name']
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def delete(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        try:
+            db.session.delete(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
 
 
 class Instance(flask_restful.Resource):
