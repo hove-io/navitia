@@ -1394,22 +1394,32 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
 
     navitia::handle_realtime("delay1hourD0", timestamp, first_trip_update, *b.data);
 
+    // get vj realtime for d0 and check it's on day 0
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_rt_vj().size(), 1);
+    const auto vj_rt_d0 = vj->meta_vj->get_rt_vj()[0].get();
+    BOOST_CHECK(vj_rt_d0->get_validity_pattern_at(vj_rt_d0->realtime_level)->check(0));
+
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys[1]->get_impacts().size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[1]->get_impacts()[0]->uri, "delay1hourD0");
+    BOOST_REQUIRE_EQUAL(vj_rt_d0->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(vj_rt_d0->get_impacts()[0]->uri, "delay1hourD0");
 
     navitia::handle_realtime("delay2hourD1", timestamp, second_trip_update, *b.data);
 
+    // get vj realtime for d1 and check it's on day 1
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_rt_vj().size(), 2);
+    const auto vj_rt_d1 = vj->meta_vj->get_rt_vj()[1].get();
+    BOOST_CHECK(vj_rt_d1->get_validity_pattern_at(vj_rt_d1->realtime_level)->check(1));
+
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 2);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys[1]->get_impacts().size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[1]->get_impacts()[0]->uri, "delay1hourD0");
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys[2]->get_impacts().size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[2]->get_impacts()[0]->uri, "delay2hourD1");
+    BOOST_REQUIRE_EQUAL(vj_rt_d0->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(vj_rt_d0->get_impacts()[0]->uri, "delay1hourD0");
+    BOOST_REQUIRE_EQUAL(vj_rt_d1->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(vj_rt_d1->get_impacts()[0]->uri, "delay2hourD1");
 
     navitia::handle_realtime("cancelD3", timestamp, third_trip_update, *b.data);
 
@@ -1418,8 +1428,8 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");
     BOOST_CHECK_EQUAL(vj->get_impacts()[2]->uri, "cancelD3");
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys[1]->get_impacts().size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[1]->get_impacts()[0]->uri, "delay1hourD0");
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys[2]->get_impacts().size(), 1);
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[2]->get_impacts()[0]->uri, "delay2hourD1");
+    BOOST_REQUIRE_EQUAL(vj_rt_d0->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(vj_rt_d0->get_impacts()[0]->uri, "delay1hourD0");
+    BOOST_REQUIRE_EQUAL(vj_rt_d1->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(vj_rt_d1->get_impacts()[0]->uri, "delay2hourD1");
 }
