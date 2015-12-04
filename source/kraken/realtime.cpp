@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "type/datetime.h"
 #include "kraken/apply_disruption.h"
+#include "type/kirin.pb.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
@@ -165,6 +166,14 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
+static type::disruption::Message create_message(const std::string& str_msg) {
+    type::disruption::Message msg;
+    msg.text = str_msg;
+    //msg
+
+    return msg;
+}
+
 static const type::disruption::Disruption&
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
@@ -193,12 +202,15 @@ create_disruption(const std::string& id,
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
         impact->application_periods.push_back(base_execution_period(circulation_date, mvj));
+        if (trip_update.HasExtension(kirin::trip_message)) {
+            impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
+        }
         std::string wording;
         nt::disruption::Effect effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcodded...
-            wording = "trip canceled!";
+            wording = "trip canceled";
             effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
@@ -238,7 +250,11 @@ create_disruption(const std::string& id,
                                          stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
-                type::disruption::StopTimeUpdate st_update{std::move(stop_time)};
+                std::string message;
+                if (st.HasExtension(kirin::stoptime_message)) {
+                    message = st.GetExtension(kirin::stoptime_message);
+                }
+                type::disruption::StopTimeUpdate st_update{std::move(stop_time), message};
                 impact->aux_info.stop_times.emplace_back(st_update);
             }
         } else {
