@@ -169,7 +169,7 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
 static type::disruption::Message create_message(const std::string& str_msg) {
     type::disruption::Message msg;
     msg.text = str_msg;
-    //msg
+    //do we want to add channel types ?
 
     return msg;
 }
@@ -255,7 +255,7 @@ create_disruption(const std::string& id,
                     message = st.GetExtension(kirin::stoptime_message);
                 }
                 type::disruption::StopTimeUpdate st_update{std::move(stop_time), message};
-                impact->aux_info.stop_times.emplace_back(st_update);
+                impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
