@@ -311,6 +311,7 @@ public:
 
 
     const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
+        clean_up_weak_ptr(impacts);
         return impacts;
     }
 
@@ -728,7 +729,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     bool has_boarding() const;
     bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
@@ -750,6 +752,7 @@ private:
      */
     VehicleJourney() = default;
     VehicleJourney(const VehicleJourney&) = default;
+    std::vector<idx_t> get_impacts_idx(const PT_Data& data) const;
     friend class boost::serialization::access;
     friend struct DiscreteVehicleJourney;
     friend struct FrequencyVehicleJourney;
@@ -1045,8 +1048,9 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
     void cancel_vj(RTLevel level,
-            const std::vector<boost::posix_time::time_period>& periods,
-            PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
+                   const std::vector<boost::posix_time::time_period>& periods,
+                   PT_Data& pt_data,
+                   const Route* filtering_route = nullptr);
 
     VehicleJourney*
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;

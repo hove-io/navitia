@@ -354,24 +354,27 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
 template <typename F>
 static bool concerns_base_at_period(const VehicleJourney& vj,
                                     const std::vector<bt::time_period>& periods,
-                                    const nt::MetaData& meta, const F& fun) {
+                                    const F& fun,
+                                    bool check_past_midnight = true) {
     bool intersect = false;
     // we only need to check on the base canceled vp
     ValidityPattern concerned_vp = vj.get_base_canceled_validity_pattern();
     for (const auto& period: periods) {
         //we can impact a vj with a departure the day before who past midnight
         namespace bg = boost::gregorian;
-        bg::day_iterator titr(period.begin().date() - bg::days(1));
+        bg::day_iterator titr(period.begin().date() - bg::days(check_past_midnight ? 1 : 0));
         for (; titr <= period.end().date(); ++titr) {
-            if (! meta.production_date.contains(*titr)) { continue; }
-
-            auto day = (*titr - meta.production_date.begin()).days();
-            if (! concerned_vp.check(day)) { continue; }
-
-            if (period.intersects(vj.execution_period(*titr))) {
+            // check that day is not out of concerned_vp bound, then if day is concerned by concerned_vp
+            if (*titr < concerned_vp.beginning_date) { continue; }
+            size_t day((*titr - concerned_vp.beginning_date).days());
+            if (day >= concerned_vp.days.size() || ! concerned_vp.check(day)) { continue; }
+            // we check on the execution period of base-schedule vj, as impact are targeted on this period
+            const auto base_vj = vj.meta_vj->get_base_vj_circulating_at_date(*titr);
+            if (*titr < concerned_vp.beginning_date) { continue; }
+            if (period.intersects(base_vj->execution_period(*titr))) {
                 intersect = true;
-                // execution day may be shifted
-                if (! fun(day + vj.shift)) {
+                // calling fun() on concerned day of base vj
+                if (! fun(day)) {
                     return intersect;
                 }
             }
@@ -481,8 +484,9 @@ MetaVehicleJourney::create_discrete_vj(const std::string& uri,
 
 
 void MetaVehicleJourney::cancel_vj(RTLevel level,
-        const std::vector<boost::posix_time::time_period>& periods,
-        nt::PT_Data& pt_data, const nt::MetaData& meta, const Route* filtering_route) {
+                                   const std::vector<boost::posix_time::time_period>& periods,
+                                   nt::PT_Data& pt_data,
+                                   const Route* filtering_route) {
     for (auto vj_level: reverse_enum_range_from<RTLevel>(level)) {
         for (auto& vj: rtlevel_to_vjs_map[vj_level]) {
             // for each vj, we want to cancel vp at all levels above cancel level
@@ -490,12 +494,14 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
                 // note: we might want to cancel only the vj of certain routes
                 if (filtering_route && vj->route != filtering_route) { continue; }
                 nt::ValidityPattern tmp_vp(*vj->get_validity_pattern_at(vp_level));
-                auto vp_modifier = [&tmp_vp] (const unsigned day) {
-                    tmp_vp.remove(day);
+                auto vp_modifier = [&] (const unsigned day) {
+                    // day concerned is computed from base vj,
+                    // so we have to shift when canceling it on realtime vj
+                    tmp_vp.remove(day + vj->shift);
                     return true; // we don't want to stop
                 };
 
-                if (concerns_base_at_period(*vj, periods, meta, vp_modifier)) {
+                if (concerns_base_at_period(*vj, periods, vp_modifier)) {
                     vj->validity_patterns[vp_level] = pt_data.get_or_create_validity_pattern(tmp_vp);
                 }
             }
@@ -756,6 +762,41 @@ type::hasOdtProperties Route::get_odt_properties() const{
     return result;
 }
 
+std::vector<boost::shared_ptr<disruption::Impact>>
+VehicleJourney::get_impacts() const {
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
+    // considering which impact concerns this vj
+    for (const auto impact: meta_vj->get_impacts()) {
+        auto impact_sptr = impact.lock();
+        if (impact_sptr == nullptr) { continue; }
+        // checking if impact concerns the period where this vj is valid (base-schedule centric)
+        auto vp_functor = [&] (const unsigned) {
+            return false; // we don't need to carry on when we find a day concerned
+        };
+        if (concerns_base_at_period(*this, impact_sptr->application_periods, vp_functor, false)) {
+            result.push_back(impact_sptr);
+        }
+    }
+    return result;
+}
+
+std::vector<idx_t> VehicleJourney::get_impacts_idx(const PT_Data& data) const {
+    const auto impacts = get_impacts();
+
+    std::vector<idx_t> result;
+    idx_t i = 0;
+    const auto & impacts_pool = data.disruption_holder.get_weak_impacts();
+    for (const auto& impact: impacts_pool) {
+        auto impact_sptr = impact.lock();
+        assert(impact_sptr);
+        if (navitia::contains(impacts, impact_sptr)){
+            result.push_back(i);
+        }
+        ++i;
+    }
+    return result;
+}
+
 std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
@@ -763,7 +804,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::Company: result.push_back(company->idx); break;
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
-    case Type_e::Impact: return meta_vj->get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return get_impacts_idx(data);
     default: break;
     }
     return result;

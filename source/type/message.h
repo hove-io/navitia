@@ -213,6 +213,7 @@ struct Impact {
     boost::posix_time::ptime updated_at;
 
     // the application period define when the impact happen
+    // i.e. the canceled base schedule period for vj
     std::vector<boost::posix_time::time_period> application_periods;
 
     boost::shared_ptr<Severity> severity;
