@@ -201,9 +201,16 @@ struct Message {
     }
 };
 
+struct StopTimeUpdate {
+    StopTimeUpdate(const StopTime& st, const std::string& c): stop_time(st), cause(c) {}
+    StopTime stop_time;
+    std::string cause; //TODO factorize this cause with a pool
+    // enum ADDED/DELETED/UPDATE
+};
+
 namespace detail {
 struct AuxInfoForMetaVJ {
-  std::vector<navitia::type::StopTime> stop_times;
+    std::vector<StopTimeUpdate> stop_times;
 };
 }
 

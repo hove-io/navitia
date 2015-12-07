@@ -5,11 +5,13 @@ SET(PROTO_FILES
     ${CMAKE_SOURCE_DIR}/navitia-proto/task.proto
     ${CMAKE_SOURCE_DIR}/chaos-proto/chaos.proto
     ${CMAKE_SOURCE_DIR}/chaos-proto/gtfs-realtime.proto
+    ${CMAKE_SOURCE_DIR}/chaos-proto/kirin.proto
 )
 
 SET(PROTO_HDRS
     ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/kirin.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/request.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/response.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/task.pb.h
@@ -18,6 +20,7 @@ SET(PROTO_HDRS
 
 SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/kirin.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/request.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/response.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/task.pb.cc
@@ -54,7 +57,7 @@ add_custom_command (TARGET pb_lib
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/jormungandr/tests" 
-    chaos.proto gtfs-realtime.proto
+    chaos.proto gtfs-realtime.proto kirin.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM)
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)

@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "type/gtfs-realtime.pb.h"
 #include "type/pt_data.h"
+#include "type/kirin.pb.h"
 #include "kraken/realtime.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
@@ -58,6 +59,7 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     trip->set_trip_id(vj_uri);
     trip->set_start_date(date);
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
+    trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
 
     return trip_update;
 }
@@ -77,6 +79,7 @@ make_delay_message(const std::string& vj_uri,
         auto stop_time = st_update->Add();
         auto arrival = stop_time->mutable_arrival();
         auto departure = stop_time->mutable_departure();
+        stop_time->SetExtension(kirin::stoptime_message, "birds on the tracks");
         stop_time->set_stop_id(std::get<0>(delayed_st));
         arrival->set_time(std::get<1>(delayed_st));
         departure->set_time(std::get<2>(delayed_st));
@@ -108,6 +111,15 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
 
     //the rt vp must be empty
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, navitia::type::ValidityPattern::year_bitset());
+
+    //check the disruption created
+    const auto& impacts = vj->meta_vj->get_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact = impacts.front().lock();
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->messages.size(), 1);
+    BOOST_CHECK_EQUAL(impact->messages.front().text, "cow on the tracks");
+    BOOST_CHECK(impact->aux_info.stop_times.empty());
 
     // we add a second time the realtime message, it should not change anything
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
@@ -240,7 +252,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -252,9 +264,19 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime(feed_id_1, timestamp, trip_update, *b.data);
+    //check the disruption created
+    const auto& impacts = vj->meta_vj->get_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact = impacts.front().lock();
+    BOOST_REQUIRE(impact);
+    BOOST_CHECK(impact->messages.empty());
+    const auto& stus = impact->aux_info.stop_times;
+    BOOST_REQUIRE_EQUAL(stus.size(), 2);
+    BOOST_CHECK_EQUAL(stus[0].cause, "birds on the tracks");
+    BOOST_CHECK_EQUAL(stus[1].cause, "birds on the tracks");
 
+    // we add a second time the realtime message, it should not change anything
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -262,6 +284,19 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);  //we should still have only one impact
+
+    // we add a third time the same message but with a different id, it should not change anything
+    // but for the number of impacts in the meta vj
+    navitia::handle_realtime("bobette", timestamp, trip_update, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+    // The base VP is different from realtime VP
+    BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    BOOST_REQUIRE_EQUAL(impacts.size(), 2);
 
     pt_data->index();
     b.finish();
