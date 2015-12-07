@@ -309,11 +309,7 @@ public:
     std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
             const boost::posix_time::ptime& current_time) const;
 
-
-    const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
-        clean_up_weak_ptr(impacts);
-        return impacts;
-    }
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
         auto it = std::find_if(impacts.begin(), impacts.end(),
@@ -324,10 +320,6 @@ public:
             impacts.erase(it);
         }
     }
-
-    std::vector<idx_t>
-    get_impacts_idx(const std::vector<boost::weak_ptr<disruption::Impact>>& impacts_pool) const ;
-
 };
 
 enum class ConnectionType {
@@ -752,7 +744,6 @@ private:
      */
     VehicleJourney() = default;
     VehicleJourney(const VehicleJourney&) = default;
-    std::vector<idx_t> get_impacts_idx(const PT_Data& data) const;
     friend class boost::serialization::access;
     friend struct DiscreteVehicleJourney;
     friend struct FrequencyVehicleJourney;

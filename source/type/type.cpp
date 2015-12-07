@@ -90,23 +90,13 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_m
     return result;
 }
 
-std::vector<idx_t>
-HasMessages::get_impacts_idx(const std::vector<boost::weak_ptr<disruption::Impact>>& impacts_pool) const {
-    std::vector<idx_t> result;
+std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_impacts() const {
     clean_up_weak_ptr(impacts);
-    std::set<std::string> impact_str_set;
-    boost::for_each(impacts, [&](const boost::weak_ptr<disruption::Impact>& impact_wptr){
-        auto impact_sptr = impact_wptr.lock();
-        impact_str_set.insert(impact_sptr->uri);
-    });
-    idx_t i = 0;
-    for (const auto& impact: impacts_pool) {
+    std::vector<boost::shared_ptr<disruption::Impact>> result;
+    for (const auto impact: impacts) {
         auto impact_sptr = impact.lock();
-        assert(impact_sptr);
-        if (navitia::contains(impact_str_set, impact_sptr->uri)){
-            result.push_back(i);
-        }
-        ++i;
+        if (impact_sptr == nullptr) { continue; }
+        result.push_back(impact_sptr);
     }
     return result;
 }
@@ -650,7 +640,7 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
         }
     }
         break;
-    case Type_e::Impact: return get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
 
     default: break;
     }
@@ -661,7 +651,7 @@ std::vector<idx_t> Network::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
-    case Type_e::Impact: return get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
     return result;
@@ -709,7 +699,7 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data& data) const {
     case Type_e::Route: return indexes(route_list);
     case Type_e::Calendar: return indexes(calendar_list);
     case Type_e::LineGroup: return indexes(line_group_list);
-    case Type_e::Impact: return get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
     return result;
@@ -744,7 +734,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data& data) const {
                 return true;
             });
         break;
-    case Type_e::Impact: return get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
     return result;
@@ -767,32 +757,13 @@ VehicleJourney::get_impacts() const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
     // considering which impact concerns this vj
     for (const auto impact: meta_vj->get_impacts()) {
-        auto impact_sptr = impact.lock();
-        if (impact_sptr == nullptr) { continue; }
         // checking if impact concerns the period where this vj is valid (base-schedule centric)
         auto vp_functor = [&] (const unsigned) {
             return false; // we don't need to carry on when we find a day concerned
         };
-        if (concerns_base_at_period(*this, impact_sptr->application_periods, vp_functor, false)) {
-            result.push_back(impact_sptr);
+        if (concerns_base_at_period(*this, impact->application_periods, vp_functor, false)) {
+            result.push_back(impact);
         }
-    }
-    return result;
-}
-
-std::vector<idx_t> VehicleJourney::get_impacts_idx(const PT_Data& data) const {
-    const auto impacts = get_impacts();
-
-    std::vector<idx_t> result;
-    idx_t i = 0;
-    const auto & impacts_pool = data.disruption_holder.get_weak_impacts();
-    for (const auto& impact: impacts_pool) {
-        auto impact_sptr = impact.lock();
-        assert(impact_sptr);
-        if (navitia::contains(impacts, impact_sptr)){
-            result.push_back(i);
-        }
-        ++i;
     }
     return result;
 }
@@ -804,7 +775,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::Company: result.push_back(company->idx); break;
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
-    case Type_e::Impact: return get_impacts_idx(data);
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
     return result;
@@ -823,7 +794,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
         for (const StopPointConnection* stop_cnx : stop_point_connection_list)
             result.push_back(stop_cnx->idx);
         break;
-    case Type_e::Impact: return get_impacts_idx(data.disruption_holder.get_weak_impacts());
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
     return result;
