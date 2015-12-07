@@ -43,6 +43,8 @@ www.navitia.io
 
 namespace navitia {
 
+namespace nd = type::disruption;
+
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     namespace bpt = boost::posix_time;
 
@@ -169,7 +171,9 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
 static type::disruption::Message create_message(const std::string& str_msg) {
     type::disruption::Message msg;
     msg.text = str_msg;
-    //do we want to add channel types ?
+    msg.channel_id = "rt";
+    msg.channel_name = "rt";
+    msg.channel_types = {nd::ChannelType::web, nd::ChannelType::mobile};
 
     return msg;
 }
