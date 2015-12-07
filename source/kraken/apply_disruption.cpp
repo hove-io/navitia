@@ -145,7 +145,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
-            mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
+            mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
