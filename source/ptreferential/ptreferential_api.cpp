@@ -120,7 +120,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
             break;
         case Type_e::Impact:{
             auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-            fill_impacts(*impact, data, result);
+            fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
             break;
         }
         default: break;

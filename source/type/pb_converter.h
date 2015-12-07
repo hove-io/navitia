@@ -281,6 +281,12 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     pbnavitia::Properties* properties, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
+void fill_pb_object(const type::disruption::Impact*, const type::Data& data,
+                    pbnavitia::Response*, int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period,
+                    bool show_codes);
+
 void fill_pb_object(const navitia::type::MultiLineString& shape, pbnavitia::MultiLineString* geojson);
 
 
@@ -290,7 +296,6 @@ void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &da
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes=false);
 
-void fill_impacts(const type::disruption::Impact& impact, const type::Data &data, pbnavitia::Response& response);
 
 /**
  * get_label() is a function that returns:
