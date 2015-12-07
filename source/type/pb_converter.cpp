@@ -197,8 +197,14 @@ void fill_message(const type::disruption::Impact& impact,
     pb_impact->set_status(compute_disruption_status(impact, action_period));
 }
 
-void fill_impacts(const type::disruption::Impact& impact, const type::Data &data, pbnavitia::Response& response) {
-    fill_message(impact, data, &response);
+void fill_pb_object(const type::disruption::Impact* impact,
+                    const type::Data& data,
+                    pbnavitia::Response* response,
+                    int depth,
+                    const boost::posix_time::ptime& current_time,
+                    const boost::posix_time::time_period& action_period,
+                    bool /*show_codes*/) {
+    fill_message(*impact, data, response, depth, current_time, action_period);
 }
 
 
