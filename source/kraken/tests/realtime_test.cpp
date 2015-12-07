@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     //check the disruption created
     const auto& impacts = vj->meta_vj->get_impacts();
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
-    auto impact = impacts.front().lock();
+    auto impact = impacts.front();
     BOOST_REQUIRE(impact);
     BOOST_REQUIRE_EQUAL(impact->messages.size(), 1);
     BOOST_CHECK_EQUAL(impact->messages.front().text, "cow on the tracks");
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     //check the disruption created
     const auto& impacts = vj->meta_vj->get_impacts();
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
-    auto impact = impacts.front().lock();
+    auto impact = impacts.front();
     BOOST_REQUIRE(impact);
     BOOST_CHECK(impact->messages.empty());
     const auto& stus = impact->aux_info.stop_times;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    BOOST_REQUIRE_EQUAL(impacts.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 2);
 
     pt_data->index();
     b.finish();
