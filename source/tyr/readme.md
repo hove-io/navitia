@@ -161,11 +161,39 @@ To get the list of users
         "email": "foo@example.com",
         "id": 1,
         "login": "foo"
+        "type": "with_free_instances",
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false,
+            "hostnames": [],
+            "id": 2,
+            "name": "foo"
+        }
     },
     {
         "email": "alex@example.com",
         "id": 3,
         "login": "alex"
+        "type": "with_free_instances",
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false,
+            "hostnames": [],
+            "id": 1,
+            "name": "alex"
+        }
     }
 ]
 ```
@@ -177,6 +205,20 @@ Look for a user with his email:
 ```json
 [
     {
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false, 
+            "hostnames": [], 
+            "id": 1, 
+            "name": "foo"
+        },
+        "type": "with_free_instances",
         "email": "foo@example.com",
         "id": 1,
         "login": "foo"
@@ -191,6 +233,20 @@ Get all users for a specific endpoint
 ```json
 [
     {
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false, 
+            "hostnames": [], 
+            "id": 1, 
+            "name": "foo"
+        },
+        "type": "with_free_instances",
         "email": "foo@example.com",
         "id": 1,
         "login": "foo"
@@ -204,11 +260,24 @@ Get all a user information:
 
 ```json
 {
+    "billing_plan": {
+        "max_request_count": 3000,
+        "name": "foo",
+        "default": true,
+        "max_object_count": 60000,
+        "id": 1
+    },
     "authorizations": [],
     "email": "alex@example.com",
     "id": 3,
     "keys": [],
-    "login": "alex"
+    "login": "alex",
+    "end_point": {
+        "default": false, 
+        "hostnames": [], 
+        "id": 1, 
+        "name": "foo"
+    },
 }
 ```
 
