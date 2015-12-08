@@ -113,6 +113,7 @@ user_fields = {
     'email': fields.Raw,
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
+    'billing_plan': fields.Nested(billing_plan_fields),
 }
 
 user_fields_full = {
