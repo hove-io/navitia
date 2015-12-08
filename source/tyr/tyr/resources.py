@@ -104,6 +104,14 @@ billing_plan_fields = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+}
+
+billing_plan_fields_full = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw,
+    'default': fields.Raw,
     'end_point': fields.Nested(end_point_fields)
 }
 
@@ -807,10 +815,10 @@ class BillingPlan(flask_restful.Resource):
     def get(self, billing_plan_id=None):
         if billing_plan_id:
             billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         else:
             billing_plans = models.BillingPlan.query.all()
-            return marshal(billing_plans, billing_plan_fields)
+            return marshal(billing_plans, billing_plan_fields_full)
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -838,7 +846,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise
@@ -867,7 +875,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.default = args['default']
             billing_plan.end_point = end_point
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise
