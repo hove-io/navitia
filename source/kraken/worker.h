@@ -89,6 +89,7 @@ class Worker {
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request);
         pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
+        pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
 };
 
 }

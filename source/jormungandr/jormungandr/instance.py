@@ -48,6 +48,7 @@ from flask import g
 import json
 import flask
 import pybreaker
+from jormungandr import georef, planner
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -80,6 +81,8 @@ class Instance(object):
         self.publication_date = -1
         self.is_up = True
         self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
+        self.georef = georef.Kraken(self)
+        self.planner = planner.Kraken(self)
 
     def get_models(self):
         if self.name not in g.instances_model:
