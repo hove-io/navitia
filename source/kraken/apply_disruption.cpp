@@ -145,7 +145,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
-            mvj->cancel_vj(rt_level, impact->application_periods, pt_data, meta, r);
+            mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
             mvj->impacted_by.push_back(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
@@ -157,18 +157,22 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
                     + impact->disruption->uri;
+            std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
+            for (const auto& stu: impact->aux_info.stop_times) {
+                stoptimes.push_back(stu.stop_time);
+            }
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
                 canceled_vp,
                 r,
-                impact->aux_info.stop_times,
+                std::move(stoptimes),
                 pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = mvj->get_base_vj().at(0)->name; 
-            }else {
+            } else {
                 // If we set nothing for physical_mode, it'll crash when building raptor
                 vj->physical_mode = pt_data.physical_modes[0];
                 vj->physical_mode->vehicle_journey_list.push_back(vj);
@@ -250,7 +254,11 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 return (spt) ? spt == impact : true;
         });
 
-        for (auto i: mvj->impacted_by) {
+        // add_impacts_visitor populate mvj->impacted_by, thus we swap
+        // it with an empty vector.
+        decltype(mvj->impacted_by) impacted_by_moved;
+        boost::swap(impacted_by_moved, mvj->impacted_by);
+        for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
                 auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
                 v(mvj);

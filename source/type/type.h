@@ -309,10 +309,7 @@ public:
     std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
             const boost::posix_time::ptime& current_time) const;
 
-
-    const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
-        return impacts;
-    }
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
         auto it = std::find_if(impacts.begin(), impacts.end(),
@@ -323,7 +320,6 @@ public:
             impacts.erase(it);
         }
     }
-
 };
 
 enum class ConnectionType {
@@ -725,7 +721,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     bool has_boarding() const;
     bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
@@ -780,6 +777,7 @@ struct Route : public Header, Nameable, HasMessages {
     Line* line = nullptr;
     StopArea* destination = nullptr;
     MultiLineString shape;
+    std::string direction_type;
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
@@ -796,7 +794,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -1041,8 +1039,9 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
     void cancel_vj(RTLevel level,
-            const std::vector<boost::posix_time::time_period>& periods,
-            PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
+                   const std::vector<boost::posix_time::time_period>& periods,
+                   PT_Data& pt_data,
+                   const Route* filtering_route = nullptr);
 
     VehicleJourney*
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;

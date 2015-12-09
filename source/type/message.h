@@ -201,9 +201,16 @@ struct Message {
     }
 };
 
+struct StopTimeUpdate {
+    StopTimeUpdate(const StopTime& st, const std::string& c): stop_time(st), cause(c) {}
+    StopTime stop_time;
+    std::string cause; //TODO factorize this cause with a pool
+    // enum ADDED/DELETED/UPDATE
+};
+
 namespace detail {
 struct AuxInfoForMetaVJ {
-  std::vector<navitia::type::StopTime> stop_times;
+    std::vector<StopTimeUpdate> stop_times;
 };
 }
 
@@ -213,6 +220,7 @@ struct Impact {
     boost::posix_time::ptime updated_at;
 
     // the application period define when the impact happen
+    // i.e. the canceled base schedule period for vj
     std::vector<boost::posix_time::time_period> application_periods;
 
     boost::shared_ptr<Severity> severity;

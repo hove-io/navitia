@@ -201,6 +201,22 @@ void PT_Data::index(){
     ITERATE_NAVITIA_PT_TYPES(INDEX)
 }
 
+std::vector<idx_t>
+PT_Data::get_impacts_idx(const std::vector<boost::shared_ptr<disruption::Impact>>& impacts) const {
+    std::vector<idx_t> result;
+    idx_t i = 0;
+    const auto & impacts_pool = disruption_holder.get_weak_impacts();
+    for (const auto& impact: impacts_pool) {
+        auto impact_sptr = impact.lock();
+        assert(impact_sptr);
+        if (navitia::contains(impacts, impact_sptr)){
+            result.push_back(i);
+        }
+        ++i;
+    }
+    return result;
+}
+
 const StopPointConnection*
 PT_Data::get_stop_point_connection(const StopPoint& from, const StopPoint& to) const {
     const auto& connections = from.stop_point_connection_list;

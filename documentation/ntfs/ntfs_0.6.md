@@ -705,5 +705,3 @@ Les zones n'ont pas de valeur dans le NTFS: la prise des passagers se fait sur d
 * G>H>I
     * montée interdite
     * 10h10 partout
-
-

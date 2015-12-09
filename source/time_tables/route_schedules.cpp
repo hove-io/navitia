@@ -109,12 +109,13 @@ get_all_route_stop_times(const nt::Route* route,
         // we add 24h for each vj's dt that starts before 'date_time' so the vj will be sorted
         // at the end (with the complex score of the route schedule)
         for (auto& vjs_stops: result) {
-            //by construction the vector cannot be empty
-            if (DateTimeUtils::hour(vjs_stops.front().first) >= DateTimeUtils::hour(date_time)) {
-                continue;
-            }
+            bool add_day = false;
             for (auto& dt_st: vjs_stops) {
-                dt_st.first += DateTimeUtils::SECONDS_PER_DAY;
+                // If a stop time is before limit then add a day from here to end of stops
+                if (add_day || (DateTimeUtils::hour(dt_st.first) < DateTimeUtils::hour(date_time))) {
+                    dt_st.first += DateTimeUtils::SECONDS_PER_DAY;
+                    add_day = true;
+                }
             }
         }
     }

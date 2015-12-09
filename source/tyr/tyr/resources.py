@@ -104,6 +104,14 @@ billing_plan_fields = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+}
+
+billing_plan_fields_full = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw,
+    'default': fields.Raw,
     'end_point': fields.Nested(end_point_fields)
 }
 
@@ -113,6 +121,7 @@ user_fields = {
     'email': fields.Raw,
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
+    'billing_plan': fields.Nested(billing_plan_fields),
 }
 
 user_fields_full = {
@@ -140,6 +149,13 @@ jobs_fields = {
             'name': fields.Raw
         })),
         'instance': fields.Nested(instance_fields)
+    }))
+}
+
+poi_types_fields = {
+    'poi_types': fields.List(fields.Nested({
+        'uri': fields.Raw,
+        'name': fields.Raw,
     }))
 }
 
@@ -181,6 +197,61 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+class PoiType(flask_restful.Resource):
+    @marshal_with(poi_types_fields)
+    def get(self, instance_name):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def post(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode,  case_sensitive=False,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type = models.PoiType(uri, args['name'], instance)
+            db.session.add(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}, 201
+
+    @marshal_with(poi_types_fields)
+    def put(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type.name = args['name']
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def delete(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        try:
+            db.session.delete(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
 
 
 class Instance(flask_restful.Resource):
@@ -744,10 +815,10 @@ class BillingPlan(flask_restful.Resource):
     def get(self, billing_plan_id=None):
         if billing_plan_id:
             billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         else:
             billing_plans = models.BillingPlan.query.all()
-            return marshal(billing_plans, billing_plan_fields)
+            return marshal(billing_plans, billing_plan_fields_full)
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -775,7 +846,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise
@@ -804,7 +875,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.default = args['default']
             billing_plan.end_point = end_point
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise

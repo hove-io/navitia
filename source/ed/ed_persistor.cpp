@@ -794,10 +794,9 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
     this->lotus.finish_bulk_insert();
 }
 
-
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape"});
+            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape", "direction_type"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
@@ -820,6 +819,8 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         else
             shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
         values.push_back(shape.str());
+
+        values.push_back(route->direction_type);
 
         this->lotus.insert(values);
     }

@@ -192,6 +192,19 @@ class Key(db.Model):
     def get_by_token(cls, token):
         return cls.query.filter_by(token=token).first()
 
+class PoiType(db.Model):
+    uri = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
+
+    __tablename__ = 'poi_type'
+    __table_args__ = (db.PrimaryKeyConstraint('instance_id', 'uri'), )
+
+    def __init__(self, uri, name=None, instance=None):
+        self.uri = uri
+        self.name = name
+        self.instance = instance
+
 
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -202,6 +215,9 @@ class Instance(db.Model):
             lazy='dynamic', cascade='save-update, merge, delete')
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic', cascade='save-update, merge, delete')
+
+    poi_types = db.relationship('PoiType', backref=backref('instance'),
+                               lazy='dynamic', cascade='save-update, merge, delete')
     # ============================================================
     # params for jormungandr
     # ============================================================
