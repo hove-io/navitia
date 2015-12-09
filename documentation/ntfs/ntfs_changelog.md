@@ -27,3 +27,4 @@
 * Version 0.5 du 25/10/2015 (version technique, pas de modification effective de format)
     * Gestion du champ line_text_color
     * Gestion du fichier equipments.txt
+* Version 0.6 (en cours)
