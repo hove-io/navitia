@@ -6,7 +6,7 @@ Navitia
     :alt: build status
     :target: https://ci.navitia.io/job/navitia_release/
 
-``(pronounce "navissia")``
+``(pronounce [navi-sia])``
 
 Presentation
 ============
