@@ -348,8 +348,17 @@ class Instance(flask_restful.Resource):
                 help='', location=('json', 'values'),
                 default=instance.max_duration_fallback_mode)
 
-        parser.add_argument('max_duration', type=int, help='latest time point of research', location=('json', 'values'),
-                default=instance.max_duration)
+        parser.add_argument('max_duration', type=int, help='latest time point of research, in second',
+                            location=('json', 'values'), default=instance.max_duration)
+
+        parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in min',
+                            location=('json', 'values'), default=instance.walking_transfer_penalty)
+
+        parser.add_argument('night_bus_filter_max_factor', type=int, help='night bust filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_max_factor)
+
+        parser.add_argument('night_bus_filter_base_factor', type=int, help='night bust filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_base_factor)
 
         args = parser.parse_args()
 
