@@ -160,7 +160,7 @@ To get the list of users
     {
         "email": "foo@example.com",
         "id": 1,
-        "login": "foo"
+        "login": "foo",
         "type": "with_free_instances",
         "billing_plan": {
             "max_request_count": 3000,
@@ -179,7 +179,7 @@ To get the list of users
     {
         "email": "alex@example.com",
         "id": 3,
-        "login": "alex"
+        "login": "alex",
         "type": "with_free_instances",
         "billing_plan": {
             "max_request_count": 3000,
