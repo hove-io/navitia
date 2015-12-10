@@ -588,9 +588,9 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
 
-        parser_get.add_argument("walking_transfer_penalty", type=int)
-        parser_get.add_argument("night_bus_filter_base_factor", type=int)
-        parser_get.add_argument("night_bus_filter_max_factor", type=int)
+        parser_get.add_argument("_walking_transfer_penalty", type=int)
+        parser_get.add_argument("_night_bus_filter_base_factor", type=int)
+        parser_get.add_argument("_night_bus_filter_max_factor", type=int)
 
         self.method_decorators.append(complete_links(self))
 
@@ -667,12 +667,12 @@ class Journeys(ResourceUri, ResourceUtc):
         def _set_specific_params(mod):
             if args.get('max_duration') is None:
                 args['max_duration'] = mod.max_duration
-            if args.get('walking_transfer_penalty') is None:
-                args['walking_transfer_penalty'] = mod.walking_transfer_penalty
-            if args.get('night_bus_filter_base_factor') is None:
-                args['night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
-            if args.get('night_bus_filter_max_factor') is None:
-                args['night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
+            if args.get('_walking_transfer_penalty') is None:
+                args['_walking_transfer_penalty'] = mod.walking_transfer_penalty
+            if args.get('_night_bus_filter_base_factor') is None:
+                args['_night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
+            if args.get('_night_bus_filter_max_factor') is None:
+                args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
 
         if region:
             _set_specific_params(i_manager.instances[region])

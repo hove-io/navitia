@@ -163,7 +163,7 @@ def way_later(request, journey, asap_journey, original_request):
     pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
     pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
 
-    max_value = pseudo_asap_duration * request['night_bus_filter_max_factor'] + request['night_bus_filter_base_factor']
+    max_value = pseudo_asap_duration * request['_night_bus_filter_max_factor'] + request['_night_bus_filter_base_factor']
     return pseudo_journey_duration > max_value
 
 

@@ -139,7 +139,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if "details" in request and request["details"]:
         req.journeys.details = request["details"]
 
-    req.journeys.walking_transfer_penalty = request['walking_transfer_penalty']
+    req.journeys.walking_transfer_penalty = request['_walking_transfer_penalty']
 
     for forbidden_uri in get_or_default(request, "forbidden_uris[]", []):
         req.journeys.forbidden_uris.append(forbidden_uri)

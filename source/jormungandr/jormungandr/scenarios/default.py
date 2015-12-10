@@ -115,7 +115,7 @@ class Scenario(simple.Scenario):
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]
 
-        req.journeys.walking_transfer_penalty = request['walking_transfer_penalty']
+        req.journeys.walking_transfer_penalty = request['_walking_transfer_penalty']
 
         self.origin_modes = request["origin_mode"]
 
