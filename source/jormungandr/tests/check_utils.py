@@ -730,10 +730,11 @@ def is_valid_pt_object(pt_object, depth_check=1):
                            'vehicle_journey',
                            'calendar',
                            'company',
-                           "stop_area",
-                           "stop_point",
-                           "poi",
-                           "address")
+                           'stop_area',
+                           'stop_point',
+                           'poi',
+                           'address',
+                           'trip')
 
     # if it's a line, it should pass the 'is_valid_line' test,
     # if it's a stop_area, it should pass the 'is_valid_stop_area' test ...
@@ -816,8 +817,7 @@ def is_valid_vehicle_journey(vj, depth_check=1):
         is_valid_comment(c)
 
     if depth_check > 0:
-        get_not_null(vj, "trip")
-        get_not_null(vj["trip"], "id")
+        is_valid_trip(get_not_null(vj, "trip"), depth_check=depth_check-1)
 
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
         is_valid_validity_pattern(get_not_null(vj, 'validity_pattern'), depth_check=depth_check-1)
@@ -840,6 +840,10 @@ def is_valid_vehicle_journey(vj, depth_check=1):
         assert 'stop_times' not in vj
         assert 'journey_pattern' not in vj
         assert 'validity_pattern' not in vj
+
+
+def is_valid_trip(trip, depth_check=1):
+    get_not_null(trip, "id")
 
 
 def is_valid_journey_pattern(jp, depth_check=1):
@@ -918,10 +922,10 @@ def is_valid_disruption(disruption):
         is_valid_pt_object(pt_obj, depth_check=0)
 
         # for the vj, if it's not a cancellation we need to have the list of impacted stoptimes
-        # if get_not_null(pt_obj, 'embedded_type') == 'vehicle_journey' and effect != 'NO_SERVICE':
-        #     impacted_stops = get_not_null(impacted_obj, 'impacted_stops')
-        #
-        #     #TODO
+        if get_not_null(pt_obj, 'embedded_type') == 'vehicle_journey' and effect != 'NO_SERVICE':
+            impacted_stops = get_not_null(impacted_obj, 'impacted_stops')
+
+            #TODO
 
 
 

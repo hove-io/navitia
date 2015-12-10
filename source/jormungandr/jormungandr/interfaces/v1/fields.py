@@ -636,6 +636,7 @@ pt_object = {
     "line": PbField(line),
     "route": PbField(route),
     "stop_area": PbField(stop_area),
+    "trip": PbField(trip),
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),

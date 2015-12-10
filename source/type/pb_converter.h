@@ -138,11 +138,13 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
         const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const navitia::type::MetaVehicleJourney* nav_mvj,
+                    const nt::Data&,
                     pbnavitia::Trip* pb_trip,
-                    int max_depth,
-                    const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period,
-                    const bool show_codes, const DumpMessage = DumpMessage::Yes);
+                    int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const bool show_codes = false,
+                    const DumpMessage = DumpMessage::Yes);
 
 void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data, const type::VehicleJourney* vehicle_journey);
 void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data, const std::string& mode_uri);
@@ -170,6 +172,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const georef::Admin*) { return p
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopArea*) { return pbnavitia::STOP_AREA; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopPoint*) { return pbnavitia::STOP_POINT; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::MetaVehicleJourney*) { return pbnavitia::TRIP; }
 
 inline pbnavitia::Calendar* get_sub_object(const type::Calendar*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
 inline pbnavitia::VehicleJourney* get_sub_object(const type::VehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
@@ -182,6 +185,7 @@ inline pbnavitia::AdministrativeRegion* get_sub_object(const georef::Admin*, pbn
 inline pbnavitia::StopArea* get_sub_object(const type::StopArea*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
 inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
 inline pbnavitia::CommercialMode* get_sub_object(const type::CommercialMode*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
+inline pbnavitia::Trip* get_sub_object(const type::MetaVehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,

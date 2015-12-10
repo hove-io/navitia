@@ -143,7 +143,6 @@ struct PtObjVisitor: public boost::static_visitor<> {
         fill_pb_placemark(line_section.line, data, pb_pt_pbj, 0, now, action_period, show_codes, DumpMessage::No);
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
-    void operator()(const nt::MetaVehicleJourney*) const { }
 };
 
 void fill_pb_object(const nt::disruption::PtObj& ptobj,
@@ -231,8 +230,7 @@ void fill_message(const type::disruption::Impact& impact,
     pb_impact->set_status(compute_disruption_status(impact, action_period));
 
     for (const auto& informed_entity: impact.informed_entities) {
-        if (boost::get<nt::disruption::UnknownPtObj>(&informed_entity) != nullptr ||
-                boost::get<nt::MetaVehicleJourney*>(&informed_entity) != nullptr) { continue; }
+        if (boost::get<nt::disruption::UnknownPtObj>(&informed_entity) != nullptr) { continue; }
         auto* pb_impacted_obj = pb_impact->add_impacted_objects();
         fill_pb_object(informed_entity, data, pb_impacted_obj->mutable_pt_object(),
                        depth, now, action_period, show_codes);
@@ -714,6 +712,7 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
 }
 
 void fill_pb_object(const nt::MetaVehicleJourney* nav_mvj,
+                    const nt::Data&,
                     pbnavitia::Trip* pb_trip,
                     int /*max_depth*/,
                     const pt::ptime& /*now*/,
@@ -761,7 +760,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
             fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period, show_codes);
         }
-        fill_pb_object(vj->meta_vj, vehicle_journey->mutable_trip(), depth-1, now,
+        fill_pb_object(vj->meta_vj, data, vehicle_journey->mutable_trip(), depth-1, now,
                        action_period, show_codes);
         fill_pb_object(vj->physical_mode, data,
                        vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,

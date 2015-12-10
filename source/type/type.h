@@ -1049,6 +1049,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     VehicleJourney*
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
 
+    const std::string& get_label() const { return uri; } // for the moment the label is just the uri
 private:
     template<typename VJ>
     VJ* impl_create_vj(const std::string& uri,
