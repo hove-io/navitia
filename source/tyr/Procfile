@@ -1,3 +1,5 @@
 web: ./manage_tyr.py runserver
 worker: celery worker -A tyr.tasks
 scheduler: celery beat -A tyr.tasks
+dbmigrate: ./manage_tyr.py db migrate
+dbupgrade: ./manage_tyr.py db upgrade

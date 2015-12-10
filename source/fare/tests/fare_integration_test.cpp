@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
-                                             true, type::AccessibiliteParams(), {}, sn_worker, type::RTLevel::Base);
+                                             true, type::AccessibiliteParams(), {}, sn_worker, type::RTLevel::Base,
+                                             2_min);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -161,7 +162,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
-                                             true, type::AccessibiliteParams(), {}, sn_worker, type::RTLevel::Base);
+                                             true, type::AccessibiliteParams(), {}, sn_worker, type::RTLevel::Base, 2_min);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);

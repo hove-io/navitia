@@ -126,6 +126,7 @@ struct RAPTOR
             int departure_day,
             DateTime bound,
             const nt::RTLevel rt_level,
+            const navitia::time_duration& transfer_penalty,
             bool clockwise = true,
             const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
             uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
@@ -142,14 +143,14 @@ struct RAPTOR
                 const map_stop_point_duration& destinations,
                 const DateTime& departure_datetime,
                 const nt::RTLevel rt_level,
+                const navitia::time_duration& transfer_penalty,
                 const DateTime& bound = DateTimeUtils::inf,
                 const uint32_t max_transfers = 10,
                 const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string>& forbidden = std::vector<std::string>(),
                 bool clockwise = true,
                 const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
-                const size_t max_extra_second_pass = 0,
-                const navitia::time_duration& transfer_penalty = 2_min); // "les 2 minutes du peuple"
+                const size_t max_extra_second_pass = 0);
 
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs

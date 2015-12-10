@@ -269,6 +269,16 @@ class Instance(db.Model):
     max_duration_fallback_mode = db.Column(db.Enum('walking', 'bss', 'bike', 'car', name='max_duration_fallback_mode'),
             default=default_values.max_duration_fallback_mode, nullable=False)
 
+    max_duration = db.Column(db.Integer, default=default_values.max_duration, nullable=False, server_default='86400')
+
+    walking_transfer_penalty = db.Column(db.Integer, default=default_values.walking_transfer_penalty, nullable=False,
+                                         server_default='2')
+
+    night_bus_filter_max_factor = db.Column(db.Integer, default=default_values.night_bus_filter_max_factor,
+                                            nullable=False, server_default='30')
+
+    night_bus_filter_base_factor = db.Column(db.Integer, default=default_values.night_bus_filter_base_factor,
+                                             nullable=False,server_default='3600')
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):

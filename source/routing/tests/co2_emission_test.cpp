@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base);
+                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base, 2_min);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base);
+                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base, 2_min);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base);
+                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker, nt::RTLevel::Base, 2_min);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 

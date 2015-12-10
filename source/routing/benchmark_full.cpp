@@ -287,6 +287,7 @@ int main(int argc, char** argv){
               {},
               georef_worker,
               type::RTLevel::Base,
+              2_min,
               std::numeric_limits<int>::max(),
               10,
               false,
