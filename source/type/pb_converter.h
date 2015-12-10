@@ -205,6 +205,12 @@ void fill_message(const type::disruption::Impact& impact, const type::Data &data
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes = false);
 
+template <typename HasMessage, typename PbObj>
+void fill_messages(const HasMessage*, const type::Data& data, PbObj, int max_depth = 0,
+                   const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                   const boost::posix_time::time_period& action_period = null_time_period,
+                   const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
+
 void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item, const type::EntryPoint &ori_dest,
                    const navitia::type::Data& data);
 

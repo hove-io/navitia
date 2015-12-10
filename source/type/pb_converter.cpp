@@ -237,6 +237,18 @@ void fill_message(const type::disruption::Impact& impact,
     }
 }
 
+
+template <typename HasMessage, typename PbObj>
+void fill_messages(const HasMessage* obj, const type::Data& data, PbObj pb_obj, int max_depth,
+                   const boost::posix_time::ptime& now,
+                   const boost::posix_time::time_period& action_period,
+                   const bool show_codes, const DumpMessage dump_message) {
+    if (dump_message == DumpMessage::No) { return; }
+    for (const auto& message : obj->get_applicable_messages(now, action_period)){
+        fill_message(*message, data, pb_obj, max_depth, now, action_period, show_codes);
+    }
+}
+
 void fill_pb_object(const type::disruption::Impact* impact,
                     const type::Data& data,
                     pbnavitia::Response* response,
@@ -337,11 +349,7 @@ void fill_pb_object(const nt::StopArea* sa,
         }
     }
 
-    if (dump_message == DumpMessage::Yes) {
-        for (const auto& message : sa->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, stop_area, max_depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
     if (show_codes) { fill_codes(sa, data, stop_area); }
 }
 
@@ -414,11 +422,7 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
         fill_pb_object(sp->stop_area, data, stop_point->mutable_stop_area(),
                        depth-1, now, action_period, show_codes);
 
-    if (dump_message == DumpMessage::Yes) {
-        for(const auto message : sp->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, stop_point, max_depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(sp, data, stop_point, max_depth-1, now, action_period, show_codes, dump_message);
     if (show_codes) { fill_codes(sp, data, stop_point); }
 }
 
@@ -497,11 +501,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         }
     }
 
-    if (dump_message == DumpMessage::Yes) {
-        for(const auto message : l->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, line, depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(l, data, line, max_depth-1, now, action_period, show_codes, dump_message);
 
     if (show_codes) { fill_codes(l, data, line); }
 
@@ -591,11 +591,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     route->set_uri(r->uri);
 
-    if (dump_message == DumpMessage::Yes) {
-        for(const auto& message : r->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, route, max_depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(r, data, route, max_depth-1, now, action_period, show_codes, dump_message);
 
     if (show_codes) { fill_codes(r, data, route); }
 
@@ -639,11 +635,7 @@ void fill_pb_object(const nt::Network* n, const nt::Data& data,
     network->set_name(n->name);
     network->set_uri(n->uri);
 
-    if (dump_message == DumpMessage::Yes) {
-        for(const auto& message : n->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, network, max_depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(n, data, network, max_depth-1, now, action_period, show_codes, dump_message);
     if (show_codes) { fill_codes(n, data, network); }
 }
 
@@ -783,11 +775,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                                      action_period);
     }
 
-    if (dump_message == DumpMessage::Yes) {
-        for (const auto& message: vj->meta_vj->get_applicable_messages(now, action_period)) {
-            fill_message(*message, data, vehicle_journey, max_depth-1, now, action_period, show_codes);
-        }
-    }
+    fill_messages(vj->meta_vj, data, vehicle_journey, max_depth-1, now, action_period, show_codes, dump_message);
 
     if (show_codes) { fill_codes(vj, data, vehicle_journey); }
 }
@@ -1441,9 +1429,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for (const auto& comment: data.pt_data->comments.get(r)) {
         fill_pb_object(comment, data, pt_display_info->add_notes(), max_depth, now, action_period);
     }
-    for(auto message : r->get_applicable_messages(now, action_period)){
-        fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
-    }
+    fill_messages(r, data, pt_display_info, max_depth-1, now, action_period);
 
     if(r->destination != nullptr){
         //Here we format display_informations.direction for stop_schedules.
@@ -1463,16 +1449,14 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         for (const auto& comment: data.pt_data->comments.get(r->line)) {
             fill_pb_object(comment, data, pt_display_info->add_notes(), max_depth, now, action_period);
         }
-        for(auto message : r->line->get_applicable_messages(now, action_period)){
-            fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
-        }
+
+        fill_messages(r->line, data, pt_display_info, max_depth-1, now, action_period);
         uris->set_line(r->line->uri);
         if (r->line->network != nullptr){
             pt_display_info->set_network(r->line->network->name);
             uris->set_network(r->line->network->uri);
-            for(auto message : r->line->network->get_applicable_messages(now, action_period)){
-                fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
-            }
+
+            fill_messages(r->line->network, data, pt_display_info, max_depth-1, now, action_period);
         }
         if (r->line->commercial_mode != nullptr){
             pt_display_info->set_commercial_mode(r->line->commercial_mode->name);
@@ -1500,9 +1484,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         const auto& jp_idx = data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
         uris->set_journey_pattern(data.dataRaptor->jp_container.get_id(jp_idx));
     }
-    for (const auto& message : vj->meta_vj->get_applicable_messages(now, action_period)) {
-        fill_message(*message, data, pt_display_info, max_depth-1, now, action_period);
-    }
+
+    fill_messages(vj->meta_vj, data, pt_display_info, max_depth-1, now, action_period);
     if (origin != nullptr) {
         pt_display_info->set_headsign(data.pt_data->headsign_handler.get_headsign(*origin));
     }
