@@ -746,10 +746,10 @@ def is_valid_pt_object(pt_object, depth_check=1):
         assert get_not_null(pt_object, pt_obj_type)['label'] == n
     if pt_obj_type == 'line':
         # the line network, commercial_mode, code and name should be in the label
-        check_embedded_line_label(n, pt_obj_type['line'], depth_check)
+        check_embedded_line_label(n, pt_object['line'], depth_check)
     if pt_obj_type == 'route':
         # the line network, commercial_mode, code and name should be in the label
-        check_embedded_route_label(n, pt_obj_type['route'], depth_check)
+        check_embedded_route_label(n, pt_object['route'], depth_check)
 
 
 def check_embedded_line_label(label, line, depth_check):
@@ -903,7 +903,7 @@ def is_valid_disruption(disruption):
     s = get_not_null(disruption, 'severity')
     get_not_null(s, 'name')
     get_not_null(s, 'color')
-    get_not_null(s, 'effect')
+    effect = get_not_null(s, 'effect')
     msg = get_not_null(disruption, 'messages')
     assert len(msg) > 0
     for m in msg:
@@ -912,6 +912,18 @@ def is_valid_disruption(disruption):
         get_not_null(channel, "content_type")
         get_not_null(channel, "id")
         get_not_null(channel, "name")
+
+    for impacted_obj in get_not_null(disruption, 'impacted_objects'):
+        pt_obj = get_not_null(impacted_obj, 'pt_object')
+        is_valid_pt_object(pt_obj, depth_check=0)
+
+        # for the vj, if it's not a cancellation we need to have the list of impacted stoptimes
+        # if get_not_null(pt_obj, 'embedded_type') == 'vehicle_journey' and effect != 'NO_SERVICE':
+        #     impacted_stops = get_not_null(impacted_obj, 'impacted_stops')
+        #
+        #     #TODO
+
+
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset

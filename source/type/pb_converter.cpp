@@ -136,7 +136,6 @@ struct PtObjVisitor: public boost::static_visitor<> {
                  now(now), action_period(action_period), show_codes(show_codes) {}
     template <typename NavitiaPTObject>
     void operator()(const NavitiaPTObject* bo) const {
-        std::cout << "hop objet bo" << std::endl;
         fill_pb_placemark(bo, data, pb_pt_pbj, 0, now, action_period, show_codes, DumpMessage::No);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
@@ -232,8 +231,8 @@ void fill_message(const type::disruption::Impact& impact,
     pb_impact->set_status(compute_disruption_status(impact, action_period));
 
     for (const auto& informed_entity: impact.informed_entities) {
-        if (boost::get<nt::disruption::UnknownPtObj>(&informed_entity) == nullptr ||
-                boost::get<nt::MetaVehicleJourney*>(&informed_entity) == nullptr) { continue; }
+        if (boost::get<nt::disruption::UnknownPtObj>(&informed_entity) != nullptr ||
+                boost::get<nt::MetaVehicleJourney*>(&informed_entity) != nullptr) { continue; }
         auto* pb_impacted_obj = pb_impact->add_impacted_objects();
         fill_pb_object(informed_entity, data, pb_impacted_obj->mutable_pt_object(),
                        depth, now, action_period, show_codes);

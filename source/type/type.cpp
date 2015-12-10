@@ -715,6 +715,24 @@ type::hasOdtProperties Line::get_odt_properties() const{
     return result;
 }
 
+std::string Line::get_label() const {
+    //LineName = NetworkName + ModeName + LineCode + (LineName)
+    std::stringstream s;
+    if (network) { s << network->name << " "; }
+    if (commercial_mode) { s << commercial_mode->name << " "; }
+    s << code << " (" << name << ")";
+    return s.str();
+}
+
+std::string Route::get_label() const {
+    //RouteName = NetworkName + ModeName + LineCode + (RouteName)
+    std::stringstream s;
+    if (line->network) { s << line->network->name << " "; }
+    if (line->commercial_mode) { s << line->commercial_mode->name << " "; }
+    s << line->code << " (" << name << ")";
+    return s.str();
+}
+
 std::vector<idx_t> LineGroup::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {

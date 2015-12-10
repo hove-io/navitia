@@ -169,6 +169,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const georef::POI*) { return pbn
 inline pbnavitia::NavitiaType get_embedded_type(const georef::Admin*) { return pbnavitia::ADMINISTRATIVE_REGION; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopArea*) { return pbnavitia::STOP_AREA; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopPoint*) { return pbnavitia::STOP_POINT; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
 
 inline pbnavitia::Calendar* get_sub_object(const type::Calendar*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
 inline pbnavitia::VehicleJourney* get_sub_object(const type::VehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
@@ -180,7 +181,7 @@ inline pbnavitia::Poi* get_sub_object(const georef::POI*, pbnavitia::PtObject* p
 inline pbnavitia::AdministrativeRegion* get_sub_object(const georef::Admin*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_administrative_region(); }
 inline pbnavitia::StopArea* get_sub_object(const type::StopArea*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
 inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
-
+inline pbnavitia::CommercialMode* get_sub_object(const type::CommercialMode*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
