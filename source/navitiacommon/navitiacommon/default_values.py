@@ -84,7 +84,7 @@ max_duration_fallback_mode = 'walking'
 max_duration = 60*60*24  # seconds
 
 # the penalty for each walking transfer
-walking_transfer_penalty = 2  # minutes
+walking_transfer_penalty = 120  # seconds
 
 # night bus filtering parameter
 night_bus_filter_max_factor = 3
