@@ -120,39 +120,40 @@ void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const type::Data& d,
                       const boost::posix_time::ptime now){
 
-    for(auto idx : network_idx){
+    for (auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
-        if(!filter.empty()){
+        if (!filter.empty()) {
             new_filter += " and " + filter;
         }
-        std::vector<type::idx_t> line_list;
+        std::vector<type::idx_t> stop_areas;
 
-       try{
-            line_list = ptref::make_query(type::Type_e::StopArea, new_filter,
-                    forbidden_uris, d);
-        } catch(const ptref::parsing_error &parse_error) {
+       try {
+            stop_areas = ptref::make_query(type::Type_e::StopArea, new_filter, forbidden_uris, d);
+        } catch (const ptref::parsing_error& parse_error) {
             LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
                                 + parse_error.more);
-        } catch(const ptref::ptref_error &ptref_error){
-            LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : ptref : "  + ptref_error.more);
+        } catch (const ptref::ptref_error& ptref_error) {
+           // that can arrive quite often if there is a filter, and
+           // it's quite normal. Imagine /line/metro1/traffic_reports
+           // for the network SNCF.
         }
-        for(auto stop_area_idx: line_list){
+        for (auto stop_area_idx: stop_areas) {
             const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
             auto v = stop_area->get_publishable_messages(now);
-            for(const auto* stop_point: stop_area->stop_point_list){
+            for (const auto* stop_point: stop_area->stop_point_list) {
                 auto vsp = stop_point->get_publishable_messages(now);
                 v.insert(v.end(), vsp.begin(), vsp.end());
             }
-            if (!v.empty()){
+            if (!v.empty()) {
                 NetworkDisrupt& dist = this->find_or_create(network);
                 auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
                     return item.first == stop_area;
                 };
                 auto it = boost::find_if(dist.stop_areas, find_predicate);
-                if(it == dist.stop_areas.end()){
+                if (it == dist.stop_areas.end()) {
                     dist.stop_areas.push_back(std::make_pair(stop_area, DisruptionSet(v.begin(), v.end())));
-                }else{
+                } else {
                     it->second.insert(v.begin(), v.end());
                 }
             }
