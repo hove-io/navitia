@@ -573,7 +573,7 @@ class Journeys(ResourceUri, ResourceUtc):
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-# a supprimer
+
         parser_get.add_argument("max_duration", type=int)
         parser_get.add_argument("wheelchair", type=boolean, default=None)
         parser_get.add_argument("debug", type=boolean, default=False,
