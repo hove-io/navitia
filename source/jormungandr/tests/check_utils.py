@@ -930,7 +930,7 @@ def is_valid_disruption(disruption):
                 is_valid_stop_point(get_not_null(impacted_stop, 'stop_point'), depth_check=0)
 
                 get_not_null(impacted_stop, "cause")
-                get_not_null(impacted_stop, "stoptime_effect") in ('ADDED', 'DELETED', 'DELAYED')
+                assert(get_not_null(impacted_stop, "stoptime_effect") in ('ADDED', 'DELETED', 'DELAYED'))
 
                 if 'base_arrival_time' in impacted_stop:
                     get_valid_time(impacted_stop['base_arrival_time'])

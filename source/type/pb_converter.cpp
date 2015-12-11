@@ -176,7 +176,8 @@ struct PtObjVisitor: public boost::static_visitor<> {
     }
 };
 
-void fill_pb_object(const nt::disruption::PtObj& ptobj,
+
+static void fill_pb_object(const nt::disruption::PtObj& ptobj,
                     const nt::disruption::Impact& impact,
                     const nt::Data& data,
                     pbnavitia::Impact* pb_impact, int max_depth,
