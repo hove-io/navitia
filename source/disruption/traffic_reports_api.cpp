@@ -133,7 +133,7 @@ void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
         } catch (const ptref::parsing_error& parse_error) {
             LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
                                 + parse_error.more);
-        } catch (const ptref::ptref_error& ptref_error) {
+        } catch (const ptref::ptref_error& /*ptref_error*/) {
            // that can arrive quite often if there is a filter, and
            // it's quite normal. Imagine /line/metro1/traffic_reports
            // for the network SNCF.
