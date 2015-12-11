@@ -470,16 +470,6 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
 
 void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     //we need to find out which side of the projection has been used to compute the right length
-
-    //we check if we already are at the arrival
-    if (predecessors[starting_edge[source_e]] == starting_edge[source_e] ||
-            predecessors[starting_edge[target_e]] == starting_edge[target_e]) {
-        //and we add the closer starting edge
-        ProjectionData::Direction direction = starting_edge.distances[source_e] < starting_edge.distances[target_e]
-            ? source_e : target_e;
-        add_custom_projections_to_path(p, append_to_begin, starting_edge, direction);
-        return;
-    }
     assert(! p.path_items.empty());
 
     const auto& path_item_to_consider = append_to_begin ? p.path_items.front(): p.path_items.back();
