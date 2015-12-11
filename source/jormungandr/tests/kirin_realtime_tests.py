@@ -29,13 +29,14 @@
 
 # Note: the tests_mechanism should be the first
 # import for the conf to be loaded correctly when only this test is ran
+from datetime import datetime
 from nose.tools.trivial import eq_
 from tests.tests_mechanism import dataset
 
 from jormungandr.utils import str_to_time_stamp
-from tests import gtfs_realtime_pb2
+from tests import gtfs_realtime_pb2, kirin_pb2
 from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, get_used_vj, \
-    get_arrivals
+    get_arrivals, get_valid_time
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
 
@@ -45,6 +46,16 @@ class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
     """
     def _make_mock_item(self, *args, **kwargs):
         return make_mock_kirin_item(*args, **kwargs)
+
+
+def tstamp(str):
+    """just to have clearer tests"""
+    return str_to_time_stamp(str)
+
+
+def _dt(h, m, s):
+    """syntaxic sugar"""
+    return datetime(1900, 1, 1, hour=h, minute=m, second=s)
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
@@ -66,7 +77,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         self.send_mock("vjA", "20120614", 'canceled')
 
         # we should see the disruption
-        def _check_train_delay_disruption(dis):
+        def _check_train_cancel_disruption(dis):
             eq_(dis['disruption_id'], '96231_2015-07-28_0')
             eq_(dis['severity']['effect'], 'NO_SERVICE')
             eq_(len(dis['impacted_objects']), 1)
@@ -74,15 +85,17 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
             eq_(ptobj['embedded_type'], 'trip')
             eq_(ptobj['id'], 'vjA')
             eq_(ptobj['name'], 'vjA')
+            # for cancellation we do not output the impacted stops
+            assert 'impacted_stops' not in dis['impacted_objects'][0]
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)
-        _check_train_delay_disruption(pt_response['disruptions'][0])
+        _check_train_cancel_disruption(pt_response['disruptions'][0])
 
         # and we should be able to query for the vj's disruption
         disrup_response = self.query_region('vehicle_journeys/vjA/disruptions')
         eq_(len(disrup_response['disruptions']), 1)
-        _check_train_delay_disruption(disrup_response['disruptions'][0])
+        _check_train_cancel_disruption(disrup_response['disruptions'][0])
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
@@ -118,8 +131,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(len(pt_response['disruptions']), 0)
 
         self.send_mock("vjA", "20120614", 'delayed',
-           [("stop_point:stopB", str_to_time_stamp("20120614T080224"), str_to_time_stamp("20120614T080224")),
-            ("stop_point:stopA", str_to_time_stamp("20120614T080400"), str_to_time_stamp("20120614T080400"))])
+           [("stop_point:stopB", tstamp("20120614T080224"), tstamp("20120614T080225"), 'cow on tracks'),
+            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -128,10 +141,36 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
 
+        def _check_train_delay_disruption(dis):
+            eq_(dis['disruption_id'], '96231_2015-07-28_0')
+            eq_(dis['severity']['effect'], 'SIGNIFICANT_DELAYS')
+            eq_(len(dis['impacted_objects']), 1)
+            ptobj = dis['impacted_objects'][0]['pt_object']
+            eq_(ptobj['embedded_type'], 'trip')
+            eq_(ptobj['id'], 'vjA')
+            eq_(ptobj['name'], 'vjA')
+            # for delay we should have detail on the impacted stops
+            impacted_objs = get_not_null(dis['impacted_objects'][0], 'impacted_stops')
+            assert len(impacted_objs) == 2
+            imp_obj1 = impacted_objs[0]
+            eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(h=8, m=2, s=24))
+            eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(h=8, m=2, s=25))
+            eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
+            # for the moment we output 00000, but we should output the right base departure/arrival
+            eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(0, 0, 0))
+            eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(0, 0, 0))
+
+            imp_obj2 = impacted_objs[1]
+            eq_(get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')), _dt(h=8, m=4, s=0))
+            eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(h=8, m=4, s=0))
+            eq_(imp_obj2['cause'], '')
+            eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(0, 0, 0))
+            eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(0, 0, 0))
+
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)
-        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+        _check_train_delay_disruption(pt_response['disruptions'][0])
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
@@ -144,8 +183,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',
-           [("stop_point:stopB", str_to_time_stamp("20120614T080224"), str_to_time_stamp("20120614T080224")),
-            ("stop_point:stopA", str_to_time_stamp("20120614T080400"), str_to_time_stamp("20120614T080400"))])
+           [("stop_point:stopB", tstamp("20120614T080224"), tstamp("20120614T080225"), 'cow on tracks'),
+            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -155,7 +194,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)
-        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+        _check_train_delay_disruption(pt_response['disruptions'][0])
 
         # so the first real-time vj created for the first disruption should be deactivated
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
@@ -199,8 +238,8 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         # sending disruption delaying VJ to the next day
         self.send_mock("vjA", "20120614", 'delayed',
-           [("stop_point:stopB", str_to_time_stamp("20120615T070224"), str_to_time_stamp("20120615T070224")),
-            ("stop_point:stopA", str_to_time_stamp("20120615T070400"), str_to_time_stamp("20120615T070400"))])
+           [("stop_point:stopB", tstamp("20120615T070224"), tstamp("20120615T070224")),
+            ("stop_point:stopA", tstamp("20120615T070400"), tstamp("20120615T070400"))])
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -259,6 +298,8 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
             stop_time_update.stop_id = st[0]
             stop_time_update.arrival.time = st[1]
             stop_time_update.departure.time = st[2]
+            if len(st) > 3:
+                stop_time_update.Extensions[kirin_pb2.stoptime_message] = st[3]
     else:
         #TODO
         pass
