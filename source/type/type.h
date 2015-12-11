@@ -993,6 +993,7 @@ struct Calendar : public Nameable, public Header {
  *
  */
 struct MetaVehicleJourney: public Header, HasMessages {
+    const static Type_e type = Type_e::MetaVehicleJourney;
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
@@ -1050,6 +1051,9 @@ struct MetaVehicleJourney: public Header, HasMessages {
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
 
     const std::string& get_label() const { return uri; } // for the moment the label is just the uri
+
+    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+
 private:
     template<typename VJ>
     VJ* impl_create_vj(const std::string& uri,

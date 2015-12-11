@@ -511,6 +511,20 @@ MetaVehicleJourney::get_base_vj_circulating_at_date(const boost::gregorian::date
     return nullptr;
 }
 
+std::vector<idx_t> MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::VehicleJourney:
+        for_all_vjs([&](const VehicleJourney& vj) {
+            result.push_back(vj.idx);
+        });
+    break;
+    case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    default: break;
+    }
+    return result;
+}
+
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {
@@ -538,6 +552,7 @@ static_data * static_data::get() {
                 (Type_e::POIType, "poi_type")
                 (Type_e::Contributor, "contributor")
                 (Type_e::Calendar, "calendar")
+                (Type_e::MetaVehicleJourney, "meta_vehicle_journey")
                 (Type_e::Impact, "disruption");
 
         boost::assign::insert(temp->modes_string)
@@ -793,6 +808,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::Company: result.push_back(company->idx); break;
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
+    case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }

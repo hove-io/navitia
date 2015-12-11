@@ -53,6 +53,7 @@ Jointures::Jointures() {
     vertex_map[Type_e::POIType] = boost::add_vertex(Type_e::POIType, g);
     vertex_map[Type_e::Connection] = boost::add_vertex(Type_e::Connection, g);
     vertex_map[Type_e::Impact] = boost::add_vertex(Type_e::Impact, g);
+    vertex_map[Type_e::MetaVehicleJourney] = boost::add_vertex(Type_e::MetaVehicleJourney, g);
 
     // From a StopArea, we can have its StopPoints.
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
@@ -87,13 +88,14 @@ Jointures::Jointures() {
 
     // from a VehicleJourney, we can have the Route, the
     // JourneyPattern, the Company, the PhysicalMode, the
-    // ValidityPattern.
+    // ValidityPattern, the MetaVehicleJourney.
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
     // Higher weight on the Company to get Route->Line better than Company->Line.
     boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), Edge(2.5), g);
     boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::MetaVehicleJourney), vertex_map.at(Type_e::VehicleJourney), g);
 
     // From a JourneyPatternPoint, we can have the JourneyPattern and
     // the StopPoints.
@@ -121,10 +123,13 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map[Type_e::LineGroup], vertex_map[Type_e::Line], g);
     boost::add_edge(vertex_map[Type_e::Line], vertex_map[Type_e::LineGroup], g);
 
+    // From a MetaVehicleJourney, we can have its VehicleJourneys.
+    boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::MetaVehicleJourney), g);
+
     // edges for the impacts. for the moment we only need unilateral links,
     // we don't need from an impact all the impacted objects
     const auto objects_having_impacts = {Type_e::StopPoint, Type_e::Line, Type_e::Route, Type_e::StopArea,
-            Type_e::Network, Type_e::VehicleJourney};
+            Type_e::Network, Type_e::VehicleJourney, Type_e::MetaVehicleJourney};
     for (auto object: objects_having_impacts) {
         boost::add_edge(vertex_map.at(Type_e::Impact), vertex_map.at(object), g);
     }

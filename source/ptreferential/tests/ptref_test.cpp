@@ -503,14 +503,82 @@ static std::vector<nt::idx_t> query(nt::Type_e requested_type, std::string reque
         if (fail) {
             throw e;
         }
-        BOOST_CHECK_MESSAGE(false, " error on ptref request" + std::string(e.what()));
+        BOOST_CHECK_MESSAGE(false, " error on ptref request " + std::string(e.what()));
         return {};
     }
 }
 
 /*
+ * Test the meta-vj filtering on vj
+ */
+BOOST_AUTO_TEST_CASE(mvj_filtering) {
+    ed::builder builder("20130311");
+    builder.generate_dummy_basis();
+    // Date  11    12    13    14
+    // A      -   08:00 08:00   -
+    // B    10:00 10:00   -   10:00
+    // C      -     -     -   10:00
+    builder.vj("A", "0110")("stop1", "08:00"_t);
+    builder.vj("B", "1011")("stop3", "10:00"_t);
+    builder.vj("C", "1000")("stop3", "10:00"_t);
+    builder.finish();
+    nt::idx_t a = 0;
+    nt::idx_t b = 1;
+    nt::idx_t c = 2;
+
+    auto check = [](const std::vector<nt::idx_t>& col, std::set<nt::idx_t> s_ref) {
+        std::set<nt::idx_t> s_col(std::begin(col), std::end(col));
+        BOOST_CHECK_EQUAL(s_col, s_ref);
+    };
+
+    //not limited, we get 3 mvj
+    auto indexes = query(nt::Type_e::MetaVehicleJourney, "", *(builder.data));
+    check(indexes, {a, b, c});
+
+    // looking for MetaVJ 0
+    indexes = make_query(navitia::type::Type_e::MetaVehicleJourney,
+                         "meta_vehicle_journey.uri=\"vehicle_journey 0\"",
+                         *(builder.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    const auto mvj_idx = navitia::Idx<navitia::type::MetaVehicleJourney>(indexes.front());
+    BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vehicle_journey 0");
+
+    // looking for MetaVJ 0 another way
+    Filter filter;
+    filter.navitia_type = Type_e::MetaVehicleJourney;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "vehicle_journey 0";
+    indexes = get_indexes<navitia::type::MetaVehicleJourney>(filter, Type_e::MetaVehicleJourney, *(builder.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(indexes[0], 0);
+
+    // looking for MetaVJ A through VJ A
+    filter.navitia_type = Type_e::VehicleJourney;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "vj:A:0";
+    indexes = get_indexes<navitia::type::VehicleJourney>(filter, Type_e::MetaVehicleJourney, *(builder.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(indexes[0], 0);
+
+    //not limited, we get 3 vj
+    indexes = query(nt::Type_e::VehicleJourney, "", *(builder.data));
+    check(indexes, {a, b, c});
+
+    // looking for VJ B through MetaVJ B
+    filter.navitia_type = Type_e::MetaVehicleJourney;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "vehicle_journey 1";
+    indexes = get_indexes<navitia::type::MetaVehicleJourney>(filter, Type_e::VehicleJourney, *(builder.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(indexes[0], b);
+}
+
+/*
  * Test the filtering on the period
-  */
+ */
 BOOST_AUTO_TEST_CASE(vj_filtering) {
     ed::builder builder("20130311");
     builder.generate_dummy_basis();

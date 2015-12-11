@@ -51,11 +51,11 @@ www.navitia.io
 #else
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #endif
+#include <boost/date_time.hpp>
 #include <boost/date_time/time_duration.hpp>
 #include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
-#include <boost/date_time.hpp>
 
 
 namespace bt = boost::posix_time;
@@ -142,17 +142,17 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 template<typename T, typename C>
 struct ClauseType {
-    static bool is_clause_tested(const T e, const C & clause){
+    static bool is_clause_tested(typename T::const_reference e, const C & clause){
         return clause(*e);
     }
 };
 
-using impact_wptr = boost::weak_ptr<navitia::type::disruption::Impact>;
+using vec_impact_wptr = std::vector<boost::weak_ptr<navitia::type::disruption::Impact>>;
 
 // Partial specialization for boost::weak_ptr<navitia::type::disruption::Impact>
 template<typename C>
-struct ClauseType<impact_wptr, C> {
-    static bool is_clause_tested(const impact_wptr e, const C & clause){
+struct ClauseType<vec_impact_wptr, C> {
+    static bool is_clause_tested(vec_impact_wptr::const_reference e, const C & clause){
         auto impact_sptr = e.lock();
         if (impact_sptr) {
             return clause(*impact_sptr);
@@ -161,11 +161,25 @@ struct ClauseType<impact_wptr, C> {
     }
 };
 
+template<typename C>
+struct GetterType {
+    static typename C::const_reference get(const C& c, size_t i) {
+        return c[i];
+    }
+};
+
+template<typename T>
+struct GetterType<ObjFactory<T>> {
+    static const T* get(const ObjFactory<T>& c, size_t i) {
+        return c[Idx<T>(i)];
+    }
+};
+
 template<typename T, typename C>
-std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
+std::vector<idx_t> filtered_indexes(const T& data, const C& clause) {
     std::vector<idx_t> result;
     for (size_t i = 0; i < data.size(); ++i) {
-        if (ClauseType<T, C>::is_clause_tested(data[i], clause)) {
+        if (ClauseType<T, C>::is_clause_tested(GetterType<T>::get(data, i), clause)) {
             result.push_back(i);
         }
     }
@@ -270,7 +284,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             indexes.push_back(jpp_idx->val);
         }
     } else {
-        auto data = d.get_data<T>();
+        const auto& data = d.get_data<T>();
         indexes = filtered_indexes(data, build_clause<T>({filter}));
     }
     Type_e current = filter.navitia_type;
@@ -485,6 +499,9 @@ std::vector<idx_t> make_query(const Type_e requested_type,
             break;
         case Type_e::Connection:
             indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data);
+            break;
+        case Type_e::MetaVehicleJourney:
+            indexes = get_indexes<type::MetaVehicleJourney>(filter, requested_type, data);
             break;
         case Type_e::Impact:
             indexes = get_indexes<type::disruption::Impact>(filter, requested_type, data);
