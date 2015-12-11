@@ -177,7 +177,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 vj->physical_mode = pt_data.physical_modes[0];
                 vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = new_vj_uri;
-
+            }
+            // we need to associate the stoptimes to the created vj
+            for (auto& stu: impact->aux_info.stop_times) {
+                stu.stop_time.vehicle_journey = vj;
             }
             mvj->impacted_by.push_back(impact);
         } else {

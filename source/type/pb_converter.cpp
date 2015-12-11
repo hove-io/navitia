@@ -123,34 +123,66 @@ static void fill_property(const std::string& name,
 
 struct PtObjVisitor: public boost::static_visitor<> {
     const nt::Data& data;
-    pbnavitia::PtObject* pb_pt_pbj;
+    const nt::disruption::Impact& impact;
+    pbnavitia::Impact* pb_impact;
     const pt::ptime& now;
     const pt::time_period& action_period;
     const bool show_codes;
     PtObjVisitor(const nt::Data& data,
-                 pbnavitia::PtObject* pb_pt_pbj,
+                 const nt::disruption::Impact& impact,
+                 pbnavitia::Impact* pb_impact,
+                 int /*depth*/,
                  const pt::ptime& now,
                  const pt::time_period& action_period,
                  const bool show_codes):
-                 data(data), pb_pt_pbj(pb_pt_pbj),
+                 data(data), impact(impact), pb_impact(pb_impact),
                  now(now), action_period(action_period), show_codes(show_codes) {}
     template <typename NavitiaPTObject>
+    pbnavitia::ImpactedObject* add_pt_object(const NavitiaPTObject* bo) const {
+        auto* pobj = pb_impact->add_impacted_objects();
+        fill_pb_placemark(bo, data, pobj->mutable_pt_object(),
+                          0, now, action_period, show_codes, DumpMessage::No);
+        return pobj;
+    }
+    template <typename NavitiaPTObject>
     void operator()(const NavitiaPTObject* bo) const {
-        fill_pb_placemark(bo, data, pb_pt_pbj, 0, now, action_period, show_codes, DumpMessage::No);
+        add_pt_object(bo);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
         //TODO: for the moment a line section is only a line, but later we might want to output more stuff
-        fill_pb_placemark(line_section.line, data, pb_pt_pbj, 0, now, action_period, show_codes, DumpMessage::No);
+        add_pt_object(line_section.line);
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
+    void operator()(const nt::MetaVehicleJourney* mvj) const {
+        auto* pobj = add_pt_object(mvj);
+
+        //for meta vj we also need to output the impacted stoptimes
+        for (const auto& stu: impact.aux_info.stop_times) {
+            auto* impacted_stop = pobj->add_impacted_stops();
+            impacted_stop->set_cause(stu.cause);
+            impacted_stop->set_effect(pbnavitia::DELAYED);
+
+            //TODO output only modified stoptime update
+            fill_pb_object(stu.stop_time, data, impacted_stop->mutable_amended_stop_time(),
+                           0, now, action_period, show_codes, DumpMessage::No);
+
+            // we need to get the base stoptime
+            const auto* base_st = stu.get_base_stop_time();
+            if (base_st) {
+                fill_pb_object(*base_st, data, impacted_stop->mutable_base_stop_time(),
+                               0, now, action_period, show_codes, DumpMessage::No);
+            }
+        }
+    }
 };
 
 void fill_pb_object(const nt::disruption::PtObj& ptobj,
+                    const nt::disruption::Impact& impact,
                     const nt::Data& data,
-                    pbnavitia::PtObject* pb_pt_pbj, int max_depth,
+                    pbnavitia::Impact* pb_impact, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period,
                     const bool show_codes) {
-    boost::apply_visitor(PtObjVisitor(data, pb_pt_pbj, now, action_period, show_codes), ptobj);
+    boost::apply_visitor(PtObjVisitor(data, impact, pb_impact, max_depth, now, action_period, show_codes), ptobj);
 }
 
 template <typename T>
@@ -230,9 +262,7 @@ void fill_message(const type::disruption::Impact& impact,
     pb_impact->set_status(compute_disruption_status(impact, action_period));
 
     for (const auto& informed_entity: impact.informed_entities) {
-        if (boost::get<nt::disruption::UnknownPtObj>(&informed_entity) != nullptr) { continue; }
-        auto* pb_impacted_obj = pb_impact->add_impacted_objects();
-        fill_pb_object(informed_entity, data, pb_impacted_obj->mutable_pt_object(),
+        fill_pb_object(informed_entity, impact, data, pb_impact,
                        depth, now, action_period, show_codes);
     }
 }
@@ -511,8 +541,8 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 }
 
 void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
-        pbnavitia::LineGroup* line_group, int max_depth,
-        const pt::ptime& now, const pt::time_period& action_period
+                    pbnavitia::LineGroup* line_group, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period
                     , const bool show_codes, const DumpMessage dump_message) {
     if(lg == nullptr)
         return ;
@@ -749,8 +779,8 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                        vehicle_journey->mutable_journey_pattern(), depth-1,
                        now, action_period, show_codes);
         for(const auto& stop_time : vj->stop_time_list) {
-            fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
-                           depth-1, now, action_period, show_codes);
+            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
+                           depth-1, now, action_period, show_codes, dump_message);
         }
         fill_pb_object(vj->meta_vj, data, vehicle_journey->mutable_trip(), depth-1, now,
                        action_period, show_codes);
@@ -781,41 +811,41 @@ void fill_pb_object(const nt::VehicleJourney* vj,
 }
 
 
-void fill_pb_object(const nt::StopTime* st, const type::Data &data,
+void fill_pb_object(const nt::StopTime& st, const type::Data &data,
                     pbnavitia::StopTime *stop_time, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period, const bool show_codes) {
-    if (st == nullptr) { return; }
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const bool show_codes, const DumpMessage dump_message) {
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     // arrival/departure in protobuff are as seconds from midnight in local time
     const auto offset = [&](const uint32_t time) {
         static const auto flag = std::numeric_limits<uint32_t>::max();
-        return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset;
+        return time == flag ? 0 : st.vehicle_journey->utc_to_local_offset;
     };
-    stop_time->set_arrival_time(st->arrival_time + offset(st->arrival_time));
-    stop_time->set_departure_time(st->departure_time + offset(st->departure_time));
-    stop_time->set_headsign(data.pt_data->headsign_handler.get_headsign(*st));
+    stop_time->set_arrival_time(st.arrival_time + offset(st.arrival_time));
+    stop_time->set_departure_time(st.departure_time + offset(st.departure_time));
+    stop_time->set_headsign(data.pt_data->headsign_handler.get_headsign(st));
 
-    stop_time->set_pickup_allowed(st->pick_up_allowed());
-    stop_time->set_drop_off_allowed(st->drop_off_allowed());
+    stop_time->set_pickup_allowed(st.pick_up_allowed());
+    stop_time->set_drop_off_allowed(st.drop_off_allowed());
 
     // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
     if (depth > 0) {
-        const auto& jpp_idx = data.dataRaptor->jp_container.get_jpp(*st);
+        const auto& jpp_idx = data.dataRaptor->jp_container.get_jpp(st);
         fill_pb_object(data.dataRaptor->jp_container.get_jpps()[jpp_idx.val], data,
                        stop_time->mutable_journey_pattern_point(), depth-1,
                        now, action_period, show_codes);
     }
 
     // we always dump the stop point (with the same depth)
-    fill_pb_object(st->stop_point, data,
+    fill_pb_object(st.stop_point, data,
                    stop_time->mutable_stop_point(), depth,
-                   now, action_period, show_codes);
+                   now, action_period, show_codes, dump_message);
 
-    if(st->vehicle_journey != nullptr && depth > 0) {
-        fill_pb_object(st->vehicle_journey, data,
+    if (st.vehicle_journey != nullptr && depth > 0) {
+        fill_pb_object(st.vehicle_journey, data,
                        stop_time->mutable_vehicle_journey(), depth-1, now,
-                       action_period, show_codes);
+                       action_period, show_codes, dump_message);
     }
 }
 
