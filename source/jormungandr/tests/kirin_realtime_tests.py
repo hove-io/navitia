@@ -66,14 +66,23 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         self.send_mock("vjA", "20120614", 'canceled')
 
         # we should see the disruption
+        def _check_train_delay_disruption(dis):
+            eq_(dis['disruption_id'], '96231_2015-07-28_0')
+            eq_(dis['severity']['effect'], 'NO_SERVICE')
+            eq_(len(dis['impacted_objects']), 1)
+            ptobj = dis['impacted_objects'][0]['pt_object']
+            eq_(ptobj['embedded_type'], 'trip')
+            eq_(ptobj['id'], 'vjA')
+            eq_(ptobj['name'], 'vjA')
+
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)
-        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+        _check_train_delay_disruption(pt_response['disruptions'][0])
 
         # and we should be able to query for the vj's disruption
         disrup_response = self.query_region('vehicle_journeys/vjA/disruptions')
         eq_(len(disrup_response['disruptions']), 1)
-        eq_(disrup_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+        _check_train_delay_disruption(disrup_response['disruptions'][0])
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])

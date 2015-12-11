@@ -60,6 +60,12 @@ namespace navitia {
 }
 namespace pt = boost::posix_time;
 
+// we don't use a boolean to have a more type checks
+enum class DumpMessage {
+    Yes,
+    No
+};
+
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
 namespace navitia {
@@ -94,7 +100,8 @@ struct EnhancedResponse {
 #define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
     void fill_pb_object(const navitia::type::type_name* item, const navitia::type::Data& data, pbnavitia::type_name *, int max_depth = 0,\
             const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
-            const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes=false);
+            const boost::posix_time::time_period& action_period = null_time_period, \
+            const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
 void fill_pb_object(const std::pair<const routing::JpIdx, const routing::JourneyPattern&>& item,
@@ -131,11 +138,13 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
         const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const navitia::type::MetaVehicleJourney* nav_mvj,
+                    const nt::Data&,
                     pbnavitia::Trip* pb_trip,
-                    int max_depth,
-                    const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period,
-                    const bool show_codes);
+                    int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const bool show_codes = false,
+                    const DumpMessage = DumpMessage::Yes);
 
 void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data, const type::VehicleJourney* vehicle_journey);
 void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data, const std::string& mode_uri);
@@ -162,6 +171,8 @@ inline pbnavitia::NavitiaType get_embedded_type(const georef::POI*) { return pbn
 inline pbnavitia::NavitiaType get_embedded_type(const georef::Admin*) { return pbnavitia::ADMINISTRATIVE_REGION; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopArea*) { return pbnavitia::STOP_AREA; }
 inline pbnavitia::NavitiaType get_embedded_type(const type::StopPoint*) { return pbnavitia::STOP_POINT; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::MetaVehicleJourney*) { return pbnavitia::TRIP; }
 
 inline pbnavitia::Calendar* get_sub_object(const type::Calendar*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
 inline pbnavitia::VehicleJourney* get_sub_object(const type::VehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
@@ -173,7 +184,8 @@ inline pbnavitia::Poi* get_sub_object(const georef::POI*, pbnavitia::PtObject* p
 inline pbnavitia::AdministrativeRegion* get_sub_object(const georef::Admin*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_administrative_region(); }
 inline pbnavitia::StopArea* get_sub_object(const type::StopArea*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
 inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
-
+inline pbnavitia::CommercialMode* get_sub_object(const type::CommercialMode*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
+inline pbnavitia::Trip* get_sub_object(const type::MetaVehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
@@ -191,7 +203,13 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &or
 template <typename T>
 void fill_message(const type::disruption::Impact& impact, const type::Data &data, T pb_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+        const boost::posix_time::time_period& action_period = null_time_period, const bool show_codes = false);
+
+template <typename HasMessage, typename PbObj>
+void fill_messages(const HasMessage*, const type::Data& data, PbObj, int max_depth = 0,
+                   const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                   const boost::posix_time::time_period& action_period = null_time_period,
+                   const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
 
 void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item, const type::EntryPoint &ori_dest,
                    const navitia::type::Data& data);
@@ -199,7 +217,7 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
 void fill_pb_object(const georef::POI*, const type::Data &data, pbnavitia::Poi* poi, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
-        const bool show_codes=false);
+        const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
 
 void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::PoiType* poi_type, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
@@ -208,7 +226,7 @@ void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::P
 void fill_pb_object(const georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
-                    const bool show_codes=false);
+                    const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
 
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
@@ -232,7 +250,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                     int max_depth,
                     const pt::ptime& now,
                     const pt::time_period& action_period,
-                    const bool show_codes);
+                    const bool show_codes, const DumpMessage);
 
 void fill_pb_object(const type::VehicleJourney* vj,
                     const type::Data& data,
@@ -331,12 +349,12 @@ template<typename T>
 void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObject* pt_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
-        const bool show_codes=false) {
+        const bool show_codes = false, const DumpMessage dump_message = DumpMessage::Yes) {
     if(value == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
-                   now, action_period, show_codes);
+                   now, action_period, show_codes, dump_message);
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));

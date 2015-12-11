@@ -645,6 +645,8 @@ struct Line : public Header, Nameable, HasMessages {
         return this < &other;
     }
     type::hasOdtProperties get_odt_properties() const;
+
+    std::string get_label() const;
 };
 
 struct LineGroup : public Header, Nameable{
@@ -800,6 +802,7 @@ struct Route : public Header, Nameable, HasMessages {
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Route & other) const { return this < &other; }
 
+    std::string get_label() const;
 };
 
 struct AssociatedCalendar {
@@ -1046,6 +1049,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     VehicleJourney*
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
 
+    const std::string& get_label() const { return uri; } // for the moment the label is just the uri
 private:
     template<typename VJ>
     VJ* impl_create_vj(const std::string& uri,
