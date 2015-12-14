@@ -901,15 +901,19 @@ def get_disruptions(obj, response):
     return [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
 
 
-def is_valid_disruption(disruption):
+def is_valid_disruption(disruption, chaos_disrup=True):
     get_not_null(disruption, 'id')
     get_not_null(disruption, 'disruption_id')
     s = get_not_null(disruption, 'severity')
     get_not_null(s, 'name')
     get_not_null(s, 'color')
     effect = get_not_null(s, 'effect')
-    msg = get_not_null(disruption, 'messages')
-    assert len(msg) > 0
+    msg = disruption.get('messages', [])
+
+    if chaos_disrup:
+        # for chaos message is mandatory
+        assert len(msg) > 0
+
     for m in msg:
         get_not_null(m, "text")
         channel = get_not_null(m, 'channel')
@@ -929,8 +933,7 @@ def is_valid_disruption(disruption):
             for impacted_stop in impacted_stops:
                 is_valid_stop_point(get_not_null(impacted_stop, 'stop_point'), depth_check=0)
 
-                get_not_null(impacted_stop, "cause")
-                assert(get_not_null(impacted_stop, "stop_time_effect") in ('ADDED', 'DELETED', 'DELAYED'))
+                assert(get_not_null(impacted_stop, "stop_time_effect") in ('added', 'deleted', 'delayed'))
 
                 if 'base_arrival_time' in impacted_stop:
                     get_valid_time(impacted_stop['base_arrival_time'])
@@ -944,7 +947,6 @@ def is_valid_disruption(disruption):
                 # we need at least either the base or the departure information
                 assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
                        'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop
-
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
