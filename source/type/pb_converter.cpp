@@ -167,7 +167,7 @@ struct PtObjVisitor: public boost::static_visitor<> {
                            0, now, action_period, show_codes, DumpMessage::No);
 
             // we need to get the base stoptime
-            const auto* base_st = stu.get_base_stop_time();
+            const auto* base_st = impact.aux_info.get_base_stop_time(stu);
             if (base_st) {
                 fill_pb_object(*base_st, data, impacted_stop->mutable_base_stop_time(),
                                0, now, action_period, show_codes, DumpMessage::No);

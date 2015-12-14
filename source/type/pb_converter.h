@@ -218,23 +218,26 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
                    const navitia::type::Data& data);
 
 void fill_pb_object(const georef::POI*, const type::Data &data, pbnavitia::Poi* poi, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period,
-        const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
-
-void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::PoiType* poi_type, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(const georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
 
-void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
+void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::PoiType* poi_type, int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(const georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin,
+                    int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
-                    const DateTime& date_time = DateTime(), boost::optional<const std::string> calendar_id = boost::optional<const std::string>());
+                    const bool show_codes = false, const DumpMessage = DumpMessage::Yes);
+
+void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row,
+                    int max_depth = 0,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const DateTime& date_time = DateTime(),
+                    boost::optional<const std::string> calendar_id = boost::optional<const std::string>());
 
 void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     pbnavitia::Connection* connection, int max_depth,

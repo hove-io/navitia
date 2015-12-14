@@ -157,15 +157,15 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(h=8, m=2, s=25))
             eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
             # for the moment we output 00000, but we should output the right base departure/arrival
-            eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(0, 0, 0))
-            eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(0, 0, 0))
+            eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
+            eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
 
             imp_obj2 = impacted_objs[1]
             eq_(get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')), _dt(h=8, m=4, s=0))
             eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(h=8, m=4, s=0))
             eq_(imp_obj2['cause'], '')
-            eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(0, 0, 0))
-            eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(0, 0, 0))
+            eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
+            eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
