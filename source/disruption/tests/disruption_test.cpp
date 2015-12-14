@@ -237,4 +237,3 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
-

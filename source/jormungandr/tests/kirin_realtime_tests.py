@@ -84,6 +84,13 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(len(disrup_response['disruptions']), 1)
         _check_train_delay_disruption(disrup_response['disruptions'][0])
 
+        traffic_reports_response = self.query_region('traffic_reports?_current_datetime=20120614T1337')
+        traffic_reports = get_not_null(traffic_reports_response, 'traffic_reports')
+        assert len(traffic_reports) == 1
+        vjs = get_not_null(traffic_reports[0], "vehicle_journeys")
+        assert len(vjs) == 1
+        assert vjs[0]['id'] == 'vjA'
+
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
         eq_(get_used_vj(new_response), [[], ['vj:B:1']])
