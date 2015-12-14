@@ -1495,5 +1495,5 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     const auto resp = navitia::disruption::traffic_reports(*b.data, "20150928T0830"_pts, 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.traffic_reports(0).vehicle_journeys_size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.traffic_reports(0).vehicle_journeys(0).uri(), "vj:3");
+    BOOST_CHECK_EQUAL(resp.traffic_reports(0).vehicle_journeys(0).uri(), "vj:3");
 }
