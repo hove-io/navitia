@@ -763,7 +763,7 @@ impacted_stop = {
     "amended_arrival_time": SplitDateTime(date=None, time='amended_stop_time.arrival_time'),
     "amended_departure_time": SplitDateTime(date=None, time='amended_stop_time.departure_time'),
     "cause": fields.String(),
-    "stop_timeeffect": enum_type()
+    "stop_time_effect": enum_type()
 }
 
 impacted_object = {
