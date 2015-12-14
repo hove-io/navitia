@@ -713,6 +713,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // base-schedule validity pattern canceled by this vj (to get corresponding vjs, use meta-vj)
     ValidityPattern get_base_canceled_validity_pattern() const;
 
+    // return the base vj corresponding to this vj, return nullptr if nothing found
+    const VehicleJourney* get_corresponding_base() const;
+
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
 

@@ -161,13 +161,15 @@ struct PtObjVisitor: public boost::static_visitor<> {
             auto* impacted_stop = pobj->add_impacted_stops();
             impacted_stop->set_cause(stu.cause);
             impacted_stop->set_effect(pbnavitia::DELAYED);
+            fill_pb_object(stu.stop_time.stop_point, data, impacted_stop->mutable_stop_point(),
+                           0, now, action_period, show_codes, DumpMessage::No);
 
             //TODO output only modified stoptime update
             fill_pb_object(stu.stop_time, data, impacted_stop->mutable_amended_stop_time(),
                            0, now, action_period, show_codes, DumpMessage::No);
 
             // we need to get the base stoptime
-            const auto* base_st = stu.get_base_stop_time();
+            const auto* base_st = impact.aux_info.get_base_stop_time(stu);
             if (base_st) {
                 fill_pb_object(*base_st, data, impacted_stop->mutable_base_stop_time(),
                                0, now, action_period, show_codes, DumpMessage::No);
@@ -178,11 +180,11 @@ struct PtObjVisitor: public boost::static_visitor<> {
 
 
 static void fill_pb_object(const nt::disruption::PtObj& ptobj,
-                    const nt::disruption::Impact& impact,
-                    const nt::Data& data,
-                    pbnavitia::Impact* pb_impact, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period,
-                    const bool show_codes) {
+                           const nt::disruption::Impact& impact,
+                           const nt::Data& data,
+                           pbnavitia::Impact* pb_impact, int max_depth,
+                           const pt::ptime& now, const pt::time_period& action_period,
+                           const bool show_codes) {
     boost::apply_visitor(PtObjVisitor(data, impact, pb_impact, max_depth, now, action_period, show_codes), ptobj);
 }
 
@@ -543,8 +545,8 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
 void fill_pb_object(const nt::LineGroup* lg, const nt::Data& data,
                     pbnavitia::LineGroup* line_group, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period
-                    , const bool show_codes, const DumpMessage dump_message) {
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const bool show_codes, const DumpMessage dump_message) {
     if(lg == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;

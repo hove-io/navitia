@@ -502,10 +502,21 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
 VehicleJourney*
 MetaVehicleJourney::get_base_vj_circulating_at_date(const boost::gregorian::date& date) const {
     for (auto l: reverse_enum_range_from<RTLevel>(RTLevel::Base)) {
-        for (auto& vj: rtlevel_to_vjs_map[l]) {
-            if(vj->get_validity_pattern_at(l)->check(date)) {
+        for (const auto& vj: rtlevel_to_vjs_map[l]) {
+            if (vj->get_validity_pattern_at(l)->check(date)) {
                 return vj.get();
-            };
+            }
+        }
+    }
+    return nullptr;
+}
+
+const VehicleJourney* VehicleJourney::get_corresponding_base() const {
+    auto shifted_vj = get_base_canceled_validity_pattern();
+    for (const auto& vj: meta_vj->get_base_vj()) {
+        // if the validity pattern intersects
+        if ((shifted_vj.days & vj->base_validity_pattern()->days).any()) {
+            return vj.get();
         }
     }
     return nullptr;
