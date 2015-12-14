@@ -191,22 +191,22 @@ void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network
         }
         for (const auto vj_idx: vehicle_journeys) {
             const auto* vj = d.pt_data->vehicle_journeys[vj_idx];
-            auto v = vj->get_impacts();
-            boost::remove_erase_if(v, [&](const boost::shared_ptr<type::disruption::Impact>& impact) {
+            auto impacts = vj->get_impacts();
+            boost::remove_erase_if(impacts, [&](const boost::shared_ptr<type::disruption::Impact>& impact) {
                     if (! impact->disruption->is_publishable(now)) { return true; }
                     if (impact->severity->effect != type::disruption::Effect::NO_SERVICE) { return true; }
                     return false;
                 });
-            if (!v.empty()) {
+            if (! impacts.empty()) {
                 NetworkDisrupt& dist = this->find_or_create(network);
                 auto find_predicate = [&](const std::pair<const type::VehicleJourney*, DisruptionSet>& item) {
                     return item.first == vj;
                 };
                 auto it = boost::find_if(dist.vehicle_journeys, find_predicate);
                 if (it == dist.vehicle_journeys.end()) {
-                    dist.vehicle_journeys.push_back(std::make_pair(vj, DisruptionSet(v.begin(), v.end())));
+                    dist.vehicle_journeys.push_back({vj, DisruptionSet(impacts.begin(), impacts.end())});
                 } else {
-                    it->second.insert(v.begin(), v.end());
+                    it->second.insert(impacts.begin(), impacts.end());
                 }
             }
         }
