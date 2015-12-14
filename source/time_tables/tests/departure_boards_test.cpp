@@ -479,7 +479,7 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
     navitia::routing::RAPTOR raptor(*(b.data));
     navitia::type::PT_Data& d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*60*60, 0, navitia::DateTimeUtils::inf, nt::RTLevel::Base, true);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*60*60, 0, navitia::DateTimeUtils::inf, nt::RTLevel::Base, 2_min, true);
 
     //we must have a journey
     BOOST_REQUIRE_EQUAL(res1.size(), 1);

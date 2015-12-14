@@ -80,6 +80,17 @@ max_duration_criteria = 'time'
 #only journey with this mode (or slower mode) will be used for calculate the max_duration
 max_duration_fallback_mode = 'walking'
 
+# specify the latest time point of request, relative to datetime, in second
+max_duration = 60*60*24  # seconds
+
+# the penalty for each walking transfer
+walking_transfer_penalty = 120  # seconds
+
+# night bus filtering parameter
+night_bus_filter_max_factor = 3
+
+# night bus filtering parameter
+night_bus_filter_base_factor = 60*60  # seconds
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

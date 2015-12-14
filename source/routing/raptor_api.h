@@ -44,6 +44,7 @@ namespace navitia{
     namespace georef{
         struct StreetNetwork;
     }
+    class time_duration;
 }
 
 namespace navitia { namespace routing {
@@ -59,6 +60,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   std::vector<std::string> forbidden,
                                   georef::StreetNetwork & worker,
                                   const type::RTLevel rt_level,
+                                  const navitia::time_duration& transfer_penalty,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                   bool show_codes = false,

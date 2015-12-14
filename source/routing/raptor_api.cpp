@@ -866,6 +866,7 @@ make_response(RAPTOR &raptor,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               const type::RTLevel rt_level,
+              const navitia::time_duration& transfer_penalty,
               uint32_t max_duration,
               uint32_t max_transfers,
               bool show_codes,
@@ -932,7 +933,7 @@ make_response(RAPTOR &raptor,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
         std::vector<Path> tmp = raptor.compute_all(
-            departures, destinations, init_dt, rt_level, bound, max_transfers,
+            departures, destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
             accessibilite_params, forbidden, clockwise, direct_path_dur, max_extra_second_pass);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 

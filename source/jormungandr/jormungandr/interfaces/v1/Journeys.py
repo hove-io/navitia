@@ -68,6 +68,7 @@ from jormungandr.travelers_profile import TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
+from navitiacommon import default_values
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -572,8 +573,8 @@ class Journeys(ResourceUri, ResourceUtc):
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-# a supprimer
-        parser_get.add_argument("max_duration", type=int, default=3600*24)
+
+        parser_get.add_argument("max_duration", type=int)
         parser_get.add_argument("wheelchair", type=boolean, default=None)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
@@ -586,6 +587,10 @@ class Journeys(ResourceUri, ResourceUtc):
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
+
+        parser_get.add_argument("_walking_transfer_penalty", type=int)
+        parser_get.add_argument("_night_bus_filter_base_factor", type=int)
+        parser_get.add_argument("_night_bus_filter_max_factor", type=int)
 
         self.method_decorators.append(complete_links(self))
 
@@ -658,6 +663,21 @@ class Journeys(ResourceUri, ResourceUtc):
                 else:
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
+
+        def _set_specific_params(mod):
+            if args.get('max_duration') is None:
+                args['max_duration'] = mod.max_duration
+            if args.get('_walking_transfer_penalty') is None:
+                args['_walking_transfer_penalty'] = mod.walking_transfer_penalty
+            if args.get('_night_bus_filter_base_factor') is None:
+                args['_night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
+            if args.get('_night_bus_filter_max_factor') is None:
+                args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
+
+        if region:
+            _set_specific_params(i_manager.instances[region])
+        else:
+            _set_specific_params(default_values)
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should at least provide either a 'from' or a 'to' argument")

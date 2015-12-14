@@ -90,7 +90,11 @@ instance_fields = {
     'min_tc_with_bss': fields.Raw,
     'min_tc_with_car': fields.Raw,
     'max_duration_criteria': fields.Raw,
-    'max_duration_fallback_mode': fields.Raw
+    'max_duration_fallback_mode': fields.Raw,
+    'max_duration': fields.Raw,
+    'walking_transfer_penalty': fields.Raw,
+    'night_bus_filter_max_factor': fields.Raw,
+    'night_bus_filter_base_factor': fields.Raw,
 }
 
 api_fields = {
@@ -344,30 +348,49 @@ class Instance(flask_restful.Resource):
                 help='', location=('json', 'values'),
                 default=instance.max_duration_fallback_mode)
 
+        parser.add_argument('max_duration', type=int, help='latest time point of research, in second',
+                            location=('json', 'values'), default=instance.max_duration)
+
+        parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in second',
+                            location=('json', 'values'), default=instance.walking_transfer_penalty)
+
+        parser.add_argument('night_bus_filter_max_factor', type=int, help='night bus filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_max_factor)
+
+        parser.add_argument('night_bus_filter_base_factor', type=int, help='night bus filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_base_factor)
+
         args = parser.parse_args()
 
         try:
-            instance.scenario = args['scenario']
-            instance.journey_order = args['journey_order']
-            instance.max_walking_duration_to_pt = args['max_walking_duration_to_pt']
-            instance.max_bike_duration_to_pt = args['max_bike_duration_to_pt']
-            instance.max_bss_duration_to_pt = args['max_bss_duration_to_pt']
-            instance.max_car_duration_to_pt = args['max_car_duration_to_pt']
-            instance.max_nb_transfers = args['max_nb_transfers']
-            instance.walking_speed = args['walking_speed']
-            instance.bike_speed = args['bike_speed']
-            instance.bss_speed = args['bss_speed']
-            instance.car_speed = args['car_speed']
-            instance.min_tc_with_car = args['min_tc_with_car']
-            instance.min_tc_with_bike = args['min_tc_with_bike']
-            instance.min_tc_with_bss = args['min_tc_with_bss']
-            instance.min_bike = args['min_bike']
-            instance.min_bss = args['min_bss']
-            instance.min_car = args['min_car']
-            instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
-            instance.factor_too_long_journey = args['factor_too_long_journey']
-            instance.max_duration_criteria = args['max_duration_criteria']
-            instance.max_duration_fallback_mode = args['max_duration_fallback_mode']
+            def map_args_to_instance(attr_name):
+                setattr(instance, attr_name, args[attr_name])
+
+            map(map_args_to_instance, ['scenario',
+                                       'journey_order',
+                                       'max_walking_duration_to_pt',
+                                       'max_bike_duration_to_pt',
+                                       'max_bss_duration_to_pt',
+                                       'max_car_duration_to_pt',
+                                       'max_nb_transfers',
+                                       'walking_speed',
+                                       'bike_speed',
+                                       'bss_speed',
+                                       'car_speed',
+                                       'min_tc_with_car',
+                                       'min_tc_with_bike',
+                                       'min_tc_with_bss',
+                                       'min_bike',
+                                       'min_bss',
+                                       'min_car',
+                                       'min_duration_too_long_journey',
+                                       'factor_too_long_journey',
+                                       'max_duration_criteria',
+                                       'max_duration_fallback_mode',
+                                       'max_duration',
+                                       'walking_transfer_penalty',
+                                       'night_bus_filter_max_factor',
+                                       'night_bus_filter_base_factor'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
