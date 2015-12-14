@@ -169,4 +169,22 @@ void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
 void DisruptionHolder::clean_weak_impacts(){
     clean_up_weak_ptr(weak_impacts);
 }
+
+const StopTime* StopTimeUpdate::get_base_stop_time() const {
+    return nullptr;
+//    //TODO check effect when available, we can do this only for UPDATED
+//    auto* vj = stop_time.vehicle_journey;
+//    if (! vj) {
+//        //TODO log
+//        return nullptr;
+//    }
+
+//    const auto* base_vj = vj->meta_vj->get_base_vj_circulating_at_date();
+
+//    if (! base_vj) {
+//        return nullptr;
+//    }
+
+}
+
 }}}//namespace

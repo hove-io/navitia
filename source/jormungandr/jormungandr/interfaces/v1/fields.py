@@ -761,7 +761,13 @@ instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested
                                                                                  allow_null=True))
 
 impacted_stop = {
-
+    "stop_point": NonNullNested(stop_point),
+    "base_arrival_time": SplitDateTime(date=None, time='base_stop_time.arrival_time'),
+    "base_departure_time": SplitDateTime(date=None, time='base_stop_time.departure_time'),
+    "amended_arrival_time": SplitDateTime(date=None, time='amended_stop_time.arrival_time'),
+    "amended_departure_time": SplitDateTime(date=None, time='amended_stop_time.departure_time'),
+    "cause": fields.String(),
+    "stop_time_effect": enum_type()
 }
 
 impacted_object = {

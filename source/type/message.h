@@ -206,6 +206,9 @@ struct StopTimeUpdate {
     StopTime stop_time;
     std::string cause; //TODO factorize this cause with a pool
     // enum ADDED/DELETED/UPDATE
+
+    // get the corresponding stoptime in the base vj. return null if nothing found
+    const StopTime* get_base_stop_time() const;
 };
 
 namespace detail {

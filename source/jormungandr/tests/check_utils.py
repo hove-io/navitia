@@ -922,10 +922,28 @@ def is_valid_disruption(disruption):
         is_valid_pt_object(pt_obj, depth_check=0)
 
         # for the vj, if it's not a cancellation we need to have the list of impacted stoptimes
-        if get_not_null(pt_obj, 'embedded_type') == 'vehicle_journey' and effect != 'NO_SERVICE':
+        if get_not_null(pt_obj, 'embedded_type') == 'trip' and effect != 'NO_SERVICE':
             impacted_stops = get_not_null(impacted_obj, 'impacted_stops')
 
-            #TODO
+            assert len(impacted_stops) > 0
+            for impacted_stop in impacted_stops:
+                is_valid_stop_point(get_not_null(impacted_stop, 'stop_point'), depth_check=0)
+
+                get_not_null(impacted_stop, "cause")
+                assert(get_not_null(impacted_stop, "stop_time_effect") in ('ADDED', 'DELETED', 'DELAYED'))
+
+                if 'base_arrival_time' in impacted_stop:
+                    get_valid_time(impacted_stop['base_arrival_time'])
+                if 'base_departure_time' in impacted_stop:
+                    get_valid_time(impacted_stop['base_departure_time'])
+                if 'amended_arrival_time' in impacted_stop:
+                    get_valid_time(impacted_stop['amended_arrival_time'])
+                if 'amended_departure_time' in impacted_stop:
+                    get_valid_time(impacted_stop['amended_departure_time'])
+
+                # we need at least either the base or the departure information
+                assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
+                       'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop
 
 
 
