@@ -511,16 +511,15 @@ MetaVehicleJourney::get_base_vj_circulating_at_date(const boost::gregorian::date
     return nullptr;
 }
 
-const std::unique_ptr<VehicleJourney>& VehicleJourney::get_corresponding_base() const {
+const VehicleJourney* VehicleJourney::get_corresponding_base() const {
     auto shifted_vj = get_base_canceled_validity_pattern();
     for (const auto& vj: meta_vj->get_base_vj()) {
         // if the validity pattern intersects
         if ((shifted_vj.days & vj->base_validity_pattern()->days).any()) {
-            return vj;
+            return vj.get();
         }
     }
-    static std::unique_ptr<VehicleJourney> none = nullptr;
-    return none;
+    return nullptr;
 }
 
 std::vector<idx_t> MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {

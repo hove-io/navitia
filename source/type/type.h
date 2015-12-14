@@ -714,7 +714,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     ValidityPattern get_base_canceled_validity_pattern() const;
 
     // return the base vj corresponding to this vj, return nullptr if nothing found
-    const std::unique_ptr<VehicleJourney>& get_corresponding_base() const;
+    const VehicleJourney* get_corresponding_base() const;
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;

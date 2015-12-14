@@ -182,7 +182,7 @@ const StopTime* AuxInfoForMetaVJ::get_base_stop_time(const StopTimeUpdate& stu) 
         return nullptr;
     }
 
-    const auto& base_vj = vj->get_corresponding_base();
+    const auto* base_vj = vj->get_corresponding_base();
 
     if (! base_vj) {
         return nullptr;
