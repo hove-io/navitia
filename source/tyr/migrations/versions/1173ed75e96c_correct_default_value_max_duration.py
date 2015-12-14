@@ -1,4 +1,4 @@
-"""empty message
+"""Fix default value of max_duration
 
 Revision ID: 1173ed75e96c
 Revises: 3011cf480291
