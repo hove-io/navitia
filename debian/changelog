@@ -1,3 +1,9 @@
+navitia2 (1.31.3) unstable; urgency=low
+
+  * kraken: fix crash of sncf because of invalid stop point in IRE 
+
+ -- xlqian <patrick.qian@canaltp.fr>  Tue, 15 Dec 2015 18:12:32 +0100
+
 navitia2 (1.31.2) unstable; urgency=low
 
   *  kraken: fix a segfault when calling delete_disruption() <https://github.com/CanalTP/navitia/pull/1310>
