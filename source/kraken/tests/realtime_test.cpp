@@ -1518,3 +1518,64 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     const auto resp = navitia::disruption::traffic_reports(*b.data, "20150928T0830"_pts, 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 0);
 }
+
+/* Test unknown stop point
+ * Since the stop point is unknown, the trip update should be ignored
+ *
+ * */
+BOOST_AUTO_TEST_CASE(unknown_stop_point) {
+
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+
+    transit_realtime::TripUpdate bad_trip_update = make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop_unknown_toto", "20150928T0910"_pts, "20150928T0910"_pts), // <--- bad
+                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+            });
+
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime(feed_id, timestamp, bad_trip_update, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    {
+        navitia::routing::RAPTOR raptor(*(b.data));
+
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+        };
+
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+        
+        // Nothing has changed, the result is the same than Base
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+    }
+
+}
+
