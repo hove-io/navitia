@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
 BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     ed::builder b("20150928");
     b.vj_with_network("nt", "A", "000111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.vj_with_network("nt", "A", "000001", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "29:10"_t);
+    b.vj_with_network("nt", "A", "000111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
     b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
     b.generate_dummy_basis();
     b.finish();
@@ -1496,4 +1496,25 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.traffic_reports(0).vehicle_journeys_size(), 1);
     BOOST_CHECK_EQUAL(resp.traffic_reports(0).vehicle_journeys(0).uri(), "vj:3");
+}
+
+BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
+    ed::builder b("20150928");
+    b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+
+    transit_realtime::TripUpdate trip_update = make_delay_message(
+        "vj:1",
+        "20150928",
+        {
+            std::make_tuple("stop1", "20150928T0910"_pts, "20150928T0910"_pts),
+            std::make_tuple("stop2", "20150929T1010"_pts, "20150929T1010"_pts)
+        });
+    navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data);
+    const auto resp = navitia::disruption::traffic_reports(*b.data, "20150928T0830"_pts, 1, 10, 0, "", {});
+    BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 0);
 }
