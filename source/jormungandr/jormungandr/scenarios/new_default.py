@@ -570,7 +570,8 @@ def merge_responses(responses):
         else:
             # we need to merge the errors
             merged_response.error.id = response_pb2.Error.no_solution
-            merged_response.error.message = "several errors occured: \n * {}".format("\n * ".join(errors.itervalues()))
+            merged_response.error.message = "several errors occured: \n * {}"\
+                .format("\n * ".join([m.message for m in errors.itervalues()]))
 
     return merged_response
 
