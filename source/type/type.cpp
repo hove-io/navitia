@@ -564,7 +564,7 @@ static_data * static_data::get() {
                 (Type_e::POIType, "poi_type")
                 (Type_e::Contributor, "contributor")
                 (Type_e::Calendar, "calendar")
-                (Type_e::MetaVehicleJourney, "meta_vehicle_journey")
+                (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption");
 
         boost::assign::insert(temp->modes_string)

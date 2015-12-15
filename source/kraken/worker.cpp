@@ -71,6 +71,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin;
     case pbnavitia::CALENDAR: return nt::Type_e::Calendar;
     case pbnavitia::IMPACT: return nt::Type_e::Impact;
+    case pbnavitia::TRIP: return nt::Type_e::MetaVehicleJourney;
     default: return nt::Type_e::Unknown;
     }
 }

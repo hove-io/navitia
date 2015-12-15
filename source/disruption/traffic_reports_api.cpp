@@ -187,7 +187,7 @@ void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network
         } catch (const ptref::parsing_error& parse_error) {
             LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
                            << parse_error.more);
-        } catch (const ptref::ptref_error& ptref_error) {
+        } catch (const ptref::ptref_error& /*ptref_error*/) {
         }
         for (const auto vj_idx: vehicle_journeys) {
             const auto* vj = d.pt_data->vehicle_journeys[vj_idx];
