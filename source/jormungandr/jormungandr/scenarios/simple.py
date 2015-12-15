@@ -284,6 +284,9 @@ class Scenario(object):
     def vehicle_journeys(self, request, instance):
         return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, instance)
 
+    def trips(self, request, instance):
+        return self.__on_ptref("trips", type_pb2.TRIP, request, instance)
+
     def pois(self, request, instance):
         return self.__on_ptref("pois", type_pb2.POI, request, instance)
 

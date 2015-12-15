@@ -358,7 +358,6 @@ static bool concerns_base_at_period(const VehicleJourney& vj,
             if (*titr < concerned_vp.beginning_date) { continue; }
             size_t day((*titr - concerned_vp.beginning_date).days());
             if (day >= concerned_vp.days.size() || ! concerned_vp.check(day)) { continue; }
-            if (*titr < concerned_vp.beginning_date) { continue; }
             // we check on the execution period of base-schedule vj, as impact are targeted on this period
             const auto base_vj = vj.meta_vj->get_base_vj_circulating_at_date(*titr);
             if (! base_vj) { continue; }
@@ -564,7 +563,7 @@ static_data * static_data::get() {
                 (Type_e::POIType, "poi_type")
                 (Type_e::Contributor, "contributor")
                 (Type_e::Calendar, "calendar")
-                (Type_e::MetaVehicleJourney, "meta_vehicle_journey")
+                (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption");
 
         boost::assign::insert(temp->modes_string)

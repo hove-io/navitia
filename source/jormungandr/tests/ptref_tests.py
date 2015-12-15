@@ -625,3 +625,24 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         e = get_not_null(response, 'error')
         assert e['id'] == 'unknown_object'
         assert e['message'] == 'ptref : Filters: Unable to find object'
+
+    def test_trips(self):
+        """test the /trips api"""
+        response = self.query_region('trips')
+
+        trips = get_not_null(response, 'trips')
+        assert len(trips) == 4
+        for t in trips:
+            is_valid_trip(t)
+
+        # we test that we can access a specific trip
+        response = self.query_region('trips/vjA')
+        trips = get_not_null(response, 'trips')
+        assert len(trips) == 1
+        assert get_not_null(trips[0], 'id') == "vjA"
+
+        # we can also display trip of a vj
+        response = self.query_region('vehicle_journeys/vj:B:1/trips')
+        trips = get_not_null(response, 'trips')
+        assert len(trips) == 1
+        assert get_not_null(trips[0], 'id') == "vehicle_journey 1"

@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
 
     // looking for MetaVJ 0
     indexes = make_query(nt::Type_e::MetaVehicleJourney,
-                         "meta_vehicle_journey.uri=\"vehicle_journey 0\"",
+                         R"(trip.uri="vehicle_journey 0")",
                          *(builder.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(indexes.front());

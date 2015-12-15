@@ -118,6 +118,10 @@ static pbnavitia::Response extract_data(const type::Data& data,
             fill_pb_object(data.pt_data->calendars[idx], data,
                            result.add_calendars(), depth, current_time, action_period, show_codes);
             break;
+        case Type_e::MetaVehicleJourney:
+            fill_pb_object(data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)], data,
+                           result.add_trips(), depth, current_time, action_period, show_codes);
+            break;
         case Type_e::Impact:{
             auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
             fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
