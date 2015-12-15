@@ -164,7 +164,7 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
-static const type::disruption::Disruption&
+static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
@@ -208,6 +208,12 @@ create_disruption(const std::string& id,
             effect = nt::disruption::Effect::SIGNIFICANT_DELAYS;
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
+                auto it = data.pt_data->stop_points_map.find(st.stop_id());
+                if (it == data.pt_data->stop_points_map.cend()) {
+                    LOG4CPLUS_WARN(log, "Disruption: " + disruption.uri + " cannot be handled, because "
+                            "stop point: " + st.stop_id() + " cannot be found");
+                    return nullptr;
+                }
                 auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
                 assert(stop_point_ptr);
                 uint32_t arrival_time = st.arrival().time();
@@ -226,7 +232,7 @@ create_disruption(const std::string& id,
                         arrival_time = departure_time = st.departure().time();
                     }
                     if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()){
-                        departure_time = arrival_time =st.arrival().time();
+                        departure_time = arrival_time = st.arrival().time();
                     }
                 }
                 auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
@@ -253,7 +259,7 @@ create_disruption(const std::string& id,
     // note
 
     LOG4CPLUS_DEBUG(log, "Disruption added");
-    return disruption;
+    return &disruption;
 }
 
 void handle_realtime(const std::string& id,
@@ -276,15 +282,15 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    const auto& disruption = create_disruption(id, timestamp, trip_update, data);
+    const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
-    if (! check_disruption(disruption)) {
+    if (! disruption || ! check_disruption(*disruption)) {
         LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
         delete_disruption(id, *data.pt_data, *data.meta);
         return;
     }
 
-    apply_disruption(disruption, *data.pt_data, *data.meta);
+    apply_disruption(*disruption, *data.pt_data, *data.meta);
 }
 
 }
