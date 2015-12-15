@@ -358,9 +358,10 @@ static bool concerns_base_at_period(const VehicleJourney& vj,
             if (*titr < concerned_vp.beginning_date) { continue; }
             size_t day((*titr - concerned_vp.beginning_date).days());
             if (day >= concerned_vp.days.size() || ! concerned_vp.check(day)) { continue; }
+            if (*titr < concerned_vp.beginning_date) { continue; }
             // we check on the execution period of base-schedule vj, as impact are targeted on this period
             const auto base_vj = vj.meta_vj->get_base_vj_circulating_at_date(*titr);
-            if (*titr < concerned_vp.beginning_date) { continue; }
+            if (! base_vj) { continue; }
             if (period.intersects(base_vj->execution_period(*titr))) {
                 intersect = true;
                 // calling fun() on concerned day of base vj
