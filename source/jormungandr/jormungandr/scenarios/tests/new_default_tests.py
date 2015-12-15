@@ -225,3 +225,24 @@ def culling_jounreys_4_test():
     for jrny in mocked_pb_response.journeys:
         # 'non_pt_bike' shouldn't appear in returned journeys
         assert jrny.type in ('best', 'comfort', 'non_pt_walk')
+
+
+def merge_responses_on_errors_test():
+    """
+    check the merge responses when several errors are provided
+    """
+    resp1 = response_pb2.Response()
+    resp1.error.id = response_pb2.Error.date_out_of_bounds
+    resp1.error.message = "you're out of the bound"
+    resp2 = response_pb2.Response()
+    resp2.error.id = response_pb2.Error.bad_format
+    resp2.error.message = "you've been bad"
+    r = [resp1, resp2]
+    
+    merged_response = new_default.merge_responses(r)
+    
+    assert merged_response.HasField('error')
+    assert merged_response.error.id == response_pb2.Error.no_solution
+    # both messages must be in the composite error
+    assert resp1.error.message in merged_response.error.message
+    assert resp2.error.message in merged_response.error.message
