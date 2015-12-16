@@ -181,6 +181,7 @@ boost::local_time::tz_database fill_tz_db() {
           << "America/Thule,AST,AST,,,-04:00:00,+00:00:00,2;0;3,,1;0;11,+00:00:00" << "\n"
           << "America/Thunder_Bay,EST,EST,EDT,EDT,-05:00:00,+01:00:00,2;0;3,+02:00:00,1;0;11,+02:00:00" << "\n"
           << "America/Tijuana,PST,PST,PDT,PDT,-08:00:00,+01:00:00,1;0;4,+02:00:00,-1;0;10,+02:00:00" << "\n"
+          << "America/Toronto,EST,EST,EDT,EDT,-05:00:00,+01:00:00,2;0;3,+02:00:00,1;0;11,+02:00:00" << "\n" // Link to Montreal
           << "America/Tortola,AST,AST,,,-04:00:00,+00:00:00,,,,+00:00:00" << "\n"
           << "America/Vancouver,PST,PST,PDT,PDT,-08:00:00,+01:00:00,2;0;3,+02:00:00,1;0;11,+02:00:00" << "\n"
           << "America/Whitehorse,PST,PST,PDT,PDT,-08:00:00,+01:00:00,2;0;3,+02:00:00,1;0;11,+02:00:00" << "\n"
