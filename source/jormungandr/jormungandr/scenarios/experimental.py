@@ -35,6 +35,7 @@ from copy import deepcopy
 import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
+from jormungandr.scenarios import journey_filter
 
 from jormungandr.scenarios.new_default import sort_journeys, type_journeys, tag_journeys, culling_journeys
 
@@ -89,6 +90,7 @@ class Scenario(new_default.Scenario):
             journey.sections.extend([create_crowfly(arrival, requested_destination, sections[-1].end_date_time, journey.arrival_date_time)])
 
 
+        journey_filter.filter_journeys([response], instance, request=request, original_request=request)
         #sort_journeys(response, instance.journey_order, request['clockwise'])
         tag_journeys(response)
         type_journeys(response, request)

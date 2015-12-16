@@ -535,33 +535,22 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         }
 
         arrival_time = handle_pt_sections(pb_journey, enhanced_response, path, d, now, show_codes);
-                // TODO:
-                // for 'taxi like' odt, we want to start from the address, not the 1 stop point
-        /*        if (item_idx == 1 && journey_begin_with_address_odt) {
-                    fill_pb_placemark(origin, d,
-                            pb_section->mutable_origin(), 1, now, action_period,
-                            show_codes);
-                } else {
-                    fill_pb_placemark(item.stop_points.front(), d,
-                            pb_section->mutable_origin(), 1, now, action_period,
-                            show_codes);
-                }
-
-                // same for the end
-                if (item_idx == path.items.size() && journey_end_with_address_odt) {
-                    fill_pb_placemark(destination, d,
-                            pb_section->mutable_destination(), 1, now,
-                            action_period, show_codes);
-                } else {
-                    fill_pb_placemark(item.stop_points.back(), d,
-                            pb_section->mutable_destination(), 1, now,
-                            action_period, show_codes);
-                }
-                */
+        // for 'taxi like' odt, we want to start from the address, not the 1 stop point
+        if (journey_begin_with_address_odt) {
+            auto* section = pb_journey->mutable_sections(0);
+            section->mutable_origin()->Clear();
+            auto action_period = bt::time_period(navitia::from_posix_timestamp(section->begin_date_time()), bt::minutes(1));
+            fill_pb_placemark(origin, d, section->mutable_origin(), 1, now, action_period, show_codes);
+        }
 
         if (journey_end_with_address_odt) {
-            // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
-            // but we have to updated the end of the journey
+            // last is 'taxi like' ODT, there is no walking nor crow fly section,
+            // but we have to update the end of the journey
+            auto* section = pb_journey->mutable_sections(pb_journey->sections_size() - 1);
+            section->mutable_origin()->Clear();
+            //TODO: the perido can probably be better (-1 min shift)
+            auto action_period = bt::time_period(navitia::from_posix_timestamp(section->end_date_time()), bt::minutes(1));
+            fill_pb_placemark(destination, d, section->mutable_destination(), 1, now, action_period, show_codes);
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
@@ -620,7 +609,6 @@ static void add_pathes(EnhancedResponse& enhanced_response,
         pb_journey->set_arrival_date_time(arrival);
         pb_journey->set_duration(arrival - departure);
         co2_emission_aggregator(pb_journey);
-
     }
 
     add_direct_path(enhanced_response, d, direct_path, origin, destination, datetimes, clockwise);
@@ -967,6 +955,10 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     std::vector<Path> pathes = raptor.compute_all(
             departures, arrivals, init_dt, rt_level, transfer_penalty, bound, max_transfers,
             accessibilite_params, forbidden, clockwise, {}, max_extra_second_pass);
+
+    for(auto & path : pathes) {
+        path.request_time = datetime;
+    }
     LOG4CPLUS_DEBUG(logger, "raptor found " << pathes.size() << " solutions");
     if(clockwise){
         std::reverse(pathes.begin(), pathes.end());
