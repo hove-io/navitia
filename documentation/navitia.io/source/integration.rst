@@ -1978,7 +1978,9 @@ date_time
 +==========================+======================+================================+
 | additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
-| date_times               | Array of String      | Date time                      |
+| departure_date_times     | Array of String      | Date time                      |
++--------------------------+----------------------+--------------------------------+
+| arrival_date_times       | Array of String      | Date time                      |
 +--------------------------+----------------------+--------------------------------+
 | links                    | Array of link_       | internal links to notes        |
 +--------------------------+----------------------+--------------------------------+
