@@ -522,11 +522,9 @@ struct Frame : public Header{
     const static Type_e type = Type_e::Frame;
     Contributor* contributor=nullptr;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
-    boost::gregorian::date_period validation_period;
+    boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
     std::string desc;
     std::string system;
-
-    Frame(): validation_period(boost::gregorian::date(), boost::gregorian::date()){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
