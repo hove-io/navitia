@@ -342,7 +342,7 @@ void fill_pb_object(const nt::Contributor*,
 void fill_pb_object(const nt::Frame*,
                     const nt::Data& , pbnavitia::Frame* ,
                     int , const pt::ptime& ,
-                    const pt::time_period& , const bool){}
+                    const pt::time_period& , const bool, const DumpMessage){}
 
 void fill_pb_object(const nt::StopArea* sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
