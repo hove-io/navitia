@@ -40,10 +40,25 @@ class TestPtRef(AbstractTestFixture):
     """
     @staticmethod
     def _test_links(response, pt_obj_name):
+        # Test the validity of links of 'previous', 'next', 'last', 'first'
+        wanted_links_type = ['previous', 'next', 'last', 'first', pt_obj_name]
+        print response
         for l in response['links']:
-            if l['type'] in ['next', 'last', 'first']:
+            if l['type'] in wanted_links_type:
                 assert pt_obj_name in l['href']
-                
+
+        # Test the consistency between links
+        import difflib
+        wanted_links = [l['href'] for l in response['links'] if l['type'] in wanted_links_type]
+        if len(wanted_links) <= 1:
+            return
+        current_match = wanted_links[0]
+        for l in wanted_links[1:]:
+            s = difflib.SequenceMatcher(None, current_match, l)
+            match = s.find_longest_match(0, len(current_match), 0, len(l))
+            assert match.size
+            current_match = current_match[match.a:(match.a + match.size)]
+
     def test_vj_default_depth(self):
         """default depth is 1"""
         response = self.query_region("v1/vehicle_journeys")
@@ -211,7 +226,6 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("v1/routes")
 
         routes = get_not_null(response, 'routes')
-
         assert len(routes) == 3
 
         r = [r for r in routes if r['id'] == 'line:A:0']
