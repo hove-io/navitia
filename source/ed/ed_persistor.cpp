@@ -585,8 +585,8 @@ void EdPersistor::insert_frames(const std::vector<types::Frame*>& frames){
         values.push_back(navitia::encode_uri(frame->uri));
         values.push_back(frame->desc);
         values.push_back(frame->system);
-        values.push_back(bg::to_iso_extended_string(frame->validation_date.begin()));
-        values.push_back(bg::to_iso_extended_string(frame->validation_date.end()));
+        values.push_back(bg::to_iso_extended_string(frame->validation_period.begin()));
+        values.push_back(bg::to_iso_extended_string(frame->validation_period.end()));
         values.push_back(std::to_string(frame->contributor->idx));
         this->lotus.insert(values);
     }
@@ -728,7 +728,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(line->name);
         values.push_back(line->color);
         values.push_back(line->code);
-        if (line->contributor != NULL){
+        if (line->contributor != nullptr){
             values.push_back(std::to_string(line->contributor->idx));
         }else{
             values.push_back(lotus.null_value);

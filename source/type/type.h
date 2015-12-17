@@ -116,7 +116,7 @@ enum class Type_e {
     Calendar                        = 24,
     LineGroup                       = 25,
     MetaVehicleJourney              = 26,
-	Impact                          = 27,
+    Impact                          = 27,
     Frame                           = 28
 };
 
@@ -522,14 +522,14 @@ struct Frame : public Header{
     const static Type_e type = Type_e::Frame;
     Contributor* contributor=nullptr;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
-    boost::gregorian::date_period validation_date;
+    boost::gregorian::date_period validation_period;
     std::string desc;
     std::string system;
 
-    Frame(): validation_date(boost::gregorian::date(), boost::gregorian::date()){}
+    Frame(): validation_period(boost::gregorian::date(), boost::gregorian::date()){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & contributor & realtime_level & validation_date & desc & system;
+        ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
     }
     bool operator<(const Frame & other) const { return this < &other; }
 };

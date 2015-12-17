@@ -362,25 +362,32 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
 void EdReader::fill_frames(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, uri, description, system, start_date, end_date, "
                           "contributor_id FROM navitia.frame";
-
+    size_t nb_unknown_contributor(0);
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
+        if(contributor_it == this->contributor_map.end()) {
+            LOG4CPLUS_TRACE(log, "impossible to find contributor" << const_it["contributor_id"]
+                    << ", we cannot assoicate it to frame " << const_it["uri"]);
+            nb_unknown_contributor++;
+            continue;
+        }
+
         nt::Frame* frame = new nt::Frame();
         const_it["uri"].to(frame->uri);
         const_it["description"].to(frame->desc);
         const_it["system"].to(frame->system);
         boost::gregorian::date start(bg::from_string(const_it["start_date"].as<std::string>()));
         boost::gregorian::date end(bg::from_string(const_it["end_date"].as<std::string>()));
-        frame->validation_date = bg::date_period(start, end);
-
-        auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
-        if(contributor_it != this->contributor_map.end()) {
-            frame->contributor = contributor_it->second;
-        }
+        frame->validation_period = bg::date_period(start, end);
+        frame->contributor = contributor_it->second;
         frame->idx = data.pt_data->frames.size();
 
         data.pt_data->frames.push_back(frame);
         this->frame_map[const_it["id"].as<idx_t>()] = frame;
+    }
+    if (nb_unknown_contributor){
+        LOG4CPLUS_WARN(log, nb_unknown_contributor << "contributor not found for frame");
     }
 }
 

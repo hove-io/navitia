@@ -49,7 +49,7 @@ typename C::mapped_type get_object(const C& map, const std::string& obj_id, cons
 Add default frame for all contributor without frame
 */
 static void default_frames(GtfsData& gdata, Data& data){
-    for(auto contributor: data.contributors){
+    for(auto* contributor: data.contributors){
         bool exist = false;
         for(const auto frame : data.frames){
             if (frame->contributor->uri == contributor->uri){
@@ -58,28 +58,27 @@ static void default_frames(GtfsData& gdata, Data& data){
             }
         }
         if (! exist){
-            ed::types::Frame* to_return = new ed::types::Frame();
-            to_return->contributor = contributor;
-            to_return->uri = "default_frame:" + contributor->uri;
-            to_return->validation_date = gdata.production_date;
-            to_return->desc = "default frame: " + contributor->name;
-            to_return->idx = data.frames.size() + 1;
-            data.frames.push_back(to_return);
-            gdata.frame_map[to_return->uri] = to_return;
+            auto frame = std::make_unique<ed::types::Frame>();
+            frame->contributor = contributor;
+            frame->uri = "default_frame:" + contributor->uri;
+            frame->validation_period = gdata.production_date;
+            frame->desc = "default frame: " + contributor->name;
+            frame->idx = data.frames.size() + 1;
+            data.frames.push_back(frame.get());
+            gdata.frame_map[frame->uri] = frame.get();
+            frame.release();
         }
     }
 }
 
 static ed::types::Frame* get_first_frame_by_contributor(const Data& data,
                                                   const std::string& contributor_id){
-    ed::types::Frame* to_return = nullptr;
-    for(const auto frame : data.frames){
+    for(auto* frame : data.frames){
         if(frame->contributor->uri == contributor_id){
-            to_return = frame;
-            break;
+            return frame;
         }
     }
-    return to_return;
+    return nullptr;
 }
 
 static ed::types::Frame* get_frame(GtfsData& gdata, Data& data,
@@ -717,7 +716,7 @@ void FrameFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     ed::types::Frame * frame = new ed::types::Frame();
     frame->contributor = contributor->second;
     frame->uri = row[id_c];
-    frame->validation_date = boost::gregorian::date_period(start_date, end_date);
+    frame->validation_period = boost::gregorian::date_period(start_date, end_date);
 
     if (is_valid(type_c, row)){
         frame->realtime_level = get_rtlevel_enum(row[type_c]);
@@ -1147,7 +1146,11 @@ void TripPropertiesFusioHandler::init(Data &){
     audible_announcement_c = csv.get_pos_col("audible_announcement");
     appropriate_escort_c = csv.get_pos_col("appropriate_escort");
     appropriate_signage_c = csv.get_pos_col("appropriate_signage");
+    // TODO school_vehicle_type NTFSv0.5: remove school_vehicle when we stop to support NTFSv0.4
     school_vehicle_c = csv.get_pos_col("school_vehicle");
+    if (school_vehicle_c == -1){
+        school_vehicle_c = csv.get_pos_col("school_vehicle_type");
+    }
 }
 
 void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){

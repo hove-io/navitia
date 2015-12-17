@@ -165,14 +165,14 @@ struct Contributor : public Header, Nameable{
 
 struct Frame : public Header{
     const static nt::Type_e type = nt::Type_e::Frame;
-    Contributor* contributor=nullptr;
-    boost::gregorian::date_period validation_date;
+    Contributor* contributor = nullptr;
+    boost::gregorian::date_period validation_period;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
     std::string desc;
+    //Contributor data types in fusio example : Google, OBiTi, ChouetteV2 etc..
     std::string system;
-    bool operator<(const Frame& other)const{ return this->desc < other.desc;}
-    Frame():validation_date(boost::gregorian::date(), boost::gregorian::date()) {}
-
+    bool operator<(const Frame& other)const{ return this->idx < other.idx;}
+    Frame():validation_period(boost::gregorian::date(), boost::gregorian::date()) {}
 };
 
 struct Network : public Header, Nameable{

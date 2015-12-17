@@ -303,7 +303,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->frames[0]->contributor);
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->desc, "frame_test");
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->uri, "f1");
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->validation_date,
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->validation_period,
             boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
