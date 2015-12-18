@@ -801,10 +801,16 @@ static boost::gregorian::date_period compute_smallest_active_period(const nm::Va
                                          vp.beginning_date + boost::gregorian::days(end + 1));
 }
 
+/*
+ * Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
+ * we thus need to split all periods for them to be on only one DST
+ * luckily in GTFS format all times are given in the same timezone (the default tz dataset) even if all stop areas are not on the same tz
+ */
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
-    //Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
-    //we thus need to split all periods for them to be on only one DST
-    //luckily in GTFS format all times are given in the same timezone (the default tz dataset) even if all stop areas are not on the same tz
+    // we start by filling the global tz_handler
+    auto splited_production_period = split_over_dst(data.meta.production_date,
+                                                    gtfs_data.tz.default_timezone.second);
+    data.tz_handler = nt::TimeZoneHandler(data.meta, splited_production_period);
 
     for (const auto& name_and_vp: gtfs_data.tz.non_split_vp) {
         const nm::ValidityPattern& original_vp = name_and_vp.second;
@@ -834,7 +840,6 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
                 vp->uri = original_vp.uri + "_" + std::to_string(cpt);
             }
             gtfs_data.tz.vp_by_name.insert({original_vp.uri, vp});
-            gtfs_data.tz.offset_by_vp.insert({vp, utc_shit_and_periods.first});
             data.validity_patterns.push_back(vp);
             cpt++;
         }
@@ -1029,12 +1034,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
         vj->shape_id = shape_id;
-
-        // we store the split vj utc shift, in minutes
-        auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
-        vj->utc_to_local_offset = utc_offset;
     }
-
 }
 
 void StopTimeGtfsHandler::init(Data&) {
@@ -1115,7 +1115,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         nm::StopTime* stop_time = new nm::StopTime();
 
         //we need to convert the stop times in UTC
-        int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
+        int utc_offset = data.tz_handler.get_utc_offset(vj_it->second->validity_pattern);
 
         stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
         stop_time->departure_time = to_utc(row[departure_c], utc_offset);
@@ -1152,7 +1152,7 @@ void FrequenciesGtfsHandler::init(Data&) {
     end_time_c = csv.get_pos_col("end_time"), headway_secs_c = csv.get_pos_col("headway_secs");
 }
 
-void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
+void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(row.empty())
         return;
     for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_id_c]),
@@ -1165,7 +1165,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
         }
 
         //we need to convert the stop times in UTC
-        int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
+        int utc_offset = data.tz_handler.get_utc_offset(vj_it->second->validity_pattern);
 
         vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
         vj_it->second->end_time = to_utc(row[end_time_c], utc_offset);

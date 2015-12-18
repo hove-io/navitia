@@ -71,7 +71,6 @@ struct TzHandler {
     //since a calendar might need to be split over several period because of dst, we need to track the splited calendar (to split also all vj on this calendar)
     std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
     std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
-    std::map<ed::types::ValidityPattern*, int> offset_by_vp; //each validity pattern are on only one dst, thus we can store the utc_offset
 
     //since 2 files are mandatory to build validity pattern
     //we need to build first the list of validity pattern,
@@ -131,6 +130,9 @@ struct GtfsData {
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
+using UtcShift = int16_t;
+using PeriodsByUtcShift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
+
 //a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to
 struct PeriodWithUtcShift {
     PeriodWithUtcShift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
@@ -144,9 +146,6 @@ struct PeriodWithUtcShift {
 
     //add info to handle the cornercase of the day of the DST (the time of the shift)
 };
-
-using UtcShift = int;
-using PeriodsByUtcShift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
 
 std::vector<PeriodWithUtcShift>
 get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);

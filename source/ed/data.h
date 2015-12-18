@@ -91,6 +91,7 @@ public:
 
     // the shapes are here, and then copied where needed
     std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
+    navitia::type::TimeZoneHandler tz_handler;
 
     std::unordered_map<std::string, nt::MultiPolygon> areas;
 

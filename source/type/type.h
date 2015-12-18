@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/time_duration.h"
 #include "datetime.h"
 #include "rt_level.h"
+#include "timezone_manager.h"
 #include "geographical_coord.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
