@@ -38,6 +38,29 @@ class TestPtRef(AbstractTestFixture):
     """
     Test the structure of the ptref response
     """
+    @staticmethod
+    def _test_links(response, pt_obj_name):
+        # Test the validity of links of 'previous', 'next', 'last', 'first'
+        wanted_links_type = ['previous', 'next', 'last', 'first']
+        for l in response['links']:
+            if l['type'] in wanted_links_type:
+                assert pt_obj_name in l['href']
+
+        # Test the consistency between links
+        wanted_links = [l['href'] for l in response['links'] if l['type'] in wanted_links_type]
+        if len(wanted_links) <= 1:
+            return
+
+        def _get_dict_to_compare(link):
+            url_dict = query_from_str(link)
+            url_dict.pop('start_page', None)
+            url_dict['url'] = link.split('?')[0]
+            return url_dict
+
+        url_dict = _get_dict_to_compare(wanted_links[0])
+
+        for l in wanted_links[1:]:
+            assert url_dict == _get_dict_to_compare(l)
 
     def test_vj_default_depth(self):
         """default depth is 1"""
@@ -156,6 +179,8 @@ class TestPtRef(AbstractTestFixture):
         assert line_group[0]['name'] == 'A group'
         assert line_group[0]['id'] == 'group:A'
 
+        self._test_links(response, 'lines')
+
     def test_line_groups(self):
         """test line group formating"""
         # Test for each possible range to ensure main_line is always at a depth of 0
@@ -204,7 +229,6 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("v1/routes")
 
         routes = get_not_null(response, 'routes')
-
         assert len(routes) == 3
 
         r = [r for r in routes if r['id'] == 'line:A:0']
@@ -220,6 +244,8 @@ class TestPtRef(AbstractTestFixture):
         assert len(com) == 1
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == "I'm a happy comment"
+
+        self._test_links(response, 'routes')
 
     def test_stop_areas(self):
         """test stop_areas formating"""
@@ -239,6 +265,8 @@ class TestPtRef(AbstractTestFixture):
         assert com[1]['type'] == 'standard'
         assert com[1]['value'] == "the stop is sad"
 
+        self._test_links(response, 'stop_areas')
+
     def test_stop_points(self):
         """test stop_areas formating"""
         response = self.query_region("v1/stop_points")
@@ -255,6 +283,8 @@ class TestPtRef(AbstractTestFixture):
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == "hello bob"
 
+        self._test_links(response, 'stop_points')
+
     def test_company_default_depth(self):
         """default depth is 1"""
         response = self.query_region("v1/companies")
@@ -269,6 +299,8 @@ class TestPtRef(AbstractTestFixture):
         assert len(companies) == 1
         company = companies[0]
         assert company['id'] == 'CMP1'
+
+        self._test_links(response, 'companies')
 
     def test_simple_crow_fly(self):
         journey_basic_query = "journeys?from=9;9.001&to=stop_area%3Astop2&datetime=20140105T000000"

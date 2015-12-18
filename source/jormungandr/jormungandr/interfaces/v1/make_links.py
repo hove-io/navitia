@@ -126,15 +126,15 @@ class add_pagination_links(object):
             else:
                 data = objects
             for key, value in data.iteritems():
-                if key == "regions":
+                if endpoint is None and key == "regions":
                     endpoint = "v1.coverage"
-                elif key == "pagination":
+                elif pagination is None and key == "pagination":
                     pagination = value
-                elif key in collections_to_resource_type.keys():
+                elif endpoint is None and key in collections_to_resource_type.keys():
                     endpoint = "v1." + key + "."
                     endpoint += "id" if "id" in kwargs else "collection"
-                elif key in ["journeys", "stop_schedules", "route_schedules",
-                             "departures", "arrivals", "places_nearby", "calendars"]:
+                elif endpoint is None and key in ["journeys", "stop_schedules", "route_schedules",
+                                                  "departures", "arrivals", "places_nearby", "calendars"]:
                     endpoint = "v1." + key
             if pagination and endpoint and "region" in kwargs:
                 pagination = data["pagination"]
