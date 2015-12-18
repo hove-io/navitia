@@ -51,6 +51,12 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.id = str(uuid.uuid4())
     return section
 
+class SectionSorter(object):
+    def __call__(self, a, b):
+        if a.begin_date_time != b.begin_date_time:
+            return -1 if a.begin_date_time < b.begin_date_time else 1
+        else:
+            return -1 if a.end_date_time < b.end_date_time else 1
 
 class Scenario(new_default.Scenario):
 
@@ -79,19 +85,22 @@ class Scenario(new_default.Scenario):
             departure = journey.sections[0].origin
             arrival = journey.sections[-1].destination
 
-            sections = deepcopy(journey.sections)
-            del journey.sections[:]
             journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
             journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
             journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
 
-            journey.sections.extend([create_crowfly(requested_origin, departure, journey.departure_date_time, sections[0].begin_date_time)])
-            journey.sections.extend(sections)
-            journey.sections.extend([create_crowfly(arrival, requested_destination, sections[-1].end_date_time, journey.arrival_date_time)])
+            #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
+            journey.sections.extend([
+                create_crowfly(arrival, requested_destination, journey.sections[-1].end_date_time,
+                               journey.arrival_date_time)])
+            journey.sections.extend([
+                create_crowfly(requested_origin, departure, journey.departure_date_time,
+                               journey.sections[0].begin_date_time)])
+            journey.sections.sort(SectionSorter())
 
 
         journey_filter.filter_journeys([response], instance, request=request, original_request=request)
-        #sort_journeys(response, instance.journey_order, request['clockwise'])
+        sort_journeys(response, instance.journey_order, request['clockwise'])
         tag_journeys(response)
         type_journeys(response, request)
         culling_journeys(response, request)
