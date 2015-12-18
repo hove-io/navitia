@@ -43,6 +43,7 @@ from navitiacommon.default_traveler_profile_params import default_traveler_profi
 from navitiacommon import models
 from navitiacommon.models import db
 from functools import wraps
+from validations import datetime_format
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -414,7 +415,7 @@ class User(flask_restful.Resource):
             parser.add_argument('key', type=unicode, required=False,
                     case_sensitive=False, help='key')
             parser.add_argument('end_point_id', type=int)
-            parser.add_argument('block_until', type=types.date, required=False,
+            parser.add_argument('block_until', type=datetime_format, required=False,
                     case_sensitive=False)
             args = parser.parse_args()
 
@@ -439,7 +440,7 @@ class User(flask_restful.Resource):
                 case_sensitive=False, help='login is required', location=('json', 'values'))
         parser.add_argument('email', type=unicode, required=True,
                 case_sensitive=False, help='email is required', location=('json', 'values'))
-        parser.add_argument('block_until', type=types.date, required=False,
+        parser.add_argument('block_until', type=datetime_format, required=False,
                             help='end block date access', location=('json', 'values'))
         parser.add_argument('end_point_id', type=int, required=False,
                             help='id of the end_point', location=('json', 'values'))
@@ -491,8 +492,8 @@ class User(flask_restful.Resource):
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
         parser.add_argument('end_point_id', type=int, default=user.end_point_id,
                             help='id of the end_point', location=('json', 'values'))
-        parser.add_argument('block_until', type=types.date, required=False,
-                            help='end block date access', location=('json', 'values'))
+        parser.add_argument('block_until', type=datetime_format, required=False,
+                            help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
