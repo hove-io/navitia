@@ -29,20 +29,20 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from functools import wraps
-from jormungandr import authentication
-import flask_restful
-from datetime import datetime
+from jormungandr    import authentication
+#from flask_limiter  import Limiter
+from datetime       import datetime
+from functools      import wraps
 
-def quota_control(func):
+import flask_restful
+
+def check(func):
     """
     Decorator for quota control on every request
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
         user = authentication.get_user(token=authentication.get_token())
-        if user.block_until and datetime.utcnow() <= user.block_until:
-            flask_restful.abort(429, message="Quota limit reached, please contact provider if you want to upgrade your current billing plan")
 
         return func(*args, **kwargs)
 
