@@ -28,10 +28,14 @@ Les données sont formatées de la manière suivante :
 * Les identifiants des objets ne doivent pas contenir le type de l'objet. Ce dernier sera ajouté directement dans l'API navitia
 
 # Liste des fichiers du format
-## Fichiers réservés
+## Fichiers spéciaux
+    Ces fichiers permettent de décrire précisément d'où viennent les données dans le cas d'un référentiel agrégeant plusieurs sources de données. La notion de _contributor_ correspond à une source de données (un exploitant peut nécessiter l'utilisation de plusieurs contributeurs). La notion de _frame_ correspond à un jeu de données provenant d'un contributeur.
+    Les autres fichiers peuvent référencer un _contributor_id_ et/ou un _frame_id_. Dans le cas où les deux notions sont spécifiées, c'est la notion de _frame_ qui sera prédominante.
+
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-contributors.txt | Réservé | Ce fichier contient les contributeurs. Si ce fichier est fourni, il sera ignoré.
+contributors.txt | Optionnel | Ce fichier contient les contributeurs. 
+frames.txt | Optionnel | Ce fichier contient les sources de données d'un contributeur.
 
 ## Fichiers de base
 Fichier | Contrainte | Commentaire
@@ -92,7 +96,7 @@ Ce fichier décrit les périodes de circulation associés aux trips.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-service_id | chaine | Requis | Identifiant du calendrier de circulation
+calendar_id | chaine | Requis | Identifiant du calendrier de circulation
 monday | entier | Requis | (1)
 tuesday | entier | Requis | (1)
 wednesday | entier | Requis | (1) 
@@ -113,7 +117,7 @@ Ce fichier décrit des exceptions aux calendriers définit dans le fichier calen
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-service_id | chaine | Requis | Identifiant du calendrier de circulation
+calendar_id | chaine | Requis | Identifiant du calendrier de circulation
 date | date | Requis | Date de l'exception
 exception_type | entier | Requis | (1)
 
@@ -128,7 +132,8 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 comment_id | chaine | Requis | Identifiant du commentaire
 comment_type | chaine | Optionnel | (1)
-comment_name | chaine | Requis | Texte du commentaire
+comment_label | chaine | Optionnel | Caractère de renvoi associé au commentaire. Si celui-ci n'est pas précisé, il sera généré automatiquement.
+comment_value | chaine | Requis | Texte du commentaire
 comment_url | chaine | Optionnel | URL associé à la note et permettant d'avoir plus d'info, comme par exemple un lien vers la page de description du service de TAD.
 
 (1) Catégorie de commentaire afin de pouvoir les différentier à l'affichage. Les valeurs possibles sont :
@@ -175,6 +180,27 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 contributor_id | chaine | Requis | Identifiant du contributeur
 contributor_name | chaine | Requis | Nom du contributeur
+contributor_license | chaine | Optionnel | licence d'utilisation des données du contributeur pour le référentiel
+contributor_website | chaine | Optionnel | URL du site web associé au fournisseur de données
+
+### frames.txt (réservé)
+Ce fichier liste des jeux de données du contributeur associé contenus dans le référentiel.
+
+Colonne | Type | Contrainte | Commentaire
+--- | --- | --- | ---
+frame_id | chaine | Requis | Identifiant du jeu de données 
+contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
+frame_start_date | date | Requis | Date de début de prise en compte du jeu de données (peut-être différent de la date de début de validité de l'export source)
+frame_end_date | date | Requis | Date de fin de prise en compte du jeu de données (peut-être différent de la date de fin de validité de l'export source)
+frame_type | entier (1) | Optionnel | Type de données représentant la "fraicheur" 
+frame_desc | chaine | Optionnel | Note indiquant le contenu du jeu de données
+frame_system | chaine | Optionnel | Nom du système source ayant généré les données ou du format des données
+
+(1) Spécifie le type de données :
+
+* 0 - il s'agit de données théoriques
+* 1 - il s'agit de données de grèves ou révisées 
+* 2 - il s'agit de données de production du jour J
 
 ### frequencies.txt (optionnel)
 Colonne | Type | Contrainte | Commentaire
@@ -199,7 +225,6 @@ line_text_color | couleur | Optionnel | Couleur du code de la ligne
 line_sort_order | entier | Optionnel | Clé de trie de la ligne au sein du réseau. Les indices les plus petits sont retournés en premier.
 network_id | chaine | Requis | Identifiant du réseau principal de la ligne (lien vers le fichier networks)
 commercial_mode_id | chaine | Requis | Identifiant du mode commercial (lien vers le fichier  commercial_modes)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la ligne (lien vers le fichier geometries)
 line_opening_time | heure | Optionnel | Heure de début de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée.
 line_closing_time | heure | Optionnel | Heure de fin de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée. Spécifier une heure superieure à 24 pour indiquer une heure sur le jour d'après.
@@ -209,16 +234,16 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 route_id | chaine | Requis | Identifiant du parcours
 route_name | chaine | Requis | Nom du parcours
-is_forward | entier | Requis | (1)
+direction_type | chaine (1) | Optionnel | Description de la direction de la route. Ce champ est libre, mais il est préconisé d'utiliser un des éléments recommandés ci-dessous.
 line_id | chaine | Requis | Identifiant de la ligne commerciale (lien vers le fichier lines)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant le parcours (lien vers le fichier geometries)
 destination_id | chaine | Optionnel | Identifiant de la destination principale (lien vers le fichier stops.txt de type zone d'arrêt)
 
-(1) Spécifie le sens du parcours :
+(1) Liste des valeurs recommandées pour le champ _direction_type_ :
 
-* 0 - le parcours est en sens aller
-* 1 - le parcours est en sens retour
+* Pour des sens aller et retour : _forward_ et _backward_
+* Pour des parcours en boucle : _clockwise_ et _anticlockwise_
+* Pour des parcours entrant et sortants : _inbound_ et _outbound_
 
 ### physical_modes.txt (requis)
 Colonne | Type | Contrainte | Commentaire
@@ -288,7 +313,7 @@ appropriate_signage | entier (1) | Optionnel | Information claire à l'arrêt
         2 - l'équipement n'est pas disponible
 
 ### stops.txt (requis)
-Une ligne du fichier "stops.txt" représente un horaire d'arrivée et un horaire de départ à un point ou une zone.
+Une ligne du fichier "stops.txt" représente un point ou une zone où un véhicule dépose ou fait monter des voyageurs.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
@@ -304,7 +329,8 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Requis | Identifiant du contributeur. Cette valeur peut être vide dans le cas de la déclaration d'une zone administrative (location_type=2)
+contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
+frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni l'arrêt (lien vers le fichier frames). Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. 
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique
@@ -370,7 +396,6 @@ school_vehicle_type | entier (2) | Optionnel | Type de transport scolaire
         1 : transport scolaire exclusif
         2 : transport mixte (scolaire et régulier)
 
-
 ### trips.txt (requis)
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
@@ -382,7 +407,9 @@ block_id | chaine | Optionnel | Identifiant du prolongement de service
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
-contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributor)
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors). Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
+frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames).
+base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
 
     Pour préciser si la circulation est sur réservation (tout ou partie), il faut :
@@ -480,21 +507,23 @@ feed_start_date | date | Optionnel | Date de début de validité du jeu de donn�
 feed_end_date | date | Optionnel | Date de fin de validité du jeu de données
 feed_creation_date |  date |  Optionnel | Date de génération du jeu de données
 feed_creation_time | heure | Optionnel | Heure de génération du jeu de données
+revised_networks | chaine | Optionnel | Liste des réseaux dont les données de grève sont fournis dans le jeu de données courant
 
 Le tableau ci-dessous indique les paramètres libres renseignés par Kisio Digital.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 feed_provider | chaine | Libre | Société/Entité fournissant le jeu de données 
+feed_license | chaine | Libre | Licence d'utilisation des données globale du référentiel
 fusio_url | chaine | Libre | URL du système ayant généré le jeu de données
-fusio_version | date | Libre | Version du système ayant généré le jeu de données
+fusio_version | chaine | Libre | Version du système ayant généré le jeu de données
 
 ### grid_calendars.txt (optionnel)
 Ce fichier contient les calendriers. 
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | chaine | Requis | Identifiant du calendrier
+grid_calendar_id | chaine | Requis | Identifiant du calendrier
 name | chaine | Requis | Nom du calendrier
 monday | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
 tuesday | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
@@ -509,7 +538,7 @@ Ce fichier contient les exceptions sur les calendriers des grilles horaires.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | string | Requis | Identifiant du calendrier de grille horaire
+grid_calendar_id | string | Requis | Identifiant du calendrier de grille horaire
 date | date | Requis | Date de l'exception
 type | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
 
@@ -518,7 +547,7 @@ Ce fichier contient les périodes des calendriers des grilles horaires.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
+grid_calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
 start_date | date | Requis | Date de début
 end_date | date | Requis | Date de fin
 
@@ -527,9 +556,17 @@ Ce fichier contient toutes les relations entre les lignes et les calendriers des
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
+grid_calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
 line_id | chaine | Requis | Identifiant de la ligne associée à ce calendrier (lien vers le fichier lines). Ce champ peut être vide si le champ line_external_code est renseigné.
 line_external_code | chaine | Requis | cette colonne contient le code externe NAViTiA 1 de la ligne (lien vers le fichier lines). Ce champ peut être vide si le champ line_id et renseigné
+
+# Gestion des données perturbées / de grèves
+Afin de limiter la complexité du format, la gestion des données de grève est effectuée par plusieurs exports :
+
+1. un export contenant toutes les données théoriques du référentiel. L'export NTFS est un export classique, et dont la clé "revised_networks" du fichier "feed_infos.txt" est vide. 
+2. un ou plusieurs exports NTFS de grèves, dont chaque export fournit toutes les données (impactées par la grève ou non) :
+    * de un ou plusieurs réseaux spécifiés par la clé **revised_networks** du fichier **feed_infos.txt** 
+    * pour des données valides entre les dates spécifiées par **feed_start_date** et **feed_end_date**
 
 # Évolutions possibles du format
 Ce chapitre liste des évolutions du format qui peuvent être intéressantes si elles sont utiles concrètement.
@@ -666,4 +703,3 @@ Les zones n'ont pas de valeur dans le NTFS: la prise des passagers se fait sur d
 * G>H>I
     * montée interdite
     * 10h10 partout
-
