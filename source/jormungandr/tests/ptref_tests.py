@@ -41,23 +41,26 @@ class TestPtRef(AbstractTestFixture):
     @staticmethod
     def _test_links(response, pt_obj_name):
         # Test the validity of links of 'previous', 'next', 'last', 'first'
-        wanted_links_type = ['previous', 'next', 'last', 'first', pt_obj_name]
-        print response
+        wanted_links_type = ['previous', 'next', 'last', 'first']
         for l in response['links']:
             if l['type'] in wanted_links_type:
                 assert pt_obj_name in l['href']
 
         # Test the consistency between links
-        import difflib
         wanted_links = [l['href'] for l in response['links'] if l['type'] in wanted_links_type]
         if len(wanted_links) <= 1:
             return
-        current_match = wanted_links[0]
+
+        def _get_dict_to_compare(link):
+            url_dict = query_from_str(link)
+            url_dict.pop('start_page', None)
+            url_dict['url'] = link.split('?')[0]
+            return url_dict
+
+        url_dict = _get_dict_to_compare(wanted_links[0])
+
         for l in wanted_links[1:]:
-            s = difflib.SequenceMatcher(None, current_match, l)
-            match = s.find_longest_match(0, len(current_match), 0, len(l))
-            assert match.size
-            current_match = current_match[match.a:(match.a + match.size)]
+            assert url_dict == _get_dict_to_compare(l)
 
     def test_vj_default_depth(self):
         """default depth is 1"""
