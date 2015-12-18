@@ -225,7 +225,6 @@ line_text_color | couleur | Optionnel | Couleur du code de la ligne
 line_sort_order | entier | Optionnel | Clé de trie de la ligne au sein du réseau. Les indices les plus petits sont retournés en premier.
 network_id | chaine | Requis | Identifiant du réseau principal de la ligne (lien vers le fichier networks)
 commercial_mode_id | chaine | Requis | Identifiant du mode commercial (lien vers le fichier  commercial_modes)
-contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la ligne (lien vers le fichier geometries)
 line_opening_time | heure | Optionnel | Heure de début de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée.
 line_closing_time | heure | Optionnel | Heure de fin de service de la ligne (quelque soit le type de jour ou la periode). Si cette information n'est pas fournie, elle sera recalculée. Spécifier une heure superieure à 24 pour indiquer une heure sur le jour d'après.
@@ -237,7 +236,6 @@ route_id | chaine | Requis | Identifiant du parcours
 route_name | chaine | Requis | Nom du parcours
 direction_type | chaine (1) | Optionnel | Description de la direction de la route. Ce champ est libre, mais il est préconisé d'utiliser un des éléments recommandés ci-dessous.
 line_id | chaine | Requis | Identifiant de la ligne commerciale (lien vers le fichier lines)
-contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant le parcours (lien vers le fichier geometries)
 destination_id | chaine | Optionnel | Identifiant de la destination principale (lien vers le fichier stops.txt de type zone d'arrêt)
 
@@ -331,8 +329,8 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est nécessairement vide dans le cas de la déclaration d'une zone administrative (location_type=3)
-frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni l'arrêt (lien vers le fichier frames). Un arrêt pouvant être partagé entre plusieurs jeux de données (d'un ou plusieurs contributeurs), le premier frame_id est retourné.
+contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
+frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni l'arrêt (lien vers le fichier frames). Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. 
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique
@@ -409,8 +407,8 @@ block_id | chaine | Optionnel | Identifiant du prolongement de service
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
-contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors)
-frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames)
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors). Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
+frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames).
 base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
 
