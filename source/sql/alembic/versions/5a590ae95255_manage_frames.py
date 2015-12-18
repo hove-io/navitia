@@ -26,13 +26,9 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     schema='navitia'
     )
-    op.add_column('line', sa.Column('contributor_id', sa.BIGINT(), nullable=True), schema='navitia')
-    op.add_column('route', sa.Column('contributor_id', sa.BIGINT(), nullable=True), schema='navitia')
     op.add_column('vehicle_journey', sa.Column('frame_id', sa.BIGINT(), nullable=True), schema='navitia')
 
 
 def downgrade():
     op.drop_column('vehicle_journey', 'frame_id', schema='navitia')
-    op.drop_column('route', 'contributor_id', schema='navitia')
-    op.drop_column('line', 'contributor_id', schema='navitia')
     op.drop_table('frame', schema='navitia')
