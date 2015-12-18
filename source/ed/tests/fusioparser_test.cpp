@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 25),
                                                       boost::gregorian::date(2015, 8, 27)));
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 25),
                                                       boost::gregorian::date(2015, 8, 27)));
 }
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 27),
                                                       boost::gregorian::date(2015, 8, 27)));
 }

@@ -29,11 +29,11 @@ www.navitia.io
 */
 #pragma once
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include "validity_pattern.h"
 
 namespace navitia {
 namespace type {
 
-struct ValidityPattern;
 struct MetaData;
 class TimeZoneHandler {
     /*
@@ -54,17 +54,12 @@ public:
     TimeZoneHandler() {}
     int16_t get_utc_offset(boost::gregorian::date day) const;
     int16_t get_utc_offset(int day) const;
-    template <typename VP>
-    int16_t get_utc_offset(const VP* vp) const;
+    int16_t get_first_utc_offset(const ValidityPattern& vp) const;
 };
 
 class TimeZoneManager {
     const TimeZoneHandler* get_or_create(const MetaData*, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
 };
 
-template <typename VP>
-int16_t TimeZoneHandler::get_utc_offset(const VP* vp) const {
-throw "bob";
-}
 }
 }

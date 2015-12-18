@@ -497,7 +497,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     //the validity pattern may have been split because of DST, so we need to create one vj for each
     for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
 
-        ed::types::ValidityPattern* vp_xx = vp_it->second;
+        navitia::type::ValidityPattern* vp_xx = vp_it->second;
 
         ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
 

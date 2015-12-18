@@ -82,7 +82,6 @@ struct TzHandler {
  * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
  */
 struct GtfsData {
-    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
@@ -124,8 +123,6 @@ struct GtfsData {
     ed::types::CommercialMode* default_commercial_mode = nullptr;
     ed::types::PhysicalMode* get_or_create_default_physical_mode(Data & data);
     ed::types::PhysicalMode* default_physical_mode = nullptr;
-
-    boost::gregorian::date_period production_date;// Data validity period
 
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };

@@ -65,6 +65,7 @@ using nt::Header;
 using nt::hasProperties;
 using nt::hasVehicleProperties;
 
+using nt::ValidityPattern;
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
@@ -87,30 +88,6 @@ struct StopPointConnection: public Header, hasProperties {
 
    bool operator<(const StopPointConnection& other) const;
 
-};
-
-struct ValidityPattern: public Header {
-    const static nt::Type_e type = nt::Type_e::ValidityPattern;
-private:
-    bool is_valid(int duration);
-    int slide(boost::gregorian::date day) const;
-public:
-    using year_bitset = std::bitset<366>;
-    year_bitset days;
-    boost::gregorian::date beginning_date;
-    ValidityPattern(){}
-    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
-    void add(boost::gregorian::date day);
-    void add(int day);
-    void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    void remove(boost::gregorian::date day);
-    void remove(int day);
-
-    bool check(int day) const;
-    bool check(boost::gregorian::date day) const;
-
-    bool operator<(const ValidityPattern& other) const;
-    bool operator==(const ValidityPattern& other) const;
 };
 
 struct Calendar : public Nameable, public Header {

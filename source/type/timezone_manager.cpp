@@ -66,6 +66,15 @@ int16_t TimeZoneHandler::get_utc_offset(int day) const {
     throw navitia::exception("day " + std::to_string(day) + " not in production period");
 }
 
+int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
+    for (const auto& vp_shift: time_changes) {
+        // we check if the vj intersect
+        if ((vp_shift.first->days & vp.days).any()) { return vp_shift.second; }
+    }
+    // by construction, this should not be possible
+    throw navitia::exception("no intersection with a validitypattern found");
+}
+
 const TimeZoneHandler*
 TimeZoneManager::get_or_create(const MetaData*,
                                const std::map<int16_t, std::vector<boost::gregorian::date_period>>&) {
