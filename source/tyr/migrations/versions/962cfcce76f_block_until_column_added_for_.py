@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 
 def upgrade():
-    op.add_column('user', sa.Column('block_until', sa.DateTime(), nullable=True))
+    op.add_column('user', sa.Column('block_until', sa.DateTime(timezone=True), nullable=True))
 
 
 def downgrade():
