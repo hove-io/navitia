@@ -543,7 +543,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, code, color, text_color,"
         "network_id, commercial_mode_id, sort, ST_AsText(shape) AS shape, "
-        "opening_time, closing_time"
+        "opening_time, closing_time "
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);

@@ -635,14 +635,13 @@ struct Line : public Header, Nameable, HasMessages {
     std::map<std::string,std::string> properties;
 
     std::vector<LineGroup*> line_group_list;
-    Contributor* contributor=nullptr;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & text_color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & impacts & calendar_list & shape & closing_time
-                & opening_time & properties & line_group_list & contributor;
+                & opening_time & properties & line_group_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -804,7 +803,6 @@ struct Route : public Header, Nameable, HasMessages {
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
-    Contributor* contributor=nullptr;
 
     type::hasOdtProperties get_odt_properties() const;
 
@@ -818,7 +816,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape & direction_type & contributor;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
