@@ -82,7 +82,6 @@ struct RouteFusioHandler : public GenericHandler {
         line_id_c,
         comment_id_c,
         commercial_mode_id_c,
-        contributor_id_c,
         geometry_id_c,
         destination_id_c;
     int ignored;

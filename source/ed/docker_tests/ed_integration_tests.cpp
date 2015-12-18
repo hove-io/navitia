@@ -292,11 +292,8 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
 
     BOOST_REQUIRE(res);
 
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);
-    BOOST_CHECK_EQUAL(data.pt_data->lines[0]->contributor->uri, "C1");
-
+    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);    
     BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 3);
-    BOOST_CHECK_EQUAL(data.pt_data->routes[0]->contributor->uri, "C1");
 
     BOOST_REQUIRE_EQUAL(data.pt_data->frames.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
@@ -307,4 +304,5 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
             boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->frame->uri, "f1");
 }

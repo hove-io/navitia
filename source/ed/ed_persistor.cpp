@@ -718,7 +718,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 }
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
-            {"id", "uri", "name", "color", "code", "contributor_id",
+            {"id", "uri", "name", "color", "code",
              "commercial_mode_id", "network_id", "sort", "shape", "opening_time", "closing_time", "text_color"});
 
     for(types::Line* line : lines){
@@ -727,12 +727,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(navitia::encode_uri(line->uri));
         values.push_back(line->name);
         values.push_back(line->color);
-        values.push_back(line->code);
-        if (line->contributor != nullptr){
-            values.push_back(std::to_string(line->contributor->idx));
-        }else{
-            values.push_back(lotus.null_value);
-        }
+        values.push_back(line->code);        
         if(line->commercial_mode != NULL){
             values.push_back(std::to_string(line->commercial_mode->idx));
         }else{
@@ -822,7 +817,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape", "direction_type", "contributor_id"});
+            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape", "direction_type"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
@@ -846,14 +841,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
             shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
         values.push_back(shape.str());
 
-        values.push_back(route->direction_type);
-
-        if(route->contributor != nullptr){
-            values.push_back(std::to_string(route->contributor->idx));
-        }else{
-            values.push_back(lotus.null_value);
-        }
-
+        values.push_back(route->direction_type);        
         this->lotus.insert(values);
     }
 

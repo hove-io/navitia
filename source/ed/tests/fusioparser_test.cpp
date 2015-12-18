@@ -352,12 +352,8 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
-    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
-
-    BOOST_CHECK_EQUAL(data.lines[0]->contributor->uri, "C1");
-
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");    
     BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
-    BOOST_CHECK_EQUAL(data.routes[0]->contributor->uri, "C1");
 
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
@@ -376,4 +372,5 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.frames[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.frames[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.frames[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->frame->uri, "f1");
 }

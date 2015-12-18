@@ -270,7 +270,6 @@ void RouteFusioHandler::init(Data& ) {
     direction_type_c = csv.get_pos_col("direction_type");
     line_id_c = csv.get_pos_col("line_id");
     comment_id_c = csv.get_pos_col("comment_id");
-    contributor_id_c = csv.get_pos_col("contributor_id");
     geometry_id_c = csv.get_pos_col("geometry_id");
     destination_id_c = csv.get_pos_col("destination_id");
     ignored = 0;
@@ -291,13 +290,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Route orphan " + row[route_id_c]);
         return;
     }
-    ed::types::Route* ed_route = new ed::types::Route();
-    if (is_valid(contributor_id_c, row)){
-        const auto it_contributor = gtfs_data.contributor_map.find(row[contributor_id_c]);
-        if (it_contributor != gtfs_data.contributor_map.end()){
-            ed_route->contributor = it_contributor->second;
-        }
-    }
+    ed::types::Route* ed_route = new ed::types::Route();    
     ed_route->line = ed_line;
     ed_route->uri = row[route_id_c];
 
@@ -750,7 +743,6 @@ void LineFusioHandler::init(Data &){
     opening_c = csv.get_pos_col("line_opening_time");
     closing_c = csv.get_pos_col("line_closing_time");
     text_color_c = csv.get_pos_col("line_text_color");
-    contributor_c = csv.get_pos_col("contributor_id");
 }
 
 
@@ -835,13 +827,6 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(external_code_c, row)) {
         data.add_object_code(line, row[external_code_c]);
         gtfs_data.line_map_by_external_code[row[external_code_c]] = line;
-    }
-
-    if (is_valid(contributor_c, row)){
-        const auto it_contributor = gtfs_data.contributor_map.find(row[contributor_c]);
-        if (it_contributor != gtfs_data.contributor_map.end()){
-            line->contributor = it_contributor->second;
-        }
     }
 
     data.lines.push_back(line);

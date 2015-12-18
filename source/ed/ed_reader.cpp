@@ -543,7 +543,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, code, color, text_color,"
         "network_id, commercial_mode_id, sort, ST_AsText(shape) AS shape, "
-        "opening_time, closing_time, contributor_id "
+        "opening_time, closing_time"
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
@@ -571,12 +571,6 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
                                   line->shape);
 
-        if (! const_it["contributor_id"].is_null()) {
-            auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
-            if(contributor_it != this->contributor_map.end()) {
-                line->contributor = contributor_it->second;
-            }
-        }
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
@@ -622,7 +616,7 @@ void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, line_id, destination_stop_area_id,"
-        "ST_AsText(shape) AS shape, direction_type, contributor_id FROM navitia.route";
+        "ST_AsText(shape) AS shape, direction_type FROM navitia.route";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -638,13 +632,6 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 
         if (!const_it["destination_stop_area_id"].is_null()) {
             route->destination = stop_area_map[const_it["destination_stop_area_id"].as<idx_t>()];
-        }
-
-        if (! const_it["contributor_id"].is_null()) {
-            auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
-            if(contributor_it != this->contributor_map.end()) {
-                route->contributor = contributor_it->second;
-            }
         }
 
         data.pt_data->routes.push_back(route);
