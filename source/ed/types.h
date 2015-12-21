@@ -230,7 +230,6 @@ struct Line : public Header, Nameable {
     CommercialMode* commercial_mode = nullptr;
     Network* network = nullptr;
     Company* company = nullptr;
-    Contributor* contributor = nullptr;
     nt::MultiLineString shape;
     boost::optional<boost::posix_time::time_duration> opening_time,
                                                       closing_time;
@@ -255,7 +254,6 @@ struct LineGroupLink {
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     Line * line;
-    Contributor* contributor = nullptr;
     nt::MultiLineString shape;
     StopArea* destination = nullptr;
     std::string direction_type;
