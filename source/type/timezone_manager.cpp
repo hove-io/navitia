@@ -46,13 +46,13 @@ TimeZoneHandler::TimeZoneHandler(const MetaData& meta_data,
                 vp.add(*it);
             }
         }
-        time_changes.push_back({&vp /*mouahahah*/, offset});
+        time_changes.push_back({std::move(vp), offset});
     }
 }
 
 int16_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
     for (const auto& vp_shift: time_changes) {
-        if (vp_shift.first->check(day)) { return vp_shift.second; }
+        if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
     // the time_changes should be a partition of the production period, so this should not happen
     throw navitia::exception("day " + boost::gregorian::to_iso_string(day) + " not in production period");
@@ -60,7 +60,7 @@ int16_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
 
 int16_t TimeZoneHandler::get_utc_offset(int day) const {
     for (const auto& vp_shift: time_changes) {
-        if (vp_shift.first->check(day)) { return vp_shift.second; }
+        if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
     // the time_changes should be a partition of the production period, so this should not happen
     throw navitia::exception("day " + std::to_string(day) + " not in production period");
@@ -69,16 +69,19 @@ int16_t TimeZoneHandler::get_utc_offset(int day) const {
 int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
     for (const auto& vp_shift: time_changes) {
         // we check if the vj intersect
-        if ((vp_shift.first->days & vp.days).any()) { return vp_shift.second; }
+        if ((vp_shift.first.days & vp.days).any()) { return vp_shift.second; }
     }
     // by construction, this should not be possible
     throw navitia::exception("no intersection with a validitypattern found");
 }
 
 const TimeZoneHandler*
-TimeZoneManager::get_or_create(const MetaData*,
-                               const std::map<int16_t, std::vector<boost::gregorian::date_period>>&) {
-    throw "TODO";
+TimeZoneManager::get_or_create(const MetaData& meta,
+                               const std::map<int16_t, std::vector<boost::gregorian::date_period>>& offsets) {
+    if (! tz_handler) {
+        tz_handler = std::make_unique<TimeZoneHandler>(meta, offsets);
+    }
+    return tz_handler.get();
 }
 }
 }

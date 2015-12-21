@@ -47,7 +47,7 @@ class TimeZoneHandler {
      * vp1:  ***********                  *********      <-- offset n
      * vp2:             ******************               <-- offset m
      */
-    std::vector<std::pair<const ValidityPattern*, int16_t>> time_changes; //TODO remove*
+    std::vector<std::pair<const ValidityPattern, int16_t>> time_changes;
     const MetaData* meta_data = nullptr;
 public:
     TimeZoneHandler(const MetaData&, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
@@ -58,7 +58,13 @@ public:
 };
 
 class TimeZoneManager {
-    const TimeZoneHandler* get_or_create(const MetaData*, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
+    // Note: for the moment we can handle only one tz since we can only read GTFS-like data and GTFS data
+    // supports only one TZ.
+    // when needed replace this with a list
+    std::unique_ptr<TimeZoneHandler> tz_handler;
+
+public:
+    const TimeZoneHandler* get_or_create(const MetaData&, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
 };
 
 }
