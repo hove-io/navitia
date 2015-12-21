@@ -49,6 +49,7 @@ namespace ed { namespace connectors {
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
+nt::RTLevel get_rtlevel_enum(const std::string& str);
 
 /**
  * handle all tz specific stuff
@@ -98,6 +99,7 @@ struct GtfsData {
     ed::types::Company* get_or_create_default_company(Data & data);
     ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
+    std::unordered_map<std::string, ed::types::Frame*> frame_map;
 
     std::unordered_map<std::string, std::vector<ed::types::StopTime*>> stop_time_map; // there may be several stoptimes for one id because of dst
 

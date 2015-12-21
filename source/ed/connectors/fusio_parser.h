@@ -82,7 +82,6 @@ struct RouteFusioHandler : public GenericHandler {
         line_id_c,
         comment_id_c,
         commercial_mode_id_c,
-        contributor_id_c,
         geometry_id_c,
         destination_id_c;
     int ignored;
@@ -125,7 +124,9 @@ struct TripsFusioHandler : public GenericHandler {
         odt_condition_id_c,
         physical_mode_c,
         ext_code_c,
-        geometry_id_c;
+        geometry_id_c,
+        contributor_id_c,
+        frame_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -149,6 +150,15 @@ struct ContributorFusioHandler : public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"contributor_name", "contributor_id"}; }
+};
+
+struct FrameFusioHandler : public GenericHandler {
+    FrameFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, contributor_c, start_date_c, end_date_c, type_c, desc_c, system_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"frame_id", "contributor_id",
+        "frame_start_date", "frame_end_date"}; }
 };
 
 struct LineFusioHandler : public GenericHandler{

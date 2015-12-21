@@ -163,6 +163,17 @@ struct Contributor : public Header, Nameable{
     bool operator<(const Contributor& other)const{ return this->name < other.name;}
 };
 
+struct Frame : public Header{
+    const static nt::Type_e type = nt::Type_e::Frame;
+    Contributor* contributor = nullptr;
+    boost::gregorian::date_period validation_period {boost::gregorian::date(), boost::gregorian::date()};
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+    std::string desc;
+    //Contributor data types in fusio example : Google, OBiTi, ChouetteV2 etc..
+    std::string system;
+    bool operator<(const Frame& other)const{ return this->idx < other.idx;}
+};
+
 struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
@@ -255,6 +266,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Route* route = nullptr;
     Company* company = nullptr;
     PhysicalMode* physical_mode = nullptr;
+    Frame* frame = nullptr;
     //Vehicle* vehicle;
     bool wheelchair_boarding = false;
     navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;

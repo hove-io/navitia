@@ -73,6 +73,14 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
+    // Check frames
+    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->uri, "default_frame:" + data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->desc, "default frame: " + data.contributors[0]->name);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->contributor->uri, data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->validation_period, parser.gtfs_data.production_date);
+
+
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
@@ -344,7 +352,9 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
-    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");    
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
+
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
     BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
@@ -353,4 +363,14 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     for (int i = 1; i < 8; i++){
         BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
     }
+
+    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.contributors[0], data.frames[0]->contributor);
+    BOOST_CHECK_EQUAL(data.frames[0]->desc, "frame_test");
+    BOOST_CHECK_EQUAL(data.frames[0]->uri, "f1");
+    BOOST_CHECK_EQUAL(data.frames[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
+    BOOST_CHECK_EQUAL(data.frames[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.frames[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->frame->uri, "f1");
 }
