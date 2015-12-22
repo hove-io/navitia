@@ -61,7 +61,7 @@ static void default_frames(GtfsData& gdata, Data& data){
             auto frame = std::make_unique<ed::types::Frame>();
             frame->contributor = contributor;
             frame->uri = "default_frame:" + contributor->uri;
-            frame->validation_period = gdata.production_date;
+            frame->validation_period = data.meta.production_date;
             frame->desc = "default frame: " + contributor->name;
             frame->idx = data.frames.size() + 1;
             data.frames.push_back(frame.get());

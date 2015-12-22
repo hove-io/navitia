@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.frames[0]->uri, "default_frame:" + data.contributors[0]->uri);
     BOOST_REQUIRE_EQUAL(data.frames[0]->desc, "default frame: " + data.contributors[0]->name);
     BOOST_REQUIRE_EQUAL(data.frames[0]->contributor->uri, data.contributors[0]->uri);
-    BOOST_REQUIRE_EQUAL(data.frames[0]->validation_period, parser.gtfs_data.production_date);
+    BOOST_REQUIRE_EQUAL(data.frames[0]->validation_period, data.meta.production_date);
 
 
     //timzeone check
