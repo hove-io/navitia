@@ -188,11 +188,11 @@ get_all_stop_times(const routing::JourneyPattern& jp,
                 }
 
                 //we need to convert this to local there since we do not have a precise date (just a period)
-                res.push_back({time + freq_vj->utc_to_local_offset, &st});
+                res.push_back({time + freq_vj->utc_to_local_offset(), &st});
             }
         } else {
             //same utc tranformation
-            res.push_back({st.departure_time + vj->utc_to_local_offset, &st});
+            res.push_back({st.departure_time + vj->utc_to_local_offset(), &st});
         }
     }
 

@@ -97,6 +97,9 @@ struct PT_Data : boost::noncopyable{
     // Headsign handler
     HeadsignHandler headsign_handler;
 
+    // timezone manager
+    TimeZoneManager tz_manager;
+
     // shape manager
     struct ShapeManager {
         const LineString* get(const LineString& l) { return &*set.insert(l).first; }
@@ -120,7 +123,8 @@ struct PT_Data : boost::noncopyable{
                 & stop_points_by_area
                 & comments
                 & codes
-                & headsign_handler;
+                & headsign_handler
+                & tz_manager;
     }
 
     /** Initialise tous les indexes

@@ -228,6 +228,12 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
     BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
 
+    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "Africa/Abidjan");
+    //we check that for all the period, it returns the same UTC shift: 0
+    for (boost::gregorian::day_iterator it(data.meta.production_date.begin()); it < data.meta.production_date.end(); ++it) {
+        BOOST_CHECK_EQUAL(data.tz_handler.get_utc_offset(*it), 0);
+    }
+
     //=> no stop area in the file, so one area has been created for each stop point
     //Stop areas
     BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
@@ -243,7 +249,6 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
-//        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
         BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "Africa/Abidjan");
     }
 
@@ -437,6 +442,11 @@ static void check_gtfs_google_example(const ed::Data& data) {
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->route != nullptr);
     }
+
+    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "America/Los_Angeles");
+    //we check that the shift for vj[0] is -480 minutes and -420 for vj[1]
+    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
+    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
 
     //Stop time
     BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 2);

@@ -35,6 +35,9 @@ www.navitia.io
 #include "type/type.h"
 #include "type/message.h"
 #include "type/data.h"
+#include "type/datetime.h"
+#include "tests/utils_test.h"
+#include "type/meta_data.h"
 
 #include <boost/geometry.hpp>
 #include <boost/make_shared.hpp>
@@ -179,4 +182,23 @@ BOOST_FIXTURE_TEST_CASE(message_is_applicable_simple, disruption_fixture) {
 
     BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-22 12:30:00"), pt::hours(10))));
     BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-23 12:30:00"), pt::hours(10))));
+}
+
+/*
+ * Test that the construction of a tz handler from a list a dst then it's conversion to this list of dst
+ * leads to the same initial period
+ */
+BOOST_AUTO_TEST_CASE(tz_handler_test) {
+    namespace nt = navitia::type;
+    const nt::TimeZoneHandler::dst_periods periods {
+        {"02:00"_t, {{"20160101"_d, "20160601"_d}, {"20160901"_d, "20170101"_d}}},
+        {"03:00"_t, {{"20160601"_d, "20160901"_d}}}
+    };
+    nt::MetaData meta;
+    meta.production_date = {"20160101"_d, "20170101"_d};
+    nt::TimeZoneHandler tz_handler{"paris", meta, periods};
+
+    auto build_dst_periods = tz_handler.get_periods_and_shift();
+
+    BOOST_CHECK_EQUAL_RANGE(periods, build_dst_periods);
 }

@@ -50,15 +50,23 @@ Route1
                 A4
 */
     ed::Data data;
+    data.meta.production_date = {boost::gregorian::date(2014, 1, 1), boost::gregorian::date(2015, 1, 1)};
+    data.tz_handler = {"utc", data.meta, {{0, {data.meta.production_date}}}};
     auto *route = new ed::types::Route();
     route->idx = 0;
     data.routes.push_back(route);
 
+    auto* vp1 = new navitia::type::ValidityPattern(data.meta.production_date.begin(), "0001");
+    data.validity_patterns.push_back(vp1);
+
     ed::types::VehicleJourney* vj1 = new ed::types::VehicleJourney();
+    vj1->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj1);
     ed::types::VehicleJourney* vj2 = new ed::types::VehicleJourney();
+    vj2->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj2);
     ed::types::VehicleJourney* vj3 = new ed::types::VehicleJourney();
+    vj3->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj3);
 
     vj1->route = route;

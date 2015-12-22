@@ -181,20 +181,15 @@ struct builder {
     std::map<std::string, navitia::type::Network *> nts;
     std::multimap<std::string, navitia::type::VehicleJourney*> block_vjs;
     boost::gregorian::date begin;
+    const navitia::type::TimeZoneHandler* tz_handler;
 
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
 
-    /// Il faut préciser là date de début des différents validity patterns
-    builder(const std::string & date, const std::string& publisher_name = "canal tp") : begin(boost::gregorian::date_from_iso_string(date)){
-        data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
-        data->meta->timezone = "UTC"; //default timezone is UTC
-		data->loaded = true;
-        data->meta->instance_name = "builder";
-        data->meta->publisher_name = publisher_name;
-        data->meta->publisher_url = "www.canaltp.fr";
-        data->meta->license = "ODBL";
-    }
+    /// 'date' is the beggining date of all the validity patterns
+    builder(const std::string & date,
+            const std::string& publisher_name = "canal tp",
+            navitia::type::TimeZoneHandler::dst_periods timezone = {});
 
     /// Create a discrete vehicle journey (no frequency, explicit stop times)
     VJ vj(const std::string& line_name,

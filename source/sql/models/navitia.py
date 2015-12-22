@@ -31,11 +31,28 @@ odt_type = Table('odt_type', metadata,*[
     schema='navitia')
 
 
-meta_vj = Table('meta_vj', metadata,*[
+timezone = Table('timezone', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),],
     schema='navitia')
 
+tz_dst = Table('tz_dst', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('tz_id', BIGINT(), primary_key=False, nullable=False),
+    Column('beginning_date', DATE(), primary_key=False),
+    Column('end_date', DATE(), primary_key=False),
+    Column('utc_offset', INTEGER(), primary_key=False),
+    ForeignKeyConstraint(['tz_id'], [u'navitia.timezone.id'], name=u'associated_tz_dst_fkey')
+    ],
+    schema='navitia')
+
+meta_vj = Table('meta_vj', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('timezone', BIGINT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['timezone'], [u'navitia.timezone.id'], name=u'associated_timezone_metavj_fkey')
+    ],
+    schema='navitia')
 
 contributor = Table('contributor', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
@@ -67,7 +84,7 @@ commercial_mode = Table('commercial_mode', metadata,*[
 parameters = Table('parameters', metadata,*[
     Column('beginning_date', DATE(), primary_key=False),
     Column('end_date', DATE(), primary_key=False),
-    Column('timezone', TEXT(), primary_key=False),
+    Column('timezone', TEXT(), primary_key=False, nullable=True),
     Column('shape', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
     Column('shape_computed', BOOLEAN(), primary_key=False, default=text(u'true')),
     Column('parse_pois_from_osm', BOOLEAN(), primary_key=False, default=text(u'true')),

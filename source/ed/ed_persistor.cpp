@@ -307,6 +307,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert feed_infos");
     this->insert_feed_info(data.feed_infos);
     LOG4CPLUS_INFO(logger, "End: insert feed_info");
+    LOG4CPLUS_INFO(logger, "Begin: insert timezone");
+    this->insert_timezones(data.tz_handler);
+    LOG4CPLUS_INFO(logger, "End: insert timezone");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
     LOG4CPLUS_INFO(logger, "End: insert networks");
@@ -467,7 +470,7 @@ void EdPersistor::clean_db(){
     this->lotus.exec(
         "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
         "navitia.physical_mode, navitia.contributor, "
-        "navitia.commercial_mode, "
+        "navitia.commercial_mode, navitia.timezone, navitia.tz_dst, "
         "navitia.vehicle_properties, navitia.properties, "
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
@@ -493,6 +496,30 @@ void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& fee
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
+}
+
+
+void EdPersistor::insert_timezones(const navitia::type::TimeZoneHandler& tz_handler) {
+    lotus.prepare_bulk_insert("navitia.timezone", {"id", "name"});
+    // in the ED part there can be only one TZ by construction
+    lotus.insert({std::to_string(default_timezone_idx), tz_handler.tz_name});
+    lotus.finish_bulk_insert();
+
+
+    lotus.prepare_bulk_insert("navitia.tz_dst", {"id", "tz_id", "beginning_date", "end_date", "utc_offset"});
+    size_t idx = 0;
+    for (const auto& dst: tz_handler.get_periods_and_shift()) {
+        for (const auto& period: dst.second) {
+            lotus.insert({std::to_string(idx),
+                          std::to_string(default_timezone_idx),
+                          bg::to_iso_extended_string(period.begin()),
+                          bg::to_iso_extended_string(period.last()),
+                          std::to_string(dst.first)
+                         });
+            ++idx;
+        }
+    }
+    lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -951,7 +978,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "route_id", "physical_mode_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message", "utc_to_local_offset", "is_frequency", "meta_vj_name", "vj_class"});
+             "odt_type_id", "odt_message", "is_frequency", "meta_vj_name", "vj_class"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -995,7 +1022,6 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
-        values.push_back(std::to_string(vj->utc_to_local_offset));
 
         bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
         values.push_back(std::to_string(is_frequency));
@@ -1033,10 +1059,10 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
 void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs) {
     //we insert first the meta vj
-    this->lotus.prepare_bulk_insert("navitia.meta_vj", {"id", "name"});
+    this->lotus.prepare_bulk_insert("navitia.meta_vj", {"id", "name", "timezone"});
     size_t cpt(0);
     for (const auto& meta_vj_pair: meta_vjs) {
-        this->lotus.insert({std::to_string(cpt), meta_vj_pair.first});
+        this->lotus.insert({std::to_string(cpt), meta_vj_pair.first, std::to_string(default_timezone_idx)});
         cpt++;
     }
     this->lotus.finish_bulk_insert();

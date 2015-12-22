@@ -34,9 +34,9 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-TimeZoneHandler::TimeZoneHandler(const MetaData& meta_data,
-                                 const std::map<int16_t, std::vector<boost::gregorian::date_period>>& offsets_periods) {
-
+TimeZoneHandler::TimeZoneHandler(const std::string& name, const MetaData& meta_data,
+                                 const dst_periods& offsets_periods):
+tz_name(name) {
     for (const auto& utc_shit_and_periods: offsets_periods) {
         ValidityPattern vp(meta_data.production_date.begin());
 
@@ -55,7 +55,7 @@ int16_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
         if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
     // the time_changes should be a partition of the production period, so this should not happen
-    throw navitia::exception("day " + boost::gregorian::to_iso_string(day) + " not in production period");
+    throw navitia::recoverable_exception("day " + boost::gregorian::to_iso_string(day) + " not in production period");
 }
 
 int16_t TimeZoneHandler::get_utc_offset(int day) const {
@@ -63,25 +63,72 @@ int16_t TimeZoneHandler::get_utc_offset(int day) const {
         if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
     // the time_changes should be a partition of the production period, so this should not happen
-    throw navitia::exception("day " + std::to_string(day) + " not in production period");
+    throw navitia::recoverable_exception("day " + std::to_string(day) + " not in production period");
 }
 
 int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
+    if (vp.days.none()) {
+        return 0; // vp is empty, utc shift is not important
+    }
     for (const auto& vp_shift: time_changes) {
         // we check if the vj intersect
         if ((vp_shift.first.days & vp.days).any()) { return vp_shift.second; }
     }
     // by construction, this should not be possible
-    throw navitia::exception("no intersection with a validitypattern found");
+    throw navitia::recoverable_exception("no intersection with a timezone found");
+}
+
+TimeZoneHandler::dst_periods TimeZoneHandler::get_periods_and_shift() const {
+    dst_periods dst;
+    namespace bg = boost::gregorian;
+    for (const auto& vp_shift: time_changes) {
+        const auto& bitset = vp_shift.first.days;
+        const auto& beg_of_period = vp_shift.first.beginning_date;
+        std::vector<bg::date_period> periods;
+        bg::date last_period_beg;
+        for (size_t i = 0; i < bitset.size(); ++i) {
+            if (bitset.test(i)) {
+                if (last_period_beg.is_not_a_date()) {
+                    // begining of a period, we store the date
+                    last_period_beg = beg_of_period + bg::days(i);
+                }
+            } else {
+                // if we had a begin, we can add a period
+                if (! last_period_beg.is_not_a_date()) {
+                    periods.push_back({last_period_beg, beg_of_period + bg::days(i)});
+                }
+                last_period_beg = bg::date();
+            }
+        }
+        // we add the last build period
+        if (! last_period_beg.is_not_a_date()) {
+            periods.push_back({last_period_beg, beg_of_period + bg::days(bitset.size())});
+        }
+        dst[vp_shift.second] = periods;
+    }
+
+    return dst;
 }
 
 const TimeZoneHandler*
-TimeZoneManager::get_or_create(const MetaData& meta,
+TimeZoneManager::get_or_create(const std::string& name, const MetaData& meta,
                                const std::map<int16_t, std::vector<boost::gregorian::date_period>>& offsets) {
-    if (! tz_handler) {
-        tz_handler = std::make_unique<TimeZoneHandler>(meta, offsets);
+    auto it = tz_handlers.find(name);
+
+    if (it == std::end(tz_handlers)) {
+        tz_handlers[name] = std::make_unique<TimeZoneHandler>(name, meta, offsets);
+        return tz_handlers[name].get();
     }
-    return tz_handler.get();
+    return it->second.get();
 }
+
+const TimeZoneHandler* TimeZoneManager::get(const std::string& name) const {
+    auto it = tz_handlers.find(name);
+    if (it == std::end(tz_handlers)) {
+        return nullptr;
+    }
+    return it->second.get();
+}
+
 }
 }

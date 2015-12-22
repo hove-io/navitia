@@ -56,6 +56,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_meta(data, work);
     // TODO merge fill_feed_infos, fill_meta
     this->fill_feed_infos(data, work);
+    this->fill_timezones(data, work);
     this->fill_networks(data, work);
     this->fill_commercial_modes(data, work);
     this->fill_physical_modes(data, work);
@@ -286,6 +287,36 @@ void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
         if (const_it["key"].as<std::string>() == "feed_license"){
             data.meta->license = const_it["value"].as<std::string>();
         }
+    }
+}
+
+void EdReader::fill_timezones(navitia::type::Data& data, pqxx::work& work) {
+    std::string request = "SELECT tz.id as id, "
+                          "tz.name as name, "
+                          "dst.beginning_date as beg, "
+                          "dst.end_date as end, "
+                          "dst.utc_offset as offset"
+                          " FROM navitia.timezone as tz,"
+                          " navitia.tz_dst as dst where dst.tz_id = tz.id";
+
+    pqxx::result result = work.exec(request);
+    std::map<std::string, idx_t> id_by_name;
+    std::map<std::string, navitia::type::TimeZoneHandler::dst_periods> timezones;
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        bg::date begin = bg::from_string(const_it["beg"].as<std::string>());
+        //we add a day because 'end' is not in the period (and we want it to be)
+        bg::date end = bg::from_string(const_it["end"].as<std::string>()) + bg::days(1);
+        auto name = const_it["name"].as<std::string>();
+        int16_t utc_offset = const_it["offset"].as<int16_t>();
+        timezones[name][utc_offset].push_back(bg::date_period(begin, end));
+
+        auto id = const_it["id"].as<idx_t>();
+        id_by_name[name] = id;
+    }
+
+    for (const auto& p: timezones) {
+        auto tz = data.pt_data->tz_manager.get_or_create(p.first, *(data.meta.get()), p.second);
+        timezone_map[id_by_name[p.first]] = tz;
     }
 }
 
@@ -742,7 +773,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.start_time as start_time,"
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
-        "vj.utc_to_local_offset as utc_to_local_offset, "
         "vj.is_frequency as is_frequency, "
         "vj.meta_vj_name as meta_vj_name, "
         "vj.vj_class as vj_class, "
@@ -797,7 +827,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         }
         const_it["name"].to(vj->name);
         const_it["odt_message"].to(vj->odt_message);
-        const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
         vj->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
@@ -923,11 +952,15 @@ void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
 
 void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     //then we fill the links between a metavj and its associated calendars
-    const std::string request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
-            " c.uri as associated_calendar_name"
-            " from navitia.rel_metavj_associated_calendar as meta, navitia.meta_vj as l,"
-            " navitia.associated_calendar as l2, navitia.calendar c"
-            " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id and c.id = l2.calendar_id";
+    const std::string request = "SELECT meta.name as name,"
+                                " meta.timezone as timezone, "
+                                " rel_vj_cal.associated_calendar_id as associated_calendar_id,"
+                                " c.uri as associated_calendar_name"
+                                " from navitia.rel_metavj_associated_calendar as rel_vj_cal,"
+                                " navitia.meta_vj as meta,"
+                                " navitia.associated_calendar as l2, navitia.calendar c"
+                                " WHERE rel_vj_cal.meta_vj_id = meta.id "
+                                "and rel_vj_cal.associated_calendar_id = l2.id and c.id = l2.calendar_id";
     const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
@@ -947,6 +980,14 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         associated_calendar = it_ac->second;
 
         meta_vj->associated_calendars[const_it["associated_calendar_name"].as<std::string>()] = associated_calendar;
+
+        const auto tz_id = const_it["timezone"].as<idx_t>();
+        const auto* tz = find_or_default(tz_id, timezone_map);
+        if (! tz) {
+            throw navitia::exception("impossible to find timezone " + std::to_string(tz_id)
+                                     + " data is in an invalid state");
+        }
+        meta_vj->tz_handler = tz;
     }
 }
 

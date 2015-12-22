@@ -77,6 +77,7 @@ private:
     std::unordered_map<idx_t, navitia::type::Route*> route_map;
     std::unordered_map<idx_t, navitia::type::ValidityPattern*> validity_pattern_map;
     std::unordered_map<idx_t, navitia::type::VehicleJourney*> vehicle_journey_map;
+    std::unordered_map<idx_t, const navitia::type::TimeZoneHandler*> timezone_map;
 
     // stop_times by vj idx
     std::unordered_map<idx_t, std::vector<navitia::type::StopTime>> sts_from_vj;
@@ -104,6 +105,7 @@ private:
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_feed_infos(navitia::type::Data& data, pqxx::work& work);
+    void fill_timezones(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
     void fill_commercial_modes(navitia::type::Data& data, pqxx::work& work);
     void fill_physical_modes(navitia::type::Data& data, pqxx::work& work);

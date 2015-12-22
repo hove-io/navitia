@@ -813,7 +813,7 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
     // we start by filling the global tz_handler
     auto splited_production_period = split_over_dst(data.meta.production_date,
                                                     gtfs_data.tz.default_timezone.second);
-    data.tz_handler = nt::TimeZoneHandler(data.meta, splited_production_period);
+    data.tz_handler = nt::TimeZoneHandler(gtfs_data.tz.default_timezone.first, data.meta, splited_production_period);
 
     for (const auto& name_and_vp: gtfs_data.tz.non_split_vp) {
         const nt::ValidityPattern& original_vp = name_and_vp.second;

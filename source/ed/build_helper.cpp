@@ -130,6 +130,9 @@ nt::VehicleJourney* VJ::make() {
     // NOTE: the meta vj name should be the same as the vj's name
     nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
 
+    // we associate the metavj to the default timezone for the moment
+    mvj->tz_handler = b.tz_handler;
+
     const auto vp = nt::ValidityPattern(b.begin, validity_pattern);
     const auto uri_str = uri.empty() ?
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
@@ -457,6 +460,25 @@ SA builder::sa(const std::string &name, double x, double y,
     return SA(*this, name, x, y, create_sp, wheelchair_boarding);
 }
 
+builder::builder(const std::string & date,
+        const std::string& publisher_name,
+        navitia::type::TimeZoneHandler::dst_periods timezone):
+    begin(boost::gregorian::date_from_iso_string(date)) {
+    data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
+    data->meta->timezone = "UTC"; //default timezone is UTC
+    data->loaded = true;
+    data->meta->instance_name = "builder";
+    data->meta->publisher_name = publisher_name;
+    data->meta->publisher_url = "www.canaltp.fr";
+    data->meta->license = "ODBL";
+
+    // for the moment we can only have one timezone per dataset
+    if (timezone.empty()) {
+        // we add a default timezone at UTC
+        timezone = {{0, {data->meta->production_date}}};
+    }
+    tz_handler = data->pt_data->tz_manager.get_or_create("timezone", *data->meta.get(), timezone);
+}
 
 void builder::connection(const std::string & name1, const std::string & name2, float length) {
     navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();

@@ -46,25 +46,37 @@ class TimeZoneHandler {
      *       [  DST    )[    non DST     )[   DST )
      * vp1:  ***********                  *********      <-- offset n
      * vp2:             ******************               <-- offset m
+     *
+     * offsets are in seconds
      */
     std::vector<std::pair<const ValidityPattern, int16_t>> time_changes;
-    const MetaData* meta_data = nullptr;
 public:
-    TimeZoneHandler(const MetaData&, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
+    std::string tz_name;
+    using dst_periods = std::map<int16_t, std::vector<boost::gregorian::date_period>>;
+    TimeZoneHandler(const std::string& name, const MetaData&, const dst_periods&);
     TimeZoneHandler() {}
     int16_t get_utc_offset(boost::gregorian::date day) const;
     int16_t get_utc_offset(int day) const;
     int16_t get_first_utc_offset(const ValidityPattern& vp) const;
+    dst_periods get_periods_and_shift() const;
+
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar & tz_name & time_changes;
+    }
 };
 
 class TimeZoneManager {
-    // Note: for the moment we can handle only one tz since we can only read GTFS-like data and GTFS data
-    // supports only one TZ.
-    // when needed replace this with a list
-    std::unique_ptr<TimeZoneHandler> tz_handler;
+    std::map<std::string, std::unique_ptr<TimeZoneHandler>> tz_handlers;
 
 public:
-    const TimeZoneHandler* get_or_create(const MetaData&, const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
+    const TimeZoneHandler* get_or_create(const std::string&, const MetaData&,
+                                         const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
+
+    const TimeZoneHandler* get(const std::string& name) const;
+
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar & tz_handlers;
+    }
 };
 
 }

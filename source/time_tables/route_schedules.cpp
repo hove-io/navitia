@@ -89,7 +89,7 @@ get_all_route_stop_times(const nt::Route* route,
                     dt = DateTimeUtils::shift(dt, stop_time.departure_time);
                 } else {
                     // for calendar, we need to shift the time to local time
-                    const auto utc_to_local_offset = stop_time.vehicle_journey->utc_to_local_offset;
+                    const auto utc_to_local_offset = stop_time.vehicle_journey->utc_to_local_offset();
                     // we don't care about the date and about the overmidnight cases
                     dt = DateTimeUtils::hour(stop_time.departure_time + utc_to_local_offset);
                 }

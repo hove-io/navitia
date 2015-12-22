@@ -540,7 +540,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset & shift & frame;
+            & meta_vj & shift & frame;
     }
 
     virtual ~VehicleJourney();
@@ -766,6 +766,7 @@ struct Calendar : public Nameable, public Header {
  */
 struct MetaVehicleJourney: public Header, HasMessages {
     const static Type_e type = Type_e::MetaVehicleJourney;
+    const TimeZoneHandler* tz_handler = nullptr;
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
@@ -775,10 +776,10 @@ struct MetaVehicleJourney: public Header, HasMessages {
     /// of the theoric vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & idx & uri & rtlevel_to_vjs_map
            & associated_calendars & impacts
-           & impacted_by;
+           & impacted_by & tz_handler;
     }
 
     FrequencyVehicleJourney*

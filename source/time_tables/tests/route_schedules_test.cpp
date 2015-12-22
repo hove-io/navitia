@@ -162,7 +162,8 @@ We have the following associations :
 - MVJ7 => ∅
 */
 struct route_schedule_calendar_fixture {
-    ed::builder b = {"20120614"};
+    // we complicate things a bit, we say that the vjs have a utc offset
+    ed::builder b = {"20120614", "canal tp", {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}};
     navitia::type::Calendar *c1, *c2, *c3, *c4;
     navitia::type::VehicleJourney *vj5, *vj6, *vj7;
 
@@ -179,11 +180,6 @@ struct route_schedule_calendar_fixture {
                 (S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t).make();
         vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")
                 (S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t).make();
-
-        // we complicate things a bit, we say that the vjs have a utc offset
-        vj5->utc_to_local_offset = "02:00"_t;
-        vj6->utc_to_local_offset = "02:00"_t;
-        vj7->utc_to_local_offset = "02:00"_t;
 
         auto save_cal = [&](navitia::type::Calendar* cal) {
             b.data->pt_data->calendars.push_back(cal);
@@ -375,17 +371,14 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  *
  */
 struct CalWithDSTFixture {
-    ed::builder b = {"20150614"};
+    ed::builder b = {"20150614", "canal tp", {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}};
 
     CalWithDSTFixture() {
         auto normal_vp = "111111";
         auto shifted_vp = "111110";
-        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
-        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
-        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
+        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t);
+        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t);
+        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t);
 
         auto cal = new navitia::type::Calendar();
         cal->uri = "cal";

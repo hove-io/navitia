@@ -5,7 +5,7 @@ SET(GEOREF_SRC_TEST
 add_library(georef_test_utils ${GEOREF_SRC_TEST})
 
 add_executable(georef_test georef_test.cpp)
-target_link_libraries(georef_test georef_test_utils fare georef utils data
+target_link_libraries(georef_test georef_test_utils ed fare georef utils data
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY}
     ${Boost_REGEX_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} log4cplus protobuf)
 ADD_BOOST_TEST(georef_test)

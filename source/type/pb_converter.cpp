@@ -828,7 +828,7 @@ void fill_pb_object(const nt::StopTime& st, const type::Data &data,
     // arrival/departure in protobuff are as seconds from midnight in local time
     const auto offset = [&](const uint32_t time) {
         static const auto flag = std::numeric_limits<uint32_t>::max();
-        return time == flag ? 0 : st.vehicle_journey->utc_to_local_offset;
+        return time == flag ? 0 : st.vehicle_journey->utc_to_local_offset();
     };
     stop_time->set_arrival_time(st.arrival_time + offset(st.arrival_time));
     stop_time->set_departure_time(st.departure_time + offset(st.departure_time));

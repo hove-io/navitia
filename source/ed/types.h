@@ -254,7 +254,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::string odt_message;
     std::string meta_vj_name; //link to it's meta vj
     std::string shape_id;
-    int16_t utc_to_local_offset = 0; // shift used to convert the local time from the data to utc, in seconds
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
