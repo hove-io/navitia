@@ -547,8 +547,8 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             // last is 'taxi like' ODT, there is no walking nor crow fly section,
             // but we have to update the end of the journey
             auto* section = pb_journey->mutable_sections(pb_journey->sections_size() - 1);
-            section->mutable_origin()->Clear();
-            //TODO: the perido can probably be better (-1 min shift)
+            section->mutable_destination()->Clear();
+            //TODO: the period can probably be better (-1 min shift)
             auto action_period = bt::time_period(navitia::from_posix_timestamp(section->end_date_time()), bt::minutes(1));
             fill_pb_placemark(destination, d, section->mutable_destination(), 1, now, action_period, show_codes);
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
