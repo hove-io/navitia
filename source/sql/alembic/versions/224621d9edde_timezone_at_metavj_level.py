@@ -8,7 +8,7 @@ Create Date: 2015-12-21 16:52:30.275508
 
 # revision identifiers, used by Alembic.
 revision = '224621d9edde'
-down_revision = '14346346596e'
+down_revision = '5a590ae95255'
 
 from alembic import op
 import sqlalchemy as sa
@@ -33,9 +33,11 @@ def upgrade():
     schema='navitia'
     )
     op.add_column(u'meta_vj', sa.Column('timezone', sa.BIGINT(), nullable=True), schema=u'navitia')
+    op.drop_column(u'vehicle_journey', 'utc_to_local_offset', schema=u'navitia')
 
 
 def downgrade():
     op.drop_column(u'meta_vj', 'timezone', schema=u'navitia')
     op.drop_table('tz_dst', schema='navitia')
     op.drop_table('timezone', schema='navitia')
+    op.add_column(u'vehicle_journey', sa.Column('utc_to_local_offset', sa.BIGINT(), nullable=True), schema=u'navitia')
