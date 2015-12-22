@@ -951,35 +951,36 @@ void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
-    //then we fill the links between a metavj and its associated calendars
-    const std::string request = "SELECT meta.name as name,"
-                                " meta.timezone as timezone, "
-                                " rel_vj_cal.associated_calendar_id as associated_calendar_id,"
-                                " c.uri as associated_calendar_name"
-                                " from navitia.rel_metavj_associated_calendar as rel_vj_cal,"
-                                " navitia.meta_vj as meta,"
-                                " navitia.associated_calendar as l2, navitia.calendar c"
-                                " WHERE rel_vj_cal.meta_vj_id = meta.id "
-                                "and rel_vj_cal.associated_calendar_id = l2.id and c.id = l2.calendar_id";
+    //then we fill the links between a metavj, its associated calendars and it's timezone
+    const auto request = "SELECT meta.name as name, "
+                         "meta.timezone as timezone, "
+                         "rel.associated_calendar_id as associated_calendar_id, "
+                         "c.uri as associated_calendar_name "
+                         "from navitia.meta_vj as meta "
+                         "LEFT JOIN navitia.rel_metavj_associated_calendar as rel ON rel.meta_vj_id = meta.id "
+                         "LEFT JOIN navitia.associated_calendar as l2 ON rel.associated_calendar_id = l2.id "
+                         "LEFT JOIN navitia.calendar as c ON c.id = l2.calendar_id";
+
     const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
         nt::MetaVehicleJourney* meta_vj = data.pt_data->meta_vjs.get_mut(name);
         if (meta_vj == nullptr) {
-            LOG4CPLUS_ERROR(log, "Impossible to find the meta vj " << name << ", we won't add associated calendar");
-            continue;
+            throw navitia::exception("impossible to find metavj " + name + " data are not valid");
         }
 
-        int associated_calendar_idx = const_it["associated_calendar_id"].as<idx_t>();
-        nt::AssociatedCalendar* associated_calendar;
-        auto it_ac = this->associated_calendar_map.find(associated_calendar_idx);
-        if (it_ac == this->associated_calendar_map.end()) {
-            LOG4CPLUS_ERROR(log, "Impossible to find the associated calendar " << associated_calendar_idx << ", we won't add it to meta vj");
-            continue;
-        }
-        associated_calendar = it_ac->second;
+        if (! const_it["associated_calendar_id"].is_null()) {
+            int associated_calendar_idx = const_it["associated_calendar_id"].as<idx_t>();
+            nt::AssociatedCalendar* associated_calendar;
+            auto it_ac = this->associated_calendar_map.find(associated_calendar_idx);
+            if (it_ac == this->associated_calendar_map.end()) {
+                LOG4CPLUS_ERROR(log, "Impossible to find the associated calendar " << associated_calendar_idx << ", we won't add it to meta vj");
+            } else {
+                associated_calendar = it_ac->second;
 
-        meta_vj->associated_calendars[const_it["associated_calendar_name"].as<std::string>()] = associated_calendar;
+                meta_vj->associated_calendars[const_it["associated_calendar_name"].as<std::string>()] = associated_calendar;
+            }
+        }
 
         const auto tz_id = const_it["timezone"].as<idx_t>();
         const auto* tz = find_or_default(tz_id, timezone_map);
