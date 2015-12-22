@@ -108,6 +108,7 @@ class Instance(object):
             try:
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
+                logger.exception('sceneario not found')
                 abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
             g.scenario = scenario

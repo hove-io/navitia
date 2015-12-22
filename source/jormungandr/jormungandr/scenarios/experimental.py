@@ -31,13 +31,12 @@ import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import new_default
 from navitiacommon import type_pb2, response_pb2, request_pb2
-from copy import deepcopy
 import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
-from jormungandr.scenarios import journey_filter
+from flask import g
 
-from jormungandr.scenarios.new_default import sort_journeys, type_journeys, tag_journeys, culling_journeys
+from jormungandr import app
 
 def create_crowfly(_from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
@@ -58,54 +57,103 @@ class SectionSorter(object):
         else:
             return -1 if a.end_date_time < b.end_date_time else 1
 
+def get_max_fallback_duration(request, mode):
+    if mode == 'walking':
+        return request['max_walking_duration_to_pt']
+    if mode == 'bss':
+        return request['max_bss_duration_to_pt']
+    if mode == 'bike':
+        return request['max_bike_duration_to_pt']
+    if mode == 'car':
+        return request['max_car_duration_to_pt']
+    raise ValueError('unknow mode: {}'.format(mode))
+
+def build_journey(journey, _from, to, origins, destinations):
+    departure = journey.sections[0].origin
+    arrival = journey.sections[-1].destination
+
+    journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
+    journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
+    journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
+
+    #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
+    journey.sections.extend([
+        create_crowfly(arrival, to, journey.sections[-1].end_date_time,
+                       journey.arrival_date_time)])
+    journey.sections.extend([
+        create_crowfly(_from, departure, journey.departure_date_time,
+                       journey.sections[0].begin_date_time)])
+    journey.sections.sort(SectionSorter())
+
+#TODO: make this work, it's dynamically imported, so the function is register too late
+#@app.before_request
+def _init_g():
+    g.origins_fallback = {}
+    g.destinations_fallback = {}
+    g.requested_origin = None
+    g.requested_destination = None
+
 class Scenario(new_default.Scenario):
 
     def __init__(self):
         super(Scenario, self).__init__()
 
+    def call_kraken(self, request_type, request, instance, krakens_call):
+        """
+        For all krakens_call, call the kraken and aggregate the responses
 
-
-    def journeys(self, request, instance):
+        return the list of all responses
+        """
         logger = logging.getLogger(__name__)
-        logger.warn('using experimental scenario!!!')
-        origins = instance.georef.get_stop_points(request['origin'], 'walking', 1800)
-        logging.debug('origins: %s', origins)
-        destinations = instance.georef.get_stop_points(request['destination'], 'walking', 1800)
-        logging.debug('destinations: %s', destinations)
+        logger.debug('datetime: %s', request['datetime'])
 
+        for dep_mode, arr_mode in krakens_call:
+            if dep_mode not in g.origins_fallback:
+                g.origins_fallback[dep_mode] = instance.georef.get_stop_points(request['origin'],
+                        dep_mode,
+                        get_max_fallback_duration(request, dep_mode))
+                #logger.debug('origins %s: %s', dep_mode, g.origins_fallback[dep_mode])
+
+            if arr_mode not in g.destinations_fallback:
+                g.destinations_fallback[arr_mode] = instance.georef.get_stop_points(request['destination'],
+                        arr_mode,
+                        get_max_fallback_duration(request, arr_mode))#TODO add reverse
+                #logger.debug('destinations %s: %s', arr_mode, g.destinations_fallback[arr_mode])
+
+        if not g.requested_origin:
+            g.requested_origin = instance.georef.place(request['origin'])
+        if not g.requested_destination:
+            g.requested_destination = instance.georef.place(request['destination'])
+
+        resp = []
         journey_parameters = JourneyParameters()
-        response = instance.planner.journeys(origins, destinations, request['datetime'], request['clockwise'], journey_parameters)
-        if not response.journeys:
-            return response
+        for dep_mode, arr_mode in krakens_call:
+            #todo: this is probably shared between multiple thread
+            self.nb_kraken_calls += 1
 
-        requested_origin = instance.georef.place(request['origin'])
-        requested_destination = instance.georef.place(request['destination'])
+            local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
+                                                   g.destinations_fallback[arr_mode],
+                                                   request['datetime'],
+                                                   request['clockwise'],
+                                                   journey_parameters)
 
-        for journey in response.journeys:
-            departure = journey.sections[0].origin
-            arrival = journey.sections[-1].destination
+            # for log purpose we put and id in each journeys
+            for idx, j in enumerate(local_resp.journeys):
+                j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 
-            journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
-            journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
-            journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
+            for journey in local_resp.journeys:
+                build_journey(journey,
+                                   g.requested_origin,
+                                   g.requested_destination,
+                                   g.origins_fallback[dep_mode],
+                                   g.destinations_fallback[arr_mode])
 
-            #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
-            journey.sections.extend([
-                create_crowfly(arrival, requested_destination, journey.sections[-1].end_date_time,
-                               journey.arrival_date_time)])
-            journey.sections.extend([
-                create_crowfly(requested_origin, departure, journey.departure_date_time,
-                               journey.sections[0].begin_date_time)])
-            journey.sections.sort(SectionSorter())
+            resp.append(local_resp)
+            logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
 
-
-        journey_filter.filter_journeys([response], instance, request=request, original_request=request)
-        sort_journeys(response, instance.journey_order, request['clockwise'])
-        tag_journeys(response)
-        type_journeys(response, request)
-        culling_journeys(response, request)
-        fill_uris(response)
-        return response
+        for r in resp:
+            fill_uris(r)
+        return resp
 
 
 
@@ -114,3 +162,9 @@ class Scenario(new_default.Scenario):
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
+
+    def journeys(self, request, instance):
+        logger = logging.getLogger(__name__)
+        logger.warn('using experimental scenario!!!')
+        _init_g()
+        return self.__on_journeys(type_pb2.PLANNER, request, instance)
