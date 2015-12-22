@@ -189,6 +189,7 @@ struct builder {
     /// 'date' is the beggining date of all the validity patterns
     builder(const std::string & date,
             const std::string& publisher_name = "canal tp",
+            const std::string& timezone_name = "UTC",
             navitia::type::TimeZoneHandler::dst_periods timezone = {});
 
     /// Create a discrete vehicle journey (no frequency, explicit stop times)

@@ -163,7 +163,7 @@ We have the following associations :
 */
 struct route_schedule_calendar_fixture {
     // we complicate things a bit, we say that the vjs have a utc offset
-    ed::builder b = {"20120614", "canal tp", {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}};
+    ed::builder b = {"20120614", "canal tp", "paris", {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}};
     navitia::type::Calendar *c1, *c2, *c3, *c4;
     navitia::type::VehicleJourney *vj5, *vj6, *vj7;
 
@@ -371,7 +371,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  *
  */
 struct CalWithDSTFixture {
-    ed::builder b = {"20150614", "canal tp", {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}};
+    ed::builder b = {"20150614", "canal tp", "paris", {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}};
 
     CalWithDSTFixture() {
         auto normal_vp = "111111";

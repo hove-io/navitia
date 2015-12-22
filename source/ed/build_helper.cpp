@@ -461,11 +461,11 @@ SA builder::sa(const std::string &name, double x, double y,
 }
 
 builder::builder(const std::string & date,
-        const std::string& publisher_name,
-        navitia::type::TimeZoneHandler::dst_periods timezone):
+                 const std::string& publisher_name,
+                 const std::string& timezone_name,
+                 navitia::type::TimeZoneHandler::dst_periods timezone):
     begin(boost::gregorian::date_from_iso_string(date)) {
     data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
-    data->meta->timezone = "UTC"; //default timezone is UTC
     data->loaded = true;
     data->meta->instance_name = "builder";
     data->meta->publisher_name = publisher_name;
@@ -477,7 +477,11 @@ builder::builder(const std::string & date,
         // we add a default timezone at UTC
         timezone = {{0, {data->meta->production_date}}};
     }
-    tz_handler = data->pt_data->tz_manager.get_or_create("timezone", *data->meta.get(), timezone);
+
+    data->meta->timezone = timezone_name;
+    tz_handler = data->pt_data->tz_manager.get_or_create(timezone_name,
+                                                         *data->meta.get(),
+                                                         timezone);
 }
 
 void builder::connection(const std::string & name1, const std::string & name2, float length) {
