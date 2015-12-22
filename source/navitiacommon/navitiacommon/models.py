@@ -105,6 +105,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False)
+    block_until = db.Column(db.Date, nullable=True)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
@@ -120,9 +121,10 @@ class User(db.Model):
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
                              default='with_free', nullable=False)
 
-    def __init__(self, login=None, email=None, keys=None, authorizations=None):
+    def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
         self.email = email
+        self.block_until = block_until
         if keys:
             self.keys = keys
         if authorizations:
@@ -467,8 +469,8 @@ class DataSet(db.Model):
 class BillingPlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    max_request_count = db.Column(db.Integer, nullable=False)
-    max_object_count = db.Column(db.Integer, nullable=False)
+    max_request_count = db.Column(db.Integer, default=0)
+    max_object_count = db.Column(db.Integer, default=0)
     default = db.Column(db.Boolean, nullable=False, default=False)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
