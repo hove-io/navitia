@@ -66,7 +66,7 @@ def get_max_fallback_duration(request, mode):
         return request['max_bike_duration_to_pt']
     if mode == 'car':
         return request['max_car_duration_to_pt']
-    raise ValueError('unknow mode: {}'.format(mode))
+    raise ValueError('unknown mode: {}'.format(mode))
 
 def build_journey(journey, _from, to, origins, destinations):
     departure = journey.sections[0].origin
@@ -92,6 +92,17 @@ def _init_g():
     g.destinations_fallback = {}
     g.requested_origin = None
     g.requested_destination = None
+
+def create_parameters(request):
+    return JourneyParameters(max_duration=request['max_duration'],
+                             max_transfers=request['max_transfers'],
+                             wheelchair=request['wheelchair'] or False,
+                             show_codes=request['show_codes'],
+                             realtime_level=request['data_freshness'],
+                             max_extra_second_pass=request['max_extra_second_pass'],
+                             walking_transfer_penalty=request['_walking_transfer_penalty'],
+                             forbidden_uris=request['forbidden_uris[]'])
+
 
 class Scenario(new_default.Scenario):
 
@@ -126,7 +137,7 @@ class Scenario(new_default.Scenario):
             g.requested_destination = instance.georef.place(request['destination'])
 
         resp = []
-        journey_parameters = JourneyParameters()
+        journey_parameters = create_parameters(request)
         for dep_mode, arr_mode in krakens_call:
             #todo: this is probably shared between multiple thread
             self.nb_kraken_calls += 1
