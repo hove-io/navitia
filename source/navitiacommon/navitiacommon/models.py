@@ -173,6 +173,11 @@ class User(db.Model):
 
         return query.count() > 0
 
+    def is_blocked(self, datetime_utc):
+        if self.block_until and datetime_utc <= self.block_until:
+            return True
+
+        return False
 
 class Key(db.Model):
     id = db.Column(db.Integer, primary_key=True)
