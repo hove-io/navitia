@@ -128,7 +128,7 @@ class Scenario(new_default.Scenario):
             if arr_mode not in g.destinations_fallback:
                 g.destinations_fallback[arr_mode] = instance.georef.get_stop_points(request['destination'],
                         arr_mode,
-                        get_max_fallback_duration(request, arr_mode))#TODO add reverse
+                        get_max_fallback_duration(request, arr_mode), reverse=True)
                 #logger.debug('destinations %s: %s', arr_mode, g.destinations_fallback[arr_mode])
 
         if not g.requested_origin:

@@ -757,7 +757,8 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     }
     entry_point.streetnetwork_params.max_duration = navitia::seconds(request.max_duration());
     street_network_worker->init(entry_point, {});
-    auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, request.reverse());
+    //kraken don't handle reverse isochrone
+    auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
     pbnavitia::Response response;
     for(const auto& item: result){
         auto* nsp = response.add_nearest_stop_points();
