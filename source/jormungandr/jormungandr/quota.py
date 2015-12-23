@@ -1,4 +1,6 @@
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# encoding: utf-8
+
+#  Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,35 +29,21 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource
-from jormungandr.stat_manager import manage_stat_caller
-from jormungandr import stat_manager
-from jormungandr.quota import quota_control
 from functools import wraps
+from jormungandr import authentication
+import flask_restful
+from datetime import datetime
 
+def quota_control(func):
+    """
+    Decorator for quota control on every request
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        user = authentication.get_user(token=authentication.get_token())
+        if user is not None and user.is_blocked(datetime.utcnow()):
+            flask_restful.abort(429, message="Quota limit reached, please contact provider if you want to upgrade your current billing plan")
 
-class StatedResource(Resource):
+        return func(*args, **kwargs)
 
-    def __init__(self, quota=True, *args, **kwargs):
-        Resource.__init__(self, *args, **kwargs)
-        self.method_decorators = []
-
-        if stat_manager.save_stat:
-            self.method_decorators.append(self._stat_regions)
-            self.method_decorators.append(manage_stat_caller(stat_manager))
-
-        if quota:
-            self.method_decorators.append(quota_control)
-
-    def _register_interpreted_parameters(self, args):
-        stat_manager.register_interpreted_parameters(args)
-
-    def _stat_regions(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            result = f(*args, **kwargs)
-            region = getattr(self, 'region', None)
-            if region:
-                stat_manager.register_regions([region])
-            return result
-        return wrapper
+    return wrapper
