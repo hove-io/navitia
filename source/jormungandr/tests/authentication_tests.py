@@ -233,7 +233,7 @@ class TestIfUserIsNotBlocked(AbstractTestAuthentication):
 
     def test_status_code(self):
         """
-        We query the api with user 2 who must not be blocked
+        We query the api with user 6 who must not be blocked
         """
         requests_status_codes = [('/v1/coverage/main_routing_test', 200)]
 
