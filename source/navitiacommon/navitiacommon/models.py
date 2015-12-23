@@ -174,7 +174,9 @@ class User(db.Model):
         return query.count() > 0
 
     def is_blocked(self, datetime_utc):
-        if self.block_until and datetime_utc.strftime('%Y%m%dT%H%M%S') <= self.block_until:
+        print self.block_until
+        print datetime_utc
+        if self.block_until and datetime_utc <= self.block_until:
             return True
 
         return False
