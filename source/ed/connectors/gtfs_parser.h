@@ -127,9 +127,6 @@ struct GtfsData {
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
-using UtcShift = int16_t;
-using PeriodsByUtcShift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
-
 //a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to
 struct PeriodWithUtcShift {
     PeriodWithUtcShift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
@@ -146,7 +143,7 @@ struct PeriodWithUtcShift {
 
 std::vector<PeriodWithUtcShift>
 get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
-PeriodsByUtcShift
+navitia::type::TimeZoneHandler::dst_periods
 split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);

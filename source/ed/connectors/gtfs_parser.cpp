@@ -189,9 +189,9 @@ std::vector<PeriodWithUtcShift> get_dst_periods(const boost::gregorian::date_per
     return res;
 }
 
-PeriodsByUtcShift
+nt::TimeZoneHandler::dst_periods
 split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
-    PeriodsByUtcShift res;
+    nt::TimeZoneHandler::dst_periods res;
 
     if (! tz) {
         LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
