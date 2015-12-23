@@ -440,7 +440,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
                     pbnavitia::PtObject* place = pb_response.add_places();
-                    fill_pb_placemark(data->geo_ref->admins[it_admin->second],*data, place, 1);
+                    fill_pb_placemark(data->geo_ref->admins[it_admin->second], *data, place, 1);
 
                 }else{
                     fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse : "+request.uri(),  pb_response.mutable_error());
@@ -625,6 +625,12 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 forbidden, *street_network_worker,
                 rt_level, request.max_duration(),
                 request.max_transfers(), request.show_codes());
+
+    case pbnavitia::pt_planner:
+        return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
+                request.clockwise(), accessibilite_params,
+                forbidden, rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
@@ -688,12 +694,14 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
             response = next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
+        case pbnavitia::pt_planner:
         case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: response = proximity_list(request.places_nearby()); break;
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref()); break;
         case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports()); break;
         case pbnavitia::calendars : response = calendars(request.calendars()); break;
         case pbnavitia::place_code : response = place_code(request.place_code()); break;
+        case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
@@ -701,6 +709,62 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     }
     metadatas(response);//we add the metadatas for each response
     feed_publisher(response);
+    return response;
+}
+
+pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request) {
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    //todo check the request
+
+    type::EntryPoint entry_point;
+    Type_e origin_type = data->get_type_of_id(request.place());
+    entry_point = type::EntryPoint(origin_type, request.place(), 0);
+
+    if (entry_point.type == type::Type_e::Address || entry_point.type == type::Type_e::Admin
+            || entry_point.type == type::Type_e::StopArea || entry_point.type == type::Type_e::StopPoint
+            || entry_point.type == type::Type_e::POI) {
+        entry_point.coordinates = this->coord_of_entry_point(entry_point, data);
+    }
+    if ((entry_point.type == type::Type_e::Address)
+            || (entry_point.type == type::Type_e::Coord) || (entry_point.type == type::Type_e::Admin)
+            || (entry_point.type == type::Type_e::POI) || (entry_point.type == type::Type_e::StopArea)) {
+
+        entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(request.mode());
+        entry_point.streetnetwork_params.set_filter(request.filter());
+    }
+    switch(entry_point.streetnetwork_params.mode){
+        case type::Mode_e::Bike:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Bike];
+            entry_point.streetnetwork_params.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
+            break;
+        case type::Mode_e::Car:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Car];
+            entry_point.streetnetwork_params.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
+            break;
+        case type::Mode_e::Bss:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Bss];
+            entry_point.streetnetwork_params.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
+            break;
+        default:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
+            entry_point.streetnetwork_params.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
+            break;
+    }
+    if (entry_point.streetnetwork_params.speed_factor <= 0) {
+        throw navitia::recoverable_exception("invalid speed factor");
+    }
+    entry_point.streetnetwork_params.max_duration = navitia::seconds(request.max_duration());
+    street_network_worker->init(entry_point, {});
+    //kraken don't handle reverse isochrone
+    auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
+    pbnavitia::Response response;
+    for(const auto& item: result){
+        auto* nsp = response.add_nearest_stop_points();
+        fill_pb_object(planner->get_sp(item.first), *data, nsp->mutable_stop_point(), 0);
+        nsp->set_access_duration(item.second.total_seconds());
+    }
     return response;
 }
 

@@ -190,7 +190,7 @@ class InstanceManager(object):
             authentication.abort_request(user)
         return valid_regions
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS',None))
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', None))
     def _all_keys_of_id(self, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:

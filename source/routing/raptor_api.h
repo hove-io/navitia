@@ -35,11 +35,13 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "type/rt_level.h"
 #include <limits>
+#include "routing/routing.h"
 
 namespace navitia{
     namespace type{
         struct EntryPoint;
         struct AccessibiliteParams;
+        struct Data;
     }
     namespace georef{
         struct StreetNetwork;
@@ -86,6 +88,24 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    int max_duration = 3600,
                                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                    bool show_codes = false);
+
+pbnavitia::Response make_pt_response(RAPTOR &raptor,
+                                  const std::vector<type::EntryPoint> &origins,
+                                  const std::vector<type::EntryPoint> &destinations,
+                                  const uint64_t timestamps,
+                                  bool clockwise,
+                                  const type::AccessibiliteParams& accessibilite_params,
+                                  const std::vector<std::string>& forbidden,
+                                  const type::RTLevel rt_level,
+                                  const navitia::time_duration& transfer_penalty,
+                                  uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
+                                  uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                                  bool show_codes = false,
+                                  uint32_t max_extra_second_pass = 0);
+
+routing::map_stop_point_duration
+get_stop_points( const type::EntryPoint &ep, const type::Data& data,
+        georef::StreetNetwork & worker, bool use_second = false);
 
 
 }}
