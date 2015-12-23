@@ -41,7 +41,7 @@ def quota_control(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         user = authentication.get_user(token=authentication.get_token())
-        if user.is_blocked(datetime.utcnow()):
+        if user is not None and user.is_blocked(datetime.utcnow()):
             flask_restful.abort(429, message="Quota limit reached, please contact provider if you want to upgrade your current billing plan")
 
         return func(*args, **kwargs)
