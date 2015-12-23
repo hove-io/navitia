@@ -37,11 +37,11 @@ namespace type {
 TimeZoneHandler::TimeZoneHandler(const std::string& name, const MetaData& meta_data,
                                  const dst_periods& offsets_periods):
 tz_name(name) {
-    for (const auto& utc_shit_and_periods: offsets_periods) {
+    for (const auto& utc_shift_and_periods: offsets_periods) {
         ValidityPattern vp(meta_data.production_date.begin());
 
-        auto offset = utc_shit_and_periods.first;
-        for (const auto& period: utc_shit_and_periods.second) {
+        auto offset = utc_shift_and_periods.first;
+        for (const auto& period: utc_shift_and_periods.second) {
             for (boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
                 vp.add(*it);
             }

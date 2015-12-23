@@ -93,7 +93,7 @@ void Data::build_block_id() {
             if (offset1 != offset2) {
                 return offset1 < offset2;
             }
-            else  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+            else if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
                 return vj1->stop_time_list.size() < vj2->stop_time_list.size();
             } else {
                 return vj1->stop_time_list.front()->departure_time <
