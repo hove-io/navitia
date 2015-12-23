@@ -174,8 +174,6 @@ class User(db.Model):
         return query.count() > 0
 
     def is_blocked(self, datetime_utc):
-        print self.block_until
-        print datetime_utc
         if self.block_until and datetime_utc <= self.block_until:
             return True
 
