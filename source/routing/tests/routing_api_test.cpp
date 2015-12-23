@@ -66,21 +66,22 @@ static void dump_response(pbnavitia::Response resp, std::string test_name, bool 
         const pbnavitia::Journey& journey = resp.journeys(idx_journey);
         for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
             auto& section = journey.sections(idx_section);
-            std::cout << "    section type=" << int(section.type())
+            std::cout << "  * section type=" << int(section.type())
                       << " " << section.origin().name() << "@" << section.begin_date_time()
                       << " -> " << section.destination().name() << "@" << section.end_date_time()
                       << std::endl;
+            std::cout << "    -- length: " << section.length() << std::endl;
             if (section.street_network().coordinates_size()) {
-                std::cout << "     -- coordinates: " << std::endl;
+                std::cout << "    -- coordinates: " << std::endl;
                 for (int i = 0; i < section.street_network().coordinates_size(); ++i)
                     std::cout << "      coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
                               << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
                               << std::endl;
             }
             if (section.street_network().path_items_size()) {
-                std::cout << "    street network pathitem: " << std::endl;
+                std::cout << "    -- street network pathitem: " << std::endl;
                 for (int i = 0; i < section.street_network().path_items_size(); ++i)
-                    std::cout << "    - " << section.street_network().path_items(i).name()
+                    std::cout << "     - " << section.street_network().path_items(i).name()
                               << " with " << section.street_network().path_items(i).length()
                               << "m | " << section.street_network().path_items(i).duration() << "s"
                               << std::endl;
@@ -1145,7 +1146,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     dump_response(resp, "car_direct");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 pathe, just the PT one, we do not compute the direct path for car
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 path, just the PT one, we do not compute the direct path for car
 
     // co2_emission Tests
     // First Journey
@@ -1558,6 +1559,81 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     }
     BOOST_CHECK_CLOSE(section.length(), total_distance, 1);
     BOOST_CHECK_EQUAL(section.duration(), total_dur);
+}
+
+/**
+  * Test length with a different speed factors
+ */
+
+BOOST_FIXTURE_TEST_CASE(speed_factor_length_test, streetnetworkmode_fixture<normal_speed_provider>) {
+    auto mode = navitia::type::Mode_e::Walking;
+    // you're supposed to be able to put any value here (only rounding might break tests)
+    double speed_factor = 1.5;
+    origin.streetnetwork_params.mode = mode;
+    origin.streetnetwork_params.offset = 0;
+    origin.streetnetwork_params.max_duration = bt::pos_infin;
+    origin.streetnetwork_params.speed_factor = speed_factor;
+
+    destination.streetnetwork_params.mode = mode;
+    destination.streetnetwork_params.offset = 0;
+    destination.streetnetwork_params.max_duration = bt::pos_infin;
+    destination.streetnetwork_params.speed_factor = speed_factor;
+
+    pbnavitia::Response resp = make_response();
+
+    pbnavitia::Journey journey;
+    for (int idx = 0; idx < resp.journeys().size(); ++idx) {
+        if (resp.journeys(idx).sections().size() == 1) {
+            journey = resp.journeys(idx);
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+
+    dump_response(resp, "speed factor length test");
+
+    std::vector<pbnavitia::PathItem> path_items;
+    for (int s = 0; s < journey.sections_size() ; s++) {
+        for (int i = 0; i < journey.sections(s).street_network().path_items_size(); ++i) {
+            path_items.push_back(journey.sections(s).street_network().path_items(i));
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL(path_items.size(), 3);
+    int cpt(0);
+    // check on crowfly
+    auto pathitem = path_items[cpt++];
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
+    BOOST_CHECK_CLOSE(pathitem.duration() * speed_factor,
+                      to_duration(B.distance_to(S), nt::Mode_e::Walking).total_seconds(),
+                      5); // we are on small distances so rounding is tough
+    BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(S), 2);
+    //check on regular street
+    pathitem = path_items[cpt++];
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ab");
+    BOOST_CHECK_CLOSE(pathitem.duration(),
+                      200 / (speed_factor * get_default_speed()[nt::Mode_e::Walking]),
+                      2);
+    BOOST_CHECK_CLOSE(pathitem.length(), 200, 2);
+    // check again on crowfly
+    pathitem = path_items[cpt++];
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
+    BOOST_CHECK_CLOSE(pathitem.duration() * speed_factor,
+                      to_duration(A.distance_to(R), nt::Mode_e::Walking).total_seconds(),
+                      5);
+    BOOST_CHECK_CLOSE(pathitem.length(), A.distance_to(R), 2);
+
+    //we check the total
+    double total_dur(0);
+    double total_distance(0);
+    for (const auto& item : path_items) {
+        total_dur += item.duration();
+        total_distance += item.length();
+    }
+    BOOST_CHECK_CLOSE(section.length(), total_distance, 1);
+    BOOST_CHECK_CLOSE(section.duration(), total_dur, 1);
 }
 
 BOOST_AUTO_TEST_CASE(projection_on_one_way) {

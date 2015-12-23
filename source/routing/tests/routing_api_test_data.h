@@ -113,6 +113,12 @@ struct routing_api_data {
               S
 
                 We want to go from S to R:
+
+                    /journeys?from=coord:8.98311981954709e-05:8.98311981954709e-05
+                              &to=coord:0.0018864551621048887:0.0007186495855637672
+                              &datetime=20120614080000
+                              &debug=true
+
                     *) The bikeway is: A->G->H->I->J->K->B
                     *) The car way is: A->E->F->C->B
                     *) We can walk on A->B
@@ -121,21 +127,19 @@ struct routing_api_data {
                     *) A->R is a pedestrian street
 
                     Coordinates:
-                                A(120, 80)    0
-                                G(100, 80)    1
-                                H(100, 100)   2
-                                I(70, 100)    3
-                                J(70, 120)    4
-                                K(10, 120)    5
-                                B(10, 30)     6
-                                C(150, 30)    7
-                                F(150, 50)    8
-                                E(120, 50)    9
-                                R(210, 80)    10
-                                S(10, 10)     11
-
-
-
+                                A(120,  80)    0
+                                G(100,  80)    1
+                                H(100, 100)    2
+                                I( 70, 100)    3
+                                J( 70, 120)    4
+                                K( 10, 120)    5
+                                B( 10,  30)    6
+                                C(220,  30)    7
+                                F(220,  50)    8
+                                E(120,  50)    9
+                                R(210,  80)   10
+                                S( 10,  10)   11
+                                D(  0,  30)   12
         */
 
         boost::add_vertex(navitia::georef::Vertex(A),b.data->geo_ref->graph);

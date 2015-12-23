@@ -250,7 +250,8 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     throw navitia::exception("unhandled path item caracteristic");
 }
 
-double PathItem::get_length() const {
+double PathItem::get_length(double speed_factor) const {
+    double def_speed = default_speed[type::Mode_e::Walking];
     switch (transportation) {
     case TransportCaracteristic::BssPutBack:
     case TransportCaracteristic::BssTake:
@@ -258,15 +259,15 @@ double PathItem::get_length() const {
     case TransportCaracteristic::CarLeaveParking:
         return 0;
     case TransportCaracteristic::Walk:
-        //milliseconds to reduce rounding
-        return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
+        def_speed = default_speed[type::Mode_e::Walking]; break;
     case TransportCaracteristic::Bike:
-        return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
+        def_speed = default_speed[type::Mode_e::Bike]; break;
     case TransportCaracteristic::Car:
-        return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
+        def_speed = default_speed[type::Mode_e::Car]; break;
     default:
         throw navitia::exception("unhandled transportation case");
     }
+    return duration.total_milliseconds() * def_speed * speed_factor / 1000;
 }
 
 void GeoRef::add_way(const Way& w){
