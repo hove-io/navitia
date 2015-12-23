@@ -936,12 +936,22 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     routing::map_stop_point_duration arrivals;
 
     for(const auto& origin: origins){
-        //todo check uri is valid
-        departures[SpIdx{*raptor.data.pt_data->stop_points_map[origin.uri]}] = navitia::seconds(origin.access_duration);
+        auto it = raptor.data.pt_data->stop_points_map.find(origin.uri);
+        if(it != raptor.data.pt_data->stop_points_map.end()){
+            departures[SpIdx{*it->second}] = navitia::seconds(origin.access_duration);
+        }else{
+            //for now we throw, maybe we should ignore them
+            throw navitia::recoverable_exception("stop_point " + origin.uri + " not found");
+        }
     }
     for(const auto& destination: destinations){
-        //todo check uri is valid
-        arrivals[SpIdx{*raptor.data.pt_data->stop_points_map[destination.uri]}] = navitia::seconds(destination.access_duration);
+        auto it = raptor.data.pt_data->stop_points_map.find(destination.uri);
+        if(it != raptor.data.pt_data->stop_points_map.end()){
+            arrivals[SpIdx{*it->second}] = navitia::seconds(destination.access_duration);
+        }else{
+            //for now we throw, maybe we should ignore them
+            throw navitia::recoverable_exception("stop_point " + destination.uri + " not found");
+        }
     }
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
