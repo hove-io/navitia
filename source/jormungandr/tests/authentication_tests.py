@@ -37,6 +37,7 @@ from jormungandr import app
 import json
 import logging
 from nose.util import *
+from datetime import datetime
 
 
 authorizations = {
@@ -63,6 +64,17 @@ authorizations = {
         "departure_board_test": {'ALL': False},
         "empty_routing_test": {'ALL': False}
     },
+    'test_user_blocked': {
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': True},
+        "empty_routing_test": {'ALL': True}
+    },
+    'test_user_not_blocked': {
+        #bobette cannot access anything
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': True},
+        "empty_routing_test": {'ALL': True}
+    },
 }
 
 
@@ -70,7 +82,7 @@ class FakeUser:
     """
     We create a user independent from a database
     """
-    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False):
+    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False, block_until=''):
         """
         We just need a fake user, we don't really care about its identity
         """
@@ -79,6 +91,7 @@ class FakeUser:
         self.have_access_to_free_instances = have_access_to_free_instances
         self.is_super_user = is_super_user
         self.end_point_id = None
+        self.block_until = block_until
 
     @classmethod
     def get_from_token(cls, token):
@@ -92,6 +105,15 @@ class FakeUser:
         This is made to avoid using of database
         """
         return authorizations[self.login][instance_name][api_name]
+
+    def is_blocked(self, datetime_utc):
+        """
+        Return True if user is blocked else False
+        """
+        if self.block_until and datetime_utc.strftime('%Y%m%dT%H%M%S') <= self.block_until:
+            return True
+
+        return False
 
 
 class FakeInstance(models.Instance):
@@ -110,6 +132,8 @@ user_in_db = {
     'bobette': FakeUser('bobette', 2),
     'bobitto': FakeUser('bobitto', 3),
     'tgv': FakeUser('tgv', 4, have_access_to_free_instances=False),
+    'test_user_blocked': FakeUser('test_user_blocked', 5, True, False, datetime.utcnow().strftime('%Y%m%dT235959')),
+    'test_user_not_blocked': FakeUser('test_user_not_blocked', 6)
 }
 
 mock_instances = {
@@ -190,6 +214,38 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert 'error' in r
             assert get_not_null(r, 'error')['message'] \
                    == "The region the_marvelous_unknown_region doesn't exists"
+
+@dataset(["main_routing_test"])
+class TestIfUserIsBlocked(AbstractTestAuthentication):
+
+    def test_status_code(self):
+        """
+        We query the api with user 5 who must be blocked
+        """
+        requests_status_codes = [
+            ('/v1/coverage/main_routing_test', 429),
+            ('/v1/coverage/departure_board_test', 429)
+        ]
+
+        with user_set(app, 'test_user_blocked'):
+            for request, status_code in requests_status_codes:
+                assert(self.app.get(request).status_code == status_code)
+
+
+
+@dataset(["main_routing_test"])
+class TestIfUserIsNotBlocked(AbstractTestAuthentication):
+
+    def test_status_code(self):
+        """
+        We query the api with user 2 who must not be blocked
+        """
+        requests_status_codes = [('/v1/coverage/main_routing_test', 200)]
+
+        with user_set(app, 'test_user_not_blocked'):
+            for request, status_code in requests_status_codes:
+                assert(self.app.get(request).status_code == status_code)
+                
 
 @dataset(["main_routing_test", "departure_board_test", "empty_routing_test"])
 class TestOverlappingAuthentication(AbstractTestAuthentication):
