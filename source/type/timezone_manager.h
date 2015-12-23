@@ -73,6 +73,8 @@ public:
                                          const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
 
     const TimeZoneHandler* get(const std::string& name) const;
+    const TimeZoneHandler* get_first_timezone() const;
+    size_t get_nb_timezones() const { return tz_handlers.size(); }
 
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
         ar & tz_handlers;

@@ -130,5 +130,9 @@ const TimeZoneHandler* TimeZoneManager::get(const std::string& name) const {
     return it->second.get();
 }
 
+const TimeZoneHandler* TimeZoneManager::get_first_timezone() const {
+    if (tz_handlers.empty()) { return nullptr; }
+    return tz_handlers.begin()->second.get();
+}
 }
 }

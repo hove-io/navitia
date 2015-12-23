@@ -39,8 +39,8 @@ timezone = Table('timezone', metadata,*[
 tz_dst = Table('tz_dst', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('tz_id', BIGINT(), primary_key=False, nullable=False),
-    Column('beginning_date', DATE(), primary_key=False),
-    Column('end_date', DATE(), primary_key=False),
+    Column('beginning_date', DATE(), primary_key=False, nullable=False),
+    Column('end_date', DATE(), primary_key=False, nullable=False),
     Column('utc_offset', INTEGER(), primary_key=False),
     ForeignKeyConstraint(['tz_id'], [u'navitia.timezone.id'], name=u'associated_tz_dst_fkey')
     ],
@@ -84,7 +84,6 @@ commercial_mode = Table('commercial_mode', metadata,*[
 parameters = Table('parameters', metadata,*[
     Column('beginning_date', DATE(), primary_key=False),
     Column('end_date', DATE(), primary_key=False),
-    Column('timezone', TEXT(), primary_key=False, nullable=True),
     Column('shape', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
     Column('shape_computed', BOOLEAN(), primary_key=False, default=text(u'true')),
     Column('parse_pois_from_osm', BOOLEAN(), primary_key=False, default=text(u'true')),

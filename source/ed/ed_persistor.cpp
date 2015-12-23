@@ -440,8 +440,7 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
     auto last = bg::to_iso_extended_string(meta.production_date.last());
     //metadata consist of only one line, we either have to update it or create it
     this->lotus.exec(Lotus::make_upsert_string("navitia.parameters",
-                {{"beginning_date", beg}, {"end_date", last},
-                {"timezone", meta.timezone}}));
+                {{"beginning_date", beg}, {"end_date", last}}));
 }
 
 void EdPersistor::insert_metadata_georef() {
@@ -482,8 +481,7 @@ void EdPersistor::clean_db(){
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
                      " beginning_date = null"
-                     ", end_date = null"
-                     ", timezone = '';");
+                     ", end_date = null;");
 }
 
 void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& feed_infos){

@@ -108,6 +108,17 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
 
     BOOST_REQUIRE(res);
 
+    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
+                            boost::gregorian::from_undelimited_string("20150325"),
+                            boost::gregorian::from_undelimited_string("20150827")));
+    const auto& tz_manager = data.pt_data->tz_manager;
+    BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
+    const auto* tz = tz_manager.get("Europe/Paris");
+    BOOST_REQUIRE(tz);
+    BOOST_REQUIRE_EQUAL(tz->tz_name, "Europe/Paris");
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2015, 03, 25)), 60 * 60);
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2015, 04, 01)), 2 * 60 * 60);
+
     BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
@@ -169,6 +180,18 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE(res);
 
     const auto& pt_data = *data.pt_data;
+
+    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
+                            boost::gregorian::from_undelimited_string("20070101"),
+                            boost::gregorian::from_undelimited_string("20080102")));
+
+    const auto& tz_manager = data.pt_data->tz_manager;
+    BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
+    const auto* tz = tz_manager.get("America/Los_Angeles");
+    BOOST_REQUIRE(tz);
+    BOOST_REQUIRE_EQUAL(tz->tz_name, "America/Los_Angeles");
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2007, 04, 01)), -420 * 60);
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2007, 12, 01)), -480 * 60);
 
     // TODO add generic check on collections
     // check map/vec same size + uri + idx + ...

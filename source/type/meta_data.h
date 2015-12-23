@@ -49,8 +49,6 @@ struct MetaData{
 
     std::string shape;
 
-    /// default dataset timezone
-    std::string timezone;
     std::string publisher_name;
     std::string publisher_url;
     std::string license;
@@ -63,7 +61,7 @@ struct MetaData{
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & data_sources & shape & timezone &
+        ar & production_date & publication_date & data_sources & shape &
                 publisher_name & publisher_url & license & instance_name;
     }
     boost::posix_time::time_period production_period() const {

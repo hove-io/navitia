@@ -1192,15 +1192,6 @@ void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
     parse_files(data, beginning_date);
 
     normalize_extcodes(data);
-
-    //small check, we need a default timezone
-
-    if (gtfs_data.tz.default_timezone.first.empty()) {
-        std::string error = "no default time zone found while loading the data feed, feed is not correct";
-        LOG4CPLUS_FATAL(logger, error);
-        throw navitia::exception(error);
-    }
-    data.meta.timezone = gtfs_data.tz.default_timezone.first;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
