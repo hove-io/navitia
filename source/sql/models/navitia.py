@@ -41,7 +41,7 @@ tz_dst = Table('tz_dst', metadata,*[
     Column('tz_id', BIGINT(), primary_key=False, nullable=False),
     Column('beginning_date', DATE(), primary_key=False, nullable=False),
     Column('end_date', DATE(), primary_key=False, nullable=False),
-    Column('utc_offset', INTEGER(), primary_key=False),
+    Column('utc_offset', INTEGER(), primary_key=False, nullable=False),
     ForeignKeyConstraint(['tz_id'], [u'navitia.timezone.id'], name=u'associated_tz_dst_fkey')
     ],
     schema='navitia')

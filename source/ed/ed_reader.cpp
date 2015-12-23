@@ -286,13 +286,13 @@ void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_timezones(navitia::type::Data& data, pqxx::work& work) {
-    std::string request = "SELECT tz.id as id, "
-                          "tz.name as name, "
-                          "dst.beginning_date as beg, "
-                          "dst.end_date as end, "
-                          "dst.utc_offset as offset"
-                          " FROM navitia.timezone as tz,"
-                          " navitia.tz_dst as dst where dst.tz_id = tz.id";
+    std::string request = "SELECT tz.id as id,"
+                          " tz.name as name,"
+                          " dst.beginning_date as beg,"
+                          " dst.end_date as end,"
+                          " dst.utc_offset as offset"
+                          " FROM navitia.timezone as tz"
+                          " JOIN navitia.tz_dst as dst ON dst.tz_id = tz.id";
 
     pqxx::result result = work.exec(request);
     std::map<std::string, idx_t> id_by_name;

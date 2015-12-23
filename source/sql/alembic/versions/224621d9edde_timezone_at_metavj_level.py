@@ -27,7 +27,7 @@ def upgrade():
     sa.Column('tz_id', sa.BIGINT(), nullable=False),
     sa.Column('beginning_date', sa.DATE(), nullable=False),
     sa.Column('end_date', sa.DATE(), nullable=False),
-    sa.Column('utc_offset', sa.INTEGER(), nullable=True),
+    sa.Column('utc_offset', sa.INTEGER(), nullable=False),
     sa.ForeignKeyConstraint(['tz_id'], [u'navitia.timezone.id'], name=u'associated_tz_dst_fkey'),
     sa.PrimaryKeyConstraint('id'),
     schema='navitia'
