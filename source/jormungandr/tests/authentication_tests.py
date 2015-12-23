@@ -37,7 +37,6 @@ from jormungandr import app
 import json
 import logging
 from nose.util import *
-from datetime import datetime
 
 
 authorizations = {
@@ -70,7 +69,6 @@ authorizations = {
         "empty_routing_test": {'ALL': True}
     },
     'test_user_not_blocked': {
-        #bobette cannot access anything
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': True},
         "empty_routing_test": {'ALL': True}
@@ -82,7 +80,7 @@ class FakeUser:
     """
     We create a user independent from a database
     """
-    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False, block_until=''):
+    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False, is_blocked=False):
         """
         We just need a fake user, we don't really care about its identity
         """
@@ -91,7 +89,7 @@ class FakeUser:
         self.have_access_to_free_instances = have_access_to_free_instances
         self.is_super_user = is_super_user
         self.end_point_id = None
-        self.block_until = block_until
+        self._is_blocked = is_blocked
 
     @classmethod
     def get_from_token(cls, token):
@@ -110,10 +108,7 @@ class FakeUser:
         """
         Return True if user is blocked else False
         """
-        if self.block_until and datetime_utc.strftime('%Y%m%dT%H%M%S') <= self.block_until:
-            return True
-
-        return False
+        return self._is_blocked
 
 
 class FakeInstance(models.Instance):
@@ -132,8 +127,8 @@ user_in_db = {
     'bobette': FakeUser('bobette', 2),
     'bobitto': FakeUser('bobitto', 3),
     'tgv': FakeUser('tgv', 4, have_access_to_free_instances=False),
-    'test_user_blocked': FakeUser('test_user_blocked', 5, True, False, datetime.utcnow().strftime('%Y%m%dT235959')),
-    'test_user_not_blocked': FakeUser('test_user_not_blocked', 6)
+    'test_user_blocked': FakeUser('test_user_blocked', 5, True, False, True),
+    'test_user_not_blocked': FakeUser('test_user_not_blocked', 6, True, False, False)
 }
 
 mock_instances = {
