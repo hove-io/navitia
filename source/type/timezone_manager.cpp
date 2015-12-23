@@ -34,11 +34,11 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-TimeZoneHandler::TimeZoneHandler(const std::string& name, const MetaData& meta_data,
+TimeZoneHandler::TimeZoneHandler(const std::string& name, const boost::gregorian::date& production_period_beg,
                                  const dst_periods& offsets_periods):
 tz_name(name) {
     for (const auto& utc_shift_and_periods: offsets_periods) {
-        ValidityPattern vp(meta_data.production_date.begin());
+        ValidityPattern vp(production_period_beg);
 
         auto offset = utc_shift_and_periods.first;
         for (const auto& period: utc_shift_and_periods.second) {
@@ -67,6 +67,10 @@ int16_t TimeZoneHandler::get_utc_offset(int day) const {
 }
 
 int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
+    // by construction a validity pattern should never span accros DST, else all resulting local time
+    // would be meaning less.
+    // so in this method we return the first dst found
+
     if (vp.days.none()) {
         return 0; // vp is empty, utc shift is not important
     }
@@ -111,12 +115,12 @@ TimeZoneHandler::dst_periods TimeZoneHandler::get_periods_and_shift() const {
 }
 
 const TimeZoneHandler*
-TimeZoneManager::get_or_create(const std::string& name, const MetaData& meta,
+TimeZoneManager::get_or_create(const std::string& name, const boost::gregorian::date& production_period_beg,
                                const std::map<int16_t, std::vector<boost::gregorian::date_period>>& offsets) {
     auto it = tz_handlers.find(name);
 
     if (it == std::end(tz_handlers)) {
-        tz_handlers[name] = std::make_unique<TimeZoneHandler>(name, meta, offsets);
+        tz_handlers[name] = std::make_unique<TimeZoneHandler>(name, production_period_beg, offsets);
         return tz_handlers[name].get();
     }
     return it->second.get();

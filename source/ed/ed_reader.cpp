@@ -310,7 +310,7 @@ void EdReader::fill_timezones(navitia::type::Data& data, pqxx::work& work) {
     }
 
     for (const auto& p: timezones) {
-        auto tz = data.pt_data->tz_manager.get_or_create(p.first, *(data.meta.get()), p.second);
+        auto tz = data.pt_data->tz_manager.get_or_create(p.first, data.meta->production_date.begin(), p.second);
         timezone_map[id_by_name[p.first]] = tz;
     }
 }

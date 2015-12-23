@@ -53,7 +53,9 @@ class TimeZoneHandler {
 public:
     std::string tz_name;
     using dst_periods = std::map<int16_t, std::vector<boost::gregorian::date_period>>;
-    TimeZoneHandler(const std::string& name, const MetaData&, const dst_periods&);
+    TimeZoneHandler(const std::string& name,
+                    const boost::gregorian::date& production_period_beg,
+                    const dst_periods&);
     TimeZoneHandler() {}
     int16_t get_utc_offset(boost::gregorian::date day) const;
     int16_t get_utc_offset(int day) const;
@@ -69,7 +71,7 @@ class TimeZoneManager {
     std::map<std::string, std::unique_ptr<TimeZoneHandler>> tz_handlers;
 
 public:
-    const TimeZoneHandler* get_or_create(const std::string&, const MetaData&,
+    const TimeZoneHandler* get_or_create(const std::string&, const boost::gregorian::date& production_period_beg,
                                          const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
 
     const TimeZoneHandler* get(const std::string& name) const;

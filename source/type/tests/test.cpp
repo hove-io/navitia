@@ -194,9 +194,7 @@ BOOST_AUTO_TEST_CASE(tz_handler_test) {
         {"02:00"_t, {{"20160101"_d, "20160601"_d}, {"20160901"_d, "20170101"_d}}},
         {"03:00"_t, {{"20160601"_d, "20160901"_d}}}
     };
-    nt::MetaData meta;
-    meta.production_date = {"20160101"_d, "20170101"_d};
-    nt::TimeZoneHandler tz_handler{"paris", meta, periods};
+    nt::TimeZoneHandler tz_handler{"paris", "20160101"_d, periods};
 
     auto build_dst_periods = tz_handler.get_periods_and_shift();
 

@@ -479,7 +479,7 @@ builder::builder(const std::string & date,
     }
 
     tz_handler = data->pt_data->tz_manager.get_or_create(timezone_name,
-                                                         *data->meta.get(),
+                                                         data->meta->production_date.begin(),
                                                          timezone);
 }
 

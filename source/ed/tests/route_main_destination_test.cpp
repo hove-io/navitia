@@ -50,8 +50,8 @@ Route1
                 A4
 */
     ed::Data data;
-    data.meta.production_date = {boost::gregorian::date(2014, 1, 1), boost::gregorian::date(2015, 1, 1)};
-    data.tz_handler = {"utc", data.meta, {{0, {data.meta.production_date}}}};
+    data.meta.production_date = {"20140101"_d, "20150101"_d};
+    data.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
     auto *route = new ed::types::Route();
     route->idx = 0;
     data.routes.push_back(route);
