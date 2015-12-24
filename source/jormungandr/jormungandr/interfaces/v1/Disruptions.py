@@ -34,6 +34,7 @@ from flask.globals import g
 from jormungandr import i_manager, timezone
 from fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
+from VehicleJourney import vehicle_journey
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import date_time_format
@@ -46,7 +47,8 @@ from jormungandr.interfaces.v1.fields import DisruptionsField
 disruption = {
     "network": PbField(network, attribute='network'),
     "lines": NonNullList(NonNullNested(line)),
-    "stop_areas": NonNullList(NonNullNested(stop_area))
+    "stop_areas": NonNullList(NonNullNested(stop_area)),
+    "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey))
 }
 
 traffic = {

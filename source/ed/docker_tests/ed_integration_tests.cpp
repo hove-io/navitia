@@ -89,6 +89,17 @@ static void check_headsigns(const nt::Data& data, const std::string& headsign,
     }
 }
 
+static void check_unsound_pickup_dropoff(const nt::Data& data) {
+    for (const auto* vj: data.pt_data->vehicle_journeys) {
+        if (! vj->prev_vj) {
+            BOOST_CHECK(! vj->stop_time_list.front().drop_off_allowed());
+        }
+        if (! vj->next_vj) {
+            BOOST_CHECK(! vj->stop_time_list.back().pick_up_allowed());
+        }
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     const auto input_file = input_file_paths.at("ntfs_file");
     nt::Data data;
@@ -96,6 +107,17 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     const auto res = data.load(input_file);
 
     BOOST_REQUIRE(res);
+
+    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
+                            boost::gregorian::from_undelimited_string("20150325"),
+                            boost::gregorian::from_undelimited_string("20150827")));
+    const auto& tz_manager = data.pt_data->tz_manager;
+    BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
+    const auto* tz = tz_manager.get("Europe/Paris");
+    BOOST_REQUIRE(tz);
+    BOOST_REQUIRE_EQUAL(tz->tz_name, "Europe/Paris");
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2015, 03, 25)), 60 * 60);
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2015, 04, 01)), 2 * 60 * 60);
 
     BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->name, "ligne flixible");
@@ -135,9 +157,19 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
     }
+
+    auto& routes_map = data.pt_data->routes_map;
+    BOOST_REQUIRE_EQUAL(routes_map.size(), 3);
+
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_1")->direction_type, "forward");
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_2")->direction_type, "backward");
+    BOOST_CHECK_EQUAL(routes_map.at("route:route_3")->direction_type, "");
+
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
+
+    check_unsound_pickup_dropoff(data);
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
@@ -148,6 +180,18 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE(res);
 
     const auto& pt_data = *data.pt_data;
+
+    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
+                            boost::gregorian::from_undelimited_string("20070101"),
+                            boost::gregorian::from_undelimited_string("20080102")));
+
+    const auto& tz_manager = data.pt_data->tz_manager;
+    BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
+    const auto* tz = tz_manager.get("America/Los_Angeles");
+    BOOST_REQUIRE(tz);
+    BOOST_REQUIRE_EQUAL(tz->tz_name, "America/Los_Angeles");
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2007, 04, 01)), -420 * 60);
+    BOOST_CHECK_EQUAL(tz->get_utc_offset(boost::gregorian::date(2007, 12, 01)), -480 * 60);
 
     // TODO add generic check on collections
     // check map/vec same size + uri + idx + ...
@@ -258,4 +302,30 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     for (const auto& st: vj_stba->stop_time_list) {
         BOOST_CHECK(st.is_frequency());
     }
+
+    check_unsound_pickup_dropoff(data);
+}
+
+
+BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
+    const auto input_file = input_file_paths.at("ntfs_v5_file");
+    nt::Data data;
+
+    const auto res = data.load(input_file);
+
+    BOOST_REQUIRE(res);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);    
+    BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 3);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->frames[0]->contributor);
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->desc, "frame_test");
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->uri, "f1");
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->validation_period,
+            boost::gregorian::date_period("20150826"_d, "20150926"_d));
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->frame->uri, "f1");
 }

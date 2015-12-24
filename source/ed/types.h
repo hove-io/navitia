@@ -65,6 +65,7 @@ using nt::Header;
 using nt::hasProperties;
 using nt::hasVehicleProperties;
 
+using nt::ValidityPattern;
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
@@ -87,30 +88,6 @@ struct StopPointConnection: public Header, hasProperties {
 
    bool operator<(const StopPointConnection& other) const;
 
-};
-
-struct ValidityPattern: public Header {
-    const static nt::Type_e type = nt::Type_e::ValidityPattern;
-private:
-    bool is_valid(int duration);
-    int slide(boost::gregorian::date day) const;
-public:
-    using year_bitset = std::bitset<366>;
-    year_bitset days;
-    boost::gregorian::date beginning_date;
-    ValidityPattern(){}
-    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
-    void add(boost::gregorian::date day);
-    void add(int day);
-    void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    void remove(boost::gregorian::date day);
-    void remove(int day);
-
-    bool check(int day) const;
-    bool check(boost::gregorian::date day) const;
-
-    bool operator<(const ValidityPattern& other) const;
-    bool operator==(const ValidityPattern& other) const;
 };
 
 struct Calendar : public Nameable, public Header {
@@ -161,6 +138,17 @@ struct Contributor : public Header, Nameable{
     Contributor() {}
 
     bool operator<(const Contributor& other)const{ return this->name < other.name;}
+};
+
+struct Frame : public Header{
+    const static nt::Type_e type = nt::Type_e::Frame;
+    Contributor* contributor = nullptr;
+    boost::gregorian::date_period validation_period {boost::gregorian::date(), boost::gregorian::date()};
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+    std::string desc;
+    //Contributor data types in fusio example : Google, OBiTi, ChouetteV2 etc..
+    std::string system;
+    bool operator<(const Frame& other)const{ return this->idx < other.idx;}
 };
 
 struct Network : public Header, Nameable{
@@ -245,6 +233,7 @@ struct Route : public Header, Nameable{
     Line * line;
     nt::MultiLineString shape;
     StopArea* destination = nullptr;
+    std::string direction_type;
 
     bool operator<(const Route& other) const;
 };
@@ -254,6 +243,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Route* route = nullptr;
     Company* company = nullptr;
     PhysicalMode* physical_mode = nullptr;
+    Frame* frame = nullptr;
     //Vehicle* vehicle;
     bool wheelchair_boarding = false;
     navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
@@ -264,7 +254,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::string odt_message;
     std::string meta_vj_name; //link to it's meta vj
     std::string shape_id;
-    int16_t utc_to_local_offset = 0; // shift used to convert the local time from the data to utc, in seconds
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey

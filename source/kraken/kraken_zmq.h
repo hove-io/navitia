@@ -39,7 +39,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include <log4cplus/ndc.h>
 
-inline pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e) {
+inline pbnavitia::Response make_internal_error(const std::exception& e) {
     pbnavitia::Response response;
 
     response.mutable_error()->set_id(pbnavitia::Error::internal_error);
@@ -100,7 +100,15 @@ inline void doWork(zmq::context_t& context,
             result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
         }
         zmq::message_t reply(result.ByteSize());
-        result.SerializeToArray(reply.data(), result.ByteSize());
+        try{
+            result.SerializeToArray(reply.data(), result.ByteSize());
+        }catch(const google::protobuf::FatalException& e){
+            LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
+            result = make_internal_error(e);
+            reply.rebuild(result.ByteSize());
+            result.SerializeToArray(reply.data(), result.ByteSize());
+
+        }
         socket.send(reply);
 
         if(api != pbnavitia::METADATAS){

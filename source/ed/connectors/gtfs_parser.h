@@ -49,6 +49,7 @@ namespace ed { namespace connectors {
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
+nt::RTLevel get_rtlevel_enum(const std::string& str);
 
 /**
  * handle all tz specific stuff
@@ -70,7 +71,6 @@ struct TzHandler {
     //since a calendar might need to be split over several period because of dst, we need to track the splited calendar (to split also all vj on this calendar)
     std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
     std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
-    std::map<ed::types::ValidityPattern*, int> offset_by_vp; //each validity pattern are on only one dst, thus we can store the utc_offset
 
     //since 2 files are mandatory to build validity pattern
     //we need to build first the list of validity pattern,
@@ -82,7 +82,6 @@ struct TzHandler {
  * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
  */
 struct GtfsData {
-    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
@@ -98,6 +97,7 @@ struct GtfsData {
     ed::types::Company* get_or_create_default_company(Data & data);
     ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
+    std::unordered_map<std::string, ed::types::Frame*> frame_map;
 
     std::unordered_map<std::string, std::vector<ed::types::StopTime*>> stop_time_map; // there may be several stoptimes for one id because of dst
 
@@ -124,8 +124,6 @@ struct GtfsData {
     ed::types::PhysicalMode* get_or_create_default_physical_mode(Data & data);
     ed::types::PhysicalMode* default_physical_mode = nullptr;
 
-    boost::gregorian::date_period production_date;// Data validity period
-
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
@@ -143,12 +141,9 @@ struct PeriodWithUtcShift {
     //add info to handle the cornercase of the day of the DST (the time of the shift)
 };
 
-using UtcShift = int;
-using PeriodsByUtcShift = std::map<UtcShift, std::vector<boost::gregorian::date_period>>;
-
 std::vector<PeriodWithUtcShift>
 get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
-PeriodsByUtcShift
+navitia::type::TimeZoneHandler::dst_periods
 split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);

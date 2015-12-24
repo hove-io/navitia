@@ -228,6 +228,12 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
     BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
 
+    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "Africa/Abidjan");
+    //we check that for all the period, it returns the same UTC shift: 0
+    for (boost::gregorian::day_iterator it(data.meta.production_date.begin()); it < data.meta.production_date.end(); ++it) {
+        BOOST_CHECK_EQUAL(data.tz_handler.get_utc_offset(*it), 0);
+    }
+
     //=> no stop area in the file, so one area has been created for each stop point
     //Stop areas
     BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
@@ -243,7 +249,6 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
-//        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
         BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "Africa/Abidjan");
     }
 
@@ -325,7 +330,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     data.complete();
 }
 
-static void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
+static void check_gtfs_google_example(const ed::Data& data) {
     //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
     BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
@@ -397,7 +402,7 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
     //Calendar, Trips and stop times are another matters
     //we have to split the trip validity period in such a fashion that the period does not overlap a dst
 
-    BOOST_CHECK_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
+    BOOST_CHECK_EQUAL(data.meta.production_date, boost::gregorian::date_period(
                             boost::gregorian::from_undelimited_string("20070101"),
                             boost::gregorian::from_undelimited_string("20080102")));
 
@@ -438,6 +443,11 @@ static void check_gtfs_google_example(const ed::Data& data, const ed::connectors
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->route != nullptr);
     }
 
+    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "America/Los_Angeles");
+    //we check that the shift for vj[0] is -480 minutes and -420 for vj[1]
+    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
+    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
+
     //Stop time
     BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 2);
     BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
@@ -472,7 +482,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_google_example");
     parser.fill(data);
 
-    check_gtfs_google_example(data, parser);
+    check_gtfs_google_example(data);
 }
 
 
@@ -487,7 +497,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_without_calendar) {
     ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_google_example_no_calendar");
     parser.fill(data);
 
-    check_gtfs_google_example(data, parser);
+    check_gtfs_google_example(data);
 }
 
 BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){
@@ -645,7 +655,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_1) {
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2010, 01, 15),
                                                       boost::gregorian::date(2010, 12, 27)));
 }
@@ -671,7 +681,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_2) {
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2010, 01, 15),
                                                       boost::gregorian::date(2010, 12, 27)));
 }
@@ -698,7 +708,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_3) {
     BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date,
+    BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2010, 01, 17),
                                                       boost::gregorian::date(2010, 12, 27)));
 }

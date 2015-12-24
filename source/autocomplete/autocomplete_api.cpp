@@ -35,25 +35,6 @@ www.navitia.io
 #include "utils/functions.h"
 
 namespace navitia { namespace autocomplete {
-/**
- * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
- *
- */
-template <typename T, typename PbNestedObj>
-void fill_pb_pt_object(T* nav_object, pbnavitia::PtObject* place,
-                       PbNestedObj* pb_nested_object,const nt::Data& data,
-                       pbnavitia::NavitiaType pb_type, u_int32_t depth, std::string key = "") {
-    fill_pb_object(nav_object, data, pb_nested_object, depth);
-    if (!key.empty()) {
-        place->set_name(key + " (" + nav_object->name + ")");
-    }
-    else {
-        place->set_name(nav_object->name);
-    }
-    place->set_uri(nav_object->uri);
-    place->set_quality(100);
-    place->set_embedded_type(pb_type);
-}
 
 static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
                             const nt::Type_e type,
@@ -89,34 +70,16 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
-            fill_pb_pt_object(data.pt_data->networks[result_item.idx],
-                    place, place->mutable_network(), data, pbnavitia::NETWORK, depth);
+            fill_pb_placemark(data.pt_data->networks[result_item.idx], data, place, depth);
             break;
-        case nt::Type_e::CommercialMode:            
-            fill_pb_pt_object(data.pt_data->commercial_modes[result_item.idx],
-                    place, place->mutable_commercial_mode(), data, pbnavitia::COMMERCIAL_MODE, depth);
+        case nt::Type_e::CommercialMode:
+            fill_pb_placemark(data.pt_data->commercial_modes[result_item.idx], data, place, depth);
             break;
-        case nt::Type_e::Line: {
-            //LineName = NetworkName + ModeName + LineCode + (LineName)
-            std::string key = "";
-            const auto* line = data.pt_data->lines[result_item.idx];
-            if (line->network) {key += line->network->name;}
-            if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
-            key += " " + line->code;
-            fill_pb_pt_object(line,place, place->mutable_line(), data, pbnavitia::LINE, depth, key);
-        }
+        case nt::Type_e::Line:
+            fill_pb_placemark(data.pt_data->lines[result_item.idx], data, place, depth);
             break;
-        case nt::Type_e::Route:{
-            //RouteName = NetworkName + ModeName + LineCode + (RouteName)
-            std::string key = "";
-            const auto* route = data.pt_data->routes[result_item.idx];
-            if (route->line) {
-                if (route->line->network) {key += route->line->network->name;}
-                if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
-                key += " " + route->line->code;
-            }
-            fill_pb_pt_object(route, place, place->mutable_route(), data, pbnavitia::ROUTE, depth, key);
-        }
+        case nt::Type_e::Route:
+            fill_pb_placemark(data.pt_data->routes[result_item.idx], data, place, depth);
             break;
         default:
             break;

@@ -82,20 +82,25 @@ void Data::build_block_id() {
     /// Two vehicle_journeys with the same block_id vj1 are consecutive if
     /// the last arrival_time of vj1 <= to the departure_time of vj2
     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
-              [](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
+              [this](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
         if(vj1->block_id != vj2->block_id) {
             return vj1->block_id < vj2->block_id;
-        } else if (vj1->utc_to_local_offset != vj2->utc_to_local_offset) {
-            // we don't want to link the splited vjs
-            return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
-        } else  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
-            return vj1->stop_time_list.size() < vj2->stop_time_list.size();
         } else {
-            return vj1->stop_time_list.front()->departure_time <
-                    vj2->stop_time_list.front()->departure_time;
+            auto offset1 = tz_handler.get_first_utc_offset(*vj1->validity_pattern);
+            auto offset2 = tz_handler.get_first_utc_offset(*vj2->validity_pattern);
+
+            // we don't want to link the splited vjs
+            if (offset1 != offset2) {
+                return offset1 < offset2;
+            }
+            else if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+                return vj1->stop_time_list.size() < vj2->stop_time_list.size();
+            } else {
+                return vj1->stop_time_list.front()->departure_time <
+                        vj2->stop_time_list.front()->departure_time;
+            }
         }
-    }
-    );
+    });
 
     types::VehicleJourney* prev_vj = nullptr;
     for (auto* vj : vehicle_journeys) {
@@ -113,7 +118,8 @@ void Data::build_block_id() {
                 if(vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
 
                     //we add another check that the vjs are on the same offset (that they are not the from vj split on different dst)
-                    if (vj->utc_to_local_offset == prev_vj->utc_to_local_offset) {
+                    if (tz_handler.get_first_utc_offset(*vj->validity_pattern) ==
+                            tz_handler.get_first_utc_offset(*prev_vj->validity_pattern)) {
                         prev_vj->next_vj = vj;
                         vj->prev_vj = prev_vj;
                     }
@@ -255,6 +261,7 @@ void Data::build_route_destination(){
 void Data::complete(){
     build_block_id();
     build_shape_from_prev();
+    pick_up_drop_of_on_borders();
 
     build_grid_validity_pattern();
     build_associated_calendar();
@@ -507,6 +514,18 @@ void Data::build_shape_from_prev() {
                 }
             }
             prev_coord = &stop_time->stop_point->coord;
+        }
+    }
+}
+
+void Data::pick_up_drop_of_on_borders() {
+    for (auto* vj: vehicle_journeys) {
+        if (vj->stop_time_list.empty()) { continue; }
+        if (! vj->prev_vj) {
+            vj->stop_time_list.front()->drop_off_allowed = false;
+        }
+        if (! vj->next_vj) {
+            vj->stop_time_list.back()->pick_up_allowed = false;
         }
     }
 }

@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "type/datetime.h"
 #include "kraken/apply_disruption.h"
+#include "type/kirin.pb.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
@@ -41,6 +42,8 @@ www.navitia.io
 #include <chrono>
 
 namespace navitia {
+
+namespace nd = type::disruption;
 
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     namespace bpt = boost::posix_time;
@@ -114,7 +117,8 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
     auto log = log4cplus::Logger::getInstance("realtime");
     for (const auto& impact: disruption.get_impacts()) {
         boost::optional<const nt::StopTime&> last_st;
-        for (const auto& st: impact->aux_info.stop_times) {
+        for (const auto& stu: impact->aux_info.stop_times) {
+            const auto& st = stu.stop_time;
             if (last_st) {
                 if (last_st->departure_time > st.arrival_time) {
                     LOG4CPLUS_WARN(log, "stop time " << *last_st
@@ -164,7 +168,17 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
     return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
 }
 
-static const type::disruption::Disruption&
+static type::disruption::Message create_message(const std::string& str_msg) {
+    type::disruption::Message msg;
+    msg.text = str_msg;
+    msg.channel_id = "rt";
+    msg.channel_name = "rt";
+    msg.channel_types = {nd::ChannelType::web, nd::ChannelType::mobile};
+
+    return msg;
+}
+
+static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
@@ -192,12 +206,15 @@ create_disruption(const std::string& id,
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
         impact->application_periods.push_back(base_execution_period(circulation_date, mvj));
+        if (trip_update.HasExtension(kirin::trip_message)) {
+            impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
+        }
         std::string wording;
         nt::disruption::Effect effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcodded...
-            wording = "trip canceled!";
+            wording = "trip canceled";
             effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
@@ -208,7 +225,13 @@ create_disruption(const std::string& id,
             effect = nt::disruption::Effect::SIGNIFICANT_DELAYS;
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
-                auto* stop_point_ptr = data.pt_data->stop_points_map[st.stop_id()];
+                auto it = data.pt_data->stop_points_map.find(st.stop_id());
+                if (it == data.pt_data->stop_points_map.cend()) {
+                    LOG4CPLUS_WARN(log, "Disruption: " + disruption.uri + " cannot be handled, because "
+                            "stop point: " + st.stop_id() + " cannot be found");
+                    return nullptr;
+                }
+                auto* stop_point_ptr = it->second;
                 assert(stop_point_ptr);
                 uint32_t arrival_time = st.arrival().time();
                 uint32_t departure_time = st.departure().time();
@@ -222,11 +245,11 @@ create_disruption(const std::string& id,
                      *
                      * TODO: And this check should be done on Kirin's side...
                      * */
-                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()){
+                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()) {
                         arrival_time = departure_time = st.departure().time();
                     }
-                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()){
-                        departure_time = arrival_time =st.arrival().time();
+                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()) {
+                        departure_time = arrival_time = st.arrival().time();
                     }
                 }
                 auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
@@ -237,8 +260,13 @@ create_disruption(const std::string& id,
                                          stop_point_ptr};
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
-                impact->aux_info.stop_times.emplace_back(std::move(stop_time));
-           }
+                std::string message;
+                if (st.HasExtension(kirin::stoptime_message)) {
+                    message = st.GetExtension(kirin::stoptime_message);
+                }
+                type::disruption::StopTimeUpdate st_update{std::move(stop_time), message};
+                impact->aux_info.stop_times.emplace_back(std::move(st_update));
+            }
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
@@ -253,7 +281,7 @@ create_disruption(const std::string& id,
     // note
 
     LOG4CPLUS_DEBUG(log, "Disruption added");
-    return disruption;
+    return &disruption;
 }
 
 void handle_realtime(const std::string& id,
@@ -276,15 +304,15 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    const auto& disruption = create_disruption(id, timestamp, trip_update, data);
+    const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
-    if (! check_disruption(disruption)) {
+    if (! disruption || ! check_disruption(*disruption)) {
         LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
         delete_disruption(id, *data.pt_data, *data.meta);
         return;
     }
 
-    apply_disruption(disruption, *data.pt_data, *data.meta);
+    apply_disruption(*disruption, *data.pt_data, *data.meta);
 }
 
 }

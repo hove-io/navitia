@@ -207,9 +207,17 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     try:
         connection_string = make_connection_string(instance_config)
         res = None
+        args = ["-i", osm_filename, "--connection-string", connection_string]
+        for poi_type in instance.poi_types:
+            args.append('-p')
+            if poi_type.name:
+                args.append(u'{}={}'.format(poi_type.uri, poi_type.name))
+            else:
+                args.append(poi_type.uri)
+
         with collect_metric('osm2ed', job, dataset_uid):
             res = launch_exec('osm2ed',
-                    ["-i", osm_filename, "--connection-string", connection_string],
+                    args,
                     logger)
         if res != 0:
             #@TODO: exception

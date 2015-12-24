@@ -48,6 +48,7 @@ from flask import g
 import json
 import flask
 import pybreaker
+from jormungandr import georef, planner
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -80,6 +81,8 @@ class Instance(object):
         self.publication_date = -1
         self.is_up = True
         self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
+        self.georef = georef.Kraken(self)
+        self.planner = planner.Kraken(self)
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -105,6 +108,7 @@ class Instance(object):
             try:
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
+                logger.exception('sceneario not found')
                 abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
             g.scenario = scenario
@@ -231,6 +235,26 @@ class Instance(object):
             return False
         else:
             return instance_db.is_free
+
+    @property
+    def max_duration(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_duration', instance_db, self.name)
+
+    @property
+    def walking_transfer_penalty(self):
+        instance_db = self.get_models()
+        return get_value_or_default('walking_transfer_penalty', instance_db, self.name)
+
+    @property
+    def night_bus_filter_max_factor(self):
+        instance_db = self.get_models()
+        return get_value_or_default('night_bus_filter_max_factor', instance_db, self.name)
+
+    @property
+    def night_bus_filter_base_factor(self):
+        instance_db = self.get_models()
+        return get_value_or_default('night_bus_filter_base_factor', instance_db, self.name)
 
     @contextmanager
     def socket(self, context):

@@ -307,6 +307,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert feed_infos");
     this->insert_feed_info(data.feed_infos);
     LOG4CPLUS_INFO(logger, "End: insert feed_info");
+    LOG4CPLUS_INFO(logger, "Begin: insert timezone");
+    this->insert_timezones(data.tz_handler);
+    LOG4CPLUS_INFO(logger, "End: insert timezone");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
     LOG4CPLUS_INFO(logger, "End: insert networks");
@@ -321,7 +324,10 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "End: insert companies");
     LOG4CPLUS_INFO(logger, "Begin: insert contributors");
     this->insert_contributors(data.contributors);
-    LOG4CPLUS_INFO(logger, "End: insert contributors");
+    LOG4CPLUS_INFO(logger, "End: insert contributors");    
+    LOG4CPLUS_INFO(logger, "Begin: insert frames");
+    this->insert_frames(data.frames);
+    LOG4CPLUS_INFO(logger, "End: insert frames");
     LOG4CPLUS_INFO(logger, "Begin: insert stops properties");
     this->insert_sa_sp_properties(data);
     LOG4CPLUS_INFO(logger, "End: insert stops properties");
@@ -434,8 +440,7 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
     auto last = bg::to_iso_extended_string(meta.production_date.last());
     //metadata consist of only one line, we either have to update it or create it
     this->lotus.exec(Lotus::make_upsert_string("navitia.parameters",
-                {{"beginning_date", beg}, {"end_date", last},
-                {"timezone", meta.timezone}}));
+                {{"beginning_date", beg}, {"end_date", last}}));
 }
 
 void EdPersistor::insert_metadata_georef() {
@@ -464,7 +469,7 @@ void EdPersistor::clean_db(){
     this->lotus.exec(
         "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
         "navitia.physical_mode, navitia.contributor, "
-        "navitia.commercial_mode, "
+        "navitia.commercial_mode, navitia.timezone, navitia.tz_dst, "
         "navitia.vehicle_properties, navitia.properties, "
         "navitia.validity_pattern, navitia.network, "
         "navitia.connection, navitia.calendar, navitia.period, "
@@ -476,8 +481,7 @@ void EdPersistor::clean_db(){
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
                      " beginning_date = null"
-                     ", end_date = null"
-                     ", timezone = '';");
+                     ", end_date = null;");
 }
 
 void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& feed_infos){
@@ -490,6 +494,30 @@ void EdPersistor::insert_feed_info(const std::map<std::string, std::string>& fee
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
+}
+
+
+void EdPersistor::insert_timezones(const navitia::type::TimeZoneHandler& tz_handler) {
+    lotus.prepare_bulk_insert("navitia.timezone", {"id", "name"});
+    // in the ED part there can be only one TZ by construction
+    lotus.insert({std::to_string(default_timezone_idx), tz_handler.tz_name});
+    lotus.finish_bulk_insert();
+
+
+    lotus.prepare_bulk_insert("navitia.tz_dst", {"id", "tz_id", "beginning_date", "end_date", "utc_offset"});
+    size_t idx = 0;
+    for (const auto& dst: tz_handler.get_periods_and_shift()) {
+        for (const auto& period: dst.second) {
+            lotus.insert({std::to_string(idx),
+                          std::to_string(default_timezone_idx),
+                          bg::to_iso_extended_string(period.begin()),
+                          bg::to_iso_extended_string(period.last()),
+                          std::to_string(dst.first)
+                         });
+            ++idx;
+        }
+    }
+    lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -568,6 +596,23 @@ void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& co
         values.push_back(contributor->name);
         values.push_back(contributor->website);
         values.push_back(contributor->license);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_frames(const std::vector<types::Frame*>& frames){
+    this->lotus.prepare_bulk_insert("navitia.frame",
+            {"id", "uri", "description", "system", "start_date", "end_date", "contributor_id"});
+    for(types::Frame* frame : frames){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(frame->idx));
+        values.push_back(navitia::encode_uri(frame->uri));
+        values.push_back(frame->desc);
+        values.push_back(frame->system);
+        values.push_back(bg::to_iso_extended_string(frame->validation_period.begin()));
+        values.push_back(bg::to_iso_extended_string(frame->validation_period.end()));
+        values.push_back(std::to_string(frame->contributor->idx));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -707,7 +752,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(navitia::encode_uri(line->uri));
         values.push_back(line->name);
         values.push_back(line->color);
-        values.push_back(line->code);
+        values.push_back(line->code);        
         if(line->commercial_mode != NULL){
             values.push_back(std::to_string(line->commercial_mode->idx));
         }else{
@@ -797,7 +842,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape"});
+            {"id", "uri", "name", "line_id", "destination_stop_area_id", "shape", "direction_type"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
@@ -821,6 +866,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
             shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
         values.push_back(shape.str());
 
+        values.push_back(route->direction_type);        
         this->lotus.insert(values);
     }
 
@@ -926,11 +972,11 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
-            {"id", "uri", "name", "validity_pattern_id",
+            {"id", "uri", "name", "validity_pattern_id", "frame_id",
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "route_id", "physical_mode_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message", "utc_to_local_offset", "is_frequency", "meta_vj_name", "vj_class"});
+             "odt_type_id", "odt_message", "is_frequency", "meta_vj_name", "vj_class"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -943,7 +989,11 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         }else{
             values.push_back(lotus.null_value);
         }
-
+        if (vj->frame != NULL){
+            values.push_back(std::to_string(vj->frame->idx));
+        }else{
+            values.push_back(lotus.null_value);
+        }
         values.push_back(std::to_string(vj->start_time));
         values.push_back(std::to_string(vj->end_time));
         values.push_back(std::to_string(vj->headway_secs));
@@ -970,7 +1020,6 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
-        values.push_back(std::to_string(vj->utc_to_local_offset));
 
         bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
         values.push_back(std::to_string(is_frequency));
@@ -1008,10 +1057,10 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
 void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs) {
     //we insert first the meta vj
-    this->lotus.prepare_bulk_insert("navitia.meta_vj", {"id", "name"});
+    this->lotus.prepare_bulk_insert("navitia.meta_vj", {"id", "name", "timezone"});
     size_t cpt(0);
     for (const auto& meta_vj_pair: meta_vjs) {
-        this->lotus.insert({std::to_string(cpt), meta_vj_pair.first});
+        this->lotus.insert({std::to_string(cpt), meta_vj_pair.first, std::to_string(default_timezone_idx)});
         cpt++;
     }
     this->lotus.finish_bulk_insert();

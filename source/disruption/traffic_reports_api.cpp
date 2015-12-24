@@ -48,6 +48,7 @@ struct NetworkDisrupt {
     //we use a vector of pair because we need to sort by the priority of the impacts
     std::vector<std::pair<const type::Line*, DisruptionSet>> lines;
     std::vector<std::pair<const type::StopArea*, DisruptionSet>> stop_areas;
+    std::vector<std::pair<const type::VehicleJourney*, DisruptionSet>> vehicle_journeys;
 };
 
 class TrafficReport {
@@ -69,6 +70,11 @@ private:
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
                       const boost::posix_time::ptime now);
+    void add_vehicle_journeys(const std::vector<type::idx_t>& network_idx,
+                              const std::string& filter,
+                              const std::vector<std::string>& forbidden_uris,
+                              const type::Data &d,
+                              const boost::posix_time::ptime now);
     void sort_disruptions();
 public:
     TrafficReport(): logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))) {}
@@ -120,40 +126,87 @@ void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const type::Data& d,
                       const boost::posix_time::ptime now){
 
-    for(auto idx : network_idx){
+    for (auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
-        if(!filter.empty()){
+        if (!filter.empty()) {
             new_filter += " and " + filter;
         }
-        std::vector<type::idx_t> line_list;
+        std::vector<type::idx_t> stop_areas;
 
-       try{
-            line_list = ptref::make_query(type::Type_e::StopArea, new_filter,
-                    forbidden_uris, d);
-        } catch(const ptref::parsing_error &parse_error) {
+       try {
+            stop_areas = ptref::make_query(type::Type_e::StopArea, new_filter, forbidden_uris, d);
+        } catch (const ptref::parsing_error& parse_error) {
             LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
                                 + parse_error.more);
-        } catch(const ptref::ptref_error &ptref_error){
-            LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : ptref : "  + ptref_error.more);
+        } catch (const ptref::ptref_error& /*ptref_error*/) {
+           // that can arrive quite often if there is a filter, and
+           // it's quite normal. Imagine /line/metro1/traffic_reports
+           // for the network SNCF.
         }
-        for(auto stop_area_idx: line_list){
+        for (auto stop_area_idx: stop_areas) {
             const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
             auto v = stop_area->get_publishable_messages(now);
-            for(const auto* stop_point: stop_area->stop_point_list){
+            for (const auto* stop_point: stop_area->stop_point_list) {
                 auto vsp = stop_point->get_publishable_messages(now);
                 v.insert(v.end(), vsp.begin(), vsp.end());
             }
-            if (!v.empty()){
+            if (!v.empty()) {
                 NetworkDisrupt& dist = this->find_or_create(network);
                 auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
                     return item.first == stop_area;
                 };
                 auto it = boost::find_if(dist.stop_areas, find_predicate);
-                if(it == dist.stop_areas.end()){
+                if (it == dist.stop_areas.end()) {
                     dist.stop_areas.push_back(std::make_pair(stop_area, DisruptionSet(v.begin(), v.end())));
-                }else{
+                } else {
                     it->second.insert(v.begin(), v.end());
+                }
+            }
+        }
+    }
+}
+
+void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network_idx,
+                                         const std::string& filter,
+                                         const std::vector<std::string>& forbidden_uris,
+                                         const type::Data& d,
+                                         const boost::posix_time::ptime now){
+
+    for (const auto idx : network_idx) {
+        const auto* network = d.pt_data->networks[idx];
+        std::string new_filter = "network.uri=" + network->uri;
+        if (!filter.empty()) {
+            new_filter += " and " + filter;
+        }
+        std::vector<type::idx_t> vehicle_journeys;
+
+        try {
+            vehicle_journeys =
+                ptref::make_query(type::Type_e::VehicleJourney, new_filter, forbidden_uris, d);
+        } catch (const ptref::parsing_error& parse_error) {
+            LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
+                           << parse_error.more);
+        } catch (const ptref::ptref_error&) {
+        }
+        for (const auto vj_idx: vehicle_journeys) {
+            const auto* vj = d.pt_data->vehicle_journeys[vj_idx];
+            auto impacts = vj->get_impacts();
+            boost::remove_erase_if(impacts, [&](const boost::shared_ptr<type::disruption::Impact>& impact) {
+                    if (! impact->disruption->is_publishable(now)) { return true; }
+                    if (impact->severity->effect != type::disruption::Effect::NO_SERVICE) { return true; }
+                    return false;
+                });
+            if (! impacts.empty()) {
+                NetworkDisrupt& dist = this->find_or_create(network);
+                auto find_predicate = [&](const std::pair<const type::VehicleJourney*, DisruptionSet>& item) {
+                    return item.first == vj;
+                };
+                auto it = boost::find_if(dist.vehicle_journeys, find_predicate);
+                if (it == dist.vehicle_journeys.end()) {
+                    dist.vehicle_journeys.push_back({vj, DisruptionSet(impacts.begin(), impacts.end())});
+                } else {
+                    it->second.insert(impacts.begin(), impacts.end());
                 }
             }
         }
@@ -244,6 +297,7 @@ void TrafficReport::disruptions_list(const std::string& filter,
     add_networks(network_idx, d, now);
     add_lines(filter, forbidden_uris, d, now);
     add_stop_areas(network_idx, filter, forbidden_uris, d, now);
+    add_vehicle_journeys(network_idx, filter, forbidden_uris, d, now);
     sort_disruptions();
 }
 
@@ -296,6 +350,14 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
                                     bt::not_a_date_time, action_period, false);
             for(const auto& impact: sa_item.second){
                 fill_message(*impact, d, pb_stop_area, depth-1, now_dt, action_period);
+            }
+        }
+        for (const auto& vj_item: dist.vehicle_journeys) {
+            pbnavitia::VehicleJourney* pb_vehicle_journey = pb_traffic_reports->add_vehicle_journeys();
+            navitia::fill_pb_object(vj_item.first, d, pb_vehicle_journey, depth-1,
+                                    bt::not_a_date_time, action_period, false);
+            for(const auto& impact: vj_item.second){
+                fill_message(*impact, d, pb_vehicle_journey, depth-1, now_dt, action_period);
             }
         }
     }

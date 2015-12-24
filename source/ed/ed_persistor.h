@@ -91,6 +91,7 @@ private:
     void insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes);
     void insert_companies(const std::vector<types::Company*>& companies);
     void insert_contributors(const std::vector<types::Contributor*>& contributors);
+    void insert_frames(const std::vector<types::Frame*>& frames);
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);
@@ -111,6 +112,8 @@ private:
 
     void insert_object_properties(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_properties);
 
+    void insert_timezones(const navitia::type::TimeZoneHandler&);
+
     void insert_comments(const Data& data);
 
     /// Inserer les données fiche horaire par période
@@ -130,6 +133,7 @@ private:
 
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 
+    size_t default_timezone_idx = 0;
 };
 
 }

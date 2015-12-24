@@ -162,7 +162,8 @@ We have the following associations :
 - MVJ7 => ∅
 */
 struct route_schedule_calendar_fixture {
-    ed::builder b = {"20120614"};
+    // we complicate things a bit, we say that the vjs have a utc offset
+    ed::builder b = {"20120614", "canal tp", "paris", {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}};
     navitia::type::Calendar *c1, *c2, *c3, *c4;
     navitia::type::VehicleJourney *vj5, *vj6, *vj7;
 
@@ -179,11 +180,6 @@ struct route_schedule_calendar_fixture {
                 (S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t).make();
         vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")
                 (S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t).make();
-
-        // we complicate things a bit, we say that the vjs have a utc offset
-        vj5->utc_to_local_offset = "02:00"_t;
-        vj6->utc_to_local_offset = "02:00"_t;
-        vj7->utc_to_local_offset = "02:00"_t;
 
         auto save_cal = [&](navitia::type::Calendar* cal) {
             b.data->pt_data->calendars.push_back(cal);
@@ -375,17 +371,14 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  *
  */
 struct CalWithDSTFixture {
-    ed::builder b = {"20150614"};
+    ed::builder b = {"20150614", "canal tp", "paris", {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}};
 
     CalWithDSTFixture() {
         auto normal_vp = "111111";
         auto shifted_vp = "111110";
-        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
-        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
-        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t)
-            .make()->utc_to_local_offset = "02:00"_t;
+        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t);
+        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t);
+        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t);
 
         auto cal = new navitia::type::Calendar();
         cal->uri = "cal";
@@ -443,6 +436,66 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
             vec_dt({"00:50"_t + one_day, "01:05"_t + one_day, "01:15"_t + one_day}));
 }
 
+// We want: (for a end of service at 2h00)
+//      A      B      C
+// S1 23:30  23:50  00:10
+// S2 23:40  00:00  00:20
+// S3 23:50  00:10  00:30
+//
+// Detail in associated PR https://github.com/CanalTP/navitia/pull/1304
+BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
+    ed::builder b = {"20151127"};
+    navitia::type::Calendar *c1;
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150101");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20160101");
+
+    b.vj("L", "111111", "", true, "A", "A")
+        ("st1", "23:30"_t)
+        ("st2", "23:40"_t)
+        ("st3", "23:50"_t);
+    b.vj("L", "111111", "", true, "B", "B")
+        ("st1", "23:50"_t)
+        ("st2", "24:00"_t)
+        ("st3", "24:10"_t);
+    b.vj("L", "111110", "", true, "C", "C")
+        ("st1", "24:10"_t)
+        ("st2", "24:20"_t)
+        ("st3", "24:30"_t);
+
+    auto save_cal = [&](navitia::type::Calendar* cal) {
+        b.data->pt_data->calendars.push_back(cal);
+        b.data->pt_data->calendars_map[cal->uri] = cal;
+    };
+
+    c1 = new navitia::type::Calendar(begin);
+    c1->uri = "C1";
+    c1->active_periods.push_back({begin, end});
+    c1->week_pattern = std::bitset<7>("1111111");
+    save_cal(c1);
+
+    auto a1 = new navitia::type::AssociatedCalendar;
+    a1->calendar = c1;
+    b.data->pt_data->associated_calendars.push_back(a1);
+
+    b.data->pt_data->meta_vjs.get_mut("A")->associated_calendars.insert({c1->uri, a1});
+    b.data->pt_data->meta_vjs.get_mut("B")->associated_calendars.insert({c1->uri, a1});
+    b.data->pt_data->meta_vjs.get_mut("C")->associated_calendars.insert({c1->uri, a1});
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    pbnavitia::Response resp = navitia::timetables::route_schedule(
+        "line.uri=L", c1->uri, {}, d("20151201T020000"), 86400, 100,
+        3, 10, 0, *b.data, nt::RTLevel::Base, false);
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+}
 
 // We want:
 //     C A B

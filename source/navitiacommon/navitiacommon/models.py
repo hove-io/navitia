@@ -105,6 +105,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False)
+    block_until = db.Column(db.Date, nullable=True)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
@@ -120,9 +121,10 @@ class User(db.Model):
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
                              default='with_free', nullable=False)
 
-    def __init__(self, login=None, email=None, keys=None, authorizations=None):
+    def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
         self.email = email
+        self.block_until = block_until
         if keys:
             self.keys = keys
         if authorizations:
@@ -171,6 +173,11 @@ class User(db.Model):
 
         return query.count() > 0
 
+    def is_blocked(self, datetime_utc):
+        if self.block_until and datetime_utc <= self.block_until:
+            return True
+
+        return False
 
 class Key(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -192,6 +199,19 @@ class Key(db.Model):
     def get_by_token(cls, token):
         return cls.query.filter_by(token=token).first()
 
+class PoiType(db.Model):
+    uri = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
+
+    __tablename__ = 'poi_type'
+    __table_args__ = (db.PrimaryKeyConstraint('instance_id', 'uri'), )
+
+    def __init__(self, uri, name=None, instance=None):
+        self.uri = uri
+        self.name = name
+        self.instance = instance
+
 
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -202,6 +222,9 @@ class Instance(db.Model):
             lazy='dynamic', cascade='save-update, merge, delete')
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic', cascade='save-update, merge, delete')
+
+    poi_types = db.relationship('PoiType', backref=backref('instance'),
+                               lazy='dynamic', cascade='save-update, merge, delete')
     # ============================================================
     # params for jormungandr
     # ============================================================
@@ -253,6 +276,16 @@ class Instance(db.Model):
     max_duration_fallback_mode = db.Column(db.Enum('walking', 'bss', 'bike', 'car', name='max_duration_fallback_mode'),
             default=default_values.max_duration_fallback_mode, nullable=False)
 
+    max_duration = db.Column(db.Integer, default=default_values.max_duration, nullable=False, server_default='86400')
+
+    walking_transfer_penalty = db.Column(db.Integer, default=default_values.walking_transfer_penalty, nullable=False,
+                                         server_default='2')
+
+    night_bus_filter_max_factor = db.Column(db.Integer, default=default_values.night_bus_filter_max_factor,
+                                            nullable=False, server_default='30')
+
+    night_bus_filter_base_factor = db.Column(db.Integer, default=default_values.night_bus_filter_base_factor,
+                                             nullable=False,server_default='3600')
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
@@ -441,8 +474,8 @@ class DataSet(db.Model):
 class BillingPlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    max_request_count = db.Column(db.Integer, nullable=False)
-    max_object_count = db.Column(db.Integer, nullable=False)
+    max_request_count = db.Column(db.Integer, default=0)
+    max_object_count = db.Column(db.Integer, default=0)
     default = db.Column(db.Boolean, nullable=False, default=False)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)

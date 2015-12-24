@@ -1,4 +1,6 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# encoding: utf-8
+
+#  Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,11 +29,21 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-def singleton(class_):
-    instances = {}
+from functools import wraps
+from jormungandr import authentication
+import flask_restful
+from datetime import datetime
 
-    def getinstance(*args, **kwargs):
-        if class_ not in instances:
-            instances[class_] = class_(*args, **kwargs)
-        return instances[class_]
-    return getinstance
+def quota_control(func):
+    """
+    Decorator for quota control on every request
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        user = authentication.get_user(token=authentication.get_token())
+        if user is not None and user.is_blocked(datetime.utcnow()):
+            flask_restful.abort(429, message="Quota limit reached, please contact provider if you want to upgrade your current billing plan")
+
+        return func(*args, **kwargs)
+
+    return wrapper

@@ -169,4 +169,48 @@ void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
 void DisruptionHolder::clean_weak_impacts(){
     clean_up_weak_ptr(weak_impacts);
 }
+
+namespace detail {
+
+const StopTime* AuxInfoForMetaVJ::get_base_stop_time(const StopTimeUpdate& stu) const {
+    //TODO check effect when available, we can do this only for UPDATED
+    auto* vj = stu.stop_time.vehicle_journey;
+    auto log = log4cplus::Logger::getInstance("log");
+    if (! vj) {
+        LOG4CPLUS_WARN(log, "impossible to find corresponding base stoptime "
+                            "since the stoptime update is not yet associated to a vj");
+        return nullptr;
+    }
+
+    const auto* base_vj = vj->get_corresponding_base();
+
+    if (! base_vj) {
+        return nullptr;
+    }
+
+    size_t idx = 0;
+    for (const auto& stop_update: stop_times) {
+        // TODO check stop_update effect not to consider added stops
+        if (&stop_update != &stu) {
+            idx ++;
+            continue;
+        }
+        if (idx >= base_vj->stop_time_list.size()) {
+            LOG4CPLUS_WARN(log, "The stoptime update list of " << base_vj->meta_vj->uri <<
+                                " is not consistent with the list of stoptimes");
+            return nullptr;
+        }
+        const auto& base_st = base_vj->stop_time_list[idx];
+        if (stu.stop_time.stop_point != base_st.stop_point) {
+            LOG4CPLUS_WARN(log, "The stoptime update list of " << base_vj->meta_vj->uri <<
+                                " is not consistent with the list of stoptimes, stoppoint are different");
+            return nullptr;
+        }
+        return &base_st;
+    }
+
+    return nullptr;
+}
+}
+
 }}}//namespace

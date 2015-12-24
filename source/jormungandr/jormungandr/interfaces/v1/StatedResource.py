@@ -30,18 +30,22 @@
 from flask.ext.restful import Resource
 from jormungandr.stat_manager import manage_stat_caller
 from jormungandr import stat_manager
+from jormungandr.quota import quota_control
 from functools import wraps
 
 
 class StatedResource(Resource):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, quota=True, *args, **kwargs):
         Resource.__init__(self, *args, **kwargs)
         self.method_decorators = []
 
         if stat_manager.save_stat:
             self.method_decorators.append(self._stat_regions)
             self.method_decorators.append(manage_stat_caller(stat_manager))
+
+        if quota:
+            self.method_decorators.append(quota_control)
 
     def _register_interpreted_parameters(self, args):
         stat_manager.register_interpreted_parameters(args)

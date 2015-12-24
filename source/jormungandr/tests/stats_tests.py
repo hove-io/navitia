@@ -84,7 +84,7 @@ class MockWrapper:
         assert len(stat.journeys) == 2
 
         assert stat.journeys[0].requested_date_time == str_to_time_stamp("20120614T080000") #1339653600
-        assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080042") #1339653642
+        assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080043") #1339653643
         assert stat.journeys[0].arrival_date_time == str_to_time_stamp("20120614T080222") #1339653742
         assert stat.journeys[0].duration == 99
         assert stat.journeys[0].type == "best"

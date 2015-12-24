@@ -117,4 +117,9 @@ class PostgresDocker(object):
     @retry(stop_max_delay=10000, wait_fixed=100,
            retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
-        psycopg2.connect(self.get_db_params().cnx_string())
+        psycopg2.connect(
+            database=self.get_db_params().dbname,
+            user=self.get_db_params().user,
+            password=self.get_db_params().password,
+            host=self.get_db_params().host
+        )

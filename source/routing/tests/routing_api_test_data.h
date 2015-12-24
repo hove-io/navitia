@@ -673,6 +673,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord D = {0, 30, false};
 
     ed::builder b = {"20120614", "routing api data"};
+
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
     std::vector<uint64_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};

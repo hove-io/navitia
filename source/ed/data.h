@@ -91,6 +91,7 @@ public:
 
     // the shapes are here, and then copied where needed
     std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
+    navitia::type::TimeZoneHandler tz_handler;
 
     std::unordered_map<std::string, nt::MultiPolygon> areas;
 
@@ -155,6 +156,7 @@ public:
 
     void build_block_id();
     void build_shape_from_prev();
+    void pick_up_drop_of_on_borders();
 
     void normalize_uri();
     /**

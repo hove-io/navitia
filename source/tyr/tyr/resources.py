@@ -43,6 +43,7 @@ from navitiacommon.default_traveler_profile_params import default_traveler_profi
 from navitiacommon import models
 from navitiacommon.models import db
 from functools import wraps
+from validations import datetime_format
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -90,7 +91,11 @@ instance_fields = {
     'min_tc_with_bss': fields.Raw,
     'min_tc_with_car': fields.Raw,
     'max_duration_criteria': fields.Raw,
-    'max_duration_fallback_mode': fields.Raw
+    'max_duration_fallback_mode': fields.Raw,
+    'max_duration': fields.Raw,
+    'walking_transfer_penalty': fields.Raw,
+    'night_bus_filter_max_factor': fields.Raw,
+    'night_bus_filter_base_factor': fields.Raw,
 }
 
 api_fields = {
@@ -104,6 +109,14 @@ billing_plan_fields = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+}
+
+billing_plan_fields_full = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'max_request_count': fields.Raw,
+    'max_object_count': fields.Raw,
+    'default': fields.Raw,
     'end_point': fields.Nested(end_point_fields)
 }
 
@@ -111,14 +124,17 @@ user_fields = {
     'id': fields.Raw,
     'login': fields.Raw,
     'email': fields.Raw,
+    'block_until': FieldDate,
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
+    'billing_plan': fields.Nested(billing_plan_fields)
 }
 
 user_fields_full = {
     'id': fields.Raw,
     'login': fields.Raw,
     'email': fields.Raw,
+    'block_until': FieldDate,
     'type': fields.Raw(),
     'keys': fields.List(fields.Nested(key_fields)),
     'authorizations': fields.List(fields.Nested({
@@ -140,6 +156,13 @@ jobs_fields = {
             'name': fields.Raw
         })),
         'instance': fields.Nested(instance_fields)
+    }))
+}
+
+poi_types_fields = {
+    'poi_types': fields.List(fields.Nested({
+        'uri': fields.Raw,
+        'name': fields.Raw,
     }))
 }
 
@@ -181,6 +204,61 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+class PoiType(flask_restful.Resource):
+    @marshal_with(poi_types_fields)
+    def get(self, instance_name):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def post(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode,  case_sensitive=False,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type = models.PoiType(uri, args['name'], instance)
+            db.session.add(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}, 201
+
+    @marshal_with(poi_types_fields)
+    def put(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
+                help='name displayed for this type of poi', location=('json', 'values'))
+        args = parser.parse_args()
+
+        try:
+            poi_type.name = args['name']
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
+
+    @marshal_with(poi_types_fields)
+    def delete(self, instance_name, uri):
+        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        try:
+            db.session.delete(poi_type)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return {'poi_types': instance.poi_types}
 
 
 class Instance(flask_restful.Resource):
@@ -273,30 +351,49 @@ class Instance(flask_restful.Resource):
                 help='', location=('json', 'values'),
                 default=instance.max_duration_fallback_mode)
 
+        parser.add_argument('max_duration', type=int, help='latest time point of research, in second',
+                            location=('json', 'values'), default=instance.max_duration)
+
+        parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in second',
+                            location=('json', 'values'), default=instance.walking_transfer_penalty)
+
+        parser.add_argument('night_bus_filter_max_factor', type=int, help='night bus filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_max_factor)
+
+        parser.add_argument('night_bus_filter_base_factor', type=int, help='night bus filter param',
+                            location=('json', 'values'), default=instance.night_bus_filter_base_factor)
+
         args = parser.parse_args()
 
         try:
-            instance.scenario = args['scenario']
-            instance.journey_order = args['journey_order']
-            instance.max_walking_duration_to_pt = args['max_walking_duration_to_pt']
-            instance.max_bike_duration_to_pt = args['max_bike_duration_to_pt']
-            instance.max_bss_duration_to_pt = args['max_bss_duration_to_pt']
-            instance.max_car_duration_to_pt = args['max_car_duration_to_pt']
-            instance.max_nb_transfers = args['max_nb_transfers']
-            instance.walking_speed = args['walking_speed']
-            instance.bike_speed = args['bike_speed']
-            instance.bss_speed = args['bss_speed']
-            instance.car_speed = args['car_speed']
-            instance.min_tc_with_car = args['min_tc_with_car']
-            instance.min_tc_with_bike = args['min_tc_with_bike']
-            instance.min_tc_with_bss = args['min_tc_with_bss']
-            instance.min_bike = args['min_bike']
-            instance.min_bss = args['min_bss']
-            instance.min_car = args['min_car']
-            instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
-            instance.factor_too_long_journey = args['factor_too_long_journey']
-            instance.max_duration_criteria = args['max_duration_criteria']
-            instance.max_duration_fallback_mode = args['max_duration_fallback_mode']
+            def map_args_to_instance(attr_name):
+                setattr(instance, attr_name, args[attr_name])
+
+            map(map_args_to_instance, ['scenario',
+                                       'journey_order',
+                                       'max_walking_duration_to_pt',
+                                       'max_bike_duration_to_pt',
+                                       'max_bss_duration_to_pt',
+                                       'max_car_duration_to_pt',
+                                       'max_nb_transfers',
+                                       'walking_speed',
+                                       'bike_speed',
+                                       'bss_speed',
+                                       'car_speed',
+                                       'min_tc_with_car',
+                                       'min_tc_with_bike',
+                                       'min_tc_with_bss',
+                                       'min_bike',
+                                       'min_bss',
+                                       'min_car',
+                                       'min_duration_too_long_journey',
+                                       'factor_too_long_journey',
+                                       'max_duration_criteria',
+                                       'max_duration_fallback_mode',
+                                       'max_duration',
+                                       'walking_transfer_penalty',
+                                       'night_bus_filter_max_factor',
+                                       'night_bus_filter_base_factor'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -318,6 +415,8 @@ class User(flask_restful.Resource):
             parser.add_argument('key', type=unicode, required=False,
                     case_sensitive=False, help='key')
             parser.add_argument('end_point_id', type=int)
+            parser.add_argument('block_until', type=datetime_format, required=False,
+                    case_sensitive=False)
             args = parser.parse_args()
 
             if args['key']:
@@ -341,6 +440,8 @@ class User(flask_restful.Resource):
                 case_sensitive=False, help='login is required', location=('json', 'values'))
         parser.add_argument('email', type=unicode, required=True,
                 case_sensitive=False, help='email is required', location=('json', 'values'))
+        parser.add_argument('block_until', type=datetime_format, required=False,
+                            help='end block date access', location=('json', 'values'))
         parser.add_argument('end_point_id', type=int, required=False,
                             help='id of the end_point', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, required=False,
@@ -368,7 +469,7 @@ class User(flask_restful.Resource):
             billing_plan = models.BillingPlan.get_default(end_point)
 
         try:
-            user = models.User(login=args['login'], email=args['email'])
+            user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
@@ -391,6 +492,8 @@ class User(flask_restful.Resource):
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
         parser.add_argument('end_point_id', type=int, default=user.end_point_id,
                             help='id of the end_point', location=('json', 'values'))
+        parser.add_argument('block_until', type=datetime_format, required=False,
+                            help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
@@ -406,6 +509,7 @@ class User(flask_restful.Resource):
         try:
             user.email = args['email']
             user.type = args['type']
+            user.block_until = args['block_until']
             user.end_point = end_point
             user.billing_plan = billing_plan
             db.session.commit()
@@ -744,10 +848,10 @@ class BillingPlan(flask_restful.Resource):
     def get(self, billing_plan_id=None):
         if billing_plan_id:
             billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         else:
             billing_plans = models.BillingPlan.query.all()
-            return marshal(billing_plans, billing_plan_fields)
+            return marshal(billing_plans, billing_plan_fields_full)
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -775,7 +879,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise
@@ -804,7 +908,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.default = args['default']
             billing_plan.end_point = end_point
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields)
+            return marshal(billing_plan, billing_plan_fields_full)
         except Exception:
             logging.exception("fail")
             raise

@@ -30,17 +30,18 @@ www.navitia.io
 
 #pragma once
 
+#include "type_interfaces.h"
 #include "type/time_duration.h"
 #include "datetime.h"
 #include "rt_level.h"
+#include "validity_pattern.h"
+#include "timezone_manager.h"
 #include "geographical_coord.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
-#include "utils/idx_map.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
-#include <bitset>
 
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
@@ -62,76 +63,12 @@ namespace navitia { namespace georef {
 }}
 
 namespace navitia { namespace type {
-typedef navitia::idx_t idx_t;
-
-const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
 namespace disruption {
 struct Impact;
 }
 
-#define ITERATE_NAVITIA_PT_TYPES(FUN)\
-    FUN(ValidityPattern, validity_patterns)\
-    FUN(Line, lines)\
-    FUN(LineGroup, line_groups)\
-    FUN(VehicleJourney, vehicle_journeys)\
-    FUN(StopPoint, stop_points)\
-    FUN(StopArea, stop_areas)\
-    FUN(Network, networks)\
-    FUN(PhysicalMode, physical_modes)\
-    FUN(CommercialMode, commercial_modes)\
-    FUN(Company, companies)\
-    FUN(Route, routes)\
-    FUN(Contributor, contributors)\
-    FUN(Calendar, calendars)
-
-enum class Type_e {
-    ValidityPattern                 = 0,
-    Line                            = 1,
-    JourneyPattern                  = 2,
-    VehicleJourney                  = 3,
-    StopPoint                       = 4,
-    StopArea                        = 5,
-    Network                         = 6,
-    PhysicalMode                    = 7,
-    CommercialMode                  = 8,
-    Connection                      = 9,
-    JourneyPatternPoint             = 10,
-    Company                         = 11,
-    Route                           = 12,
-    POI                             = 13,
-    StopPointConnection             = 15,
-    Contributor                     = 16,
-
-    // Objets spéciaux qui ne font pas partie du référentiel TC
-    StopTime                        = 17,
-    Address                         = 18,
-    Coord                           = 19,
-    Unknown                         = 20,
-    Way                             = 21,
-    Admin                           = 22,
-    POIType                         = 23,
-    Calendar                        = 24,
-    LineGroup                       = 25,
-    MetaVehicleJourney              = 26,
-    Impact                          = 27
-};
-
-enum class Mode_e {
-    Walking = 0,    // Marche à pied
-    Bike = 1,       // Vélo
-    Car = 2,        // Voiture
-    Bss = 3         // Vls
-    //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
-};
-
-enum class OdtLevel_e {
-    scheduled = 0,
-    with_stops = 1,
-    zonal = 2,
-    all = 3
-};
 
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
 
@@ -141,154 +78,6 @@ struct MetaData;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
-
-struct Nameable {
-    std::string name;
-    bool visible = true;
-};
-
-
-struct Header {
-    idx_t idx = invalid_idx; // Index of the object in the main structure
-    std::string uri; // unique indentifier of the object
-    std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
-};
-
-typedef std::bitset<10> Properties;
-struct hasProperties {
-    static const uint8_t WHEELCHAIR_BOARDING = 0;
-    static const uint8_t SHELTERED = 1;
-    static const uint8_t ELEVATOR = 2;
-    static const uint8_t ESCALATOR = 3;
-    static const uint8_t BIKE_ACCEPTED = 4;
-    static const uint8_t BIKE_DEPOT = 5;
-    static const uint8_t VISUAL_ANNOUNCEMENT = 6;
-    static const uint8_t AUDIBLE_ANNOUNVEMENT = 7;
-    static const uint8_t APPOPRIATE_ESCORT = 8;
-    static const uint8_t APPOPRIATE_SIGNAGE = 9;
-
-    bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
-    bool wheelchair_boarding() const {return _properties[WHEELCHAIR_BOARDING];}
-    bool sheltered() {return _properties[SHELTERED];}
-    bool sheltered() const {return _properties[SHELTERED];}
-    bool elevator() {return _properties[ELEVATOR];}
-    bool elevator() const {return _properties[ELEVATOR];}
-    bool escalator() {return _properties[ESCALATOR];}
-    bool escalator() const {return _properties[ESCALATOR];}
-    bool bike_accepted() {return _properties[BIKE_ACCEPTED];}
-    bool bike_accepted() const {return _properties[BIKE_ACCEPTED];}
-    bool bike_depot() {return _properties[BIKE_DEPOT];}
-    bool bike_depot() const {return _properties[BIKE_DEPOT];}
-    bool visual_announcement() {return _properties[VISUAL_ANNOUNCEMENT];}
-    bool visual_announcement() const {return _properties[VISUAL_ANNOUNCEMENT];}
-    bool audible_announcement() {return _properties[AUDIBLE_ANNOUNVEMENT];}
-    bool audible_announcement() const {return _properties[AUDIBLE_ANNOUNVEMENT];}
-    bool appropriate_escort() {return _properties[APPOPRIATE_ESCORT];}
-    bool appropriate_escort() const {return _properties[APPOPRIATE_ESCORT];}
-    bool appropriate_signage() {return _properties[APPOPRIATE_SIGNAGE];}
-    bool appropriate_signage() const {return _properties[APPOPRIATE_SIGNAGE];}
-
-    bool accessible(const Properties &required_properties) const{
-        auto mismatched = required_properties & ~_properties;
-        return mismatched.none();
-    }
-    bool accessible(const Properties &required_properties) {
-        auto mismatched = required_properties & ~_properties;
-        return mismatched.none();
-    }
-
-    void set_property(uint8_t property) {
-        _properties.set(property, true);
-    }
-
-    void set_properties(const Properties &other) {
-        this->_properties = other;
-    }
-
-    Properties properties() const {
-        return this->_properties;
-    }
-
-    void unset_property(uint8_t property) {
-        _properties.set(property, false);
-    }
-
-    bool property(uint8_t property) const {
-        return _properties[property];
-    }
-
-    idx_t to_ulog(){
-        return _properties.to_ulong();
-    }
-
-//private: on ne peut pas binaraisé si privé
-    Properties _properties;
-};
-
-typedef std::bitset<8> VehicleProperties;
-struct hasVehicleProperties {
-    static const uint8_t WHEELCHAIR_ACCESSIBLE = 0;
-    static const uint8_t BIKE_ACCEPTED = 1;
-    static const uint8_t AIR_CONDITIONED = 2;
-    static const uint8_t VISUAL_ANNOUNCEMENT = 3;
-    static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
-    static const uint8_t APPOPRIATE_ESCORT = 5;
-    static const uint8_t APPOPRIATE_SIGNAGE = 6;
-    static const uint8_t SCHOOL_VEHICLE = 7;
-
-    bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
-    bool wheelchair_accessible() const {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
-    bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
-    bool bike_accepted() const {return _vehicle_properties[BIKE_ACCEPTED];}
-    bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
-    bool air_conditioned() const {return _vehicle_properties[AIR_CONDITIONED];}
-    bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
-    bool visual_announcement() const {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
-    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
-    bool audible_announcement() const {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
-    bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
-    bool appropriate_escort() const {return _vehicle_properties[APPOPRIATE_ESCORT];}
-    bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
-    bool appropriate_signage() const {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
-    bool school_vehicle() {return _vehicle_properties[SCHOOL_VEHICLE];}
-    bool school_vehicle() const {return _vehicle_properties[SCHOOL_VEHICLE];}
-
-    bool accessible(const VehicleProperties &required_vehicles) const{
-        auto mismatched = required_vehicles & ~_vehicle_properties;
-        return mismatched.none();
-    }
-    bool accessible(const VehicleProperties &required_vehicles) {
-        auto mismatched = required_vehicles & ~_vehicle_properties;
-        return mismatched.none();
-    }
-
-    void set_vehicle(uint8_t vehicle) {
-        _vehicle_properties.set(vehicle, true);
-    }
-
-    void set_vehicles(const VehicleProperties &other) {
-        this->_vehicle_properties = other;
-    }
-
-    VehicleProperties vehicles() const {
-        return this->_vehicle_properties;
-    }
-
-    void unset_vehicle(uint8_t vehicle) {
-        _vehicle_properties.set(vehicle, false);
-    }
-
-    bool vehicle(uint8_t vehicle) const {
-        return _vehicle_properties[vehicle];
-    }
-
-    idx_t to_ulog(){
-        return _vehicle_properties.to_ulong();
-    }
-
-//private: on ne peut pas binaraisé si privé
-    VehicleProperties _vehicle_properties;
-};
 
 struct HasMessages{
 protected:
@@ -309,10 +98,7 @@ public:
     std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
             const boost::posix_time::ptime& current_time) const;
 
-
-    const std::vector<boost::weak_ptr<disruption::Impact>>& get_impacts() const {
-        return impacts;
-    }
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
         auto it = std::find_if(impacts.begin(), impacts.end(),
@@ -323,10 +109,6 @@ public:
             impacts.erase(it);
         }
     }
-
-    std::vector<idx_t>
-    get_impacts_idx(const std::vector<boost::weak_ptr<disruption::Impact>>& impacts_pool) const ;
-
 };
 
 enum class ConnectionType {
@@ -523,6 +305,20 @@ struct Contributor : public Header, Nameable{
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
+struct Frame : public Header{
+    const static Type_e type = Type_e::Frame;
+    Contributor* contributor=nullptr;
+    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
+    boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
+    std::string desc;
+    std::string system;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
+    }
+    bool operator<(const Frame & other) const { return this < &other; }
+};
+
 struct Company : public Header, Nameable {
     const static Type_e type = Type_e::Company;
     std::string address_name;
@@ -652,6 +448,8 @@ struct Line : public Header, Nameable, HasMessages {
         return this < &other;
     }
     type::hasOdtProperties get_odt_properties() const;
+
+    std::string get_label() const;
 };
 
 struct LineGroup : public Header, Nameable{
@@ -702,8 +500,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // all times are stored in UTC
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
     // For example for departure board over a period (calendar)
-    // thus we store the shit needed to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset = 0; //in seconds
+    // thus we might need the shift to convert all stop times of the vehicle journey to local
+    int16_t utc_to_local_offset() const; //in seconds
 
     RTLevel realtime_level = RTLevel::Base;
 
@@ -718,8 +516,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // base-schedule validity pattern canceled by this vj (to get corresponding vjs, use meta-vj)
     ValidityPattern get_base_canceled_validity_pattern() const;
 
+    // return the base vj corresponding to this vj, return nullptr if nothing found
+    const VehicleJourney* get_corresponding_base() const;
+
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
+    Frame* frame = nullptr;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -728,7 +530,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     bool has_boarding() const;
     bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
@@ -737,7 +540,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & utc_to_local_offset & shift;
+            & meta_vj & shift & frame;
     }
 
     virtual ~VehicleJourney();
@@ -783,6 +586,7 @@ struct Route : public Header, Nameable, HasMessages {
     Line* line = nullptr;
     StopArea* destination = nullptr;
     MultiLineString shape;
+    std::string direction_type;
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
@@ -799,12 +603,13 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Route & other) const { return this < &other; }
 
+    std::string get_label() const;
 };
 
 struct AssociatedCalendar {
@@ -919,41 +724,6 @@ private:
     uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 };
 
-
-struct ValidityPattern : public Header {
-    const static Type_e type = Type_e::ValidityPattern;
-private:
-    bool is_valid(int duration) const;
-public:
-    using year_bitset = std::bitset<366>;
-    year_bitset days;
-    boost::gregorian::date beginning_date;
-
-    ValidityPattern()  {}
-    ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date){}
-    ValidityPattern(const boost::gregorian::date& beginning_date, const std::string & vp) : days(vp), beginning_date(beginning_date){}
-
-    int slide(boost::gregorian::date day) const;
-    void add(boost::gregorian::date day);
-    void add(int day);
-    void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    void remove(boost::gregorian::date day);
-    void remove(int day);
-    void reset() { days.reset(); }
-    std::string str() const;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & beginning_date & days & idx & uri;
-    }
-
-    bool check(boost::gregorian::date day) const;
-    bool check(unsigned int day) const;
-    bool check2(unsigned int day) const;
-    bool uncheck2(unsigned int day) const;
-    //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    bool operator<(const ValidityPattern & other) const { return this < &other; }
-    bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
-};
-
 struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;
     typedef std::bitset<7> Week;
@@ -995,6 +765,8 @@ struct Calendar : public Nameable, public Header {
  *
  */
 struct MetaVehicleJourney: public Header, HasMessages {
+    const static Type_e type = Type_e::MetaVehicleJourney;
+    const TimeZoneHandler* tz_handler = nullptr;
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
@@ -1004,10 +776,10 @@ struct MetaVehicleJourney: public Header, HasMessages {
     /// of the theoric vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & idx & uri & rtlevel_to_vjs_map
            & associated_calendars & impacts
-           & impacted_by;
+           & impacted_by & tz_handler;
     }
 
     FrequencyVehicleJourney*
@@ -1044,11 +816,16 @@ struct MetaVehicleJourney: public Header, HasMessages {
     }
 
     void cancel_vj(RTLevel level,
-            const std::vector<boost::posix_time::time_period>& periods,
-            PT_Data& pt_data, const MetaData& meta, const Route* filtering_route = nullptr);
+                   const std::vector<boost::posix_time::time_period>& periods,
+                   PT_Data& pt_data,
+                   const Route* filtering_route = nullptr);
 
     VehicleJourney*
     get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
+
+    const std::string& get_label() const { return uri; } // for the moment the label is just the uri
+
+    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
 
 private:
     template<typename VJ>

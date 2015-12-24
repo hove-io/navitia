@@ -442,45 +442,6 @@ disruption_severity = {
     "priority": fields.Integer(),
 }
 
-disruption_marshaller = {
-    "id": fields.String(attribute="uri"),
-    "disruption_id": fields.String(attribute="disruption_uri"),
-    "impact_id": fields.String(attribute="uri"),
-    "title": fields.String(),
-    "application_periods": NonNullList(NonNullNested(period)),
-    "status": disruption_status,
-    "updated_at": DateTime(),
-    "tags": NonNullList(fields.String()),
-    "cause": fields.String(),
-    "severity": NonNullNested(disruption_severity),
-    "messages": NonNullList(NonNullNested(disruption_message)),
-    "uri": fields.String(),
-    "disruption_uri": fields.String(),
-    "contributor": fields.String()
-}
-
-
-class DisruptionsField(fields.Raw):
-    """
-    Dump the real disruptions (and there will be link to them)
-    """
-
-    def output(self, key, obj):
-        all_impacts = {}
-
-        def get_all_impacts(_, val):
-            if not hasattr(val, 'impacts'):
-                return
-            impacts = val.impacts
-            if not impacts or not hasattr(impacts[0], 'uri'):
-                return
-
-            for impact in impacts:
-                all_impacts[impact.uri] = impact
-
-        utils.walk_protobuf(obj, get_all_impacts)
-
-        return [marshal(d, disruption_marshaller, display_null=False) for d in all_impacts.values()]
 
 display_informations_route = {
     "network": fields.String(attribute="network"),
@@ -597,6 +558,7 @@ route = deepcopy(generic_type)
 route["links"] = DisruptionLinks()
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+route["direction_type"] = fields.String
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = MultiLineString(attribute="geojson")
@@ -674,6 +636,7 @@ pt_object = {
     "line": PbField(line),
     "route": PbField(route),
     "stop_area": PbField(stop_area),
+    "trip": PbField(trip),
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),
@@ -769,6 +732,10 @@ instance_parameters = {
     'min_duration_too_long_journey': fields.Raw,
     'max_duration_criteria': fields.Raw,
     'max_duration_fallback_mode': fields.Raw,
+    'max_duration': fields.Raw,
+    'walking_transfer_penalty': fields.Raw,
+    'night_bus_filter_max_factor': fields.Raw,
+    'night_bus_filter_base_factor': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)
@@ -792,3 +759,59 @@ instance_traveler_types = {
 
 instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
                                                                                  allow_null=True))
+
+impacted_stop = {
+    "stop_point": NonNullNested(stop_point),
+    "base_arrival_time": SplitDateTime(date=None, time='base_stop_time.arrival_time'),
+    "base_departure_time": SplitDateTime(date=None, time='base_stop_time.departure_time'),
+    "amended_arrival_time": SplitDateTime(date=None, time='amended_stop_time.arrival_time'),
+    "amended_departure_time": SplitDateTime(date=None, time='amended_stop_time.departure_time'),
+    "cause": fields.String(),
+    "stop_time_effect": enum_type(attribute='effect')
+}
+
+impacted_object = {
+    'pt_object': NonNullNested(pt_object),
+    'impacted_stops': NonNullList(NonNullNested(impacted_stop))
+}
+
+disruption_marshaller = {
+    "id": fields.String(attribute="uri"),
+    "disruption_id": fields.String(attribute="disruption_uri"),
+    "impact_id": fields.String(attribute="uri"),
+    "title": fields.String(),
+    "application_periods": NonNullList(NonNullNested(period)),
+    "status": disruption_status,
+    "updated_at": DateTime(),
+    "tags": NonNullList(fields.String()),
+    "cause": fields.String(),
+    "severity": NonNullNested(disruption_severity),
+    "messages": NonNullList(NonNullNested(disruption_message)),
+    "impacted_objects": NonNullList(NonNullNested(impacted_object)),
+    "uri": fields.String(),
+    "disruption_uri": fields.String(),
+    "contributor": fields.String()
+}
+
+
+class DisruptionsField(fields.Raw):
+    """
+    Dump the real disruptions (and there will be link to them)
+    """
+
+    def output(self, key, obj):
+        all_impacts = {}
+
+        def get_all_impacts(_, val):
+            if not hasattr(val, 'impacts'):
+                return
+            impacts = val.impacts
+            if not impacts or not hasattr(impacts[0], 'uri'):
+                return
+
+            for impact in impacts:
+                all_impacts[impact.uri] = impact
+
+        utils.walk_protobuf(obj, get_all_impacts)
+
+        return [marshal(d, disruption_marshaller, display_null=False) for d in all_impacts.values()]

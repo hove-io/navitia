@@ -136,7 +136,7 @@ def _filter_similar_journeys(journeys, request):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def way_later(journey, asap_journey, original_request):
+def way_later(request, journey, asap_journey, original_request):
     """
     to check if a journey is way later than the asap journey
     we check for each journey the difference between the requested datetime and the arrival datetime
@@ -163,10 +163,7 @@ def way_later(journey, asap_journey, original_request):
     pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
     pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
 
-    max_factor = 3  #TODO get it in instance
-    base_factor = 60*60  #TODO get it in instance, for the moment 1h
-
-    max_value = pseudo_asap_duration * max_factor + base_factor
+    max_value = pseudo_asap_duration * request['_night_bus_filter_max_factor'] + request['_night_bus_filter_base_factor']
     return pseudo_journey_duration > max_value
 
 
@@ -191,7 +188,7 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
     for j in journeys:
         if _to_be_deleted(j):
             continue
-        if way_later(j, asap_journey, original_request):
+        if way_later(request, j, asap_journey, original_request):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j.internal_id, asap_journey.internal_id))
 

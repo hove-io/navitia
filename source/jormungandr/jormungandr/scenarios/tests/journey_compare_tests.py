@@ -30,6 +30,7 @@ from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
 from jormungandr.scenarios.journey_filter import _to_be_deleted
 import navitiacommon.response_pb2 as response_pb2
+from navitiacommon import default_values
 from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
 from nose.tools import eq_
@@ -426,7 +427,10 @@ class MockInstance(object):
 
 
 def test_too_late_journeys():
-    request = {'datetime': 1000}
+    request = {'datetime': 1000,
+               '_night_bus_filter_max_factor': default_values.night_bus_filter_max_factor,
+               '_night_bus_filter_base_factor': default_values.night_bus_filter_base_factor,
+               }
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
     journey1.departure_date_time = 2000
@@ -450,7 +454,10 @@ def test_too_late_journeys():
 
 
 def test_not_too_late_journeys():
-    request = {'datetime': 1000}
+    request = {'datetime': 1000,
+               '_night_bus_filter_max_factor': default_values.night_bus_filter_max_factor,
+               '_night_bus_filter_base_factor': default_values.night_bus_filter_base_factor,
+               }
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
     journey1.departure_date_time = 2000
@@ -469,7 +476,12 @@ def test_not_too_late_journeys():
 
 
 def test_not_too_late_journeys_non_clockwise():
-    request = {'datetime': 12000, 'clockwise': False}
+    request = {'datetime': 12000,
+               'clockwise': False,
+               '_night_bus_filter_max_factor': default_values.night_bus_filter_max_factor,
+               '_night_bus_filter_base_factor': default_values.night_bus_filter_base_factor,
+               }
+
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
     journey1.departure_date_time = 2000  # way too soon compared to the second one

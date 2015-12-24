@@ -63,7 +63,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 52; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 54; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -521,6 +521,10 @@ template<> const std::vector<StopPointConnection*>&
 Data::get_data<StopPointConnection>() const {
     return this->pt_data->stop_point_connections;
 }
+template<> const ObjFactory<MetaVehicleJourney>&
+Data::get_data<MetaVehicleJourney>() const {
+    return this->pt_data->meta_vjs;
+}
 
 // JP and JPP can't work with automatic build clause
 template<> const std::vector<routing::JourneyPattern*>&
@@ -552,10 +556,10 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
     case Type_e::Connection:
         num_elements = this->pt_data->stop_point_connections.size(); break;
+    case Type_e::MetaVehicleJourney: num_elements = this->pt_data->meta_vjs.size(); break;
     case Type_e::Impact:
-        num_elements = pt_data->disruption_holder.get_weak_impacts().size();
-        break;
-    default:  break;
+        num_elements = pt_data->disruption_holder.get_weak_impacts().size(); break;
+    default: break;
     }
     std::vector<idx_t> indexes(num_elements);
     for(size_t i=0; i < num_elements; i++)
@@ -652,6 +656,9 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
     case Type_e::POI:
         result = geo_ref->pois[source_idx]->get(target, *geo_ref);
+        break;
+    case Type_e::MetaVehicleJourney:
+        result = pt_data->meta_vjs[Idx<MetaVehicleJourney>(source_idx)]->get(target, *pt_data);
         break;
     case Type_e::POIType:
         result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);

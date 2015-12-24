@@ -1,3 +1,44 @@
+navitia2 (1.32.0) unstable; urgency=low
+
+  * All: UTC offsets are now associated to trips  <https://github.com/CanalTP/navitia/pull/1345>
+  * Jormun: suspension of user account  <https://github.com/CanalTP/navitia/pull/1342>
+  * Jormun: experimental stuff on /journeys: splitting of pt and georef   <https://github.com/CanalTP/navitia/pull/1340>
+  * Timezone format for block until in tyr api updated.  <https://github.com/CanalTP/navitia/pull/1346>
+  * 'block_until' column added for restriction access before this date  <https://github.com/CanalTP/navitia/pull/1338>
+  * Jormun: fix next last previous links  <https://github.com/CanalTP/navitia/pull/1341>
+  * Manage frames  <https://github.com/CanalTP/navitia/pull/1306>
+  * Doc: Definition of the 0.6 revision of the NTFS format  <https://github.com/CanalTP/navitia/pull/1250>
+  * ED: add America/Toronto into timezone database  <https://github.com/CanalTP/navitia/pull/1339>
+  * type: fix a segfault in get_impacts when we don't have associated base vj  <https://github.com/CanalTP/navitia/pull/1334>
+  * Jormun: /trips api  <https://github.com/CanalTP/navitia/pull/1337>
+  * Jormun: fix 500 when several errors are provided  <https://github.com/CanalTP/navitia/pull/1333>
+  * Jormun: add info on base stoptimes  <https://github.com/CanalTP/navitia/pull/1330>
+  * RT: add deleted vehicle journeys  <https://github.com/CanalTP/navitia/pull/1329>
+  * Jormun: add impacted stops in /disruptions  <https://github.com/CanalTP/navitia/pull/1326>
+  * Jormun Kraken: add new param into database and api  <https://github.com/CanalTP/navitia/pull/1322>
+  * PTRef: add meta-vj  <https://github.com/CanalTP/navitia/pull/1328>
+  * traffic reports: remove spamming log  <https://github.com/CanalTP/navitia/pull/1327>
+  * georef: fix street network duration  <https://github.com/CanalTP/navitia/pull/1325>
+  * Jormun: add impacted objects to disruptions  <https://github.com/CanalTP/navitia/pull/1323>
+  * Jormun: move protobuf  <https://github.com/CanalTP/navitia/pull/1324>
+  * Tyr: Add "billing_plan" property in "/users" request.  <https://github.com/CanalTP/navitia/pull/1319>
+  * Update readme.rst  <https://github.com/CanalTP/navitia/pull/1320>
+  * Doc: ntfs 0.6 initialisation  <https://github.com/CanalTP/navitia/pull/1313>
+  * ptref: fix status in /disruptions api  <https://github.com/CanalTP/navitia/pull/1318>
+  * RT: fix compilation problem  <https://github.com/CanalTP/navitia/pull/1317>
+  * RT: impacts concerning a VJ  <https://github.com/CanalTP/navitia/pull/1316>
+  * RT: add messages in stoptimes  <https://github.com/CanalTP/navitia/pull/1315>
+  * ED: unset unsound pickup and dropoff on borders  <https://github.com/CanalTP/navitia/pull/1314>
+  * ED: Add the possibility to choose what type of poi import from osm  <https://github.com/CanalTP/navitia/pull/1305>
+  * Jormun: remove useless singleton  <https://github.com/CanalTP/navitia/pull/1312>
+  * Eitri: changing pyscopg connection string to enable old psql client  <https://github.com/CanalTP/navitia/pull/1301>
+  * TimeTable: route schedule over midnight  <https://github.com/CanalTP/navitia/pull/1304>
+  * Ed: fix bug, direction_type is not a mandatory field  <https://github.com/CanalTP/navitia/pull/1307>
+  * Eitri: adding future module in requirements.txt  <https://github.com/CanalTP/navitia/pull/1300>
+  * All: Expose direction_type string in navitia  <https://github.com/CanalTP/navitia/pull/1277>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Thu, 24 Dec 2015 11:12:32 +0100
+
 navitia2 (1.31.3) unstable; urgency=low
 
   * kraken: fix crash of sncf because of invalid stop point in IRE 

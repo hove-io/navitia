@@ -129,15 +129,17 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
     req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
     if request['data_freshness'] == 'realtime':
-        req.journeys.realtime_level = request_pb2.REAL_TIME
+        req.journeys.realtime_level = type_pb2.REAL_TIME
     elif request['data_freshness'] == 'adapted_schedule':
-        req.journeys.realtime_level = request_pb2.ADAPTED
+        req.journeys.realtime_level = type_pb2.ADAPTED
     else:
-        req.journeys.realtime_level = request_pb2.BASE
+        req.journeys.realtime_level = type_pb2.BASE
     req.journeys.show_codes = request["show_codes"]
 
     if "details" in request and request["details"]:
         req.journeys.details = request["details"]
+
+    req.journeys.walking_transfer_penalty = request['_walking_transfer_penalty']
 
     for forbidden_uri in get_or_default(request, "forbidden_uris[]", []):
         req.journeys.forbidden_uris.append(forbidden_uri)
@@ -568,7 +570,8 @@ def merge_responses(responses):
         else:
             # we need to merge the errors
             merged_response.error.id = response_pb2.Error.no_solution
-            merged_response.error.message = "several errors occured: \n * {}".format("\n * ".join(errors.itervalues()))
+            merged_response.error.message = "several errors occured: \n * {}"\
+                .format("\n * ".join([m.message for m in errors.itervalues()]))
 
     return merged_response
 

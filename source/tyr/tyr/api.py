@@ -62,6 +62,10 @@ api.add_resource(resources.BillingPlan,
                  '/v0/billing_plans/',
                  '/v0/billing_plans/<int:billing_plan_id>')
 
+api.add_resource(resources.PoiType,
+            '/v0/instances/<string:instance_name>/poi_types',
+            '/v0/instances/<string:instance_name>/poi_types/<string:uri>')
+
 @app.errorhandler(Exception)
 def error_handler(exception):
     """

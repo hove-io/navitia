@@ -35,7 +35,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, line_group, \
     physical_mode, commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, connection, error, PbField
+    journey_pattern, trip, connection, error, PbField
 from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri, protect
@@ -269,6 +269,29 @@ def vehicle_journeys(is_collection):
                                        display_null=False)
             self.method_decorators.insert(1, collections)
     return VehicleJourneys
+
+
+def trips(is_collection):
+    class Trips(Uri):
+
+        """ Retrieves trips"""
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "trips")
+            self.collections = [
+                ("trips",
+                 NonNullList(fields.Nested(trip,
+                                           display_null=False))),
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+    return Trips
 
 
 def physical_modes(is_collection):

@@ -39,6 +39,7 @@ www.navitia.io
 #include "utils/serialization_unique_ptr.h"
 #include "utils/serialization_atomic.h"
 #include "utils/exception.h"
+#include "utils/obj_factory.h"
 
 //forward declare
 namespace navitia{
@@ -67,14 +68,21 @@ struct wrong_version : public navitia::exception {
 
 template<typename T>
 struct DataTraitHelper {
-  typedef T* type;
+  typedef std::vector<T*> type;
 };
 
 // specialization for impact
 // Instead of pure pointer, we can only get a weak_ptr when requesting impacts 
 template<>
 struct DataTraitHelper<type::disruption::Impact> {
-  typedef boost::weak_ptr<type::disruption::Impact> type;
+  typedef std::vector<boost::weak_ptr<type::disruption::Impact>> type;
+};
+
+// specialization for meta-vj
+// Instead of vector, we can only get an objFactory when requesting meta-vj
+template<>
+struct DataTraitHelper<type::MetaVehicleJourney> {
+  typedef ObjFactory<MetaVehicleJourney> type;
 };
 
 /** Contient toutes les données théoriques du référentiel transport en communs
@@ -111,7 +119,7 @@ public:
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
     /** Retourne la structure de données associée au type */
-    template<typename T> const std::vector<typename DataTraitHelper<T>::type>& get_data() const;
+    template<typename T> const typename DataTraitHelper<T>::type& get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *
