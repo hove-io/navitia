@@ -61,7 +61,7 @@ static void default_frames(GtfsData& gdata, Data& data){
             auto frame = std::make_unique<ed::types::Frame>();
             frame->contributor = contributor;
             frame->uri = "default_frame:" + contributor->uri;
-            frame->validation_period = gdata.production_date;
+            frame->validation_period = data.meta.production_date;
             frame->desc = "default frame: " + contributor->name;
             frame->idx = data.frames.size() + 1;
             data.frames.push_back(frame.get());
@@ -497,7 +497,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     //the validity pattern may have been split because of DST, so we need to create one vj for each
     for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
 
-        ed::types::ValidityPattern* vp_xx = vp_it->second;
+        navitia::type::ValidityPattern* vp_xx = vp_it->second;
 
         ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
 
@@ -529,10 +529,6 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
         vj->shape_id = shape_id;
-
-        // we store the split vj utc shift
-        auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
-        vj->utc_to_local_offset = utc_offset;
     }
 
     return res;

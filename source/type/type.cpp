@@ -262,85 +262,6 @@ bool VehicleJourney::has_landing() const{
 
 }
 
-bool ValidityPattern::is_valid(int day) const {
-    if(day < 0) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
-                       << day << " is too early");
-        return false;
-    }
-    if(size_t(day) >= days.size()) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
-                       << day << " is late");
-        return false;
-    }
-    return true;
-}
-
-int ValidityPattern::slide(boost::gregorian::date day) const {
-    return (day - beginning_date).days();
-}
-
-void ValidityPattern::add(boost::gregorian::date day){
-    long duration = slide(day);
-    add(duration);
-}
-
-void ValidityPattern::add(int duration){
-    if(is_valid(duration))
-        days[duration] = true;
-}
-
-void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
-    for (auto current_date = start; current_date < end; current_date = current_date + boost::gregorian::days(1)) {
-        navitia::weekdays week_day = navitia::get_weekday(current_date);
-        if (active_days[week_day]) {
-            add(current_date);
-        } else {
-            remove(current_date);
-        }
-    };
-}
-
-void ValidityPattern::remove(boost::gregorian::date date){
-    long duration = slide(date);
-    remove(duration);
-}
-
-void ValidityPattern::remove(int day){
-    if(is_valid(day))
-        days[day] = false;
-}
-
-std::string ValidityPattern::str() const {
-    return days.to_string();
-}
-
-bool ValidityPattern::check(boost::gregorian::date day) const {
-    long duration = slide(day);
-    return ValidityPattern::check(duration);
-}
-
-bool ValidityPattern::check(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
-    return days[day];
-}
-
-bool ValidityPattern::check2(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
-    if(day == 0)
-        return days[day] || days[day+1];
-    else
-        return days[day-1] || days[day] || days[day+1];
-}
-
-bool ValidityPattern::uncheck2(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
-    if(day == 0)
-        return !days[day] && !days[day+1];
-    else
-        return !days[day-1] && !days[day] && !days[day+1];
-}
-
 template <typename F>
 static bool concerns_base_at_period(const VehicleJourney& vj,
                                     const std::vector<bt::time_period>& periods,
@@ -509,6 +430,15 @@ MetaVehicleJourney::get_base_vj_circulating_at_date(const boost::gregorian::date
         }
     }
     return nullptr;
+}
+
+int16_t VehicleJourney::utc_to_local_offset() const {
+    const auto* vp = validity_patterns[realtime_level];
+    if (! vp) {
+        throw navitia::recoverable_exception("vehicle journey " + uri +
+                                 " not valid, no validitypattern on " + get_string_from_rt_level(realtime_level));
+    }
+    return meta_vj->tz_handler->get_first_utc_offset(*vp);
 }
 
 const VehicleJourney* VehicleJourney::get_corresponding_base() const {
@@ -902,16 +832,6 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
     else {
         uri_filter = param_uri;
         type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
-    }
-}
-
-std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
-    switch (mode) {
-    case Mode_e::Walking: return os << "walking";
-    case Mode_e::Bike: return os << "bike";
-    case Mode_e::Car: return os << "car";
-    case Mode_e::Bss: return os << "bss";
-    default: return os << "[unknown mode]";
     }
 }
 
