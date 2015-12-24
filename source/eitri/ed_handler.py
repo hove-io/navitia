@@ -70,7 +70,7 @@ def import_data(data_dir, db_params, ed_component_path):
     """
     log = logging.getLogger(__name__)
     files = glob.glob(data_dir + "/*")
-    data_type, file_to_load = utils.type_of_data(files, only_one_file=False)
+    data_type, file_to_load = utils.type_of_data(files)
     if not data_type:
         log.info('unknown data type for dir {}, skipping'.format(data_dir))
         return
