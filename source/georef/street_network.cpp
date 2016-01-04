@@ -576,7 +576,7 @@ Path create_path(const GeoRef& geo_ref,
         path_item.way_idx = edge.way_idx;
         path_item.transportation = transport_carac;
         path_item.duration += edge.duration / speed_factor;
-        p.duration += path_item.duration;
+        p.duration += edge.duration / speed_factor;
         if (path_item_changed) {
             //we update the last path item
             path_item.angle = compute_directions(p, coord);
