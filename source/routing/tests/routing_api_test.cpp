@@ -1595,7 +1595,7 @@ BOOST_FIXTURE_TEST_CASE(speed_factor_length_test, streetnetworkmode_fixture<norm
     dump_response(resp, "speed factor length test");
 
     std::vector<pbnavitia::PathItem> path_items;
-    for (int s = 0; s < journey.sections_size() ; s++) {
+    for (int s = 0; s < journey.sections_size(); ++s) {
         for (int i = 0; i < journey.sections(s).street_network().path_items_size(); ++i) {
             path_items.push_back(journey.sections(s).street_network().path_items(i));
         }
