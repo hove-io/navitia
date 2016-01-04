@@ -37,6 +37,7 @@ import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
+from navitiacommon.models import Key
 import re
 from threading import Lock
 
@@ -180,13 +181,15 @@ class StatManager(object):
 
     def fill_request(self, stat_request, call_result):
         """
-        Remplir requests
+        fill stat requests message (protobuf)
         """
         dt = datetime.utcnow()
         stat_request.request_date = int(time.mktime(dt.timetuple()))
         # Note: for stat we don't want to abort if no token has been
         # given (it's up to the authentication process)
-        user = get_user(token=get_token(), abort_if_no_token=False)
+        stat_request.token = get_token()
+        user = get_user(token=stat_request.token, abort_if_no_token=False)
+
         if user is not None:
             stat_request.user_id = user.id
             stat_request.user_name = user.login
@@ -195,7 +198,7 @@ class StatManager(object):
                 stat_request.end_point_name = user.end_point.name
 
         stat_request.application_id = -1
-        app_name = get_app_name(get_token())
+        app_name = get_app_name(stat_request.token)
         if app_name:
             stat_request.application_name = app_name
         else:
