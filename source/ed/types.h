@@ -67,8 +67,19 @@ using nt::hasVehicleProperties;
 
 using nt::ValidityPattern;
 
-#define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
-ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
+struct Line;
+struct LineGroup;
+struct VehicleJourney;
+struct StopPoint;
+struct StopArea;
+struct Network;
+struct PhysicalMode;
+struct CommercialMode;
+struct Company;
+struct Route;
+struct Contributor;
+struct Calendar;
+
 struct StopTime;
 
 using nt::ConnectionType;
