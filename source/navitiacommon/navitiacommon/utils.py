@@ -29,9 +29,10 @@
 
 import zipfile
 import os
+import glob
 
 
-def type_of_data(filename, only_one_file=True):
+def type_of_data(filename):
     """
     return the type of data contains in a file + the path to load it
 
@@ -62,14 +63,17 @@ def type_of_data(filename, only_one_file=True):
         return None
 
     if not isinstance(filename, list):
-        files = [filename]
+        if os.path.isdir(filename):
+            files = glob.glob(filename + "/*")
+        else:
+            files = [filename]
     else:
         files = filename
 
-    if not only_one_file:
-        t = pt_types(files)
-        if t:  # the path to load pt data is the directory since there are several files
-            return t, os.path.dirname(files[0])
+    # we test if we regognize a ptfile in the list of files
+    t = pt_types(files)
+    if t:  # the path to load pt data is the directory since there are several files
+        return t, os.path.dirname(files[0])
 
     for filename in files:
         if filename.endswith('.pbf'):
