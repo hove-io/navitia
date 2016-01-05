@@ -1271,7 +1271,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
             finalize_section(section, last_item, item, data, session_departure, depth, now, action_period);
             session_departure += bt::seconds(section->duration());
 
-            //and be create a new one
+            //and we create a new one
             section = create_section(response, pb_journey, item, data, depth, now, action_period);
         }
 
@@ -1310,8 +1310,8 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
 
     pbnavitia::PathItem* path_item = sn->add_path_items();
     path_item->set_name(data.geo_ref->ways[item.way_idx]->name);
-    path_item->set_length(item.get_length());
-    path_item->set_duration(item.duration.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
+    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
+    path_item->set_duration(item.duration.total_seconds());
     path_item->set_direction(item.angle);
 
     //we add each path item coordinate to the global coordinate list

@@ -89,7 +89,7 @@ std::string ValidityPattern::str() const {
 
 bool ValidityPattern::check(boost::gregorian::date day) const {
     long duration = slide(day);
-    if (duration < 0 || duration >= days.size()) {
+    if (duration < 0 || duration >= long(days.size())) {
         throw navitia::recoverable_exception("date " + boost::gregorian::to_iso_extended_string(day)
                                              + " out of bound, cannot check validity pattern");
     }

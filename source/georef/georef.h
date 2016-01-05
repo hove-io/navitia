@@ -192,7 +192,7 @@ struct PathItem {
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
 
-    double get_length() const;
+    double get_length(double speed_factor) const;
 };
 
 /** Itinéraire complet */

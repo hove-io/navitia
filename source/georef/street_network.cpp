@@ -97,8 +97,9 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     if (! use_second) {
         result = departure_path_finder.get_path(idx);
 
-        if (! result.path_items.empty())
+        if (! result.path_items.empty()) {
             result.path_items.front().coordinates.push_front(departure_path_finder.starting_edge.projected);
+        }
     } else {
         result = arrival_path_finder.get_path(idx);
 
@@ -532,13 +533,14 @@ Path PathFinder::build_path(vertex_t best_destination) const {
     }
     reverse_path.push_back(best_destination);
 
-    return create_path(geo_ref, reverse_path, true);
+    return create_path(geo_ref, reverse_path, true, speed_factor);
 }
 
 
 Path create_path(const GeoRef& geo_ref,
                  const std::vector<vertex_t>& reverse_path,
-                 bool add_one_elt) {
+                 bool add_one_elt,
+                 double speed_factor) {
     Path p;
 
     // On reparcourt tout dans le bon ordre
@@ -573,8 +575,8 @@ Path create_path(const GeoRef& geo_ref,
         last_transport_carac = transport_carac;
         path_item.way_idx = edge.way_idx;
         path_item.transportation = transport_carac;
-        path_item.duration += edge.duration;
-        p.duration += edge.duration;
+        path_item.duration += edge.duration / speed_factor;
+        p.duration += edge.duration / speed_factor;
         if (path_item_changed) {
             //we update the last path item
             path_item.angle = compute_directions(p, coord);
