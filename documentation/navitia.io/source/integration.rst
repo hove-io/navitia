@@ -840,7 +840,7 @@ Main parameters
 |          |                       |           | If none are provided an isochrone is      |                 |
 |          |                       |           | computed                                  |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| yep      | datetime              | datetime  | A datetime                                |                 |
+| yep      | datetime              | datetime  | A `datetime`_                             |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | datetime_represents   | string    | Can be ``departure`` or ``arrival``.      | departure       |
 |          |                       |           |                                           |                 |
@@ -1005,11 +1005,11 @@ ______________
 +---------------------+--------------------------+--------------------------------------------------------------+
 | nb_transfers        | int                      | Number of transfers in the journey                           |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| departure_date_time | `date_time`_             | Departure date and time of the journey                       |
+| departure_date_time | "YYYYMMDDThhmmss"        | Departure date and time of the journey (ISO 8601)            |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| requested_date_time | `date_time`_             | Requested date and time of the journey                       |
+| requested_date_time | "YYYYMMDDThhmmss"        | Requested date and time of the journey (ISO 8601)            |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| arrival_date_time   | `date_time`_             | Arrival date and time of the journey                         |
+| arrival_date_time   | "YYYYMMDDThhmmss"        | Arrival date and time of the journey (ISO 8601)              |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | sections            | array of `section`_      | All the sections of the journey                              |
 +---------------------+--------------------------+--------------------------------------------------------------+
@@ -1134,9 +1134,9 @@ ______________
 +-------------------------+------------------------------------+----------------------------------------------------+
 | stop_date_times         | Array of stop_date_time_           | List of the stop times of this section             |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| departure_date_time     | `date_time`_                       | Date and time of departure                         |
+| departure_date_time     | "YYYYMMDDThhmmss"                  | Date and time of departure                         |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| arrival_date_time       | `date_time`_                       | Date and time of arrival                           |
+| arrival_date_time       | "YYYYMMDDThhmmss"                  | Date and time of arrival                           |
 +-------------------------+------------------------------------+----------------------------------------------------+
 
 
@@ -1231,7 +1231,7 @@ Parameters
 +----------+---------------------+-----------+------------------------------+---------------+
 | Required | Name                | Type      | Description                  | Default Value |
 +==========+=====================+===========+==============================+===============+
-| yep      | from_datetime       | date_time | The date_time from           |               |
+| yep      | from_datetime       | datetime  | The date_time from           |               |
 |          |                     |           | which you want the schedules |               |
 +----------+---------------------+-----------+------------------------------+---------------+
 | nop      | duration            | int       | Maximum duration in seconds  | 86400         |
@@ -1302,7 +1302,8 @@ __________
 +------------+----------------------------------------------+---------------------------+
 | Field      | Type                                         | Description               |
 +============+==============================================+===========================+
-| date_times | Array of `date_time`_                        | Array of date_time        |
+| date_times | Array of `pt_date_time`_                     | Array of public transport |
+|            |                                              | date_time                 |
 +------------+----------------------------------------------+---------------------------+
 | stop_point | `stop_point`_                                | The stop point of the row |
 +------------+----------------------------------------------+---------------------------+
@@ -1322,7 +1323,7 @@ Parameters
 +----------+---------------------+---------------+---------------------------------------+---------------+
 | Required | Name                | Type          | Description                           | Default Value |
 +==========+=====================+===============+=======================================+===============+
-| yep      | from_datetime       | `date_time`_  | The date_time from                    |               |
+| yep      | from_datetime       | `datetime`_   | The date_time from                    |               |
 |          |                     |               | which you want the schedules          |               |
 +----------+---------------------+---------------+---------------------------------------+---------------+
 | nop      | duration            | int           | Maximum duration in seconds           | 86400         |
@@ -1345,7 +1346,7 @@ Field                 Type                                            Descriptio
 ===================== =============================================== ==============================================
 display_informations  display_informations_                           Usefull information about the route to display
 route                 route_                                          The route of the schedule
-date_times            Array of `date_time`_                           When does a bus stops at the stop point
+date_times            Array of `pt_date_time`_                        When does a bus stops at the stop point
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
@@ -1361,7 +1362,7 @@ Parameters
 +----------+---------------------+---------------+---------------------------------------+---------------+
 | Required | Name                | Type          | Description                           | Default Value |
 +==========+=====================+===============+=======================================+===============+
-| yep      | from_datetime       | `date_time`_  | The date_time from                    |               |
+| yep      | from_datetime       | `datetime`_   | The date_time from                    |               |
 |          |                     |               | which you want the schedules          |               |
 +----------+---------------------+---------------+---------------------------------------+---------------+
 | nop      | duration            | int           | Maximum duration in seconds           | 86400         |
@@ -1616,7 +1617,7 @@ disruption_id         string                                     for traceabilit
 severity              `severity`_                                gives some categorization element
 application_periods   array of `period`_                         dates where the current disruption is active
 messages              `message`_                                 text to provide to the traveler
-updated_at            `date_time`_                               date_time of last modifications 
+updated_at            "YYYYMMDDThhmmss"                          date_time of last modifications 
 cause                 string                                     why is there such a disruption?
 ===================== ========================================== ===================================================
 
@@ -1960,17 +1961,17 @@ Period
 ===================== =============================================== ==============================================
 Field                 Type                                            Description
 ===================== =============================================== ==============================================
-begin                 `date_time`_                                    Beginning date and time of an activity period
-end                   `date_time`_                                    Closing date and time of an activity period
+begin                 "YYYYMMDDThhmmss"                               Beginning date and time of an activity period
+end                   "YYYYMMDDThhmmss"                               Closing date and time of an activity period
 ===================== =============================================== ==============================================
 
 
 Other objects
 *************
 
-.. _date_time:
+.. _pt_date_time:
 
-date_time
+pt_date_time
 ############
 
 +--------------------------+----------------------+--------------------------------+
@@ -1978,9 +1979,9 @@ date_time
 +==========================+======================+================================+
 | additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
-| departure_date_time      | Array of String      | A date time                    |
+| departure_date_time      | "YYYYMMDDThhmmss"    | An ISO 8601 date time          |
 +--------------------------+----------------------+--------------------------------+
-| arrival_date_time        | Array of String      | A date time                    |
+| arrival_date_time        | "YYYYMMDDThhmmss"    | An ISO 8601 date time          |
 +--------------------------+----------------------+--------------------------------+
 | links                    | Array of link_       | internal links to notes        |
 +--------------------------+----------------------+--------------------------------+
@@ -2002,12 +2003,12 @@ value String The content of the note
 stop_date_time
 ##############
 
-========== ===================================== ============
+========== ===================================== ============================
 Field      Type                                  Description
-========== ===================================== ============
-date_time  `date_time`_                          A date time
+========== ===================================== ============================
+date_time  `date_time`_                          A public transport date time
 stop_point stop_point_                           A stop point
-========== ===================================== ============
+========== ===================================== ============================
 
 .. _equipment:
 
