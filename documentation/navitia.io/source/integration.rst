@@ -1974,6 +1974,8 @@ Other objects
 pt_date_time
 ############
 
+pt_date_time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
+
 +--------------------------+----------------------+--------------------------------+
 | Field                    | Type                 | Description                    |
 +==========================+======================+================================+
