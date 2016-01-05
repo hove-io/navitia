@@ -37,7 +37,6 @@ import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
-from navitiacommon.models import Key
 import re
 from threading import Lock
 
