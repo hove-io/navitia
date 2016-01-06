@@ -91,3 +91,52 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     pt_display_info->Clear();
 
 }
+
+
+BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
+
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    // Physical_mode = Tram
+    b.vj_with_network("Network1", "A","11110000","",true,"", "","physical_mode:0x0")("stop1", 8000,8050)
+            ("stop2", 8200,8250);
+    // Physical_mode = Metro
+    b.vj("A","11110000","",true,"", "","physical_mode:0x1")("stop1", 8000,8050)
+            ("stop2", 8200,8250)("stop3", 8500,8500);
+    // Physical_mode = Car
+    b.vj_with_network("Network2", "B","00001111","",true,"", "","physical_mode:Car")("stop4", 8000,8050)
+                      ("stop5", 8200,8250)("stop6", 8500,8500);
+
+    nt::Line* ln= b.lines.find("A")->second;
+    ln->network = b.nts.find("Network1")->second;
+    ln->commercial_mode = b.cms.find("0x1")->second;
+
+    ln = b.lines.find("B")->second;
+    ln->commercial_mode = b.cms.find("Car")->second;
+    ln->network = b.nts.find("Network2")->second;
+
+
+    b.data->build_relations();
+    b.finish();
+
+    auto stop_area = new pbnavitia::StopArea();
+    boost::gregorian::date d1(2014,06,14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
+    boost::posix_time::time_period period(t1, t2);
+    const nt::StopArea* sa= b.sas.find("stop1")->second;
+    navitia::fill_pb_object(sa, *b.data,
+                        stop_area, 2,
+                        {}, period);
+    BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 2);
+    BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
+
+    stop_area->Clear();
+    sa= b.sas.find("stop6")->second;
+    navitia::fill_pb_object(sa, *b.data,
+                        stop_area, 2,
+                        {}, period);
+    BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 1);
+    BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
+
+}
