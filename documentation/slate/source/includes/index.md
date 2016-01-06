@@ -28,8 +28,8 @@ The easiest is probably to jump to [Examples](#examples) below.
 
 At some point you will want to read:
 
-- [public_transport](#public_transport)
-- [integration](#integration)
+- [public_transport](#a-small-introduction-to-public-transportation-data)
+- [integration](#navitia-documentation-v1-interface)
 
 There are no restrictions in using our API. However, please don't make more than one request per second.
 
