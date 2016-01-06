@@ -1302,8 +1302,8 @@ __________
 +------------+----------------------------------------------+---------------------------+
 | Field      | Type                                         | Description               |
 +============+==============================================+===========================+
-| date_times | Array of `pt_date_time`_                     | Array of public transport |
-|            |                                              | date_time                 |
+| date_times | Array of `pt-date-time`_                     | Array of public transport |
+|            |                                              | date time                 |
 +------------+----------------------------------------------+---------------------------+
 | stop_point | `stop_point`_                                | The stop point of the row |
 +------------+----------------------------------------------+---------------------------+
@@ -1346,7 +1346,7 @@ Field                 Type                                            Descriptio
 ===================== =============================================== ==============================================
 display_informations  display_informations_                           Usefull information about the route to display
 route                 route_                                          The route of the schedule
-date_times            Array of `pt_date_time`_                        When does a bus stops at the stop point
+date_times            Array of `pt-date-time`_                        When does a bus stops at the stop point
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
@@ -1380,13 +1380,13 @@ Parameters
 Departure objects
 #################
 
-===================== ========================= ========================================
-Field                 Type                      Description
-===================== ========================= ========================================
-route                 route_                    The route of the schedule
-stop_date_time        Array of stop_date_time_  When does a bus stops at the stop point
-stop_point            stop_point_               The stop point of the schedule
-===================== ========================= ========================================
+===================== =========================== ========================================
+Field                 Type                        Description
+===================== =========================== ========================================
+route                 route_                      The route of the schedule
+stop_date_time        Array of `stop_date_time`_  When does a bus stops at the stop point
+stop_point            stop_point_                 The stop point of the schedule
+===================== =========================== ========================================
 
 Arrivals (/arrivals)
 ********************
@@ -1969,12 +1969,12 @@ end                   "YYYYMMDDThhmmss"                               Closing da
 Other objects
 *************
 
-.. _pt_date_time:
+.. _pt-date-time:
 
-pt_date_time
+pt-date-time
 ############
 
-pt_date_time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
+pt-date-time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
 
 +--------------------------+----------------------+--------------------------------+
 | Field                    | Type                 | Description                    |
@@ -2008,7 +2008,7 @@ stop_date_time
 ========== ===================================== ============================
 Field      Type                                  Description
 ========== ===================================== ============================
-date_time  `date_time`_                          A public transport date time
+date_time  `pt-date-time`_                       A public transport date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============================
 
