@@ -2,7 +2,7 @@
 title: Documentation Navitia.io
 
 language_tabs:
-  - text: URL
+  - plaintext: URL
   - shell: cURL
   - python: Python
 

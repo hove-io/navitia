@@ -398,11 +398,11 @@ Examples :
 Response example for this request
 <https://api.navitia.io/v1/coverage/fr-idf/physical_modes>
 
-``` text
+``` plaintext
 https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 ```
 
-``` curl
+``` shell
 curl http://_TOKEN_@api.navitia.io/v1/coverage/fr-idf/physical_modes
 ```
 
