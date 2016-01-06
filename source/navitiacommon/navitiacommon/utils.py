@@ -52,7 +52,7 @@ def type_of_data(filename):
 
     for 'fusio', 'gtfs', 'fares' and 'poi', we return the directory since there are several file to load
     """
-    def pt_types(files):
+    def files_type(files):
         #first we try fusio, because it can load fares too
         if any(f for f in files if f.endswith("contributors.txt")):
             return 'fusio'
@@ -60,6 +60,10 @@ def type_of_data(filename):
             return 'fare'
         if any(f for f in files if f.endswith("stops.txt")):
             return 'gtfs'
+        if any(f for f in files if f.endswith("adresse.txt")):
+            return 'geopal'
+        if any(f for f in files if f.endswith("poi.txt")):
+            return 'poi'
         return None
 
     if not isinstance(filename, list):
@@ -71,8 +75,8 @@ def type_of_data(filename):
         files = filename
 
     # we test if we regognize a ptfile in the list of files
-    t = pt_types(files)
-    if t:  # the path to load pt data is the directory since there are several files
+    t = files_type(files)
+    if t:  # the path to load the data is the directory since there are several files
         return t, os.path.dirname(files[0])
 
     for filename in files:
@@ -80,7 +84,7 @@ def type_of_data(filename):
             return 'osm', filename
         if filename.endswith('.zip'):
             zipf = zipfile.ZipFile(filename)
-            pt_type = pt_types(zipf.namelist())
+            pt_type = files_type(zipf.namelist())
             if not pt_type:
                 return None, None
             return pt_type, filename
