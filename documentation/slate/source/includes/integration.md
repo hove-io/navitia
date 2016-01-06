@@ -235,11 +235,11 @@ r = requests.get('http://api.navitia.io/v1/coord/2.37691590563854;48.84675974811
         "fr-idf"
     ],
     "address": {
-        "id": "2.37691590564;48.8467597481"
+        "id": "2.37691590564;48.8467597481",
         "label": "20 Rue Hector Malot (Paris)",
-        "...": "...",
+        "...": "..."
     }
-},
+}
 ```
 
 The coverage id is *"regions": ["fr-idf"]* so you can ask Navitia on
