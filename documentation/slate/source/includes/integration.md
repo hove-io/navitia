@@ -398,13 +398,25 @@ Examples :
 Response example for this request
 <https://api.navitia.io/v1/coverage/fr-idf/physical_modes>
 
+``` text
+https://api.navitia.io/v1/coverage/fr-idf/physical_modes
+```
+
+``` curl
+curl http://_TOKEN_@api.navitia.io/v1/coverage/fr-idf/physical_modes
+```
+
+``` python
+r = requests.get('http://api.navitia.io/v1/coverage/fr-idf/physical_modes', auth=('_TOKEN_', ''))
+```
+
 ``` json
 {
     "links": [
-        ...
+        "..."
     ],
     "pagination": {
-        ...
+        "..."
     },
     "physical_modes": [
         {
@@ -415,7 +427,7 @@ Response example for this request
             "id": "physical_mode:0x4",
             "name": "Ferry"
         },
-        ...
+        "..."
     ]
 }
 ```
