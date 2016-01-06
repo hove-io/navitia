@@ -541,36 +541,42 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0x0";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Metro";
     commercial_mode->uri = "0x1";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Bss";
     commercial_mode->uri = "Bss";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Bike";
     commercial_mode->uri = "Bike";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Bus";
     commercial_mode->uri = "Bus";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Car";
     commercial_mode->uri = "Car";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
+    this->cms[commercial_mode->uri] = commercial_mode;
 
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
