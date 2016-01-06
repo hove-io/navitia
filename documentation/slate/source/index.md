@@ -3,7 +3,8 @@ title: Documentation Navitia.io
 
 language_tabs:
   - shell: cURL
-  - javascript
+  - python: Python
+  - javascript: JS
 
 toc_footers:
   - <a href='http://navitia.io/register/'>Get an access</a>
