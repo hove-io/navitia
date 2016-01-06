@@ -215,7 +215,19 @@ For example, you can request navitia with a WGS84 coordinate as:
 <https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174>
 
 In response, you will get the coverage id, a very useful label and a
-ressource id:
+ressource id. See right example.
+
+``` plaintext
+https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174
+```
+
+``` shell
+curl "http://_TOKEN_@api.navitia.io/v1/coord/2.37691590563854;48.8467597481174"
+```
+
+``` python
+r = requests.get('http://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174', auth=('_TOKEN_', ''))
+```
 
 ``` json
 {
@@ -223,10 +235,10 @@ ressource id:
         "fr-idf"
     ],
     "address": {
-    ...,
-    "label": "20 Rue Hector Malot (Paris)",
-    ...,
-    "id": "2.37691590564;48.8467597481"
+        "id": "2.37691590564;48.8467597481"
+        "label": "20 Rue Hector Malot (Paris)",
+        "...": "...",
+    }
 },
 ```
 
@@ -235,13 +247,25 @@ accessible local mobility services:
 
 <https://api.navitia.io/v1/coverage/fr-idf/>
 
+``` plaintext
+https://api.navitia.io/v1/coverage/fr-idf/
+```
+
+``` shell
+curl "http://_TOKEN_@api.navitia.io/v1/coverage/fr-idf/"
+```
+
+``` python
+r = requests.get('http://api.navitia.io/v1/coverage/fr-idf/', auth=('_TOKEN_', ''))
+```
+
 ``` json
 {
     "regions": [{
-            "status": "running",
-            "start_production_date": "20150804","end_production_date": "20160316",
-            "id": "fr-idf"
-            }],
+        "status": "running",
+        "start_production_date": "20150804","end_production_date": "20160316",
+        "id": "fr-idf"
+    }],
     "links": [
         {"href": "http://api.navitia.io/v1/coverage/fr-idf/coords"},
         {"href": "http://api.navitia.io/v1/coverage/fr-idf/places"},
@@ -259,7 +283,7 @@ accessible local mobility services:
         {"href": "http://api.navitia.io/v1/coverage/fr-idf/poi_types"},
         {"href": "http://api.navitia.io/v1/coverage/fr-idf/pois"},
         {"href": "http://api.navitia.io/v1/coverage/fr-idf/"}
-        ]
+    ]
 }
 ```
 
