@@ -88,7 +88,7 @@ Jointures::Jointures() {
 
     // from a VehicleJourney, we can have the Route, the
     // JourneyPattern, the Company, the PhysicalMode, the
-    // ValidityPattern, the MetaVehicleJourney.
+    // ValidityPattern, the MetaVehicleJourney, the Frame
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
     // Higher weight on the Company to get Route->Line better than Company->Line.
@@ -96,6 +96,7 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::MetaVehicleJourney), vertex_map.at(Type_e::VehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::Frame), vertex_map.at(Type_e::VehicleJourney), g);
 
     // From a JourneyPatternPoint, we can have the JourneyPattern and
     // the StopPoints.
@@ -125,6 +126,13 @@ Jointures::Jointures() {
 
     // From a MetaVehicleJourney, we can have its VehicleJourneys.
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::MetaVehicleJourney), g);
+
+    // From a frame we can have a contributor and vehiclejourneys
+    boost::add_edge(vertex_map.at(Type_e::Contributor), vertex_map.at(Type_e::Frame), g);
+    boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::Frame), g);
+
+    // From a contributor we can have frames
+    boost::add_edge(vertex_map.at(Type_e::Frame), vertex_map.at(Type_e::Contributor), g);
 
     // edges for the impacts. for the moment we only need unilateral links,
     // we don't need from an impact all the impacted objects

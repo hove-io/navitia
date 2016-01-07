@@ -127,6 +127,14 @@ static pbnavitia::Response extract_data(const type::Data& data,
             fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
             break;
         }
+        case Type_e::Contributor:
+            fill_pb_object(data.pt_data->contributors[idx], data,
+                           result.add_contributors(), depth, current_time, action_period);
+            break;
+        case Type_e::Frame:
+            fill_pb_object(data.pt_data->frames[idx], data,
+                           result.add_frames(), depth, current_time, action_period);
+            break;
         default: break;
         }
     }
