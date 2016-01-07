@@ -73,6 +73,8 @@ def filter_journeys(response_list, instance, request, original_request):
 
     _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
+    _filter_too_long_waiting(journeys, request)
+
     delete_journeys(response_list, request)
 
     return response_list
@@ -115,8 +117,6 @@ def mark_as_dead(journey, *reasons):
 
 def _filter_similar_journeys(journeys, request):
     """
-    for the moment very simple filter.
-
     we filter the journeys with the same vjs
 
     in case of similar journeys we let _get_worst_similar_vjs decide which one to delete
@@ -135,6 +135,22 @@ def _filter_similar_journeys(journeys, request):
             mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
+def _filter_too_long_waiting(journeys, request):
+    """
+    filter journeys with a too long section of type waiting
+    """
+    logger = logging.getLogger(__name__)
+    for j in journeys:
+        if _to_be_deleted(j):
+            continue
+        for s in j.sections:
+            if s.type != response_pb2.WAITING:
+                continue
+            if s.duration < 4 * 60 * 60:
+                continue
+            logger.debug("the journey {} has a too long waiting, we delete it".format(j.internal_id))
+            mark_as_dead(j, "too_long_waiting")
+            break
 
 def way_later(request, journey, asap_journey, original_request):
     """

@@ -597,22 +597,26 @@ class Scenario(simple.Scenario):
         while nb_journeys(responses) < min_asked_journeys:
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
-
-            responses.extend(tmp_resp)
-            new_nb_journeys = nb_journeys(responses)
-            if new_nb_journeys == 0:
+            if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
                 break
+
+            next_request = create_next_kraken_request(request, tmp_resp)
+            responses.extend(tmp_resp)
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)
 
-            if last_nb_journeys == new_nb_journeys:
+            cur_nb_journeys = nb_journeys(responses)
+            if cur_nb_journeys == 0:
+                # all journeys are filtered, testing a next
+                pass
+            elif last_nb_journeys == cur_nb_journeys:
                 # we are stuck with the same number of journeys, we stops
                 break
-            last_nb_journeys = new_nb_journeys
 
-            request = create_next_kraken_request(request, responses)
+            last_nb_journeys = cur_nb_journeys
+            request = next_request
 
         pb_resp = merge_responses(responses)
         sort_journeys(pb_resp, instance.journey_order, request['clockwise'])
