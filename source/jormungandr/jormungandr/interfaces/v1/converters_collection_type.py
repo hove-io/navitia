@@ -37,7 +37,8 @@ collections_to_resource_type = {
     "journey_patterns": "journey_pattern",
     "pois": "poi", "poi_types": "poi_type",
     "connections": "connection", "vehicle_journeys": "vehicle_journey",
-    "disruptions": "disruption", "trips": "trip"}
+    "disruptions": "disruption", "trips": "trip", "contributors": "contributor",
+    "frames": "frame"}
 
 resource_type_to_collection = dict((resource_type, collection)
                                    for (collection, resource_type)

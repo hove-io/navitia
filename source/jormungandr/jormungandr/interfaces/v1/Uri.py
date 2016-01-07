@@ -35,7 +35,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, line_group, \
     physical_mode, commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, trip, connection, error, PbField
+    journey_pattern, trip, connection, error, PbField, contributor, frame
 from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri, protect
@@ -584,6 +584,52 @@ def disruptions(is_collection):
                             description="original uri of the object you"
                                     "want to query")
     return Disruptions
+
+
+def contributors(is_collection):
+    class Contributors(Uri):
+
+        """ Retrieves contributors"""
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "contributors")
+            self.collections = [
+                ("contributors",
+                 NonNullList(fields.Nested(contributor,
+                                           display_null=False))),
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+    return Contributors
+
+
+def frames(is_collection):
+    class Frames(Uri):
+
+        """ Retrieves frames"""
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "frames")
+            self.collections = [
+                ("frames",
+                 NonNullList(fields.Nested(frame,
+                                           display_null=False))),
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", DisruptionsField),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+    return Frames
 
 
 def addresses(is_collection):

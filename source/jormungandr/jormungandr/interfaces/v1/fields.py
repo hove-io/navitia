@@ -243,6 +243,12 @@ class notes(fields.Raw):
             r.append({"id": note_.uri, "value": note_.note})
         return r
 
+class realtime_level(fields.Raw):
+    def output(self, key, obj):
+        rt_level = obj.realtime_level
+        enum = type_pb2._RTLEVEL
+        return str.lower(enum.values_by_number[rt_level].name)
+
 
 class stop_time_properties_links(fields.Raw):
 
@@ -600,6 +606,23 @@ address["label"] = fields.String()
 
 stop_point["address"] = PbField(address)
 poi["address"] = PbField(address)
+
+contributor = {
+    "id": fields.String(attribute='uri'),
+    "name": fields.String(),
+    "website": fields.String(),
+    "license": fields.String()
+}
+
+frame = {
+    "id": fields.String(attribute='uri'),
+    "desc": fields.String(),
+    "system": fields.String(),
+    "start_validation_date": DateTime(),
+    "end_validation_date": DateTime(),
+    "realtime_level": realtime_level(),
+    "contributor": PbField(contributor)
+}
 
 connection = {
     "origin": PbField(stop_point),
