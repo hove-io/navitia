@@ -65,8 +65,7 @@ struct GeographicalCoord{
     constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
     bool operator<(const GeographicalCoord &other) const {
-        if ( fabs(lon() - other.lon()) > coord_epsilon )
-            return lon() < other.lon();
+        if (lon() != other.lon()) { return lon() < other.lon(); }
         return lat() < other.lat();
     }
     bool operator != (const GeographicalCoord &other) const {
