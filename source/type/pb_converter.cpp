@@ -451,7 +451,14 @@ void fill_pb_object(const nt::StopArea* sa,
                            depth-1, now, action_period);
         }
     }
+
     if (depth > 1) {
+        std::string request = "stop_area.uri=" + sa->uri;
+        fill_object_from_pterf(stop_area, navitia::type::Type_e::CommercialMode,
+                               data, request, 0, now, action_period, show_codes);
+
+        fill_object_from_pterf(stop_area, navitia::type::Type_e::PhysicalMode,
+                               data, request, 0, now, action_period, show_codes);
     }
 
     fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
