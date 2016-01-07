@@ -572,6 +572,47 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->uri = "Car";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
+    //Here contributor c1 contains frames f1 and f2
+    navitia::type::Contributor * contributor = new navitia::type::Contributor();
+    contributor->idx = this->data->pt_data->contributors.size();
+    contributor->uri = "c1";
+    contributor->name = "name-c1";
+    this->data->pt_data->contributors.push_back(contributor);
+
+    navitia::type::Frame * frame = new navitia::type::Frame();
+    frame->idx = this->data->pt_data->frames.size();
+    frame->uri = "f1";
+    frame->name = "name-f1";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    this->data->pt_data->frames.push_back(frame);
+    this->frames[frame->uri]=frame;
+
+    frame = new navitia::type::Frame();
+    frame->idx = this->data->pt_data->frames.size();
+    frame->uri = "f2";
+    frame->name = "name-f2";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    this->data->pt_data->frames.push_back(frame);
+    this->frames[frame->uri]=frame;
+
+    //Here contributor c2 contains frames f3
+    contributor = new navitia::type::Contributor();
+    contributor->idx = this->data->pt_data->contributors.size();
+    contributor->uri = "c2";
+    contributor->name = "name-c2";
+    this->data->pt_data->contributors.push_back(contributor);
+
+    frame = new navitia::type::Frame();
+    frame->idx = this->data->pt_data->frames.size();
+    frame->uri = "f3";
+    frame->name = "name-f3";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    this->data->pt_data->frames.push_back(frame);
+    this->frames[frame->uri]=frame;
+
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
         double co2_emission;
