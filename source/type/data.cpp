@@ -428,7 +428,7 @@ void Data::build_associated_calendar() {
 
 void Data::build_relations(){
     // physical_mode_list of line
-    for (auto* vj: pt_data->vehicle_journeys) {
+    for (const auto* vj: pt_data->vehicle_journeys) {
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
         if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
             != vj->route->line->physical_mode_list.end()) {
