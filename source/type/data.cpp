@@ -426,23 +426,9 @@ void Data::build_associated_calendar() {
     }
 }
 
-static void rel_stop_point_network(nt::VehicleJourney* vj){
-    // network of stop_point
-    for (nt::StopTime& stop_time: vj->stop_time_list){
-        if (!stop_time.stop_point){
-            continue;
-        }
-        if ((stop_time.vehicle_journey) && (stop_time.vehicle_journey->route) &&
-                (stop_time.vehicle_journey->route->line)){
-            stop_time.stop_point->network = stop_time.vehicle_journey->route->line->network;
-        }
-    }
-}
-
 void Data::build_relations(){
     // physical_mode_list of line
     for (auto* vj: pt_data->vehicle_journeys) {
-        rel_stop_point_network(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
         if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
             != vj->route->line->physical_mode_list.end()) {
