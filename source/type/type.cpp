@@ -581,22 +581,6 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint: return indexes(this->stop_point_list);
-    case Type_e::CommercialMode:
-    case Type_e::PhysicalMode:{
-         std::set<idx_t> tmp_result;
-        for(const auto& stp: stop_point_list){
-            std::vector<idx_t> tmp = stp->get(type, data);
-            for(const idx_t idx: tmp){
-                tmp_result.insert(idx);
-            }
-        }
-        if(tmp_result.size() > 0){
-            for(const idx_t idx: tmp_result){
-                result.push_back(idx);
-            }
-        }
-    }
-        break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
 
     default: break;
@@ -609,22 +593,6 @@ std::vector<idx_t> Network::get(Type_e type, const PT_Data& data) const {
     switch(type) {
     case Type_e::Line: return indexes(line_list);
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
-    case Type_e::CommercialMode:
-    case Type_e::PhysicalMode:{
-         std::set<idx_t> tmp_result;
-        for(const auto& line: line_list){
-            std::vector<idx_t> tmp = line->get(type, data);
-            for(const idx_t idx: tmp){
-                tmp_result.insert(idx);
-            }
-        }
-        if(tmp_result.size() > 0){
-            for(const idx_t idx: tmp_result){
-                result.push_back(idx);
-            }
-        }
-    }
-        break;
     default: break;
     }
     return result;
@@ -791,12 +759,6 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
     case Type_e::StopPointConnection:
         for (const StopPointConnection* stop_cnx : stop_point_connection_list)
             result.push_back(stop_cnx->idx);
-        break;
-    case Type_e::CommercialMode:
-    case Type_e::PhysicalMode:
-        if (this->network){
-            return this->network->get(type, data);
-    }
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;

@@ -409,19 +409,6 @@ void fill_pb_object(const nt::StopArea* sa,
         }
     }
     if (depth > 1) {
-        std::vector<nt::idx_t> indexes;
-        indexes = sa->get(navitia::type::Type_e::CommercialMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::CommercialMode* commercial_mode = data.pt_data->commercial_modes[idx];
-            fill_pb_object(commercial_mode, data, stop_area->add_commercial_modes(), 0, now, action_period,
-                           show_codes);
-        }
-        indexes = sa->get(navitia::type::Type_e::PhysicalMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::PhysicalMode* physical_mode = data.pt_data->physical_modes[idx];
-            fill_pb_object(physical_mode, data, stop_area->add_physical_modes(), 0, now, action_period,
-                           show_codes);
-        }
     }
 
     fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
