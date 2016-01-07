@@ -43,6 +43,7 @@ www.navitia.io
 #include "time_tables/thermometer.h"
 #include "vptranslator/block_pattern_to_pb.h"
 #include "routing/dataraptor.h"
+#include "ptreferential/ptreferential.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -59,6 +60,48 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
             pb_code->set_value(value);
         }
     }
+}
+
+template<typename PB>
+static void fill_object_from_pterf(PB* pb,
+                                   const navitia::type::Type_e type_e,
+                                   const nt::Data& data,
+                                   std::string& request,
+                                   int depth,
+                                   const pt::ptime& now,
+                                   const pt::time_period& action_period,
+                                   const bool show_codes) {
+    std::vector<navitia::type::idx_t> index;
+    try{
+        index = ptref::make_query(type_e, request, data);
+    } catch(const ptref::parsing_error &parse_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_object_from_pterf, Unable to parse :" + parse_error.more);
+    } catch(const ptref::ptref_error &pt_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_object_from_pterf, " + pt_error.more);
+    }
+    switch (type_e) {
+        case navitia::type::Type_e::CommercialMode:
+            for(const navitia::type::idx_t idx: index){
+                navitia::type::CommercialMode* cm = data.pt_data->commercial_modes[idx];
+                fill_pb_object(cm, data, pb->add_commercial_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+        case navitia::type::Type_e::PhysicalMode:
+            for(const navitia::type::idx_t idx: index){
+                navitia::type::PhysicalMode* pm = data.pt_data->physical_modes[idx];
+                fill_pb_object(pm, data, pb->add_physical_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+         default:
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "fill_object_from_pterf, unkown type "
+                            << navitia::type::static_data::captionByType(type_e));
+            break;
+    }
+
 }
 
 static pbnavitia::ActiveStatus
