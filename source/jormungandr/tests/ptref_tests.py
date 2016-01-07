@@ -316,17 +316,18 @@ class TestPtRef(AbstractTestFixture):
         self._test_links(response, 'stop_areas')
 
     def test_stop_area(self):
-            """test stop_areas formating"""
-            response = self.query_region("v1/stop_areas/stop_area:stop2?depth=2")
+        """test stop_areas formating"""
+        response = self.query_region("v1/stop_areas/stop_area:stop1?depth=2")
 
-            stops = get_not_null(response, 'stop_areas')
+        stops = get_not_null(response, 'stop_areas')
 
-            assert len(stops) == 1
+        assert len(stops) == 1
 
-            is_valid_stop_area(stops[0], depth_check=2)
-            modes = get_not_null(stops[0], 'physical_modes')
-
-            assert len(modes) == 2
+        is_valid_stop_area(stops[0], depth_check=2)
+        modes = get_not_null(stops[0], 'physical_modes')
+        assert len(modes) == 2
+        modes = get_not_null(stops[0], 'commercial_modes')
+        assert len(modes) == 1
 
     def test_stop_points(self):
         """test stop_areas formating"""
