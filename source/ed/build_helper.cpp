@@ -570,7 +570,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
     commercial_mode->name = "Car";
     commercial_mode->uri = "Car";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);    
+    this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
