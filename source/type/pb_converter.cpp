@@ -63,14 +63,14 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
 }
 
 
-static void fill_modes_from_stop_area(pbnavitia::StopArea* pb_sa,
-                                   const navitia::type::Type_e type_e,
-                                   const nt::Data& data,
-                                   const navitia::type::StopArea* stop_area,
-                                   int depth,
-                                   const pt::ptime& now,
-                                   const pt::time_period& action_period,
-                                   const bool show_codes) {
+static void fill_modes_for_stop_area(pbnavitia::StopArea* pb_sa,
+                                     const navitia::type::Type_e type_e,
+                                     const nt::Data& data,
+                                     const navitia::type::StopArea* stop_area,
+                                     int depth,
+                                     const pt::ptime& now,
+                                     const pt::time_period& action_period,
+                                     const bool show_codes) {
     std::vector<navitia::type::idx_t> indexes;
     try{
         std::string request = "stop_area.uri=" + stop_area->uri;
@@ -454,11 +454,11 @@ void fill_pb_object(const nt::StopArea* sa,
     }
 
     if (depth > 1) {
-        fill_modes_from_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
-                               data, sa, 0, now, action_period, show_codes);
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
+                                 data, sa, 0, now, action_period, show_codes);
 
-        fill_modes_from_stop_area(stop_area, navitia::type::Type_e::PhysicalMode,
-                               data, sa, 0, now, action_period, show_codes);
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::PhysicalMode,
+                                 data, sa, 0, now, action_period, show_codes);
     }
 
     fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
