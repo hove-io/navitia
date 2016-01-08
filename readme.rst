@@ -1,6 +1,5 @@
-********
-Navitia
-********
+.. image:: documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png
+    :align: center 
 
 ``(pronounce [navi-sia])``
 
@@ -8,7 +7,6 @@ Navitia
     :alt: build status
     :target: https://ci.navitia.io/job/navitia_release/
 
-.. image:: documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png
 
 Presentation
 ============
