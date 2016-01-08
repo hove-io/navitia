@@ -109,9 +109,11 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
 
     nt::Line* ln= b.lines.find("A")->second;
     ln->network = b.nts.find("Network1")->second;
+    ln->commercial_mode = b.data->pt_data->commercial_modes_map["0x1"];
 
     ln = b.lines.find("B")->second;
     ln->network = b.nts.find("Network2")->second;
+    ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
 
     b.data->build_relations();
     b.finish();
