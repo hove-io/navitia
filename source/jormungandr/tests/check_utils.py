@@ -558,11 +558,10 @@ def is_valid_stop_area(stop_area, depth_check=1):
 
     for c in stop_area.get('comments', []):
         is_valid_comment(c)
-    if depth_check > 1:
-        for physical_mode in stop_area.get("physical_modes", []):
-            is_valid_physical_mode(physical_mode)
-        for commercial_mode in stop_area.get("commercial_modes", []):
-            is_valid_commercial_mode(commercial_mode)
+    for physical_mode in stop_area.get("physical_modes", []):
+        is_valid_physical_mode(physical_mode)
+    for commercial_mode in stop_area.get("commercial_modes", []):
+        is_valid_commercial_mode(commercial_mode)
 
 
 def is_valid_stop_point(stop_point, depth_check=1):
