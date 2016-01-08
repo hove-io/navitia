@@ -294,28 +294,34 @@ struct Network : public Header, HasMessages {
 
 };
 
+struct Frame;
+
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
     std::string website;
     std::string license;
+    std::vector<Frame*> frame_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & website & license;
+        ar & idx & name & uri & website & license & frame_list;
     }
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
-struct Frame : public Header{
+struct Frame : public Header, Nameable{
     const static Type_e type = Type_e::Frame;
     Contributor* contributor=nullptr;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
     boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
     std::string desc;
     std::string system;
+    std::vector<VehicleJourney*> vehiclejourney_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
+        ar & idx & uri & contributor & realtime_level & validation_period & desc & system & vehiclejourney_list;
     }
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Frame & other) const { return this < &other; }
 };
 

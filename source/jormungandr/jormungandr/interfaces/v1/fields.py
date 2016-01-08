@@ -601,6 +601,23 @@ address["label"] = fields.String()
 stop_point["address"] = PbField(address)
 poi["address"] = PbField(address)
 
+contributor = {
+    "id": fields.String(attribute='uri'),
+    "name": fields.String(),
+    "website": fields.String(),
+    "license": fields.String()
+}
+
+frame = {
+    "id": fields.String(attribute='uri'),
+    "description": fields.String(attribute='desc'),
+    "system": fields.String(),
+    "start_validation_date": DateTime(),
+    "end_validation_date": DateTime(),
+    "realtime_level": enum_type(),
+    "contributor": PbField(contributor)
+}
+
 connection = {
     "origin": PbField(stop_point),
     "destination": PbField(stop_point),

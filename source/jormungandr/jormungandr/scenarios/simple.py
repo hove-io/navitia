@@ -296,6 +296,12 @@ class Scenario(object):
     def disruptions(self, request, instance):
         return self.__on_ptref("impact", type_pb2.IMPACT, request, instance)
 
+    def contributors(self, request, instance):
+        return self.__on_ptref("contributors", type_pb2.CONTRIBUTOR, request, instance)
+
+    def frames(self, request, instance):
+        return self.__on_ptref("frames", type_pb2.FRAME, request, instance)
+
     def journeys(self, request, instance):
         raise NotImplementedError()
 

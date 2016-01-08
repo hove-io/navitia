@@ -143,6 +143,54 @@ class TestPtRef(AbstractTestFixture):
             code_uic = [c for c in codes if c['type'] == 'code_uic']
             assert len(code_uic) == 1 and code_uic[0]['value'] == 'bobette'
 
+    def test_contributors(self):
+        """test contributor formating"""
+        response = self.query_region("v1/contributors")
+
+        contributors = get_not_null(response, 'contributors')
+
+        assert len(contributors) == 1
+
+        ctr = contributors[0]
+        assert(ctr["id"] == 'c1')
+        assert(ctr["website"] == 'ws-c1')
+        assert(ctr["license"] == 'ls-c1')
+
+
+    def test_frames(self):
+        """test frame formating"""
+        response = self.query_region("v1/frames")
+
+        frames = get_not_null(response, 'frames')
+
+        assert len(frames) == 1
+
+        fr = frames[0]
+        assert(fr["id"] == 'f1')
+        assert(fr["description"] == 'desc-f1')
+        assert(fr["system"] == 'sys-f1')
+
+    def test_contributor_by_frame(self):
+        """test contributor by frame formating"""
+        response = self.query_region("frames/f1/contributors")
+        ctrs = get_not_null(response, 'contributors')
+        assert len(ctrs) == 1
+
+        ctr = ctrs[0]
+        assert(ctr["id"] == 'c1')
+        assert(ctr["website"] == 'ws-c1')
+        assert(ctr["license"] == 'ls-c1')
+
+    def test_frame_by_contributor(self):
+        """test frame by contributor formating"""
+        response = self.query_region("contributors/c1/frames")
+
+        frs = get_not_null(response, 'frames')
+        assert len(frs) == 1
+
+        fr = frs[0]
+        assert(fr["id"] == 'f1')
+
     def test_line(self):
         """test line formating"""
         response = self.query_region("v1/lines")

@@ -494,7 +494,8 @@ static_data * static_data::get() {
                 (Type_e::Contributor, "contributor")
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
-                (Type_e::Impact, "disruption");
+                (Type_e::Impact, "disruption")
+                (Type_e::Frame, "frame");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
@@ -750,6 +751,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
     case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
+    case Type_e::Frame: result.push_back(frame->idx); break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
@@ -787,6 +789,25 @@ std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const
     return result;
 }
 bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
+
+std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::Contributor: result.push_back(contributor->idx); break;
+    case Type_e::VehicleJourney: return indexes(vehiclejourney_list); break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Contributor::get(Type_e type, const PT_Data&) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::Frame: return indexes(frame_list); break;
+    default: break;
+    }
+    return result;
+}
 
 std::string to_string(ExceptionDate::ExceptionType t) {
     switch (t) {

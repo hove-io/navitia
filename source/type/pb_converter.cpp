@@ -46,6 +46,7 @@ www.navitia.io
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
+namespace gd = boost::gregorian;
 
 namespace navitia {
 
@@ -334,15 +335,51 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
     }
 }
 
-void fill_pb_object(const nt::Contributor*,
-                    const nt::Data& , pbnavitia::Contributor* ,
+void fill_pb_object(const nt::Contributor* cb,
+                    const nt::Data& , pbnavitia::Contributor* contributor,
                     int , const pt::ptime& ,
-                    const pt::time_period& , const bool, const DumpMessage) {}
+                    const pt::time_period& , const bool, const DumpMessage) {
+    if(cb == nullptr)
+        return;
+    contributor->set_uri(cb->uri);
+    contributor->set_name(cb->name);
+    contributor->set_license(cb->license);
+    contributor->set_website(cb->website);
+}
 
-void fill_pb_object(const nt::Frame*,
-                    const nt::Data& , pbnavitia::Frame* ,
-                    int , const pt::ptime& ,
-                    const pt::time_period& , const bool, const DumpMessage){}
+void fill_pb_object(const nt::Frame* fr,
+                    const nt::Data& data, pbnavitia::Frame* frame,
+                    int depth, const pt::ptime&  now,
+                    const pt::time_period& action_period,
+                    const bool show_codes, const DumpMessage dump_message){
+    if(fr == nullptr)
+        return;
+    frame->set_uri(fr->uri);
+    pt::time_duration td = pt::time_duration(0, 0, 0, 0);
+    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
+    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
+    frame->set_desc(fr->desc);
+    frame->set_system(fr->system);
+
+    switch (fr->realtime_level){
+        case nt::RTLevel::Base:
+        frame->set_realtime_level(pbnavitia::BASE);
+        break;
+    case nt::RTLevel::Adapted:
+        frame->set_realtime_level(pbnavitia::ADAPTED);
+        break;
+    case nt::RTLevel::RealTime:
+        frame->set_realtime_level(pbnavitia::REAL_TIME);
+        break;
+    default:
+        break;
+    }
+
+    if(fr->contributor != nullptr) {
+        fill_pb_object(fr->contributor, data, frame->mutable_contributor(), depth-1,
+                      now, action_period, show_codes, dump_message);
+    }
+}
 
 void fill_pb_object(const nt::StopArea* sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,

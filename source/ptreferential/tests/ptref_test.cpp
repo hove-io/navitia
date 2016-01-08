@@ -483,9 +483,9 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     Jointures j;
     std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 5);
+    BOOST_CHECK_EQUAL(num, 3);
     num =  boost::strong_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 6);
+    BOOST_CHECK_EQUAL(num, 4);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(nt::Type_e::Unknown), ptref_error);
@@ -697,4 +697,121 @@ BOOST_AUTO_TEST_CASE(code_request) {
                                 *(b.data));
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->stop_areas.at(res.at(0))->uri, "A");
+}
+
+BOOST_AUTO_TEST_CASE(contributor_and_frame) {
+
+    ed::builder b("201601011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000, 8050);
+    b.lines["A"]->code = "line_A";
+    b.vj("C")("stop2", 8000, 8050);
+    b.lines["C"]->code = "line C";
+
+    //contributor "c1" contains frame "f1" and "f2"
+    //contributor "c2" contains frame "f3"
+    //Here contributor c1 contains frames f1 and f2
+    navitia::type::Contributor * contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c1";
+    contributor->name = "name-c1";
+    b.data->pt_data->contributors.push_back(contributor);
+
+    navitia::type::Frame * frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f1";
+    frame->name = "name-f1";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+
+    //frame "f1" is assigned to vehicle_journey "vj:A:0"
+    auto * vj= b.data->pt_data->vehicle_journeys.front();
+    frame->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+
+    frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f2";
+    frame->name = "name-f2";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+
+    //frame "f2" is assigned to vehicle_journey "vj:C:1"
+    vj= b.data->pt_data->vehicle_journeys.back();
+    frame->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+
+    //Here contributor c2 contains frames f3
+    contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c2";
+    contributor->name = "name-c2";
+    b.data->pt_data->contributors.push_back(contributor);
+
+    frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f3";
+    frame->name = "name-f3";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+
+    b.data->build_relations();
+    b.finish();
+
+    auto indexes = make_query(nt::Type_e::Contributor, "contributor.uri=c1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->contributors[indexes.front()]->uri, "c1");
+
+    indexes = make_query(nt::Type_e::Frame, "frame.uri=f1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f1");
+
+    indexes = make_query(nt::Type_e::Frame, "contributor.uri=c1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f1");
+    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.back()]->uri, "f2");
+
+    indexes = make_query(nt::Type_e::VehicleJourney, "contributor.uri=c1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.back()]->uri, "vj:C:1");
+
+    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
+
+    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f2", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:C:1");
+
+    indexes = make_query(nt::Type_e::Route, "frame.uri=f1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
+
+    indexes = make_query(nt::Type_e::Line, "frame.uri=f2", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
+
+    indexes = make_query(nt::Type_e::Frame, "contributor.uri=c2", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f3");
+
+    //no vehicle_journey for frame "f3"
+    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "frame.uri=f3", *(b.data)),
+                      ptref_error);
+
+    //no vehicle_journey for contributor "c2"
+    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "contributor.uri=c2", *(b.data)),
+                      ptref_error);
+
+    //no route for contributor "c2"
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Route, "contributor.uri=c2", *(b.data)),
+                      ptref_error);
+
+    //no line for contributor "c2"
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "contributor.uri=c2", *(b.data)),
+                      ptref_error);
 }
