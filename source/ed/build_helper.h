@@ -180,7 +180,6 @@ struct builder {
     std::map<std::string, navitia::type::StopPoint *> sps;
     std::map<std::string, navitia::type::Network *> nts;
     std::multimap<std::string, navitia::type::VehicleJourney*> block_vjs;
-    std::map<std::string, navitia::type::Frame *> frames;
 
     boost::gregorian::date begin;
     const navitia::type::TimeZoneHandler* tz_handler;

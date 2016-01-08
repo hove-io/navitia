@@ -355,8 +355,9 @@ void fill_pb_object(const nt::Frame* fr,
     if(fr == nullptr)
         return;
     frame->set_uri(fr->uri);
-    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(),pt::time_duration(0, 0, 0, 0))));
-    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),pt::time_duration(0, 0, 0, 0))));
+    pt::time_duration td = pt::time_duration(0, 0, 0, 0);
+    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
+    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
     frame->set_desc(fr->desc);
     frame->set_system(fr->system);
     if(fr->realtime_level == nt::RTLevel::Base){

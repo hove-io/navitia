@@ -483,10 +483,8 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     Jointures j;
     std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
-    //BOOST_CHECK_EQUAL(num, 5);
     BOOST_CHECK_EQUAL(num, 3);
     num =  boost::strong_components(j.g, &component[0]);
-    //BOOST_CHECK_EQUAL(num, 6);
     BOOST_CHECK_EQUAL(num, 4);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
@@ -712,17 +710,53 @@ BOOST_AUTO_TEST_CASE(contributor_and_frame) {
 
     //contributor "c1" contains frame "f1" and "f2"
     //contributor "c2" contains frame "f3"
-    //frame "f1" is assigned to vehicle_journey "vj:A:0"
-    //frame "f2" is assigned to vehicle_journey "vj:C:1"
-    auto * fr = b.frames.find("f1")->second;
-    auto * vj= b.data->pt_data->vehicle_journeys.front();
-    fr->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->frame = fr;
+    //Here contributor c1 contains frames f1 and f2
+    navitia::type::Contributor * contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c1";
+    contributor->name = "name-c1";
+    b.data->pt_data->contributors.push_back(contributor);
 
-    fr = b.frames.find("f2")->second;
+    navitia::type::Frame * frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f1";
+    frame->name = "name-f1";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+
+    //frame "f1" is assigned to vehicle_journey "vj:A:0"
+    auto * vj= b.data->pt_data->vehicle_journeys.front();
+    frame->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+
+    frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f2";
+    frame->name = "name-f2";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+
+    //frame "f2" is assigned to vehicle_journey "vj:C:1"
     vj= b.data->pt_data->vehicle_journeys.back();
-    fr->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->frame = fr;
+    frame->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+
+    //Here contributor c2 contains frames f3
+    contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c2";
+    contributor->name = "name-c2";
+    b.data->pt_data->contributors.push_back(contributor);
+
+    frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f3";
+    frame->name = "name-f3";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
 
     b.data->build_relations();
     b.finish();
