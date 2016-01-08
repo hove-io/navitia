@@ -2069,7 +2069,7 @@ Special Parameters
 ISO-date-time
 #############
 
-Navitia manage every date or times as UTC date times. The web-service 
+Navitia manages every date or time as a UTC date-time. The web-service 
 
 * exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
 * can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
