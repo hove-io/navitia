@@ -650,6 +650,9 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
     double min_dist = way_dist.begin()->second;
     for (const auto& w_d: way_dist) {
         // way centroid
+// we assume strict float comparison in that case
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
         if (w_d.second < min_dist || (w_d.second == min_dist && w_d.first->uri < result.second->uri)) {
             result = {0, w_d.first};
             min_dist = w_d.second;
@@ -662,6 +665,7 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
             result = {nb_dist.first, w_d.first};
             min_dist = nb_dist.second;
         }
+#pragma GCC diagnostic pop
     }
     return result;
 }
