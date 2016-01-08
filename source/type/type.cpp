@@ -636,7 +636,7 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data& data) const {
     switch(type) {
     case Type_e::CommercialMode:
         if (this->commercial_mode){
-            result.push_back(commercial_mode->idx); break;
+            result.push_back(commercial_mode->idx);
         }
         break;
     case Type_e::PhysicalMode: return indexes(physical_mode_list);
