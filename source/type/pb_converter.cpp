@@ -360,21 +360,26 @@ void fill_pb_object(const nt::Frame* fr,
     frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
     frame->set_desc(fr->desc);
     frame->set_system(fr->system);
-    if(fr->realtime_level == nt::RTLevel::Base){
+
+    switch (fr->realtime_level){
+        case nt::RTLevel::Base:
         frame->set_realtime_level(pbnavitia::BASE);
-    }
-    if(fr->realtime_level == nt::RTLevel::Adapted){
+        break;
+    case nt::RTLevel::Adapted:
         frame->set_realtime_level(pbnavitia::ADAPTED);
-    }
-    if(fr->realtime_level == nt::RTLevel::RealTime){
+        break;
+    case nt::RTLevel::RealTime:
         frame->set_realtime_level(pbnavitia::REAL_TIME);
+        break;
+    default:
+        break;
     }
 
     if(fr->contributor != nullptr) {
         fill_pb_object(fr->contributor, data, frame->mutable_contributor(), depth-1,
                       now, action_period, show_codes, dump_message);
     }
-    }
+}
 
 void fill_pb_object(const nt::StopArea* sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
