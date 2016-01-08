@@ -2,11 +2,13 @@
 Navitia
 ********
 
+``(pronounce [navi-sia])``
+
 .. image::  https://ci.navitia.io/buildStatus/icon?job=navitia_release
     :alt: build status
     :target: https://ci.navitia.io/job/navitia_release/
 
-``(pronounce [navi-sia])``
+.. image:: documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png
 
 Presentation
 ============
@@ -59,7 +61,7 @@ Navitia is made of 3 main modules:
 
 Transportation data (in the `GTFS <https://developers.google.com/transit/gtfs/>`_ format) or routing data (from `OpenStreetMap <http://www.openstreetmap.org/>`_ for the moment) can be given to *Ed*. *Ed* produces a binary file used by *Kraken*.
 
-.. image:: documentation/diagrams/simple_archi.png
+.. image:: documentation/diagrams/Navitia_simple_architecture.png
 
 Tools
 ======
