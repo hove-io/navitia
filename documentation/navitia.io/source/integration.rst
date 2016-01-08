@@ -463,7 +463,7 @@ exists a stop time with the headsign `CANE`.
 "since" / "until"
 _________________
 
-- Type: `datetime`
+- Type: `iso-date-time`_
 
 To be used only on "vehicle_journeys" collection, to filter on a period.
 Both parameters "until" and "since" are optional.
@@ -801,7 +801,7 @@ There are two ways to access this api.
 The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ it will retrieve 
 all the journeys from the resource (*isochrones*).
 
-The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
+The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}>`_ .
 
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                                                                      |
@@ -829,64 +829,64 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 Main parameters
 ###############
 
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| Required | Name                  | Type      | Description                               | Default value   |
-+==========+=======================+===========+===========================================+=================+
-| nop      | from                  | id        | The id of the departure of your journey   |                 |
-|          |                       |           | If none are provided an isochrone is      |                 |
-|          |                       |           | computed                                  |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | to                    | id        | The id of the arrival of your journey     |                 |
-|          |                       |           | If none are provided an isochrone is      |                 |
-|          |                       |           | computed                                  |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| yep      | datetime              | datetime  | A `datetime`_                             |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | datetime_represents   | string    | Can be ``departure`` or ``arrival``.      | departure       |
-|          |                       |           |                                           |                 |
-|          |                       |           | If ``departure``, the request will        |                 |
-|          |                       |           | retrieve journeys starting after          |                 |
-|          |                       |           | datetime.                                 |                 |
-|          |                       |           |                                           |                 |
-|          |                       |           | If ``arrival`` it will retrieve journeys  |                 |
-|          |                       |           | arriving before datetime.                 |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | traveler_type         | enum      | Define speeds and accessibility values    | standard        |
-|          |                       |           | for different kind of people              |                 |
-|          |                       |           |                                           |                 |
-|          |                       |           | * standard                                |                 |
-|          |                       |           | * slow_walker                             |                 |
-|          |                       |           | * fast_walker                             |                 |
-|          |                       |           | * luggage                                 |                 |
-|          |                       |           | * wheelchair                              |                 |
-|          |                       |           |                                           |                 |
-|          |                       |           | Each profile also automatically           |                 |
-|          |                       |           | determines appropriate first and last     |                 |
-|          |                       |           | section modes to the covered area.        |                 |
-|          |                       |           | You can overload all parameters           |                 |
-|          |                       |           | (especially speeds, distances, first and  |                 |
-|          |                       |           | last modes) by setting all of them        |                 |
-|          |                       |           | specifically                              |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
-|          |                       |           | networks, etc.                            |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | data_freshness        | enum      | Define the freshness of data to use to    | base_schedule   |
-|          |                       |           | compute journeys                          |                 |
-|          |                       |           |                                           |                 |
-|          |                       |           | * real_time                               |                 |
-|          |                       |           | * base_schedule                           |                 |
-|          |                       |           |                                           |                 |
-|          |                       |           | when using the following parameter        |                 |
-|          |                       |           |      "&data_freshness=base_schedule"      |                 |
-|          |                       |           | you can get disrupted journeys in the     |                 |
-|          |                       |           | response.                                 |                 |
-|          |                       |           | You can then display the disruption       |                 |
-|          |                       |           | message to the traveler and make a        |                 |
-|          |                       |           | real_time request to get a new            |                 |
-|          |                       |           | undisrupted solution.                     |                 |
-|          |                       |           |                                           |                 |
-+----------+-----------------------+-----------+-------------------------------------------+-----------------+
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| Required | Name                  | Type             | Description                               | Default value   |
++==========+=======================+==================+===========================================+=================+
+| nop      | from                  | id               | The id of the departure of your journey   |                 |
+|          |                       |                  | If none are provided an isochrone is      |                 |
+|          |                       |                  | computed                                  |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| nop      | to                    | id               | The id of the arrival of your journey     |                 |
+|          |                       |                  | If none are provided an isochrone is      |                 |
+|          |                       |                  | computed                                  |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| yep      | datetime              | `iso-date-time`_ | Date and time to go                       |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| nop      | datetime_represents   | string           | Can be ``departure`` or ``arrival``.      | departure       |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | If ``departure``, the request will        |                 |
+|          |                       |                  | retrieve journeys starting after          |                 |
+|          |                       |                  | ``datetime``.                             |                 |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | If ``arrival`` it will retrieve journeys  |                 |
+|          |                       |                  | arriving before ``datetime``.             |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| nop      | traveler_type         | enum             | Define speeds and accessibility values    | standard        |
+|          |                       |                  | for different kind of people              |                 |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | * standard                                |                 |
+|          |                       |                  | * slow_walker                             |                 |
+|          |                       |                  | * fast_walker                             |                 |
+|          |                       |                  | * luggage                                 |                 |
+|          |                       |                  | * wheelchair                              |                 |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | Each profile also automatically           |                 |
+|          |                       |                  | determines appropriate first and last     |                 |
+|          |                       |                  | section modes to the covered area.        |                 |
+|          |                       |                  | You can overload all parameters           |                 |
+|          |                       |                  | (especially speeds, distances, first and  |                 |
+|          |                       |                  | last modes) by setting all of them        |                 |
+|          |                       |                  | specifically                              |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| nop      | forbidden_uris[]      | id               | If you want to avoid lines, modes,        |                 |
+|          |                       |                  | networks, etc.                            |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
+| nop      | data_freshness        | enum             | Define the freshness of data to use to    | base_schedule   |
+|          |                       |                  | compute journeys                          |                 |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | * real_time                               |                 |
+|          |                       |                  | * base_schedule                           |                 |
+|          |                       |                  |                                           |                 |
+|          |                       |                  | when using the following parameter        |                 |
+|          |                       |                  |      "&data_freshness=base_schedule"      |                 |
+|          |                       |                  | you can get disrupted journeys in the     |                 |
+|          |                       |                  | response.                                 |                 |
+|          |                       |                  | You can then display the disruption       |                 |
+|          |                       |                  | message to the traveler and make a        |                 |
+|          |                       |                  | real_time request to get a new            |                 |
+|          |                       |                  | undisrupted solution.                     |                 |
+|          |                       |                  |                                           |                 |
++----------+-----------------------+------------------+-------------------------------------------+-----------------+
 
 
 Other parameters
@@ -1229,27 +1229,27 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 Parameters
 ##########
 
-+----------+---------------------+-----------+------------------------------+---------------+
-| Required | Name                | Type      | Description                  | Default Value |
-+==========+=====================+===========+==============================+===============+
-| yep      | from_datetime       | datetime  | The date_time from           |               |
-|          |                     |           | which you want the schedules |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
-|          |                     |           | between from_datetime        |               |
-|          |                     |           | and the retrieved datetimes. |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | max_date_times      | int       | Maximum number of            |               |
-|          |                     |           | columns per                  |               |
-|          |                     |           | schedule.                    |               |
-+----------+---------------------+-----------+------------------------------+---------------+
-| nop      | data_freshness      | enum      | Define the freshness of data | base_schedule |
-|          |                     |           | to use                       |               |
-|          |                     |           |                              |               |
-|          |                     |           | * real_time                  |               |
-|          |                     |           | * base_schedule              |               |
-|          |                     |           |                              |               |
-+----------+---------------------+-----------+------------------------------+---------------+
++----------+---------------------+-------------------+------------------------------+---------------+
+| Required | Name                | Type              | Description                  | Default Value |
++==========+=====================+===================+==============================+===============+
+| yep      | from_datetime       | `iso-date-time`_  | The date_time from           |               |
+|          |                     |                   | which you want the schedules |               |
++----------+---------------------+-------------------+------------------------------+---------------+
+| nop      | duration            | int               | Maximum duration in seconds  | 86400         |
+|          |                     |                   | between from_datetime        |               |
+|          |                     |                   | and the retrieved datetimes. |               |
++----------+---------------------+-------------------+------------------------------+---------------+
+| nop      | max_date_times      | int               | Maximum number of            |               |
+|          |                     |                   | columns per                  |               |
+|          |                     |                   | schedule.                    |               |
++----------+---------------------+-------------------+------------------------------+---------------+
+| nop      | data_freshness      | enum              | Define the freshness of data | base_schedule |
+|          |                     |                   | to use                       |               |
+|          |                     |                   |                              |               |
+|          |                     |                   | * real_time                  |               |
+|          |                     |                   | * base_schedule              |               |
+|          |                     |                   |                              |               |
++----------+---------------------+-------------------+------------------------------+---------------+
 
 Objects
 #######
@@ -1321,23 +1321,23 @@ You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a
 Parameters
 ##########
 
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| Required | Name                | Type          | Description                           | Default Value |
-+==========+=====================+===============+=======================================+===============+
-| yep      | from_datetime       | `datetime`_   | The date_time from                    |               |
-|          |                     |               | which you want the schedules          |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
-|          |                     |               | between from_datetime                 |               |
-|          |                     |               | and the retrieved datetimes.          |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| nop      | data_freshness      | enum          | Define the freshness of data to use   | base_schedule |
-|          |                     |               | to compute journeys                   |               |
-|          |                     |               |                                       |               |
-|          |                     |               | * real_time                           |               |
-|          |                     |               | * base_schedule                       |               |
-|          |                     |               |                                       |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
++----------+---------------------+------------------+---------------------------------------+---------------+
+| Required | Name                | Type             | Description                           | Default Value |
++==========+=====================+==================+=======================================+===============+
+| yep      | from_datetime       | `iso-date-time`_ | The date_time from                    |               |
+|          |                     |                  | which you want the schedules          |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
+| nop      | duration            | int              | Maximum duration in seconds           | 86400         |
+|          |                     |                  | between from_datetime                 |               |
+|          |                     |                  | and the retrieved datetimes.          |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum             | Define the freshness of data to use   | base_schedule |
+|          |                     |                  | to compute journeys                   |               |
+|          |                     |                  |                                       |               |
+|          |                     |                  | * real_time                           |               |
+|          |                     |                  | * base_schedule                       |               |
+|          |                     |                  |                                       |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
 
 Stop_schedule object
 ####################
@@ -1360,23 +1360,23 @@ Departures are ordered chronologically in ascending order.
 Parameters
 ##########
 
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| Required | Name                | Type          | Description                           | Default Value |
-+==========+=====================+===============+=======================================+===============+
-| yep      | from_datetime       | `datetime`_   | The date_time from                    |               |
-|          |                     |               | which you want the schedules          |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| nop      | duration            | int           | Maximum duration in seconds           | 86400         |
-|          |                     |               | between from_datetime                 |               |
-|          |                     |               | and the retrieved datetimes.          |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
-| nop      | data_freshness      | enum          | Define the freshness of data to use   | real_time     |
-|          |                     |               | to compute journeys                   |               |
-|          |                     |               |                                       |               |
-|          |                     |               | * real_time                           |               |
-|          |                     |               | * base_schedule                       |               |
-|          |                     |               |                                       |               |
-+----------+---------------------+---------------+---------------------------------------+---------------+
++----------+---------------------+------------------+---------------------------------------+---------------+
+| Required | Name                | Type             | Description                           | Default Value |
++==========+=====================+==================+=======================================+===============+
+| yep      | from_datetime       | `iso-date-time`_ | The date_time from                    |               |
+|          |                     |                  | which you want the schedules          |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
+| nop      | duration            | int              | Maximum duration in seconds           | 86400         |
+|          |                     |                  | between from_datetime                 |               |
+|          |                     |                  | and the retrieved datetimes.          |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
+| nop      | data_freshness      | enum             | Define the freshness of data to use   | real_time     |
+|          |                     |                  | to compute journeys                   |               |
+|          |                     |                  |                                       |               |
+|          |                     |                  | * real_time                           |               |
+|          |                     |                  | * base_schedule                       |               |
+|          |                     |                  |                                       |               |
++----------+---------------------+------------------+---------------------------------------+---------------+
 
 Departure objects
 #################
