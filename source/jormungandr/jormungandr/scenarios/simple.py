@@ -225,7 +225,7 @@ class Scenario(object):
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request["filter"]
+        req.ptref.filter = request.get("filter", '')
         req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
