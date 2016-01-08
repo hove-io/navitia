@@ -1006,11 +1006,11 @@ ______________
 +---------------------+--------------------------+--------------------------------------------------------------+
 | nb_transfers        | int                      | Number of transfers in the journey                           |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| departure_date_time | `iso-date-time`_         | Departure date and time of the journey (ISO 8601)            |
+| departure_date_time | `iso-date-time`_         | Departure date and time of the journey                       |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| requested_date_time | `iso-date-time`_         | Requested date and time of the journey (ISO 8601)            |
+| requested_date_time | `iso-date-time`_         | Requested date and time of the journey                       |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| arrival_date_time   | `iso-date-time`_         | Arrival date and time of the journey (ISO 8601)              |
+| arrival_date_time   | `iso-date-time`_         | Arrival date and time of the journey                         |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | sections            | array of `section`_      | All the sections of the journey                              |
 +---------------------+--------------------------+--------------------------------------------------------------+
@@ -1982,9 +1982,9 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 +==========================+======================+================================+
 | additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
-| departure_date_time      | `iso-date-time`_     | An ISO 8601 date time          |
+| departure_date_time      | `iso-date-time`_     | A date time                    |
 +--------------------------+----------------------+--------------------------------+
-| arrival_date_time        | `iso-date-time`_     | An ISO 8601 date time          |
+| arrival_date_time        | `iso-date-time`_     | A date time                    |
 +--------------------------+----------------------+--------------------------------+
 | links                    | Array of link_       | internal links to notes        |
 +--------------------------+----------------------+--------------------------------+
@@ -2075,6 +2075,8 @@ Navitia manage every date or times as UTC date times. The web-service
 * can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
 
 For example: `<https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>`_
+
+There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down `<https://youtu.be/-5wpm-gesOY>`_
 
 Misc mechanisms (and few boring stuff)
 ======================================
