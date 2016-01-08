@@ -43,6 +43,7 @@ www.navitia.io
 #include "time_tables/thermometer.h"
 #include "vptranslator/block_pattern_to_pb.h"
 #include "routing/dataraptor.h"
+#include "ptreferential/ptreferential.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -59,6 +60,49 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
             pb_code->set_value(value);
         }
     }
+}
+
+
+static void fill_modes_for_stop_area(pbnavitia::StopArea* pb_sa,
+                                     const navitia::type::Type_e type_e,
+                                     const nt::Data& data,
+                                     const navitia::type::StopArea* stop_area,
+                                     int depth,
+                                     const pt::ptime& now,
+                                     const pt::time_period& action_period,
+                                     const bool show_codes) {
+    std::vector<navitia::type::idx_t> indexes;
+    try{
+        std::string request = "stop_area.uri=" + stop_area->uri;
+        indexes = ptref::make_query(type_e, request, data);
+    } catch(const ptref::parsing_error &parse_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_modes_from_stop_area, Unable to parse :" + parse_error.more);
+    } catch(const ptref::ptref_error &pt_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_modes_from_stop_area, " + pt_error.more);
+    }
+    switch (type_e) {
+        case navitia::type::Type_e::CommercialMode:
+            for(const navitia::type::idx_t idx: indexes){
+                navitia::type::CommercialMode* cm = data.pt_data->commercial_modes[idx];
+                fill_pb_object(cm, data, pb_sa->add_commercial_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+        case navitia::type::Type_e::PhysicalMode:
+            for(const navitia::type::idx_t idx: indexes){
+                navitia::type::PhysicalMode* pm = data.pt_data->physical_modes[idx];
+                fill_pb_object(pm, data, pb_sa->add_physical_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+         default:
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "fill_modes_from_stop_area, unkown type "
+                            << navitia::type::static_data::captionByType(type_e));
+            break;
+    }
+
 }
 
 static pbnavitia::ActiveStatus
@@ -408,20 +452,13 @@ void fill_pb_object(const nt::StopArea* sa,
                            depth-1, now, action_period);
         }
     }
+
     if (depth > 1) {
-        std::vector<nt::idx_t> indexes;
-        indexes = sa->get(navitia::type::Type_e::CommercialMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::CommercialMode* commercial_mode = data.pt_data->commercial_modes[idx];
-            fill_pb_object(commercial_mode, data, stop_area->add_commercial_modes(), 0, now, action_period,
-                           show_codes);
-        }
-        indexes = sa->get(navitia::type::Type_e::PhysicalMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::PhysicalMode* physical_mode = data.pt_data->physical_modes[idx];
-            fill_pb_object(physical_mode, data, stop_area->add_physical_modes(), 0, now, action_period,
-                           show_codes);
-        }
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
+                                 data, sa, 0, now, action_period, show_codes);
+
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::PhysicalMode,
+                                 data, sa, 0, now, action_period, show_codes);
     }
 
     fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);

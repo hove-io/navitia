@@ -93,6 +93,13 @@ struct data_set {
                                     {{10,20}, {20,20}, {40,50}}
                                    };
 
+        // Commercial modes
+        navitia::type::CommercialMode* cm = new navitia::type::CommercialMode();
+        cm->uri = "Commercial_mode:Car";
+        cm->name = "Car";
+        b.data->pt_data->commercial_modes.push_back(cm);
+        b.lines["line:A"]->commercial_mode = cm;
+
         for (auto r: b.lines["line:A"]->route_list) {
             r->shape = {
                 {{1,2}, {2,2}, {4,5}},

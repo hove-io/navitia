@@ -581,22 +581,6 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint: return indexes(this->stop_point_list);
-    case Type_e::CommercialMode:
-    case Type_e::PhysicalMode:{
-         std::set<idx_t> tmp_result;
-        for(const auto& stp: stop_point_list){
-            std::vector<idx_t> tmp = stp->get(type, data);
-            for(const idx_t idx: tmp){
-                tmp_result.insert(idx);
-            }
-        }
-        if(tmp_result.size() > 0){
-            for(const idx_t idx: tmp_result){
-                result.push_back(idx);
-            }
-        }
-    }
-        break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
 
     default: break;
@@ -650,7 +634,12 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
 std::vector<idx_t> Line::get(Type_e type, const PT_Data& data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::CommercialMode: result.push_back(commercial_mode->idx); break;
+    case Type_e::CommercialMode:
+        if (this->commercial_mode){
+            result.push_back(commercial_mode->idx);
+        }
+        break;
+    case Type_e::PhysicalMode: return indexes(physical_mode_list);
     case Type_e::Company: return indexes(company_list);
     case Type_e::Network: result.push_back(network->idx); break;
     case Type_e::Route: return indexes(route_list);
