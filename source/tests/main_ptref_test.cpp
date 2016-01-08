@@ -168,7 +168,6 @@ struct data_set {
         frame->contributor = contributor;
         contributor->frame_list.push_back(frame);
         b.data->pt_data->frames.push_back(frame);
-        //b.frames[frame->uri] = frame;
 
         //Link between frame and vehicle_journey
         vj = b.data->pt_data->vehicle_journeys.back();
