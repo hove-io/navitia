@@ -1006,11 +1006,11 @@ ______________
 +---------------------+--------------------------+--------------------------------------------------------------+
 | nb_transfers        | int                      | Number of transfers in the journey                           |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| departure_date_time | "YYYYMMDDThhmmss"        | Departure date and time of the journey (ISO 8601)            |
+| departure_date_time | `iso-date-time`_         | Departure date and time of the journey (ISO 8601)            |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| requested_date_time | "YYYYMMDDThhmmss"        | Requested date and time of the journey (ISO 8601)            |
+| requested_date_time | `iso-date-time`_         | Requested date and time of the journey (ISO 8601)            |
 +---------------------+--------------------------+--------------------------------------------------------------+
-| arrival_date_time   | "YYYYMMDDThhmmss"        | Arrival date and time of the journey (ISO 8601)              |
+| arrival_date_time   | `iso-date-time`_         | Arrival date and time of the journey (ISO 8601)              |
 +---------------------+--------------------------+--------------------------------------------------------------+
 | sections            | array of `section`_      | All the sections of the journey                              |
 +---------------------+--------------------------+--------------------------------------------------------------+
@@ -1135,9 +1135,9 @@ ______________
 +-------------------------+------------------------------------+----------------------------------------------------+
 | stop_date_times         | Array of stop_date_time_           | List of the stop times of this section             |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| departure_date_time     | "YYYYMMDDThhmmss"                  | Date and time of departure                         |
+| departure_date_time     | `iso-date-time`_                   | Date and time of departure                         |
 +-------------------------+------------------------------------+----------------------------------------------------+
-| arrival_date_time       | "YYYYMMDDThhmmss"                  | Date and time of arrival                           |
+| arrival_date_time       | `iso-date-time`_                   | Date and time of arrival                           |
 +-------------------------+------------------------------------+----------------------------------------------------+
 
 
@@ -1618,7 +1618,7 @@ disruption_id         string                                     for traceabilit
 severity              `severity`_                                gives some categorization element
 application_periods   array of `period`_                         dates where the current disruption is active
 messages              `message`_                                 text to provide to the traveler
-updated_at            "YYYYMMDDThhmmss"                          date_time of last modifications 
+updated_at            `iso-date-time`_                           date_time of last modifications 
 cause                 string                                     why is there such a disruption?
 ===================== ========================================== ===================================================
 
@@ -1962,8 +1962,8 @@ Period
 ===================== =============================================== ==============================================
 Field                 Type                                            Description
 ===================== =============================================== ==============================================
-begin                 "YYYYMMDDThhmmss"                               Beginning date and time of an activity period
-end                   "YYYYMMDDThhmmss"                               Closing date and time of an activity period
+begin                 `iso-date-time`_                                Beginning date and time of an activity period
+end                   `iso-date-time`_                                Closing date and time of an activity period
 ===================== =============================================== ==============================================
 
 
@@ -1982,9 +1982,9 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 +==========================+======================+================================+
 | additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
-| departure_date_time      | "YYYYMMDDThhmmss"    | An ISO 8601 date time          |
+| departure_date_time      | `iso-date-time`_     | An ISO 8601 date time          |
 +--------------------------+----------------------+--------------------------------+
-| arrival_date_time        | "YYYYMMDDThhmmss"    | An ISO 8601 date time          |
+| arrival_date_time        | `iso-date-time`_     | An ISO 8601 date time          |
 +--------------------------+----------------------+--------------------------------+
 | links                    | Array of link_       | internal links to notes        |
 +--------------------------+----------------------+--------------------------------+
@@ -2064,12 +2064,17 @@ See `interface`_ section.
 Special Parameters
 ******************
 
-.. _datetime:
+.. _iso-date-time:
 
-datetime
-########
+ISO-date-time
+#############
 
-A date time with the format YYYYMMDDThhmmss
+Navitia manage every date or times as UTC date times. The web-service 
+
+* exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
+* can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
+
+For example: `<https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>`_
 
 Misc mechanisms (and few boring stuff)
 ======================================
