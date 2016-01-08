@@ -148,6 +148,33 @@ struct data_set {
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
 
+        //contributor "c1" contains frame "f1"
+        navitia::type::Contributor* contributor = new navitia::type::Contributor();
+        contributor->idx = b.data->pt_data->contributors.size();
+        contributor->uri = "c1";
+        contributor->name = "name-c1";
+        contributor->website = "ws-c1";
+        contributor->license = "ls-c1";
+        b.data->pt_data->contributors.push_back(contributor);
+
+        navitia::type::Frame * frame = new navitia::type::Frame();
+        frame->idx = b.data->pt_data->frames.size();
+        frame->uri = "f1";
+        frame->name = "name-f1";
+        frame->desc = "desc-f1";
+        frame->system = "sys-f1";
+        frame->validation_period = period("20160101", "20161230");
+
+        frame->contributor = contributor;
+        contributor->frame_list.push_back(frame);
+        b.data->pt_data->frames.push_back(frame);
+        //b.frames[frame->uri] = frame;
+
+        //Link between frame and vehicle_journey
+        vj = b.data->pt_data->vehicle_journeys.back();
+        vj->frame = frame;
+        frame->vehiclejourney_list.push_back(vj);
+
         b.data->complete();
         b.data->build_raptor();
     }
