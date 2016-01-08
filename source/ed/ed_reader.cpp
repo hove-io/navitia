@@ -409,6 +409,7 @@ void EdReader::fill_frames(nt::Data& data, pqxx::work& work){
         frame->contributor = contributor_it->second;
         frame->idx = data.pt_data->frames.size();
 
+        frame->contributor->frame_list.push_back(frame);
         data.pt_data->frames.push_back(frame);
         this->frame_map[const_it["id"].as<idx_t>()] = frame;
     }
@@ -886,6 +887,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             auto frame_it = this->frame_map.find(const_it["frame_id"].as<idx_t>());
             if(frame_it != this->frame_map.end()) {
                 vj->frame = frame_it->second;
+                vj->frame->vehiclejourney_list.push_back(vj);
             }
         }
     }

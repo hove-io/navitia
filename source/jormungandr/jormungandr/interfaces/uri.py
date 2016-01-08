@@ -34,7 +34,8 @@ collections_to_resource_type = {
     "networks": "network", "commercial_modes": "commercial_mode",
     "physical_modes": "physical_mode", "companies": "company",
     "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
-    "addresses": "address", "coords": "coord", "trips": "trip"}
+    "addresses": "address", "coords": "coord", "trips": "trip", "contributors": "contributor",
+    "frames": "frame"}
 
 resource_type_to_collection = dict((resource_type, collection)
                                    for (collection, resource_type)
@@ -120,7 +121,7 @@ class Uri:
         resource_types = ["connections", "stop_points", "networks",
                           "commercial_modes", "physical_modes", "companies",
                           "stop_areas", "routes", "lines", "line_groups", "addresses",
-                          "administrative_regions", "coords", "pois", "trips"]
+                          "administrative_regions", "coords", "pois", "trips", "contributors", "frames"]
 
         return resource_type in resource_types
 

@@ -225,7 +225,7 @@ class Scenario(object):
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request["filter"]
+        req.ptref.filter = request.get("filter", '')
         req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
@@ -295,6 +295,12 @@ class Scenario(object):
 
     def disruptions(self, request, instance):
         return self.__on_ptref("impact", type_pb2.IMPACT, request, instance)
+
+    def contributors(self, request, instance):
+        return self.__on_ptref("contributors", type_pb2.CONTRIBUTOR, request, instance)
+
+    def frames(self, request, instance):
+        return self.__on_ptref("frames", type_pb2.FRAME, request, instance)
 
     def journeys(self, request, instance):
         raise NotImplementedError()

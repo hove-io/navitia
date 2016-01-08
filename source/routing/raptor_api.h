@@ -41,7 +41,7 @@ namespace navitia{
     namespace type{
         struct EntryPoint;
         struct AccessibiliteParams;
-        struct Data;
+        class Data;
     }
     namespace georef{
         struct StreetNetwork;

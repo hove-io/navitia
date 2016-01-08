@@ -51,6 +51,17 @@ from tyr.helper import get_instance_logger, get_named_arg
 from contextlib import contextmanager
 
 
+def unzip_if_needed(filename):
+    if not os.path.isdir(filename):
+        # if it's not a directory, we consider it's a zip, and we unzip it
+        working_directory = os.path.dirname(filename)
+        zip_file = zipfile.ZipFile(filename)
+        zip_file.extractall(path=working_directory)
+    else:
+        working_directory = filename
+    return working_directory
+
+
 def move_to_backupdirectory(filename, working_directory):
     """ If there is no backup directory it creates one in
         {instance_directory}/backup/{name}
@@ -127,10 +138,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance)
     try:
-        working_directory = os.path.dirname(filename)
-
-        zip_file = zipfile.ZipFile(filename)
-        zip_file.extractall(path=working_directory)
+        working_directory = unzip_if_needed(filename)
 
         params = ["-i", working_directory]
         if instance_config.aliases_file:
@@ -166,10 +174,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance)
     try:
-        working_directory = os.path.dirname(gtfs_filename)
-
-        zip_file = zipfile.ZipFile(gtfs_filename)
-        zip_file.extractall(path=working_directory)
+        working_directory = unzip_if_needed(gtfs_filename)
 
         params = ["-i", working_directory]
         if instance_config.aliases_file:
@@ -237,10 +242,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     instance = job.instance
     logger = get_instance_logger(instance)
     try:
-        working_directory = os.path.dirname(filename)
-
-        zip_file = zipfile.ZipFile(filename)
-        zip_file.extractall(path=working_directory)
+        working_directory = unzip_if_needed(filename)
 
         connection_string = make_connection_string(instance_config)
         res = None
@@ -266,10 +268,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     instance = job.instance
     logger = get_instance_logger(instance)
     try:
-        working_directory = os.path.dirname(filename)
-
-        zip_file = zipfile.ZipFile(filename)
-        zip_file.extractall(path=working_directory)
+        working_directory = unzip_if_needed(filename)
 
         connection_string = make_connection_string(instance_config)
         res = None
@@ -462,6 +461,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         models.db.session.commit()
         raise
 
+
 @celery.task(bind=True)
 @Lock(timeout=10*60)
 def fare2ed(self, instance_config, filename, job_id, dataset_uid):
@@ -472,10 +472,8 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance)
     try:
-        working_directory = os.path.dirname(filename)
 
-        zip_file = zipfile.ZipFile(filename)
-        zip_file.extractall(path=working_directory)
+        working_directory = unzip_if_needed(filename)
 
         res = launch_exec("fare2ed", ['-f', working_directory,
                                       '--connection-string',

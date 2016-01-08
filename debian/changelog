@@ -1,3 +1,20 @@
+navitia2 (1.33.0) unstable; urgency=low
+
+  * Doc: Readme schemas  <https://github.com/CanalTP/navitia/pull/1359>
+  * Jormun: in some random case "filter" seem to not be set  <https://github.com/CanalTP/navitia/pull/1358>
+  * Ptref: Fix modes on stop area  <https://github.com/CanalTP/navitia/pull/1353>
+  * Ptref: Feature navp 445 contributor frame in ptref and json  <https://github.com/CanalTP/navitia/pull/1356>
+  * Doc: Update integration.rst  <https://github.com/CanalTP/navitia/pull/1343>
+  * Georef: fix ambiguity on nearest_addr when we have equal ways  <https://github.com/CanalTP/navitia/pull/1357>
+  * Jormungandr: add a too long waiting filter in new_default  <https://github.com/CanalTP/navitia/pull/1355>
+  * Tyr: geopal and poi types were not handled without the zips  <https://github.com/CanalTP/navitia/pull/1354>
+  * Georef: crowfly length with speed_factor bug fix  <https://github.com/CanalTP/navitia/pull/1347>
+  * Stat manager: Token Informations added in protobuf message.  <https://github.com/CanalTP/navitia/pull/1351>
+  * Tyr: update default value in a migration  <https://github.com/CanalTP/navitia/pull/1350>
+  * Tyr: handle raw files or zips  <https://github.com/CanalTP/navitia/pull/1349>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 08 Jan 2016 18:01:33 +0100
+
 navitia2 (1.32.0) unstable; urgency=low
 
   * All: UTC offsets are now associated to trips  <https://github.com/CanalTP/navitia/pull/1345>

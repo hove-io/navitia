@@ -93,6 +93,13 @@ struct data_set {
                                     {{10,20}, {20,20}, {40,50}}
                                    };
 
+        // Commercial modes
+        navitia::type::CommercialMode* cm = new navitia::type::CommercialMode();
+        cm->uri = "Commercial_mode:Car";
+        cm->name = "Car";
+        b.data->pt_data->commercial_modes.push_back(cm);
+        b.lines["line:A"]->commercial_mode = cm;
+
         for (auto r: b.lines["line:A"]->route_list) {
             r->shape = {
                 {{1,2}, {2,2}, {4,5}},
@@ -147,6 +154,32 @@ struct data_set {
         b.lines["line:A"]->line_group_list.push_back(lg);
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
+
+        //contributor "c1" contains frame "f1"
+        navitia::type::Contributor* contributor = new navitia::type::Contributor();
+        contributor->idx = b.data->pt_data->contributors.size();
+        contributor->uri = "c1";
+        contributor->name = "name-c1";
+        contributor->website = "ws-c1";
+        contributor->license = "ls-c1";
+        b.data->pt_data->contributors.push_back(contributor);
+
+        navitia::type::Frame * frame = new navitia::type::Frame();
+        frame->idx = b.data->pt_data->frames.size();
+        frame->uri = "f1";
+        frame->name = "name-f1";
+        frame->desc = "desc-f1";
+        frame->system = "sys-f1";
+        frame->validation_period = period("20160101", "20161230");
+
+        frame->contributor = contributor;
+        contributor->frame_list.push_back(frame);
+        b.data->pt_data->frames.push_back(frame);
+
+        //Link between frame and vehicle_journey
+        vj = b.data->pt_data->vehicle_journeys.back();
+        vj->frame = frame;
+        frame->vehiclejourney_list.push_back(vj);
 
         b.data->complete();
         b.data->build_raptor();

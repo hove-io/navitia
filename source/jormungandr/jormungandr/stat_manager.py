@@ -180,22 +180,25 @@ class StatManager(object):
 
     def fill_request(self, stat_request, call_result):
         """
-        Remplir requests
+        fill stat requests message (protobuf)
         """
         dt = datetime.utcnow()
         stat_request.request_date = int(time.mktime(dt.timetuple()))
         # Note: for stat we don't want to abort if no token has been
         # given (it's up to the authentication process)
-        user = get_user(token=get_token(), abort_if_no_token=False)
+        token = get_token()
+        user = get_user(token=token, abort_if_no_token=False)
+
         if user is not None:
             stat_request.user_id = user.id
             stat_request.user_name = user.login
             if user.end_point_id:
                 stat_request.end_point_id = user.end_point_id
                 stat_request.end_point_name = user.end_point.name
-
+        if (token is not None):
+            stat_request.token = token
         stat_request.application_id = -1
-        app_name = get_app_name(get_token())
+        app_name = get_app_name(token)
         if app_name:
             stat_request.application_name = app_name
         else:

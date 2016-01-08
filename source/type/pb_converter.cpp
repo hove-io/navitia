@@ -43,9 +43,11 @@ www.navitia.io
 #include "time_tables/thermometer.h"
 #include "vptranslator/block_pattern_to_pb.h"
 #include "routing/dataraptor.h"
+#include "ptreferential/ptreferential.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
+namespace gd = boost::gregorian;
 
 namespace navitia {
 
@@ -58,6 +60,49 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
             pb_code->set_value(value);
         }
     }
+}
+
+
+static void fill_modes_for_stop_area(pbnavitia::StopArea* pb_sa,
+                                     const navitia::type::Type_e type_e,
+                                     const nt::Data& data,
+                                     const navitia::type::StopArea* stop_area,
+                                     int depth,
+                                     const pt::ptime& now,
+                                     const pt::time_period& action_period,
+                                     const bool show_codes) {
+    std::vector<navitia::type::idx_t> indexes;
+    try{
+        std::string request = "stop_area.uri=" + stop_area->uri;
+        indexes = ptref::make_query(type_e, request, data);
+    } catch(const ptref::parsing_error &parse_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_modes_from_stop_area, Unable to parse :" + parse_error.more);
+    } catch(const ptref::ptref_error &pt_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "fill_modes_from_stop_area, " + pt_error.more);
+    }
+    switch (type_e) {
+        case navitia::type::Type_e::CommercialMode:
+            for(const navitia::type::idx_t idx: indexes){
+                navitia::type::CommercialMode* cm = data.pt_data->commercial_modes[idx];
+                fill_pb_object(cm, data, pb_sa->add_commercial_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+        case navitia::type::Type_e::PhysicalMode:
+            for(const navitia::type::idx_t idx: indexes){
+                navitia::type::PhysicalMode* pm = data.pt_data->physical_modes[idx];
+                fill_pb_object(pm, data, pb_sa->add_physical_modes(), depth, now, action_period,
+                                           show_codes);
+            }
+            break;
+         default:
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "fill_modes_from_stop_area, unkown type "
+                            << navitia::type::static_data::captionByType(type_e));
+            break;
+    }
+
 }
 
 static pbnavitia::ActiveStatus
@@ -334,15 +379,51 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
     }
 }
 
-void fill_pb_object(const nt::Contributor*,
-                    const nt::Data& , pbnavitia::Contributor* ,
+void fill_pb_object(const nt::Contributor* cb,
+                    const nt::Data& , pbnavitia::Contributor* contributor,
                     int , const pt::ptime& ,
-                    const pt::time_period& , const bool, const DumpMessage) {}
+                    const pt::time_period& , const bool, const DumpMessage) {
+    if(cb == nullptr)
+        return;
+    contributor->set_uri(cb->uri);
+    contributor->set_name(cb->name);
+    contributor->set_license(cb->license);
+    contributor->set_website(cb->website);
+}
 
-void fill_pb_object(const nt::Frame*,
-                    const nt::Data& , pbnavitia::Frame* ,
-                    int , const pt::ptime& ,
-                    const pt::time_period& , const bool, const DumpMessage){}
+void fill_pb_object(const nt::Frame* fr,
+                    const nt::Data& data, pbnavitia::Frame* frame,
+                    int depth, const pt::ptime&  now,
+                    const pt::time_period& action_period,
+                    const bool show_codes, const DumpMessage dump_message){
+    if(fr == nullptr)
+        return;
+    frame->set_uri(fr->uri);
+    pt::time_duration td = pt::time_duration(0, 0, 0, 0);
+    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
+    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
+    frame->set_desc(fr->desc);
+    frame->set_system(fr->system);
+
+    switch (fr->realtime_level){
+        case nt::RTLevel::Base:
+        frame->set_realtime_level(pbnavitia::BASE);
+        break;
+    case nt::RTLevel::Adapted:
+        frame->set_realtime_level(pbnavitia::ADAPTED);
+        break;
+    case nt::RTLevel::RealTime:
+        frame->set_realtime_level(pbnavitia::REAL_TIME);
+        break;
+    default:
+        break;
+    }
+
+    if(fr->contributor != nullptr) {
+        fill_pb_object(fr->contributor, data, frame->mutable_contributor(), depth-1,
+                      now, action_period, show_codes, dump_message);
+    }
+}
 
 void fill_pb_object(const nt::StopArea* sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
@@ -371,20 +452,13 @@ void fill_pb_object(const nt::StopArea* sa,
                            depth-1, now, action_period);
         }
     }
+
     if (depth > 1) {
-        std::vector<nt::idx_t> indexes;
-        indexes = sa->get(navitia::type::Type_e::CommercialMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::CommercialMode* commercial_mode = data.pt_data->commercial_modes[idx];
-            fill_pb_object(commercial_mode, data, stop_area->add_commercial_modes(), 0, now, action_period,
-                           show_codes);
-        }
-        indexes = sa->get(navitia::type::Type_e::PhysicalMode, *(data.pt_data));
-        for (const nt::idx_t idx : indexes) {
-            nt::PhysicalMode* physical_mode = data.pt_data->physical_modes[idx];
-            fill_pb_object(physical_mode, data, stop_area->add_physical_modes(), 0, now, action_period,
-                           show_codes);
-        }
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
+                                 data, sa, 0, now, action_period, show_codes);
+
+        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::PhysicalMode,
+                                 data, sa, 0, now, action_period, show_codes);
     }
 
     fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
@@ -1271,7 +1345,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
             finalize_section(section, last_item, item, data, session_departure, depth, now, action_period);
             session_departure += bt::seconds(section->duration());
 
-            //and be create a new one
+            //and we create a new one
             section = create_section(response, pb_journey, item, data, depth, now, action_period);
         }
 
@@ -1310,8 +1384,8 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
 
     pbnavitia::PathItem* path_item = sn->add_path_items();
     path_item->set_name(data.geo_ref->ways[item.way_idx]->name);
-    path_item->set_length(item.get_length());
-    path_item->set_duration(item.duration.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
+    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
+    path_item->set_duration(item.duration.total_seconds());
     path_item->set_direction(item.angle);
 
     //we add each path item coordinate to the global coordinate list
