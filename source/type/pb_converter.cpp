@@ -63,7 +63,7 @@ static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
 }
 
 template<typename PB>
-static void fill_object_from_pterf(PB* pb,
+static void fill_object_from_ptref(PB* pb,
                                    const navitia::type::Type_e type_e,
                                    const nt::Data& data,
                                    std::string& request,
@@ -454,10 +454,10 @@ void fill_pb_object(const nt::StopArea* sa,
 
     if (depth > 1) {
         std::string request = "stop_area.uri=" + sa->uri;
-        fill_object_from_pterf(stop_area, navitia::type::Type_e::CommercialMode,
+        fill_object_from_ptref(stop_area, navitia::type::Type_e::CommercialMode,
                                data, request, 0, now, action_period, show_codes);
 
-        fill_object_from_pterf(stop_area, navitia::type::Type_e::PhysicalMode,
+        fill_object_from_ptref(stop_area, navitia::type::Type_e::PhysicalMode,
                                data, request, 0, now, action_period, show_codes);
     }
 
