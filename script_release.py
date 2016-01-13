@@ -92,6 +92,7 @@ class ReleaseManager:
             parent = "release"
 
         self.git.checkout(parent)
+        self.git.submodule('update')
 
         print "current branch {}".format(self.repo.active_branch)
 
@@ -236,6 +237,7 @@ class ReleaseManager:
 
     def publish_release(self, temp_branch):
         self.git.checkout("release")
+        self.git.submodule('update')
         #merge with the release branch
         self.git.merge(temp_branch, "release", '--no-ff')
 
@@ -257,7 +259,7 @@ class ReleaseManager:
         print "publishing the release"
 
         print "Check the release, you will probably want to merge release in dev:"
-        print "  git checkout dev"
+        print "  git checkout dev; git submodule update"
         print "  git merge release"
         print "And when you're happy do:"
         print "  git push {} release dev --tags".format(self.remote_name)
