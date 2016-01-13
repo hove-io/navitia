@@ -1,4 +1,5 @@
 .. image:: documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png
+    :alt: navitia
     :align: center 
 
 ``(pronounce [navi-sia])``
