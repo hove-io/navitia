@@ -34,6 +34,85 @@ www.navitia.io
 #include "type/response.pb.h"
 #include "type/pt_data.h"
 
+namespace pt = boost::posix_time;
+
+// we don't use a boolean to have a more type checks
+enum class DumpMessage {
+    Yes,
+    No
+};
+
+#define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
+
+//*********************************************
+
+using house_number_coord = std::pair<int, navitia::type::GeographicalCoord>;
+using way_name = std::pair<const navitia::georef::Way*, const std::string>;
+using way_pair = std::pair<const navitia::georef::Way*, house_number_coord>;
+using way_pair_name = std::pair<way_name, house_number_coord>;
+
+namespace ProtoCreator {
+struct PbCreator {
+    const nt::Data& data;
+    const pt::ptime now;
+    const pt::time_period action_period;
+    const bool show_codes;
+    PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period, const bool show_codes):
+        data(data), now(now), action_period(action_period),show_codes(show_codes) {}
+    template<typename N, typename P>
+    void fill(int depth, const DumpMessage dump_message, const N* item, P * proto) {
+        Filler(depth, dump_message, *this).filler_pb_object(item, proto);
+    }
+
+private:
+    struct Filler {
+        int depth;
+        const DumpMessage dump_message;
+        PbCreator & pb_creator;
+        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator):
+            depth(depth), dump_message(dump_message), pb_creator(pb_creator){};
+
+        Filler copy_depth_decr();
+        template<typename NAV, typename PB>
+        void fill(const NAV* nav_object, PB* pb_object) {
+            copy_depth_decr().filler_pb_object(nav_object, pb_object);
+        }
+
+        void filler_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
+        void filler_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);
+        void filler_pb_object(const navitia::type::StopArea*, pbnavitia::StopArea*);
+        void filler_pb_object(const navitia::type::StopPoint*, pbnavitia::StopPoint*);
+        void filler_pb_object(const navitia::type::Company*, pbnavitia::Company*);
+        void filler_pb_object(const navitia::type::Network*, pbnavitia::Network*);
+        void filler_pb_object(const navitia::type::PhysicalMode*, pbnavitia::PhysicalMode*);
+        void filler_pb_object(const navitia::type::CommercialMode*, pbnavitia::CommercialMode*);
+        void filler_pb_object(const navitia::type::Line*, pbnavitia::Line*);
+        void filler_pb_object(const navitia::type::Route*, pbnavitia::Route*);
+        void filler_pb_object(const navitia::type::LineGroup*, pbnavitia::LineGroup*);
+        void filler_pb_object(const navitia::type::Calendar*, pbnavitia::Calendar*);
+        void filler_pb_object(const navitia::type::ValidityPattern*, pbnavitia::ValidityPattern*);
+        void filler_pb_object(const navitia::type::VehicleJourney*, pbnavitia::VehicleJourney*);
+        void filler_pb_object(const navitia::georef::Admin*, pbnavitia::AdministrativeRegion*);
+        void filler_pb_object(const navitia::type::ExceptionDate*, pbnavitia::CalendarException*);
+        void filler_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
+        void filler_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
+        void filler_pb_object(const way_pair*, pbnavitia::Address*);
+        void filler_pb_object(const way_pair_name*, pbnavitia::Address*);
+    };
+};
+
+template<typename N, typename P>
+void fill_pb_object(const N* item, const navitia::type::Data& data, P * proto, int depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false, const DumpMessage dump_message = DumpMessage::Yes) {
+    PbCreator creator(data, now, action_period, show_codes);
+    creator.fill(depth, dump_message, item, proto);
+}
+
+}
+
+//*********************************************
 //forward declare
 namespace navitia {
     namespace routing {
@@ -58,15 +137,9 @@ namespace navitia {
         struct Thermometer;
     }
 }
-namespace pt = boost::posix_time;
 
-// we don't use a boolean to have a more type checks
-enum class DumpMessage {
-    Yes,
-    No
-};
 
-#define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
+
 
 namespace navitia {
 

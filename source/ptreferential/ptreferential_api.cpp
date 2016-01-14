@@ -37,6 +37,7 @@ www.navitia.io
 #include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
+namespace pc = ProtoCreator;
 
 namespace navitia{ namespace ptref{
 
@@ -51,7 +52,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
     for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:
-            fill_pb_object(data.pt_data->validity_patterns[idx], data,
+            pc::fill_pb_object(data.pt_data->validity_patterns[idx], data,
                            result.add_validity_patterns(), depth, current_time, action_period);
             break;
         case Type_e::Line:
@@ -79,11 +80,11 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            result.add_networks(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::PhysicalMode:
-            fill_pb_object(data.pt_data->physical_modes[idx], data,
+            pc::fill_pb_object(data.pt_data->physical_modes[idx], data,
                            result.add_physical_modes(), depth, current_time, action_period);
             break;
         case Type_e::CommercialMode:
-            fill_pb_object(data.pt_data->commercial_modes[idx], data,
+            pc::fill_pb_object(data.pt_data->commercial_modes[idx], data,
                            result.add_commercial_modes(), depth, current_time, action_period);
             break;
         case Type_e::JourneyPatternPoint:
@@ -91,7 +92,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            result.add_journey_pattern_points(), depth, current_time, action_period);
             break;
         case Type_e::Company:
-            fill_pb_object(data.pt_data->companies[idx], data,
+            pc::fill_pb_object(data.pt_data->companies[idx], data,
                            result.add_companies(), depth, current_time, action_period);
             break;
         case Type_e::Route:
@@ -115,7 +116,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            result.add_vehicle_journeys(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::Calendar:
-            fill_pb_object(data.pt_data->calendars[idx], data,
+            pc::fill_pb_object(data.pt_data->calendars[idx], data,
                            result.add_calendars(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::MetaVehicleJourney:
@@ -128,11 +129,11 @@ static pbnavitia::Response extract_data(const type::Data& data,
             break;
         }
         case Type_e::Contributor:
-            fill_pb_object(data.pt_data->contributors[idx], data,
+            pc::fill_pb_object(data.pt_data->contributors[idx], data,
                            result.add_contributors(), depth, current_time, action_period);
             break;
         case Type_e::Frame:
-            fill_pb_object(data.pt_data->frames[idx], data,
+            pc::fill_pb_object(data.pt_data->frames[idx], data,
                            result.add_frames(), depth, current_time, action_period);
             break;
         default: break;

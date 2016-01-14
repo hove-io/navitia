@@ -49,6 +49,538 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace gd = boost::gregorian;
 
+//*********************************************
+namespace ProtoCreator{
+
+template<typename NT, typename PB>
+static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
+    for (const auto& code: data.pt_data->codes.get_codes(nt)) {
+        for (const auto& value: code.second) {
+            auto* pb_code = pb->add_codes();
+            pb_code->set_type(code.first);
+            pb_code->set_value(value);
+        }
+    }
+}
+
+static void fill_property(const std::string& name,
+                          const std::string& value,
+                          pbnavitia::Property* property) {
+    property->set_name(name);
+    property->set_value(value);
+}
+
+PbCreator::Filler PbCreator::Filler::copy_depth_decr(){
+    if (depth == 0) {
+        return PbCreator::Filler(0,dump_message, pb_creator);
+    }
+    return PbCreator::Filler(depth-1,dump_message, pb_creator);
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
+    if(cb == nullptr)
+        return;
+    contrib->set_uri(cb->uri);
+    contrib->set_name(cb->name);
+    contrib->set_license(cb->license);
+    contrib->set_website(cb->website);
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Frame* fr, pbnavitia::Frame* frame){
+    if(fr == nullptr)
+        return;
+    frame->set_uri(fr->uri);
+    pt::time_duration td = pt::time_duration(0, 0, 0, 0);
+    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
+    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
+    frame->set_desc(fr->desc);
+    frame->set_system(fr->system);
+
+    switch (fr->realtime_level){
+        case nt::RTLevel::Base:
+        frame->set_realtime_level(pbnavitia::BASE);
+        break;
+    case nt::RTLevel::Adapted:
+        frame->set_realtime_level(pbnavitia::ADAPTED);
+        break;
+    case nt::RTLevel::RealTime:
+        frame->set_realtime_level(pbnavitia::REAL_TIME);
+        break;
+    default:
+        break;
+    }
+    fill(fr->contributor, frame->mutable_contributor());
+}
+
+void PbCreator::Filler::filler_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
+    if(sa == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+    stop_area->set_uri(sa->uri);
+    stop_area->set_name(sa->name);
+    stop_area->set_label(sa->label);
+    stop_area->set_timezone(sa->timezone);
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(sa)) {
+        auto com = stop_area->add_comments();
+        com->set_value(comment);
+        com->set_type("standard");
+    }
+    if(sa->coord.is_initialized()) {
+        stop_area->mutable_coord()->set_lon(sa->coord.lon());
+        stop_area->mutable_coord()->set_lat(sa->coord.lat());
+    }
+    if(new_depth > 0){
+        for(navitia::georef::Admin* adm : sa->admin_list){
+            fill(adm, stop_area->add_administrative_regions());
+        }
+    }
+
+//    if (new_depth > 1) {
+//        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
+//                                 data, sa, 0, now, action_period, show_codes);
+
+//        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::PhysicalMode,
+//                                 data, sa, 0, now, action_period, show_codes);
+//    }
+
+//    fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
+    if (pb_creator.show_codes) { fill_codes(sa, pb_creator.data, stop_area); }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
+    if(adm == nullptr)
+        return ;
+    admin->set_name(adm->name);
+    admin->set_uri(adm->uri);
+    admin->set_label(adm->label);
+    admin->set_zip_code(adm->postal_codes_to_string());
+    admin->set_level(adm->level);
+    if(adm->coord.is_initialized()) {
+        admin->mutable_coord()->set_lat(adm->coord.lat());
+        admin->mutable_coord()->set_lon(adm->coord.lon());
+    }
+    if(!adm->insee.empty()){
+        admin->set_insee(adm->insee);
+    }
+}
+
+void PbCreator::Filler::filler_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
+    if(sp == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+    stop_point->set_uri(sp->uri);
+    stop_point->set_name(sp->name);
+    stop_point->set_label(sp->label);
+    if(!sp->platform_code.empty()) {
+        stop_point->set_platform_code(sp->platform_code);
+    }
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(sp)) {
+        auto com = stop_point->add_comments();
+        com->set_value(comment);
+        com->set_type("standard");
+    }
+    if(sp->coord.is_initialized()) {
+        stop_point->mutable_coord()->set_lon(sp->coord.lon());
+        stop_point->mutable_coord()->set_lat(sp->coord.lat());
+    }
+
+    pbnavitia::hasEquipments* has_equipments =  stop_point->mutable_has_equipments();
+    if (sp->wheelchair_boarding()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_boarding);
+    }
+    if (sp->sheltered()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_sheltered);
+    }
+    if (sp->elevator()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_elevator);
+    }
+    if (sp->escalator()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_escalator);
+    }
+    if (sp->bike_accepted()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_accepted);
+    }
+    if (sp->bike_depot()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_depot);
+    }
+    if (sp->visual_announcement()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_visual_announcement);
+    }
+    if (sp->audible_announcement()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_audible_announcement);
+    }
+    if (sp->appropriate_escort()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_escort);
+    }
+    if (sp->appropriate_signage()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
+    }
+    if(new_depth > 0){
+        for(navitia::georef::Admin* adm : sp->admin_list){
+            fill(adm, stop_point->add_administrative_regions());
+        }
+    }
+    if(new_depth > 2){
+        fill(&sp->coord, stop_point->mutable_address());
+    }
+
+    if(new_depth > 0)
+        fill(sp->stop_area, stop_point->mutable_stop_area());
+
+//    fill_messages(sp, data, stop_point, max_depth-1, now, action_period, show_codes, dump_message);
+    if (pb_creator.show_codes) { fill_codes(sp, pb_creator.data, stop_point); }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
+    if(c == nullptr)
+        return ;
+
+    company->set_name(c->name);
+    company->set_uri(c->uri);
+
+    if (pb_creator.show_codes) { fill_codes(c, pb_creator.data, company); }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Network* n,
+                                         pbnavitia::Network* network){
+    if(n == nullptr)
+        return ;
+
+    network->set_name(n->name);
+    network->set_uri(n->uri);
+
+//    fill_messages(n, data, network, max_depth-1, now, action_period, show_codes, dump_message);
+    if (pb_creator.show_codes) { fill_codes(n, pb_creator.data, network); }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::PhysicalMode* m,
+                                         pbnavitia::PhysicalMode* physical_mode){
+    if(m == nullptr)
+        return ;
+
+    physical_mode->set_name(m->name);
+    physical_mode->set_uri(m->uri);
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::CommercialMode* m,
+                      pbnavitia::CommercialMode* commercial_mode){
+    if(m == nullptr)
+        return ;
+
+    commercial_mode->set_name(m->name);
+    commercial_mode->set_uri(m->uri);
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
+    if(l == nullptr)
+        return ;
+
+    int new_depth = (depth <= 3) ? depth : 3;
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(l)) {
+        auto com = line->add_comments();
+        com->set_value(comment);
+        com->set_type("standard");
+    }
+    if(l->code != "")
+        line->set_code(l->code);
+    if(l->color != "")
+        line->set_color(l->color);
+
+    if(! l->text_color.empty())
+        line->set_text_color(l->text_color);
+
+    line->set_name(l->name);
+    line->set_uri(l->uri);
+    if (l->opening_time) {
+        line->set_opening_time((*l->opening_time).total_seconds());
+    }
+    if (l->closing_time) {
+        line->set_closing_time((*l->closing_time).total_seconds());
+    }
+
+
+    if (new_depth > 0) {
+        fill(&l->shape, line->mutable_geojson());
+
+        for(auto route : l->route_list) {
+            fill(route, line->add_routes());
+        }
+        for(auto physical_mode : l->physical_mode_list){
+            fill(physical_mode, line->add_physical_modes());
+        }
+
+        fill(l->commercial_mode, line->mutable_commercial_mode());
+        fill(l->network, line->mutable_network());
+
+        for(const auto& line_group : l->line_group_list) {
+            fill(line_group, line->add_line_groups());
+        }
+    }
+
+//    fill_messages(l, data, line, max_depth-1, now, action_period, show_codes, dump_message);
+
+    if (pb_creator.show_codes) { fill_codes(l, pb_creator.data, line); }
+
+    for(auto property : l->properties) {
+        fill_property(property.first, property.second, line->add_properties());
+    }
+
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
+    if(r == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+
+    route->set_name(r->name);
+    route->set_direction_type(r->direction_type);
+
+//    if (r->destination != nullptr){
+//        fill_pb_placemark(r->destination, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
+//    }
+
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(r)) {
+        auto com = route->add_comments();
+        com->set_value(comment);
+        com->set_type("standard");
+    }
+
+    route->set_uri(r->uri);
+
+//    fill_messages(r, data, route, max_depth-1, now, action_period, show_codes, dump_message);
+
+    if (pb_creator.show_codes) { fill_codes(r, pb_creator.data, route); }
+
+    if (new_depth == 0) { return; }
+
+    fill(r->line, route->mutable_line());
+
+    fill(&r->shape, route->mutable_geojson());
+
+    auto thermometer = navitia::timetables::Thermometer();
+    thermometer.generate_thermometer(r);
+    if (new_depth>2) {
+        for(auto idx : thermometer.get_thermometer()) {
+            auto stop_point = pb_creator.data.pt_data->stop_points[idx];
+            fill(stop_point, route->add_stop_points());
+        }
+        std::set<const nt::PhysicalMode*> physical_modes;
+        r->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                physical_modes.insert(vj.physical_mode);
+                return true;
+            });
+        //Attention : here depth should be 0
+        for (auto physical_mode : physical_modes) {
+            fill(physical_mode, route->add_physical_modes());
+        }
+    }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::LineGroup* lg,
+                                         pbnavitia::LineGroup* line_group){
+    if(lg == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+
+    line_group->set_name(lg->name);
+    line_group->set_uri(lg->uri);
+
+    if(new_depth > 0) {
+        for(const auto& line : lg->line_list) {
+            fill(line, line_group->add_lines());
+        }
+        //Attention: Here we pass depth = 0
+        fill(lg->main_line, line_group->mutable_main_line());
+
+        for (const auto& comment: pb_creator.data.pt_data->comments.get(lg)) {
+            auto com = line_group->add_comments();
+            com->set_value(comment);
+            com->set_type("standard");
+        }
+    }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
+    pb_cal->set_uri(cal->uri);
+    pb_cal->set_name(cal->name);
+    auto vp = pb_cal->mutable_validity_pattern();
+    vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
+    std::string vp_str = cal->validity_pattern.str();
+    std::reverse(vp_str.begin(), vp_str.end());
+    vp->set_days(vp_str);
+    auto week = pb_cal->mutable_week_pattern();
+    week->set_monday(cal->week_pattern[navitia::Monday]);
+    week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
+    week->set_wednesday(cal->week_pattern[navitia::Wednesday]);
+    week->set_thursday(cal->week_pattern[navitia::Thursday]);
+    week->set_friday(cal->week_pattern[navitia::Friday]);
+    week->set_saturday(cal->week_pattern[navitia::Saturday]);
+    week->set_sunday(cal->week_pattern[navitia::Sunday]);
+
+    for (const auto& p: cal->active_periods) {
+        auto pb_period = pb_cal->add_active_periods();
+        pb_period->set_begin(boost::gregorian::to_iso_string(p.begin()));
+        pb_period->set_end(boost::gregorian::to_iso_string(p.end()));
+    }
+
+    for (const auto& excep: cal->exceptions) {
+        fill(&excep, pb_cal->add_exceptions());
+    }
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::ExceptionDate* exception_date,
+                                         pbnavitia::CalendarException* calendar_exception){
+    pbnavitia::ExceptionType type;
+    switch (exception_date->type) {
+    case nt::ExceptionDate::ExceptionType::add:
+        type = pbnavitia::Add;
+        break;
+    case nt::ExceptionDate::ExceptionType::sub:
+        type = pbnavitia::Remove;
+        break;
+    default:
+        throw navitia::exception("exception date case not handled");
+    }
+    calendar_exception->set_uri("exception:" + std::to_string(type) +
+                                boost::gregorian::to_iso_string(exception_date->date));
+    calendar_exception->set_type(type);
+    calendar_exception->set_date(boost::gregorian::to_iso_string(exception_date->date));
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::ValidityPattern* vp,
+                                         pbnavitia::ValidityPattern* validity_pattern){
+    if(vp == nullptr)
+        return;
+    auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
+    validity_pattern->set_beginning_date(vp_string);
+    validity_pattern->set_days(vp->days.to_string());
+}
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::VehicleJourney* vj,
+                                         pbnavitia::VehicleJourney* vehicle_journey){
+    if (vj == nullptr) { return; }
+    int new_depth = (depth <= 3) ? depth : 3;
+
+    vehicle_journey->set_name(vj->name);
+    vehicle_journey->set_uri(vj->uri);
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(vj)) {
+        auto com = vehicle_journey->add_comments();
+        com->set_value(comment);
+        com->set_type("standard");
+    }
+    vehicle_journey->set_odt_message(vj->odt_message);
+    vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
+
+    vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
+    vehicle_journey->set_bike_accepted(vj->bike_accepted());
+    vehicle_journey->set_air_conditioned(vj->air_conditioned());
+    vehicle_journey->set_visual_announcement(vj->visual_announcement());
+    vehicle_journey->set_appropriate_escort(vj->appropriate_escort());
+    vehicle_journey->set_appropriate_signage(vj->appropriate_signage());
+    vehicle_journey->set_school_vehicle(vj->school_vehicle());
+
+    if(new_depth > 0) {
+//        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
+//        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jp_idx.val], data,
+//                       vehicle_journey->mutable_journey_pattern(), depth-1,
+//                       now, action_period, show_codes);
+//        for(const auto& stop_time : vj->stop_time_list) {
+//            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
+//                           depth-1, now, action_period, show_codes, dump_message);
+//        }
+//        fill_pb_object(vj->meta_vj, data, vehicle_journey->mutable_trip(), depth-1, now,
+//                       action_period, show_codes);
+        fill(vj->physical_mode, vehicle_journey->mutable_journey_pattern()->mutable_physical_mode());
+        fill(vj->base_validity_pattern(), vehicle_journey->mutable_validity_pattern());
+        fill(vj->adapted_validity_pattern(), vehicle_journey->mutable_adapted_validity_pattern());
+        fill(vj->base_validity_pattern(),vehicle_journey->mutable_validity_pattern());
+        fill(vj->adapted_validity_pattern(), vehicle_journey->mutable_adapted_validity_pattern());
+//        vptranslator::fill_pb_object(vptranslator::translate(*vj->base_validity_pattern()),
+//                                     data,
+//                                     vehicle_journey,
+//                                     max_depth - 1,
+//                                     now,
+//                                     action_period);
+    }
+
+//    fill_messages(vj->meta_vj, data, vehicle_journey, max_depth-1, now, action_period, show_codes, dump_message);
+
+    if (pb_creator.show_codes) { fill_codes(vj, pb_creator.data, vehicle_journey); }
+}
+
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::MultiLineString* shape,
+                                         pbnavitia::MultiLineString* geojson){
+    for (const std::vector<nt::GeographicalCoord>& line: *shape) {
+        auto l = geojson->add_lines();
+        for (const auto coord: line) {
+            auto c = l->add_coordinates();
+            c->set_lon(coord.lon());
+            c->set_lat(coord.lat());
+        }
+    }
+}
+
+
+void PbCreator::Filler::filler_pb_object(const navitia::type::GeographicalCoord* coord,
+                                         pbnavitia::Address* address){
+    if (!coord->is_initialized()) {
+        return;
+    }
+
+    try{
+        const auto nb_way = pb_creator.data.geo_ref->nearest_addr(*coord);
+        house_number_coord hn = {nb_way.first, *coord};
+        const way_pair waypair = {nb_way.second, hn};
+        fill(&waypair, address);
+    }catch(navitia::proximitylist::NotFound){
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                       "unable to find a way from coord ["<< coord->lon() << "-" << coord->lat() << "]");
+    }
+}
+
+void PbCreator::Filler::filler_pb_object(const way_pair* waypair, pbnavitia::Address* address){
+    const navitia::georef::Way* way = waypair->first;
+    const way_pair_name waypair_name = {{way, way->name}, waypair->second};
+    fill(&waypair_name, address);
+}
+
+void PbCreator::Filler::filler_pb_object(const way_pair_name* waypair_name, pbnavitia::Address* address){
+    const way_name wayname = waypair_name->first;
+    const house_number_coord hn_coord = waypair_name->second;
+
+    if(wayname.first == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+    address->set_name(wayname.second);
+    std::string label;
+    if(hn_coord.first >= 1){
+        address->set_house_number(hn_coord.first);
+        label += std::to_string(hn_coord.first) + " ";
+    }
+//    label += get_label(wayname.first);
+//    address->set_label(label);
+
+    if(hn_coord.second.is_initialized()) {
+        address->mutable_coord()->set_lon(hn_coord.second.lon());
+        address->mutable_coord()->set_lat(hn_coord.second.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << hn_coord.second.lon() << ";" << hn_coord.second.lat();
+        address->set_uri(ss.str());
+    }
+
+    if(new_depth > 0){
+        for(navitia::georef::Admin* admin : wayname.first->admin_list){
+            fill(admin, address->add_administrative_regions());
+        }
+    }
+}
+
+
+}
+
+//*********************************************
+
 namespace navitia {
 
 template<typename NT, typename PB>
