@@ -46,12 +46,13 @@ enum class DumpMessage {
 
 //*********************************************
 
-using house_number_coord = std::pair<int, navitia::type::GeographicalCoord>;
-using way_name = std::pair<const navitia::georef::Way*, const std::string>;
+using house_number_coord = std::pair<int, const navitia::type::GeographicalCoord&>;
+using way_name = std::pair<const navitia::georef::Way*, const std::string&>;
 using way_pair = std::pair<const navitia::georef::Way*, house_number_coord>;
 using way_pair_name = std::pair<way_name, house_number_coord>;
 
 namespace ProtoCreator {
+
 struct PbCreator {
     const nt::Data& data;
     const pt::ptime now;
@@ -61,7 +62,7 @@ struct PbCreator {
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
     template<typename N, typename P>
     void fill(int depth, const DumpMessage dump_message, const N* item, P * proto) {
-        Filler(depth, dump_message, *this).filler_pb_object(item, proto);
+        Filler(depth, dump_message, *this).fill_pb_object(item, proto);
     }
 
 private:
@@ -75,29 +76,31 @@ private:
         Filler copy_depth_decr();
         template<typename NAV, typename PB>
         void fill(const NAV* nav_object, PB* pb_object) {
-            copy_depth_decr().filler_pb_object(nav_object, pb_object);
+            copy_depth_decr().fill_pb_object(nav_object, pb_object);
         }
 
-        void filler_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
-        void filler_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);
-        void filler_pb_object(const navitia::type::StopArea*, pbnavitia::StopArea*);
-        void filler_pb_object(const navitia::type::StopPoint*, pbnavitia::StopPoint*);
-        void filler_pb_object(const navitia::type::Company*, pbnavitia::Company*);
-        void filler_pb_object(const navitia::type::Network*, pbnavitia::Network*);
-        void filler_pb_object(const navitia::type::PhysicalMode*, pbnavitia::PhysicalMode*);
-        void filler_pb_object(const navitia::type::CommercialMode*, pbnavitia::CommercialMode*);
-        void filler_pb_object(const navitia::type::Line*, pbnavitia::Line*);
-        void filler_pb_object(const navitia::type::Route*, pbnavitia::Route*);
-        void filler_pb_object(const navitia::type::LineGroup*, pbnavitia::LineGroup*);
-        void filler_pb_object(const navitia::type::Calendar*, pbnavitia::Calendar*);
-        void filler_pb_object(const navitia::type::ValidityPattern*, pbnavitia::ValidityPattern*);
-        void filler_pb_object(const navitia::type::VehicleJourney*, pbnavitia::VehicleJourney*);
-        void filler_pb_object(const navitia::georef::Admin*, pbnavitia::AdministrativeRegion*);
-        void filler_pb_object(const navitia::type::ExceptionDate*, pbnavitia::CalendarException*);
-        void filler_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
-        void filler_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
-        void filler_pb_object(const way_pair*, pbnavitia::Address*);
-        void filler_pb_object(const way_pair_name*, pbnavitia::Address*);
+        void fill_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
+        void fill_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);
+        void fill_pb_object(const navitia::type::StopArea*, pbnavitia::StopArea*);
+        void fill_pb_object(const navitia::type::StopPoint*, pbnavitia::StopPoint*);
+        void fill_pb_object(const navitia::type::Company*, pbnavitia::Company*);
+        void fill_pb_object(const navitia::type::Network*, pbnavitia::Network*);
+        void fill_pb_object(const navitia::type::PhysicalMode*, pbnavitia::PhysicalMode*);
+        void fill_pb_object(const navitia::type::CommercialMode*, pbnavitia::CommercialMode*);
+        void fill_pb_object(const navitia::type::Line*, pbnavitia::Line*);
+        void fill_pb_object(const navitia::type::Route*, pbnavitia::Route*);
+        void fill_pb_object(const navitia::type::LineGroup*, pbnavitia::LineGroup*);
+        void fill_pb_object(const navitia::type::Calendar*, pbnavitia::Calendar*);
+        void fill_pb_object(const navitia::type::ValidityPattern*, pbnavitia::ValidityPattern*);
+        void fill_pb_object(const navitia::type::VehicleJourney*, pbnavitia::VehicleJourney*);
+        void fill_pb_object(const navitia::georef::Admin*, pbnavitia::AdministrativeRegion*);
+        void fill_pb_object(const navitia::type::ExceptionDate*, pbnavitia::CalendarException*);
+        void fill_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
+        void fill_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
+        void fill_pb_object(const way_pair*, pbnavitia::Address*);
+        void fill_pb_object(const way_pair_name*, pbnavitia::Address*);
+        void fill_pb_object(const navitia::type::StopArea*, pbnavitia::PtObject*);
+        void fill_pb_object(const navitia::type::StopArea*, pbnavitia::PtObject*, int a);
     };
 };
 

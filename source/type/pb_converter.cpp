@@ -77,7 +77,7 @@ PbCreator::Filler PbCreator::Filler::copy_depth_decr(){
     return PbCreator::Filler(depth-1,dump_message, pb_creator);
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
     if(cb == nullptr)
         return;
     contrib->set_uri(cb->uri);
@@ -86,7 +86,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Contributor* cb, p
     contrib->set_website(cb->website);
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Frame* fr, pbnavitia::Frame* frame){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Frame* fr, pbnavitia::Frame* frame){
     if(fr == nullptr)
         return;
     frame->set_uri(fr->uri);
@@ -112,7 +112,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Frame* fr, pbnavit
     fill(fr->contributor, frame->mutable_contributor());
 }
 
-void PbCreator::Filler::filler_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
+void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
     if(sa == nullptr)
         return ;
     int new_depth = (depth <= 3) ? depth : 3;
@@ -147,7 +147,7 @@ void PbCreator::Filler::filler_pb_object(const nt::StopArea* sa, pbnavitia::Stop
     if (pb_creator.show_codes) { fill_codes(sa, pb_creator.data, stop_area); }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
+void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
     if(adm == nullptr)
         return ;
     admin->set_name(adm->name);
@@ -164,7 +164,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::georef::Admin* adm, pbna
     }
 }
 
-void PbCreator::Filler::filler_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
+void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
     if(sp == nullptr)
         return ;
     int new_depth = (depth <= 3) ? depth : 3;
@@ -231,7 +231,7 @@ void PbCreator::Filler::filler_pb_object(const nt::StopPoint* sp, pbnavitia::Sto
     if (pb_creator.show_codes) { fill_codes(sp, pb_creator.data, stop_point); }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
     if(c == nullptr)
         return ;
 
@@ -241,7 +241,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Company* c, pbnavi
     if (pb_creator.show_codes) { fill_codes(c, pb_creator.data, company); }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Network* n,
+void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n,
                                          pbnavitia::Network* network){
     if(n == nullptr)
         return ;
@@ -253,7 +253,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Network* n,
     if (pb_creator.show_codes) { fill_codes(n, pb_creator.data, network); }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::PhysicalMode* m,
+void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
                                          pbnavitia::PhysicalMode* physical_mode){
     if(m == nullptr)
         return ;
@@ -262,7 +262,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::PhysicalMode* m,
     physical_mode->set_uri(m->uri);
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::CommercialMode* m,
+void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
                       pbnavitia::CommercialMode* commercial_mode){
     if(m == nullptr)
         return ;
@@ -271,7 +271,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::CommercialMode* m,
     commercial_mode->set_uri(m->uri);
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
     if(l == nullptr)
         return ;
 
@@ -327,7 +327,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Line* l, pbnavitia
 
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
     if(r == nullptr)
         return ;
     int new_depth = (depth <= 3) ? depth : 3;
@@ -376,7 +376,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Route* r, pbnaviti
     }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::LineGroup* lg,
+void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
     if(lg == nullptr)
         return ;
@@ -400,7 +400,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::LineGroup* lg,
     }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
+void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
@@ -428,7 +428,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::Calendar* cal, pbn
     }
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::ExceptionDate* exception_date,
+void PbCreator::Filler::fill_pb_object(const navitia::type::ExceptionDate* exception_date,
                                          pbnavitia::CalendarException* calendar_exception){
     pbnavitia::ExceptionType type;
     switch (exception_date->type) {
@@ -447,7 +447,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::ExceptionDate* exc
     calendar_exception->set_date(boost::gregorian::to_iso_string(exception_date->date));
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::ValidityPattern* vp,
+void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
                                          pbnavitia::ValidityPattern* validity_pattern){
     if(vp == nullptr)
         return;
@@ -456,7 +456,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::ValidityPattern* v
     validity_pattern->set_days(vp->days.to_string());
 }
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::VehicleJourney* vj,
+void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
                                          pbnavitia::VehicleJourney* vehicle_journey){
     if (vj == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
@@ -509,7 +509,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::VehicleJourney* vj
 }
 
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::MultiLineString* shape,
+void PbCreator::Filler::fill_pb_object(const navitia::type::MultiLineString* shape,
                                          pbnavitia::MultiLineString* geojson){
     for (const std::vector<nt::GeographicalCoord>& line: *shape) {
         auto l = geojson->add_lines();
@@ -522,7 +522,7 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::MultiLineString* s
 }
 
 
-void PbCreator::Filler::filler_pb_object(const navitia::type::GeographicalCoord* coord,
+void PbCreator::Filler::fill_pb_object(const navitia::type::GeographicalCoord* coord,
                                          pbnavitia::Address* address){
     if (!coord->is_initialized()) {
         return;
@@ -539,13 +539,13 @@ void PbCreator::Filler::filler_pb_object(const navitia::type::GeographicalCoord*
     }
 }
 
-void PbCreator::Filler::filler_pb_object(const way_pair* waypair, pbnavitia::Address* address){
+void PbCreator::Filler::fill_pb_object(const way_pair* waypair, pbnavitia::Address* address){
     const navitia::georef::Way* way = waypair->first;
     const way_pair_name waypair_name = {{way, way->name}, waypair->second};
     fill(&waypair_name, address);
 }
 
-void PbCreator::Filler::filler_pb_object(const way_pair_name* waypair_name, pbnavitia::Address* address){
+void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavitia::Address* address){
     const way_name wayname = waypair_name->first;
     const house_number_coord hn_coord = waypair_name->second;
 
