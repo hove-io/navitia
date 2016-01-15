@@ -81,11 +81,23 @@ private:
 
         template<typename NAV, typename GetPbObject>
         void fill(const std::vector<NAV*>& nav_list, GetPbObject get_pb_object){
-            if (dump_message == DumpMessage::No) { return; }
             for (auto* nav_obj : nav_list) {
                 fill(nav_obj, get_pb_object());
             }
         }
+
+        template <typename NAV, typename P>
+        void fill_messages(const NAV* nav_obj, P* pb_obj){
+            if (dump_message == DumpMessage::No) { return; }
+            for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
+                                                                        pb_creator.action_period)){
+                fill_message(*message, pb_obj);
+            }
+        }
+
+
+        template <typename P>
+        void fill_message(const navitia::type::disruption::Impact& impact, P pb_object);
 
         void fill_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
         void fill_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);

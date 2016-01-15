@@ -141,7 +141,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 //                                 data, sa, 0, now, action_period, show_codes);
 //    }
 
-//    fill_messages(sa, data, stop_area, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(sa, stop_area);
     if (pb_creator.show_codes) { fill_codes(sa, pb_creator.data, stop_area); }
 }
 
@@ -224,8 +224,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
 
     if(new_depth > 0)
         fill(sp->stop_area, stop_point->mutable_stop_area());
-
-//    fill_messages(sp, data, stop_point, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(sp, stop_point);
     if (pb_creator.show_codes) { fill_codes(sp, pb_creator.data, stop_point); }
 }
 
@@ -247,7 +246,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n,
     network->set_name(n->name);
     network->set_uri(n->uri);
 
-//    fill_messages(n, data, network, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(n, network);
     if (pb_creator.show_codes) { fill_codes(n, pb_creator.data, network); }
 }
 
@@ -308,8 +307,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
 
         fill(l->line_group_list, [&](){return line->add_line_groups();});
     }
-
-//    fill_messages(l, data, line, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(l, line);
 
     if (pb_creator.show_codes) { fill_codes(l, pb_creator.data, line); }
 
@@ -338,8 +336,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
     }
 
     route->set_uri(r->uri);
-
-//    fill_messages(r, data, route, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(r, route);
 
     if (pb_creator.show_codes) { fill_codes(r, pb_creator.data, route); }
 
@@ -492,8 +489,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
 //                                     now,
 //                                     action_period);
     }
-
-//    fill_messages(vj->meta_vj, data, vehicle_journey, max_depth-1, now, action_period, show_codes, dump_message);
+    fill_messages(vj->meta_vj, vehicle_journey);
 
     if (pb_creator.show_codes) { fill_codes(vj, pb_creator.data, vehicle_journey); }
 }
@@ -578,6 +574,106 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavit
     }
 }
 
+static pbnavitia::ActiveStatus
+compute_disruption_status(const navitia::type::disruption::Impact& impact,
+                          const boost::posix_time::time_period& action_period) {
+
+    bool is_future = false;
+    for(const auto& period: impact.application_periods){
+        if(period.intersects(action_period)){
+            return pbnavitia::active;
+        }
+        if(!period.is_null() && period.begin() >= action_period.end()){
+            is_future = true;
+        }
+    }
+
+    if(is_future){
+        return pbnavitia::future;
+    }else{
+        return pbnavitia::past;
+    }
+}
+
+template <typename P>
+void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& impact, P pb_object){
+    auto pb_impact = pb_object->add_impacts();
+
+    pb_impact->set_disruption_uri(impact.disruption->uri);
+
+    if (!impact.disruption->contributor.empty()) {
+        pb_impact->set_contributor(impact.disruption->contributor);
+    }
+
+    pb_impact->set_uri(impact.uri);
+    for (const auto& app_period: impact.application_periods) {
+        auto p = pb_impact->add_application_periods();
+        p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
+        p->set_end(navitia::to_posix_timestamp(app_period.last()));
+    }
+
+    //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
+    pb_impact->set_updated_at(navitia::to_posix_timestamp(impact.updated_at));
+
+    auto pb_severity = pb_impact->mutable_severity();
+    pb_severity->set_name(impact.severity->wording);
+    pb_severity->set_color(impact.severity->color);
+    pb_severity->set_effect(to_string(impact.severity->effect));
+    pb_severity->set_priority(impact.severity->priority);
+
+    for (const auto& t: impact.disruption->tags) {
+        pb_impact->add_tags(t->name);
+    }
+    if (impact.disruption->cause) {
+        pb_impact->set_cause(impact.disruption->cause->wording);
+    }
+
+    for (const auto& m: impact.messages) {
+        auto pb_m = pb_impact->add_messages();
+        pb_m->set_text(m.text);
+        auto pb_channel = pb_m->mutable_channel();
+        pb_channel->set_content_type(m.channel_content_type);
+        pb_channel->set_id(m.channel_id);
+        pb_channel->set_name(m.channel_name);
+        for (const auto& type: m.channel_types){
+            switch (type) {
+            case nt::disruption::ChannelType::web:
+                pb_channel->add_channel_types(pbnavitia::Channel::web);
+                break;
+            case nt::disruption::ChannelType::sms:
+                pb_channel->add_channel_types(pbnavitia::Channel::sms);
+                break;
+            case nt::disruption::ChannelType::email:
+                pb_channel->add_channel_types(pbnavitia::Channel::email);
+                break;
+            case nt::disruption::ChannelType::mobile:
+                pb_channel->add_channel_types(pbnavitia::Channel::mobile);
+                break;
+            case nt::disruption::ChannelType::notification:
+                pb_channel->add_channel_types(pbnavitia::Channel::notification);
+                break;
+            case nt::disruption::ChannelType::twitter:
+                pb_channel->add_channel_types(pbnavitia::Channel::twitter);
+                break;
+            case nt::disruption::ChannelType::facebook:
+                pb_channel->add_channel_types(pbnavitia::Channel::facebook);
+                break;
+            case nt::disruption::ChannelType::unknown_type:
+                pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
+                break;
+            }
+        }
+    }
+
+    //we need to compute the active status
+    pb_impact->set_status(compute_disruption_status(impact, pb_creator.action_period));
+
+//    for (const auto& informed_entity: impact.informed_entities) {
+//        fill_pb_object(informed_entity, impact, data, pb_impact,
+//                       depth, now, action_period, show_codes);
+//    }
+
+}
 
 }
 
