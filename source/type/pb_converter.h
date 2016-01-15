@@ -79,6 +79,21 @@ private:
             copy_depth_decr().fill_pb_object(nav_object, pb_object);
         }
 
+        template<typename NAV, typename GetPbObject>
+        void fill(const std::vector<NAV*>& nav_list, GetPbObject get_pb_object){
+            for (auto* nav_obj : nav_list) {
+                fill(nav_obj, get_pb_object());
+            }
+        }
+
+        void fill_pb_object(const std::vector<navitia::georef::Admin*>, pbnavitia::StopPoint*);
+        void fill_pb_object(const std::vector<navitia::georef::Admin*>, pbnavitia::StopArea*);
+        void fill_pb_object(const std::vector<navitia::georef::Admin*>, pbnavitia::Address*);
+        void fill_pb_object(const std::vector<navitia::type::Route*>, pbnavitia::Line*);
+        void fill_pb_object(const std::vector<navitia::type::PhysicalMode*>, pbnavitia::Line*);
+        void fill_pb_object(const std::vector<navitia::type::LineGroup*>, pbnavitia::Line*);
+        void fill_pb_object(const std::vector<navitia::type::Line*>, pbnavitia::LineGroup*);
+
         void fill_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
         void fill_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);
         void fill_pb_object(const navitia::type::StopArea*, pbnavitia::StopArea*);
@@ -99,8 +114,7 @@ private:
         void fill_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
         void fill_pb_object(const way_pair*, pbnavitia::Address*);
         void fill_pb_object(const way_pair_name*, pbnavitia::Address*);
-        void fill_pb_object(const navitia::type::StopArea*, pbnavitia::PtObject*);
-        void fill_pb_object(const navitia::type::StopArea*, pbnavitia::PtObject*, int a);
+        void fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection);
     };
 };
 

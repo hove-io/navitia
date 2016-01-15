@@ -130,9 +130,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
         stop_area->mutable_coord()->set_lat(sa->coord.lat());
     }
     if(new_depth > 0){
-        for(navitia::georef::Admin* adm : sa->admin_list){
-            fill(adm, stop_area->add_administrative_regions());
-        }
+        fill(sa->admin_list, [&](){return stop_area->add_administrative_regions();});
     }
 
 //    if (new_depth > 1) {
@@ -216,10 +214,10 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
     }
     if(new_depth > 0){
-        for(navitia::georef::Admin* adm : sp->admin_list){
-            fill(adm, stop_point->add_administrative_regions());
-        }
+        fill(sp->admin_list, [&](){return stop_point->add_administrative_regions();});
     }
+
+
     if(new_depth > 2){
         fill(&sp->coord, stop_point->mutable_address());
     }
@@ -302,19 +300,13 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
     if (new_depth > 0) {
         fill(&l->shape, line->mutable_geojson());
 
-        for(auto route : l->route_list) {
-            fill(route, line->add_routes());
-        }
-        for(auto physical_mode : l->physical_mode_list){
-            fill(physical_mode, line->add_physical_modes());
-        }
+        fill(l->route_list, [&](){return line->add_routes();});
+        fill(l->physical_mode_list, [&](){return line->add_physical_modes();});
 
         fill(l->commercial_mode, line->mutable_commercial_mode());
         fill(l->network, line->mutable_network());
 
-        for(const auto& line_group : l->line_group_list) {
-            fill(line_group, line->add_line_groups());
-        }
+        fill(l->line_group_list, [&](){return line->add_line_groups();});
     }
 
 //    fill_messages(l, data, line, max_depth-1, now, action_period, show_codes, dump_message);
@@ -386,9 +378,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
     line_group->set_uri(lg->uri);
 
     if(new_depth > 0) {
-        for(const auto& line : lg->line_list) {
-            fill(line, line_group->add_lines());
-        }
+        fill(lg->line_list, [&](){return line_group->add_lines();});
         //Attention: Here we pass depth = 0
         fill(lg->main_line, line_group->mutable_main_line());
 
@@ -570,9 +560,21 @@ void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavi
     }
 
     if(new_depth > 0){
-        for(navitia::georef::Admin* admin : wayname.first->admin_list){
-            fill(admin, address->add_administrative_regions());
-        }
+        fill(wayname.first->admin_list, [&](){return address->add_administrative_regions();});
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection){
+    if(c == nullptr)
+        return ;
+    int new_depth = (depth <= 3) ? depth : 3;
+
+    connection->set_duration(c->duration);
+    connection->set_display_duration(c->display_duration);
+    connection->set_max_duration(c->max_duration);
+    if(c->departure != nullptr && c->destination != nullptr && new_depth > 0){
+        fill(c->departure, connection->mutable_origin());
+        fill(c->destination, connection->mutable_destination());
     }
 }
 
