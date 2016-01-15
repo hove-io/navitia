@@ -78,8 +78,7 @@ PbCreator::Filler PbCreator::Filler::copy_depth_decr(){
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
-    if(cb == nullptr)
-        return;
+    if(cb == nullptr) { return; }
     contrib->set_uri(cb->uri);
     contrib->set_name(cb->name);
     contrib->set_license(cb->license);
@@ -113,8 +112,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Frame* fr, pbnavitia
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
-    if(sa == nullptr)
-        return ;
+    if(sa == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
@@ -146,8 +144,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
-    if(adm == nullptr)
-        return ;
+    if(adm == nullptr) { return; }
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
     admin->set_label(adm->label);
@@ -163,8 +160,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavi
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
-    if(sp == nullptr)
-        return ;
+    if(sp == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
@@ -229,8 +225,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
-    if(c == nullptr)
-        return ;
+    if(c == nullptr) { return; }
 
     company->set_name(c->name);
     company->set_uri(c->uri);
@@ -240,8 +235,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnaviti
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n,
                                          pbnavitia::Network* network){
-    if(n == nullptr)
-        return ;
+    if(n == nullptr) { return; }
 
     network->set_name(n->name);
     network->set_uri(n->uri);
@@ -261,16 +255,14 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
                       pbnavitia::CommercialMode* commercial_mode){
-    if(m == nullptr)
-        return ;
+    if(m == nullptr) { return; }
 
     commercial_mode->set_name(m->name);
     commercial_mode->set_uri(m->uri);
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
-    if(l == nullptr)
-        return ;
+    if(l == nullptr) { return; }
 
     int new_depth = (depth <= 3) ? depth : 3;
     for (const auto& comment: pb_creator.data.pt_data->comments.get(l)) {
@@ -318,8 +310,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
-    if(r == nullptr)
-        return ;
+    if(r == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
 
     route->set_name(r->name);
@@ -367,8 +358,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
-    if(lg == nullptr)
-        return ;
+    if(lg == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
 
     line_group->set_name(lg->name);
@@ -388,6 +378,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
+     if (cal == nullptr) { return; }
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
@@ -436,8 +427,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::ExceptionDate* excep
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
                                          pbnavitia::ValidityPattern* validity_pattern){
-    if(vp == nullptr)
-        return;
+    if(vp == nullptr) { return; }
+
     auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
     validity_pattern->set_beginning_date(vp_string);
     validity_pattern->set_days(vp->days.to_string());
@@ -561,8 +552,7 @@ void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavi
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection){
-    if(c == nullptr)
-        return ;
+    if(c == nullptr) { return; }
     int new_depth = (depth <= 3) ? depth : 3;
 
     connection->set_duration(c->duration);
