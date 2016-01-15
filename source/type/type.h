@@ -811,6 +811,10 @@ struct MetaVehicleJourney: public Header, HasMessages {
         }
     }
 
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_vjs_at(RTLevel rt_level) const {
+            return rtlevel_to_vjs_map[rt_level];
+    }
+
     const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
         return rtlevel_to_vjs_map[RTLevel::Base];
     }

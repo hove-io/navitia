@@ -31,6 +31,7 @@ www.navitia.io
 #include "apply_disruption.h"
 #include "utils/logger.h"
 #include "type/datetime.h"
+#include "ptreferential/ptreferential.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -38,7 +39,8 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/algorithm/cxx11/any_of.hpp>
 
 namespace navitia {
 
@@ -170,14 +172,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = mvj->get_base_vj().at(0)->name; 
             } else {
                 // If we set nothing for physical_mode, it'll crash when building raptor
                 vj->physical_mode = pt_data.physical_modes[0];
-                vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = new_vj_uri;
             }
+            vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
             for (auto& stu: impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
@@ -190,11 +191,106 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::StopPoint* stop_point) {
-        LOG4CPLUS_INFO(log, "Disruption on stop point:" << stop_point->uri << " is not handled");
+        /*
+         * 1. Get All vj passed by stop_point
+         * 2. Get Vj
+         *
+         * */
+        std::vector<const nt::VehicleJourney*> impacted_vjs;
+        using namespace boost::posix_time;
+        using namespace boost::gregorian;
+        type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
+        for (const auto& period: impact->application_periods) {
+            for (time_iterator it(period.begin(),boost::posix_time::time_duration{24, 0, 0}); it < period.end(); ++it) {
+                if (! meta.production_date.contains((*it).date())) { continue; }
+                auto day = ((*it).date() - meta.production_date.begin()).days();
+                std::cout << "adding days" << std::endl;
+                impact_vp.add(day);
+            }
+            // we may impact vj's passing midnight but all we care is start date
+        }
+        LOG4CPLUS_DEBUG(log, "impact_vp vp: " <<impact_vp.days);
+
+        LOG4CPLUS_DEBUG(log, "impact rt_level: " <<get_string_from_rt_level(rt_level));
+
+        for (const auto* vj: pt_data.vehicle_journeys) {
+
+            if ((vj->validity_patterns[rt_level]->days & impact_vp.days).none()) {
+                continue;
+            }
+
+            if (boost::algorithm::any_of(vj->stop_time_list, [&](const nt::StopTime& stop_time){
+                LOG4CPLUS_DEBUG(log, "stop_time stop_point " << stop_time.stop_point->uri);
+                if (stop_time.stop_point != stop_point) {
+                    return false;
+                }
+                auto beginning_date = vj->validity_patterns[rt_level]->beginning_date;
+                auto beginning_date_posix = navitia::to_posix_timestamp(boost::posix_time::ptime(beginning_date));
+                for (size_t i  = 0; i < vj->validity_patterns[rt_level]->days.size(); ++i) {
+                    if (! vj->validity_patterns[rt_level]->days.test(i)) {
+                        continue;
+                    }
+                    auto arrival_time_utc = beginning_date_posix + 86400 * i + stop_time.arrival_time;
+                    for (const auto& period: impact->application_periods) {
+                        if (period.contains(boost::posix_time::from_time_t(arrival_time_utc))) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            })) {
+                LOG4CPLUS_DEBUG(log, "find vj " << vj->uri);
+                impacted_vjs.push_back(vj);
+            }
+        }
+
+
+        for (const auto* vj : impacted_vjs) {
+            std::vector<nt::StopTime> new_stop_times;
+            for (const auto& st : vj->stop_time_list) {
+                if (st.stop_point == stop_point) {
+                    continue;
+                }
+                LOG4CPLUS_DEBUG(log, "find st " << st.stop_point->uri);
+
+                new_stop_times.push_back(st);
+            }
+
+
+            auto mvj = vj->meta_vj;
+            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
+            std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
+                                + impact->disruption->uri;
+
+            nt::ValidityPattern new_vp{meta.production_date.begin()};
+            new_vp.days = impact_vp.days & vj->validity_patterns[rt_level]->days;
+
+            auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+                rt_level,
+                new_vp,
+                nullptr,
+                std::move(new_stop_times),
+                pt_data);
+            if (! mvj->get_base_vj().empty()) {
+                new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                new_vj->name = mvj->get_base_vj().at(0)->name;
+            } else {
+                // If we set nothing for physical_mode, it'll crash when building raptor
+                new_vj->physical_mode = pt_data.physical_modes[0];
+                new_vj->name = new_vj_uri;
+            }
+            new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
+            LOG4CPLUS_DEBUG(log, "new_vj vp: " << new_vj->get_validity_pattern_at(rt_level)->days);
+
+        }
     }
 
     void operator()(nt::StopArea* stop_area) {
-        LOG4CPLUS_INFO(log, "Disruption on stop area:" << stop_area->uri << " is not handled");
+        LOG4CPLUS_DEBUG(log, "stop_area id" << stop_area->uri);
+        LOG4CPLUS_DEBUG(log, "stop_area id" << stop_area->stop_point_list.size());
+        for (auto* stop_point: stop_area->stop_point_list) {
+            (*this)(stop_point);
+        }
     }
 };
 
