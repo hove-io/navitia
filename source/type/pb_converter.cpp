@@ -52,6 +52,57 @@ namespace gd = boost::gregorian;
 //*********************************************
 namespace ProtoCreator{
 
+
+struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
+    const nt::disruption::Impact& impact;
+    pbnavitia::Impact* pb_impact;
+
+    Filler& filler;
+    PtObjVisitor(const nt::disruption::Impact& impact,
+                 pbnavitia::Impact* pb_impact, PbCreator::Filler& filler):
+        impact(impact),
+        pb_impact(pb_impact), filler(filler) {}
+    template <typename NavitiaPTObject>
+    pbnavitia::ImpactedObject* add_pt_object(const NavitiaPTObject* /*bo*/) const {
+        auto* pobj = pb_impact->add_impacted_objects();
+//        fill_pb_placemark(bo, data, pobj->mutable_pt_object(),
+//                          0, now, action_period, show_codes, DumpMessage::No);
+        return pobj;
+    }
+    template <typename NavitiaPTObject>
+    void operator()(const NavitiaPTObject* bo) const {
+        add_pt_object(bo);
+    }
+    void operator()(const nt::disruption::LineSection& line_section) const {
+        //TODO: for the moment a line section is only a line, but later we might want to output more stuff
+        add_pt_object(line_section.line);
+    }
+    void operator()(const nt::disruption::UnknownPtObj&) const {}
+    void operator()(const nt::MetaVehicleJourney* mvj) const {
+        auto* pobj = add_pt_object(mvj);
+
+        //for meta vj we also need to output the impacted stoptimes
+        for (const auto& stu: impact.aux_info.stop_times) {
+            auto* impacted_stop = pobj->add_impacted_stops();
+            impacted_stop->set_cause(stu.cause);
+            impacted_stop->set_effect(pbnavitia::DELAYED);
+            // depht = 0 et DumpMessage::No
+            filler.fill(stu.stop_time.stop_point, impacted_stop->mutable_stop_point());
+
+            //TODO output only modified stoptime update
+            // depht = 0 et DumpMessage::No
+//            filler.fill(stu.stop_time, impacted_stop->mutable_amended_stop_time());
+
+            // we need to get the base stoptime
+//            const auto* base_st = impact.aux_info.get_base_stop_time(stu);
+//            if (base_st) {
+//                fill_pb_object(*base_st, data, impacted_stop->mutable_base_stop_time(),
+//                               0, now, action_period, show_codes, DumpMessage::No);
+//            }
+        }
+    }
+};
+
 template<typename NT, typename PB>
 static void fill_codes(const NT* nt, const nt::Data& data, PB* pb) {
     for (const auto& code: data.pt_data->codes.get_codes(nt)) {
@@ -86,8 +137,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbn
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Frame* fr, pbnavitia::Frame* frame){
-    if(fr == nullptr)
-        return;
+    if(fr == nullptr) { return; }
     frame->set_uri(fr->uri);
     pt::time_duration td = pt::time_duration(0, 0, 0, 0);
     frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
@@ -113,7 +163,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Frame* fr, pbnavitia
 
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
     if(sa == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
+
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
     stop_area->set_label(sa->label);
@@ -127,11 +177,11 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
         stop_area->mutable_coord()->set_lon(sa->coord.lon());
         stop_area->mutable_coord()->set_lat(sa->coord.lat());
     }
-    if(new_depth > 0){
+    if(depth > 0){
         fill(sa->admin_list, [&](){return stop_area->add_administrative_regions();});
     }
 
-//    if (new_depth > 1) {
+//    if (depth > 1) {
 //        fill_modes_for_stop_area(stop_area, navitia::type::Type_e::CommercialMode,
 //                                 data, sa, 0, now, action_period, show_codes);
 
@@ -144,7 +194,9 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
+
     if(adm == nullptr) { return; }
+
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
     admin->set_label(adm->label);
@@ -160,8 +212,9 @@ void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavi
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
+
     if(sp == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
+
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
     stop_point->set_label(sp->label);
@@ -209,16 +262,16 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
     if (sp->appropriate_signage()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
     }
-    if(new_depth > 0){
+    if(depth > 0){
         fill(sp->admin_list, [&](){return stop_point->add_administrative_regions();});
     }
 
 
-    if(new_depth > 2){
+    if(depth > 2){
         fill(&sp->coord, stop_point->mutable_address());
     }
 
-    if(new_depth > 0)
+    if(depth > 0)
         fill(sp->stop_area, stop_point->mutable_stop_area());
     fill_messages(sp, stop_point);
     if (pb_creator.show_codes) { fill_codes(sp, pb_creator.data, stop_point); }
@@ -262,9 +315,9 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
+
     if(l == nullptr) { return; }
 
-    int new_depth = (depth <= 3) ? depth : 3;
     for (const auto& comment: pb_creator.data.pt_data->comments.get(l)) {
         auto com = line->add_comments();
         com->set_value(comment);
@@ -288,7 +341,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
     }
 
 
-    if (new_depth > 0) {
+    if (depth > 0) {
         fill(&l->shape, line->mutable_geojson());
 
         fill(l->route_list, [&](){return line->add_routes();});
@@ -310,8 +363,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
+
     if(r == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
 
     route->set_name(r->name);
     route->set_direction_type(r->direction_type);
@@ -331,7 +384,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
 
     if (pb_creator.show_codes) { fill_codes(r, pb_creator.data, route); }
 
-    if (new_depth == 0) { return; }
+    if (depth == 0) { return; }
 
     fill(r->line, route->mutable_line());
 
@@ -339,7 +392,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
 
     auto thermometer = navitia::timetables::Thermometer();
     thermometer.generate_thermometer(r);
-    if (new_depth>2) {
+    if (depth>2) {
         for(auto idx : thermometer.get_thermometer()) {
             auto stop_point = pb_creator.data.pt_data->stop_points[idx];
             fill(stop_point, route->add_stop_points());
@@ -358,13 +411,13 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
+
     if(lg == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
 
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
 
-    if(new_depth > 0) {
+    if(depth > 0) {
         fill(lg->line_list, [&](){return line_group->add_lines();});
         //Attention: Here we pass depth = 0
         fill(lg->main_line, line_group->mutable_main_line());
@@ -436,8 +489,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
                                          pbnavitia::VehicleJourney* vehicle_journey){
+
     if (vj == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
@@ -457,7 +510,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
     vehicle_journey->set_appropriate_signage(vj->appropriate_signage());
     vehicle_journey->set_school_vehicle(vj->school_vehicle());
 
-    if(new_depth > 0) {
+    if(depth > 0) {
 //        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[routing::VjIdx(*vj)];
 //        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jp_idx.val], data,
 //                       vehicle_journey->mutable_journey_pattern(), depth-1,
@@ -526,9 +579,8 @@ void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavi
     const way_name wayname = waypair_name->first;
     const house_number_coord hn_coord = waypair_name->second;
 
-    if(wayname.first == nullptr)
-        return ;
-    int new_depth = (depth <= 3) ? depth : 3;
+    if(wayname.first == nullptr) { return; }
+
     address->set_name(wayname.second);
     std::string label;
     if(hn_coord.first >= 1){
@@ -546,23 +598,121 @@ void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavi
         address->set_uri(ss.str());
     }
 
-    if(new_depth > 0){
+    if(depth > 0){
         fill(wayname.first->admin_list, [&](){return address->add_administrative_regions();});
     }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection){
     if(c == nullptr) { return; }
-    int new_depth = (depth <= 3) ? depth : 3;
 
     connection->set_duration(c->duration);
     connection->set_display_duration(c->display_duration);
     connection->set_max_duration(c->max_duration);
-    if(c->departure != nullptr && c->destination != nullptr && new_depth > 0){
+    if(c->departure != nullptr && c->destination != nullptr && depth > 0){
         fill(c->departure, connection->mutable_origin());
         fill(c->destination, connection->mutable_destination());
     }
 }
+void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* st, pbnavitia::StopTime* stop_time){
+
+    // arrival/departure in protobuff are as seconds from midnight in local time
+    const auto offset = [&](const uint32_t time) {
+        static const auto flag = std::numeric_limits<uint32_t>::max();
+        return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset();
+    };
+    stop_time->set_arrival_time(st->arrival_time + offset(st->arrival_time));
+    stop_time->set_departure_time(st->departure_time + offset(st->departure_time));
+    stop_time->set_headsign(pb_creator.data.pt_data->headsign_handler.get_headsign(*st));
+
+    stop_time->set_pickup_allowed(st->pick_up_allowed());
+    stop_time->set_drop_off_allowed(st->drop_off_allowed());
+
+    // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
+//    if (depth > 0) {
+//        const auto& jpp_idx = pb_creator.data.dataRaptor->jp_container.get_jpp(*st);
+//        fill(pb_creator.data.dataRaptor->jp_container.get_jpps()[jpp_idx.val], stop_time->mutable_journey_pattern_point());
+//    }
+
+    // we always dump the stop point (with the same depth)
+    fill(st->stop_point, stop_time->mutable_stop_point());
+
+    if ( depth > 0) {
+        fill(st->vehicle_journey, stop_time->mutable_vehicle_journey());
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopDateTime* stop_date_time){
+
+    if(st == nullptr) { return; }
+
+    pbnavitia::Properties* properties = stop_date_time->mutable_properties();
+    fill(st, properties);
+
+    for (const std::string& comment: pb_creator.data.pt_data->comments.get(*st)) {
+        fill(&comment, properties->add_notes());
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const std::string* comment, pbnavitia::Note* note){
+    std::hash<std::string> hash_fn;
+    note->set_uri("note:"+std::to_string(hash_fn(*comment)));
+    note->set_note(*comment);
+}
+
+//void PbCreator::Filler::fill_pb_object(const jp_pair* jp, pbnavitia::JourneyPattern* journey_pattern){
+
+//    const std::string id = pb_creator.data.dataRaptor->jp_container.get_id(jp->first);
+//    journey_pattern->set_name(id);
+//    journey_pattern->set_uri(id);
+//    if (depth > 0) {
+//        const auto* route = pb_creator.data.pt_data->routes[jp->second.route_idx.val];
+//        fill(route, journey_pattern->mutable_route());
+//    }
+//}
+
+void PbCreator::Filler::fill_pb_object(const jpp_pair* jpp,
+                                       pbnavitia::JourneyPatternPoint* journey_pattern_point){
+
+    journey_pattern_point->set_uri(pb_creator.data.dataRaptor->jp_container.get_id(jpp->first));
+    journey_pattern_point->set_order(jpp->second.order);
+
+//    if(depth > 0){
+//        fill_pb_object(data.pt_data->stop_points[jpp->second.sp_idx.val], data,
+//                       journey_pattern_point->mutable_stop_point(),
+//                       depth-1, now, action_period, show_codes);
+//        fill_pb_object(data.dataRaptor->jp_container.get_jps()[jpp->second.jp_idx.val], data,
+//                       journey_pattern_point->mutable_journey_pattern(),
+//                       depth - 1, now, action_period, show_codes);
+//    }
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* stop_time, pbnavitia::Properties* properties){
+    if (((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed())
+        // No display pick up only information if first stoptime in vehiclejourney
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
+        properties->add_additional_informations(pbnavitia::Properties::pick_up_only);
+    }
+    if((stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed()))
+        // No display drop off only information if last stoptime in vehiclejourney
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
+        properties->add_additional_informations(pbnavitia::Properties::drop_off_only);
+    }
+    if (stop_time->odt()){
+        properties->add_additional_informations(pbnavitia::Properties::on_demand_transport);
+    }
+    if (stop_time->date_time_estimated()){
+        properties->add_additional_informations(pbnavitia::Properties::date_time_estimated);
+    }
+}
+
+void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
+                                             const nt::disruption::Impact& impact,
+                                             pbnavitia::Impact* pb_impact){
+    auto filler = copy_depth_decr();
+        boost::apply_visitor(PtObjVisitor(impact, pb_impact, filler), ptobj);
+    }
+
 
 static pbnavitia::ActiveStatus
 compute_disruption_status(const navitia::type::disruption::Impact& impact,
@@ -658,11 +808,9 @@ void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& im
     //we need to compute the active status
     pb_impact->set_status(compute_disruption_status(impact, pb_creator.action_period));
 
-//    for (const auto& informed_entity: impact.informed_entities) {
-//        fill_pb_object(informed_entity, impact, data, pb_impact,
-//                       depth, now, action_period, show_codes);
-//    }
-
+    for (const auto& informed_entity: impact.informed_entities) {
+        fill_informed_entity(informed_entity, impact, pb_impact);
+    }
 }
 
 }

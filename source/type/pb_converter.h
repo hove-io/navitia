@@ -45,11 +45,39 @@ enum class DumpMessage {
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
 //*********************************************
+//forward declare
+namespace navitia {
+    namespace routing {
+        struct PathItem;
+        struct JourneyPattern;
+        struct JourneyPatternPoint;
+        using JppIdx = Idx<JourneyPatternPoint>;
+        using JpIdx = Idx<JourneyPattern>;
+    }
+    namespace georef {
+        struct PathItem;
+        struct Way;
+        struct POI;
+        struct Path;
+        struct POIType;
+    }
+    namespace fare {
+        struct results;
+        struct Ticket;
+    }
+    namespace timetables {
+        struct Thermometer;
+    }
+}
 
 using house_number_coord = std::pair<int, const navitia::type::GeographicalCoord&>;
 using way_name = std::pair<const navitia::georef::Way*, const std::string&>;
 using way_pair = std::pair<const navitia::georef::Way*, house_number_coord>;
 using way_pair_name = std::pair<way_name, house_number_coord>;
+using jp_pair = std::pair<const navitia::routing::JpIdx, const navitia::routing::JourneyPattern&>;
+using jpp_pair = std::pair<const navitia::routing::JppIdx, const navitia::routing::JourneyPatternPoint&>;
+
+
 
 namespace ProtoCreator {
 
@@ -67,6 +95,7 @@ struct PbCreator {
 
 private:
     struct Filler {
+        struct PtObjVisitor;
         int depth;
         const DumpMessage dump_message;
         PbCreator & pb_creator;
@@ -99,6 +128,9 @@ private:
         template <typename P>
         void fill_message(const navitia::type::disruption::Impact& impact, P pb_object);
 
+        void fill_informed_entity(const nt::disruption::PtObj& ptobj,const nt::disruption::Impact& impact,
+                                  pbnavitia::Impact* pb_impact);
+
         void fill_pb_object(const navitia::type::Contributor*, pbnavitia::Contributor*);
         void fill_pb_object(const navitia::type::Frame*, pbnavitia::Frame*);
         void fill_pb_object(const navitia::type::StopArea*, pbnavitia::StopArea*);
@@ -119,7 +151,13 @@ private:
         void fill_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
         void fill_pb_object(const way_pair*, pbnavitia::Address*);
         void fill_pb_object(const way_pair_name*, pbnavitia::Address*);
-        void fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection);
+        void fill_pb_object(const nt::StopPointConnection*, pbnavitia::Connection*);
+        void fill_pb_object(const navitia::type::StopTime* , pbnavitia::StopTime*);
+        void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);
+        void fill_pb_object(const navitia::type::StopTime* , pbnavitia::Properties*);
+        void fill_pb_object(const std::string* , pbnavitia::Note*);
+//        void fill_pb_object(const jp_pair*, pbnavitia::JourneyPattern*);
+        void fill_pb_object(const jpp_pair*, pbnavitia::JourneyPatternPoint*);
 
     };
 };
@@ -136,32 +174,6 @@ void fill_pb_object(const N* item, const navitia::type::Data& data, P * proto, i
 }
 
 //*********************************************
-//forward declare
-namespace navitia {
-    namespace routing {
-        struct PathItem;
-        struct JourneyPattern;
-        struct JourneyPatternPoint;    
-        using JppIdx = Idx<JourneyPatternPoint>;
-        using JpIdx = Idx<JourneyPattern>;
-    }
-    namespace georef {
-        struct PathItem;
-        struct Way;
-        struct POI;
-        struct Path;
-        struct POIType;
-    }
-    namespace fare {
-        struct results;
-        struct Ticket;
-    }
-    namespace timetables {
-        struct Thermometer;
-    }
-}
-
-
 
 
 namespace navitia {
