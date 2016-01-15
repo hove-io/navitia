@@ -45,7 +45,7 @@ from errors import ManageError
 from Coord import Coord
 from jormungandr.interfaces.v1.fields import DisruptionsField, feed_publisher
 from jormungandr.timezone import set_request_timezone
-from flask.ext.restful.types import boolean
+from flask.ext.restful.inputs import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp

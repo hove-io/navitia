@@ -115,7 +115,7 @@ def log_exception(sender, exception, **extra):
     message = ""
     if hasattr(exception, "data") and "message" in exception.data:
         message = exception.data['message']
-    error = exception.__class__.__name__ + " " + message + " " + request.url
+    error = '{} {} {}'.format(exception.__class__.__name__, message, request.url)
 
     if isinstance(exception, (HTTPException, RegionNotFound)):
         logger.debug(error)
