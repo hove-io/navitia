@@ -202,6 +202,48 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     return validity_patterns[rt_level]->check(day);
 }
 
+
+ValidityPattern VehicleJourney::does_stop_at(const StopPoint& sp,
+        RTLevel rt_level,
+        const boost::posix_time::time_period& period) const {
+    /*
+     *
+     *
+     *  Day     1              2               3               4               5               6
+     *          -----------------------------------------------------------------------------------------------------
+     * stop_time       8:30         8:30             8:30             8:30
+     * period      |-----------------------------------------------|
+     *
+     *
+     *
+     * In this case, the vehicle does stop at the Day1, 2, 3, *BUT* not the Day4
+     * Then the validity pattern of this stop_time in this period is "00111" (Reminder: the vp string is inverted)
+     *
+     * */
+    ValidityPattern vp_for_stop_time{validity_patterns[rt_level]->beginning_date};
+
+    auto pass_by_the_sp = [&](const nt::StopTime& stop_time){
+       if (stop_time.stop_point->uri != sp.uri) {
+           return;
+       }
+       const auto& beginning_date = validity_patterns[rt_level]->beginning_date;
+       for (size_t i  = 0; i < validity_patterns[rt_level]->days.size(); ++i) {
+           if (! validity_patterns[rt_level]->days.test(i)) {
+               continue;
+           }
+           auto circulating_day = beginning_date + boost::gregorian::days{static_cast<int>(i)};
+           auto arrival_time_utc = stop_time.get_arrival_utc(circulating_day);
+           if (period.contains(arrival_time_utc)) {
+               auto days = (circulating_day - vp_for_stop_time.beginning_date).days();
+               vp_for_stop_time.add(days);
+           }
+       }
+    };
+    boost::for_each(stop_time_list, pass_by_the_sp);
+    return vp_for_stop_time;
+
+}
+
 boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
     uint32_t first_departure = std::numeric_limits<uint32_t>::max();
     uint32_t last_arrival = 0;

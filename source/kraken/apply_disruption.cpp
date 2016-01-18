@@ -198,49 +198,40 @@ struct add_impacts_visitor : public apply_impacts_visitor {
          * */
         using namespace boost::posix_time;
         using namespace boost::gregorian;
-        std::vector<const nt::VehicleJourney*> impacted_vjs;
 
         type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
         for (const auto& period: impact->application_periods) {
-            for (time_iterator it(period.begin(),boost::posix_time::time_duration{24, 0, 0}); it < period.end(); ++it) {
+            auto one_day = boost::posix_time::time_duration{24, 0, 0};
+            for (time_iterator it(period.begin() - one_day, one_day); it < period.end(); ++it) {
                 if (! meta.production_date.contains((*it).date())) { continue; }
                 auto day = ((*it).date() - meta.production_date.begin()).days();
                 impact_vp.add(day);
             }
-            // we may impact vj's passing midnight but all we care is start date
         }
 
+        std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;
         for (const auto* vj: pt_data.vehicle_journeys) {
 
             if ((vj->validity_patterns[rt_level]->days & impact_vp.days).none()) {
                 continue;
             }
 
-            if (boost::algorithm::any_of(vj->stop_time_list, [&](const nt::StopTime& stop_time){
-                if (stop_time.stop_point != stop_point) {
-                    return false;
-                }
-                auto beginning_date = vj->validity_patterns[rt_level]->beginning_date;
-                auto beginning_date_posix = navitia::to_posix_timestamp(boost::posix_time::ptime(beginning_date));
-                for (size_t i  = 0; i < vj->validity_patterns[rt_level]->days.size(); ++i) {
-                    if (! vj->validity_patterns[rt_level]->days.test(i)) {
-                        continue;
-                    }
-                    auto arrival_time_utc = beginning_date_posix + 86400 * i + stop_time.arrival_time;
-                    for (const auto& period: impact->application_periods) {
-                        if (period.contains(boost::posix_time::from_time_t(arrival_time_utc))) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            })) {
-                impacted_vjs.push_back(vj);
+            nt::ValidityPattern new_vp{vj->validity_patterns[rt_level]->beginning_date};
+
+            for(const auto& period : impact->application_periods) {
+                new_vp.days |= vj->does_stop_at(*stop_point, rt_level, period).days;
             }
+            if(new_vp.days.none()){
+                continue;
+            }
+            vj_vp_pairs.emplace_back(vj, new_vp);
         }
 
-        for (const auto* vj : impacted_vjs) {
+        for (auto& vj_vp : vj_vp_pairs) {
             std::vector<nt::StopTime> new_stop_times;
+            const auto* vj = vj_vp.first;
+            auto& new_vp = vj_vp.second;
+
             for (const auto& st : vj->stop_time_list) {
                 if (st.stop_point == stop_point) {
                     continue;
@@ -255,15 +246,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     std::to_string(nb_rt_vj) + ":" +
                     impact->disruption->uri;
 
-            nt::ValidityPattern new_vp{meta.production_date.begin()};
-            new_vp.days = impact_vp.days & vj->validity_patterns[rt_level]->days;
-
+            new_vp.days = new_vp.days & vj->validity_patterns[rt_level]->days;
+            
             auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
-                rt_level,
-                new_vp,
-                nullptr,
-                std::move(new_stop_times),
-                pt_data);
+                    rt_level,
+                    new_vp,
+                    nullptr,
+                    std::move(new_stop_times),
+                    pt_data);
+            
             if (! mvj->get_base_vj().empty()) {
                 new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 new_vj->name = mvj->get_base_vj().at(0)->name;
@@ -351,7 +342,6 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             if (auto spt = i.lock()) {
                 auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
                 boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-                // v(mvj);
             }
         }
     }
@@ -420,7 +410,6 @@ void delete_disruption(const std::string& disruption_id,
     // the disruption is deleted by RAII
     if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
-            std::cout << impact->uri << std::endl;
             delete_impact(impact, pt_data, meta);
         }
     }

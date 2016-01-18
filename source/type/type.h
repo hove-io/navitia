@@ -525,6 +525,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
+    // figure out if the vj stop at that stop_point, given the realtime level and a period
+    ValidityPattern does_stop_at(const StopPoint& sp, RTLevel rt_level, const boost::posix_time::time_period& period) const;
+
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
     Frame* frame = nullptr;
@@ -716,6 +719,12 @@ struct StopTime {
     }
     DateTime arrival(DateTime dt) const {
         return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
+    }
+
+    boost::posix_time::ptime get_arrival_utc(const boost::gregorian::date& circulating_day) const {
+       auto timestamp = navitia::to_posix_timestamp(boost::posix_time::ptime{circulating_day})
+                   + static_cast<uint64_t>(arrival_time);
+       return boost::posix_time::from_time_t(timestamp);
     }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
