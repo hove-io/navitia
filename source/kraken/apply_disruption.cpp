@@ -196,22 +196,19 @@ struct add_impacts_visitor : public apply_impacts_visitor {
          * 2. Get Vj
          *
          * */
-        std::vector<const nt::VehicleJourney*> impacted_vjs;
         using namespace boost::posix_time;
         using namespace boost::gregorian;
+        std::vector<const nt::VehicleJourney*> impacted_vjs;
+
         type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
         for (const auto& period: impact->application_periods) {
             for (time_iterator it(period.begin(),boost::posix_time::time_duration{24, 0, 0}); it < period.end(); ++it) {
                 if (! meta.production_date.contains((*it).date())) { continue; }
                 auto day = ((*it).date() - meta.production_date.begin()).days();
-                std::cout << "adding days" << std::endl;
                 impact_vp.add(day);
             }
             // we may impact vj's passing midnight but all we care is start date
         }
-        LOG4CPLUS_DEBUG(log, "impact_vp vp: " <<impact_vp.days);
-
-        LOG4CPLUS_DEBUG(log, "impact rt_level: " <<get_string_from_rt_level(rt_level));
 
         for (const auto* vj: pt_data.vehicle_journeys) {
 
@@ -220,7 +217,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             if (boost::algorithm::any_of(vj->stop_time_list, [&](const nt::StopTime& stop_time){
-                LOG4CPLUS_DEBUG(log, "stop_time stop_point " << stop_time.stop_point->uri);
                 if (stop_time.stop_point != stop_point) {
                     return false;
                 }
@@ -239,11 +235,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
                 return false;
             })) {
-                LOG4CPLUS_DEBUG(log, "find vj " << vj->uri);
                 impacted_vjs.push_back(vj);
             }
         }
-
 
         for (const auto* vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
@@ -251,16 +245,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (st.stop_point == stop_point) {
                     continue;
                 }
-                LOG4CPLUS_DEBUG(log, "find st " << st.stop_point->uri);
-
                 new_stop_times.push_back(st);
             }
 
-
             auto mvj = vj->meta_vj;
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
-                                + impact->disruption->uri;
+            std::string new_vj_uri = mvj->uri + ":" +
+                    type::get_string_from_rt_level(rt_level) + ":" +
+                    std::to_string(nb_rt_vj) + ":" +
+                    impact->disruption->uri;
 
             nt::ValidityPattern new_vp{meta.production_date.begin()};
             new_vp.days = impact_vp.days & vj->validity_patterns[rt_level]->days;
@@ -280,14 +273,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_vj->name = new_vj_uri;
             }
             new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
-            LOG4CPLUS_DEBUG(log, "new_vj vp: " << new_vj->get_validity_pattern_at(rt_level)->days);
-
+            mvj->impacted_by.push_back(impact);
         }
     }
 
     void operator()(nt::StopArea* stop_area) {
-        LOG4CPLUS_DEBUG(log, "stop_area id" << stop_area->uri);
-        LOG4CPLUS_DEBUG(log, "stop_area id" << stop_area->stop_point_list.size());
         for (auto* stop_point: stop_area->stop_point_list) {
             (*this)(stop_point);
         }
@@ -360,20 +350,33 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
                 auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
-                v(mvj);
+                boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+                // v(mvj);
             }
         }
     }
 
     void operator()(nt::StopPoint* stop_point) {
         stop_point->remove_impact(impact);
-        LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_point->uri << " is not handled");
+        for (auto& mvj: pt_data.meta_vjs) {
+            auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
+                if (auto i = weak_ptr.lock()){
+                    return i->uri == impact->uri;
+                }
+                return false;
+            };
+            if (boost::algorithm::any_of(mvj->impacted_by, find_impact)) {
+                (*this)(mvj.get());
+            };
+        }
 
     }
 
     void operator()(nt::StopArea* stop_area) {
         stop_area->remove_impact(impact);
-        LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_area->uri << " is not handled");
+        for (auto* sp: stop_area->stop_point_list) {
+            (*this)(sp);
+        }
     }
 
     void operator()(nt::Network* network) {
@@ -417,6 +420,7 @@ void delete_disruption(const std::string& disruption_id,
     // the disruption is deleted by RAII
     if (auto disruption = holder.pop_disruption(disruption_id)) {
         for (const auto& impact : disruption->get_impacts()) {
+            std::cout << impact->uri << std::endl;
             delete_impact(impact, pt_data, meta);
         }
     }
