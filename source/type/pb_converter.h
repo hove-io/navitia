@@ -33,6 +33,8 @@ www.navitia.io
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/pt_data.h"
+#include "vptranslator/vptranslator.h"
+#include "ptreferential/ptreferential.h"
 
 namespace pt = boost::posix_time;
 
@@ -81,6 +83,64 @@ using jpp_pair = std::pair<const navitia::routing::JppIdx, const navitia::routin
 
 namespace ProtoCreator {
 
+
+/**
+ * get_label() is a function that returns:
+ * * the label (or a function get_label()) if the object has it
+ * * else return the name of the object
+ *
+ * Note: the trick is that int is a better match for 0 than
+ * long and template resolution takes the best match
+ */
+namespace detail {
+template<typename T>
+auto get_label_if_exists(const T* v, int) -> decltype(v->label) {
+    return v->label;
+}
+
+template<typename T>
+auto get_label_if_exists(const T* v, int) -> decltype(v->get_label()) {
+    return v->get_label();
+}
+
+template<typename T>
+auto get_label_if_exists(const T* v, long) -> decltype(v->name) {
+    return v->name;
+}
+}
+
+template<typename T>
+std::string get_label(const T* v) {
+    return detail::get_label_if_exists(v, 0);
+}
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::Calendar*) { return pbnavitia::CALENDAR; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::VehicleJourney*) { return pbnavitia::VEHICLE_JOURNEY; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::Line*) { return pbnavitia::LINE; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::Route*) { return pbnavitia::ROUTE; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::Company*) { return pbnavitia::COMPANY; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::Network*) { return pbnavitia::NETWORK; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::georef::POI*) { return pbnavitia::POI; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::georef::Admin*) { return pbnavitia::ADMINISTRATIVE_REGION; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::StopArea*) { return pbnavitia::STOP_AREA; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::StopPoint*) { return pbnavitia::STOP_POINT; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
+inline pbnavitia::NavitiaType get_embedded_type(const navitia::type::MetaVehicleJourney*) { return pbnavitia::TRIP; }
+
+inline pbnavitia::Calendar* get_sub_object(const navitia::type::Calendar*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
+inline pbnavitia::VehicleJourney* get_sub_object(const navitia::type::VehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
+inline pbnavitia::Line* get_sub_object(const navitia::type::Line*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_line(); }
+inline pbnavitia::Route* get_sub_object(const navitia::type::Route*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_route(); }
+inline pbnavitia::Company* get_sub_object(const navitia::type::Company*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_company(); }
+inline pbnavitia::Network* get_sub_object(const navitia::type::Network*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_network(); }
+inline pbnavitia::Poi* get_sub_object(const navitia::georef::POI*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_poi(); }
+inline pbnavitia::AdministrativeRegion* get_sub_object(const navitia::georef::Admin*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_administrative_region(); }
+inline pbnavitia::StopArea* get_sub_object(const navitia::type::StopArea*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
+inline pbnavitia::StopPoint* get_sub_object(const navitia::type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
+inline pbnavitia::CommercialMode* get_sub_object(const navitia::type::CommercialMode*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
+inline pbnavitia::Trip* get_sub_object(const navitia::type::MetaVehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
+
+
+
 struct PbCreator {
     const nt::Data& data;
     const pt::ptime now;
@@ -108,10 +168,17 @@ private:
             copy_depth_decr().fill_pb_object(nav_object, pb_object);
         }
 
-        template<typename NAV, typename GetPbObject>
-        void fill(const std::vector<NAV*>& nav_list, GetPbObject get_pb_object){
-            for (auto* nav_obj : nav_list) {
-                fill(nav_obj, get_pb_object());
+        template<typename Nav, typename Pb>
+        void fill (const std::vector<Nav*>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto* nav_obj: nav_list) {
+                fill(nav_obj, pb_list->Add());
+            }
+        }
+
+        template<typename Nav, typename Pb>
+        void fill (const std::vector<Nav>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto& nav_obj: nav_list) {
+                fill(&nav_obj, pb_list->Add());
             }
         }
 
@@ -124,6 +191,32 @@ private:
             }
         }
 
+        template<typename T>
+        void fill_pb_placemark(const T* value, pbnavitia::PtObject* pt_object) {
+            if(value == nullptr) { return; }
+
+            fill(value, get_sub_object(value, pt_object));
+            pt_object->set_name(get_label(value));
+            pt_object->set_uri(value->uri);
+            pt_object->set_embedded_type(get_embedded_type(value));
+        }
+
+        template <typename NAV>
+        std::vector<navitia::type::idx_t> ptref_indexs( const NAV* nav_obj, const navitia::type::Type_e type_e) {
+            std::vector<navitia::type::idx_t> indexes;
+            try{
+                std::string request = navitia::type::static_data::get()->captionByType(nav_obj->type) +
+                        ".uri=" + nav_obj->uri;
+                indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
+            } catch(const navitia::ptref::parsing_error &parse_error) {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                               "ptref_indexs, Unable to parse :" + parse_error.more);
+            } catch(const navitia::ptref::ptref_error &pt_error) {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                               "ptref_indexs, " + pt_error.more);
+            }
+            return indexes;
+        }
 
         template <typename P>
         void fill_message(const navitia::type::disruption::Impact& impact, P pb_object);
@@ -144,7 +237,8 @@ private:
         void fill_pb_object(const navitia::type::LineGroup*, pbnavitia::LineGroup*);
         void fill_pb_object(const navitia::type::Calendar*, pbnavitia::Calendar*);
         void fill_pb_object(const navitia::type::ValidityPattern*, pbnavitia::ValidityPattern*);
-        void fill_pb_object(const navitia::type::VehicleJourney*, pbnavitia::VehicleJourney*);
+        void fill_pb_object(const navitia::type::VehicleJourney*, pbnavitia::VehicleJourney*);        
+        void fill_pb_object(const nt::MetaVehicleJourney*, pbnavitia::Trip*);
         void fill_pb_object(const navitia::georef::Admin*, pbnavitia::AdministrativeRegion*);
         void fill_pb_object(const navitia::type::ExceptionDate*, pbnavitia::CalendarException*);
         void fill_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
@@ -156,8 +250,10 @@ private:
         void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);
         void fill_pb_object(const navitia::type::StopTime* , pbnavitia::Properties*);
         void fill_pb_object(const std::string* , pbnavitia::Note*);
-//        void fill_pb_object(const jp_pair*, pbnavitia::JourneyPattern*);
+        void fill_pb_object(const jp_pair*, pbnavitia::JourneyPattern*);
         void fill_pb_object(const jpp_pair*, pbnavitia::JourneyPatternPoint*);
+        void fill_pb_object(const navitia::vptranslator::BlockPattern* ,pbnavitia::Calendar*);
+        void fill_pb_object(const nt::Route*, pbnavitia::PtDisplayInfo*);
 
     };
 };
