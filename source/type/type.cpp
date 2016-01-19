@@ -203,23 +203,10 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
 }
 
 
-ValidityPattern VehicleJourney::does_stop_at(const StopPoint& sp,
+ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
         RTLevel rt_level,
         const boost::posix_time::time_period& period) const {
-    /*
-     *
-     *
-     *  Day     1              2               3               4               5               6
-     *          -----------------------------------------------------------------------------------------------------
-     * stop_time       8:30         8:30             8:30             8:30
-     * period      |-----------------------------------------------|
-     *
-     *
-     *
-     * In this case, the vehicle does stop at the Day1, 2, 3, *BUT* not the Day4
-     * Then the validity pattern of this stop_time in this period is "00111" (Reminder: the vp string is inverted)
-     *
-     * */
+
     ValidityPattern vp_for_stop_time{validity_patterns[rt_level]->beginning_date};
 
     auto pass_by_the_sp = [&](const nt::StopTime& stop_time){
@@ -229,6 +216,7 @@ ValidityPattern VehicleJourney::does_stop_at(const StopPoint& sp,
        const auto& beginning_date = validity_patterns[rt_level]->beginning_date;
        for (size_t i  = 0; i < validity_patterns[rt_level]->days.size(); ++i) {
            if (! validity_patterns[rt_level]->days.test(i)) {
+               // the VJ doesn't run at day i
                continue;
            }
            auto circulating_day = beginning_date + boost::gregorian::days{static_cast<int>(i)};

@@ -525,8 +525,28 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
-    // figure out if the vj stop at that stop_point, given the realtime level and a period
-    ValidityPattern does_stop_at(const StopPoint& sp, RTLevel rt_level, const boost::posix_time::time_period& period) const;
+    /*
+     *
+     *
+     *  Day     1              2               3               4               5               6
+     *          -----------------------------------------------------------------------------------------------------
+     * SP_bob           8:30         8:30             8:30                       (vj)
+     * Period_bob   |-----------------------------------------------|
+     *
+     *
+     * Let's say we have a vj passes every day at 8:30 on a stop point SP_bob.
+     * Now given a Period_bob and the VJ stops at SP_bob only during this Period_bob, what's the validity pattern of the
+     * VJ if SP_bob must be served?
+     *
+     * In this case, the vehicle does stop at the Day1, 2, 3, *BUT* not the Day4
+     * Then the validity pattern of this stop_time in this period is "00111" (Reminder: the vp string is inverted)
+     *
+     * */
+    // compute the validity pattern of the vj stop at that stop_point, given the realtime level and a period
+    ValidityPattern get_vp_of_sp(
+            const StopPoint& sp,
+            RTLevel rt_level,
+            const boost::posix_time::time_period& period) const;
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;

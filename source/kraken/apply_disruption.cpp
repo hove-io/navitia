@@ -191,11 +191,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::StopPoint* stop_point) {
-        /*
-         * 1. Get All vj passed by stop_point
-         * 2. Get Vj
-         *
-         * */
+
         using namespace boost::posix_time;
         using namespace boost::gregorian;
 
@@ -219,9 +215,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             nt::ValidityPattern new_vp{vj->validity_patterns[rt_level]->beginning_date};
 
             for(const auto& period : impact->application_periods) {
-                new_vp.days |= vj->does_stop_at(*stop_point, rt_level, period).days;
+                new_vp.days |= vj->get_vp_of_sp(*stop_point, rt_level, period).days;
             }
+
             if(new_vp.days.none()){
+                // The vj doesn't stop at the impacted stop_point during all the given impact periods
                 continue;
             }
             vj_vp_pairs.emplace_back(vj, new_vp);
