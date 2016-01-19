@@ -54,10 +54,10 @@ pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "ro
 
 
 class Ptobjects(ResourceUri):
-    parsers = {}
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,

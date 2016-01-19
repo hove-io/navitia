@@ -417,7 +417,7 @@ struct routing_api_data {
                                 b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
             //add another bus, much later. we'll use that one for disruptions
-            b.vj("B")("stop_point:stopB", "18:01"_t)("stop_point:stopA", "18:01:02"_t)
+            b.vj("B", "111111", "", true, "vjB")("stop_point:stopB", "18:01"_t)("stop_point:stopA", "18:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["B"]->code = "1B";
 

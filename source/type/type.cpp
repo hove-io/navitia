@@ -813,7 +813,7 @@ std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Contributor: result.push_back(contributor->idx); break;
-    case Type_e::VehicleJourney: return indexes(vehiclejourney_list); break;
+    case Type_e::VehicleJourney: return indexes(vehiclejourney_list);
     default: break;
     }
     return result;
@@ -822,7 +822,7 @@ std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
 std::vector<idx_t> Contributor::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::Frame: return indexes(frame_list); break;
+    case Type_e::Frame: return indexes(frame_list);
     default: break;
     }
     return result;

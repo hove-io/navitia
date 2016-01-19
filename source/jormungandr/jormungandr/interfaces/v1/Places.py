@@ -130,10 +130,10 @@ ww_places = {
 
 
 class Places(ResourceUri):
-    parsers = {}
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
@@ -285,10 +285,10 @@ places_types = {'stop_areas', 'stop_points', 'pois',
                 'addresses', 'coords', 'places'}  # add admins when possible
 
 class PlacesNearby(ResourceUri):
-    parsers = {}
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
