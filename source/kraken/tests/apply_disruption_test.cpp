@@ -47,6 +47,7 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace ntest = navitia::test;
 namespace ba = boost::algorithm;
+namespace bg = boost::gregorian;
 
 using btp = boost::posix_time::time_period;
 
@@ -203,6 +204,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 
     const auto* vj2_adapted = get_adapted(vj2, 2);
 
+    BOOST_CHECK(ba::ends_with(vj2->base_validity_pattern()->days.to_string(), "111"));
     BOOST_CHECK(ba::ends_with(vj2->adapted_validity_pattern()->days.to_string(), "110"));
     BOOST_CHECK(ba::ends_with(vj2_adapted->base_validity_pattern()->days.to_string(), "000"));
     BOOST_CHECK(ba::ends_with(vj2_adapted->adapted_validity_pattern()->days.to_string(), "001"));
@@ -232,7 +234,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     // we delete the stop_area 1, two vjs are impacted, we create a new journey pattern without this stop_area
     // and two new vj are enable on this journey pattern, of course the theorical vj are disabled
@@ -311,7 +313,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     //we delete the stop_area 1, two vj are impacted, we create a new journey pattern without this stop_area
     //and two new vj are enable on this journey pattern, of course the theorical vj are disabled
@@ -386,7 +388,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     //we delete the stop_area 1, on vj passing midnight is impacted,
 
@@ -439,7 +441,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop3_closed")
                               .severity(nt::disruption::Effect::NO_SERVICE)
@@ -484,7 +486,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     auto&& disruption = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                               .severity(nt::disruption::Effect::NO_SERVICE)
@@ -532,4 +534,88 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
             vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
             vj->adapted_validity_pattern()->days);
+}
+
+BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
+
+    ed::builder b("20120614");
+    b.vj("A", "111111", "", true, "vj:1")
+            ("stop1", "08:00"_t, "08:01"_t)
+            ("stop2", "08:15"_t, "08:16"_t)
+            ("stop3", "08:45"_t, "08:46"_t);
+
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop1")
+                              // 2012/6/14 8h00 -> 2012/6/19 8h05
+                              .application_periods(btp("20120614T080000"_dt, "20120619T080500"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop2_closed")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop2")
+                              // 2012/6/14 8h15 -> 2012/6/19 8h17
+                              .application_periods(btp("20120614T081500"_dt, "20120619T081700"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop3_closed")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop3")
+                              // 2012/6/14 8h45 -> 2012/6/19 8h47
+                              .application_periods(btp("20120614T084500"_dt, "20120619T084700"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // Base VJ
+    auto* vj  = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
+            vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
+            vj->adapted_validity_pattern()->days);
+
+
+    // Adapted VJ
+    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:2:stop1_closed:stop2_closed:stop3_closed"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+            vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
+            vj->adapted_validity_pattern()->days);
+
+    // in Adapted Vj, all stop point is blocked....
+    BOOST_REQUIRE(vj->stop_time_list.empty());
+
+
+    navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
+    navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
+    navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
+
+    for (const auto* vj: b.data->pt_data->vehicle_journeys) {
+        switch (vj->realtime_level) {
+        case nt::RTLevel::Base:
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
+                    vj->adapted_validity_pattern()->days);
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
+                    vj->base_validity_pattern()->days);
+            break;
+        case nt::RTLevel::Adapted:
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
+                    vj->adapted_validity_pattern()->days);
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+                    vj->base_validity_pattern()->days);
+            break;
+        case nt::RTLevel::RealTime:
+            //TODO
+            throw navitia::exception("realtime check unhandled case");
+        }
+    }
 }

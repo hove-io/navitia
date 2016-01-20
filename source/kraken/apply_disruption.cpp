@@ -31,7 +31,6 @@ www.navitia.io
 #include "apply_disruption.h"
 #include "utils/logger.h"
 #include "type/datetime.h"
-#include "ptreferential/ptreferential.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -131,6 +130,18 @@ static type::ValidityPattern compute_base_disrupted_vp(
         vp.add(day);
     }
     return vp;
+}
+
+std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
+    std::string impacts_uris;
+    for (auto& mvj_impacts : mvj.impacted_by) {
+        if (auto i = mvj_impacts.lock()) {
+            if (impacts_uris.find(i->disruption->uri) == std::string::npos) {
+                impacts_uris += ":" + i->disruption->uri;
+            }
+        }
+    }
+    return impacts_uris;
 }
 
 struct add_impacts_visitor : public apply_impacts_visitor {
@@ -238,11 +249,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto mvj = vj->meta_vj;
+            mvj->impacted_by.push_back(impact);
+
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             std::string new_vj_uri = mvj->uri + ":" +
                     type::get_string_from_rt_level(rt_level) + ":" +
-                    std::to_string(nb_rt_vj) + ":" +
-                    impact->disruption->uri;
+                    std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
 
             new_vp.days = new_vp.days & vj->validity_patterns[rt_level]->days;
             
@@ -262,7 +274,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_vj->name = new_vj_uri;
             }
             new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
-            mvj->impacted_by.push_back(impact);
         }
     }
 
@@ -346,18 +357,17 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     void operator()(nt::StopPoint* stop_point) {
         stop_point->remove_impact(impact);
+        auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
+            if (auto i = weak_ptr.lock()){
+                return i->uri == impact->uri;
+            }
+            return false;
+        };
         for (auto& mvj: pt_data.meta_vjs) {
-            auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
-                if (auto i = weak_ptr.lock()){
-                    return i->uri == impact->uri;
-                }
-                return false;
-            };
             if (boost::algorithm::any_of(mvj->impacted_by, find_impact)) {
                 (*this)(mvj.get());
             };
         }
-
     }
 
     void operator()(nt::StopArea* stop_area) {
