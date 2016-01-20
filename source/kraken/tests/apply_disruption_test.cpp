@@ -639,6 +639,7 @@ make_delay_message(const std::string& vj_uri,
 
     return trip_update;
 }
+
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     ed::builder b("20120614");
     auto* vj1 = b.vj("A", "111111", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
@@ -656,6 +657,14 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
             std::make_tuple("stop3", "20120617T0205"_pts, "20120617T0205"_pts),
         });
     navitia::handle_realtime("bob", "20120616T1337"_dt, trip_update, *b.data);
+
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
+            vj1->rt_validity_pattern()->days);
+
+    auto* vj  = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
+            vj->rt_validity_pattern()->days);
+
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "stop2_closed")
                               .severity(nt::disruption::Effect::NO_SERVICE)
                               .on(nt::Type_e::StopPoint, "stop2")
@@ -665,8 +674,42 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
 
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
             vj1->rt_validity_pattern()->days);
-}
 
+
+    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+            vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "000000"),
+            vj->rt_validity_pattern()->days);
+
+    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:1:bob:stop2_closed"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+            vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
+            vj->rt_validity_pattern()->days);
+
+    BOOST_REQUIRE_EQUAL(vj->shift, 1);
+    auto* s1 = b.data->pt_data->stop_points_map["stop1"];
+    auto* s3 = b.data->pt_data->stop_points_map["stop3"];
+
+    check_vj(vj, {{"00:05"_t, "00:05"_t, s1},
+                  {"02:05"_t, "02:05"_t, s3}});
+
+    navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
+            vj1->rt_validity_pattern()->days);
+
+    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "000000"),
+            vj->rt_validity_pattern()->days);
+
+    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:modified:2:bob"];
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
+            vj->rt_validity_pattern()->days);
+
+}
+/*
 BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     ed::builder b("20120614");
     auto* vj = b.vj("A", "111111", "", true, "vj:1")
@@ -715,4 +758,4 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
     BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
     BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
-}
+}*/

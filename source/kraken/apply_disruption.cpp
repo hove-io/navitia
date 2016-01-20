@@ -233,6 +233,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 // The vj doesn't stop at the impacted stop_point during all the given impact periods
                 continue;
             }
+            new_vp.days >>= vj->shift;
             vj_vp_pairs.emplace_back(vj, new_vp);
         }
 
@@ -245,7 +246,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (st.stop_point == stop_point) {
                     continue;
                 }
-                new_stop_times.push_back(st);
+                new_stop_times.emplace_back(
+                        st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift,
+                        st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift,
+                        st.stop_point);
             }
 
             auto mvj = vj->meta_vj;
@@ -256,8 +260,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     type::get_string_from_rt_level(rt_level) + ":" +
                     std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
 
-            new_vp.days = new_vp.days & vj->validity_patterns[rt_level]->days;
-            
+            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
             auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
                     rt_level,
                     new_vp,
@@ -349,8 +352,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         boost::swap(impacted_by_moved, mvj->impacted_by);
         for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
-                auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
-                boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+                auto v = add_impacts_visitor(spt, pt_data, meta, spt->disruption->rt_level);
+                boost::for_each(spt->informed_entities, boost::apply_visitor(v));
             }
         }
     }
