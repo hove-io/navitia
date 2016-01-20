@@ -55,52 +55,63 @@ class TestDisruptions(AbstractTestFixture):
 
         response = self.query_region('traffic_reports?' + default_date_filter)
 
-        traffic_report = get_not_null(response, 'traffic_reports')
+        global_traffic_report = get_not_null(response, 'traffic_reports')
 
-        # the disruptions are grouped by network and we have only one network
-        eq_(len(traffic_report), 1)
+        def check_response(traffic_report):
+            # the disruptions are grouped by network and we have only one network
+            eq_(len(traffic_report), 1)
 
-        impacted_lines = get_not_null(traffic_report[0], 'lines')
-        eq_(len(impacted_lines), 1)
-        is_valid_line(impacted_lines[0], depth_check=0)
-        eq_(impacted_lines[0]['id'], 'A')
+            impacted_lines = get_not_null(traffic_report[0], 'lines')
+            eq_(len(impacted_lines), 1)
+            is_valid_line(impacted_lines[0], depth_check=0)
+            eq_(impacted_lines[0]['id'], 'A')
 
-        lines_disrupt = get_disruptions(impacted_lines[0], response)
-        eq_(len(lines_disrupt), 2)
-        for d in lines_disrupt:
-            is_valid_disruption(d)
-        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['contributor'], 'contrib')
-        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
-        eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
+            lines_disrupt = get_disruptions(impacted_lines[0], response)
+            eq_(len(lines_disrupt), 2)
+            for d in lines_disrupt:
+                is_valid_disruption(d)
+            eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+            eq_(lines_disrupt[0]['contributor'], 'contrib')
+            eq_(lines_disrupt[0]['uri'], 'too_bad_again')
+            eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
 
-        eq_(lines_disrupt[1]['uri'], 'later_impact')
+            eq_(lines_disrupt[1]['uri'], 'later_impact')
 
-        impacted_network = get_not_null(traffic_report[0], 'network')
-        is_valid_network(impacted_network, depth_check=0)
-        eq_(impacted_network['id'], 'base_network')
-        network_disrupt = get_disruptions(impacted_network, response)
-        eq_(len(network_disrupt), 2)
-        for d in network_disrupt:
-            is_valid_disruption(d)
-        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['uri'], 'too_bad_again')
+            impacted_network = get_not_null(traffic_report[0], 'network')
+            is_valid_network(impacted_network, depth_check=0)
+            eq_(impacted_network['id'], 'base_network')
+            network_disrupt = get_disruptions(impacted_network, response)
+            eq_(len(network_disrupt), 2)
+            for d in network_disrupt:
+                is_valid_disruption(d)
+            eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
+            eq_(network_disrupt[0]['uri'], 'too_bad_again')
 
-        eq_(network_disrupt[1]['contributor'], '')
+            eq_(network_disrupt[1]['contributor'], '')
 
-        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['uri'], 'later_impact')
+            eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
+            eq_(network_disrupt[1]['uri'], 'later_impact')
 
-        impacted_stop_areas = get_not_null(traffic_report[0], 'stop_areas')
-        eq_(len(impacted_stop_areas), 1)
-        is_valid_stop_area(impacted_stop_areas[0], depth_check=0)
-        eq_(impacted_stop_areas[0]['id'], 'stopA')
-        stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
-        eq_(len(stop_disrupt), 1)
-        for d in stop_disrupt:
-            is_valid_disruption(d)
-        eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
-        eq_(stop_disrupt[0]['uri'], 'too_bad')
+            impacted_stop_areas = get_not_null(traffic_report[0], 'stop_areas')
+            eq_(len(impacted_stop_areas), 1)
+            is_valid_stop_area(impacted_stop_areas[0], depth_check=0)
+            eq_(impacted_stop_areas[0]['id'], 'stopA')
+            stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
+            eq_(len(stop_disrupt), 1)
+            for d in stop_disrupt:
+                is_valid_disruption(d)
+            eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
+            eq_(stop_disrupt[0]['uri'], 'too_bad')
+
+        check_response(global_traffic_report)
+
+        # we should also we able to find the disruption with a place_nerby
+        # (since the coords in the # datasets are very close, we find all)
+
+        coord_traffic_report = self.query_region(
+            'coords/{s}/traffic_reports?{dt_filter}'.format(s=s_coord, dt_filter=default_date_filter))
+
+        check_response(get_not_null(coord_traffic_report, 'traffic_reports'))
 
         """
         by querying directly the impacted object, we only find publishable disruptions
@@ -120,7 +131,7 @@ class TestDisruptions(AbstractTestFixture):
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
         is_valid_line(line)
-        lines_disrupt = get_disruptions(impacted_lines[0], response)
+        lines_disrupt = get_disruptions(line, response)
         eq_(len(lines_disrupt), 2)
         for d in lines_disrupt:
             is_valid_disruption(d)
@@ -135,7 +146,7 @@ class TestDisruptions(AbstractTestFixture):
         stops = self.query_region('stop_areas/stopA?' + default_date_filter)
         stop = get_not_null(stops, 'stop_areas')[0]
         is_valid_stop_area(stop)
-        stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
+        stop_disrupt = get_disruptions(stop, response)
         eq_(len(stop_disrupt), 1)
         for d in stop_disrupt:
             is_valid_disruption(d)
