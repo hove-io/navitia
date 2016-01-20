@@ -1233,7 +1233,7 @@ void GenericGtfsParser::fill_default_modes(Data& data){
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->name = "Cable car";
-    commercial_mode->uri = commercial_mode->name;
+    commercial_mode->uri = "Cable_car";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["5"] = commercial_mode;
 
@@ -1249,7 +1249,12 @@ void GenericGtfsParser::fill_default_modes(Data& data){
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["7"] = commercial_mode;
 
-    for(ed::types::CommercialMode *mt : data.commercial_modes) {
+    for (ed::types::CommercialMode* mt : data.commercial_modes) {
+        // we aggregate some GTFS modes
+        if (in(mt->uri, {"Cable_car", "Gondola"})) {
+            continue;
+        }
+
         ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
         mode->name = mt->name;
         mode->uri = mt->uri;
@@ -1257,6 +1262,9 @@ void GenericGtfsParser::fill_default_modes(Data& data){
         //NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
         gtfs_data.physical_mode_map[mode->uri] = mode;
     }
+    //for physical mode, cable car is tramway, gondola is funicular
+    gtfs_data.physical_mode_map["Cable_car"] = gtfs_data.physical_mode_map.at("Tram");
+    gtfs_data.physical_mode_map["Gondola"] = gtfs_data.physical_mode_map.at("Funicular");
 }
 
 void normalize_extcodes(Data & data) {

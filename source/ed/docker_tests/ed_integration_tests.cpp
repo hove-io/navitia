@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     // check physical/commercial modes
     // for GTFS we got all the default ones
-    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 8);
+    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 6); // less physical mode, some are aggregated
     BOOST_REQUIRE_EQUAL(pt_data.commercial_modes.size(), 8);
     // we check one of each
     const auto* physical_bus = pt_data.physical_modes_map.at("physical_mode:Bus");
