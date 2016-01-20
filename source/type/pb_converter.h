@@ -108,6 +108,15 @@ struct StopTimeCalandar{
         stop_time(stop_time), date_time(date_time), calendar_id(calendar_id){}
 };
 
+struct WayCoord{
+    const navitia::georef::Way* way;
+    const navitia::type::GeographicalCoord& coord;
+    const int number;
+    WayCoord(const navitia::georef::Way* way, const navitia::type::GeographicalCoord& coord,
+             const int number):
+        way(way), coord(coord), number(number){}
+
+};
 /**
  * get_label() is a function that returns:
  * * the label (or a function get_label()) if the object has it
@@ -249,15 +258,6 @@ private:
             }
         }
 
-        template<typename T>
-        void fill_pb_placemark(const T* value, pbnavitia::PtObject* pt_object) {
-            if(value == nullptr) { return; }
-
-            fill(value, get_sub_object(value, pt_object), depth, dump_message);
-            pt_object->set_name(get_label(value));
-            pt_object->set_uri(value->uri);
-            pt_object->set_embedded_type(get_embedded_type(value));
-        }
 
         template <typename Target, typename Source>
         std::vector<Target*> ptref_indexes(const Source* nav_obj) {
@@ -327,6 +327,20 @@ private:
         void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
         void fill_pb_object(const navitia::type::VehicleJourney*, pbnavitia::hasEquipments*);
         void fill_pb_object(const StopTimeCalandar*, pbnavitia::ScheduleStopTime*);
+        void fill_pb_object(const navitia::type::EntryPoint*, pbnavitia::PtObject*);
+        void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
+        void fill_pb_object(const WayCoord*, pbnavitia::Address*);
+
+
+        template<typename T>
+        void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
+            if(value == nullptr) { return; }
+
+            fill(value, get_sub_object(value, pt_object), depth, dump_message);
+            pt_object->set_name(get_label(value));
+            pt_object->set_uri(value->uri);
+            pt_object->set_embedded_type(get_embedded_type(value));
+        }
     };
 };
 

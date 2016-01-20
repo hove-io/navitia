@@ -432,22 +432,22 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
     if(it_sa != data->pt_data->stop_areas_map.end()) {
         pbnavitia::PtObject* place = pb_response.add_places();
-        fill_pb_placemark(it_sa->second, *data, place, 1);
+        ProtoCreator::fill_pb_object(it_sa->second, *data, place, 1);
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
         if(it_sp != data->pt_data->stop_points_map.end()) {
             pbnavitia::PtObject* place = pb_response.add_places();
-            fill_pb_placemark(it_sp->second, *data, place, 1);
+            ProtoCreator::fill_pb_object(it_sp->second, *data, place, 1);
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
                 pbnavitia::PtObject* place = pb_response.add_places();
-                fill_pb_placemark(data->geo_ref->pois[it_poi->second], *data,place, 1);
+                ProtoCreator::fill_pb_object(data->geo_ref->pois[it_poi->second], *data,place, 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
                     pbnavitia::PtObject* place = pb_response.add_places();
-                    fill_pb_placemark(data->geo_ref->admins[it_admin->second], *data, place, 1);
+                    ProtoCreator::fill_pb_object(data->geo_ref->admins[it_admin->second], *data, place, 1);
 
                 }else{
                     fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse : "+request.uri(),  pb_response.mutable_error());
@@ -467,7 +467,7 @@ static void fill_or_error(const pbnavitia::PlaceCodeRequest &request,
         fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
     } else {
         // FIXME: add every object or (as before) just the first one?
-        fill_pb_placemark(objs.front(), data, pb_response.add_places());
+        ProtoCreator::fill_pb_object(objs.front(), data, pb_response.add_places());
     }
 }
 

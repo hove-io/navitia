@@ -65,7 +65,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     pbnavitia::ImpactedObject* add_pt_object(const NavitiaPTObject* bo) const {
         auto* pobj = pb_impact->add_impacted_objects();
           // depht = 0 and DumpMessage::No
-        filler.copy(0, DumpMessage::No).fill_pb_placemark(bo, pobj->mutable_pt_object());
+        filler.copy(0, DumpMessage::No).fill(bo, pobj->mutable_pt_object());
         return pobj;
     }
     template <typename NavitiaPTObject>
@@ -378,7 +378,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
     route->set_name(r->name);
     route->set_direction_type(r->direction_type);
 
-    fill_pb_placemark(r->destination,route->mutable_direction());
+    fill(r->destination,route->mutable_direction());
 
     for (const auto& comment: pb_creator.data.pt_data->comments.get(r)) {
         auto com = route->add_comments();
@@ -1098,6 +1098,65 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
             fill(asso_cal_it->second->exceptions, hn->mutable_exceptions());
         }
     }
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::type::EntryPoint* point, pbnavitia::PtObject* place){
+    if (point->type == navitia::type::Type_e::StopPoint) {
+        const auto it = pb_creator.data.pt_data->stop_points_map.find(point->uri);
+        if (it != pb_creator.data.pt_data->stop_points_map.end()) {
+            fill(it->second, place);
+        }
+    } else if (point->type == navitia::type::Type_e::StopArea) {
+        const auto it = pb_creator.data.pt_data->stop_areas_map.find(point->uri);
+        if (it != pb_creator.data.pt_data->stop_areas_map.end()) {
+            fill(it->second, place);
+        }
+    } else if (point->type == navitia::type::Type_e::POI) {
+        const auto it = pb_creator.data.geo_ref->poi_map.find(point->uri);
+        if (it != pb_creator.data.geo_ref->poi_map.end()) {
+            fill(pb_creator.data.geo_ref->pois[it->second], place);
+        }
+    } else if (point->type == navitia::type::Type_e::Admin) {
+        const auto it = pb_creator.data.geo_ref->admin_map.find(point->uri);
+        if (it != pb_creator.data.geo_ref->admin_map.end()) {
+            fill(pb_creator.data.geo_ref->admins[it->second], place);
+        }
+    } else if (point->type == navitia::type::Type_e::Coord){
+        try{
+            auto address = pb_creator.data.geo_ref->nearest_addr(point->coordinates);
+            navitia::fill_pb_placemark(address.second, pb_creator.data, place, address.first,
+                                       point->coordinates, depth, pb_creator.now,
+                                       pb_creator.action_period);
+        }catch(navitia::proximitylist::NotFound){
+            //we didn't find a address at this coordinate, we fill the address manually with the coord, so we have a valid output
+            place->set_name("");
+            place->set_uri(point->coordinates.uri());
+            place->set_embedded_type(pbnavitia::ADDRESS);
+            auto addr = place->mutable_address();
+            auto c = addr->mutable_coord();
+            c->set_lon(point->coordinates.lon());
+            c->set_lat(point->coordinates.lat());
+        }
+
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::PtObject*  place){
+    if(way_coord->way == nullptr)
+        return;
+
+    fill(way_coord, place->mutable_address(), depth);
+
+    place->set_name(place->address().label());
+
+    place->set_uri(place->address().uri());
+    place->set_embedded_type(pbnavitia::ADDRESS);
+}
+
+void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::Address* address){
+    const navitia::georef::Way* way = way_coord->way;
+    const way_pair_name waypair_name = {{way, way->name}, {way_coord->number, way_coord->coord}};
+    fill(&waypair_name, address, depth);
 }
 
 }

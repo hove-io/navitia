@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(name_formater_sa) {
     BOOST_CHECK_EQUAL(navitia::get_label(sa1), sa1->name + " (" + admin8->name + ")");
 }
 
-BOOST_AUTO_TEST_CASE(fill_pb_placemark_sa) {
+BOOST_AUTO_TEST_CASE(fill_pb_object_sa) {
     navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     d.geo_ref->admins.push_back(admin1);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_placemark_sa) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_placemark(sa1, d, pb);
+    ProtoCreator::fill_pb_object(sa1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), sa1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), sa1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_AREA);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(name_formater_poi) {
     BOOST_CHECK_EQUAL(navitia::get_label(poi1), poi1->name + " (" + admin8->name + ")");
 }
 
-BOOST_AUTO_TEST_CASE(fill_pb_placemark_poi) {
+BOOST_AUTO_TEST_CASE(fill_pb_object_poi) {
     navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_placemark_poi) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_placemark(poi1, d, pb);
+    ProtoCreator::fill_pb_object(poi1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), poi1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), poi1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::POI);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(name_formater_stop_point) {
     BOOST_CHECK_EQUAL(navitia::get_label(stop_point1), stop_point1->name);
 }
 
-BOOST_AUTO_TEST_CASE(fill_pb_placemark_stop_point) {
+BOOST_AUTO_TEST_CASE(fill_pb_object_stop_point) {
     navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_placemark_stop_point) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_placemark(stop_point1, d, pb);
+    ProtoCreator::fill_pb_object(stop_point1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), stop_point1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), stop_point1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_POINT);

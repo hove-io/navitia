@@ -45,17 +45,17 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
         pbnavitia::PtObject* place = pb_response.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_placemark(data.pt_data->stop_areas[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->stop_areas[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Admin:
-            fill_pb_placemark(data.geo_ref->admins[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.geo_ref->admins[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_placemark(data.pt_data->stop_points[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->stop_points[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
@@ -65,21 +65,21 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
             place->set_score(result_item.score);
             break;
         case nt::Type_e::POI:
-            fill_pb_placemark(data.geo_ref->pois[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.geo_ref->pois[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
-            fill_pb_placemark(data.pt_data->networks[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->networks[result_item.idx], data, place, depth);
             break;
         case nt::Type_e::CommercialMode:
-            fill_pb_placemark(data.pt_data->commercial_modes[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->commercial_modes[result_item.idx], data, place, depth);
             break;
         case nt::Type_e::Line:
-            fill_pb_placemark(data.pt_data->lines[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->lines[result_item.idx], data, place, depth);
             break;
         case nt::Type_e::Route:
-            fill_pb_placemark(data.pt_data->routes[result_item.idx], data, place, depth);
+            ProtoCreator::fill_pb_object(data.pt_data->routes[result_item.idx], data, place, depth);
             break;
         default:
             break;
