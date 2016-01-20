@@ -226,7 +226,7 @@ const Journey& make_journey(const PathElt& path, RaptorSolutionReader<Visitor>& 
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
-    j.transfer_dur = reader.transfer_penalty * j.sections.size();
+    j.transfer_dur = reader.transfer_penalty * (j.sections.size() + j.nb_vj_extentions);
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
         const auto first_transfer_waiting = get_transfer_waiting(data, j.sections[0], j.sections[1]);
