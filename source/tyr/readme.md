@@ -540,7 +540,7 @@ If nothing if configured, default POI are extracted. At this time the list is as
 Let say you want to see all type of poi for the instance fr-bre, you have to call the PoiTypes endpoint for this
 instance:
 
-    curl -X POST "http://localhost:5000/v0/instances/fr-bre/poi_types"
+    curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
 ```json
 {
     "poi_types": [
