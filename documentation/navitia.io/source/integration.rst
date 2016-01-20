@@ -2098,7 +2098,7 @@ label           String          The label of the object
 color           String          The hexadecimal code of the line
 code            String          The code of the line
 description     String          A description
-equipments      Array of String
+equipments      Array of string list of `equipment`_ of the object
 =============== =============== ==================================
 
 .. _link:
