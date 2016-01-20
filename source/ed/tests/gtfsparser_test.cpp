@@ -274,14 +274,14 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_REQUIRE(data.lines[0]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "3");
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "Bus");
 
     BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
     BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
     BOOST_REQUIRE(data.lines[4]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "Bus");
 
     //Trips
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11);
@@ -372,14 +372,14 @@ static void check_gtfs_google_example(const ed::Data& data) {
     BOOST_REQUIRE(data.lines[0]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "3");
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "Bus");
 
     BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
     BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
     BOOST_REQUIRE(data.lines[4]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "Bus");
 
     // we need to also check the number of routes created (since they are implicit in GTFS)
     // we create one by line/direction id

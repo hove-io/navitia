@@ -100,14 +100,7 @@ static void check_unsound_pickup_dropoff(const nt::Data& data) {
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
-    const auto input_file = input_file_paths.at("ntfs_file");
-    nt::Data data;
-
-    const auto res = data.load(input_file);
-
-    BOOST_REQUIRE(res);
-
+void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
                             boost::gregorian::from_undelimited_string("20150325"),
                             boost::gregorian::from_undelimited_string("20150827")));
@@ -158,6 +151,25 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
     }
 
+    // check physical/commercial modes
+    // for NTFS we only got the modes defined in the files
+    // + a default physical_mode since the trip_4 is not linked to a physical_mode
+    BOOST_REQUIRE_EQUAL(data.pt_data->physical_modes.size(), 2);
+    BOOST_REQUIRE_EQUAL(data.pt_data->commercial_modes.size(), 1);
+    const auto* physical_bus = data.pt_data->physical_modes_map.at("physical_mode:BUS");
+    BOOST_CHECK_EQUAL(physical_bus->name, "BUS");
+    BOOST_CHECK_EQUAL(physical_bus->uri, "physical_mode:BUS");
+    const auto* physical_default = data.pt_data->physical_modes_map.at("physical_mode:default_physical_mode");
+    BOOST_CHECK_EQUAL(physical_default->name, "mode physique par défaut");
+    BOOST_CHECK_EQUAL(physical_default->uri, "physical_mode:default_physical_mode");
+    const auto* commercial_bus = data.pt_data->commercial_modes_map.at("commercial_mode:BUS");
+    BOOST_CHECK_EQUAL(commercial_bus->name, "BUS");
+    BOOST_CHECK_EQUAL(commercial_bus->uri, "commercial_mode:BUS");
+
+    const auto& vj_map = data.pt_data->vehicle_journeys_map;
+    BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_1_dst_1")->physical_mode, physical_bus);
+    BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_4_dst_1")->physical_mode, physical_default);
+
     auto& routes_map = data.pt_data->routes_map;
     BOOST_REQUIRE_EQUAL(routes_map.size(), 3);
 
@@ -165,11 +177,22 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(routes_map.at("route:route_2")->direction_type, "backward");
     BOOST_CHECK_EQUAL(routes_map.at("route:route_3")->direction_type, "");
 
+    check_unsound_pickup_dropoff(data);
+}
+
+BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
+    const auto input_file = input_file_paths.at("ntfs_file");
+    nt::Data data;
+
+    const auto res = data.load(input_file);
+
+    BOOST_REQUIRE(res);
+
+    check_ntfs(data);
+
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
-
-    check_unsound_pickup_dropoff(data);
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
@@ -199,6 +222,19 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(pt_data.networks.size(), 1);
     BOOST_CHECK_EQUAL(pt_data.networks[0]->name, "Demo Transit Authority");
     BOOST_CHECK_EQUAL(pt_data.networks[0]->uri, "network:DTA");
+
+    // check physical/commercial modes
+    // for GTFS we got all the default ones
+    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 8);
+    BOOST_REQUIRE_EQUAL(pt_data.commercial_modes.size(), 8);
+    // we check one of each
+    const auto* physical_bus = pt_data.physical_modes_map.at("physical_mode:Bus");
+    BOOST_REQUIRE_EQUAL(physical_bus->name, "Bus");
+    BOOST_REQUIRE_EQUAL(physical_bus->uri, "physical_mode:Bus");
+    const auto* commercial_bus = pt_data.commercial_modes_map.at("commercial_mode:Bus");
+    BOOST_REQUIRE_EQUAL(commercial_bus->name, "Bus");
+    BOOST_REQUIRE_EQUAL(commercial_bus->uri, "commercial_mode:Bus");
+
 
     BOOST_REQUIRE_EQUAL(pt_data.stop_areas.size(), 9);
     const auto* fur_creek = pt_data.stop_areas_map.at("stop_area:FUR_CREEK_RES");
@@ -233,7 +269,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE(ab_line->network);
     BOOST_CHECK_EQUAL(ab_line->network->uri, "network:DTA");
     BOOST_REQUIRE(ab_line->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(ab_line->commercial_mode->uri, "commercial_mode:3");
+    BOOST_CHECK_EQUAL(ab_line->commercial_mode->uri, "commercial_mode:Bus");
     BOOST_REQUIRE_EQUAL(ab_line->route_list.size(), 2);
     BOOST_CHECK(boost::find_if(ab_line->route_list, [](nt::Route* r) { return r->uri == "route:AB:0"; })
                 != std::end(ab_line->route_list));
@@ -328,4 +364,6 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
     BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->frame->uri, "f1");
+
+    check_ntfs(data);
 }
