@@ -212,7 +212,17 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
 
 def similar_journeys_generator(journey):
-    for s in journey.sections:
+    is_park_section = lambda section: section.type == response_pb2.PARK
+
+    for idx, s in enumerate(journey.sections):
+        # special case, we don't want to consider the walking section after/before parking a car
+        # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
+        if s.type == response_pb2.STREET_NETWORK:
+            if s.street_network.mode == response_pb2.Walking and \
+                ((idx - 1 >= 0 and is_park_section(journey.sections[idx - 1])) or
+                 (idx + 1 < len(journey.sections) and is_park_section(journey.sections[idx + 1]))):
+                    continue
+
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:" + s.pt_display_informations.uris.vehicle_journey
         elif s.type == response_pb2.STREET_NETWORK:
