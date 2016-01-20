@@ -769,7 +769,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     pbnavitia::Response response;
     for(const auto& item: result){
         auto* nsp = response.add_nearest_stop_points();
-        fill_pb_object(planner->get_sp(item.first), *data, nsp->mutable_stop_point(), 0);
+        ProtoCreator::fill_pb_object(planner->get_sp(item.first), *data, nsp->mutable_stop_point(), 0);
         nsp->set_access_duration(item.second.total_seconds());
     }
     return response;

@@ -35,7 +35,6 @@ www.navitia.io
 #include "type/datetime.h"
 #include "type/meta_data.h"
 #include "fare/fare.h"
-#include "vptranslator/block_pattern_to_pb.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -169,11 +168,13 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         return;
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
+
     if (! stop_times.empty()) {
-        fill_pb_object(vj, d, vj_pt_display_information, stop_times.front(), stop_times.back()
-                       , 1, now, action_period);
+        const auto& vj_stoptimes = ProtoCreator::VjStopTimes(vj, stop_times.front(), stop_times.back());
+        ProtoCreator::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
     } else {
-        fill_pb_object(vj, d, vj_pt_display_information, nullptr, nullptr, 1, now, action_period);
+        const auto& vj_stoptimes = ProtoCreator::VjStopTimes(vj, nullptr, nullptr);
+        ProtoCreator::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
     }
 
     fill_shape(pb_section, stop_times);
@@ -310,9 +311,9 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 bt::time_period action_period(p_deptime, p_arrtime);
-                fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(),
+                ProtoCreator::fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(),
                         0, now, action_period, show_codes);
-                fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
+                ProtoCreator::fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
 
                 // L'heure de départ du véhicule au premier stop point
                 if(departure_ptime.is_not_a_date_time())
@@ -415,7 +416,9 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     }
 
     if (vp) {
-        vptranslator::fill_pb_object(vptranslator::translate(*vp), d, pb_journey, 1);
+        const auto& vect_p = vptranslator::translate(*vp);
+        ProtoCreator::fill_pb_object(vect_p, d, pb_journey->mutable_calendars());
+
     }
 
     compute_most_serious_disruption(pb_journey);

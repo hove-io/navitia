@@ -83,6 +83,30 @@ using jpp_pair = std::pair<const navitia::routing::JppIdx, const navitia::routin
 
 namespace ProtoCreator {
 
+struct VjOrigDest{
+    const navitia::type::VehicleJourney* vj;
+    const navitia::type::StopPoint* orig;
+    const navitia::type::StopPoint* dest;
+    VjOrigDest(const nt::VehicleJourney*vj, nt::StopPoint* orig, nt::StopPoint* dest):vj(vj),
+        orig(orig), dest(dest) {}
+};
+
+struct VjStopTimes{
+    const navitia::type::VehicleJourney* vj;
+    const navitia::type::StopTime* orig;
+    const navitia::type::StopTime* dest;
+    VjStopTimes(const nt::VehicleJourney* vj, const nt::StopTime* orig, const nt::StopTime* dest): vj(vj),
+        orig(orig), dest(dest){}
+};
+
+struct StopTimeCalandar{
+    const navitia::type::StopTime* stop_time;
+    const navitia::DateTime& date_time;
+    boost::optional<const std::string> calendar_id;
+    StopTimeCalandar(const navitia::type::StopTime* stop_time, const navitia::DateTime& date_time,
+                     boost::optional<const std::string> calendar_id):
+        stop_time(stop_time), date_time(date_time), calendar_id(calendar_id){}
+};
 
 /**
  * get_label() is a function that returns:
@@ -139,6 +163,29 @@ inline pbnavitia::StopPoint* get_sub_object(const navitia::type::StopPoint*, pbn
 inline pbnavitia::CommercialMode* get_sub_object(const navitia::type::CommercialMode*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
 inline pbnavitia::Trip* get_sub_object(const navitia::type::MetaVehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
 
+namespace {
+template<typename T> nt::Type_e get_type_e() {
+    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
+    return nt::Type_e::Unknown;
+}
+template<> nt::Type_e get_type_e<nt::PhysicalMode>() {
+    return nt::Type_e::PhysicalMode;
+}
+template<> nt::Type_e get_type_e<nt::CommercialMode>() {
+    return nt::Type_e::CommercialMode;
+}
+
+template<typename T> const std::vector<T*>& get_data_vector(const nt::Data& data) {
+    static_assert(!std::is_same<T, T>::value, "get_data_vector unimplemented");
+    return {};
+}
+template<> const std::vector<nt::PhysicalMode*>& get_data_vector<nt::PhysicalMode>(const nt::Data& data) {
+    return data.pt_data->physical_modes;
+}
+template<> const std::vector<nt::CommercialMode*>& get_data_vector<nt::CommercialMode>(const nt::Data& data) {
+    return data.pt_data->commercial_modes;
+}
+}
 
 
 struct PbCreator {
@@ -149,7 +196,7 @@ struct PbCreator {
     PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period, const bool show_codes):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
     template<typename N, typename P>
-    void fill(int depth, const DumpMessage dump_message, const N* item, P * proto) {
+    void fill(int depth, const DumpMessage dump_message, const N& item, P* proto) {
         Filler(depth, dump_message, *this).fill_pb_object(item, proto);
     }
 
@@ -157,28 +204,39 @@ private:
     struct Filler {
         struct PtObjVisitor;
         int depth;
-        const DumpMessage dump_message;
+        DumpMessage dump_message;
+
         PbCreator & pb_creator;
         Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator):
             depth(depth), dump_message(dump_message), pb_creator(pb_creator){};
 
-        Filler copy_depth_decr();
+        Filler copy(int, DumpMessage);
         template<typename NAV, typename PB>
-        void fill(const NAV* nav_object, PB* pb_object) {
-            copy_depth_decr().fill_pb_object(nav_object, pb_object);
+        void fill(const NAV& nav_object, PB* pb_object) {
+            copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
+        }
+
+        template<typename NAV, typename PB>
+        void fill(const NAV& nav_object, PB* pb_object, int d) {
+            copy(d, dump_message).fill_pb_object(nav_object, pb_object);
+        }
+
+        template<typename NAV, typename PB>
+        void fill(const NAV& nav_object, PB* pb_object, int d, DumpMessage dm) {
+            copy(d, dm).fill_pb_object(nav_object, pb_object);
         }
 
         template<typename Nav, typename Pb>
-        void fill (const std::vector<Nav*>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+        void fill_pb_object(const std::vector<Nav*>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto* nav_obj: nav_list) {
-                fill(nav_obj, pb_list->Add());
+                fill_pb_object(nav_obj, pb_list->Add());
             }
         }
 
         template<typename Nav, typename Pb>
-        void fill (const std::vector<Nav>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+        void fill_pb_object(const std::vector<Nav>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto& nav_obj: nav_list) {
-                fill(&nav_obj, pb_list->Add());
+                fill_pb_object(&nav_obj, pb_list->Add());
             }
         }
 
@@ -195,14 +253,15 @@ private:
         void fill_pb_placemark(const T* value, pbnavitia::PtObject* pt_object) {
             if(value == nullptr) { return; }
 
-            fill(value, get_sub_object(value, pt_object));
+            fill(value, get_sub_object(value, pt_object), depth, dump_message);
             pt_object->set_name(get_label(value));
             pt_object->set_uri(value->uri);
             pt_object->set_embedded_type(get_embedded_type(value));
         }
 
-        template <typename NAV>
-        std::vector<navitia::type::idx_t> ptref_indexs( const NAV* nav_obj, const navitia::type::Type_e type_e) {
+        template <typename Target, typename Source>
+        std::vector<Target*> ptref_indexes(const Source* nav_obj) {
+            const navitia::type::Type_e type_e = get_type_e<Target>();
             std::vector<navitia::type::idx_t> indexes;
             try{
                 std::string request = navitia::type::static_data::get()->captionByType(nav_obj->type) +
@@ -210,12 +269,17 @@ private:
                 indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
             } catch(const navitia::ptref::parsing_error &parse_error) {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                               "ptref_indexs, Unable to parse :" + parse_error.more);
+                               "ptref_indexes, Unable to parse :" + parse_error.more);
             } catch(const navitia::ptref::ptref_error &pt_error) {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                               "ptref_indexs, " + pt_error.more);
+                               "ptref_indexes, " + pt_error.more);
             }
-            return indexes;
+            std::vector<Target*> res;
+            const std::vector<Target*>& data_vec = get_data_vector<Target>(pb_creator.data);
+            for (const auto& idx: indexes) {
+                res.push_back(data_vec.at(idx));
+            }
+            return res;
         }
 
         template <typename P>
@@ -244,7 +308,7 @@ private:
         void fill_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
         void fill_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
         void fill_pb_object(const way_pair*, pbnavitia::Address*);
-        void fill_pb_object(const way_pair_name*, pbnavitia::Address*);
+        void fill_pb_object(const way_pair_name*, pbnavitia::Address*);        
         void fill_pb_object(const nt::StopPointConnection*, pbnavitia::Connection*);
         void fill_pb_object(const navitia::type::StopTime* , pbnavitia::StopTime*);
         void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);
@@ -255,11 +319,19 @@ private:
         void fill_pb_object(const navitia::vptranslator::BlockPattern* ,pbnavitia::Calendar*);
         void fill_pb_object(const nt::Route*, pbnavitia::PtDisplayInfo*);
 
+        void fill_pb_object(const navitia::georef::POI*, pbnavitia::Poi*);
+        void fill_pb_object(const navitia::georef::POI*, pbnavitia::Address*);
+        void fill_pb_object(const navitia::georef::POIType*, pbnavitia::PoiType*);
+        void fill_pb_object(const navitia::type::disruption::Impact*, pbnavitia::Response*);
+        void fill_pb_object(const VjOrigDest*, pbnavitia::hasEquipments*);
+        void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
+        void fill_pb_object(const navitia::type::VehicleJourney*, pbnavitia::hasEquipments*);
+        void fill_pb_object(const StopTimeCalandar*, pbnavitia::ScheduleStopTime*);
     };
 };
 
 template<typename N, typename P>
-void fill_pb_object(const N* item, const navitia::type::Data& data, P * proto, int depth = 0,
+void fill_pb_object(const N& item, const navitia::type::Data& data, P* proto, int depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes = false, const DumpMessage dump_message = DumpMessage::Yes) {

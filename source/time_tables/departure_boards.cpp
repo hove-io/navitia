@@ -60,33 +60,33 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
     for(auto id_vec : map_route_stop_point) {
         auto schedule = response.add_stop_schedules();
         //Each schedule has a stop_point and a route
-        fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
+        ProtoCreator::fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
                        schedule->mutable_stop_point(), depth,
                        current_time, action_period, show_codes);
 
         auto m_route = schedule->mutable_route();
-        fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
+        ProtoCreator::fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
                                m_route, depth, current_time, action_period, show_codes);
         if (data.pt_data->routes[id_vec.first.second]->line != nullptr){
             auto m_line = m_route->mutable_line();
-            fill_pb_object(data.pt_data->routes[id_vec.first.second]->line, data,
+            ProtoCreator::fill_pb_object(data.pt_data->routes[id_vec.first.second]->line, data,
                                    m_line, 0, current_time, action_period, show_codes);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
 
-        fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
+        ProtoCreator::fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
                                pt_display_information, 0, current_time, action_period);
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
-            fill_pb_object(dt_st.second, data, date_time, 0,
-                           current_time, action_period, dt_st.first, calendar_id);
+            const auto& st_calendar = ProtoCreator::StopTimeCalandar(dt_st.second, dt_st.first, calendar_id);
+            ProtoCreator::fill_pb_object(&st_calendar, data, date_time, 0, current_time, action_period);
             if (dt_st.second != nullptr) {
                 auto vj = dt_st.second->vehicle_journey;
                 if(vj != nullptr) {
                     for (const auto& comment: data.pt_data->comments.get(*vj)) {
-                        fill_pb_object(comment, data, date_time->mutable_properties()->add_notes(),
+                        ProtoCreator::fill_pb_object(&comment, data, date_time->mutable_properties()->add_notes(),
                                        0, current_time, action_period);
                     }
                 }

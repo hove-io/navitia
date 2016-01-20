@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
 
     stop_area->Clear();
     sa= b.sas.find("stop6")->second;
-    navitia::fill_pb_object(sa, *b.data,
+    ProtoCreator::fill_pb_object(sa, *b.data,
                         stop_area, 2,
                         {}, period);
     BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 1);

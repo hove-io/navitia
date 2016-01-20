@@ -41,7 +41,6 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
-#include "vptranslator/block_pattern_to_pb.h"
 #include "routing/dataraptor.h"
 #include "ptreferential/ptreferential.h"
 
@@ -65,8 +64,8 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     template <typename NavitiaPTObject>
     pbnavitia::ImpactedObject* add_pt_object(const NavitiaPTObject* bo) const {
         auto* pobj = pb_impact->add_impacted_objects();
-          // depht = 0 et DumpMessage::No
-        filler.fill_pb_placemark(bo, pobj->mutable_pt_object());
+          // depht = 0 and DumpMessage::No
+        filler.copy(0, DumpMessage::No).fill_pb_placemark(bo, pobj->mutable_pt_object());
         return pobj;
     }
     template <typename NavitiaPTObject>
@@ -86,18 +85,18 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
             auto* impacted_stop = pobj->add_impacted_stops();
             impacted_stop->set_cause(stu.cause);
             impacted_stop->set_effect(pbnavitia::DELAYED);
-            // depht = 0 et DumpMessage::No
-            filler.fill(stu.stop_time.stop_point, impacted_stop->mutable_stop_point());
+            // depht = 0 and DumpMessage::No
+            filler.fill(stu.stop_time.stop_point, impacted_stop->mutable_stop_point(), 0, DumpMessage::No);
 
             //TODO output only modified stoptime update
-            // depht = 0 et DumpMessage::No
-            filler.fill(&stu.stop_time, impacted_stop->mutable_amended_stop_time());
+            // depht = 0 and DumpMessage::No
+            filler.fill(&stu.stop_time, impacted_stop->mutable_amended_stop_time(), 0, DumpMessage::No);
 
             // we need to get the base stoptime
-            // depht = 0 et DumpMessage::No
+            // depht = 0 and DumpMessage::No
             const auto* base_st = impact.aux_info.get_base_stop_time(stu);
             if (base_st) {
-                filler.fill(base_st, impacted_stop->mutable_base_stop_time());
+                filler.fill(base_st, impacted_stop->mutable_base_stop_time(), 0, DumpMessage::No);
             }
         }
     }
@@ -121,11 +120,21 @@ static void fill_property(const std::string& name,
     property->set_value(value);
 }
 
-PbCreator::Filler PbCreator::Filler::copy_depth_decr(){
-    if (depth == 0) {
-        return PbCreator::Filler(0,dump_message, pb_creator);
+static bool is_partial_terminus(const navitia::type::StopTime* stop_time){
+    return stop_time->vehicle_journey
+        && stop_time->vehicle_journey->route
+        && stop_time->vehicle_journey->route->destination
+        && ! stop_time->vehicle_journey->stop_time_list.empty()
+        && stop_time->vehicle_journey->stop_time_list.back().stop_point
+        && stop_time->vehicle_journey->route->destination
+           != stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
+}
+
+PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message){
+    if (depth <= 0) {
+        return PbCreator::Filler(0, dump_message, pb_creator);
     }
-    return PbCreator::Filler(depth-1,dump_message, pb_creator);
+    return PbCreator::Filler(depth, dump_message, pb_creator);
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
@@ -182,18 +191,10 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
     }
 
     if (depth > 1) {
-        std::vector<navitia::idx_t> indexs = ptref_indexs(sa, navitia::type::Type_e::CommercialMode);
-        std::vector<navitia::type::CommercialMode*> cm;
-        for(const navitia::type::idx_t idx: indexs){
-            cm.push_back(pb_creator.data.pt_data->commercial_modes[idx]);
-        }
+        std::vector<navitia::type::CommercialMode*> cm = ptref_indexes<navitia::type::CommercialMode>(sa);
         fill(cm, stop_area->mutable_commercial_modes());
 
-        indexs = ptref_indexs(sa, navitia::type::Type_e::PhysicalMode);
-        std::vector<navitia::type::PhysicalMode*> pm;
-        for(const navitia::type::idx_t idx: indexs){
-            pm.push_back(pb_creator.data.pt_data->physical_modes[idx]);
-        }
+        std::vector<navitia::type::PhysicalMode*> pm = ptref_indexes<navitia::type::PhysicalMode>(sa);
         fill(pm, stop_area->mutable_physical_modes());
     }
 
@@ -426,7 +427,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
     if(depth > 0) {
         fill(lg->line_list, line_group->mutable_lines());
         //Attention: Here we pass depth = 0
-        fill(lg->main_line, line_group->mutable_main_line());
+        fill(lg->main_line, line_group->mutable_main_line(), 0);
 
         for (const auto& comment: pb_creator.data.pt_data->comments.get(lg)) {
             auto com = line_group->add_comments();
@@ -640,7 +641,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* st, pbnavi
     }
 
     // we always dump the stop point (with the same depth)
-    fill(st->stop_point, stop_time->mutable_stop_point());
+    fill(st->stop_point, stop_time->mutable_stop_point(), depth);
 
     if ( depth > 0) {
         fill(st->vehicle_journey, stop_time->mutable_vehicle_journey());
@@ -736,7 +737,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* stop_time,
 void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
                                              const nt::disruption::Impact& impact,
                                              pbnavitia::Impact* pb_impact){
-    auto filler = copy_depth_decr();
+    auto filler = copy(depth - 1, dump_message);
         boost::apply_visitor(PtObjVisitor(impact, pb_impact, filler), ptobj);
     }
 
@@ -880,6 +881,221 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
         if (r->line->commercial_mode != nullptr){
             pt_display_info->set_commercial_mode(r->line->commercial_mode->name);
             uris->set_commercial_mode(r->line->commercial_mode->uri);
+        }
+    }
+}
+
+
+void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* geopoi, pbnavitia::Poi* poi){
+    if(geopoi == nullptr) { return; }
+
+    poi->set_name(geopoi->name);
+    poi->set_uri(geopoi->uri);
+    poi->set_label(geopoi->label);
+
+    if(geopoi->coord.is_initialized()) {
+        poi->mutable_coord()->set_lat(geopoi->coord.lat());
+        poi->mutable_coord()->set_lon(geopoi->coord.lon());
+    }
+
+    if(depth > 0){
+        fill(pb_creator.data.geo_ref->poitypes[geopoi->poitype_idx], poi->mutable_poi_type());
+
+        fill(geopoi->admin_list, poi->mutable_administrative_regions());
+
+        pbnavitia::Address* pb_address = poi->mutable_address();
+        if(geopoi->address_name.empty()){
+            fill(&geopoi->coord, pb_address);
+        }else{
+            fill(geopoi, pb_address);
+        }
+    }
+    for(const auto& propertie : geopoi->properties){
+        pbnavitia::Code * pb_code = poi->add_properties();
+        pb_code->set_type(propertie.first);
+        pb_code->set_value(propertie.second);
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* poi, pbnavitia::Address* address){
+    if(poi == nullptr) { return; }
+
+    address->set_name(poi->address_name);
+    std::string label;
+    if(poi->address_number >= 1){
+        address->set_house_number(poi->address_number);
+        label += std::to_string(poi->address_number) + " ";
+    }
+    label += get_label(poi);
+    address->set_label(label);
+
+    if(poi->coord.is_initialized()) {
+        address->mutable_coord()->set_lon(poi->coord.lon());
+        address->mutable_coord()->set_lat(poi->coord.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << poi->coord.lon() << ";" << poi->coord.lat();
+        address->set_uri(ss.str());
+    }
+
+    if(depth > 0){
+        fill(poi->admin_list, address->mutable_administrative_regions());
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::georef::POIType* geo_poi_type,
+                                       pbnavitia::PoiType* poi_type){
+    poi_type->set_name(geo_poi_type->name);
+    poi_type->set_uri(geo_poi_type->uri);
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::type::disruption::Impact* impact,
+                                       pbnavitia::Response* response){
+    fill_message(*impact, response);
+}
+
+void PbCreator::Filler::fill_pb_object(const VjOrigDest* vj_orig_dest, pbnavitia::hasEquipments* has_equipments){
+    bool wheelchair_accessible = vj_orig_dest->vj->wheelchair_accessible() && vj_orig_dest->orig->wheelchair_boarding()
+        && vj_orig_dest->dest->wheelchair_boarding();
+    if (wheelchair_accessible){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
+    }
+    if (vj_orig_dest->vj->bike_accepted()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_accepted);
+    }
+    if (vj_orig_dest->vj->air_conditioned()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_air_conditioned);
+    }
+    bool visual_announcement = vj_orig_dest->vj->visual_announcement() && vj_orig_dest->orig->visual_announcement()
+        && vj_orig_dest->dest->visual_announcement();
+    if (visual_announcement){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_visual_announcement);
+    }
+    bool audible_announcement = vj_orig_dest->vj->audible_announcement() && vj_orig_dest->orig->audible_announcement()
+        && vj_orig_dest->dest->audible_announcement();
+    if (audible_announcement){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_audible_announcement);
+    }
+    bool appropriate_escort = vj_orig_dest->vj->appropriate_escort() && vj_orig_dest->orig->appropriate_escort()
+        && vj_orig_dest->dest->appropriate_escort();
+    if (appropriate_escort){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_escort);
+    }
+    bool appropriate_signage = vj_orig_dest->vj->appropriate_signage() && vj_orig_dest->orig->appropriate_signage()
+        && vj_orig_dest->dest->appropriate_signage();
+    if (appropriate_signage){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
+    }
+    if (vj_orig_dest->vj->school_vehicle()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
+                                       pbnavitia::PtDisplayInfo* pt_display_info){
+    if(vj_stoptimes->vj == nullptr)
+        return ;
+    pbnavitia::Uris* uris = pt_display_info->mutable_uris();
+    uris->set_vehicle_journey(vj_stoptimes->vj->uri);
+    if (depth > 0 && vj_stoptimes->vj->route) {
+        fill(vj_stoptimes->vj->route, pt_display_info);
+        uris->set_route(vj_stoptimes->vj->route->uri);
+        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[navitia::routing::VjIdx(*vj_stoptimes->vj)];
+        uris->set_journey_pattern(pb_creator.data.dataRaptor->jp_container.get_id(jp_idx));
+    }
+
+    fill_messages(vj_stoptimes->vj->meta_vj, pt_display_info);
+
+    if (vj_stoptimes->orig != nullptr) {
+        pt_display_info->set_headsign(pb_creator.data.pt_data->headsign_handler.get_headsign(*vj_stoptimes->orig));
+    }
+    pt_display_info->set_direction(vj_stoptimes->vj->get_direction());
+    if (vj_stoptimes->vj->physical_mode != nullptr) {
+        pt_display_info->set_physical_mode(vj_stoptimes->vj->physical_mode->name);
+        uris->set_physical_mode(vj_stoptimes->vj->physical_mode->uri);
+    }
+    pt_display_info->set_description(vj_stoptimes->vj->odt_message);
+    pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
+    if (vj_stoptimes->orig && vj_stoptimes->dest) {
+        const auto& vj = VjOrigDest(vj_stoptimes->vj, vj_stoptimes->orig->stop_point, vj_stoptimes->dest->stop_point);
+        fill(&vj, has_equipments);
+    } else {
+        fill(vj_stoptimes->vj, has_equipments);
+    }
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(vj_stoptimes->vj)) {
+        fill(&comment, pt_display_info->add_notes());
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
+                                       pbnavitia::hasEquipments* has_equipments){
+    if (vj->wheelchair_accessible()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
+    }
+    if (vj->bike_accepted()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_accepted);
+    }
+    if (vj->air_conditioned()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_air_conditioned);
+    }
+    if (vj->visual_announcement()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_visual_announcement);
+    }
+    if (vj->audible_announcement()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_audible_announcement);
+    }
+    if (vj->appropriate_escort()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_escort);
+    }
+    if (vj->appropriate_signage()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
+    }
+    if (vj->school_vehicle()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calendar,
+                                       pbnavitia::ScheduleStopTime* rs_date_time){
+    if (stop_time_calendar->stop_time == nullptr) {
+        //we need to represent a 'null' value (for not found datetime)
+        // before it was done with a empty string, but now it is the max value (since 0 is a valid value)
+        rs_date_time->set_time(std::numeric_limits<u_int64_t>::max());
+        return;
+    }
+
+    rs_date_time->set_time(navitia::DateTimeUtils::hour(stop_time_calendar->date_time));
+
+    if (! stop_time_calendar->calendar_id) {
+        //for calendar we don't want to have a date
+        rs_date_time->set_date(navitia::to_int_date(navitia::to_posix_time(stop_time_calendar->date_time,pb_creator.data)));
+    }
+
+    pbnavitia::Properties* hn = rs_date_time->mutable_properties();
+    fill(stop_time_calendar->stop_time, hn);
+
+    // partial terminus
+    if (is_partial_terminus(stop_time_calendar->stop_time)) {
+        auto sa = stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
+        pbnavitia::Destination* destination = hn->mutable_destination();
+        std::hash<std::string> hash_fn;
+        destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
+        destination->set_destination(sa->name);
+        rs_date_time->set_dt_status(pbnavitia::ResponseStatus::partial_terminus);
+    }
+    for (const auto& comment: pb_creator.data.pt_data->comments.get(*stop_time_calendar->stop_time)) {
+        fill(&comment, hn->add_notes());
+    }
+    if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
+        if(!stop_time_calendar->stop_time->vehicle_journey->odt_message.empty()){
+            fill(&stop_time_calendar->stop_time->vehicle_journey->odt_message, hn->add_notes());
+        }
+        rs_date_time->mutable_properties()->set_vehicle_journey_id(stop_time_calendar->stop_time->vehicle_journey->uri);
+    }
+
+    if((stop_time_calendar->calendar_id) && (stop_time_calendar->stop_time->vehicle_journey != nullptr)) {
+        auto asso_cal_it = stop_time_calendar->stop_time->vehicle_journey->meta_vj->associated_calendars.find(*stop_time_calendar->calendar_id);
+        if(asso_cal_it != stop_time_calendar->stop_time->vehicle_journey->meta_vj->associated_calendars.end()){
+            fill(asso_cal_it->second->exceptions, hn->mutable_exceptions());
         }
     }
 }
@@ -1718,12 +1934,12 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                        vehicle_journey->mutable_validity_pattern(), max_depth-1);
         fill_pb_object(vj->adapted_validity_pattern(), data,
                        vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-        vptranslator::fill_pb_object(vptranslator::translate(*vj->base_validity_pattern()),
-                                     data,
-                                     vehicle_journey,
-                                     max_depth - 1,
-                                     now,
-                                     action_period);
+//        vptranslator::fill_pb_object(vptranslator::translate(*vj->base_validity_pattern()),
+//                                     data,
+//                                     vehicle_journey,
+//                                     max_depth - 1,
+//                                     now,
+//                                     action_period);
     }
 
     fill_messages(vj->meta_vj, data, vehicle_journey, max_depth-1, now, action_period, show_codes, dump_message);
