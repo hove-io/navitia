@@ -96,13 +96,11 @@ def _get_worst_similar_vjs(j1, j2, request):
         if j1.departure_date_time != j2.departure_date_time:
             return j1 if j1.departure_date_time < j2.departure_date_time else j2
 
-    fallback1 = fallback_duration(j1)
-    fallback2 = fallback_duration(j2)
+    if j1.duration != j2.duration:
+        return j1 if j1.duration > j2.duration else j2
 
-    if fallback1 != fallback2:
-        return j1 if fallback1 > fallback2 else j2
+    return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
 
-    return j1 if j1.duration > j2.duration else j2
 
 
 def _to_be_deleted(journey):
