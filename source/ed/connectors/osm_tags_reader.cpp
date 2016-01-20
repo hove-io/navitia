@@ -29,10 +29,17 @@ www.navitia.io
 */
 
 #include "osm_tags_reader.h"
+#include "utils/functions.h"
 #include <iostream>
 #include <algorithm>
 
 namespace ed { namespace connectors{
+
+static void update_if_unknown(int& target, const int& source) {
+    if (target == -1) {
+        target = source;
+    }
+}
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
     constexpr int unknown = -1;
@@ -65,56 +72,56 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         std::transform(val.begin(), val.end(), val.begin(), ::tolower);
 
-        if(key == "highway") {
-            if(val == "footway" || val == "pedestrian") {
-                foot = foot_allowed;
-            } else if(val == "cycleway") {
-                bike_direct = bike_track;
-                foot = foot_allowed;
-            } else if(val == "path") {
+        if (key == "highway") {
+            if (in(val, {"footway", "pedestrian"})) {
+                update_if_unknown(foot, foot_allowed);
+            } else if (val == "cycleway") {
+                update_if_unknown(bike_direct, bike_track);
+                update_if_unknown(foot, foot_allowed);
+            } else if (val == "path") {
                 //http://www.cyclestreets.net/journey/help/osmconversion/#toc6
                 //highway = path => might mean lots of different things, so we allow bike and foot
-                bike_direct = bike_track;
-                foot = foot_allowed;
-            } else if(val == "steps") {
-                foot = foot_allowed;
-            } else if(val == "primary" || val == "primary_link") {
-                car_direct = car_primary;
-                foot = foot_allowed;
-                bike_direct = bike_allowed;
-            } else if(val == "secondary" || val == "secondary_link") {
-                car_direct = car_secondary;
-                foot = foot_allowed;
-                bike_direct = bike_allowed;
-            } else if(val == "tertiary" || val == "tertiary_link") {
-                car_direct = car_tertiary;
-                foot = foot_allowed;
-                bike_direct = bike_allowed;
-            } else if(val == "unclassified" || val == "residential" || val == "living_street" ||
-                    val == "road" || val == "service" || val == "track") {
-                car_direct = car_residential;
-                foot = foot_allowed;
-                bike_direct = bike_allowed;
-            } else if(val == "motorway" || val == "motorway_link") {
-                car_direct = car_motorway;
-                foot = foot_forbiden;
-                bike_direct = bike_forbiden;
-            } else if(val == "trunk" || val == "trunk_link") {
-                car_direct = car_trunk;
-                foot = foot_forbiden;
-                bike_direct = bike_forbiden;
+                update_if_unknown(bike_direct, bike_track);
+                update_if_unknown(foot, foot_allowed);
+            } else if (val == "steps") {
+                update_if_unknown(foot, foot_allowed);
+            } else if (in(val, {"primary", "primary_link"})) {
+                update_if_unknown(car_direct, car_primary);
+                update_if_unknown(foot, foot_allowed);
+                update_if_unknown(bike_direct, bike_allowed);
+            } else if (in(val, {"secondary", "secondary_link"})) {
+                update_if_unknown(car_direct, car_secondary);
+                update_if_unknown(foot, foot_allowed);
+                update_if_unknown(bike_direct, bike_allowed);
+            } else if (in(val, {"tertiary", "tertiary_link"})) {
+                update_if_unknown(car_direct, car_tertiary);
+                update_if_unknown(foot, foot_allowed);
+                update_if_unknown(bike_direct, bike_allowed);
+            } else if (in(val, {"unclassified", "residential", "living_street",
+                            "road", "service", "track"})) {
+                update_if_unknown(car_direct, car_residential);
+                update_if_unknown(foot, foot_allowed);
+                update_if_unknown(bike_direct, bike_allowed);
+            } else if (in(val, {"motorway", "motorway_link"})) {
+                update_if_unknown(car_direct, car_motorway);
+                update_if_unknown(foot, foot_forbiden);
+                update_if_unknown(bike_direct, bike_forbiden);
+            } else if (in(val, {"trunk", "trunk_link"})) {
+                update_if_unknown(car_direct, car_trunk);
+                update_if_unknown(foot, foot_forbiden);
+                update_if_unknown(bike_direct, bike_forbiden);
             }
         }
 
-        else if(key == "pedestrian" || key == "foot") {
-            if(val == "yes" || val == "designated" || val == "permissive"
-                    || val == "lane" || val == "official" || val == "allowed"
-                    || val == "destination")
+        else if (in(key, {"pedestrian", "foot"})) {
+            if (in(val, {"yes", "designated", "permissive", "lane", "official",
+                            "allowed", "destination"})) {
                 foot = foot_allowed;
-            else if(val == "no" || val == "private")
+            } else if (in(val, {"no", "private"})) {
                 foot = foot_forbiden;
-            else
+            } else {
                 std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+            }
         }
 
         // http://wiki.openstreetmap.org/wiki/Cycleway
@@ -152,28 +159,27 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
                 std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
         }
 
-        else if(key == "busway") {
-            if(val == "yes" || val == "track" || val == "lane")
-                bike_direct = bike_busway;
-            else if(val == "opposite_lane" || val == "opposite_track")
-                bike_reverse = bike_busway;
-            else
-                bike_direct = bike_busway;
+        else if (key == "busway") {
+            if (in(val, {"yes", "track", "lane"})) {
+                update_if_unknown(bike_direct, bike_busway);
+            } else if (in(val, {"opposite_lane", "opposite_track"})) {
+                update_if_unknown(bike_reverse, bike_busway);
+            } else {
+                update_if_unknown(bike_direct, bike_busway);
+            }
         }
 
         else if(key == "oneway") {
             if(val == "yes" || val == "true" || val == "1") {
                 car_reverse = car_forbiden;
-                if(bike_reverse == unknown)
-                    bike_reverse = bike_forbiden;
+                update_if_unknown(bike_reverse, bike_forbiden);
             }
         }
 
         else if(key == "junction") {
             if(val == "roundabout") {
                 car_reverse = car_forbiden;
-                if(bike_reverse == unknown)
-                    bike_reverse = bike_forbiden;
+                update_if_unknown(bike_reverse, bike_forbiden);
             }
         }
 
@@ -198,15 +204,13 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
         }
     }
 
-    if(car_reverse == unknown && car_direct != unknown)
-        car_reverse = car_direct;
-    if(bike_reverse == unknown && bike_direct != unknown)
-        bike_reverse = bike_direct;
-    if(car_direct == unknown) car_direct = car_forbiden;
-    if(bike_direct == unknown) bike_direct = bike_forbiden;
-    if(car_reverse == unknown) car_reverse = car_forbiden;
-    if(bike_reverse == unknown) bike_reverse = bike_forbiden;
-    if(foot == unknown) foot = foot_forbiden;
+    update_if_unknown(car_reverse, car_direct);
+    update_if_unknown(bike_reverse, bike_direct);
+    update_if_unknown(car_direct, car_forbiden);
+    update_if_unknown(bike_direct, bike_forbiden);
+    update_if_unknown(car_reverse, car_forbiden);
+    update_if_unknown(bike_reverse, bike_forbiden);
+    update_if_unknown(foot, foot_forbiden);
 
     std::bitset<8> result;
     result[CYCLE_FWD] = (bike_direct != bike_forbiden);
