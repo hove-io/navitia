@@ -48,6 +48,9 @@ from jormungandr.scenarios.helpers import fallback_mode_comparator
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
+def is_admin(entrypoint):
+    return entrypoint.startswith('admin:')
+
 class Scenario(simple.Scenario):
 
     def parse_journey_request(self, requested_type, request):
@@ -150,6 +153,11 @@ class Scenario(simple.Scenario):
         for o_mode, d_mode in itertools.product(self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
             req.journeys.streetnetwork_params.destination_mode = d_mode
+            if o_mode == 'car' or (is_admin(req.journeys.origin[0].place) and is_admin(req.journeys.destination[0].place)):
+                # we don't want direct path for car or for admin to admin journeys
+                req.journeys.streetnetwork_params.enable_direct_path = False
+            else:
+                req.journeys.streetnetwork_params.enable_direct_path = True
             local_resp = instance.send_and_receive(req)
             if local_resp.response_type == response_pb2.ITINERARY_FOUND:
 

@@ -80,6 +80,7 @@ static void dump_response(pbnavitia::Response resp, std::string test_name, bool 
             }
             if (section.street_network().path_items_size()) {
                 std::cout << "    -- street network pathitem: " << std::endl;
+                std::cout << "      -- mode: " << section.street_network().mode()<< std::endl;
                 for (int i = 0; i < section.street_network().path_items_size(); ++i)
                     std::cout << "     - " << section.street_network().path_items(i).name()
                               << " with " << section.street_network().path_items(i).length()
@@ -2088,4 +2089,100 @@ BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<te
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+}
+
+// bus + car using parking
+BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_provider>) {
+    using namespace navitia;
+    using type::Mode_e;
+    using navitia::seconds;
+
+    const double speed_factor = 1;
+
+    origin.streetnetwork_params.mode = Mode_e::Car;
+    origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
+    origin.streetnetwork_params.max_duration = seconds(900);
+    origin.streetnetwork_params.speed_factor = speed_factor;
+
+    destination.streetnetwork_params.mode = Mode_e::Walking;
+    destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
+    destination.streetnetwork_params.max_duration = seconds(900);
+    destination.streetnetwork_params.speed_factor = speed_factor;
+
+    ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
+    nr::RAPTOR raptor(*this->b.data);
+    auto resp = nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, type::RTLevel::Base, 2_min);
+
+    dump_response(resp, "direct_path_car", true);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct car + 1 car->bus->walk
+
+    // the car->bus->walk journey
+    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 5);
+    auto sections = journey.sections();
+
+    // section 0: goto to the station
+    BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().label(), "rue bs (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(0).destination().poi().label(), "first parking (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 6);
+
+    // section 1: parking
+    BOOST_CHECK_EQUAL(sections.Get(1).type(), pbnavitia::SectionType::PARK);
+    BOOST_CHECK_EQUAL(sections.Get(1).street_network().duration(), 1);
+
+    // section 2: we walk to the stop point
+    BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().label(), "1 rue bd (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(2).destination().stop_point().name(), "stop_point:stopB");
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 10);
+
+    // section 3: PT A->B
+    BOOST_CHECK_EQUAL(sections.Get(3).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(sections.Get(3).origin().stop_point().name(), "stop_point:stopB");
+    BOOST_CHECK_EQUAL(sections.Get(3).destination().stop_point().name(), "stop_point:stopA");
+
+    // section 2: go to the destination
+    BOOST_CHECK_EQUAL(sections.Get(4).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(4).origin().stop_point().name(), "stop_point:stopA");
+    BOOST_CHECK_EQUAL(sections.Get(4).destination().address().label(), "1 rue ag (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(4).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    BOOST_CHECK_EQUAL(sections.Get(4).street_network().duration(), 90);
+
+    //second journey, direct path with a car
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    sections = journey.sections();
+
+    //car to the parking
+    BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().label(), "rue bs (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(0).destination().poi().label(), "second parking (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 38);
+
+    //parking
+    BOOST_CHECK_EQUAL(sections.Get(1).type(), pbnavitia::SectionType::PARK);
+    BOOST_CHECK_EQUAL(sections.Get(1).origin().poi().label(), "second parking (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(1).destination().address().label(), "rue ae (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(1).street_network().duration(), 1);
+
+    //walking to the destination
+    BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().label(), "rue ae (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(2).destination().address().label(), "1 rue ag (Condom)");
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 120);
+
+
+    origin.streetnetwork_params.enable_direct_path = false;
+    //direct path is disabled, we should only found the solution with car as fallback
+    resp = nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, type::RTLevel::Base, 2_min);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 car->bus->walk
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 5);
+
 }
