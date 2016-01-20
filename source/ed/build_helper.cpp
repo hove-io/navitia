@@ -61,7 +61,7 @@ VJ::VJ(builder& b,
     network_name(network_name),
     line_name(line_name),
     validity_pattern(validity_pattern),
-    block_id(block_id),
+    _block_id(block_id),
     is_frequency(is_frequency),
     wheelchair_boarding(wheelchair_boarding),
     uri(uri),
@@ -172,8 +172,8 @@ nt::VehicleJourney* VJ::make() {
 
     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, name);
 
-    if (block_id != "") {
-        b.block_vjs.insert(std::make_pair(block_id, vj));
+    if (_block_id != "") {
+        b.block_vjs.insert(std::make_pair(_block_id, vj));
     }
 
     if (wheelchair_boarding) {
