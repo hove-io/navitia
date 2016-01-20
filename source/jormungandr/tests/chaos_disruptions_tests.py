@@ -487,6 +487,16 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
+        journey_query = journey_basic_query + "&disruption_active=true"
+        journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
+
+        response = self.query_region(journey_query)
+        response_adapted = self.query_region(journey_query_adapted)
+
+        assert response['journeys'] == response_adapted['journeys']
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['type'] == 'non_pt_walk'
+
         # delete disruption on stop point
         self.send_mock(disruption_id,
                        disruption_target,
@@ -497,6 +507,13 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         disruptions = response.get('disruptions')
         assert not disruptions
 
+        journey_query = journey_basic_query + "&data_freshness=base_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
+
+        journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
 
 @dataset([('main_routing_test', ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
@@ -528,10 +545,15 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
         # query on journey, we should find some since the disruption is not blocking for real
         journey_query = journey_basic_query + "&disruption_active=true"
-        response = self.query_region(journey_query)
+        journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
 
+        response = self.query_region(journey_query)
+        response_adapted = self.query_region(journey_query_adapted)
+
+        assert response['journeys'] == response_adapted['journeys']
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['type'] == 'non_pt_walk'
+
         # delete disruption on stop point
         self.send_mock(disruption_id,
                        disruption_target,

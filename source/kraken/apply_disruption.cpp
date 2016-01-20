@@ -132,16 +132,16 @@ static type::ValidityPattern compute_base_disrupted_vp(
     return vp;
 }
 
-std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
-    std::string impacts_uris;
+static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
+    std::stringstream impacts_uris;
     for (auto& mvj_impacts : mvj.impacted_by) {
         if (auto i = mvj_impacts.lock()) {
-            if (impacts_uris.find(i->disruption->uri) == std::string::npos) {
-                impacts_uris += ":" + i->disruption->uri;
+            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
+                impacts_uris << ":" << i->disruption->uri;
             }
         }
     }
-    return impacts_uris;
+    return impacts_uris.str();
 }
 
 struct add_impacts_visitor : public apply_impacts_visitor {

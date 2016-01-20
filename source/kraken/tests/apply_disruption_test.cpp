@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
 /*
  * small helper to check VJs
  */
-void check_vj(const nt::VehicleJourney* vj, const std::vector<nt::StopTime>& sts) {
+static void check_vj(const nt::VehicleJourney* vj, const std::vector<nt::StopTime>& sts) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), sts.size());
     for (size_t idx = 0; idx < sts.size(); ++idx) {
         BOOST_CHECK_EQUAL(vj->stop_time_list[idx].departure_time, sts[idx].departure_time);
@@ -127,6 +127,27 @@ void check_vj(const nt::VehicleJourney* vj, const std::vector<nt::StopTime>& sts
     }
 }
 
+static void check_vjs_without_disruptions(const std::vector<nt::VehicleJourney*>& vehicle_journeys) {
+    for (const auto* vj: vehicle_journeys) {
+        switch (vj->realtime_level) {
+        case nt::RTLevel::Base:
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
+                    vj->adapted_validity_pattern()->days);
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
+                    vj->base_validity_pattern()->days);
+            break;
+        case nt::RTLevel::Adapted:
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
+                    vj->adapted_validity_pattern()->days);
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+                    vj->base_validity_pattern()->days);
+            break;
+        case nt::RTLevel::RealTime:
+            //TODO
+            throw navitia::exception("realtime check unhandled case");
+        }
+    }
+}
 /*
  *
  * test to close different stop point on different hours
@@ -157,7 +178,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 
     b.sa("S1")("S1");
     b.sa("S2")("S2");
-    b.sa("S2")("S2");
+    b.sa("S3")("S3");
 
     const auto* vj1 = b.vj("A").uri("vj1")("S1", "08:00"_t)("S2", "09:00"_t)("S3", "10:00"_t).make();
     const auto* vj2 = b.vj("A").uri("vj2")("S1", "10:00"_t)("S2", "10:30"_t)("S3", "11:00"_t).make();
@@ -211,9 +232,9 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     check_vj(vj2_adapted, {{"10:00"_t, "10:00"_t, s1}});
     check_vj(get_adapted(vj3, 1), {{"10:00"_t, "10:00"_t, s1}});
     check_vj(get_adapted(vj4, 1), {{"08:00"_t, "08:00"_t, s1},
-                                {"10:30"_t, "10:30"_t, s3}});
+                                   {"10:30"_t, "10:30"_t, s3}});
     check_vj(get_adapted(vj5, 1), {{"08:00"_t, "08:00"_t, s1},
-                                {"13:00"_t, "13:00"_t, s2}});
+                                   {"13:00"_t, "13:00"_t, s2}});
 }
 
 
@@ -415,6 +436,10 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
             vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
             vj->adapted_validity_pattern()->days);
+
+    navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
+
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 /*
@@ -469,6 +494,10 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "100111"),
             vj->adapted_validity_pattern()->days);
 
+    navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
+
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+
 }
 
 BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
@@ -521,19 +550,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    // Base VJ
-    vj  = b.data->pt_data->vehicle_journeys_map["vj:1"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
-            vj->base_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
-            vj->adapted_validity_pattern()->days);
-
-    // Adapted VJ
-    vj  = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:stop3_closed"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
-            vj->base_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
-            vj->adapted_validity_pattern()->days);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
@@ -599,23 +616,5 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    for (const auto* vj: b.data->pt_data->vehicle_journeys) {
-        switch (vj->realtime_level) {
-        case nt::RTLevel::Base:
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
-                    vj->adapted_validity_pattern()->days);
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
-                    vj->base_validity_pattern()->days);
-            break;
-        case nt::RTLevel::Adapted:
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
-                    vj->adapted_validity_pattern()->days);
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
-                    vj->base_validity_pattern()->days);
-            break;
-        case nt::RTLevel::RealTime:
-            //TODO
-            throw navitia::exception("realtime check unhandled case");
-        }
-    }
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
