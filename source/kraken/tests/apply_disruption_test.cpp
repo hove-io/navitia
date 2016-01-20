@@ -662,7 +662,57 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
                               .application_periods(btp("20120617T000000"_dt, "20120617T080500"_dt))
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
-    
+
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
             vj1->rt_validity_pattern()->days);
+}
+
+BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
+    ed::builder b("20120614");
+    auto* vj = b.vj("A", "111111", "", true, "vj:1")
+        ("stop1", "08:00"_t)
+        ("stop2", "09:00"_t)
+        ("stop3", "10:00"_t)
+        ("stop1", "11:00"_t).make();
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop1")
+                              .application_periods(btp("20120615T100000"_dt, "20120617T100000"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "110001"),
+            vj->adapted_validity_pattern()->days);
+
+    const nt::VehicleJourney* vj15 = nullptr;
+    const nt::VehicleJourney* vj16 = nullptr;
+    const nt::VehicleJourney* vj17 = nullptr;
+    for (const auto* cur_vj: b.data->pt_data->vehicle_journeys) {
+        if (cur_vj->adapted_validity_pattern()->check(1)) { vj15 = cur_vj; }
+        if (cur_vj->adapted_validity_pattern()->check(2)) { vj16 = cur_vj; }
+        if (cur_vj->adapted_validity_pattern()->check(3)) { vj17 = cur_vj; }
+    }
+
+    BOOST_REQUIRE(vj15 && ! vj15->stop_time_list.empty());
+    BOOST_CHECK_EQUAL(vj15->stop_time_list.size(), 3);
+    BOOST_CHECK_EQUAL(vj15->stop_time_list.front().stop_point->uri, "stop1");
+    BOOST_CHECK_EQUAL(vj15->stop_time_list.back().stop_point->uri, "stop3");
+
+    BOOST_REQUIRE(vj16 && ! vj16->stop_time_list.empty());
+    BOOST_CHECK_EQUAL(vj16->stop_time_list.size(), 2);
+    BOOST_CHECK_EQUAL(vj16->stop_time_list.front().stop_point->uri, "stop2");
+    BOOST_CHECK_EQUAL(vj16->stop_time_list.back().stop_point->uri, "stop3");
+
+    BOOST_REQUIRE(vj17 && ! vj17->stop_time_list.empty());
+    BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
+    BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
+    BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
 }
