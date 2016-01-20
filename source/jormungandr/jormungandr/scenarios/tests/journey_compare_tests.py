@@ -447,6 +447,31 @@ def test_similar_journeys_car_park():
     assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
 
 
+def test_similar_journeys_bss_park():
+    """
+    We have to consider a journey with
+    WALK / GET A BIKE / BSS to be equals to GET A BIKE / BSS
+    """
+    responses = [response_pb2.Response()]
+    journey1 = response_pb2.Journey()
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Walking
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.BSS_RENT
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Bss
+
+    journey2 = response_pb2.Journey()
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.BSS_RENT
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.STREET_NETWORK
+    journey2.sections[-1].street_network.mode = response_pb2.Bss
+
+    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
+
 class MockInstance(object):
     def __init__(self):
         pass  #TODO when we'll got instances's param
