@@ -39,7 +39,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
+#include <algorithm>
 
 namespace navitia {
 
@@ -364,7 +364,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             return false;
         };
         for (auto& mvj: pt_data.meta_vjs) {
-            if (boost::algorithm::any_of(mvj->impacted_by, find_impact)) {
+            if (std::any_of(std::begin(mvj->impacted_by), std::end(mvj->impacted_by), find_impact)) {
                 (*this)(mvj.get());
             };
         }
