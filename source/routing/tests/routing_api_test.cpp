@@ -2113,7 +2113,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     nr::RAPTOR raptor(*this->b.data);
     auto resp = nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, type::RTLevel::Base, 2_min);
 
-    dump_response(resp, "direct_path_car", true);
+    dump_response(resp, "direct_path_car");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct car + 1 car->bus->walk
