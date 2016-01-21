@@ -251,6 +251,12 @@ def updated_request_with_default(request, instance):
     if request['car_speed'] is None:
         request['car_speed'] = instance.car_speed
 
+    if request['_min_car'] is None:
+        request['_min_car'] = instance.min_car
+
+    if request['_min_bike'] is None:
+        request['_min_bike'] = instance.min_bike
+
 def change_ids(new_journeys, journey_count):
     """
     we have to change some id's on the response not to have id's collision between response
