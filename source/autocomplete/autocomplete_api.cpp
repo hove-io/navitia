@@ -59,11 +59,14 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
-        case nt::Type_e::Address:
-            fill_pb_placemark(data.geo_ref->ways[result_item.idx], data, place, result_item.house_number, result_item.coord, depth);
+        case nt::Type_e::Address:{
+            const auto& way_coord = ProtoCreator::WayCoord(data.geo_ref->ways[result_item.idx],
+                    result_item.coord, result_item.house_number);
+            ProtoCreator::fill_pb_object(&way_coord, data, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
+        }
         case nt::Type_e::POI:
             ProtoCreator::fill_pb_object(data.geo_ref->pois[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);

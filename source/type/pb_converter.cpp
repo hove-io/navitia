@@ -592,8 +592,8 @@ void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavi
         address->set_house_number(hn_coord.first);
         label += std::to_string(hn_coord.first) + " ";
     }
-//    label += get_label(wayname.first);
-//    address->set_label(label);
+    label += get_label(wayname.first);
+    address->set_label(label);
 
     if(hn_coord.second.is_initialized()) {
         address->mutable_coord()->set_lon(hn_coord.second.lon());
