@@ -615,31 +615,6 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
-// XL must cleanup that!
-static transit_realtime::TripUpdate
-make_delay_message(const std::string& vj_uri,
-        const std::string& date,
-        const std::vector<std::tuple<std::string, int, int>>& delayed_time_stops) {
-    transit_realtime::TripUpdate trip_update;
-    auto trip = trip_update.mutable_trip();
-    trip->set_trip_id(vj_uri);
-    trip->set_start_date(date);
-    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
-    auto st_update = trip_update.mutable_stop_time_update();
-
-    for (const auto& delayed_st: delayed_time_stops) {
-        auto stop_time = st_update->Add();
-        auto arrival = stop_time->mutable_arrival();
-        auto departure = stop_time->mutable_departure();
-        stop_time->SetExtension(kirin::stoptime_message, "birds on the tracks");
-        stop_time->set_stop_id(std::get<0>(delayed_st));
-        arrival->set_time(std::get<1>(delayed_st));
-        departure->set_time(std::get<2>(delayed_st));
-    }
-
-    return trip_update;
-}
-
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     ed::builder b("20120614");
     auto* vj1 = b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
@@ -651,7 +626,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
-    auto trip_update = make_delay_message("vj:1", "20120616", {
+    auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
             std::make_tuple("stop1", "20120617T0005"_pts, "20120617T0005"_pts),
             std::make_tuple("stop2", "20120617T0105"_pts, "20120617T0105"_pts),
             std::make_tuple("stop3", "20120617T0205"_pts, "20120617T0205"_pts),
@@ -734,7 +709,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
-    auto trip_update = make_delay_message("vj:1", "20120616", {
+    auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
             std::make_tuple("stop1", "20120617T2300"_pts, "20120617T2300"_pts),
             std::make_tuple("stop2", "20120618T0005"_pts, "20120618T0005"_pts),
             std::make_tuple("stop3", "20120618T0100"_pts, "20120618T0100"_pts),
