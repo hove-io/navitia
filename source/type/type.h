@@ -701,6 +701,8 @@ struct StopTime {
         return this - &vehicle_journey->stop_time_list.front();
     }
 
+    StopTime clone() const;
+
     /// can we start with this stop time (according to clockwise)
     bool valid_begin(bool clockwise) const {return clockwise ? pick_up_allowed() : drop_off_allowed();}
 

@@ -154,6 +154,16 @@ bool HasMessages::has_publishable_message(const boost::posix_time::ptime& curren
     return false;
 }
 
+
+StopTime StopTime::clone() const{
+    StopTime ret{arrival_time, departure_time, stop_point};
+    ret.properties = properties;
+    ret.local_traffic_zone = local_traffic_zone;
+    ret.vehicle_journey = vehicle_journey;
+    ret.shape_from_prev = shape_from_prev;
+    return ret;
+}
+
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {

@@ -246,10 +246,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (st.stop_point == stop_point) {
                     continue;
                 }
-                new_stop_times.emplace_back(
-                        st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift,
-                        st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift,
-                        st.stop_point);
+                nt::StopTime new_st = st.clone();
+                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_stop_times.push_back(std::move(new_st));
             }
 
             auto mvj = vj->meta_vj;
@@ -265,7 +265,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
                     rt_level,
                     new_vp,
-                    nullptr,
+                    vj->route,
                     std::move(new_stop_times),
                     pt_data);
             
@@ -278,6 +278,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_vj->name = new_vj_uri;
             }
             new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
+            new_vj->company = vj->company;
+            new_vj->vehicle_journey_type = vj->vehicle_journey_type;
+            new_vj->odt_message = vj->odt_message;
+            new_vj->_vehicle_properties = vj->_vehicle_properties;
+
         }
     }
 

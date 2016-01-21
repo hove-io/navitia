@@ -628,6 +628,9 @@ void builder::build_blocks() {
 
      build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
+         if (vj->stop_time_list.empty()) {
+             continue;
+         }
          if(!vj->prev_vj) {
              vj->stop_time_list.front().set_drop_off_allowed(false);
          }
@@ -638,6 +641,9 @@ void builder::build_blocks() {
 
      for (auto* route: data->pt_data->routes) {
          for (auto& freq_vj: route->frequency_vehicle_journey_list) {
+             if (freq_vj->stop_time_list.empty()) {
+                 continue;
+             }
 
              const auto start = freq_vj->stop_time_list.front().arrival_time;
              for (auto& st: freq_vj->stop_time_list) {

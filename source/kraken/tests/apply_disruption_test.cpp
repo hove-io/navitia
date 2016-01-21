@@ -39,6 +39,7 @@ www.navitia.io
 #include "kraken/make_disruption_from_chaos.h"
 #include "kraken/realtime.h"
 #include "type/kirin.pb.h"
+#include "routing/raptor.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -240,6 +241,11 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
                                    {"10:30"_t, "10:30"_t, s3}});
     check_vj(get_adapted(vj5, 1), {{"08:00"_t, "08:00"_t, s1},
                                    {"13:00"_t, "13:00"_t, s2}});
+
+    navitia::delete_disruption("S2_closed", *b.data->pt_data, *b.data->meta);
+    navitia::delete_disruption("S3_closed", *b.data->pt_data, *b.data->meta);
+
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 
@@ -320,13 +326,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
                 ("stop_area:stop2")
                 ("stop_area:stop3");
 
-    b.vj("A", "000111")
+    b.vj("A", "111111").uri("VjA")
             ("A1",              "08:10"_t, "08:11"_t)
             ("stop_area:stop1", "09:10"_t, "09:11"_t)
             ("stop_area:stop2", "10:20"_t, "10:21"_t)
             ("A2",              "11:20"_t, "11:21"_t);
 
-    b.vj("B", "000111")
+    b.vj("B", "111111").uri("VjB")
             ("B1",              "08:10"_t, "08:11"_t)
             ("stop_area:stop1", "09:10"_t, "09:11"_t)
             ("stop_area:stop3", "10:20"_t, "10:21"_t)
@@ -335,8 +341,8 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->index();
-    b.data->build_raptor();
     b.data->build_uri();
+    b.data->build_raptor();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     //we delete the stop_area 1, two vj are impacted, we create a new journey pattern without this stop_area
@@ -356,19 +362,19 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
     for (const auto* vj: b.data->pt_data->vehicle_journeys) {
         switch (vj->realtime_level) {
         case nt::RTLevel::Base:
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"),
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "100001"),
 vj->adapted_validity_pattern()->days);
-            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+            BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
                     vj->base_validity_pattern()->days);
             break;
         case nt::RTLevel::Adapted:
             has_adapted_vj = true;
-            if (vj->uri == "vehicle_journey 0:Adapted:0:stop_area_closed" ||
-                    vj->uri == "vehicle_journey 1:Adapted:0:stop_area_closed") {
+            if (vj->uri == "VjA:Adapted:0:stop_area_closed" ||
+                    vj->uri == "VjB:Adapted:0:stop_area_closed") {
                 BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
                         vj->adapted_validity_pattern()->days);
             } else {
-                BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "011110"),
                         vj->adapted_validity_pattern()->days);
             }
             BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
@@ -381,6 +387,29 @@ vj->adapted_validity_pattern()->days);
         }
     }
     BOOST_REQUIRE(has_adapted_vj);
+
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+
+    auto res = compute(nt::RTLevel::Adapted, "A1", "A2", "08:00"_t, 0);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 4);
+
+    res = compute(nt::RTLevel::Adapted, "A1", "A2", "08:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 2);
+    auto vp = res[0].items[0].stop_times[0]->vehicle_journey->adapted_validity_pattern();
+    BOOST_CHECK_MESSAGE(ba::ends_with(vp->days.to_string(), "011110"),  vp->days.to_string());
 }
 
 /*
@@ -439,6 +468,24 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
             vj->adapted_validity_pattern()->days);
 
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+    auto res = compute(nt::RTLevel::Adapted, "A1", "A2", "23:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 2);
+    auto vp = res[0].items[0].stop_times[0]->vehicle_journey->adapted_validity_pattern();
+    BOOST_CHECK_MESSAGE(ba::ends_with(vp->days.to_string(), "0000111"),  vp->days.to_string());
+
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
@@ -451,7 +498,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
  *      -----------------------------------------------------------------------------------------------------
  *   VJ     8H----9H         8H----9H        8H----9H        8H----9H        8H----9H        8H----9H
  * Impact  |-----------------------------------------------|           |---|                     |------|
- *        7:00                                            6:00       23:00                      8:30   9:30
+ *        7:00                                            6:00      23:00  6:00                 8:30   9:30
  * */
 BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
@@ -495,6 +542,32 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "100111"),
             vj->adapted_validity_pattern()->days);
 
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor(*(b.data));
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+
+    // 2012/6/15 8:00
+    auto res = compute(nt::RTLevel::Base, "stop1", "stop3", "08:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop4", "08:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop3", "08:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 0); // <-- The stop3 is not accessible at the given datetime.
+
+    // 2012/6/18 5:00
+    res = compute(nt::RTLevel::Base, "stop1", "stop3", "05:00"_t, 4);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop3", "05:00"_t, 4);
+    BOOST_REQUIRE_EQUAL(res.size(), 1); // <-- The result should be the base vj
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times[0]->vehicle_journey->uri, "vj:1");
+
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
@@ -517,7 +590,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
-    auto&& disruption = b.impact(nt::RTLevel::Adapted, "stop3_closed")
+    const auto& disruption = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                               .severity(nt::disruption::Effect::NO_SERVICE)
                                               .on(nt::Type_e::StopPoint, "stop3")
                                               // 2012/6/14 7h -> 2012/6/17 6h
@@ -607,6 +680,19 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     // in Adapted Vj, all stop point is blocked....
     BOOST_REQUIRE(vj->stop_time_list.empty());
 
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor(*(b.data));
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+
+    auto res = compute(nt::RTLevel::Adapted, "stop1", "stop3", "8:00"_t, 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
 
     navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
@@ -670,6 +756,20 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     check_vj(vj, {{"00:05"_t, "00:05"_t, s1},
                   {"02:05"_t, "02:05"_t, s3}});
 
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor(*(b.data));
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+
+    auto res = compute(nt::RTLevel::RealTime, "stop1", "stop3", "8:00"_t, 3);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
@@ -692,11 +792,11 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
  *  Day 14          15          16          17          18          19          20          21
  *      -----------------------------------------------------------------------------------------------
  *  Vj1:
- *                23H---1H
+ *                                        23H---1H
  * Delayed_VJ:
- *                            23H---1H
+ *                                                    23H---1H
  * Disrupted_Delayed_VJ:
- *                               0H05-1H
+ *                                                       0H05-1H
  * */
 BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     ed::builder b("20120614");
@@ -750,11 +850,37 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     check_vj(vj, {{"00:05"_t, "00:05"_t, stop2},
                   {"01:00"_t, "01:00"_t, stop3}});
 
-    navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor(*(b.data));
+    auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
 
-    for(auto*vj:b.data->pt_data->vehicle_journeys) {
-        std::cout << vj->uri << std::endl;
-    }
+    auto res = compute(nt::RTLevel::Base, "stop1", "stop3", "23:00"_t, 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop3", "23:00"_t, 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+
+    res = compute(nt::RTLevel::Base, "stop1", "stop3", "23:00"_t, 3);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+    res = compute(nt::RTLevel::RealTime, "stop1", "stop3", "23:00"_t, 3);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+    res = compute(nt::RTLevel::RealTime, "stop2", "stop3", "23:00"_t, 3);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 2);
+    auto vp = res[0].items[0].stop_times[0]->vehicle_journey->rt_validity_pattern();
+    BOOST_CHECK_MESSAGE(ba::ends_with(vp->days.to_string(), "010000"),  vp->days.to_string());
+
+    navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
 
     vj  = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:1:bob:stop1_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "000000"),
