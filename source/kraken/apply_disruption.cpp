@@ -261,6 +261,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+
             auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
                     rt_level,
                     new_vp,
@@ -352,8 +353,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         boost::swap(impacted_by_moved, mvj->impacted_by);
         for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
-                auto v = add_impacts_visitor(spt, pt_data, meta, spt->disruption->rt_level);
-                boost::for_each(spt->informed_entities, boost::apply_visitor(v));
+                apply_disruption(*spt->disruption, pt_data, meta);
             }
         }
     }
