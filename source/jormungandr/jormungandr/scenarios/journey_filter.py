@@ -96,13 +96,11 @@ def _get_worst_similar_vjs(j1, j2, request):
         if j1.departure_date_time != j2.departure_date_time:
             return j1 if j1.departure_date_time < j2.departure_date_time else j2
 
-    fallback1 = fallback_duration(j1)
-    fallback2 = fallback_duration(j2)
+    if j1.duration != j2.duration:
+        return j1 if j1.duration > j2.duration else j2
 
-    if fallback1 != fallback2:
-        return j1 if fallback1 > fallback2 else j2
+    return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
 
-    return j1 if j1.duration > j2.duration else j2
 
 
 def _to_be_deleted(journey):
@@ -212,7 +210,20 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
 
 
 def similar_journeys_generator(journey):
-    for s in journey.sections:
+    is_park_section = lambda section: section.type in (response_pb2.PARK,
+                                                       response_pb2.LEAVE_PARKING,
+                                                       response_pb2.BSS_PUT_BACK,
+                                                       response_pb2.BSS_RENT)
+
+    for idx, s in enumerate(journey.sections):
+        # special case, we don't want to consider the walking section after/before parking a car
+        # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
+        if s.type == response_pb2.STREET_NETWORK:
+            if s.street_network.mode == response_pb2.Walking and \
+                ((idx - 1 >= 0 and is_park_section(journey.sections[idx - 1])) or
+                 (idx + 1 < len(journey.sections) and is_park_section(journey.sections[idx + 1]))):
+                    continue
+
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:" + s.pt_display_informations.uris.vehicle_journey
         elif s.type == response_pb2.STREET_NETWORK:
