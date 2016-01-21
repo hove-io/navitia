@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
             auto collection_name##_map = compute_opt.data.pt_data->collection_name##_map;\
             if ( collection_name##_map.find(id) != collection_name##_map.end()) {\
                 pbnavitia::type_name p;\
-                navitia::fill_pb_object(collection_name##_map.at(id), compute_opt.data, &p);\
+                ProtoCreator::fill_pb_object(collection_name##_map.at(id), compute_opt.data, &p);\
                 std::cout << p.DebugString() << std::endl;}
             ITERATE_NAVITIA_PT_TYPES(SHOW_ID_CLI)
         }
