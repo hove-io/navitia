@@ -71,10 +71,6 @@ namespace navitia {
     }
 }
 
-using house_number_coord = std::pair<int, const navitia::type::GeographicalCoord&>;
-using way_name = std::pair<const navitia::georef::Way*, const std::string&>;
-using way_pair = std::pair<const navitia::georef::Way*, house_number_coord>;
-using way_pair_name = std::pair<way_name, house_number_coord>;
 using jp_pair = std::pair<const navitia::routing::JpIdx, const navitia::routing::JourneyPattern&>;
 using jpp_pair = std::pair<const navitia::routing::JppIdx, const navitia::routing::JourneyPatternPoint&>;
 
@@ -114,6 +110,7 @@ struct WayCoord{
         way(way), coord(coord), number(number){}
 
 };
+
 /**
  * get_label() is a function that returns:
  * * the label (or a function get_label()) if the object has it
@@ -302,8 +299,6 @@ private:
         void fill_pb_object(const navitia::type::ExceptionDate*, pbnavitia::CalendarException*);
         void fill_pb_object(const navitia::type::MultiLineString*, pbnavitia::MultiLineString*);
         void fill_pb_object(const navitia::type::GeographicalCoord*, pbnavitia::Address*);
-        void fill_pb_object(const way_pair*, pbnavitia::Address*);
-        void fill_pb_object(const way_pair_name*, pbnavitia::Address*);        
         void fill_pb_object(const nt::StopPointConnection*, pbnavitia::Connection*);
         void fill_pb_object(const navitia::type::StopTime* , pbnavitia::StopTime*);
         void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);

@@ -565,46 +565,11 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::GeographicalCoord* c
 
     try{
         const auto nb_way = pb_creator.data.geo_ref->nearest_addr(*coord);
-        house_number_coord hn = {nb_way.first, *coord};
-        const way_pair waypair = {nb_way.second, hn};
-        fill(&waypair, address);
+        const auto& way_coord = WayCoord(nb_way.second, *coord, nb_way.first);
+        fill_pb_object(&way_coord, address);
     }catch(navitia::proximitylist::NotFound){
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                        "unable to find a way from coord ["<< coord->lon() << "-" << coord->lat() << "]");
-    }
-}
-
-void PbCreator::Filler::fill_pb_object(const way_pair* waypair, pbnavitia::Address* address){
-    const navitia::georef::Way* way = waypair->first;
-    const way_pair_name waypair_name = {{way, way->name}, waypair->second};
-    fill(&waypair_name, address);
-}
-
-void PbCreator::Filler::fill_pb_object(const way_pair_name* waypair_name, pbnavitia::Address* address){
-    const way_name wayname = waypair_name->first;
-    const house_number_coord hn_coord = waypair_name->second;
-
-    if(wayname.first == nullptr) { return; }
-
-    address->set_name(wayname.second);
-    std::string label;
-    if(hn_coord.first >= 1){
-        address->set_house_number(hn_coord.first);
-        label += std::to_string(hn_coord.first) + " ";
-    }
-    label += get_label(wayname.first);
-    address->set_label(label);
-
-    if(hn_coord.second.is_initialized()) {
-        address->mutable_coord()->set_lon(hn_coord.second.lon());
-        address->mutable_coord()->set_lat(hn_coord.second.lat());
-        std::stringstream ss;
-        ss << std::setprecision(16) << hn_coord.second.lon() << ";" << hn_coord.second.lat();
-        address->set_uri(ss.str());
-    }
-
-    if(depth > 0){
-        fill(wayname.first->admin_list, address->mutable_administrative_regions());
     }
 }
 
@@ -1153,14 +1118,32 @@ void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::PtO
 }
 
 void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::Address* address){
-    const navitia::georef::Way* way = way_coord->way;
-    const way_pair_name waypair_name = {{way, way->name}, {way_coord->number, way_coord->coord}};
-    fill(&waypair_name, address, depth);
+
+    if(way_coord->way == nullptr) { return; }
+
+    address->set_name(way_coord->way->name);
+    std::string label;
+    if(way_coord->number >= 1){
+        address->set_house_number(way_coord->number);
+        label += std::to_string(way_coord->number) + " ";
+    }
+    label += get_label(way_coord->way);
+    address->set_label(label);
+
+    if(way_coord->coord.is_initialized()) {
+        address->mutable_coord()->set_lon(way_coord->coord.lon());
+        address->mutable_coord()->set_lat(way_coord->coord.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << way_coord->coord.lon() << ";" << way_coord->coord.lat();
+        address->set_uri(ss.str());
+    }
+
+    if(depth > 0){
+        fill(way_coord->way->admin_list, address->mutable_administrative_regions());
+    }
 }
 
 }
-
-//*********************************************
 
 namespace navitia {
 
