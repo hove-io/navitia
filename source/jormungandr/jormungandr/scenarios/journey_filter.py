@@ -69,6 +69,8 @@ def filter_journeys(response_list, instance, request, original_request):
     for j in journeys:
         _debug_journey(j)
 
+    _filter_too_short_heavy_journeys(journeys, request)
+
     _filter_similar_journeys(journeys, request)
 
     _filter_not_coherent_journeys(journeys, instance, request, original_request)
@@ -132,6 +134,33 @@ def _filter_similar_journeys(journeys, request):
 
             mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
+
+def _filter_too_short_heavy_journeys(journeys, request):
+    """
+    we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
+    Heavy fallback mode are Bike and Car, bss is not considered as one.
+    Typically you don't take your car for only 2 minutes
+    """
+    logger = logging.getLogger(__name__)
+    for journey in journeys:
+        if _to_be_deleted(journey):
+            continue
+        on_bss = False
+        for s in journey.sections:
+            if s.type == response_pb2.BSS_RENT:
+                on_bss = True
+            if s.type == response_pb2.BSS_PUT_BACK:
+                on_bss = False
+            if s.type != response_pb2.STREET_NETWORK:
+                continue
+            if s.street_network.mode == response_pb2.Car and s.duration < request['_min_car']:
+                logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
+                mark_as_dead(journey, "not_enough_car")
+                break
+            if not on_bss and s.street_network.mode == response_pb2.Bike and s.duration < request['_min_bike']:
+                logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
+                mark_as_dead(journey, "not_enough_bike")
+                break
 
 def _filter_too_long_waiting(journeys, request):
     """
