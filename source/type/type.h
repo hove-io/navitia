@@ -872,6 +872,7 @@ struct StreetNetworkParams{
     void set_filter(const std::string & param_uri);
 
     navitia::time_duration max_duration = 1_s;
+    bool enable_direct_path = true;
 };
 /**
   Gestion de l'accessibilié

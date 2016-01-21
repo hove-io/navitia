@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.scenarios import default, helpers
+from jormungandr.scenarios.default import is_admin
 import copy
 import logging
 from jormungandr.scenarios.utils import JourneySorter, are_equals, compare
@@ -202,9 +203,6 @@ class DestineoJourneySorter(JourneySorter):
             return 1
 
         return 0
-
-def is_admin(entrypoint):
-    return entrypoint.startswith('admin:')
 
 
 class Scenario(default.Scenario):

@@ -118,6 +118,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     sn_params.bss_speed = request["bss_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
+    #we always want direct path, even for car
+    sn_params.enable_direct_path = True
 
     #settings fallback modes
     sn_params.origin_mode = dep_mode
@@ -517,6 +519,12 @@ def type_journeys(resp, req):
             non_pt_journey,
             has_no_car,
             has_bss,
+        ], [
+            best_crit
+        ])),
+        ("non_pt_car", trip_carac([
+            non_pt_journey,
+            has_car,
         ], [
             best_crit
         ])),
