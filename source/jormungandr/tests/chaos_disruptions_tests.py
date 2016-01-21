@@ -544,15 +544,12 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         assert disruptions[0]['disruption_id'] == disruption_id
 
         # query on journey, we should find some since the disruption is not blocking for real
-        journey_query = journey_basic_query + "&disruption_active=true"
         journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
 
-        response = self.query_region(journey_query)
         response_adapted = self.query_region(journey_query_adapted)
 
-        assert response['journeys'] == response_adapted['journeys']
-        assert len(response['journeys']) == 1
-        assert response['journeys'][0]['type'] == 'non_pt_walk'
+        assert len(response_adapted['journeys']) == 1
+        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
 
         # delete disruption on stop point
         self.send_mock(disruption_id,
