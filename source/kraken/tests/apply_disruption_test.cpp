@@ -916,6 +916,10 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
 }
 
 /*
+ * In this test case, some commented tests could not be satisfied because of the current algo.
+ * 3 three VJ should be created in this test case, but only one is now created...
+ *
+ * */
 BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     ed::builder b("20120614");
     auto* vj = b.vj("A").uri("vj:1")
@@ -950,18 +954,18 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
         if (cur_vj->adapted_validity_pattern()->check(3)) { vj17 = cur_vj; }
     }
 
-    BOOST_REQUIRE(vj15 && ! vj15->stop_time_list.empty());
-    BOOST_CHECK_EQUAL(vj15->stop_time_list.size(), 3);
-    BOOST_CHECK_EQUAL(vj15->stop_time_list.front().stop_point->uri, "stop1");
-    BOOST_CHECK_EQUAL(vj15->stop_time_list.back().stop_point->uri, "stop3");
+    // BOOST_REQUIRE(vj15 && ! vj15->stop_time_list.empty());
+    // BOOST_CHECK_EQUAL(vj15->stop_time_list.size(), 3);
+    // BOOST_CHECK_EQUAL(vj15->stop_time_list.front().stop_point->uri, "stop1");
+    // BOOST_CHECK_EQUAL(vj15->stop_time_list.back().stop_point->uri, "stop3");
 
     BOOST_REQUIRE(vj16 && ! vj16->stop_time_list.empty());
     BOOST_CHECK_EQUAL(vj16->stop_time_list.size(), 2);
     BOOST_CHECK_EQUAL(vj16->stop_time_list.front().stop_point->uri, "stop2");
     BOOST_CHECK_EQUAL(vj16->stop_time_list.back().stop_point->uri, "stop3");
 
-    BOOST_REQUIRE(vj17 && ! vj17->stop_time_list.empty());
-    BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
-    BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
-    BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
-}*/
+    // BOOST_REQUIRE(vj17 && ! vj17->stop_time_list.empty());
+    // BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
+    // BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
+    // BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
+}
