@@ -44,8 +44,7 @@ www.navitia.io
 #include "routing/dataraptor.h"
 #include "ptreferential/ptreferential.h"
 
-namespace nt = navitia::type;
-namespace pt = boost::posix_time;
+
 namespace gd = boost::gregorian;
 
 namespace navitia{
@@ -106,7 +105,7 @@ static void fill_property(const std::string& name,
     property->set_value(value);
 }
 
-static bool is_partial_terminus(const navitia::type::StopTime* stop_time){
+static bool is_partial_terminus(const nt::StopTime* stop_time){
     return stop_time->vehicle_journey
         && stop_time->vehicle_journey->route
         && stop_time->vehicle_journey->route->destination
@@ -123,7 +122,7 @@ PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message){
     return PbCreator::Filler(depth, dump_message, pb_creator);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbnavitia::Contributor* contrib){
+void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib){
     if(cb == nullptr) { return; }
     contrib->set_uri(cb->uri);
     contrib->set_name(cb->name);
@@ -131,7 +130,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Contributor* cb, pbn
     contrib->set_website(cb->website);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Frame* fr, pbnavitia::Frame* frame){
+void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* frame){
     if(fr == nullptr) { return; }
     frame->set_uri(fr->uri);
     pt::time_duration td = pt::time_duration(0, 0, 0, 0);
@@ -175,10 +174,10 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
     }
 
     if (depth > 1) {
-        std::vector<navitia::type::CommercialMode*> cm = ptref_indexes<navitia::type::CommercialMode>(sa);
+        std::vector<nt::CommercialMode*> cm = ptref_indexes<nt::CommercialMode>(sa);
         fill(cm, stop_area->mutable_commercial_modes());
 
-        std::vector<navitia::type::PhysicalMode*> pm = ptref_indexes<navitia::type::PhysicalMode>(sa);
+        std::vector<nt::PhysicalMode*> pm = ptref_indexes<nt::PhysicalMode>(sa);
         fill(pm, stop_area->mutable_physical_modes());
     }
 
@@ -186,7 +185,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
     fill_codes(sa, stop_area);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::georef::Admin* adm, pbnavitia::AdministrativeRegion* admin){
+void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::AdministrativeRegion* admin){
 
     if(adm == nullptr) { return; }
 
@@ -267,7 +266,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
     fill_codes(sp, stop_point);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
+void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company* company){
 
     if(!c) { return; }
 
@@ -277,7 +276,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnaviti
     fill_codes(c, company);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n, pbnavitia::Network* network){
+void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network* network){
 
     if(!n) { return; }
 
@@ -288,7 +287,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n, pbnaviti
     fill_codes(n, network);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
+void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m,
                                          pbnavitia::PhysicalMode* physical_mode){
     if(!m) { return; }
 
@@ -296,7 +295,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
     physical_mode->set_uri(m->uri);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
+void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
                       pbnavitia::CommercialMode* commercial_mode){
     if(!m) { return; }
 
@@ -304,7 +303,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
     commercial_mode->set_uri(m->uri);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
+void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line){
 
     if(!l) { return; }
 
@@ -349,7 +348,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
 
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
+void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* route){
 
     if(!r) { return; }
 
@@ -389,7 +388,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
+void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
 
     if(!lg) { return; }
@@ -404,14 +403,14 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
+void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calendar* pb_cal){
 
     if (!cal) { return; }
 
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
-    vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
+    vp->set_beginning_date(gd::to_iso_string(cal->validity_pattern.beginning_date));
     std::string vp_str = cal->validity_pattern.str();
     std::reverse(vp_str.begin(), vp_str.end());
     vp->set_days(vp_str);
@@ -426,8 +425,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnav
 
     for (const auto& p: cal->active_periods) {
         auto pb_period = pb_cal->add_active_periods();
-        pb_period->set_begin(boost::gregorian::to_iso_string(p.begin()));
-        pb_period->set_end(boost::gregorian::to_iso_string(p.end()));
+        pb_period->set_begin(gd::to_iso_string(p.begin()));
+        pb_period->set_end(gd::to_iso_string(p.end()));
     }
 
     for (const auto& excep: cal->exceptions) {
@@ -435,7 +434,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnav
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::ExceptionDate* exception_date,
+void PbCreator::Filler::fill_pb_object(const nt::ExceptionDate* exception_date,
                                          pbnavitia::CalendarException* calendar_exception){
     pbnavitia::ExceptionType type;
     switch (exception_date->type) {
@@ -449,21 +448,21 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::ExceptionDate* excep
         throw navitia::exception("exception date case not handled");
     }
     calendar_exception->set_uri("exception:" + std::to_string(type) +
-                                boost::gregorian::to_iso_string(exception_date->date));
+                                gd::to_iso_string(exception_date->date));
     calendar_exception->set_type(type);
-    calendar_exception->set_date(boost::gregorian::to_iso_string(exception_date->date));
+    calendar_exception->set_date(gd::to_iso_string(exception_date->date));
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
+void PbCreator::Filler::fill_pb_object(const nt::ValidityPattern* vp,
                                          pbnavitia::ValidityPattern* validity_pattern){
     if(!vp) { return; }
 
-    auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
+    auto vp_string = gd::to_iso_string(vp->beginning_date);
     validity_pattern->set_beginning_date(vp_string);
     validity_pattern->set_days(vp->days.to_string());
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
+void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
                                          pbnavitia::VehicleJourney* vehicle_journey){
 
     if (!vj) { return; }
@@ -509,7 +508,7 @@ void PbCreator::Filler::fill_pb_object(const nt::MetaVehicleJourney* nav_mvj, pb
     pb_trip->set_uri(nav_mvj->uri);
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::MultiLineString* shape,
+void PbCreator::Filler::fill_pb_object(const nt::MultiLineString* shape,
                                          pbnavitia::MultiLineString* geojson){
     for (const std::vector<nt::GeographicalCoord>& line: *shape) {
         auto l = geojson->add_lines();
@@ -522,7 +521,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::MultiLineString* sha
 }
 
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::GeographicalCoord* coord,
+void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord,
                                          pbnavitia::Address* address){
 
     if (!coord->is_initialized()) { return; }
@@ -549,7 +548,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavit
         fill(c->destination, connection->mutable_destination());
     }
 }
-void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* st, pbnavitia::StopTime* stop_time){
+void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time){
 
     // arrival/departure in protobuff are as seconds from midnight in local time
     const auto offset = [&](const uint32_t time) {
@@ -634,8 +633,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::vptranslator::BlockPattern
 
     for (const auto& p: bp->validity_periods) {
         auto pb_period = pb_cal->add_active_periods();
-        pb_period->set_begin(boost::gregorian::to_iso_string(p.begin()));
-        pb_period->set_end(boost::gregorian::to_iso_string(p.end()));
+        pb_period->set_begin(gd::to_iso_string(p.begin()));
+        pb_period->set_end(gd::to_iso_string(p.end()));
     }
 
     for (const auto& excep: bp->exceptions) {
@@ -645,7 +644,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::vptranslator::BlockPattern
 }
 
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* stop_time, pbnavitia::Properties* properties){
+void PbCreator::Filler::fill_pb_object(const nt::StopTime* stop_time, pbnavitia::Properties* properties){
     if (((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed())
         // No display pick up only information if first stoptime in vehiclejourney
         && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
@@ -673,8 +672,8 @@ void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
 
 
 static pbnavitia::ActiveStatus
-compute_disruption_status(const navitia::type::disruption::Impact& impact,
-                          const boost::posix_time::time_period& action_period) {
+compute_disruption_status(const nt::disruption::Impact& impact,
+                          const pt::time_period& action_period) {
 
     bool is_future = false;
     for(const auto& period: impact.application_periods){
@@ -694,7 +693,7 @@ compute_disruption_status(const navitia::type::disruption::Impact& impact,
 }
 
 template <typename P>
-void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& impact, P pb_object){
+void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, P pb_object){
     auto pb_impact = pb_object->add_impacts();
 
     pb_impact->set_disruption_uri(impact.disruption->uri);
@@ -773,7 +772,7 @@ void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& im
 
 // Forcing an instantiation
 template
-void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& impact, pbnavitia::Response* pb_object);
+void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, pbnavitia::Response* pb_object);
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayInfo* pt_display_info){
 
@@ -821,7 +820,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
 }
 
 
-void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* geopoi, pbnavitia::Poi* poi){
+void PbCreator::Filler::fill_pb_object(const ng::POI* geopoi, pbnavitia::Poi* poi){
 
     if(!geopoi) { return; }
 
@@ -853,7 +852,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* geopoi, pbnav
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* poi, pbnavitia::Address* address){
+void PbCreator::Filler::fill_pb_object(const ng::POI* poi, pbnavitia::Address* address){
 
     if(!poi) { return; }
 
@@ -879,7 +878,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* poi, pbnaviti
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::georef::POIType* geo_poi_type,
+void PbCreator::Filler::fill_pb_object(const ng::POIType* geo_poi_type,
                                        pbnavitia::PoiType* poi_type){
     poi_type->set_name(geo_poi_type->name);
     poi_type->set_uri(geo_poi_type->uri);
@@ -958,7 +957,7 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
+void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
                                        pbnavitia::hasEquipments* has_equipments){
     if (vj->wheelchair_accessible()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
@@ -1032,28 +1031,28 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const navitia::type::EntryPoint* point, pbnavitia::PtObject* place){
-    if (point->type == navitia::type::Type_e::StopPoint) {
+void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::PtObject* place){
+    if (point->type == nt::Type_e::StopPoint) {
         const auto it = pb_creator.data.pt_data->stop_points_map.find(point->uri);
         if (it != pb_creator.data.pt_data->stop_points_map.end()) {
             fill(it->second, place);
         }
-    } else if (point->type == navitia::type::Type_e::StopArea) {
+    } else if (point->type == nt::Type_e::StopArea) {
         const auto it = pb_creator.data.pt_data->stop_areas_map.find(point->uri);
         if (it != pb_creator.data.pt_data->stop_areas_map.end()) {
             fill(it->second, place);
         }
-    } else if (point->type == navitia::type::Type_e::POI) {
+    } else if (point->type == nt::Type_e::POI) {
         const auto it = pb_creator.data.geo_ref->poi_map.find(point->uri);
         if (it != pb_creator.data.geo_ref->poi_map.end()) {
             fill(pb_creator.data.geo_ref->pois[it->second], place);
         }
-    } else if (point->type == navitia::type::Type_e::Admin) {
+    } else if (point->type == nt::Type_e::Admin) {
         const auto it = pb_creator.data.geo_ref->admin_map.find(point->uri);
         if (it != pb_creator.data.geo_ref->admin_map.end()) {
             fill(pb_creator.data.geo_ref->admins[it->second], place);
         }
-    } else if (point->type == navitia::type::Type_e::Coord){
+    } else if (point->type == nt::Type_e::Coord){
         try{
             auto address = pb_creator.data.geo_ref->nearest_addr(point->coordinates);
             const auto& way_coord = WayCoord(address.second, point->coordinates, address.first);
@@ -1168,10 +1167,10 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-static const navitia::georef::POI*
-get_nearest_poi(const navitia::type::Data& data,
+static const ng::POI*
+get_nearest_poi(const nt::Data& data,
                 const nt::GeographicalCoord& coord,
-                const navitia::georef::POIType& poi_type) {
+                const ng::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
@@ -1183,25 +1182,25 @@ get_nearest_poi(const navitia::type::Data& data,
     return nullptr;
 }
 
-static const navitia::georef::POI*
-get_nearest_parking(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
-    navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
-    const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
+static const ng::POI*
+get_nearest_parking(const nt::Data& data, const nt::GeographicalCoord& coord) {
+    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
+    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
 }
 
-static const navitia::georef::POI*
-get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
-    navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
-    const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
+static const ng::POI*
+get_nearest_bss_station(const nt::Data& data, const nt::GeographicalCoord& coord) {
+    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
+    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
 }
 
 static void finalize_section(pbnavitia::Section* section,
-                             const navitia::georef::PathItem& last_item,
-                             const navitia::georef::PathItem& item,
-                             const navitia::type::Data& data,
-                             const boost::posix_time::ptime departure,
+                             const ng::PathItem& last_item,
+                             const ng::PathItem& item,
+                             const nt::Data& data,
+                             const pt::ptime departure,
                              int depth,
                              const pt::ptime& now,
                              const pt::time_period& action_period) {
@@ -1298,8 +1297,8 @@ static pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_obje
 
 static pbnavitia::Section* create_section(EnhancedResponse& response,
                                           pbnavitia::Journey* pb_journey,
-                                          const navitia::georef::PathItem& first_item,
-                                          const navitia::type::Data& data,
+                                          const ng::PathItem& first_item,
+                                          const nt::Data& data,
                                           int depth,
                                           const pt::ptime& now,
                                           const pt::time_period& action_period) {
@@ -1344,7 +1343,7 @@ static pbnavitia::Section* create_section(EnhancedResponse& response,
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
-                          boost::posix_time::ptime origin_time, const type::Data& data,
+                          pt::ptime origin_time, const type::Data& data,
                           EnhancedResponse& response, pbnavitia::Journey* pb_journey,
                           const pt::ptime& now, const pt::time_period& action_period) {
     pbnavitia::Section* section = pb_journey->add_sections();
@@ -1388,7 +1387,7 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
 
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
                             const georef::Path& path, const type::Data& data,
-                            pbnavitia::Journey* pb_journey, const boost::posix_time::ptime departure,
+                            pbnavitia::Journey* pb_journey, const pt::ptime departure,
                             int max_depth, const pt::ptime& now, const pt::time_period& action_period) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
@@ -1442,8 +1441,8 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
     }
 }
 
-void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item,
-                    const type::EntryPoint &ori_dest, const navitia::type::Data& data) {
+void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item,
+                    const type::EntryPoint &ori_dest, const nt::Data& data) {
     if(item.way_idx >= data.geo_ref->ways.size())
         throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
 
@@ -1485,7 +1484,7 @@ void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& message,
                     pbnavitia::Error* error, int ,
-                    const boost::posix_time::ptime& , const boost::posix_time::time_period& ){
+                    const pt::ptime& , const pt::time_period& ){
     error->set_id(id);
     error->set_message(message);
 }
