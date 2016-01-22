@@ -98,13 +98,6 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     }
 };
 
-static void fill_property(const std::string& name,
-                          const std::string& value,
-                          pbnavitia::Property* property) {
-    property->set_name(name);
-    property->set_value(value);
-}
-
 static bool is_partial_terminus(const nt::StopTime* stop_time){
     return stop_time->vehicle_journey
         && stop_time->vehicle_journey->route
@@ -131,7 +124,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Con
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* frame){
-    if(fr == nullptr) { return; }
+
+    if(!fr) { return; }
+
     frame->set_uri(fr->uri);
     pt::time_duration td = pt::time_duration(0, 0, 0, 0);
     frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
@@ -156,7 +151,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* fr
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
-    if(sa == nullptr) { return; }
+
+    if(!sa) { return; }
 
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
@@ -187,7 +183,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 
 void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::AdministrativeRegion* admin){
 
-    if(adm == nullptr) { return; }
+    if(!adm) { return; }
 
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
@@ -205,7 +201,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
 
-    if(sp == nullptr) { return; }
+    if(!sp) { return; }
 
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
@@ -260,8 +256,9 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(&sp->coord, stop_point->mutable_address());
     }
 
-    if(depth > 0)
+    if(depth > 0){
         fill(sp->stop_area, stop_point->mutable_stop_area());
+    }
     fill_messages(sp, stop_point);
     fill_codes(sp, stop_point);
 }
@@ -309,10 +306,12 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
 
     fill_comments(l, line);
 
-    if(l->code != "")
+    if(!l->code.empty()){
         line->set_code(l->code);
-    if(l->color != "")
+    }
+    if(!l->color.empty()){
         line->set_color(l->color);
+    }
 
     if(! l->text_color.empty())
         line->set_text_color(l->text_color);
@@ -343,7 +342,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
     fill_codes(l, line);
 
     for(auto property : l->properties) {
-        fill_property(property.first, property.second, line->add_properties());
+        auto* pb_property = line->add_properties();
+        pb_property->set_name(property.first);
+        pb_property->set_value(property.second);
     }
 
 }
@@ -376,15 +377,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
             auto stop_point = pb_creator.data.pt_data->stop_points[idx];
             fill(stop_point, route->add_stop_points());
         }
-        std::set<const nt::PhysicalMode*> physical_modes;
-        r->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                physical_modes.insert(vj.physical_mode);
-                return true;
-            });
-
-        for (auto physical_mode : physical_modes) {
-            fill(physical_mode, route->add_physical_modes(), 0);
-        }
+        std::vector<nt::PhysicalMode*> pm = ptref_indexes<nt::PhysicalMode>(r);
+        fill(pm, route->mutable_physical_modes());
     }
 }
 
@@ -427,11 +421,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calen
         auto pb_period = pb_cal->add_active_periods();
         pb_period->set_begin(gd::to_iso_string(p.begin()));
         pb_period->set_end(gd::to_iso_string(p.end()));
-    }
-
-    for (const auto& excep: cal->exceptions) {
-        fill(&excep, pb_cal->add_exceptions());
-    }
+    }    
+    fill(cal->exceptions, pb_cal->mutable_exceptions());
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::ExceptionDate* exception_date,
@@ -636,11 +627,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::vptranslator::BlockPattern
         pb_period->set_begin(gd::to_iso_string(p.begin()));
         pb_period->set_end(gd::to_iso_string(p.end()));
     }
-
-    for (const auto& excep: bp->exceptions) {
-        fill(&excep, pb_cal->add_exceptions());
-    }
-
+    fill(bp->exceptions, pb_cal->mutable_exceptions());
 }
 
 
@@ -1167,10 +1154,8 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-static const ng::POI*
-get_nearest_poi(const nt::Data& data,
-                const nt::GeographicalCoord& coord,
-                const ng::POIType& poi_type) {
+static const ng::POI* get_nearest_poi(const nt::Data& data, const nt::GeographicalCoord& coord,
+                                      const ng::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
@@ -1182,15 +1167,13 @@ get_nearest_poi(const nt::Data& data,
     return nullptr;
 }
 
-static const ng::POI*
-get_nearest_parking(const nt::Data& data, const nt::GeographicalCoord& coord) {
+static const ng::POI* get_nearest_parking(const nt::Data& data, const nt::GeographicalCoord& coord) {
     nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
     const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
 }
 
-static const ng::POI*
-get_nearest_bss_station(const nt::Data& data, const nt::GeographicalCoord& coord) {
+static const ng::POI* get_nearest_bss_station(const nt::Data& data, const nt::GeographicalCoord& coord) {
     nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
     const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
@@ -1231,7 +1214,9 @@ static void finalize_section(pbnavitia::Section* section,
             if (vls_station) {
                 navitia::fill_pb_object(vls_station, data, dest_place, depth, now, action_period);
             } else {
-                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                                "impossible to find the associated BSS putback station poi for coord "
+                                << last_item.coordinates.front());
             }
             break;
         }
@@ -1242,7 +1227,9 @@ static void finalize_section(pbnavitia::Section* section,
             if (parking) {
                 navitia::fill_pb_object(parking, data, dest_place, depth, now, action_period);
             } else {
-                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "impossible to find the associated parking poi for coord " << last_item.coordinates.front());
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                                "impossible to find the associated parking poi for coord "
+                                << last_item.coordinates.front());
             }
             break;
         }
@@ -1315,7 +1302,9 @@ static pbnavitia::Section* create_section(EnhancedResponse& response,
         if (vls_station) {
             navitia::fill_pb_object(vls_station, data, section->mutable_destination(), depth, now, action_period);
         } else {
-            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
+                            "impossible to find the associated BSS rent station poi for coord "
+                            << first_item.coordinates.front());
         }
     }
     if (prev_section) {
@@ -1489,7 +1478,8 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& messa
     error->set_message(message);
 }
 
-void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data, const std::string& mode_uri){
+void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data,
+                               const std::string& mode_uri){
     if (!mode_uri.empty()){
       const auto it_physical_mode = data.pt_data->physical_modes_map.find(mode_uri);
       if ((it_physical_mode != data.pt_data->physical_modes_map.end())
@@ -1501,7 +1491,8 @@ void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& d
     }
 }
 
-void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data, const type::VehicleJourney* vehicle_journey){
+void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data,
+                       const type::VehicleJourney* vehicle_journey){
     if (vehicle_journey && vehicle_journey->physical_mode) {
         fill_co2_emission_by_mode(pb_section, data, vehicle_journey->physical_mode->uri);
     }

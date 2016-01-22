@@ -259,6 +259,14 @@ private:
             }
         }
 
+        template<typename Nav, typename Pb>
+        void fill_pb_object(const std::set<Nav>& nav_list,
+                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto& nav_obj: nav_list) {
+                fill_pb_object(&nav_obj, pb_list->Add());
+            }
+        }
+
         template <typename NAV, typename P>
         void fill_messages(const NAV* nav_obj, P* pb_obj){
             if (dump_message == DumpMessage::No) { return; }
