@@ -258,9 +258,6 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                        start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        # Exceptional Case
-        # blocking disruption applied on stop_area and stop_point will not block them
-        # We should still find them in journey
 
         check_links_("20120616T080000", False)
         #We test out of the period
