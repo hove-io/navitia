@@ -89,8 +89,8 @@ static pbnavitia::Response extract_data(const type::Data& data,
                            result.add_commercial_modes(), depth, current_time, action_period);
             break;
         case Type_e::JourneyPatternPoint:{
-            const auto& pair_jppp = data.dataRaptor->jp_container.get_jpps()[idx];
-            fill_pb_object(&pair_jppp, data,
+            const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
+            fill_pb_object(&pair_jpp, data,
                            result.add_journey_pattern_points(), depth, current_time, action_period);
             break;
         }
