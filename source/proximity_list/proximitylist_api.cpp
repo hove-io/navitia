@@ -54,21 +54,21 @@ static void create_pb(const std::vector<t_result>& result, uint32_t depth, const
         auto type = std::get<2>(result_item);
         switch(type){
         case nt::Type_e::StopArea:
-            ProtoCreator::fill_pb_object(data.pt_data->stop_areas[idx], data, place, depth, current_date);
+            navitia::fill_pb_object(data.pt_data->stop_areas[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::StopPoint:
-            ProtoCreator::fill_pb_object(data.pt_data->stop_points[idx], data, place, depth, current_date);
+            navitia::fill_pb_object(data.pt_data->stop_points[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::POI:
-            ProtoCreator::fill_pb_object(data.geo_ref->pois[idx], data, place, depth, current_date);
+            navitia::fill_pb_object(data.geo_ref->pois[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::Address:{
-            const auto& way_coord = ProtoCreator::WayCoord(data.geo_ref->ways[idx],
+            const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx],
                     coord, data.geo_ref->ways[idx]->nearest_number(coord).first);
-            ProtoCreator::fill_pb_object(&way_coord, data, place, depth, current_date);
+            navitia::fill_pb_object(&way_coord, data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
             break;
         }

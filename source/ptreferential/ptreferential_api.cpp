@@ -37,7 +37,7 @@ www.navitia.io
 #include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
-namespace pc = ProtoCreator;
+namespace pc = navitia;
 
 namespace navitia{ namespace ptref{
 

@@ -58,14 +58,14 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
 
-    ProtoCreator::fill_pb_object(r, *b.data, pt_display_info, 0, {}, period);
+    navitia::fill_pb_object(r, *b.data, pt_display_info, 0, {}, period);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "stop1");
     pt_display_info->Clear();
 
     r->destination = new nt::StopArea();
     r->destination->name = "bob";
-    ProtoCreator::fill_pb_object(r, *b.data, pt_display_info, 0, {}, period);
+    navitia::fill_pb_object(r, *b.data, pt_display_info, 0, {}, period);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "bob");
 }
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
-    ProtoCreator::fill_pb_object(route, *b.data, pt_display_info, 0, {}, period);
+    navitia::fill_pb_object(route, *b.data, pt_display_info, 0, {}, period);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "");
     pt_display_info->Clear();
@@ -124,14 +124,14 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     boost::posix_time::time_period period(t1, t2);
     const nt::StopArea* sa= b.sas.find("stop1")->second;
 
-    ProtoCreator::fill_pb_object(sa, *b.data, stop_area, 2, {}, period);
+    navitia::fill_pb_object(sa, *b.data, stop_area, 2, {}, period);
 
     BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 2);
     BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
 
     stop_area->Clear();
     sa= b.sas.find("stop6")->second;
-    ProtoCreator::fill_pb_object(sa, *b.data,
+    navitia::fill_pb_object(sa, *b.data,
                         stop_area, 2,
                         {}, period);
     BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 1);

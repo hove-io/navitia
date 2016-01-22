@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(get_label_test) {
         //get_label should be prefered to name
     };
 
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(std::make_unique<bob>().get()), "sponge bob");
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(std::make_unique<bobette>().get()), "bobette");
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(std::make_unique<bobitto>().get()), "bobitto's the best");
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(std::make_unique<bobitte>().get()), "bobitte's the best");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bob>().get()), "sponge bob");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobette>().get()), "bobette");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitto>().get()), "bobitto's the best");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitte>().get()), "bobitte's the best");
 }
 
 BOOST_AUTO_TEST_CASE(name_formater_sa) {
@@ -82,11 +82,11 @@ BOOST_AUTO_TEST_CASE(name_formater_sa) {
 
     d.compute_labels();
 
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(sa1), sa1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(sa1), sa1->name);
     sa1->admin_list.push_back(admin1);
     sa1->admin_list.push_back(admin8);
     d.compute_labels();
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(sa1), sa1->name + " (" + admin8->name + ")");
+    BOOST_CHECK_EQUAL(navitia::get_label(sa1), sa1->name + " (" + admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_object_sa) {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_sa) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    ProtoCreator::fill_pb_object(sa1, d, pb);
+    navitia::fill_pb_object(sa1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), sa1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), sa1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_AREA);
@@ -134,11 +134,11 @@ BOOST_AUTO_TEST_CASE(name_formater_poi) {
     d.geo_ref->pois.push_back(poi1);
     d.compute_labels();
 
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(poi1), poi1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(poi1), poi1->name);
     poi1->admin_list.push_back(admin1);
     poi1->admin_list.push_back(admin8);
     d.compute_labels();
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(poi1), poi1->name + " (" + admin8->name + ")");
+    BOOST_CHECK_EQUAL(navitia::get_label(poi1), poi1->name + " (" + admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_object_poi) {
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_poi) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    ProtoCreator::fill_pb_object(poi1, d, pb);
+    navitia::fill_pb_object(poi1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), poi1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), poi1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::POI);
@@ -186,10 +186,10 @@ BOOST_AUTO_TEST_CASE(name_formater_stop_point) {
     d.pt_data->stop_points.push_back(stop_point1);
     d.compute_labels();
 
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(stop_point1), stop_point1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(stop_point1), stop_point1->name);
     stop_point1->admin_list.push_back(admin1);
     stop_point1->admin_list.push_back(admin8);
-    BOOST_CHECK_EQUAL(ProtoCreator::get_label(stop_point1), stop_point1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(stop_point1), stop_point1->name);
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_object_stop_point) {
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_stop_point) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    ProtoCreator::fill_pb_object(stop_point1, d, pb);
+    navitia::fill_pb_object(stop_point1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), stop_point1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), stop_point1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_POINT);

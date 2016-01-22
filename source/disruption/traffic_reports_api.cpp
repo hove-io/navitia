@@ -334,30 +334,30 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
         auto* pb_traffic_reports = pb_response.add_traffic_reports();
         pbnavitia::Network* pb_network = pb_traffic_reports->mutable_network();
         for(const auto& impact: dist.network_disruptions){
-            ProtoCreator::fill_pb_object(impact.get(), d, pb_network, depth-1, now_dt, action_period);
+            navitia::fill_pb_object(impact.get(), d, pb_network, depth-1, now_dt, action_period);
         }
-        ProtoCreator::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
+        navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
         for (const auto& line_item: dist.lines) {
             pbnavitia::Line* pb_line = pb_traffic_reports->add_lines();
-            ProtoCreator::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
+            navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
             for(const auto& impact: line_item.second){
-                ProtoCreator::fill_pb_object(impact.get(), d, pb_line, depth-1, now_dt, action_period);
+                navitia::fill_pb_object(impact.get(), d, pb_line, depth-1, now_dt, action_period);
             }
         }
         for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_traffic_reports->add_stop_areas();
-            ProtoCreator::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
+            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
                                     bt::not_a_date_time, action_period, false);
             for(const auto& impact: sa_item.second){
-                ProtoCreator::fill_pb_object(impact.get(), d, pb_stop_area, depth-1, now_dt, action_period);
+                navitia::fill_pb_object(impact.get(), d, pb_stop_area, depth-1, now_dt, action_period);
             }
         }
         for (const auto& vj_item: dist.vehicle_journeys) {
             pbnavitia::VehicleJourney* pb_vehicle_journey = pb_traffic_reports->add_vehicle_journeys();
-            ProtoCreator::fill_pb_object(vj_item.first, d, pb_vehicle_journey, depth-1,
+            navitia::fill_pb_object(vj_item.first, d, pb_vehicle_journey, depth-1,
                                     bt::not_a_date_time, action_period, false);
             for(const auto& impact: vj_item.second){
-                ProtoCreator::fill_pb_object(impact.get(), d, pb_vehicle_journey, depth-1, now_dt, action_period);
+                navitia::fill_pb_object(impact.get(), d, pb_vehicle_journey, depth-1, now_dt, action_period);
             }
         }
     }

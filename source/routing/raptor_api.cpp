@@ -170,11 +170,11 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
 
     if (! stop_times.empty()) {
-        const auto& vj_stoptimes = ProtoCreator::VjStopTimes(vj, stop_times.front(), stop_times.back());
-        ProtoCreator::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
+        const auto& vj_stoptimes = navitia::VjStopTimes(vj, stop_times.front(), stop_times.back());
+        navitia::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
     } else {
-        const auto& vj_stoptimes = ProtoCreator::VjStopTimes(vj, nullptr, nullptr);
-        ProtoCreator::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
+        const auto& vj_stoptimes = navitia::VjStopTimes(vj, nullptr, nullptr);
+        navitia::fill_pb_object(&vj_stoptimes, d, vj_pt_display_information, 1, now, action_period);
     }
 
     fill_shape(pb_section, stop_times);
@@ -246,11 +246,11 @@ static void add_direct_path(EnhancedResponse& enhanced_response,
             // We add coherence with the origin of the request
             auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
             origin_pb->Clear();
-            ProtoCreator::fill_pb_object(&origin, d, origin_pb, 2);
+            navitia::fill_pb_object(&origin, d, origin_pb, 2);
             //We add coherence with the destination object of the request
             auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
             destination_pb->Clear();
-            ProtoCreator::fill_pb_object(&destination, d, destination_pb, 2);
+            navitia::fill_pb_object(&destination, d, destination_pb, 2);
             co2_emission_aggregator(pb_journey);
         }
     }
@@ -311,9 +311,9 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 bt::time_period action_period(p_deptime, p_arrtime);
-                ProtoCreator::fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(),
+                navitia::fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(),
                         0, now, action_period, show_codes);
-                ProtoCreator::fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
+                navitia::fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
 
                 // L'heure de départ du véhicule au premier stop point
                 if(departure_ptime.is_not_a_date_time())
@@ -329,11 +329,11 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 auto dep_time = item.departures[0];
                 bt::time_period action_period(dep_time, arr_time + bt::seconds(1));
 
-                ProtoCreator::fill_pb_object(item.stop_points.front(), d,
+                navitia::fill_pb_object(item.stop_points.front(), d,
                         pb_section->mutable_origin(), 1, now, action_period,
                         show_codes);
 
-                ProtoCreator::fill_pb_object(item.stop_points.back(), d,
+                navitia::fill_pb_object(item.stop_points.back(), d,
                         pb_section->mutable_destination(), 1, now,
                         action_period, show_codes);
 
@@ -393,8 +393,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
             bt::time_period action_period(item.departure, item.arrival);
             const auto origin_sp = item.stop_points.front();
             const auto destination_sp = item.stop_points.back();
-            ProtoCreator::fill_pb_object(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period, show_codes);
-            ProtoCreator::fill_pb_object(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period,
+            navitia::fill_pb_object(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period, show_codes);
+            navitia::fill_pb_object(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period,
                     show_codes);
             pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
         }
@@ -417,7 +417,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
     if (vp) {
         const auto& vect_p = vptranslator::translate(*vp);
-        ProtoCreator::fill_pb_object(vect_p, d, pb_journey->mutable_calendars());
+        navitia::fill_pb_object(vect_p, d, pb_journey->mutable_calendars());
 
     }
 
@@ -521,11 +521,11 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                                     navitia::from_posix_timestamp(first_section->begin_date_time()),
                                     navitia::from_posix_timestamp(last_section->end_date_time()));
                     // We add coherence with the origin of the request
-                    ProtoCreator::fill_pb_object(&origin, d, first_section->mutable_origin(), 2, now,
+                    navitia::fill_pb_object(&origin, d, first_section->mutable_origin(), 2, now,
                                       action_period, show_codes);
                     // We add coherence with the first pt section
                     last_section->mutable_destination()->Clear();
-                    ProtoCreator::fill_pb_object(departure_stop_point, d, last_section->mutable_destination(),
+                    navitia::fill_pb_object(departure_stop_point, d, last_section->mutable_destination(),
                                       2, now, action_period, show_codes);
                 }
             }
@@ -537,7 +537,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             auto* section = pb_journey->mutable_sections(0);
             section->mutable_origin()->Clear();
             auto action_period = bt::time_period(navitia::from_posix_timestamp(section->begin_date_time()), bt::minutes(1));
-            ProtoCreator::fill_pb_object(&origin, d, section->mutable_origin(), 1, now, action_period, show_codes);
+            navitia::fill_pb_object(&origin, d, section->mutable_origin(), 1, now, action_period, show_codes);
         }
 
         if (journey_end_with_address_odt) {
@@ -547,7 +547,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             section->mutable_destination()->Clear();
             //TODO: the period can probably be better (-1 min shift)
             auto action_period = bt::time_period(navitia::from_posix_timestamp(section->end_date_time()), bt::minutes(1));
-            ProtoCreator::fill_pb_object(&destination, d, section->mutable_destination(), 1, now, action_period, show_codes);
+            navitia::fill_pb_object(&destination, d, section->mutable_destination(), 1, now, action_period, show_codes);
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
@@ -586,7 +586,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     bt::time_period action_period(
                                        navitia::from_posix_timestamp(section->begin_date_time()),
                                        navitia::from_posix_timestamp(section->end_date_time() + 1));
-                    ProtoCreator::fill_pb_object(arrival_stop_point, d, section->mutable_origin(), 2, now,
+                    navitia::fill_pb_object(arrival_stop_point, d, section->mutable_origin(), 2, now,
                                       action_period, show_codes);
                 }
 
@@ -595,7 +595,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 bt::time_period action_period(
                                        navitia::from_posix_timestamp(section->begin_date_time()),
                                        navitia::from_posix_timestamp(section->end_date_time() + 1));
-                ProtoCreator::fill_pb_object(&destination, d, section->mutable_destination(), 2, now,
+                navitia::fill_pb_object(&destination, d, section->mutable_destination(), 2, now,
                                   action_period, show_codes);
             }
         }
@@ -733,10 +733,10 @@ static void add_isochrone_response(RAPTOR& raptor,
             bt::time_period action_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                           navitia::to_posix_time(best_lbl, raptor.data));
             if (show_stop_area)
-                ProtoCreator::fill_pb_object(sp->stop_area, raptor.data, pb_journey->mutable_destination(),
+                navitia::fill_pb_object(sp->stop_area, raptor.data, pb_journey->mutable_destination(),
                                              0, now, action_period, show_codes);
             else
-                ProtoCreator::fill_pb_object(sp, raptor.data, pb_journey->mutable_destination(),
+                navitia::fill_pb_object(sp, raptor.data, pb_journey->mutable_destination(),
                                              0, now, action_period, show_codes);
         }
     }
