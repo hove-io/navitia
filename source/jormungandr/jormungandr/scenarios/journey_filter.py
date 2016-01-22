@@ -227,8 +227,11 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
     else:
         comp_value = lambda j: j.departure_date_time
         comp_func = max
-
-    asap_journey = comp_func((j for j in journeys if not _to_be_deleted(j)), key=comp_value)
+    keeped = [j for j in journeys if not _to_be_deleted(j)]
+    if not keeped:
+        #min and max don't like empty list
+        return
+    asap_journey = comp_func(keeped, key=comp_value)
 
     for j in journeys:
         if _to_be_deleted(j):

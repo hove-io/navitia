@@ -594,15 +594,17 @@ class Scenario(simple.Scenario):
 
         responses = []
         last_nb_journeys = 0
-        while nb_journeys(responses) < min_asked_journeys:
+        nb_try = 0
+        while nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys:
+            nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            responses.extend(tmp_resp)#we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
                 break
 
             next_request = create_next_kraken_request(request, tmp_resp)
-            responses.extend(tmp_resp)
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)
