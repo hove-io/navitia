@@ -525,6 +525,29 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
+    /*
+     *
+     *
+     *  Day     1              2               3               4               5               6             ...
+     *          -----------------------------------------------------------------------------------------------------
+     * SP_bob           8:30         8:30             8:30           8:30           8:30             8:30   ... (vj)
+     * Period_bob   |-----------------------------------------------|
+     *             6:00                                            6:00
+     *
+     * Let's say we have a vj passes every day at 8:30 on a stop point SP_bob.
+     * Now given a Period_bob and the VJ stops at SP_bob only during this Period_bob, what's the validity pattern of the
+     * VJ if SP_bob must be served?
+     *
+     * In this case, the vehicle does stop at the Day1, 2, 3, *BUT* not the Day4
+     * Then the validity pattern of this stop_time in this period is "00111" (Reminder: the vp string is inverted)
+     *
+     * */
+    // compute the validity pattern of the vj stop at that stop_point, given the realtime level and a period
+    ValidityPattern get_vp_of_sp(
+            const StopPoint& sp,
+            RTLevel rt_level,
+            const boost::posix_time::time_period& period) const;
+
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
     Frame* frame = nullptr;
@@ -678,6 +701,8 @@ struct StopTime {
         return this - &vehicle_journey->stop_time_list.front();
     }
 
+    StopTime clone() const;
+
     /// can we start with this stop time (according to clockwise)
     bool valid_begin(bool clockwise) const {return clockwise ? pick_up_allowed() : drop_off_allowed();}
 
@@ -716,6 +741,12 @@ struct StopTime {
     }
     DateTime arrival(DateTime dt) const {
         return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
+    }
+
+    boost::posix_time::ptime get_arrival_utc(const boost::gregorian::date& circulating_day) const {
+       auto timestamp = navitia::to_posix_timestamp(boost::posix_time::ptime{circulating_day})
+                   + static_cast<uint64_t>(arrival_time);
+       return boost::posix_time::from_time_t(timestamp);
     }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
@@ -809,6 +840,10 @@ struct MetaVehicleJourney: public Header, HasMessages {
             auto& vjs = rt_vjs.second;
             boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj){fun(*vj);});
         }
+    }
+
+    const std::vector<std::unique_ptr<VehicleJourney>>& get_vjs_at(RTLevel rt_level) const {
+            return rtlevel_to_vjs_map[rt_level];
     }
 
     const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {

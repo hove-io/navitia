@@ -38,7 +38,8 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <algorithm>
 
 namespace navitia {
 
@@ -131,6 +132,18 @@ static type::ValidityPattern compute_base_disrupted_vp(
     return vp;
 }
 
+static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
+    std::stringstream impacts_uris;
+    for (auto& mvj_impacts : mvj.impacted_by) {
+        if (auto i = mvj_impacts.lock()) {
+            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
+                impacts_uris << ":" << i->disruption->uri;
+            }
+        }
+    }
+    return impacts_uris.str();
+}
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -170,14 +183,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = mvj->get_base_vj().at(0)->name; 
             } else {
                 // If we set nothing for physical_mode, it'll crash when building raptor
                 vj->physical_mode = pt_data.physical_modes[0];
-                vj->physical_mode->vehicle_journey_list.push_back(vj);
                 vj->name = new_vj_uri;
             }
+            vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
             for (auto& stu: impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
@@ -190,11 +202,105 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::StopPoint* stop_point) {
-        LOG4CPLUS_INFO(log, "Disruption on stop point:" << stop_point->uri << " is not handled");
+        log_start_action(stop_point->uri);
+
+        using namespace boost::posix_time;
+        using namespace boost::gregorian;
+
+        // Computing a validity_pattern of impact used to pre-filter concerned vjs later
+        type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
+        for (const auto& period: impact->application_periods) {
+            auto one_day = boost::posix_time::time_duration{24, 0, 0};
+            for (time_iterator it(period.begin() - one_day, one_day); it < period.end(); ++it) {
+                if (! meta.production_date.contains((*it).date())) { continue; }
+                auto day = ((*it).date() - meta.production_date.begin()).days();
+                impact_vp.add(day);
+            }
+        }
+
+        std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;
+        for (const auto* vj: pt_data.vehicle_journeys) {
+            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " may be impacted");
+
+            if ((vj->validity_patterns[rt_level]->days & impact_vp.days).none()) {
+                continue;
+            }
+
+            nt::ValidityPattern new_vp{vj->validity_patterns[rt_level]->beginning_date};
+
+            for(const auto& period : impact->application_periods) {
+                new_vp.days |= vj->get_vp_of_sp(*stop_point, rt_level, period).days;
+            }
+
+            if(new_vp.days.none()){
+                // The vj doesn't stop at the impacted stop_point during all the given impact periods
+                continue;
+            }
+            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " is impacted");
+
+            new_vp.days >>= vj->shift;
+            vj_vp_pairs.emplace_back(vj, new_vp);
+        }
+
+        for (auto& vj_vp : vj_vp_pairs) {
+            std::vector<nt::StopTime> new_stop_times;
+            const auto* vj = vj_vp.first;
+            auto& new_vp = vj_vp.second;
+
+            for (const auto& st : vj->stop_time_list) {
+                if (st.stop_point == stop_point) {
+                    continue;
+                }
+                nt::StopTime new_st = st.clone();
+                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_stop_times.push_back(std::move(new_st));
+            }
+
+            auto mvj = vj->meta_vj;
+            mvj->impacted_by.push_back(impact);
+
+            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
+            std::string new_vj_uri = mvj->uri + ":" +
+                    type::get_string_from_rt_level(rt_level) + ":" +
+                    std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
+
+            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+
+            auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+                    rt_level,
+                    new_vp,
+                    vj->route,
+                    std::move(new_stop_times),
+                    pt_data);
+            
+            LOG4CPLUS_TRACE(log,  "new_vj: "<< new_vj->uri << " is created");
+
+            if (! mvj->get_base_vj().empty()) {
+                new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                new_vj->name = mvj->get_base_vj().at(0)->name;
+            } else {
+                // If we set nothing for physical_mode, it'll crash when building raptor
+                new_vj->physical_mode = pt_data.physical_modes[0];
+                new_vj->name = new_vj_uri;
+            }
+            new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
+            new_vj->company = vj->company;
+            new_vj->vehicle_journey_type = vj->vehicle_journey_type;
+            new_vj->odt_message = vj->odt_message;
+            new_vj->_vehicle_properties = vj->_vehicle_properties;
+
+        }
+        log_end_action(stop_point->uri);
     }
 
     void operator()(nt::StopArea* stop_area) {
-        LOG4CPLUS_INFO(log, "Disruption on stop area:" << stop_area->uri << " is not handled");
+        log_start_action(stop_area->uri);
+        for (auto* stop_point: stop_area->stop_point_list) {
+            LOG4CPLUS_TRACE(log,  "Dispatching stop_area impact to stop_point: "<< stop_point->uri);
+            (*this)(stop_point);
+        }
+        log_end_action(stop_area->uri);
     }
 };
 
@@ -263,21 +369,31 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         boost::swap(impacted_by_moved, mvj->impacted_by);
         for (auto i: impacted_by_moved) {
             if (auto spt = i.lock()) {
-                auto v = add_impacts_visitor(spt, pt_data, meta, rt_level);
-                v(mvj);
+                apply_disruption(*spt->disruption, pt_data, meta);
             }
         }
     }
 
     void operator()(nt::StopPoint* stop_point) {
         stop_point->remove_impact(impact);
-        LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_point->uri << " is not handled");
-
+        auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
+            if (auto i = weak_ptr.lock()){
+                return i->uri == impact->uri;
+            }
+            return false;
+        };
+        for (auto& mvj: pt_data.meta_vjs) {
+            if (std::any_of(std::begin(mvj->impacted_by), std::end(mvj->impacted_by), find_impact)) {
+                (*this)(mvj.get());
+            };
+        }
     }
 
     void operator()(nt::StopArea* stop_area) {
         stop_area->remove_impact(impact);
-        LOG4CPLUS_INFO(log, "Deletion of disruption on stop point:" << stop_area->uri << " is not handled");
+        for (auto* sp: stop_area->stop_point_list) {
+            (*this)(sp);
+        }
     }
 
     void operator()(nt::Network* network) {

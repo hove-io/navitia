@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type/datetime.h"
+#include "type/kirin.pb.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <set>
@@ -17,7 +18,32 @@ inline uint64_t to_posix_timestamp(const std::string& str) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(str));
 }
 
+inline transit_realtime::TripUpdate
+make_delay_message(const std::string& vj_uri,
+        const std::string& date,
+        const std::vector<std::tuple<std::string, int, int>>& delayed_time_stops) {
+    transit_realtime::TripUpdate trip_update;
+    auto trip = trip_update.mutable_trip();
+    trip->set_trip_id(vj_uri);
+    trip->set_start_date(date);
+    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
+    auto st_update = trip_update.mutable_stop_time_update();
+
+    for (const auto& delayed_st: delayed_time_stops) {
+        auto stop_time = st_update->Add();
+        auto arrival = stop_time->mutable_arrival();
+        auto departure = stop_time->mutable_departure();
+        stop_time->SetExtension(kirin::stoptime_message, "birds on the tracks");
+        stop_time->set_stop_id(std::get<0>(delayed_st));
+        arrival->set_time(std::get<1>(delayed_st));
+        departure->set_time(std::get<2>(delayed_st));
+    }
+
+    return trip_update;
 }
+
+}
+
 }
 
 inline u_int32_t operator"" _t(const char* str, size_t s) {

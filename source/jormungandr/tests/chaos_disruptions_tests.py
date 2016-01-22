@@ -236,13 +236,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                        start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        # Exceptional Case
-        # blocking disruption applied on stop_area and stop_point will not block them
-        # We should still find them in journey
-        if type_ in ['stop_area', 'stop_point']:
-            check_links_("20120616T080000", True)
-        else:
-            check_links_("20120616T080000", False)
+
+        check_links_("20120616T080000", False)
         #We test out of the period
         check_links_("20120614T080000", True)
 
@@ -263,13 +258,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                        start_period=start_period)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        # Exceptional Case
-        # blocking disruption applied on stop_area and stop_point will not block them
-        # We should still find them in journey
-        if type_ in ['stop_area', 'stop_point']:
-            check_links_("20120616T080000", True)
-        else:
-            check_links_("20120616T080000", False)
+
+        check_links_("20120616T080000", False)
         #We test out of the period
         check_links_("20120614T080000", True)
 
@@ -293,9 +283,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
     def test_blocking_disruption_of_stop_area_and_stop_point_on_journey(self):
         """
-        We send blocking disruptions on stop area and stop point. For the moment, even though disruptions are blocking,
-        stop area and stop point are EXCEPTIONALLY not blocked.
-        We then test if the blocked object is STILL used by the journey.
+        We send blocking disruptions on stop area and stop point.
 
         Then we delete it and test if use the blocked object
         """
@@ -473,7 +461,7 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
     """
     Add disruption on stop point:
         test if the information is raised in response
-        test if stop point is blocked, for the moment the stop point should not be blocking
+        test if stop point is blocked
     Then delete disruption:
         test if there is no more disruptions in response
     """
@@ -496,6 +484,13 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
+        journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
+
+        response_adapted = self.query_region(journey_query_adapted)
+
+        assert len(response_adapted['journeys']) == 1
+        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
+
         # delete disruption on stop point
         self.send_mock(disruption_id,
                        disruption_target,
@@ -506,13 +501,22 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         disruptions = response.get('disruptions')
         assert not disruptions
 
+        journey_query = journey_basic_query + "&data_freshness=base_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
+
+        journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
 
 @dataset([('main_routing_test', ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
     """
     Add disruption on stop area:
         test if the information is raised in response
-        test if stop area is blocked, for the moment the stop area should not be blocking
+        test if stop area is blocked
     Then delete disruption:
         test if there is no more disruptions in response
     """
@@ -535,10 +539,13 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
-        # query on journey, we should find some since the disruption is not blocking for real
-        journey_query = journey_basic_query + "&disruption_active=true"
-        response = self.query_region(journey_query)
-        is_valid_journey_response(response, self.tester, journey_query)
+        journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
+
+        response_adapted = self.query_region(journey_query_adapted)
+
+        # No public transport journey is found, the only way it by foot
+        assert len(response_adapted['journeys']) == 1
+        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
 
         # delete disruption on stop point
         self.send_mock(disruption_id,
@@ -549,6 +556,18 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         response = self.query_region(query)
         disruptions = response.get('disruptions')
         assert not disruptions
+
+        journey_query = journey_basic_query + "&data_freshness=base_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
+
+        journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
+        response = self.query_region(journey_query)
+        is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
+
+
 
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
