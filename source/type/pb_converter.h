@@ -303,6 +303,15 @@ private:
             }
         }
 
+        template<typename NT, typename PB>
+        void fill_comments(const NT* nt, PB* pb, const std::string& type = "standard") {
+            for (const auto& comment: pb_creator.data.pt_data->comments.get(nt)) {
+                auto com = pb->add_comments();
+                com->set_value(comment);
+                com->set_type(type);
+            }
+        }
+
         template <typename P>
         void fill_message(const navitia::type::disruption::Impact& impact, P pb_object);
 

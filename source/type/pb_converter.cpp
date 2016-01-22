@@ -163,11 +163,9 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
     stop_area->set_name(sa->name);
     stop_area->set_label(sa->label);
     stop_area->set_timezone(sa->timezone);
-    for (const auto& comment: pb_creator.data.pt_data->comments.get(sa)) {
-        auto com = stop_area->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
+
+    fill_comments(sa, stop_area);
+
     if(sa->coord.is_initialized()) {
         stop_area->mutable_coord()->set_lon(sa->coord.lon());
         stop_area->mutable_coord()->set_lat(sa->coord.lat());
@@ -216,11 +214,8 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
     if(!sp->platform_code.empty()) {
         stop_point->set_platform_code(sp->platform_code);
     }
-    for (const auto& comment: pb_creator.data.pt_data->comments.get(sp)) {
-        auto com = stop_point->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
+    fill_comments(sp, stop_point);
+
     if(sp->coord.is_initialized()) {
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
@@ -273,7 +268,8 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnavitia::Company* company){
-    if(c == nullptr) { return; }
+
+    if(!c) { return; }
 
     company->set_name(c->name);
     company->set_uri(c->uri);
@@ -283,7 +279,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Company* c, pbnaviti
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n, pbnavitia::Network* network){
 
-    if(n == nullptr) { return; }
+    if(!n) { return; }
 
     network->set_name(n->name);
     network->set_uri(n->uri);
@@ -294,7 +290,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Network* n, pbnaviti
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
                                          pbnavitia::PhysicalMode* physical_mode){
-    if(m == nullptr) { return; }
+    if(!m) { return; }
 
     physical_mode->set_name(m->name);
     physical_mode->set_uri(m->uri);
@@ -302,7 +298,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::PhysicalMode* m,
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
                       pbnavitia::CommercialMode* commercial_mode){
-    if(m == nullptr) { return; }
+    if(!m) { return; }
 
     commercial_mode->set_name(m->name);
     commercial_mode->set_uri(m->uri);
@@ -310,13 +306,10 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::CommercialMode* m,
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::Line* line){
 
-    if(l == nullptr) { return; }
+    if(!l) { return; }
 
-    for (const auto& comment: pb_creator.data.pt_data->comments.get(l)) {
-        auto com = line->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
+    fill_comments(l, line);
+
     if(l->code != "")
         line->set_code(l->code);
     if(l->color != "")
@@ -358,18 +351,13 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Line* l, pbnavitia::
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia::Route* route){
 
-    if(r == nullptr) { return; }
+    if(!r) { return; }
 
     route->set_name(r->name);
     route->set_direction_type(r->direction_type);
 
     fill(r->destination,route->mutable_direction());
-
-    for (const auto& comment: pb_creator.data.pt_data->comments.get(r)) {
-        auto com = route->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
+    fill_comments(r, route);
 
     route->set_uri(r->uri);
     fill_messages(r, route);
@@ -404,7 +392,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::Route* r, pbnavitia:
 void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
 
-    if(lg == nullptr) { return; }
+    if(!lg) { return; }
 
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
@@ -412,17 +400,14 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::LineGroup* lg,
     if(depth > 0) {
         fill(lg->line_list, line_group->mutable_lines());
         fill(lg->main_line, line_group->mutable_main_line(), 0);
-
-        for (const auto& comment: pb_creator.data.pt_data->comments.get(lg)) {
-            auto com = line_group->add_comments();
-            com->set_value(comment);
-            com->set_type("standard");
-        }
+        fill_comments(lg, line_group);
     }
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::Calendar* cal, pbnavitia::Calendar* pb_cal){
-     if (cal == nullptr) { return; }
+
+    if (!cal) { return; }
+
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
@@ -471,7 +456,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::ExceptionDate* excep
 
 void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
                                          pbnavitia::ValidityPattern* validity_pattern){
-    if(vp == nullptr) { return; }
+    if(!vp) { return; }
 
     auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
     validity_pattern->set_beginning_date(vp_string);
@@ -481,15 +466,11 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::ValidityPattern* vp,
 void PbCreator::Filler::fill_pb_object(const navitia::type::VehicleJourney* vj,
                                          pbnavitia::VehicleJourney* vehicle_journey){
 
-    if (vj == nullptr) { return; }
+    if (!vj) { return; }
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
-    for (const auto& comment: pb_creator.data.pt_data->comments.get(vj)) {
-        auto com = vehicle_journey->add_comments();
-        com->set_value(comment);
-        com->set_type("standard");
-    }
+    fill_comments(vj, vehicle_journey);
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
 
@@ -557,7 +538,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::GeographicalCoord* c
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection){
-    if(c == nullptr) { return; }
+
+    if(!c) { return; }
 
     connection->set_duration(c->duration);
     connection->set_display_duration(c->display_duration);
@@ -598,7 +580,7 @@ void PbCreator::Filler::fill_pb_object(const navitia::type::StopTime* st, pbnavi
 
 void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopDateTime* stop_date_time){
 
-    if(st == nullptr) { return; }
+    if(!st) { return; }
 
     pbnavitia::Properties* properties = stop_date_time->mutable_properties();
     fill(st, properties);
@@ -794,7 +776,8 @@ template
 void PbCreator::Filler::fill_message(const navitia::type::disruption::Impact& impact, pbnavitia::Response* pb_object);
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayInfo* pt_display_info){
-    if(r == nullptr) { return; }
+
+    if(!r) { return; }
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_route(r->uri);
@@ -839,7 +822,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
 
 
 void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* geopoi, pbnavitia::Poi* poi){
-    if(geopoi == nullptr) { return; }
+
+    if(!geopoi) { return; }
 
     poi->set_name(geopoi->name);
     poi->set_uri(geopoi->uri);
@@ -870,7 +854,8 @@ void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* geopoi, pbnav
 }
 
 void PbCreator::Filler::fill_pb_object(const navitia::georef::POI* poi, pbnavitia::Address* address){
-    if(poi == nullptr) { return; }
+
+    if(!poi) { return; }
 
     address->set_name(poi->address_name);
     std::string label;

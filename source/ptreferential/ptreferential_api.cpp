@@ -37,7 +37,6 @@ www.navitia.io
 #include "routing/dataraptor.h"
 
 namespace pt = boost::posix_time;
-namespace pc = navitia;
 
 namespace navitia{ namespace ptref{
 
@@ -52,93 +51,93 @@ static pbnavitia::Response extract_data(const type::Data& data,
     for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:
-            pc::fill_pb_object(data.pt_data->validity_patterns[idx], data,
+            fill_pb_object(data.pt_data->validity_patterns[idx], data,
                            result.add_validity_patterns(), depth, current_time, action_period);
             break;
         case Type_e::Line:
-            pc::fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
+            fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
                            depth, current_time, action_period, show_codes);
             break;
         case Type_e::LineGroup:
-            pc::fill_pb_object(data.pt_data->line_groups[idx], data, result.add_line_groups(),
+            fill_pb_object(data.pt_data->line_groups[idx], data, result.add_line_groups(),
                            depth, current_time, action_period, show_codes);
             break;
         case Type_e::JourneyPattern:{
             const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
-            pc::fill_pb_object(&pair_jp, data,
+            fill_pb_object(&pair_jp, data,
                            result.add_journey_patterns(), depth, current_time, action_period);
             break;
         }
         case Type_e::StopPoint:
-            pc::fill_pb_object(data.pt_data->stop_points[idx], data,
+            fill_pb_object(data.pt_data->stop_points[idx], data,
                            result.add_stop_points(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::StopArea:
-            pc::fill_pb_object(data.pt_data->stop_areas[idx], data,
+            fill_pb_object(data.pt_data->stop_areas[idx], data,
                            result.add_stop_areas(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::Network:
-            pc::fill_pb_object(data.pt_data->networks[idx], data,
+            fill_pb_object(data.pt_data->networks[idx], data,
                            result.add_networks(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::PhysicalMode:
-            pc::fill_pb_object(data.pt_data->physical_modes[idx], data,
+            fill_pb_object(data.pt_data->physical_modes[idx], data,
                            result.add_physical_modes(), depth, current_time, action_period);
             break;
         case Type_e::CommercialMode:
-            pc::fill_pb_object(data.pt_data->commercial_modes[idx], data,
+            fill_pb_object(data.pt_data->commercial_modes[idx], data,
                            result.add_commercial_modes(), depth, current_time, action_period);
             break;
         case Type_e::JourneyPatternPoint:{
             const auto& pair_jppp = data.dataRaptor->jp_container.get_jpps()[idx];
-            pc::fill_pb_object(&pair_jppp, data,
+            fill_pb_object(&pair_jppp, data,
                            result.add_journey_pattern_points(), depth, current_time, action_period);
             break;
         }
 
         case Type_e::Company:
-            pc::fill_pb_object(data.pt_data->companies[idx], data,
+            fill_pb_object(data.pt_data->companies[idx], data,
                            result.add_companies(), depth, current_time, action_period);
             break;
         case Type_e::Route:
-            pc::fill_pb_object(data.pt_data->routes[idx], data,
+            fill_pb_object(data.pt_data->routes[idx], data,
                     result.add_routes(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::POI:
-            pc::fill_pb_object(data.geo_ref->pois[idx], data,
+            fill_pb_object(data.geo_ref->pois[idx], data,
                            result.add_pois(), depth, current_time, action_period);
             break;
         case Type_e::POIType:
-            pc::fill_pb_object(data.geo_ref->poitypes[idx], data,
+            fill_pb_object(data.geo_ref->poitypes[idx], data,
                            result.add_poi_types(), depth, current_time, action_period);
             break;
         case Type_e::Connection:
-            pc::fill_pb_object(data.pt_data->stop_point_connections[idx], data,
+            fill_pb_object(data.pt_data->stop_point_connections[idx], data,
                            result.add_connections(), depth, current_time, action_period);
             break;
         case Type_e::VehicleJourney:
-            pc::fill_pb_object(data.pt_data->vehicle_journeys[idx], data,
+            fill_pb_object(data.pt_data->vehicle_journeys[idx], data,
                            result.add_vehicle_journeys(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::Calendar:
-            pc::fill_pb_object(data.pt_data->calendars[idx], data,
+            fill_pb_object(data.pt_data->calendars[idx], data,
                            result.add_calendars(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::MetaVehicleJourney:
-            pc::fill_pb_object(data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)], data,
+            fill_pb_object(data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)], data,
                            result.add_trips(), depth, current_time, action_period, show_codes);
             break;
         case Type_e::Impact:{
             auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-            pc::fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
+            fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
             break;
         }
         case Type_e::Contributor:
-            pc::fill_pb_object(data.pt_data->contributors[idx], data,
+            fill_pb_object(data.pt_data->contributors[idx], data,
                            result.add_contributors(), depth, current_time, action_period);
             break;
         case Type_e::Frame:
-            pc::fill_pb_object(data.pt_data->frames[idx], data,
+            fill_pb_object(data.pt_data->frames[idx], data,
                            result.add_frames(), depth, current_time, action_period);
             break;
         default: break;
