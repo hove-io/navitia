@@ -528,11 +528,11 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     /*
      *
      *
-     *  Day     1              2               3               4               5               6
+     *  Day     1              2               3               4               5               6             ...
      *          -----------------------------------------------------------------------------------------------------
-     * SP_bob           8:30         8:30             8:30                       (vj)
+     * SP_bob           8:30         8:30             8:30           8:30           8:30             8:30   ... (vj)
      * Period_bob   |-----------------------------------------------|
-     *
+     *             6:00                                            6:00
      *
      * Let's say we have a vj passes every day at 8:30 on a stop point SP_bob.
      * Now given a Period_bob and the VJ stops at SP_bob only during this Period_bob, what's the validity pattern of the
