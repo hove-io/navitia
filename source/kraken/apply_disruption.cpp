@@ -202,10 +202,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::StopPoint* stop_point) {
+        log_start_action(stop_point->uri);
 
         using namespace boost::posix_time;
         using namespace boost::gregorian;
 
+        // Computing a validity_pattern of impact used to pre-filter concerned vjs later
         type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
         for (const auto& period: impact->application_periods) {
             auto one_day = boost::posix_time::time_duration{24, 0, 0};
@@ -218,6 +220,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
         std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;
         for (const auto* vj: pt_data.vehicle_journeys) {
+            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " may be impacted");
 
             if ((vj->validity_patterns[rt_level]->days & impact_vp.days).none()) {
                 continue;
@@ -233,6 +236,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 // The vj doesn't stop at the impacted stop_point during all the given impact periods
                 continue;
             }
+            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " is impacted");
+
             new_vp.days >>= vj->shift;
             vj_vp_pairs.emplace_back(vj, new_vp);
         }
@@ -269,6 +274,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     std::move(new_stop_times),
                     pt_data);
             
+            LOG4CPLUS_TRACE(log,  "new_vj: "<< new_vj->uri << " is created");
+
             if (! mvj->get_base_vj().empty()) {
                 new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 new_vj->name = mvj->get_base_vj().at(0)->name;
@@ -284,12 +291,16 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             new_vj->_vehicle_properties = vj->_vehicle_properties;
 
         }
+        log_end_action(stop_point->uri);
     }
 
     void operator()(nt::StopArea* stop_area) {
+        log_start_action(stop_area->uri);
         for (auto* stop_point: stop_area->stop_point_list) {
+            LOG4CPLUS_TRACE(log,  "Dispatching stop_area impact to stop_point: "<< stop_point->uri);
             (*this)(stop_point);
         }
+        log_end_action(stop_area->uri);
     }
 };
 

@@ -159,7 +159,7 @@ StopTime StopTime::clone() const{
     StopTime ret{arrival_time, departure_time, stop_point};
     ret.properties = properties;
     ret.local_traffic_zone = local_traffic_zone;
-    ret.vehicle_journey = vehicle_journey;
+    ret.vehicle_journey = nullptr;
     ret.shape_from_prev = shape_from_prev;
     return ret;
 }

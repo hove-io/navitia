@@ -504,10 +504,12 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         journey_query = journey_basic_query + "&data_freshness=base_schedule"
         response = self.query_region(journey_query)
         is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
 
         journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
         response = self.query_region(journey_query)
         is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
 
 @dataset([('main_routing_test', ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
@@ -537,11 +539,11 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
 
-        # query on journey, we should find some since the disruption is not blocking for real
         journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
 
         response_adapted = self.query_region(journey_query_adapted)
 
+        # No public transport journey is found, the only way it by foot
         assert len(response_adapted['journeys']) == 1
         assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
 
@@ -558,10 +560,12 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         journey_query = journey_basic_query + "&data_freshness=base_schedule"
         response = self.query_region(journey_query)
         is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
 
         journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
         response = self.query_region(journey_query)
         is_valid_journey_response(response, self.tester, journey_query)
+        assert len(response['journeys']) == 2
 
 
 

@@ -486,9 +486,29 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     auto vp = res[0].items[0].stop_times[0]->vehicle_journey->adapted_validity_pattern();
     BOOST_CHECK_MESSAGE(ba::ends_with(vp->days.to_string(), "0000111"),  vp->days.to_string());
 
+    BOOST_REQUIRE(! compute(nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
+    BOOST_REQUIRE(compute(nt::RTLevel::Adapted, "A1", "stop_area", "08:00"_t, 1).empty());
+
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor_2(*(b.data));
+
+    auto compute_2 = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor_2.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+
+    BOOST_REQUIRE(! compute_2(nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
+    BOOST_REQUIRE(! compute_2(nt::RTLevel::Adapted, "A1", "stop_area", "08:00"_t, 1).empty());
+
 }
 
 /*
@@ -571,6 +591,19 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor_2(*(b.data));
+    auto compute_2 = [&](nt::RTLevel level, const std::string& from, const std::string& to,
+            navitia::DateTime datetime, int day) {
+        return raptor_2.compute(b.data->pt_data->stop_areas_map.at(from), b.data->pt_data->stop_areas_map.at(to),
+                datetime, day, navitia::DateTimeUtils::inf, level, 2_min, true);
+    };
+    BOOST_REQUIRE_EQUAL(compute_2(nt::RTLevel::RealTime, "stop1", "stop3", "08:00"_t, 1).size(), 1);
+    BOOST_REQUIRE_EQUAL(compute_2(nt::RTLevel::RealTime, "stop1", "stop3", "05:00"_t, 4).size(), 1);
 
 }
 
@@ -954,7 +987,7 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
         if (cur_vj->adapted_validity_pattern()->check(3)) { vj17 = cur_vj; }
     }
 
-    // BOOST_REQUIRE(vj15 && ! vj15->stop_time_list.empty());
+    BOOST_REQUIRE(vj15 && ! vj15->stop_time_list.empty());
     // BOOST_CHECK_EQUAL(vj15->stop_time_list.size(), 3);
     // BOOST_CHECK_EQUAL(vj15->stop_time_list.front().stop_point->uri, "stop1");
     // BOOST_CHECK_EQUAL(vj15->stop_time_list.back().stop_point->uri, "stop3");
@@ -964,7 +997,7 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     BOOST_CHECK_EQUAL(vj16->stop_time_list.front().stop_point->uri, "stop2");
     BOOST_CHECK_EQUAL(vj16->stop_time_list.back().stop_point->uri, "stop3");
 
-    // BOOST_REQUIRE(vj17 && ! vj17->stop_time_list.empty());
+    BOOST_REQUIRE(vj17 && ! vj17->stop_time_list.empty());
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
