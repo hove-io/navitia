@@ -272,11 +272,6 @@ Code 50x
 
 Ouch. Technical issue :/
 
-Code 204
-********
-
-When your request is good but we are not able to find a journey
-
 Apis
 ====
 
