@@ -80,7 +80,8 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_up = True
-        self.breaker = pybreaker.CircuitBreaker(fail_max=4, reset_timeout=60)
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_FAIL'],
+                                                reset_timeout=app.config['CIRCUIT_BREAKER_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
 

@@ -118,6 +118,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     sn_params.bss_speed = request["bss_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
+    #we always want direct path, even for car
+    sn_params.enable_direct_path = True
 
     #settings fallback modes
     sn_params.origin_mode = dep_mode
@@ -520,6 +522,12 @@ def type_journeys(resp, req):
         ], [
             best_crit
         ])),
+        ("non_pt_car", trip_carac([
+            non_pt_journey,
+            has_car,
+        ], [
+            best_crit
+        ])),
     ]
 
     for name, carac in trip_caracs:
@@ -594,15 +602,17 @@ class Scenario(simple.Scenario):
 
         responses = []
         last_nb_journeys = 0
-        while nb_journeys(responses) < min_asked_journeys:
+        nb_try = 0
+        while nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys:
+            nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            responses.extend(tmp_resp)#we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
                 break
 
             next_request = create_next_kraken_request(request, tmp_resp)
-            responses.extend(tmp_resp)
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)

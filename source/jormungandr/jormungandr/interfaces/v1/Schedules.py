@@ -53,12 +53,12 @@ from navitiacommon import response_pb2
 
 
 class Schedules(ResourceUri, ResourceUtc):
-    parsers = {}
 
     def __init__(self, endpoint):
         ResourceUri.__init__(self)
         ResourceUtc.__init__(self)
         self.endpoint = endpoint
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]

@@ -154,6 +154,16 @@ bool HasMessages::has_publishable_message(const boost::posix_time::ptime& curren
     return false;
 }
 
+
+StopTime StopTime::clone() const{
+    StopTime ret{arrival_time, departure_time, stop_point};
+    ret.properties = properties;
+    ret.local_traffic_zone = local_traffic_zone;
+    ret.vehicle_journey = nullptr;
+    ret.shape_from_prev = shape_from_prev;
+    return ret;
+}
+
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
@@ -200,6 +210,36 @@ bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
     return validity_patterns[rt_level]->check(day);
+}
+
+
+ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
+        RTLevel rt_level,
+        const boost::posix_time::time_period& period) const {
+
+    ValidityPattern vp_for_stop_time{validity_patterns[rt_level]->beginning_date};
+
+    auto pass_by_the_sp = [&](const nt::StopTime& stop_time){
+       if (stop_time.stop_point->uri != sp.uri) {
+           return;
+       }
+       const auto& beginning_date = validity_patterns[rt_level]->beginning_date;
+       for (size_t i  = 0; i < validity_patterns[rt_level]->days.size(); ++i) {
+           if (! validity_patterns[rt_level]->days.test(i)) {
+               // the VJ doesn't run at day i
+               continue;
+           }
+           auto circulating_day = beginning_date + boost::gregorian::days{static_cast<int>(i)};
+           auto arrival_time_utc = stop_time.get_arrival_utc(circulating_day);
+           if (period.contains(arrival_time_utc)) {
+               auto days = (circulating_day - vp_for_stop_time.beginning_date).days();
+               vp_for_stop_time.add(days);
+           }
+       }
+    };
+    boost::for_each(stop_time_list, pass_by_the_sp);
+    return vp_for_stop_time;
+
 }
 
 boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
@@ -783,7 +823,7 @@ std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Contributor: result.push_back(contributor->idx); break;
-    case Type_e::VehicleJourney: return indexes(vehiclejourney_list); break;
+    case Type_e::VehicleJourney: return indexes(vehiclejourney_list);
     default: break;
     }
     return result;
@@ -792,7 +832,7 @@ std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
 std::vector<idx_t> Contributor::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::Frame: return indexes(frame_list); break;
+    case Type_e::Frame: return indexes(frame_list);
     default: break;
     }
     return result;

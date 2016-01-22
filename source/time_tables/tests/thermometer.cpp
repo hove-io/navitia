@@ -281,8 +281,8 @@ BOOST_AUTO_TEST_CASE(t10) {
         }
     }
 
-    BOOST_REQUIRE_EQUAL(t.get_thermometer().size(), 97);
-    BOOST_REQUIRE_EQUAL(error, false);
+    BOOST_CHECK_EQUAL(t.get_thermometer().size(), 96);
+    BOOST_CHECK_EQUAL(error, false);
 }
 
 
@@ -338,10 +338,11 @@ BOOST_AUTO_TEST_CASE(t13) {
     t.generate_thermometer(req);
     auto result = t.get_thermometer();
 
-    BOOST_REQUIRE_EQUAL(result[0], 0);
-    BOOST_REQUIRE_EQUAL(result[1], 3);
-    BOOST_REQUIRE_EQUAL(result[2], 1);
-    BOOST_REQUIRE_EQUAL(result[3], 2);
+    BOOST_REQUIRE_EQUAL(result.size(), 4);
+    BOOST_CHECK_EQUAL(result[0], 0);
+    BOOST_CHECK_EQUAL(result[1], 1);
+    BOOST_CHECK_EQUAL(result[2], 3);
+    BOOST_CHECK_EQUAL(result[3], 2);
 }
 
 BOOST_AUTO_TEST_CASE(t14) {

@@ -1,3 +1,21 @@
+navitia2 (2.0.0) unstable; urgency=low
+
+  * Kraken: Disruptions on stop point and stop area  <https://github.com/CanalTP/navitia/pull/1370>
+  * Kraken: Kraken can now compute direct path on car  <https://github.com/CanalTP/navitia/pull/1381>
+  * jormun: keep error for the users  <https://github.com/CanalTP/navitia/pull/1385>
+  * jormun: filter short fallback on car and bike in new_default  <https://github.com/CanalTP/navitia/pull/1383>
+  * Jormugnandr: CAR|PARK|WALKING = CAR|PARK for similar journeys  <https://github.com/CanalTP/navitia/pull/1380>
+  * Ed: normalize physical_modes uri  <https://github.com/CanalTP/navitia/pull/1382>
+  * raptor: add penalty for vj extentions  <https://github.com/CanalTP/navitia/pull/1379>
+  * Jormungandr: fix traffic report for coords  <https://github.com/CanalTP/navitia/pull/1377>
+  * Jormungandr: configuration of the circuit breaker  <https://github.com/CanalTP/navitia/pull/1375>
+  * osm2ed: fix ignoring foot=no in osm tags when we have a highway tag  <https://github.com/CanalTP/navitia/pull/1374>
+  * route_schedule: Improve ranked pairs implementation  <https://github.com/CanalTP/navitia/pull/1366>
+  * Type: realtime update info serialization  <https://github.com/CanalTP/navitia/pull/1368>
+  * jormun: fix a bug in multithread context  <https://github.com/CanalTP/navitia/pull/1364>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 22 Jan 2016 15:01:35 +0100
+
 navitia2 (1.33.0) unstable; urgency=low
 
   * Doc: Readme schemas  <https://github.com/CanalTP/navitia/pull/1359>

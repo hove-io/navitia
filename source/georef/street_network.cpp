@@ -147,9 +147,14 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 
 Path
 StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination) {
+    auto dest_mode = origin.streetnetwork_params.mode;
+    if(dest_mode == type::Mode_e::Car){
+        //on direct path with car we want to arrive on the walking graph
+        dest_mode = type::Mode_e::Walking;
+    }
     const auto dest_edge = ProjectionData(destination.coordinates,
                                           geo_ref,
-                                          geo_ref.offsets[origin.streetnetwork_params.mode],
+                                          geo_ref.offsets[dest_mode],
                                           geo_ref.pl);
     if (! dest_edge.found) { return Path(); }
     const auto max_dur = origin.streetnetwork_params.max_duration

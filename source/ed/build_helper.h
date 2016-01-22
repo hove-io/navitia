@@ -55,10 +55,10 @@ struct VJ {
     const std::string network_name;
     const std::string line_name;
     const std::string validity_pattern;
-    const std::string block_id;
+    std::string _block_id;
     const bool is_frequency;
     const bool wheelchair_boarding;
-    const std::string uri;
+    std::string _uri;
     const std::string meta_vj_name;
     const std::string physical_mode;
     const uint32_t start_time;
@@ -105,8 +105,12 @@ struct VJ {
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true);
 
+    VJ& block_id(const std::string& b) { _block_id = b; return *this; }
+
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
+
+    VJ& uri(const std::string& u) { _uri = u; return *this; }
 
     // create the vj
     nt::VehicleJourney* make();

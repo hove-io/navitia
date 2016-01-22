@@ -80,6 +80,7 @@ class TrafficReport(ResourceUri):
                                 action="append")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
+        self.collection = 'traffic_reports'
 
     @marshal_with(traffic)
     @ManageError()

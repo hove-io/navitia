@@ -33,6 +33,7 @@ www.navitia.io
 #include "time.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 namespace navitia { namespace timetables {
 
@@ -188,7 +189,11 @@ bool Thermometer::generate_topological_thermometer(const std::vector<vector_idx>
     return true;
 }
 
-void Thermometer::generate_thermometer(const std::vector<vector_idx> &stop_point_lists) {
+void Thermometer::generate_thermometer(const std::vector<vector_idx> &sps) {
+    // We prefere to have the biggest jp first, because the heuristic
+    // has less chance to do bad choice if critical jp are used first.
+    std::vector<vector_idx> stop_point_lists = sps;
+    boost::range::sort(stop_point_lists, [](const vector_idx& a, const vector_idx&b) { return a.size() > b.size(); });
 
     if (stop_point_lists.size() > 1) {
         // Try a topological_sort first

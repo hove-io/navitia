@@ -421,6 +421,57 @@ def test_similar_journeys_walking_bike():
     assert 'to_delete' not in journey2.tags
 
 
+def test_similar_journeys_car_park():
+    """
+    We have to consider a journey with
+    CAR / PARK / WALK to be equal to CAR / PARK
+    """
+    responses = [response_pb2.Response()]
+    journey1 = response_pb2.Journey()
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Car
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.PARK
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Walking
+
+    journey2 = response_pb2.Journey()
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.STREET_NETWORK
+    journey2.sections[-1].street_network.mode = response_pb2.Car
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.PARK
+
+    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
+
+
+def test_similar_journeys_bss_park():
+    """
+    We have to consider a journey with
+    WALK / GET A BIKE / BSS to be equals to GET A BIKE / BSS
+    """
+    responses = [response_pb2.Response()]
+    journey1 = response_pb2.Journey()
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Walking
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.BSS_RENT
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.STREET_NETWORK
+    journey1.sections[-1].street_network.mode = response_pb2.Bss
+
+    journey2 = response_pb2.Journey()
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.BSS_RENT
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.STREET_NETWORK
+    journey2.sections[-1].street_network.mode = response_pb2.Bss
+
+    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
+
 class MockInstance(object):
     def __init__(self):
         pass  #TODO when we'll got instances's param
@@ -592,4 +643,97 @@ def test_arrival_sort():
     eq_(result[2], j5)
     eq_(result[3], j4)
     eq_(result[4], j3)
+
+def test_heavy_journey_walking():
+    """
+    we don't filter any journey with walking
+    """
+    request = {'_min_bike': 10, '_min_car': 20}
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Walking
+    journey.sections[-1].duration = 5
+
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' not in journey.tags
+
+def test_heavy_journey_bike():
+    """
+    the first time the duration of the biking section is superior to the min value, so we keep the journey
+    on the second test the duration is inferior to the min, so we delete the journey
+    """
+    request = {'_min_bike': 10, '_min_car': 20}
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Bike
+    journey.sections[-1].duration = 15
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' not in journey.tags
+
+    journey.sections[-1].duration = 5
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' in journey.tags
+
+def test_heavy_journey_car():
+    """
+    the first time the duration of the car section is superior to the min value, so we keep the journey
+    on the second test the duration is inferior to the min, so we delete the journey
+    """
+    request = {'_min_bike': 10, '_min_car': 20}
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Car
+    journey.sections[-1].duration = 25
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' not in journey.tags
+
+    journey.sections[-1].duration = 15
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' in journey.tags
+
+def test_heavy_journey_bss():
+    """
+    we should not remove any bss journey since it is already in concurrence with the walking
+    """
+    request = {'_min_bike': 10, '_min_car': 20}
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Walking
+    journey.sections[-1].duration = 5
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.BSS_RENT
+    journey.sections[-1].duration = 5
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Bike
+    journey.sections[-1].duration = 5
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.BSS_PUT_BACK
+    journey.sections[-1].duration = 5
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Walking
+    journey.sections[-1].duration = 5
+
+    journey_filter._filter_too_short_heavy_journeys([journey], request)
+
+    assert 'to_delete' not in journey.tags
 

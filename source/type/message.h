@@ -194,7 +194,6 @@ struct Message {
 
     std::set<ChannelType> channel_types;
 
-
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & text & created_at & updated_at & channel_id & channel_name & channel_content_type& channel_types;
@@ -202,10 +201,16 @@ struct Message {
 };
 
 struct StopTimeUpdate {
+    StopTimeUpdate() {}
     StopTimeUpdate(const StopTime& st, const std::string& c): stop_time(st), cause(c) {}
     StopTime stop_time;
     std::string cause; //TODO factorize this cause with a pool
     // enum ADDED/DELETED/UPDATE
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & stop_time & cause;
+    }
 };
 
 namespace detail {
@@ -213,6 +218,11 @@ struct AuxInfoForMetaVJ {
     std::vector<StopTimeUpdate> stop_times;
     // get the corresponding stoptime in the base vj. return null if nothing found
     const StopTime* get_base_stop_time(const StopTimeUpdate&) const;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & stop_times;
+    }
 };
 }
 
@@ -240,7 +250,9 @@ struct Impact {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & disruption;
+        ar & uri & created_at & updated_at & application_periods
+           & severity & informed_entities & messages & disruption
+           & aux_info;
     }
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;

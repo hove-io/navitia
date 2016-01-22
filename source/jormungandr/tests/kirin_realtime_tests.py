@@ -30,6 +30,7 @@
 # Note: the tests_mechanism should be the first
 # import for the conf to be loaded correctly when only this test is ran
 from datetime import datetime
+import uuid
 from nose.tools.trivial import eq_
 from tests.tests_mechanism import dataset
 
@@ -74,12 +75,12 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 0)
 
-        self.send_mock("vjA", "20120614", 'canceled')
+        self.send_mock("vjA", "20120614", 'canceled', disruption_id='disruption_bob')
 
         # we should see the disruption
         def _check_train_cancel_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
-            eq_(dis['disruption_id'], '96231_2015-07-28_0')
+            eq_(dis['disruption_id'], 'disruption_bob')
             eq_(dis['severity']['effect'], 'NO_SERVICE')
             eq_(len(dis['impacted_objects']), 1)
             ptobj = dis['impacted_objects'][0]['pt_object']
@@ -107,7 +108,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
-        eq_(get_used_vj(new_response), [[], ['vj:B:1']])
+        eq_(get_used_vj(new_response), [[], ['vjB']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
@@ -140,18 +141,19 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         self.send_mock("vjA", "20120614", 'delayed',
            [("stop_point:stopB", tstamp("20120614T080224"), tstamp("20120614T080225"), 'cow on tracks'),
-            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))])
+            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))],
+           disruption_id='vjA_delayed')
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
         eq_(len(pt_response['vehicle_journeys']), 5)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
+        assert 'vjA:modified:0:vjA_delayed' in vj_ids
 
         def _check_train_delay_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
-            eq_(dis['disruption_id'], '96231_2015-07-28_0')
+            eq_(dis['disruption_id'], 'vjA_delayed')
             eq_(dis['severity']['effect'], 'SIGNIFICANT_DELAYS')
             eq_(len(dis['impacted_objects']), 1)
             ptobj = dis['impacted_objects'][0]['pt_object']
@@ -183,7 +185,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
-        eq_(get_used_vj(new_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
+        eq_(get_used_vj(new_response), [[], ['vjA:modified:0:vjA_delayed']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
@@ -193,7 +195,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',
            [("stop_point:stopB", tstamp("20120614T080224"), tstamp("20120614T080225"), 'cow on tracks'),
-            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))])
+            ("stop_point:stopA", tstamp("20120614T080400"), tstamp("20120614T080400"))],
+           disruption_id='vjA_delayed')
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -208,12 +211,26 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # so the first real-time vj created for the first disruption should be deactivated
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
-        eq_(get_used_vj(new_response), [[], ['vjA:modified:1:96231_2015-07-28_0']])
+        eq_(get_used_vj(new_response), [[], ['vjA:modified:1:vjA_delayed']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080435'])
         eq_(get_used_vj(new_base), [['vjA'], []])
+
+        # we then try to send a delay on another train.
+        # we should not have lost the first delay
+        self.send_mock("vjB", "20120614", 'delayed',
+           [("stop_point:stopB", tstamp("20120614T180224"), tstamp("20120614T180225")),
+            ("stop_point:stopA", tstamp("20120614T180400"), tstamp("20120614T180400"), "bob's in the place")])
+
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        eq_(len(pt_response['disruptions']), 1)
+        _check_train_delay_disruption(pt_response['disruptions'][0])
+
+        # we should also have the disruption on vjB
+        eq_(len(self.query_region('vehicle_journeys/vjB?_current_datetime=20120614T1337')['disruptions']), 1)
+
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
 class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
@@ -238,7 +255,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
             .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080500")
         later_response = self.query_region(journey_later_query + "&data_freshness=realtime")
         eq_(get_arrivals(later_response), ['20120614T080935', '20120614T180222']) # pt_walk + vj 18:01
-        eq_(get_used_vj(later_response), [[], ['vj:B:1']])
+        eq_(get_used_vj(later_response), [[], ['vjB']])
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -247,7 +264,8 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         # sending disruption delaying VJ to the next day
         self.send_mock("vjA", "20120614", 'delayed',
            [("stop_point:stopB", tstamp("20120615T070224"), tstamp("20120615T070224")),
-            ("stop_point:stopA", tstamp("20120615T070400"), tstamp("20120615T070400"))])
+            ("stop_point:stopA", tstamp("20120615T070400"), tstamp("20120615T070400"))],
+           disruption_id='96231_2015-07-28_0')
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
@@ -264,7 +282,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222']) # pt_walk + vj 18:01
-        eq_(get_used_vj(new_response), [[], ['vj:B:1']])
+        eq_(get_used_vj(new_response), [[], ['vjB']])
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
@@ -284,14 +302,14 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         eq_(get_used_vj(day_after_base), [[], ['vjA']])
 
 
-def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[]):
+def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
     feed_message.header.timestamp = 0
 
     entity = feed_message.entity.add()
-    entity.id = "96231_2015-07-28_0"
+    entity.id = disruption_id or "id={}".format(uuid.uuid1())
     trip_update = entity.trip_update
 
     trip = trip_update.trip

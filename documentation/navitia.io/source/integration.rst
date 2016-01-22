@@ -272,11 +272,6 @@ Code 50x
 
 Ouch. Technical issue :/
 
-Code 204
-********
-
-When your request is good but we are not able to find a journey
-
 Apis
 ====
 
@@ -366,6 +361,7 @@ Collections
 * physical_modes
 * companies
 * vehicle_journeys
+* disruptions
 
 Specific parameters
 ###################
@@ -1395,8 +1391,8 @@ Arrivals (/arrivals)
 This api retrieves a list of arrivals from a datetime of a selected object.
 Arrivals are ordered chronologically in ascending order.
 
-Traffic reports and disruptions (/traffic_reports)
-**************************************************
+Traffic reports (/traffic_reports)
+**********************************
 
 This service provides the state of public transport traffic.
 It can be called for an overall coverage or for a specific object. 
@@ -1602,36 +1598,20 @@ This typical response means:
     * disruption "yellow"
     * Each disruption contains the messages to show.
 
-Here is the details of the disruption object:
-
-.. _disruptions:
-
-Disruption object
-_________________
-
-===================== ========================================== ===================================================
-Field                 Type                                       Description
-===================== ========================================== ===================================================
-status                between: "past", "active" or "future"      state of the disruption         
-id                    string                                     Id of the disruption
-disruption_id         string                                     for traceability: Id of original input disruption
-severity              `severity`_                                gives some categorization element
-application_periods   array of `period`_                         dates where the current disruption is active
-messages              `message`_                                 text to provide to the traveler
-updated_at            `iso-date-time`_                           date_time of last modifications 
-cause                 string                                     why is there such a disruption?
-===================== ========================================== ===================================================
+Details for disruption objects : `disruptions`_
 
 Objects
 =======
 
-Geographical Objects
-********************
+Standard objects
+****************
 
 .. _coord:
 
 Coord
 #####
+
+Lots of object are geographically localized :
 
 ====== ====== ============
 Field  Type   Description
@@ -1639,6 +1619,20 @@ Field  Type   Description
 lon    float  Longitude
 lat    float  Latitude
 ====== ====== ============
+
+.. _iso-date-time:
+
+ISO-date-time
+#############
+
+Navitia manages every date or time as a UTC date-time. The web-service 
+
+* exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
+* can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
+
+For example: `<https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>`_
+
+There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down `<https://youtu.be/-5wpm-gesOY>`_
 
 Public transport objects
 ************************
@@ -1790,20 +1784,36 @@ name                 string                             Name of the company
 Place
 #####
 
-A container containing either a `admin`_, `poi`_, `address`_, `stop_area`_, `stop_point`_,
-`network`_, `commercial_mode`_, `line`_, `route`_  
-
+A container containing either a `admin`_, `poi`_, `address`_, `stop_area`_, `stop_point`_.
 
 ===================== ============================= =================================
 Field                 Type                          Description
 ===================== ============================= =================================
 name                  string                        The name of the embedded object
 id                    string                        The id of the embedded object
-embedded_type         `embedded_type_place`_        The type of the embedded object
+embedded_type         `embedded_type`_              The type of the embedded object
 administrative_region *optional* `admin`_           Embedded administrative region
 stop_area             *optional* `stop_area`_       Embedded Stop area
 poi                   *optional* `poi`_             Embedded poi
 address               *optional* `address`_         Embedded address
+stop_point            *optional* `stop_point`_      Embedded Stop point
+===================== ============================= =================================
+
+.. _pt_object:
+
+pt_object
+#########
+
+A container containing either a `network`_, `commercial_mode`_, `line`_, 
+`route`_, `stop_area`_, `stop_point`_
+
+===================== ============================= =================================
+Field                 Type                          Description
+===================== ============================= =================================
+name                  string                        The name of the embedded object
+id                    string                        The id of the embedded object
+embedded_type         `embedded_type`_        The type of the embedded object
+stop_area             *optional* `stop_area`_       Embedded Stop area
 stop_point            *optional* `stop_point`_      Embedded Stop point
 network               *optional* `network`_         Embedded network
 commercial_mode       *optional* `commercial_mode`_ Embedded commercial_mode
@@ -1812,32 +1822,92 @@ line                  *optional* `line`_            Embedded line
 route                 *optional* `route`_           Embedded route
 ===================== ============================= =================================
 
-+------------------------------------------------------------------------+
-| *Note*                                                                 |
-|                                                                        |
-|    Using /places API, navitia would returned objects among             |
-|    administrative_region, stop_area, poi, address and stop_point types |
-|                                                                        |
-|    Using /pt_objects API, navitia would returned objects among         |
-|    network, commercial_mode, stop_area, line and route types           |
-|                                                                        |
-+------------------------------------------------------------------------+
+
+Real time and disruption objects
+********************************
+
+.. _disruptions:
+
+Disruption
+##########
+
+===================== ========================================== ===================================================
+Field                 Type                                       Description
+===================== ========================================== ===================================================
+status                between: "past", "active" or "future"      state of the disruption         
+id                    string                                     Id of the disruption
+disruption_id         string                                     for traceability: Id of original input disruption
+severity              `severity`_                                gives some categorization element
+application_periods   array of `period`_                         dates where the current disruption is active
+messages              `message`_                                 text to provide to the traveler
+updated_at            `iso-date-time`_                           date_time of last modifications 
+impacted_objects      array of `pt_object`_                      The list of public transport objects which are 
+                                                                 affected by the disruption
+cause                 string                                     why is there such a disruption?
+===================== ========================================== ===================================================
+
+.. _message:
+
+Messages
+########
+
+===================== ==================== ==========================================================
+Field                 Type                 Description
+===================== ==================== ==========================================================
+text                  string               a message to bring to a traveler
+channel               `channel`_           destination media. Be careful, no normalized enum for now
+===================== ==================== ==========================================================
+
+.. _severity:
+
+Severity
+########
+
+Severity object can be used to make visual grouping.
+
++--------------------+------------------+-----------------------------------------------------------------------+
+| Field              | Type             | Description                                                           |
++====================+==================+=======================================================================+
+| color              |  string          | HTML color for classification                                         |
++--------------------+------------------+-----------------------------------------------------------------------+
+| priority           |  integer         | given by the agency : 0 is strongest priority. it can be null         |
++--------------------+------------------+-----------------------------------------------------------------------+
+| name               |  string          | name of severity                                                      |
++--------------------+------------------+-----------------------------------------------------------------------+
+| effect             |  Enum            | Normalized value of the effect on the public transport object         |
+|                    |                  | See the GTFS RT documentation at                                      |
+|                    |                  | https://developers.google.com/transit/gtfs-realtime/reference#Effect  |
++--------------------+------------------+-----------------------------------------------------------------------+
+
+.. _channel:
+
+Channel
+#######
+
++---------------------+------------------+-----------------------------------------------------------------------+
+| Field               | Type             | Description                                                           |
++=====================+==================+=======================================================================+
+| id                  | string           | Identifier of the address                                             |
++---------------------+------------------+-----------------------------------------------------------------------+
+| content_type        | string           | Like text/html, you know? Otherwise, take a look at                   |
+|                     |                  | http://www.w3.org/Protocols/rfc1341/4_Content-Type.html               |
++---------------------+------------------+-----------------------------------------------------------------------+
+| name                | string           | name of the Channel                                                   |
++---------------------+------------------+-----------------------------------------------------------------------+
+
+.. _period:
+
+Period
+######
+
+===================== =============================================== ==============================================
+Field                 Type                                            Description
+===================== =============================================== ==============================================
+begin                 `iso-date-time`_                                Beginning date and time of an activity period
+end                   `iso-date-time`_                                Closing date and time of an activity period
+===================== =============================================== ==============================================
 
 
-.. _embedded_type_place:
-
-Embedded type
-_____________
-
-===================== ============================================================
-Value                 Description
-===================== ============================================================
-stop_point            a location where vehicles can pickup or drop off passengers
-stop_area             a nameable zone, where there are some stop points  
-address               a point located in a street
-poi                   a point of interest
-administrative_region a city, a district, a neighborhood
-===================== ============================================================
 
 Street network objects
 **********************
@@ -1902,71 +1972,6 @@ zip_code              string                      Zip code of the admin
 
 Cities are mainly on the 8 level, dependant on the country (http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative)
 
-disruptions objects
-*******************
-
-.. _message:
-
-Messages
-########
-
-===================== ==================== ==========================================================
-Field                 Type                 Description
-===================== ==================== ==========================================================
-text                  string               a message to bring to a traveler
-channel               `channel`_           destination media. Be careful, no normalized enum for now
-===================== ==================== ==========================================================
-
-.. _severity:
-
-Severity
-########
-
-Severity object can be used to make visual grouping.
-
-+--------------------+------------------+-----------------------------------------------------------------------+
-| Field              | Type             | Description                                                           |
-+====================+==================+=======================================================================+
-| color              |  string          | HTML color for classification                                         |
-+--------------------+------------------+-----------------------------------------------------------------------+
-| priority           |  integer         | given by the agency : 0 is strongest priority. it can be null         |
-+--------------------+------------------+-----------------------------------------------------------------------+
-| name               |  string          | name of severity                                                      |
-+--------------------+------------------+-----------------------------------------------------------------------+
-| effect             |  Enum            | Normalized value of the effect on the public transport object         |
-|                    |                  | See the GTFS RT documentation at                                      |
-|                    |                  | https://developers.google.com/transit/gtfs-realtime/reference#Effect  |
-+--------------------+------------------+-----------------------------------------------------------------------+
-
-.. _channel:
-
-Channel
-#######
-
-+---------------------+------------------+-----------------------------------------------------------------------+
-| Field               | Type             | Description                                                           |
-+=====================+==================+=======================================================================+
-| id                  | string           | Identifier of the address                                             |
-+---------------------+------------------+-----------------------------------------------------------------------+
-| content_type        | string           | Like text/html, you know? Otherwise, take a look at                   |
-|                     |                  | http://www.w3.org/Protocols/rfc1341/4_Content-Type.html               |
-+---------------------+------------------+-----------------------------------------------------------------------+
-| name                | string           | name of the Channel                                                   |
-+---------------------+------------------+-----------------------------------------------------------------------+
-
-.. _period:
-
-Period
-######
-
-===================== =============================================== ==============================================
-Field                 Type                                            Description
-===================== =============================================== ==============================================
-begin                 `iso-date-time`_                                Beginning date and time of an activity period
-end                   `iso-date-time`_                                Closing date and time of an activity period
-===================== =============================================== ==============================================
-
-
 Other objects
 *************
 
@@ -2013,6 +2018,43 @@ date_time  `pt-date-time`_                       A public transport date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============================
 
+.. _embedded_type:
+
+Embedded type
+#############
+
+Enum use to identify what kind of objects "/place", "/pt_objects" or "/disruptions" API are managing.
+
++------------------------------------------------------------------------+
+| *Note*                                                                 |
+|                                                                        |
+|    This enum is used by 3 API:                                         |
+|                                                                        |
+|    * Using /places API, navitia would returned objects among           |
+|    administrative_region, stop_area, poi, address and stop_point types |
+|                                                                        |
+|    * Using /pt_objects API, navitia would returned objects among       |
+|    network, commercial_mode, stop_area, line and route types           |
+|                                                                        |
+|    * Using /disruptions API, navitia would returned objects among      |
+|    network, commercial_mode, stop_area, line, route and trips types    |
+|                                                                        |
++------------------------------------------------------------------------+
+
+===================== ============================================================
+Value                 Description
+===================== ============================================================
+administrative_region a city, a district, a neighborhood
+network               a public transport network
+commercial_mode       a public transport branded mode
+line                  a public transport line
+route                 a public transport route
+stop_area             a nameable zone, where there are some stop points  
+stop_point            a location where vehicles can pickup or drop off passengers
+address               a point located in a street
+poi                   a point of interest
+===================== ============================================================
+
 .. _equipment:
 
 equipment
@@ -2051,7 +2093,7 @@ label           String          The label of the object
 color           String          The hexadecimal code of the line
 code            String          The code of the line
 description     String          A description
-equipments      Array of String
+equipments      Array of string list of `equipment`_ of the object
 =============== =============== ==================================
 
 .. _link:
@@ -2060,23 +2102,6 @@ link
 ####
 
 See `interface`_ section.
-
-Special Parameters
-******************
-
-.. _iso-date-time:
-
-ISO-date-time
-#############
-
-Navitia manages every date or time as a UTC date-time. The web-service 
-
-* exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
-* can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
-
-For example: `<https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>`_
-
-There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down `<https://youtu.be/-5wpm-gesOY>`_
 
 Misc mechanisms (and few boring stuff)
 ======================================

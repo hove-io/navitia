@@ -2707,3 +2707,39 @@ BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
     BOOST_CHECK_EQUAL(res.at(1).items.front().departure, time_from_string("2015-01-03 08:00:00"));
     BOOST_CHECK_EQUAL(res.at(1).items.back().arrival, time_from_string("2015-01-03 09:10:00"));
 }
+
+// A=======B=======C
+//        /        + <- vj extention
+//       / D=======C
+// Dest +--'
+//
+// As dist(D, Dest) < dist(B, Dest) < dist(D, Dest) + penalty, we
+// don't want A=C+C=D as a solution, only A=B
+BOOST_AUTO_TEST_CASE(penalty_on_vj_extentions) {
+    ed::builder b("20150101");
+    b.vj("1").block_id("42")("A", "09:00"_t)("B", "10:00"_t)("C", "11:00"_t);
+    b.vj("2").block_id("42")("C", "11:00"_t)("D", "12:00"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 0_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("B")->stop_point_list.front())] = 2_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front())] = 1_min;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(2, "08:00"_t),
+                                  type::RTLevel::Base,
+                                  2_min);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 09:00:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 10:00:00"));
+}

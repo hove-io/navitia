@@ -659,7 +659,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         departures = get_not_null(response, 'departures')
         eq_(len(departures), 2)
-        assert {"A00", "vehicle_journey 1"} == {d['display_informations']['headsign'] for d in departures}
+        assert {"A00", "vjB"} == {d['display_informations']['headsign'] for d in departures}
 
     def test_headsign_display_info_arrivals(self):
         """test basic print of headsign in display informations for arrivals"""
@@ -687,7 +687,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         vjs = get_not_null(response, 'vehicle_journeys')
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
-        assert any(vj['name'] == "vehicle_journey 1" and vj['trip']['id'] == "vehicle_journey 1" for vj in vjs)
+        assert any(vj['name'] == "vjB" and vj['trip']['id'] == "vjB" for vj in vjs)
 
     def test_disruptions(self):
         """test the /disruptions api"""
@@ -736,7 +736,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert get_not_null(trips[0], 'id') == "vjA"
 
         # we can also display trip of a vj
-        response = self.query_region('vehicle_journeys/vj:B:1/trips')
+        response = self.query_region('vehicle_journeys/vjB/trips')
         trips = get_not_null(response, 'trips')
         assert len(trips) == 1
-        assert get_not_null(trips[0], 'id') == "vehicle_journey 1"
+        assert get_not_null(trips[0], 'id') == "vjB"

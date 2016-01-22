@@ -40,7 +40,7 @@ www.navitia.io
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
 #include <boost/graph/topological_sort.hpp>
-#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/adjacency_matrix.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -146,11 +146,7 @@ int score(const std::vector<datetime_stop_time>& v1,
         });
     return res;
 }
-typedef boost::adjacency_list<
-    boost::vecS,
-    boost::vecS,
-    boost::directedS
-    > Graph;
+typedef boost::adjacency_matrix<boost::directedS> Graph;
 struct Edge {
     uint32_t source;
     uint32_t target;
@@ -177,37 +173,125 @@ std::vector<Edge> create_edges(std::vector<std::vector<datetime_stop_time>>& v) 
     boost::sort(edges);
     return edges;
 }
+struct IsDag {
+    bool operator()(const Graph& g) {
+        ++nb_call;
+        order.reserve(num_vertices(g));
+        try {
+            order.clear();
+            boost::topological_sort(g, std::back_inserter(order));
+            return true;
+        } catch (boost::not_a_dag&) {
+            return false;
+        }
+    }
+    std::vector<uint32_t> order;
+    size_t nb_call = 0;
+};
 // Using http://en.wikipedia.org/wiki/Ranked_pairs to sort the vj.  As
 // if each stop time vote according to the time of the vj at its stop
 // time (don't care for the vj that don't stop).
 std::vector<uint32_t> compute_order(const size_t nb_vertices, const std::vector<Edge>& edges) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     Graph g(nb_vertices);
-    std::vector<uint32_t> order;
-    order.reserve(nb_vertices);
+    IsDag is_dag;
 
+    LOG4CPLUS_DEBUG(logger, "trying total topological sort with nb_vertices = " << nb_vertices);
     // most of the time, the graph will not have any cycle, thus we
     // test directly a topological sort.
-    try {
-        for (const auto& edge: edges) { add_edge(edge.source, edge.target, g); }
-        order.clear();
-        boost::topological_sort(g, std::back_inserter(order));
-        return order;
-    } catch (boost::not_a_dag&) {}
+    for (const auto& edge: edges) { add_edge(edge.source, edge.target, g); }
+    if (is_dag(g)) {
+        LOG4CPLUS_DEBUG(logger, "total topological sort is working, great!");
+        return std::move(is_dag.order);
+    }
 
     // there is a cycle, thus we run the complete algorithm.
     g = Graph(nb_vertices);// remove all edges
-    for (const auto& edge: edges) {
-        const auto e_desc = add_edge(edge.source, edge.target, g).first;
-        try {
-            order.clear();
-            boost::topological_sort(g, std::back_inserter(order));
-        } catch (boost::not_a_dag&) {
-            remove_edge(e_desc, g);
+    size_t nb_removed_edges = 0;
+    LOG4CPLUS_DEBUG(logger, "trying total ranked pair with nb_edges = " << edges.size());
+
+    // Straintforward implementation of ranked pair is:
+    //
+    //for (const auto& edge: edges) {
+    //    const auto e_desc = add_edge(edge.source, edge.target, g).first;
+    //    if (! is_dag(g)) { ++nb_removed_edges; remove_edge(e_desc, g); }
+    //}
+    //
+    // Let n be the number of vertices, and e be the number of
+    // edges. O(e) = O(n²).  The straintforward implementation is
+    //
+    //   O(e * (n + e)) = O(e²) = O(n⁴)
+    //
+    // In practice, this algorithm is too costy for big route
+    // schedules.  Let k be the number of edges that will be removed.
+    // O(k) = O(n²).  In practice, it seems that Omega(k) = Omega(n).
+    // If we do binary search to find each edges that we need to
+    // remove, the complexity is
+    //
+    //   O(k * log(e) * (n + e)) = O(k * n² * log(n²)) = O(k * n² * log(n))
+    //
+    // Thus, in our case, this algorithm seems to run in
+    //
+    //   Omega(k * n² * log(n)) = Omega(n³ * log(n))
+    //
+    // which is much better than the naive implementation.  In
+    // practice, our problematic case run in 33s using the naive
+    // algorithm, and 1s using the binary search.
+    //
+    size_t done_until = 0;
+    // the edges in the graph that we may remove during the current binary search
+    std::vector<Graph::edge_descriptor> e_descrs;
+    e_descrs.reserve(edges.size());
+    while (done_until < edges.size()) { // while not all edges are done
+        // binary searching the next edge that create a cycle,
+        // inspired by
+        // https://en.wikipedia.org/wiki/Binary_search_algorithm#Deferred_detection_of_equality
+        size_t imin = done_until;
+        size_t imax = edges.size();
+        while (imin < imax) {
+            const size_t imid = (imin + imax) / 2;
+
+            // modifying the graph to be in the wanted state
+            const size_t nb_elt_to_add = imid - done_until + 1;
+            if (e_descrs.size() < nb_elt_to_add) {
+                // add corresponding edges
+                while (nb_elt_to_add != e_descrs.size()) {
+                    const size_t idx = done_until + e_descrs.size();
+                    e_descrs.push_back(add_edge(edges[idx].source, edges[idx].target, g).first);
+                }
+            } else {
+                // remove corresponding edges
+                while (nb_elt_to_add != e_descrs.size()) {
+                    remove_edge(e_descrs.back(), g);
+                    e_descrs.pop_back();
+                }
+            }
+
+            if (is_dag(g)) {
+                imin = imid + 1;
+            } else {
+                imax = imid;
+            }
         }
+
+        // We've found the problematic edge (or we are at the end).
+        assert(imin == imax);
+        if (imax < edges.size()) {
+            // remove the edge that create the cycle
+            ++nb_removed_edges;
+            remove_edge(e_descrs.back(), g);
+        }
+        // current state of the graph is valid until imax + 1
+        done_until = imax + 1;
+        e_descrs.clear();
     }
-    order.clear();
-    topological_sort(g, std::back_inserter(order));
-    return order;
+    // Great, we have the graph, end of the binary search
+    // implementation of ranked pair.
+
+    if (!is_dag(g)) { assert(false); } // to compute the order on the final graph
+    LOG4CPLUS_DEBUG(logger, "total ranked pair done with nb_removed_edges = " << nb_removed_edges
+                   << ", nb_topo_sort = " << is_dag.nb_call);
+    return std::move(is_dag.order);
 }
 void ranked_pairs_sort(std::vector<std::vector<datetime_stop_time>>& v) {
     const auto edges = create_edges(v);

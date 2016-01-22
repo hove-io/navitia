@@ -61,10 +61,10 @@ VJ::VJ(builder& b,
     network_name(network_name),
     line_name(line_name),
     validity_pattern(validity_pattern),
-    block_id(block_id),
+    _block_id(block_id),
     is_frequency(is_frequency),
     wheelchair_boarding(wheelchair_boarding),
-    uri(uri),
+    _uri(uri),
     meta_vj_name(meta_vj_name),
     physical_mode(physical_mode),
     start_time(start_time),
@@ -121,8 +121,8 @@ nt::VehicleJourney* VJ::make() {
     std::string name;
     if (! meta_vj_name.empty()) {
         name = meta_vj_name;
-    } else if (! uri.empty()) {
-        name = uri;
+    } else if (! _uri.empty()) {
+        name = _uri;
     } else {
         auto idx = pt_data.vehicle_journeys.size();
         name = "vehicle_journey " + std::to_string(idx);
@@ -134,9 +134,9 @@ nt::VehicleJourney* VJ::make() {
     mvj->tz_handler = b.tz_handler;
 
     const auto vp = nt::ValidityPattern(b.begin, validity_pattern);
-    const auto uri_str = uri.empty() ?
+    const auto uri_str = _uri.empty() ?
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
-        uri;
+        _uri;
     if (is_frequency) {
         auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
         fvj->start_time = start_time;
@@ -172,8 +172,8 @@ nt::VehicleJourney* VJ::make() {
 
     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, name);
 
-    if (block_id != "") {
-        b.block_vjs.insert(std::make_pair(block_id, vj));
+    if (_block_id != "") {
+        b.block_vjs.insert(std::make_pair(_block_id, vj));
     }
 
     if (wheelchair_boarding) {
@@ -628,6 +628,9 @@ void builder::build_blocks() {
 
      build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
+         if (vj->stop_time_list.empty()) {
+             continue;
+         }
          if(!vj->prev_vj) {
              vj->stop_time_list.front().set_drop_off_allowed(false);
          }
@@ -638,6 +641,9 @@ void builder::build_blocks() {
 
      for (auto* route: data->pt_data->routes) {
          for (auto& freq_vj: route->frequency_vehicle_journey_list) {
+             if (freq_vj->stop_time_list.empty()) {
+                 continue;
+             }
 
              const auto start = freq_vj->stop_time_list.front().arrival_time;
              for (auto& st: freq_vj->stop_time_list) {

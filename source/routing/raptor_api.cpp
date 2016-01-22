@@ -202,15 +202,9 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
 static georef::Path get_direct_path(georef::StreetNetwork& worker,
                             const type::EntryPoint& origin,
                             const type::EntryPoint& destination) {
-    if ((origin.type == nt::Type_e::Admin && destination.type == nt::Type_e::Admin)
-        || origin.streetnetwork_params.mode == nt::Mode_e::Car) { //(direct path use only origin mode)
-        // we don't want direct path for admin to admin (it has no meaning)
-        // and we do not compute direct path for car because:
-        //  * our car pathes are not very realistic
-        //  * we do not want to promote car solution
+    if (! origin.streetnetwork_params.enable_direct_path) { //(direct path use only origin mode)
         return georef::Path();
     }
-
     return worker.get_direct_path(origin, destination);
 }
 

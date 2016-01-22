@@ -54,12 +54,12 @@ from datetime import datetime
 
 
 class Uri(ResourceUri, ResourceUtc):
-    parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
         kwargs['authentication'] = False
         ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser = self.parsers["get"]
