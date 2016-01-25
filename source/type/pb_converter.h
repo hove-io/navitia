@@ -228,19 +228,9 @@ private:
             depth(depth), dump_message(dump_message), pb_creator(pb_creator){};
 
         Filler copy(int, DumpMessage);
-        template<typename NAV, typename PB>        
+        template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
             copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
-        }
-
-        template<typename NAV, typename PB>
-        void fill(const NAV& nav_object, PB* pb_object, int d) {
-            copy(d, dump_message).fill_pb_object(nav_object, pb_object);
-        }
-
-        template<typename NAV, typename PB>
-        void fill(const NAV& nav_object, PB* pb_object, int d, DumpMessage dm) {
-            copy(d, dm).fill_pb_object(nav_object, pb_object);
         }
 
         template<typename Nav, typename Pb>
@@ -378,7 +368,7 @@ private:
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
             if(value == nullptr) { return; }
 
-            fill(value, get_sub_object(value, pt_object), depth, dump_message);
+            copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
             pt_object->set_name(get_label(value));
             pt_object->set_uri(value->uri);
             pt_object->set_embedded_type(get_embedded_type(value));

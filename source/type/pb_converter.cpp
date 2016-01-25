@@ -84,15 +84,17 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
             impacted_stop->set_cause(stu.cause);
             impacted_stop->set_effect(pbnavitia::DELAYED);
 
-            filler.fill(stu.stop_time.stop_point, impacted_stop->mutable_stop_point(), 0, DumpMessage::No);
+            filler.copy(0, DumpMessage::No).fill_pb_object(stu.stop_time.stop_point,
+                                                           impacted_stop->mutable_stop_point());
 
             //TODO output only modified stoptime update
-            filler.fill(&stu.stop_time, impacted_stop->mutable_amended_stop_time(), 0, DumpMessage::No);
+            filler.copy(0, DumpMessage::No).fill_pb_object(&stu.stop_time,
+                                                           impacted_stop->mutable_amended_stop_time());
 
             // we need to get the base stoptime
             const auto* base_st = impact.aux_info.get_base_stop_time(stu);
             if (base_st) {
-                filler.fill(base_st, impacted_stop->mutable_base_stop_time(), 0, DumpMessage::No);
+                filler.copy(0, DumpMessage::No).fill_pb_object(base_st, impacted_stop->mutable_base_stop_time());
             }
         }
     }
@@ -392,7 +394,7 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 
     if(depth > 0) {
         fill(lg->line_list, line_group->mutable_lines());
-        fill(lg->main_line, line_group->mutable_main_line(), 0);
+        copy(0, dump_message).fill_pb_object(lg->main_line, line_group->mutable_main_line());
         fill_comments(lg, line_group);
     }
 }
@@ -561,7 +563,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTi
     }
 
     // we always dump the stop point (with the same depth)
-    fill(st->stop_point, stop_time->mutable_stop_point(), depth);
+    copy(depth, dump_message).fill_pb_object(st->stop_point, stop_time->mutable_stop_point());
 
     if ( depth > 0) {
         fill(st->vehicle_journey, stop_time->mutable_vehicle_journey());
@@ -1063,7 +1065,7 @@ void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::PtO
     if(way_coord->way == nullptr)
         return;
 
-    fill(way_coord, place->mutable_address(), depth);
+    copy(depth, dump_message).fill_pb_object(way_coord, place->mutable_address());
 
     place->set_name(place->address().label());
 
