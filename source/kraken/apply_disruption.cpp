@@ -218,6 +218,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
         }
 
+        // Get all impacted VJs and compute the corresponding base_canceled vp
         std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;
 
         /*
@@ -324,6 +325,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     continue;
                 }
                 nt::StopTime new_st = st.clone();
+                // Here the first arrival/departure time may be > 24hours.
+                // Check the test case: apply_disruption_test/test_shift_of_a_disrupted_delayed_train for more details
                 new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_stop_times.push_back(std::move(new_st));
