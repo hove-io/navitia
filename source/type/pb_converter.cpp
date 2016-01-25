@@ -118,7 +118,7 @@ PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message){
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib){
-    if(cb == nullptr) { return; }
+
     contrib->set_uri(cb->uri);
     contrib->set_name(cb->name);
     contrib->set_license(cb->license);
@@ -126,8 +126,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Con
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* frame){
-
-    if(!fr) { return; }
 
     frame->set_uri(fr->uri);
     pt::time_duration td = pt::time_duration(0, 0, 0, 0);
@@ -153,8 +151,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* fr
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
-
-    if(!sa) { return; }
 
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
@@ -185,8 +181,6 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 
 void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::AdministrativeRegion* admin){
 
-    if(!adm) { return; }
-
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
     admin->set_label(adm->label);
@@ -202,8 +196,6 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
-
-    if(!sp) { return; }
 
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
@@ -267,8 +259,6 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
 
 void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company* company){
 
-    if(!c) { return; }
-
     company->set_name(c->name);
     company->set_uri(c->uri);
 
@@ -276,8 +266,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company*
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network* network){
-
-    if(!n) { return; }
 
     network->set_name(n->name);
     network->set_uri(n->uri);
@@ -288,7 +276,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network*
 
 void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m,
                                          pbnavitia::PhysicalMode* physical_mode){
-    if(!m) { return; }
 
     physical_mode->set_name(m->name);
     physical_mode->set_uri(m->uri);
@@ -296,15 +283,12 @@ void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m,
 
 void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
                       pbnavitia::CommercialMode* commercial_mode){
-    if(!m) { return; }
 
     commercial_mode->set_name(m->name);
     commercial_mode->set_uri(m->uri);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line){
-
-    if(!l) { return; }
 
     fill_comments(l, line);
 
@@ -353,8 +337,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* route){
 
-    if(!r) { return; }
-
     route->set_name(r->name);
     route->set_direction_type(r->direction_type);
 
@@ -372,9 +354,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
 
     fill(&r->shape, route->mutable_geojson());
 
-    auto thermometer = navitia::timetables::Thermometer();
-    thermometer.generate_thermometer(r);
     if (depth>2) {
+        auto thermometer = navitia::timetables::Thermometer();
+        thermometer.generate_thermometer(r);
         for(auto idx : thermometer.get_thermometer()) {
             auto stop_point = pb_creator.data.pt_data->stop_points[idx];
             fill(stop_point, route->add_stop_points());
@@ -387,8 +369,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
 void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
                                          pbnavitia::LineGroup* line_group){
 
-    if(!lg) { return; }
-
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
 
@@ -400,8 +380,6 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calendar* pb_cal){
-
-    if (!cal) { return; }
 
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
@@ -448,7 +426,6 @@ void PbCreator::Filler::fill_pb_object(const nt::ExceptionDate* exception_date,
 
 void PbCreator::Filler::fill_pb_object(const nt::ValidityPattern* vp,
                                          pbnavitia::ValidityPattern* validity_pattern){
-    if(!vp) { return; }
 
     auto vp_string = gd::to_iso_string(vp->beginning_date);
     validity_pattern->set_beginning_date(vp_string);
@@ -457,8 +434,6 @@ void PbCreator::Filler::fill_pb_object(const nt::ValidityPattern* vp,
 
 void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
                                          pbnavitia::VehicleJourney* vehicle_journey){
-
-    if (!vj) { return; }
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
@@ -531,12 +506,10 @@ void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord,
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavitia::Connection* connection){
 
-    if(!c) { return; }
-
     connection->set_duration(c->duration);
     connection->set_display_duration(c->display_duration);
     connection->set_max_duration(c->max_duration);
-    if(c->departure != nullptr && c->destination != nullptr && depth > 0){
+    if(depth > 0){
         fill(c->departure, connection->mutable_origin());
         fill(c->destination, connection->mutable_destination());
     }
@@ -571,8 +544,6 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTi
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopDateTime* stop_date_time){
-
-    if(!st) { return; }
 
     pbnavitia::Properties* properties = stop_date_time->mutable_properties();
     fill(st, properties);
@@ -765,8 +736,6 @@ void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, pbnav
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayInfo* pt_display_info){
 
-    if(!r) { return; }
-
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_route(r->uri);
     for (const auto& comment: pb_creator.data.pt_data->comments.get(r)) {
@@ -811,8 +780,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
 
 void PbCreator::Filler::fill_pb_object(const ng::POI* geopoi, pbnavitia::Poi* poi){
 
-    if(!geopoi) { return; }
-
     poi->set_name(geopoi->name);
     poi->set_uri(geopoi->uri);
     poi->set_label(geopoi->label);
@@ -842,8 +809,6 @@ void PbCreator::Filler::fill_pb_object(const ng::POI* geopoi, pbnavitia::Poi* po
 }
 
 void PbCreator::Filler::fill_pb_object(const ng::POI* poi, pbnavitia::Address* address){
-
-    if(!poi) { return; }
 
     address->set_name(poi->address_name);
     std::string label;

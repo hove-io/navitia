@@ -224,10 +224,16 @@ private:
         DumpMessage dump_message;
 
         PbCreator& pb_creator;
-        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator):
-            depth(depth), dump_message(dump_message), pb_creator(pb_creator){};
+        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator): depth(depth),
+            dump_message(dump_message), pb_creator(pb_creator){};
 
         Filler copy(int, DumpMessage);
+        template<typename NAV, typename PB>
+        void fill(NAV* nav_object, PB* pb_object) {
+            if (nav_object == nullptr) {return ;}
+            copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
+        }
+
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
             copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
@@ -259,6 +265,7 @@ private:
 
         template <typename NAV, typename P>
         void fill_messages(const NAV* nav_obj, P* pb_obj){
+            if (nav_obj == nullptr) {return ;}
             if (dump_message == DumpMessage::No) { return; }
             for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
                                                                         pb_creator.action_period)){
@@ -304,6 +311,7 @@ private:
 
         template<typename NT, typename PB>
         void fill_comments(const NT* nt, PB* pb, const std::string& type = "standard") {
+            if (nt == nullptr) {return ;}
             for (const auto& comment: pb_creator.data.pt_data->comments.get(nt)) {
                 auto com = pb->add_comments();
                 com->set_value(comment);
