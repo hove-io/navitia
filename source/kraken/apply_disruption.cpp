@@ -250,9 +250,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
              * we say that this vj is impacted and the computed validity pattern will be the vp of the new vj.
              *
              *
-             *  Day     1              2               3               4               5               6             ...
-             *          -----------------------------------------------------------------------------------------------------
-             * SP_bob         8:30           8:30             8:30           8:30           8:30             8:30   ... (vj)
+             *  Day     1              2               3               4               5               6         ...
+             *          ----------------------------------------------------------------------------------------------
+             * SP_bob         8:30           8:30             8:30           8:30           8:30           8:30 ... (vj)
              *
              * Period_bob           |--------------|
              *                    17:00          14:00
@@ -360,7 +360,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_vj->name = new_vj_uri;
             }
             /*
-             * Properties manually added to guarantee the good behavior for raptor.
+             * Properties manually added to guarantee the good behavior for raptor and consistency.
              * */
             new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
             new_vj->company = vj->company;
