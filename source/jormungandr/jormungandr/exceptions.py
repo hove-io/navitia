@@ -44,9 +44,10 @@ def format_error(code, message):
     return error
 
 
-class RegionNotFound(Exception):
+class RegionNotFound(HTTPException):
 
     def __init__(self, region=None, lon=None, lat=None, object_id=None, custom_msg=None):
+        super(RegionNotFound, self).__init__()
         self.code = 404
         if custom_msg:
             self.data = format_error("unknown_object", custom_msg)
@@ -75,37 +76,40 @@ class RegionNotFound(Exception):
             self.data = format_error("unknown_object",
                                      "Unable to parse region")
 
-
     def __str__(self):
         return repr(self.data['message'])
 
 
-class DeadSocketException(Exception):
+class DeadSocketException(HTTPException):
 
     def __init__(self, region, path):
-        error = "The region " + region + " is dead"
+        super(DeadSocketException, self).__init__()
+        error = 'The region {} is dead'.format(region)
         self.data = format_error("dead_socket", error)
         self.code = 503
 
 
-class ApiNotFound(Exception):
+class ApiNotFound(HTTPException):
 
     def __init__(self, api):
-        error = "The api " + api + " doesn't exist"
+        super(ApiNotFound, self).__init__()
+        error = 'The api {} doesn\'t exist'.format(api)
         self.data = format_error("unknown_object", error)
         self.code = 404
 
 
-class InvalidArguments(Exception):
+class InvalidArguments(HTTPException):
 
     def __init__(self, arg):
+        super(InvalidArguments, self).__init__()
         self.data = format_error("unknown_object", "Invalid arguments " + arg)
         self.code = 400
 
 
-class TechnicalError(Exception):
+class TechnicalError(HTTPException):
 
     def __init__(self, msg):
+        super(TechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
 
