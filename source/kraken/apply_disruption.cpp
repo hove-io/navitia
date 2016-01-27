@@ -159,7 +159,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
@@ -194,7 +194,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (auto& stu: impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
             }
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
@@ -333,7 +333,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto mvj = vj->meta_vj;
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
 
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             std::string new_vj_uri = mvj->uri + ":" +

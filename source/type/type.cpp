@@ -506,6 +506,21 @@ std::vector<idx_t> MetaVehicleJourney::get(Type_e type, const PT_Data& data) con
     return result;
 }
 
+bool MetaVehicleJourney::is_already_impacted_by(const boost::shared_ptr<disruption::Impact>& impact) {
+    auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& i) {
+            auto spt = i.lock();
+            return (spt) ? spt == impact : true;
+        };
+    return std::any_of(std::begin(impacted_by), std::end(impacted_by),find_impact);
+}
+
+
+void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact) {
+    if (! is_already_impacted_by(impact)) {
+        impacted_by.push_back(impact);
+    }
+}
+
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {

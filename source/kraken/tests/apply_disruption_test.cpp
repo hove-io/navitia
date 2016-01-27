@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     navitia::delete_disruption("S2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("S3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
                     vj->base_validity_pattern()->days);
             break;
         case nt::RTLevel::RealTime:
-            // No information available at this level
+            //TODO
             throw navitia::exception("realtime check unhandled case");
         }
     }
@@ -398,7 +398,7 @@ vj->adapted_validity_pattern()->days);
             break;
 
         case nt::RTLevel::RealTime:
-            // No information available at this level
+            //TODO
             throw navitia::exception("realtime check unhandled case");
         }
     }
@@ -484,7 +484,8 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "0111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+
 
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Adapted, "A1", "stop_area", "08:00"_t, 1).empty());
@@ -560,7 +561,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 
     BOOST_REQUIRE_EQUAL(compute(*b.data, nt::RTLevel::RealTime, "stop1", "stop3", "08:00"_t, 1).size(), 1);
     BOOST_REQUIRE_EQUAL(compute(*b.data, nt::RTLevel::RealTime, "stop1", "stop3", "05:00"_t, 4).size(), 1);
@@ -616,7 +617,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
@@ -680,7 +681,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
@@ -756,7 +757,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
 
     navitia::delete_disruption("bob", *b.data->pt_data, *b.data->meta);
     
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
 }
 
 /*
@@ -854,6 +855,25 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     BOOST_REQUIRE_EQUAL(vj->shift, 1);
 
     navitia::delete_disruption("bob", *b.data->pt_data, *b.data->meta);
+    for (const auto* vj: b.data->pt_data->vehicle_journeys) {
+          switch (vj->realtime_level) {
+          case nt::RTLevel::Base:
+              BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "00100"),
+                      vj->adapted_validity_pattern()->days);
+              BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "00100"),
+                      vj->base_validity_pattern()->days);
+              break;
+          case nt::RTLevel::Adapted:
+              throw navitia::exception("Adapted check unhandled case");
+              break;
+          case nt::RTLevel::RealTime:
+              BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
+                      vj->adapted_validity_pattern()->days);
+              BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
+                      vj->base_validity_pattern()->days);
+              break;
+          }
+      }
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "00100");
 
@@ -1026,4 +1046,119 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.size(), 3);
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.front().stop_point->uri, "stop2");
     // BOOST_CHECK_EQUAL(vj17->stop_time_list.back().stop_point->uri, "stop1");
+}
+
+/*
+ *
+ *         |---------------------------------------------|
+ *         |
+ * A1 > > >|sp1> >sp2> >sp3> >sp4> >sp5> >sp6> >sp7> >sp8|> > > > A2
+ *         |      /                               \      |          (VJ_A)
+ * B1 > > >|-----/                                 \-----|> > > > B2 > > > B3 > > > B4
+ *         |                                             |                            (VJ_B)
+ *         |---------------------------------------------|
+ *                    stop_area
+ *
+ *
+ *
+ * */
+BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
+
+
+    ed::builder b("20120614");
+    b.sa("stop_area", 0, 0, false, true)
+                ("stop_area:stop1")("stop_area:stop2")
+                ("stop_area:stop3")("stop_area:stop4")
+                ("stop_area:stop5")("stop_area:stop6")
+                ("stop_area:stop7")("stop_area:stop8");
+
+    b.vj("A", "111111").uri("VjA")
+            ("A1",              "08:10"_t)
+            ("stop_area:stop1", "09:10"_t)
+            ("stop_area:stop2", "10:20"_t)
+            ("stop_area:stop3", "11:10"_t)
+            ("stop_area:stop4", "12:20"_t)
+            ("stop_area:stop5", "13:10"_t)
+            ("stop_area:stop6", "14:20"_t)
+            ("stop_area:stop7", "15:10"_t)
+            ("stop_area:stop8", "16:20"_t)
+            ("A2",              "17:20"_t);
+
+    b.vj("B", "111111").uri("VjB")
+            ("B1",              "08:10"_t)
+            ("stop_area:stop2", "10:20"_t)
+            ("stop_area:stop3", "11:10"_t)
+            ("stop_area:stop4", "12:20"_t)
+            ("stop_area:stop5", "13:10"_t)
+            ("stop_area:stop6", "14:20"_t)
+            ("stop_area:stop7", "15:10"_t)
+            ("B2",              "17:20"_t)
+            ("B3",              "18:20"_t)
+            ("B4",              "19:20"_t);
+
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point_B2_closed_3")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "B2")
+                              .application_periods(btp("20120616T080000"_dt, "20120616T203200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point_B3_closed_3")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "B3")
+                              .application_periods(btp("20120616T080000"_dt, "20120616T203200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopArea, "stop_area")
+                              .application_periods(btp("20120618T080000"_dt, "20120618T173200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_2")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopArea, "stop_area")
+                              .application_periods(btp("20120615T080000"_dt, "20120615T173200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_3")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopArea, "stop_area")
+                              .application_periods(btp("20120614T080000"_dt, "20120614T173200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+
+    const auto* mvj_A = b.data->pt_data->meta_vjs["VjA"];
+    const auto* mvj_B = b.data->pt_data->meta_vjs["VjB"];
+    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 3);
+    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 5);
+
+    navitia::delete_disruption("disruption_does't_exist", *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 3);
+    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 5);
+
+
+    navitia::delete_disruption("stop_area_closed_1", *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 2);
+    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 4);
+
+    navitia::delete_disruption("stop_area_closed_2", *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 1);
+    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 3);
+
+    navitia::delete_disruption("stop_area_closed_3", *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 0);
+    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 2);
+
 }
