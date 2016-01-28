@@ -286,7 +286,7 @@ class Instance(flask_restful.Resource):
 
 
         parser = reqparse.RequestParser()
-        parser.add_argument('scenario', type=str,  case_sensitive=False,
+        parser.add_argument('scenario', type=str, case_sensitive=False,
                 help='the name of the scenario used by jormungandr', choices=['default',
                                                                               'keolis',
                                                                               'destineo',
@@ -459,14 +459,20 @@ class User(flask_restful.Resource):
 
         end_point = None
         if args['end_point_id']:
-            end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+            end_point = models.EndPoint.query.get(args['end_point_id'])
         else:
             end_point = models.EndPoint.get_default()
 
+        if not end_point:
+            return ({'error': 'end_point doesn\'t exist'}, 400)
+
         if args['billing_plan_id']:
-            billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
+            billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
         else:
             billing_plan = models.BillingPlan.get_default(end_point)
+
+        if not billing_plan:
+            return ({'error': 'billing plan doesn\'t exist'}, 400)
 
         try:
             user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
@@ -503,8 +509,14 @@ class User(flask_restful.Resource):
                           verify=current_app.config['EMAIL_CHECK_SMTP']):
             return ({'error': 'email invalid'}, 400)
 
-        end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        end_point = models.EndPoint.query.get(args['end_point_id'])
         billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
+
+        if not end_point:
+            return ({'error': 'end_point doesn\'t exist'}, 400)
+
+        if not billing_plan:
+            return ({'error': 'billing_plan doesn\'t exist'}, 400)
 
         try:
             user.email = args['email']
@@ -548,7 +560,7 @@ class Key(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
                             help='end validity date of the key', location=('json', 'values'))
-        parser.add_argument('app_name', type=str, required=True, case_sensitive=False,
+        parser.add_argument('app_name', type=str, required=True,
                             help='app name associated to this key', location=('json', 'values'))
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
@@ -578,9 +590,9 @@ class Key(flask_restful.Resource):
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
-                case_sensitive=False, help='end validity date of the key', location=('json', 'values'))
+                help='end validity date of the key', location=('json', 'values'))
         parser.add_argument('app_name', type=str, required=True,
-                case_sensitive=False, help='eapp name associated to this key', location=('json', 'values'))
+                help='app name associated to this key', location=('json', 'values'))
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -869,9 +881,12 @@ class BillingPlan(flask_restful.Resource):
         args = parser.parse_args()
 
         if args['end_point_id']:
-            end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+            end_point = models.EndPoint.query.get(args['end_point_id'])
         else:
             end_point = models.EndPoint.get_default()
+
+        if not end_point:
+            return ({'error': 'end_point doesn\'t exist'}, 400)
 
         try:
             billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
@@ -899,7 +914,9 @@ class BillingPlan(flask_restful.Resource):
                             help='id of the end_point', location=('json', 'values'))
         args = parser.parse_args()
 
-        end_point = models.EndPoint.query.get_or_404(args['end_point_id'])
+        end_point = models.EndPoint.query.get(args['end_point_id'])
+        if not end_point:
+            return ({'error': 'end_point doesn\'t exist'}, 400)
 
         try:
             billing_plan.name = args['name']

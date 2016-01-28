@@ -84,7 +84,7 @@ class EndPoint(db.Model):
 
     @classmethod
     def get_default(cls):
-        return cls.query.filter(cls.default == True).first_or_404()
+        return cls.query.filter(cls.default == True).first()
 
 
 class Host(db.Model):
@@ -119,7 +119,7 @@ class User(db.Model):
                                      lazy='joined', cascade='save-update, merge, delete')
 
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
-                             default='with_free', nullable=False)
+                             default='with_free_instances', nullable=False)
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
