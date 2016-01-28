@@ -868,6 +868,10 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
 
+    void push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact);
+
+    bool is_already_impacted_by(const boost::shared_ptr<disruption::Impact>& impact);
+
 private:
     template<typename VJ>
     VJ* impl_create_vj(const std::string& uri,
