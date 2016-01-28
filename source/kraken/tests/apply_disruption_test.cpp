@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     navitia::delete_disruption("S2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("S3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "111111");
 }
 
 
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "0111111");
 
 
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 
     BOOST_REQUIRE_EQUAL(compute(*b.data, nt::RTLevel::RealTime, "stop1", "stop3", "08:00"_t, 1).size(), 1);
     BOOST_REQUIRE_EQUAL(compute(*b.data, nt::RTLevel::RealTime, "stop1", "stop3", "05:00"_t, 4).size(), 1);
@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
 
 BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
 
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
 
     navitia::delete_disruption("bob", *b.data->pt_data, *b.data->meta);
     
-    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys);
+    check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
 
 /*
