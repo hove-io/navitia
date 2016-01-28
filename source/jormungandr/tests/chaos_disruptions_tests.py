@@ -488,6 +488,7 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
 
         response_adapted = self.query_region(journey_query_adapted)
 
+        # As the public transport is blocked by the disruption, we should find only 1 journey here
         assert len(response_adapted['journeys']) == 1
         assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
 
