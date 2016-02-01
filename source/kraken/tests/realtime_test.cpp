@@ -738,8 +738,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
+                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
             });
     b.data->build_uri();
 
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
 
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0710"_dt);
 }
 
 /* testing a vj delayed to the day after and passing midnight is accepted and correctly handled
@@ -846,16 +846,21 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+                hour, day, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-    res = compute(nt::RTLevel::RealTime);
+    // we cannot find a vj whose departure is 24 hours later the requested time hour
+    res = compute(nt::RTLevel::RealTime, "8:00"_t, 0);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+
+    res = compute(nt::RTLevel::RealTime, "8:00"_t, 1);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150930T0110"_dt);
 }
@@ -1081,21 +1086,20 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+                hour, day, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, "10:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
 
-    res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-            "09:00"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, true);
+    res = compute(nt::RTLevel::RealTime, "09:00"_t, 1);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T1001"_dt);
 
@@ -1115,8 +1119,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
+                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
             });
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
     b.data->build_uri();
@@ -1155,16 +1159,16 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+                hour, day, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, "09:02"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
 }
@@ -1183,8 +1187,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
+                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
             });
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150929");
     b.data->build_uri();
@@ -1224,18 +1228,18 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+                hour, day, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0810"_dt);
+    BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0710"_dt);
 }
 
 /* testing a vj canceled first day, then a vj canceled second day
@@ -1301,7 +1305,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     BOOST_REQUIRE_EQUAL(res.size(), 0);
 
     res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-            "08:00"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min,true);
+            "09:02"_t, 1, navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min,true);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150930T0901"_dt);
 }
@@ -1360,16 +1364,16 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
-                              "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+                hour, day, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, "09:02"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
 }
