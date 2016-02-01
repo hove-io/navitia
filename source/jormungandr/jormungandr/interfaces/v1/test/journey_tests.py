@@ -34,9 +34,10 @@ from navitiacommon import models
 
 
 class MockInstance:
-    def __init__(self, is_free, name):
+    def __init__(self, is_free, name, priority):
         self.is_free = is_free
         self.name = name
+        self.priority = priority
 
 
 class TestMultiCoverage:
@@ -51,10 +52,10 @@ class TestMultiCoverage:
 
         #and we will use a list of instances
         self.regions = {
-            'equador': MockInstance(True, 'equador'),
-            'france': MockInstance(False, 'france'),
-            'peru': MockInstance(False, 'peru'),
-            'bolivia': MockInstance(True, 'bolivia')
+            'equador': MockInstance(True, 'equador', 0),
+            'france': MockInstance(False, 'france', 0),
+            'peru': MockInstance(False, 'peru', 0),
+            'bolivia': MockInstance(True, 'bolivia', 0)
         }
 
     def _mock_function(self, paris_region, lima_region):
