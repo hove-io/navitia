@@ -230,6 +230,11 @@ class Instance(object):
         return get_value_or_default('max_duration_fallback_mode', instance_db, self.name)
 
     @property
+    def priority(self):
+        instance_db = self.get_models()
+        return get_value_or_default('priority', instance_db, self.name)
+
+    @property
     def is_free(self):
         instance_db = self.get_models()
         if not instance_db:
