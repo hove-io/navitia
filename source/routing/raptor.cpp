@@ -188,12 +188,13 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
                                bool clockwise) {
 
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
-    const auto valid_jpps = set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                                                 accessibilite_params,
-                                                 forbidden_uri,
-                                                 rt_level);
-    next_st.load(data,
-                 valid_jpps,
+
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+            accessibilite_params,
+            forbidden_uri,
+            rt_level);
+
+    cached_next_st.load(data,
                  clockwise ? departure_datetime : bound,
                  clockwise ? bound : departure_datetime,
                  rt_level,
@@ -499,8 +500,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_po
                                                  accessibilite_params,
                                                  forbidden_uri,
                                                  rt_level);
-    next_st.load(data,
-                 valid_jpps,
+    cached_next_st.load(data,
                  clockwise ? departure_datetime : bound,
                  clockwise ? bound : departure_datetime,
                  rt_level,
@@ -553,8 +553,7 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                                                  accessibilite_params,
                                                  forbidden,
                                                  rt_level);
-    next_st.load(data,
-                 valid_jpps,
+    cached_next_st.load(data,
                  clockwise ? departure_datetime : bound,
                  clockwise ? bound : departure_datetime,
                  rt_level,
@@ -742,7 +741,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
                     if (prec_labels.transfer_is_initialized(jpp.sp_idx) &&
                         (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
-                        const auto tmp_st_dt = next_st.next_stop_time(
+                        const auto tmp_st_dt = cached_next_st.next_stop_time(
                             visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
 
                         if (tmp_st_dt.first != nullptr) {

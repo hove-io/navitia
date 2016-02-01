@@ -70,7 +70,7 @@ struct RAPTOR
 {
     const navitia::type::Data& data;
 
-    CachedNextStopTime next_st;
+    CachedNextStopTime cached_next_st;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
