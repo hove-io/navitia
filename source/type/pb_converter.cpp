@@ -121,6 +121,9 @@ template<> nt::Type_e get_type_e<nt::PhysicalMode>() {
 template<> nt::Type_e get_type_e<nt::CommercialMode>() {
     return nt::Type_e::CommercialMode;
 }
+template<> nt::Type_e get_type_e<nt::Contributor>() {
+    return nt::Type_e::Contributor;
+}
 
 template<typename T> const std::vector<T*>& get_data_vector(const nt::Data&) {
     static_assert(!std::is_same<T, T>::value, "get_data_vector unimplemented");
@@ -190,6 +193,20 @@ template<typename PB> pbnavitia::Trip* get_sub_object(const nt::MetaVehicleJourn
 template<typename PB> pbnavitia::VehicleJourney* get_sub_object(const nt::VehicleJourney*, PB* pt_object) {
     return pt_object->mutable_vehicle_journey();
 }
+
+template<typename T> pbnavitia::NavitiaType get_pb_type();
+template<> pbnavitia::NavitiaType get_pb_type<nt::Calendar>(){ return pbnavitia::CALENDAR;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::VehicleJourney>(){ return pbnavitia::VEHICLE_JOURNEY;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::Line>(){ return pbnavitia::LINE;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::Route>(){ return pbnavitia::ROUTE;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::Company>(){ return pbnavitia::COMPANY;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::Network>(){ return pbnavitia::NETWORK;}
+template<> pbnavitia::NavitiaType get_pb_type<ng::POI>(){ return pbnavitia::POI;}
+template<> pbnavitia::NavitiaType get_pb_type<ng::Admin>(){ return pbnavitia::ADMINISTRATIVE_REGION;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::StopArea>(){ return pbnavitia::STOP_AREA;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::StopPoint>(){ return pbnavitia::STOP_POINT;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::CommercialMode>(){ return pbnavitia::COMMERCIAL_MODE;}
+template<> pbnavitia::NavitiaType get_pb_type<nt::MetaVehicleJourney>(){ return pbnavitia::TRIP;}
 }// anonymous namespace
 
 template <typename Target, typename Source>
@@ -198,21 +215,26 @@ std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
     std::vector<nt::idx_t> indexes;
     try{
         std::string request = nt::static_data::get()->captionByType(nav_obj->type) +
-                ".uri=" + nav_obj->uri;
+            ".uri=" + nav_obj->uri;
         indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
     } catch(const navitia::ptref::parsing_error &parse_error) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                       "ptref_indexes, Unable to parse :" + parse_error.more);
+                        "ptref_indexes, Unable to parse :" + parse_error.more);
     } catch(const navitia::ptref::ptref_error &pt_error) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                       "ptref_indexes, " + pt_error.more);
+                        "ptref_indexes, " + pt_error.more);
     }
-    std::vector<Target*> res;
-    const std::vector<Target*>& data_vec = get_data_vector<Target>(pb_creator.data);
-    for (const auto& idx: indexes) {
-        res.push_back(data_vec.at(idx));
+    return pb_creator.data.get_data<Target>(indexes);
+}
+
+template<typename T>
+void PbCreator::Filler::add_contributor(const T* nav) {
+    const auto& contributors = ptref_indexes<nt::Contributor>(nav);
+    for(const nt::Contributor* c: contributors){
+        if (! c->license.empty()){
+            pb_creator.contributors.insert(c);
+        }
     }
-    return res;
 }
 
 template<typename NAV, typename PB>
@@ -233,7 +255,7 @@ void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_o
     copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
-    pt_object->set_embedded_type(get_embedded_type(value));
+    pt_object->set_embedded_type(get_pb_type<T>());
 }
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::Calendar>(const nt::Calendar*, pbnavitia::PtObject*);
@@ -289,6 +311,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* fr
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
 
     stop_area->set_uri(sa->uri);
+    add_contributor(sa);
     stop_area->set_name(sa->name);
     stop_area->set_label(sa->label);
     stop_area->set_timezone(sa->timezone);
@@ -334,6 +357,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
 
     stop_point->set_uri(sp->uri);
+    add_contributor(sp);
     stop_point->set_name(sp->name);
     stop_point->set_label(sp->label);
     if(!sp->platform_code.empty()) {
@@ -397,6 +421,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company*
 
     company->set_name(c->name);
     company->set_uri(c->uri);
+    add_contributor(c);
 
     fill_codes(c, company);
 }
@@ -405,6 +430,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network*
 
     network->set_name(n->name);
     network->set_uri(n->uri);
+    add_contributor(n);
 
     fill_messages(n, network);
     fill_codes(n, network);
@@ -415,6 +441,7 @@ void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m,
 
     physical_mode->set_name(m->name);
     physical_mode->set_uri(m->uri);
+    add_contributor(m);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
@@ -422,6 +449,7 @@ void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
 
     commercial_mode->set_name(m->name);
     commercial_mode->set_uri(m->uri);
+    add_contributor(m);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line){
@@ -440,6 +468,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
 
     line->set_name(l->name);
     line->set_uri(l->uri);
+    add_contributor(l);
     if (l->opening_time) {
         line->set_opening_time((*l->opening_time).total_seconds());
     }
@@ -480,6 +509,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
     fill_comments(r, route);
 
     route->set_uri(r->uri);
+    add_contributor(r);
     fill_messages(r, route);
 
     fill_codes(r, route);
@@ -507,6 +537,7 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
+    add_contributor(lg);
 
     if(depth > 0) {
         fill(lg->line_list, line_group->mutable_lines());
@@ -518,6 +549,7 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calendar* pb_cal){
 
     pb_cal->set_uri(cal->uri);
+    add_contributor(cal);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
     vp->set_beginning_date(gd::to_iso_string(cal->validity_pattern.beginning_date));
@@ -573,6 +605,7 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    add_contributor(vj);
     fill_comments(vj, vehicle_journey);
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
@@ -1191,6 +1224,11 @@ void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::Add
     }
 }
 
+void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::FeedPublisher* fp){
+        fp->set_id(c->uri);
+        fp->set_name(c->name);
+        fp->set_license(c->license);
+}
 
 void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* pb_journey, const fare::results& fare) {
     auto pb_fare = pb_journey->mutable_fare();
@@ -1591,5 +1629,4 @@ void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data,
         fill_co2_emission_by_mode(pb_section, data, vehicle_journey->physical_mode->uri);
     }
 }
-
 }

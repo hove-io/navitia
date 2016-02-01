@@ -121,6 +121,13 @@ public:
     /** Retourne la structure de données associée au type */
     template<typename T> const typename DataTraitHelper<T>::type& get_data() const;
 
+    template<typename T> typename DataTraitHelper<T>::type
+    get_data(const std::vector<idx_t>& indexes) const {
+        typename DataTraitHelper<T>::type res;
+        const auto& objs = get_data<T>();
+        for (const auto& idx: indexes) { res.push_back(objs[idx]); }
+        return res;
+    }
     /** Retourne tous les indices d'un type donné
       *
       * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments

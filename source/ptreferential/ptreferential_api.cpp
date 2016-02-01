@@ -46,104 +46,68 @@ static pbnavitia::Response extract_data(const type::Data& data,
                                         const int depth,
                                         const bool show_codes,
                                         const boost::posix_time::ptime& current_time) {
-    pbnavitia::Response result;
     const auto& action_period = data.meta->production_period();
-    for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:
-            fill_pb_object(data.pt_data->validity_patterns[idx], data,
-                           result.add_validity_patterns(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<nt::ValidityPattern>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Line:
-            fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
-                           depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::Line>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::LineGroup:
-            fill_pb_object(data.pt_data->line_groups[idx], data, result.add_line_groups(),
-                           depth, current_time, action_period, show_codes);
-            break;
-        case Type_e::JourneyPattern:{
-            const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
-            fill_pb_object(&pair_jp, data,
-                           result.add_journey_patterns(), depth, current_time, action_period);
-            break;
-        }
+            return get_response(data.get_data<nt::LineGroup>(rows), data, depth, current_time, action_period, show_codes);
+        case Type_e::JourneyPattern:
+//            const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
+//            fill_pb_object(&pair_jp, data,
+//                           result.add_journey_patterns(), depth, current_time, action_period);
+//            break;
+//        }
         case Type_e::StopPoint:
-            fill_pb_object(data.pt_data->stop_points[idx], data,
-                           result.add_stop_points(), depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::StopPoint>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::StopArea:
-            fill_pb_object(data.pt_data->stop_areas[idx], data,
-                           result.add_stop_areas(), depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::StopArea>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Network:
-            fill_pb_object(data.pt_data->networks[idx], data,
-                           result.add_networks(), depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::Network>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::PhysicalMode:
-            fill_pb_object(data.pt_data->physical_modes[idx], data,
-                           result.add_physical_modes(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<nt::PhysicalMode>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::CommercialMode:
-            fill_pb_object(data.pt_data->commercial_modes[idx], data,
-                           result.add_commercial_modes(), depth, current_time, action_period);
-            break;
-        case Type_e::JourneyPatternPoint:{
-            const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
-            fill_pb_object(&pair_jpp, data,
-                           result.add_journey_pattern_points(), depth, current_time, action_period);
-            break;
-        }
+            return get_response(data.get_data<nt::CommercialMode>(rows), data, depth, current_time, action_period, show_codes);
+//        case Type_e::JourneyPatternPoint:{
+//            const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
+//            fill_pb_object(&pair_jpp, data,
+//                           result.add_journey_pattern_points(), depth, current_time, action_period);
+//            break;
+//        }
 
         case Type_e::Company:
-            fill_pb_object(data.pt_data->companies[idx], data,
-                           result.add_companies(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<nt::Company>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Route:
-            fill_pb_object(data.pt_data->routes[idx], data,
-                    result.add_routes(), depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::Route>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::POI:
-            fill_pb_object(data.geo_ref->pois[idx], data,
-                           result.add_pois(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<georef::POI>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::POIType:
-            fill_pb_object(data.geo_ref->poitypes[idx], data,
-                           result.add_poi_types(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<georef::POIType>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Connection:
-            fill_pb_object(data.pt_data->stop_point_connections[idx], data,
-                           result.add_connections(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<nt::StopPointConnection>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::VehicleJourney:
-            fill_pb_object(data.pt_data->vehicle_journeys[idx], data,
-                           result.add_vehicle_journeys(), depth, current_time, action_period, show_codes);
-            break;
+            return get_response(data.get_data<nt::VehicleJourney>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Calendar:
-            fill_pb_object(data.pt_data->calendars[idx], data,
-                           result.add_calendars(), depth, current_time, action_period, show_codes);
-            break;
-        case Type_e::MetaVehicleJourney:
-            fill_pb_object(data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)], data,
-                           result.add_trips(), depth, current_time, action_period, show_codes);
-            break;
-        case Type_e::Impact:{
-            auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-            fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
-            break;
-        }
+            return get_response(data.get_data<nt::Calendar>(rows), data, depth, current_time, action_period, show_codes);
+//        case Type_e::MetaVehicleJourney:
+//            return get_response(data.get_data<nt::MetaVehicleJourney>(rows), data, depth, current_time, action_period, show_codes);
+//            fill_pb_object(data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)], data,
+//                           result.add_trips(), depth, current_time, action_period, show_codes);
+//            break;
+        case Type_e::Impact:
+//            return get_response(data.get_data<type::disruption::Impact>(rows), data, depth, current_time, action_period, show_codes);
+//            auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
+//            fill_pb_object(impact.get(), data, &result, depth, current_time, action_period, show_codes);
+//            break;
+//        }
         case Type_e::Contributor:
-            fill_pb_object(data.pt_data->contributors[idx], data,
-                           result.add_contributors(), depth, current_time, action_period);
-            break;
+            return get_response(data.get_data<nt::Contributor>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Frame:
-            fill_pb_object(data.pt_data->frames[idx], data,
-                           result.add_frames(), depth, current_time, action_period);
-            break;
-        default: break;
+            return get_response(data.get_data<nt::Frame>(rows), data, depth, current_time, action_period, show_codes);
+        default: return {};
         }
-    }
-    return result;
 }
 
 
