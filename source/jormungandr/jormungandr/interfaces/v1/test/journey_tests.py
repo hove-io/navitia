@@ -162,7 +162,7 @@ class TestMultiCoverage:
     def test_multi_coverage_overlap_chose_with_non_free_and_priority(self):
         """
         all regions are overlaping,
-        we have to have the non free first then the free sorted by priority desc
+        regions are sorted by priority desc
         """
         self._mock_function(['france', 'netherlands', 'germany'], ['france', 'netherlands', 'germany'])
 
@@ -178,7 +178,7 @@ class TestMultiCoverage:
     def test_multi_coverage_overlap_chose_with_priority(self):
         """
         4 regions are overlaping,
-        we have to have the non free first then the free sorted by priority desc
+        regions are sorted by priority desc
         """
         self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'], ['france', 'netherlands', 'brazil', 'bolivia'])
 
