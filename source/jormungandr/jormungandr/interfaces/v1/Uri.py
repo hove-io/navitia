@@ -48,8 +48,8 @@ from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
-from jormungandr.utils import date_to_timestamp, ResourceUtc
-import navitiacommon.type_pb2 as type_pb2
+from jormungandr.utils import date_to_timestamp
+from jormungandr.resources_utc import ResourceUtc
 from datetime import datetime
 
 

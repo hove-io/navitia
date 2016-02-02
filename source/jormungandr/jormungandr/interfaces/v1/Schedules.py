@@ -30,7 +30,6 @@
 # www.navitia.io
 
 from flask.ext.restful import fields, marshal_with, reqparse
-from flask.globals import g
 from flask import request
 from jormungandr import i_manager, utils
 from jormungandr import timezone
@@ -45,7 +44,7 @@ from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
 from jormungandr.interfaces.v1.fields import DisruptionsField
-from jormungandr.utils import ResourceUtc
+from jormungandr.resources_utc import ResourceUtc
 from make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
