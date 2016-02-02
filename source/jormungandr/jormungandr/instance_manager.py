@@ -47,7 +47,7 @@ def instances_comparator(instance1, instance2):
     """
     compare the instances for journey computation
 
-    we want first the non free instances then the free ones
+    we want first the non free instances then the free ones following by priority
     """
     jormun_bdd_instance1 = models.Instance.get_by_name(instance1)
     jormun_bdd_instance2 = models.Instance.get_by_name(instance2)
@@ -60,6 +60,10 @@ def instances_comparator(instance1, instance2):
         return -1
     if not jormun_bdd_instance2:
         return 1
+
+    #Here we choose the instance with greater priority.
+    if jormun_bdd_instance1.priority != jormun_bdd_instance2.priority:
+        return jormun_bdd_instance2.priority - jormun_bdd_instance1.priority
 
     if jormun_bdd_instance1.is_free != jormun_bdd_instance2.is_free:
         return jormun_bdd_instance1.is_free - jormun_bdd_instance2.is_free

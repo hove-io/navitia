@@ -92,6 +92,10 @@ night_bus_filter_max_factor = 3
 # night bus filtering parameter
 night_bus_filter_base_factor = 60*60  # seconds
 
+#priority value to be used to choose a kraken instance among valid instances. The greater it is, the more the instance
+# will be chosen.
+priority = 0
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)

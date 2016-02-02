@@ -472,8 +472,8 @@ class TestWithoutPt(AbstractTestFixture):
     def setup(self):
         from jormungandr import i_manager
         self.instance_map = {
-            'main_routing_without_pt_test': MockKraken(i_manager.instances['main_routing_without_pt_test'], True),
-            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True),
+            'main_routing_without_pt_test': MockKraken(i_manager.instances['main_routing_without_pt_test'], True, 0),
+            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True, 0),
         }
         self.real_method = models.Instance.get_by_name
         self.real_comparator = instance_manager.instances_comparator

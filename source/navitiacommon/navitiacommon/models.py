@@ -285,7 +285,10 @@ class Instance(db.Model):
                                             nullable=False, server_default='30')
 
     night_bus_filter_base_factor = db.Column(db.Integer, default=default_values.night_bus_filter_base_factor,
-                                             nullable=False,server_default='3600')
+                                             nullable=False, server_default='3600')
+
+    priority = db.Column(db.Integer, default=default_values.priority,
+                                  nullable=False, server_default='0')
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
