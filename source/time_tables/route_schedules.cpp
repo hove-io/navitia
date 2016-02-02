@@ -380,7 +380,7 @@ route_schedule(const std::string& filter,
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
         auto m_pt_display_informations = schedule->mutable_pt_display_informations();
-        fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
+        navitia::fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
 
         std::vector<bool> is_vj_set(stop_times.size(), false);
         for (size_t i = 0; i < stop_times.size(); ++i) { table->add_headers(); }
@@ -388,7 +388,7 @@ route_schedule(const std::string& filter,
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data->stop_points[spidx];
             pbnavitia::RouteScheduleRow* row = table->add_rows();
-            fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
+            navitia::fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
                            now, action_period, show_codes);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
@@ -396,8 +396,8 @@ route_schedule(const std::string& filter,
                     pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
                     auto vj = dt_stop_time.second->vehicle_journey;
-                    fill_pb_object(vj, d, vj_display_information, dt_stop_time.second, nullptr,
-                                   0, now, action_period);
+                    const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
+                    navitia::fill_pb_object(&vj_st, d, vj_display_information, 0, now, action_period);
                     // as we only issue headsign for vj in route_schedules:
                     // - need to override headsign with trip headsign (i.e. vj.name)
                     // - issue all headsigns of the vj in headsigns
@@ -413,11 +413,12 @@ route_schedule(const std::string& filter,
                 }
 
                 auto pb_dt = row->add_date_times();
-                fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
-                               now, action_period, dt_stop_time.first, calendar_id);
+                const auto& st_calandar =  navitia::StopTimeCalandar(dt_stop_time.second,
+                                                                          dt_stop_time.first, calendar_id);
+                navitia::fill_pb_object(&st_calandar, d, pb_dt, max_depth, now, action_period);
             }
         }
-        fill_pb_object(route->shape, schedule->mutable_geojson());
+        navitia::fill_pb_object(&route->shape, d, schedule->mutable_geojson());
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);

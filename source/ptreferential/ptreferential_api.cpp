@@ -62,10 +62,12 @@ static pbnavitia::Response extract_data(const type::Data& data,
             fill_pb_object(data.pt_data->line_groups[idx], data, result.add_line_groups(),
                            depth, current_time, action_period, show_codes);
             break;
-        case Type_e::JourneyPattern:
-            fill_pb_object(data.dataRaptor->jp_container.get_jps()[idx], data,
+        case Type_e::JourneyPattern:{
+            const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
+            fill_pb_object(&pair_jp, data,
                            result.add_journey_patterns(), depth, current_time, action_period);
             break;
+        }
         case Type_e::StopPoint:
             fill_pb_object(data.pt_data->stop_points[idx], data,
                            result.add_stop_points(), depth, current_time, action_period, show_codes);
@@ -86,10 +88,13 @@ static pbnavitia::Response extract_data(const type::Data& data,
             fill_pb_object(data.pt_data->commercial_modes[idx], data,
                            result.add_commercial_modes(), depth, current_time, action_period);
             break;
-        case Type_e::JourneyPatternPoint:
-            fill_pb_object(data.dataRaptor->jp_container.get_jpps()[idx], data,
+        case Type_e::JourneyPatternPoint:{
+            const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
+            fill_pb_object(&pair_jpp, data,
                            result.add_journey_pattern_points(), depth, current_time, action_period);
             break;
+        }
+
         case Type_e::Company:
             fill_pb_object(data.pt_data->companies[idx], data,
                            result.add_companies(), depth, current_time, action_period);

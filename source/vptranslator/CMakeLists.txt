@@ -1,8 +1,6 @@
 SET(vptranslator_src
     vptranslator.h
-    vptranslator.cpp
-    block_pattern_to_pb.h
-    block_pattern_to_pb.cpp)
+    vptranslator.cpp)
 add_library(vptranslator ${vptranslator_src})
 target_link_libraries(vptranslator types ${Boost_DATE_TIME_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} data)
 
