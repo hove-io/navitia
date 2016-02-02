@@ -865,7 +865,6 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
               break;
           case nt::RTLevel::Adapted:
               throw navitia::exception("Adapted check unhandled case");
-              break;
           case nt::RTLevel::RealTime:
               BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
                       vj->adapted_validity_pattern()->days);

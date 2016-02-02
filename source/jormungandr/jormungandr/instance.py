@@ -45,10 +45,9 @@ from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry
 from flask import g
-import json
 import flask
 import pybreaker
-from jormungandr import georef, planner
+from jormungandr import georef, planner, schedule
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -84,6 +83,8 @@ class Instance(object):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
+
+        self.schedule = schedule.MixedSchedule(self)
 
     def get_models(self):
         if self.name not in g.instances_model:

@@ -29,40 +29,32 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
-from flask import Flask, request, g
+from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
-from jormungandr import authentication
 from jormungandr.interfaces.v1.fields import DisruptionsField
-from jormungandr.protobuf_to_dict import protobuf_to_dict
-from fields import stop_point, stop_area, line, physical_mode, \
-    commercial_mode, company, network, pagination, place,\
+from fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    display_informations_vj, error,\
     SectionGeoJson, Co2Emission, PbEnum, feed_publisher
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
-#from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links
-import datetime
 from functools import wraps
 from fields import DateTime
 from jormungandr.timezone import set_request_timezone
-from make_links import add_id_links, clean_links, create_external_link, create_internal_link
+from make_links import create_external_link, create_internal_link
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, float_gt_0
 from operator import itemgetter
 from datetime import datetime, timedelta
-import sys
-from copy import copy
-from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
-from jormungandr.utils import date_to_timestamp, ResourceUtc
+from jormungandr.utils import date_to_timestamp
+from jormungandr.resources_utc import ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
