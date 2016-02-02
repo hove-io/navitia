@@ -92,7 +92,7 @@ night_bus_filter_max_factor = 3
 # night bus filtering parameter
 night_bus_filter_base_factor = 60*60  # seconds
 
-#priority
+#priority value to be used to choose un instance kraken among valid instances
 priority = 0
 
 def get_value_or_default(attr, instance, instance_name):

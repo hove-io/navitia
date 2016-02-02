@@ -61,12 +61,12 @@ def instances_comparator(instance1, instance2):
     if not jormun_bdd_instance2:
         return 1
 
+    #Here we choose the instance with greater priority.
+    if jormun_bdd_instance1.priority != jormun_bdd_instance2.priority:
+        return jormun_bdd_instance2.priority - jormun_bdd_instance1.priority
+
     if jormun_bdd_instance1.is_free != jormun_bdd_instance2.is_free:
         return jormun_bdd_instance1.is_free - jormun_bdd_instance2.is_free
-
-    #Here we choose the instance with greater priority.
-    if jormun_bdd_instance1.priority > jormun_bdd_instance2.priority:
-        return 1
 
     # TODO choose the smallest region ?
     # take the origin/destination coords into account and choose the region with the center nearest to those coords ?

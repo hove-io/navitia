@@ -28,5 +28,3 @@ debian/tmp
 debian/*.substvars
 debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
-source/jormungandr/venv/*
-source/tyr/venv/*
