@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr import utils
 
 from navitiacommon import type_pb2, request_pb2
 from jormungandr.utils import date_to_timestamp
@@ -87,6 +88,7 @@ class MixedSchedule(object):
                 st.forbidden_uri.append(forbidden_uri)
         if request.get("calendar"):
             st.calendar = request["calendar"]
+        st.realtime_level = utils.realtime_level_to_pbf(request['data_freshness'])
         st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = self.instance.send_and_receive(req)
 
