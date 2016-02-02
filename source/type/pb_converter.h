@@ -180,30 +180,6 @@ inline pbnavitia::CommercialMode* get_sub_object(const nt::CommercialMode*,
 inline pbnavitia::Trip* get_sub_object(const nt::MetaVehicleJourney*,
                                        pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
 
-namespace {
-template<typename T> nt::Type_e get_type_e() {
-    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
-    return nt::Type_e::Unknown;
-}
-template<> nt::Type_e get_type_e<nt::PhysicalMode>() {
-    return nt::Type_e::PhysicalMode;
-}
-template<> nt::Type_e get_type_e<nt::CommercialMode>() {
-    return nt::Type_e::CommercialMode;
-}
-
-template<typename T> const std::vector<T*>& get_data_vector(const nt::Data& data) {
-    static_assert(!std::is_same<T, T>::value, "get_data_vector unimplemented");
-    return {};
-}
-template<> const std::vector<nt::PhysicalMode*>& get_data_vector<nt::PhysicalMode>(const nt::Data& data) {
-    return data.pt_data->physical_modes;
-}
-template<> const std::vector<nt::CommercialMode*>& get_data_vector<nt::CommercialMode>(const nt::Data& data) {
-    return data.pt_data->commercial_modes;
-}
-}
-
 struct PbCreator {
     const nt::Data& data;
     const pt::ptime now;
@@ -225,7 +201,7 @@ private:
 
         PbCreator& pb_creator;
         Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator): depth(depth),
-            dump_message(dump_message), pb_creator(pb_creator){};
+            dump_message(dump_message), pb_creator(pb_creator){}
 
         Filler copy(int, DumpMessage);
         template<typename NAV, typename PB>
@@ -274,27 +250,7 @@ private:
         }
 
         template <typename Target, typename Source>
-        std::vector<Target*> ptref_indexes(const Source* nav_obj) {
-            const nt::Type_e type_e = get_type_e<Target>();
-            std::vector<nt::idx_t> indexes;
-            try{
-                std::string request = nt::static_data::get()->captionByType(nav_obj->type) +
-                        ".uri=" + nav_obj->uri;
-                indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
-            } catch(const navitia::ptref::parsing_error &parse_error) {
-                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                               "ptref_indexes, Unable to parse :" + parse_error.more);
-            } catch(const navitia::ptref::ptref_error &pt_error) {
-                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                               "ptref_indexes, " + pt_error.more);
-            }
-            std::vector<Target*> res;
-            const std::vector<Target*>& data_vec = get_data_vector<Target>(pb_creator.data);
-            for (const auto& idx: indexes) {
-                res.push_back(data_vec.at(idx));
-            }
-            return res;
-        }
+        std::vector<Target*> ptref_indexes(const Source* nav_obj);
 
         template<typename NT, typename PB>
         void fill_codes(const NT* nt, PB* pb) {
