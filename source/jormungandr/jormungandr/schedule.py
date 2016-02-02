@@ -1,0 +1,94 @@
+# coding=utf-8
+
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
+from navitiacommon import type_pb2, request_pb2
+from jormungandr.utils import date_to_timestamp
+
+
+class MixedSchedule(object):
+
+    def __init__(self, instance):
+        self.instance = instance
+
+    def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
+        req = request_pb2.Request()
+        req.requested_api = api
+        st = req.next_stop_times
+        st.departure_filter = departure_filter
+        st.arrival_filter = arrival_filter
+        if request["from_datetime"]:
+            st.from_datetime = request["from_datetime"]
+        if request["until_datetime"]:
+            st.until_datetime = request["until_datetime"]
+        st.duration = request["duration"]
+        st.depth = request["depth"]
+        st.show_codes = request["show_codes"]
+        if "nb_stoptimes" not in request:
+            st.nb_stoptimes = 0
+        else:
+            st.nb_stoptimes = request["nb_stoptimes"]
+        if "interface_version" not in request:
+            st.interface_version = 0
+        else:
+            st.interface_version = request["interface_version"]
+        st.count = request.get("count", 10)
+        if "start_page" not in request:
+            st.start_page = 0
+        else:
+            st.start_page = request["start_page"]
+        if request["max_date_times"]:
+            st.max_date_times = request["max_date_times"]
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                st.forbidden_uri.append(forbidden_uri)
+        if request.get("calendar"):
+            st.calendar = request["calendar"]
+        st._current_datetime = date_to_timestamp(request['_current_datetime'])
+        resp = self.instance.send_and_receive(req)
+        return resp
+
+    def route_schedules(self, request):
+        return self.__stop_times(request, api=type_pb2.ROUTE_SCHEDULES, departure_filter=request["filter"])
+
+    def next_arrivals(self, request):
+        return self.__stop_times(request, api=type_pb2.NEXT_ARRIVALS, arrival_filter=request["filter"])
+
+    def next_departures(self, request):
+        return self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
+
+    def previous_arrivals(self, request):
+        return self.__stop_times(request, api=type_pb2.PREVIOUS_ARRIVALS, arrival_filter=request["filter"])
+
+    def previous_departures(self, request):
+        return self.__stop_times(request, api=type_pb2.PREVIOUS_DEPARTURES, departure_filter=request["filter"])
+
+    def departure_boards(self, request):
+        return self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])

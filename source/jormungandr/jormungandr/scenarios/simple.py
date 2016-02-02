@@ -144,61 +144,23 @@ class Scenario(object):
         req.place_uri.uri = request["uri"]
         return instance.send_and_receive(req)
 
-    def __stop_times(self, request, instance, departure_filter,
-                     arrival_filter, api):
-        req = request_pb2.Request()
-        req.requested_api = api
-        st = req.next_stop_times
-        st.departure_filter = departure_filter
-        st.arrival_filter = arrival_filter
-        if request["from_datetime"]:
-            st.from_datetime = request["from_datetime"]
-        if request["until_datetime"]:
-            st.until_datetime = request["until_datetime"]
-        st.duration = request["duration"]
-        st.depth = request["depth"]
-        st.show_codes = request["show_codes"]
-        if "nb_stoptimes" not in request:
-            st.nb_stoptimes = 0
-        else:
-            st.nb_stoptimes = request["nb_stoptimes"]
-        if "interface_version" not in request:
-            st.interface_version = 0
-        else:
-            st.interface_version = request["interface_version"]
-        st.count = request.get("count", 10)
-        if "start_page" not in request:
-            st.start_page = 0
-        else:
-            st.start_page = request["start_page"]
-        if request["max_date_times"]:
-            st.max_date_times = request["max_date_times"]
-        if request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                st.forbidden_uri.append(forbidden_uri)
-        if request.get("calendar"):
-            st.calendar = request["calendar"]
-        st._current_datetime = date_to_timestamp(request['_current_datetime'])
-        resp = instance.send_and_receive(req)
-        return resp
-
     def route_schedules(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
+        return instance.schedule.route_schedules(request)
 
     def next_arrivals(self, request, instance):
-        return self.__stop_times(request, instance, "", request["filter"], type_pb2.NEXT_ARRIVALS)
+        return instance.schedule.next_arrivals(request)
 
     def next_departures(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return instance.schedule.next_departures(request)
 
     def previous_arrivals(self, request, instance):
-        return self.__stop_times(request, instance, "", request["filter"], type_pb2.PREVIOUS_ARRIVALS)
+        return instance.schedule.previous_arrivals(request)
 
     def previous_departures(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.PREVIOUS_DEPARTURES)
+        return instance.schedule.previous_departures(request)
 
     def departure_boards(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
+        return instance.schedule.departure_boards(request)
 
 
     def places_nearby(self, request, instance):
