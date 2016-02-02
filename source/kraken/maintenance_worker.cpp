@@ -116,7 +116,6 @@ void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "Starting background thread");
 
     try{
-        this->load_realtime();
         this->listen_rabbitmq();
     }catch(const std::runtime_error& ex){
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -126,8 +125,6 @@ void MaintenanceWorker::operator()(){
     while(true){
         try{
             this->init_rabbitmq();
-            //we try to load realtime data in case of rabbitmq problems previously
-            this->load_realtime();
             this->listen_rabbitmq();
         }catch(const std::runtime_error& ex){
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -242,7 +239,14 @@ void MaintenanceWorker::listen_rabbitmq(){
     LOG4CPLUS_INFO(logger, "start event loop");
     data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
+        auto now = pt::microsec_clock::universal_time();
+        //We don't want to try to load realtime data every second
+        if(now > this->next_try_realtime_loading){
+            this->next_try_realtime_loading = now + pt::milliseconds(conf.kirin_retry_timeout());
+            this->load_realtime();
+        }
         size_t timeout_ms = conf.broker_timeout();
+
         // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
         // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
         size_t max_batch_nb = 5000;
@@ -308,7 +312,8 @@ void MaintenanceWorker::init_rabbitmq(){
 MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, kraken::Configuration conf) :
         data_manager(data_manager),
         logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
-        conf(conf){
+        conf(conf),
+        next_try_realtime_loading(pt::microsec_clock::universal_time()){
     try{
         this->init_rabbitmq();
     }catch(const std::runtime_error& ex){

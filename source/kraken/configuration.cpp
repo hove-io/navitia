@@ -55,6 +55,8 @@ po::options_description get_options_description(const boost::optional<std::strin
                                         "enable loading of realtime data")
         ("GENERAL.kirin_timeout", po::value<int>()->default_value(60000),
                                   "timeout in ms for loading realtime data from kirin")
+        ("GENERAL.kirin_retry_timeout", po::value<int>()->default_value(5*60*1000),
+                                  "timeout in ms before retrying to load realtime data")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -154,5 +156,9 @@ std::vector<std::string> Configuration::rt_topics() const{
         return std::vector<std::string>();
     }
     return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+}
+
+int Configuration::kirin_retry_timeout() const{
+    return vm["GENERAL.kirin_retry_timeout"].as<int>();
 }
 }}//namespace
