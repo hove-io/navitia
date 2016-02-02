@@ -34,6 +34,10 @@ from jormungandr.utils import date_to_timestamp
 
 
 class MixedSchedule(object):
+    """
+    class dealing with schedule (arrivals, departure, route)
+    this class manages mixing of stop_times (from an external RT-provider and from kraken)
+    """
 
     def __init__(self, instance):
         self.instance = instance
@@ -55,10 +59,7 @@ class MixedSchedule(object):
             st.nb_stoptimes = 0
         else:
             st.nb_stoptimes = request["nb_stoptimes"]
-        if "interface_version" not in request:
-            st.interface_version = 0
-        else:
-            st.interface_version = request["interface_version"]
+        st.interface_version = 1
         st.count = request.get("count", 10)
         if "start_page" not in request:
             st.start_page = 0
