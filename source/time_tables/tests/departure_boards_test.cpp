@@ -484,3 +484,61 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
     //we must have a journey
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
+
+BOOST_FIXTURE_TEST_CASE(base_stop_schedule, departure_board_fixture) {
+    pbnavitia::Response resp = departure_board("stop_point.uri=S1", {}, {}, d("20160101T070000"),
+                                               86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data),
+                                               nt::RTLevel::Base);
+
+    auto find_sched = [](const std::string& route) {
+        return [&route](const pbnavitia::StopSchedule& s) { return s.route().uri() == route; };
+    };
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    auto it_sc1 = boost::find_if(resp.stop_schedules(), find_sched("A:0"));
+    BOOST_CHECK(it_sc1 != std::end(resp.stop_schedules()));
+    const auto& sc1 = *it_sc1;
+    BOOST_CHECK_EQUAL(sc1.stop_point().uri(), "S1");
+    BOOST_CHECK_EQUAL(sc1.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(sc1.date_times_size(), 3);
+    BOOST_CHECK_EQUAL(sc1.date_times(0).time(), "09:00"_t);
+    BOOST_CHECK_EQUAL(sc1.date_times(1).time(), "10:00"_t);
+    BOOST_CHECK_EQUAL(sc1.date_times(2).time(), "11:00"_t);
+
+    auto it_sc2 = boost::find_if(resp.stop_schedules(), find_sched("B:1"));
+    BOOST_CHECK(it_sc2 != std::end(resp.stop_schedules()));
+    const auto& sc2 = *it_sc2;
+    BOOST_CHECK_EQUAL(sc2.stop_point().uri(), "S1");
+    BOOST_CHECK_EQUAL(sc2.route().uri(), "B:1");
+    BOOST_REQUIRE_EQUAL(sc2.date_times_size(), 1);
+    BOOST_CHECK_EQUAL(sc2.date_times(0).time(), "11:30"_t);
+}
+
+// same as above but with realtime data
+// all A's vj have 7 mn delay
+BOOST_FIXTURE_TEST_CASE(rt_stop_schedule, departure_board_fixture) {
+    pbnavitia::Response resp = departure_board("stop_point.uri=S1", {}, {}, d("20160101T070000"),
+                                               86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data),
+                                               nt::RTLevel::RealTime);
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    auto find_sched = [](const std::string& route) {
+        return [&route](const pbnavitia::StopSchedule& s) { return s.route().uri() == route; };
+    };
+    auto it_sc1 = boost::find_if(resp.stop_schedules(), find_sched("A:0"));
+    BOOST_CHECK(it_sc1 != std::end(resp.stop_schedules()));
+    const auto& sc1 = *it_sc1;
+    BOOST_CHECK_EQUAL(sc1.stop_point().uri(), "S1");
+    BOOST_CHECK_EQUAL(sc1.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(sc1.date_times_size(), 3);
+    BOOST_CHECK_EQUAL(sc1.date_times(0).time(), "09:07"_t);
+    BOOST_CHECK_EQUAL(sc1.date_times(1).time(), "10:07"_t);
+    BOOST_CHECK_EQUAL(sc1.date_times(2).time(), "11:07"_t);
+
+    auto it_sc2 = boost::find_if(resp.stop_schedules(), find_sched("B:1"));
+    BOOST_CHECK(it_sc2 != std::end(resp.stop_schedules()));
+    const auto& sc2 = *it_sc2;
+    BOOST_CHECK_EQUAL(sc2.stop_point().uri(), "S1");
+    BOOST_CHECK_EQUAL(sc2.route().uri(), "B:1");
+    BOOST_REQUIRE_EQUAL(sc2.date_times_size(), 1);
+    BOOST_CHECK_EQUAL(sc2.date_times(0).time(), "11:30"_t);
+}

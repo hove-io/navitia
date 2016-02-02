@@ -26,38 +26,37 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from collections import namedtuple
+import itertools
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 import datetime
 
 
-def check_departure_board(schedules, tester, only_time=False):
+def is_valid_stop_schedule(schedules, tester, only_time=False):
     """
     check the structure of a departure board response
     """
-    assert len(schedules) == 1, "there should be only one elt"
+    for schedule in schedules:
+        is_valid_stop_point(get_not_null(schedule, "stop_point"), depth_check=2)
 
-    schedule = schedules[0]
+        route = get_not_null(schedule, "route")
+        is_valid_route(route, depth_check=2)
 
-    is_valid_stop_point(get_not_null(schedule, "stop_point"), depth_check=2)
+        datetimes = get_not_null(schedule, "date_times")
 
-    route = get_not_null(schedule, "route")
-    is_valid_route(route, depth_check=2)
+        assert len(datetimes) != 0, "we have to have date_times"
+        for dt_wrapper in datetimes:
+            dt = dt_wrapper["date_time"]
+            if only_time:
+                get_valid_time(dt)
+            else:
+                get_valid_datetime(dt)
+            #TODO remove href_mandatory=False after link refactor, they should always be there :)
+            check_links(dt_wrapper, tester, href_mandatory=False)
 
-    datetimes = get_not_null(schedule, "date_times")
-
-    assert len(datetimes) != 0, "we have to have date_times"
-    for dt_wrapper in datetimes:
-        dt = dt_wrapper["date_time"]
-        if only_time:
-            get_valid_time(dt)
-        else:
-            get_valid_datetime(dt)
         #TODO remove href_mandatory=False after link refactor, they should always be there :)
-        check_links(dt_wrapper, tester, href_mandatory=False)
-
-    #TODO remove href_mandatory=False after link refactor, they should always be there :)
-    check_links(schedule, tester, href_mandatory=False)
+        check_links(schedule, tester, href_mandatory=False)
 
 
 def is_valid_route_schedule_header(header):
@@ -146,7 +145,8 @@ class TestDepartureBoard(AbstractTestFixture):
 
         assert "stop_schedules" in response
         #all datetime in the response should be only time (no dates since we query if on a period (a calendar))
-        check_departure_board(response["stop_schedules"], self.tester, only_time=True)
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=True)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
 
         #after the structure check, we check some test specific stuff
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
@@ -180,10 +180,11 @@ class TestDepartureBoard(AbstractTestFixture):
                                      "from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
-        #all datetime in the response should be only time (no dates since we query if on a period (a calendar))
-        check_departure_board(response["stop_schedules"], self.tester, only_time=False)
+        # all datetime in the response should be datetime
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
 
-        #after the structure check, we check some test specific stuff
+        # after the structure check, we check some test specific stuff
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
         assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
 
@@ -195,7 +196,8 @@ class TestDepartureBoard(AbstractTestFixture):
                                      "from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
-        check_departure_board(response["stop_schedules"], self.tester, only_time=False)
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
 
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
@@ -355,3 +357,85 @@ class TestDepartureBoard(AbstractTestFixture):
                 notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
                 # assert that if it's the 'all' vj there is no note
                 assert(len(vj_link) == 0 or len(notes_link) == 0)
+
+
+StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
+SchedDT = namedtuple('SchedDT', ['dt', 'vj'])
+
+
+def check_stop_schedule(response, reference):
+    """
+    check the values in a stopschedule
+    check the id of the stoppoint, the id of the routes, the datetimes and the vj used
+    """
+    for (resp, ref) in itertools.izip_longest(response, reference):
+        assert get_not_null(get_not_null(resp, 'stop_point'), 'id') == ref.sp
+        assert get_not_null(get_not_null(resp, 'route'), 'id') == ref.route
+
+        for (resp_dt, ref_st) in itertools.izip_longest(get_not_null(resp, 'date_times'), ref.date_times):
+            eq_(get_not_null(resp_dt, 'date_time'), ref_st.dt)
+            eq_(get_not_null(resp_dt, 'links')[0]['id'], ref_st.vj)
+
+@dataset(["basic_schedule_test"])
+class TestSchedules(AbstractTestFixture):
+
+    def test_classic_stop_schedule(self):
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[SchedDT(dt='20160101T090000', vj='A:vj1'),
+                                                      SchedDT(dt='20160101T100000', vj='A:vj2'),
+                                                      SchedDT(dt='20160101T110000', vj='A:vj3')]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
+
+    @staticmethod
+    def check_rt_sol(stop_sched):
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[SchedDT(dt='20160101T090700',
+                                                              vj='A:vj1:modified:0:delay_vj1'),
+                                                      SchedDT(dt='20160101T100700',
+                                                              vj='A:vj2:modified:0:delay_vj2'),
+                                                      SchedDT(dt='20160101T110700',
+                                                              vj='A:vj3:modified:0:delay_vj3')]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
+
+    def test_stop_schedule_realtime(self):
+        """
+        test a stop schedule without a from_datetime parameter
+
+        we should have the current datetime used and the realtime activated
+
+        Note: for test purpose we override the current_datetime
+        """
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_rt_sol(stop_sched)
+
+    def test_stop_schedule_no_dt(self):
+        """
+        test a stop schedule without a from_datetime parameter
+
+        we should have the current datetime used and the realtime activated
+
+        Note: for test purpose we override the current_datetime
+        """
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_rt_sol(stop_sched)
+
+
+

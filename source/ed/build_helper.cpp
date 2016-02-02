@@ -624,9 +624,23 @@ void builder::build_blocks() {
     }
 }
 
- void builder::finish() {
+/*
+ * assign the last stop point a the first vj as the route's destination if none given
+ */
+void builder::fill_missing_destinations() {
+    for (auto r: data->pt_data->routes) {
+        if (r->destination) { continue; }
+        r->for_each_vehicle_journey([&r](nt::VehicleJourney& vj) {
+            if (vj.stop_time_list.empty()) { return true; }
+            r->destination = vj.stop_time_list.back().stop_point->stop_area;
+            return false; // we stop at the first
+        });
+    }
+}
 
+void builder::finish() {
      build_blocks();
+     fill_missing_destinations();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
          if (vj->stop_time_list.empty()) {
              continue;

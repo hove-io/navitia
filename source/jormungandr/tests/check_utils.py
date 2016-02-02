@@ -568,7 +568,6 @@ def is_valid_stop_point(stop_point, depth_check=1):
     """
     check the structure of a stop point
     """
-
     get_not_null(stop_point, "name")
     is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")

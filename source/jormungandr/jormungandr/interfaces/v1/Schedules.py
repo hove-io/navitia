@@ -124,7 +124,7 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args["from_datetime"] and not args["until_datetime"]:
             # no datetime given, default is the current time, and we activate the realtime
-            args['from_datetime'] = datetime.datetime.utcnow()
+            args['from_datetime'] = args['_current_datetime']
             if args["calendar"]:  # if we have a calendar, the dt is only used for sorting, so 00:00 is fine
                 args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)
 
