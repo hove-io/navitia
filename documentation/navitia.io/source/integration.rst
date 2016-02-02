@@ -422,7 +422,7 @@ It allows you to request navitia for specific pickup lines. It refers to the odt
     * You can easily request route_schedule and stop_schedule with these kind of lines.
     * Be aware of "estimated" stop times
 
-* zonal : to get "odt_with_zone" lines with non-detailed trips 
+* zonal : to get "odt_with_zone" lines with non-detailed journeys
 
 For example
 
@@ -934,12 +934,12 @@ Other parameters
 |          |                       |           | Speed unit must be in meter/seconds       | (60 km/h)       |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | min_nb_journeys       | int       | Minimum number of different suggested     |                 |
-|          |                       |           | trips                                     |                 |
+|          |                       |           | journey                                   |                 |
 |          |                       |           |                                           |                 |
 |          |                       |           | More in `multiple_journeys`_              |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_journeys       | int       | Maximum number of different suggested     |                 |
-|          |                       |           | trips                                     |                 |
+|          |                       |           | journey                                   |                 |
 |          |                       |           |                                           |                 |
 |          |                       |           | More in `multiple_journeys`_              |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
@@ -2111,10 +2111,10 @@ Misc mechanisms (and few boring stuff)
 Multiple journeys
 *****************
 
-Navitia can compute several kind of trips within a journey query.
+Navitia can compute several kind of journeys with a single journey query.
 
 The `RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>`_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
-For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
+For example it cannot decide that a one hour journey with no connection is better than a 45 minutes journey with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
 
 If the user asks for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
 but for the following journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
@@ -2134,18 +2134,18 @@ The different journey types are:
 ===================== ========================================================== 
 Type                  Description
 ===================== ========================================================== 
-best                  The best trip
+best                  The best journey
 rapid                 A good trade off between duration, changes and constraint respect
-no_train              Alternative trip without train
-comfort               A trip with less changes and walking
-car                   A trip with car to get to the public transport
-less_fallback_walk    A trip with less walking
-less_fallback_bike    A trip with less biking
-less_fallback_bss     A trip with less bss
-fastest               A trip with minimum duration
-non_pt_walk           A trip without public transport, only walking
-non_pt_bike           A trip without public transport, only biking
-non_pt_bss            A trip without public transport, only bike sharing
+no_train              Alternative journey without train
+comfort               A journey with less changes and walking
+car                   A journey with car to get to the public transport
+less_fallback_walk    A journey with less walking
+less_fallback_bike    A journey with less biking
+less_fallback_bss     A journey with less bss
+fastest               A journey with minimum duration
+non_pt_walk           A journey without public transport, only walking
+non_pt_bike           A journey without public transport, only biking
+non_pt_bss            A journey without public transport, only bike sharing
 ===================== ========================================================== 
 
 .. _odt:
