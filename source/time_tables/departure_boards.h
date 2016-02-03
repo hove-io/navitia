@@ -39,15 +39,13 @@ typedef std::vector<DateTime> vector_datetime;
 typedef std::pair<uint32_t, uint32_t> stop_point_line;
 typedef std::vector<datetime_stop_time> vector_dt_st;
 
-pbnavitia::Response departure_board(const std::string &filter,
-                                    boost::optional<const std::string> calendar_id,
-                                    const std::vector<std::string>& forbidden_uris,
-                                    const boost::posix_time::ptime datetime,
-                                    uint32_t duration,
-                                    uint32_t depth, uint32_t max_date_times,
-                                    int interface_version,
-                                    int count, int start_page, const type::Data &data, const type::RTLevel rt_level,
-                                    bool show_codes=false);
+void departure_board(PbCreator& pb_creator, const std::string &filter,
+                     boost::optional<const std::string> calendar_id,
+                     const std::vector<std::string>& forbidden_uris,
+                     const boost::posix_time::ptime datetime,
+                     uint32_t duration, uint32_t depth, uint32_t max_date_times,
+                     int interface_version, int count, int start_page,
+                     const type::RTLevel rt_level);
 }
 
 }

@@ -213,16 +213,17 @@ template <typename Target, typename Source>
 std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
     const nt::Type_e type_e = get_type_e<Target>();
     std::vector<nt::idx_t> indexes;
+    std::string request;
     try{
-        std::string request = nt::static_data::get()->captionByType(nav_obj->type) +
+        request = nt::static_data::get()->captionByType(nav_obj->type) +
             ".uri=" + nav_obj->uri;
         indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
     } catch(const navitia::ptref::parsing_error &parse_error) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                        "ptref_indexes, Unable to parse :" + parse_error.more);
+                        "ptref_indexes, Unable to parse :" + parse_error.more + ", request: " + request);
     } catch(const navitia::ptref::ptref_error &pt_error) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                        "ptref_indexes, " + pt_error.more);
+                        "ptref_indexes, " + pt_error.more + ", request: " + request);
     }
     return pb_creator.data.get_data<Target>(indexes);
 }
@@ -255,6 +256,7 @@ void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_o
     copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
+    add_contributor(value);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
@@ -1230,10 +1232,49 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
         fp->set_license(c->license);
 }
 
-void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* pb_journey, const fare::results& fare) {
+const std::string& PbCreator::register_section(pbnavitia::Journey* j, size_t section_idx) {
+    routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
+    return routing_section_map[{j, section_idx}];
+}
+
+std::string PbCreator::register_section() {
+    // For some section (transfer, waiting, streetnetwork, corwfly) we don't need info
+    // about the item
+    return "section_" + boost::lexical_cast<std::string>(nb_sections++);
+}
+
+std::string PbCreator::get_section_id(pbnavitia::Journey* j, size_t section_idx) {
+    auto it  = routing_section_map.find({j, section_idx});
+    if (it == routing_section_map.end()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
+                       "Impossible to find section id for section idx " << section_idx);
+        return "";
+    }
+    return it->second;
+}
+
+void PbCreator::fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const std::string& mode_uri){
+    if (!mode_uri.empty()){
+      const auto it_physical_mode = data.pt_data->physical_modes_map.find(mode_uri);
+      if ((it_physical_mode != data.pt_data->physical_modes_map.end())
+              && (it_physical_mode->second->co2_emission)){
+          pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
+          pb_co2_emission->set_unit("gEC");
+          pb_co2_emission->set_value((pb_section->length()/1000.0) * (*it_physical_mode->second->co2_emission));
+      }
+    }
+}
+
+void PbCreator::fill_co2_emission(pbnavitia::Section *pb_section, const type::VehicleJourney* vehicle_journey){
+    if (vehicle_journey && vehicle_journey->physical_mode) {
+        this->fill_co2_emission_by_mode(pb_section, vehicle_journey->physical_mode->uri);
+    }
+}
+
+void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare) {
     auto pb_fare = pb_journey->mutable_fare();
 
-    size_t cpt_ticket = enhanced_response.response.tickets_size();
+    size_t cpt_ticket = response.tickets_size();
 
     boost::optional<std::string> currency;
     for (const fare::Ticket& ticket : fare.tickets) {
@@ -1249,21 +1290,21 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 
         pbnavitia::Ticket* pb_ticket = nullptr;
         if (ticket.is_default_ticket()) {
-            if (! enhanced_response.unknown_ticket) {
-                pb_ticket = enhanced_response.response.add_tickets();
+            if (! unknown_ticket) {
+                pb_ticket = response.add_tickets();
                 pb_ticket->set_name(ticket.key);
                 pb_ticket->set_found(false);
                 pb_ticket->set_id("unknown_ticket");
                 pb_ticket->set_comment("unknown ticket");
-                enhanced_response.unknown_ticket = pb_ticket;
+                unknown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
             }
             else {
-                pb_ticket = enhanced_response.unknown_ticket;
+                pb_ticket = unknown_ticket;
             }
         }
         else {
-            pb_ticket = enhanced_response.response.add_tickets();
+            pb_ticket = response.add_tickets();
 
             pb_ticket->set_name(ticket.key);
             pb_ticket->set_found(true);
@@ -1275,7 +1316,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
         }
 
         for (auto section: ticket.sections) {
-            auto section_id = enhanced_response.get_section_id(pb_journey, section.path_item_idx);
+            auto section_id = get_section_id(pb_journey, section.path_item_idx);
             pb_ticket->add_section_id(section_id);
         }
 
@@ -1286,8 +1327,88 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-static const ng::POI* get_nearest_poi(const nt::Data& data, const nt::GeographicalCoord& coord,
-                                      const ng::POIType& poi_type) {
+void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item,
+                              const type::EntryPoint &ori_dest) {
+    if(item.way_idx >= data.geo_ref->ways.size())
+        throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
+
+    pbnavitia::PathItem* path_item = sn->add_path_items();
+    path_item->set_name(data.geo_ref->ways[item.way_idx]->name);
+    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
+    path_item->set_duration(item.duration.total_seconds());
+    path_item->set_direction(item.angle);
+
+    //we add each path item coordinate to the global coordinate list
+    for(auto coord : item.coordinates) {
+        if(!coord.is_initialized()) {
+            continue;
+        }
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+        pb_coord->set_lon(coord.lon());
+        pb_coord->set_lat(coord.lat());
+    }
+}
+
+void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const georef::Path& path,
+                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, int max_depth) {
+    int depth = std::min(max_depth, 3);
+    if (path.path_items.empty())
+        return;
+
+    auto session_departure = departure;
+
+    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
+    auto section = create_section(pb_journey, path.path_items.front(), depth);
+    georef::PathItem last_item;
+
+    //we create 1 section by mean of transport
+    for (auto item : path.path_items) {
+        auto transport_carac = item.transportation;
+
+        if (last_transportation_carac && transport_carac != *last_transportation_carac) {
+            //we end the last section
+            finalize_section(section, last_item, item, session_departure, depth);
+            session_departure += bt::seconds(section->duration());
+
+            //and we create a new one
+            section = create_section(pb_journey, item, depth);
+        }
+
+        this->add_path_item(section->mutable_street_network(), item, ori_dest);
+
+        last_transportation_carac = transport_carac;
+        last_item = item;
+    }
+
+    finalize_section(section, path.path_items.back(), {}, session_departure, depth);
+    //We add consistency between origin/destination places and geojson
+
+    auto sections = pb_journey->mutable_sections();
+    for (auto section = sections->begin(); section != sections->end(); ++section) {
+        auto destination_coord = get_coord(section->destination());
+        auto sn = section->mutable_street_network();
+        if (destination_coord.IsInitialized() ||
+                sn->coordinates().size() == 0) {
+            continue;
+        }
+        auto last_coord = sn->coordinates(sn->coordinates_size()-1);
+        if (last_coord.IsInitialized() &&
+            type::GeographicalCoord(last_coord.lon(), last_coord.lat())
+                != type::GeographicalCoord(destination_coord.lon(), destination_coord.lat())) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(destination_coord.lon());
+            pb_coord->set_lat(destination_coord.lat());
+        }
+    }
+}
+
+const ng::POI* PbCreator::get_nearest_bss_station(const nt::GeographicalCoord& coord){
+    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
+    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
+    return this->get_nearest_poi(coord, poi_type);
+}
+
+const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, const ng::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
@@ -1299,26 +1420,80 @@ static const ng::POI* get_nearest_poi(const nt::Data& data, const nt::Geographic
     return nullptr;
 }
 
-static const ng::POI* get_nearest_parking(const nt::Data& data, const nt::GeographicalCoord& coord) {
+const ng::POI* PbCreator::get_nearest_parking(const nt::GeographicalCoord& coord){
     nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
     const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
-    return get_nearest_poi(data, coord, poi_type);
+    return get_nearest_poi(coord, poi_type);
 }
 
-static const ng::POI* get_nearest_bss_station(const nt::Data& data, const nt::GeographicalCoord& coord) {
-    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
-    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
-    return get_nearest_poi(data, coord, poi_type);
+pbnavitia::RouteSchedule* PbCreator::add_route_schedules(){
+    return response.add_route_schedules();
 }
 
-static void finalize_section(pbnavitia::Section* section,
+pbnavitia::StopSchedule* PbCreator::add_stop_schedules(){
+    return response.add_stop_schedules();
+}
+
+int PbCreator::route_schedules_size(){
+    return response.route_schedules_size();
+}
+pbnavitia::Passage* PbCreator::add_next_departures(){
+    return response.add_next_departures();
+}
+
+pbnavitia::Passage* PbCreator::add_next_arrivals(){
+    return response.add_next_arrivals();
+}
+
+pbnavitia::Section* PbCreator::create_section(pbnavitia::Journey* pb_journey,
+                                          const ng::PathItem& first_item,
+                                          int depth) {
+    pbnavitia::Section* prev_section = (pb_journey->sections_size() > 0) ?
+            pb_journey->mutable_sections(pb_journey->sections_size()-1) : nullptr;
+    auto section = pb_journey->add_sections();
+    section->set_id(this->register_section());
+    section->set_type(pbnavitia::STREET_NETWORK);
+
+    pbnavitia::PtObject* orig_place = section->mutable_origin();
+    // we want to have a specific place mark for vls or for the departure if we started from a poi
+    if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
+        const auto vls_station = this->get_nearest_bss_station(first_item.coordinates.front());
+        if (vls_station) {
+            fill(depth, DumpMessage::Yes, vls_station, section->mutable_destination());
+        } else {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
+                            "impossible to find the associated BSS rent station poi for coord "
+                            << first_item.coordinates.front());
+        }
+    }
+    if (prev_section) {
+        orig_place->CopyFrom(prev_section->destination());
+    } else if (first_item.way_idx != nt::invalid_idx) {
+        auto way = data.geo_ref->ways[first_item.way_idx];
+        type::GeographicalCoord departure_coord = first_item.coordinates.front();
+        auto const& way_coord = navitia::WayCoord(way, departure_coord, way->nearest_number(departure_coord).first);
+        fill(depth, DumpMessage::Yes, &way_coord, orig_place);
+    }
+
+    //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
+
+    auto origin_coord = get_coord(section->origin());
+    if (origin_coord.IsInitialized() && !first_item.coordinates.empty() &&
+        first_item.coordinates.front().is_initialized() &&
+        first_item.coordinates.front() != type::GeographicalCoord(origin_coord.lon(), origin_coord.lat())) {
+        pbnavitia::GeographicalCoord * pb_coord = section->mutable_street_network()->add_coordinates();
+        pb_coord->set_lon(origin_coord.lon());
+        pb_coord->set_lat(origin_coord.lat());
+    }
+
+    return section;
+}
+
+void PbCreator::finalize_section(pbnavitia::Section* section,
                              const ng::PathItem& last_item,
                              const ng::PathItem& item,
-                             const nt::Data& data,
                              const pt::ptime departure,
-                             int depth,
-                             const pt::ptime& now,
-                             const pt::time_period& action_period) {
+                             int depth) {
 
     double total_duration = 0;
     double total_length = 0;
@@ -1342,9 +1517,9 @@ static void finalize_section(pbnavitia::Section* section,
     switch(item.transportation){
         case georef::PathItem::TransportCaracteristic::BssPutBack:
         {
-            const auto vls_station = get_nearest_bss_station(data, item.coordinates.front());
+            const auto vls_station = this->get_nearest_bss_station(item.coordinates.front());
             if (vls_station) {
-                navitia::fill_pb_object(vls_station, data, dest_place, depth, now, action_period);
+                fill(depth, DumpMessage::Yes, vls_station, dest_place);
             } else {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                                 "impossible to find the associated BSS putback station poi for coord "
@@ -1355,9 +1530,9 @@ static void finalize_section(pbnavitia::Section* section,
         case georef::PathItem::TransportCaracteristic::CarPark:
         case georef::PathItem::TransportCaracteristic::CarLeaveParking:
         {
-            const auto parking = get_nearest_parking(data, item.coordinates.front());
+            const auto parking = this->get_nearest_parking(item.coordinates.front());
             if (parking) {
-                navitia::fill_pb_object(parking, data, dest_place, depth, now, action_period);
+                fill(depth, DumpMessage::Yes, parking, dest_place);
             } else {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                                 "impossible to find the associated parking poi for coord "
@@ -1371,7 +1546,7 @@ static void finalize_section(pbnavitia::Section* section,
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
         const auto& way_coord = navitia::WayCoord(way, coord, way->nearest_number(coord).first);
-        navitia::fill_pb_object(&way_coord, data, dest_place, depth, now, action_period);
+        fill(depth, DumpMessage::Yes, &way_coord, dest_place);
     }
 
     switch (last_item.transportation) {
@@ -1380,11 +1555,11 @@ static void finalize_section(pbnavitia::Section* section,
         break;
     case georef::PathItem::TransportCaracteristic::Bike:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
-        fill_co2_emission_by_mode(section, data, "physical_mode:Bike");
+        this->fill_co2_emission_by_mode(section, "physical_mode:Bike");
         break;
     case georef::PathItem::TransportCaracteristic::Car:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
-        fill_co2_emission_by_mode(section, data, "physical_mode:Car");
+        this->fill_co2_emission_by_mode(section, "physical_mode:Car");
         break;
     case georef::PathItem::TransportCaracteristic::BssTake:
         section->set_type(pbnavitia::BSS_RENT);
@@ -1403,74 +1578,15 @@ static void finalize_section(pbnavitia::Section* section,
     }
 }
 
-
-static pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object) {
-    switch(pt_object.embedded_type()) {
-    case pbnavitia::NavitiaType::STOP_AREA: return pt_object.stop_area().coord();
-    case pbnavitia::NavitiaType::STOP_POINT: return pt_object.stop_point().coord();
-    case pbnavitia::NavitiaType::POI: return pt_object.poi().coord();
-    case pbnavitia::NavitiaType::ADDRESS: return pt_object.address().coord();
-    default: return pbnavitia::GeographicalCoord();
-    }
-}
-
-static pbnavitia::Section* create_section(EnhancedResponse& response,
-                                          pbnavitia::Journey* pb_journey,
-                                          const ng::PathItem& first_item,
-                                          const nt::Data& data,
-                                          int depth,
-                                          const pt::ptime& now,
-                                          const pt::time_period& action_period) {
-    pbnavitia::Section* prev_section = (pb_journey->sections_size() > 0) ?
-            pb_journey->mutable_sections(pb_journey->sections_size()-1) : nullptr;
-    auto section = pb_journey->add_sections();
-    section->set_id(response.register_section());
-    section->set_type(pbnavitia::STREET_NETWORK);
-
-    pbnavitia::PtObject* orig_place = section->mutable_origin();
-    // we want to have a specific place mark for vls or for the departure if we started from a poi
-    if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
-        const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
-        if (vls_station) {
-            navitia::fill_pb_object(vls_station, data, section->mutable_destination(), depth, now, action_period);
-        } else {
-            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
-                            "impossible to find the associated BSS rent station poi for coord "
-                            << first_item.coordinates.front());
-        }
-    }
-    if (prev_section) {
-        orig_place->CopyFrom(prev_section->destination());
-    } else if (first_item.way_idx != nt::invalid_idx) {
-        auto way = data.geo_ref->ways[first_item.way_idx];
-        type::GeographicalCoord departure_coord = first_item.coordinates.front();
-        auto const& way_coord = navitia::WayCoord(way, departure_coord, way->nearest_number(departure_coord).first);
-        navitia::fill_pb_object(&way_coord, data, orig_place, depth, now, action_period);
-    }
-
-    //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
-
-    auto origin_coord = get_coord(section->origin());
-    if (origin_coord.IsInitialized() && !first_item.coordinates.empty() &&
-        first_item.coordinates.front().is_initialized() &&
-        first_item.coordinates.front() != type::GeographicalCoord(origin_coord.lon(), origin_coord.lat())) {
-        pbnavitia::GeographicalCoord * pb_coord = section->mutable_street_network()->add_coordinates();
-        pb_coord->set_lon(origin_coord.lon());
-        pb_coord->set_lat(origin_coord.lat());
-    }
-
-    return section;
-}
-
-void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
                           const time_duration& crow_fly_duration, type::Mode_e mode,
-                          pt::ptime origin_time, const type::Data& data,
-                          EnhancedResponse& response, pbnavitia::Journey* pb_journey,
-                          const pt::ptime& now, const pt::time_period& action_period) {
+                          pt::ptime origin_time, pbnavitia::Journey* pb_journey) {
     pbnavitia::Section* section = pb_journey->add_sections();
-    section->set_id(response.register_section());
-    navitia::fill_pb_object(&origin, data, section->mutable_origin(), 2, now, action_period);
-    navitia::fill_pb_object(&destination, data, section->mutable_destination(), 2, now, action_period);
+    section->set_id(this->register_section());
+
+    fill(2, DumpMessage::Yes, &origin, section->mutable_origin());
+    fill(2, DumpMessage::Yes, &destination, section->mutable_destination());
+
     section->set_begin_date_time(navitia::to_posix_timestamp(origin_time));
     section->set_duration(crow_fly_duration.total_seconds());
     if (crow_fly_duration.total_seconds() > 0) {
@@ -1506,85 +1622,20 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     }
 }
 
-void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
-                            const georef::Path& path, const type::Data& data,
-                            pbnavitia::Journey* pb_journey, const pt::ptime departure,
-                            int max_depth, const pt::ptime& now, const pt::time_period& action_period) {
-    int depth = std::min(max_depth, 3);
-    if (path.path_items.empty())
-        return;
-
-    auto session_departure = departure;
-
-    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
-    auto section = create_section(response, pb_journey, path.path_items.front(), data,
-            depth, now, action_period);
-    georef::PathItem last_item;
-
-    //we create 1 section by mean of transport
-    for (auto item : path.path_items) {
-        auto transport_carac = item.transportation;
-
-        if (last_transportation_carac && transport_carac != *last_transportation_carac) {
-            //we end the last section
-            finalize_section(section, last_item, item, data, session_departure, depth, now, action_period);
-            session_departure += bt::seconds(section->duration());
-
-            //and we create a new one
-            section = create_section(response, pb_journey, item, data, depth, now, action_period);
-        }
-
-        add_path_item(section->mutable_street_network(), item, ori_dest, data);
-
-        last_transportation_carac = transport_carac;
-        last_item = item;
-    }
-
-    finalize_section(section, path.path_items.back(), {}, data, session_departure, depth, now, action_period);
-    //We add consistency between origin/destination places and geojson
-
-    auto sections = pb_journey->mutable_sections();
-    for (auto section = sections->begin(); section != sections->end(); ++section) {
-        auto destination_coord = get_coord(section->destination());
-        auto sn = section->mutable_street_network();
-        if (destination_coord.IsInitialized() ||
-                sn->coordinates().size() == 0) {
-            continue;
-        }
-        auto last_coord = sn->coordinates(sn->coordinates_size()-1);
-        if (last_coord.IsInitialized() &&
-            type::GeographicalCoord(last_coord.lon(), last_coord.lat())
-                != type::GeographicalCoord(destination_coord.lon(), destination_coord.lat())) {
-            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-            pb_coord->set_lon(destination_coord.lon());
-            pb_coord->set_lat(destination_coord.lat());
-        }
-    }
+void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id,
+                              const pbnavitia::ResponseType& resp_type,
+                              const std::string& message){
+    fill_pb_error(id, message);
+    response.set_response_type(resp_type);
 }
 
-void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item,
-                    const type::EntryPoint &ori_dest, const nt::Data& data) {
-    if(item.way_idx >= data.geo_ref->ways.size())
-        throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
-
-    pbnavitia::PathItem* path_item = sn->add_path_items();
-    path_item->set_name(data.geo_ref->ways[item.way_idx]->name);
-    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
-    path_item->set_duration(item.duration.total_seconds());
-    path_item->set_direction(item.angle);
-
-    //we add each path item coordinate to the global coordinate list
-    for(auto coord : item.coordinates) {
-        if(!coord.is_initialized()) {
-            continue;
-        }
-        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-        pb_coord->set_lon(coord.lon());
-        pb_coord->set_lat(coord.lat());
-    }
+void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id, const std::string& message){
+    pbnavitia::Error* error = response.mutable_error();
+    error->set_id(id);
+    error->set_message(message);
 }
 
-void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
+void PbCreator::fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
                                   const bool has_datetime_estimated,
                                   const bool has_odt,
                                   const bool is_zonal) {
@@ -1603,30 +1654,81 @@ void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
     }
 }
 
+pbnavitia::GeographicalCoord PbCreator::get_coord(const pbnavitia::PtObject& pt_object) {
+    switch(pt_object.embedded_type()) {
+    case pbnavitia::NavitiaType::STOP_AREA: return pt_object.stop_area().coord();
+    case pbnavitia::NavitiaType::STOP_POINT: return pt_object.stop_point().coord();
+    case pbnavitia::NavitiaType::POI: return pt_object.poi().coord();
+    case pbnavitia::NavitiaType::ADDRESS: return pt_object.address().coord();
+    default: return pbnavitia::GeographicalCoord();
+    }
+}
+
+pbnavitia::PtObject* PbCreator::add_places_nearby(){
+    return response.add_places_nearby();
+}
+
+pbnavitia::PtObject* PbCreator::add_places(){
+    return response.add_places();
+}
+
+pbnavitia::Journey* PbCreator::add_journeys(){
+    return response.add_journeys();
+}
+
+bool PbCreator::has_error(){
+    return response.has_error();
+}
+
+bool PbCreator::has_response_type(const pbnavitia::ResponseType& resp_type){
+    return resp_type == response.response_type();
+}
+
+void PbCreator::set_response_type(const pbnavitia::ResponseType& resp_type){
+    response.set_response_type(resp_type);
+}
+
+::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* PbCreator::get_mutable_places(){
+    return response.mutable_places();
+}
+
+void PbCreator::make_paginate(const int total_result, const int start_page,
+                              const int items_per_page, const int items_on_page){
+    auto pagination = response.mutable_pagination();
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(items_per_page);
+    pagination->set_itemsonpage(items_on_page);
+}
+
+int PbCreator::departure_boards_size(){
+    return response.departure_boards_size();
+}
+
+int PbCreator::stop_schedules_size(){
+    return response.stop_schedules_size();
+}
+
+
+void PbCreator::sort_journeys(){
+    std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
+              [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
+               auto duration1 = journey1.duration(), duration2 = journey2.duration();
+               if (duration1 != duration2) {
+                   return duration1 < duration2;
+               }
+               return journey1.destination().uri() < journey2.destination().uri();
+               });
+}
+
+bool PbCreator::empty_journeys(){
+    return (response.journeys().size() == 0);
+}
+
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& message,
                     pbnavitia::Error* error, int ,
                     const pt::ptime& , const pt::time_period& ){
     error->set_id(id);
     error->set_message(message);
-}
-
-void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data,
-                               const std::string& mode_uri){
-    if (!mode_uri.empty()){
-      const auto it_physical_mode = data.pt_data->physical_modes_map.find(mode_uri);
-      if ((it_physical_mode != data.pt_data->physical_modes_map.end())
-              && (it_physical_mode->second->co2_emission)){
-          pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
-          pb_co2_emission->set_unit("gEC");
-          pb_co2_emission->set_value((pb_section->length()/1000.0) * (*it_physical_mode->second->co2_emission));
-      }
-    }
-}
-
-void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data,
-                       const type::VehicleJourney* vehicle_journey){
-    if (vehicle_journey && vehicle_journey->physical_mode) {
-        fill_co2_emission_by_mode(pb_section, data, vehicle_journey->physical_mode->uri);
-    }
 }
 }

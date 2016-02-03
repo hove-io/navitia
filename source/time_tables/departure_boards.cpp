@@ -42,52 +42,48 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-static pbnavitia::Response
-render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
+static void
+render_v1(PbCreator& pb_creator,
+          const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st>& map_route_stop_point,
           DateTime datetime,
           DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
-          uint32_t depth,
-          const bool show_codes,
-          const type::Data& data) {
-    pbnavitia::Response response;
-    auto current_time = pt::second_clock::universal_time();
-    pt::time_period action_period(to_posix_time(datetime, data),
-                                  to_posix_time(max_datetime, data));
+          uint32_t depth) {
+    pb_creator.now = pt::second_clock::universal_time();
+    pb_creator.action_period = pt::time_period(to_posix_time(datetime, pb_creator.data),
+                                               to_posix_time(max_datetime, pb_creator.data));
 
 //    bool display_date = ! calendar_id;
     for(auto id_vec : map_route_stop_point) {
-        auto schedule = response.add_stop_schedules();
+        auto schedule = pb_creator.add_stop_schedules();
         //Each schedule has a stop_point and a route
-        navitia::fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
-                       schedule->mutable_stop_point(), depth,
-                       current_time, action_period, show_codes);
+        pb_creator.fill(depth, DumpMessage::Yes, pb_creator.data.pt_data->stop_points[id_vec.first.first],
+                schedule->mutable_stop_point());
 
         auto m_route = schedule->mutable_route();
-        navitia::fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
-                               m_route, depth, current_time, action_period, show_codes);
-        if (data.pt_data->routes[id_vec.first.second]->line != nullptr){
+        pb_creator.fill(depth, DumpMessage::Yes, pb_creator.data.pt_data->routes[id_vec.first.second],
+                m_route);
+        if (pb_creator.data.pt_data->routes[id_vec.first.second]->line != nullptr){
             auto m_line = m_route->mutable_line();
-            navitia::fill_pb_object(data.pt_data->routes[id_vec.first.second]->line, data,
-                                   m_line, 0, current_time, action_period, show_codes);
+            pb_creator.fill(0, DumpMessage::Yes, pb_creator.data.pt_data->routes[id_vec.first.second]->line,
+                    m_line);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
 
-        navitia::fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
-                               pt_display_information, 0, current_time, action_period);
+        pb_creator.fill(0, DumpMessage::Yes, pb_creator.data.pt_data->routes[id_vec.first.second],
+                pt_display_information);
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
-            auto date_time = schedule->add_date_times();
+            auto date_time = schedule->add_date_times();            
             const auto& st_calendar = navitia::StopTimeCalandar(dt_st.second, dt_st.first, calendar_id);
-            navitia::fill_pb_object(&st_calendar, data, date_time, 0, current_time, action_period);
+            pb_creator.fill(0, DumpMessage::Yes, &st_calendar, date_time);
             if (dt_st.second != nullptr) {
                 auto vj = dt_st.second->vehicle_journey;
                 if(vj != nullptr) {
-                    for (const auto& comment: data.pt_data->comments.get(*vj)) {
-                        navitia::fill_pb_object(&comment, data, date_time->mutable_properties()->add_notes(),
-                                       0, current_time, action_period);
+                    for (const auto& comment: pb_creator.data.pt_data->comments.get(*vj)) {
+                        pb_creator.fill(0, DumpMessage::Yes, &comment, date_time->mutable_properties()->add_notes());
                     }
                 }
             }
@@ -96,35 +92,30 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         if(it != response_status.end()){
             schedule->set_response_status(it->second);
         }
-    }
-    return response;
+    }    
 }
 
 
-pbnavitia::Response
-departure_board(const std::string& request,
+void departure_board(PbCreator& pb_creator, const std::string& request,
                 boost::optional<const std::string> calendar_id,
                 const std::vector<std::string>& forbidden_uris,
                 const pt::ptime date,
                 uint32_t duration, uint32_t depth,
                 uint32_t max_date_times,
                 int interface_version,
-                int count, int start_page, const type::Data &data, const type::RTLevel rt_level,
-                bool show_codes) {
+                int count, int start_page, const type::RTLevel rt_level) {
 
-    RequestHandle handler(request, forbidden_uris, date,  duration, data, calendar_id);
+    RequestHandle handler(pb_creator, request, forbidden_uris, date,  duration, calendar_id);
 
-    if(handler.pb_response.has_error())
-        return handler.pb_response;
-
-    if(handler.journey_pattern_points.size() == 0)
-        return handler.pb_response;
+    if(pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)){
+        return;
+    }
 
     if (calendar_id) {
         //check whether that calendar exists, to raise an early error
-        if (data.pt_data->calendars_map.find(*calendar_id) == data.pt_data->calendars_map.end()) {
-            fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : calendar does not exist", handler.pb_response.mutable_error());
-            return handler.pb_response;
+        if (pb_creator.data.pt_data->calendars_map.find(*calendar_id) == pb_creator.data.pt_data->calendars_map.end()) {
+            pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : calendar does not exist");
+            return;
         }
     }
     //  <idx_route, status>
@@ -132,11 +123,12 @@ departure_board(const std::string& request,
 
 
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
+
     //Mapping route/stop_point
-    std::vector<stop_point_line> sps_routes;
+    std::vector<stop_point_line> sps_routes;    
     for(auto jpp_idx : handler.journey_pattern_points) {
-        const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
-        const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+        const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
+        const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
         stop_point_line key = stop_point_line(jpp.sp_idx.val, jp.route_idx.val);
         auto find_predicate = [&](stop_point_line spl) {
             return spl.first == key.first && spl.second == key.second;
@@ -158,29 +150,29 @@ departure_board(const std::string& request,
     // (une route étant une vague direction commerciale
     for(auto sp_route : sps_routes) {
         std::vector<datetime_stop_time> stop_times;
-        const type::StopPoint* stop_point = data.pt_data->stop_points[sp_route.first];
+        const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first];
         const auto sp_idx = routing::SpIdx(*stop_point);
-        const type::Route* route = data.pt_data->routes[sp_route.second];
+        const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second];
         const auto route_idx = routing::RouteIdx(*route);
-        const auto& jpps = data.dataRaptor->jpps_from_sp[sp_idx];
+        const auto& jpps = pb_creator.data.dataRaptor->jpps_from_sp[sp_idx];
         for (const auto& jpp_from_sp: jpps) {
             const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
-            const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
-            const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+            const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
+            const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
             if (jp.route_idx != route_idx) { continue; }
 
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {
                 tmp = get_stop_times(routing::StopEvent::pick_up, {jpp_idx}, handler.date_time,
-                                     handler.max_datetime, max_date_times, data, rt_level);
+                                     handler.max_datetime, max_date_times, pb_creator.data, rt_level);
             } else {
                 tmp = get_stop_times({jpp_idx}, DateTimeUtils::hour(handler.date_time),
-                                     DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);
+                                     DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             } else {
-                const auto& last_jpp = data.dataRaptor->jp_container.get(jp.jpps.back());
+                const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
                 if (sp_idx == last_jpp.sp_idx) {
                     if (stop_point->stop_area == route->destination){
                         response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
@@ -207,24 +199,15 @@ departure_board(const std::string& request,
     }
 
     if(interface_version == 1) {
-        handler.pb_response = render_v1(response_status, map_route_stop_point,
-                                        handler.date_time,
-                                        handler.max_datetime,
-                                        calendar_id, depth, show_codes, data);
+        render_v1(pb_creator, response_status, map_route_stop_point, handler.date_time, handler.max_datetime,
+                  calendar_id, depth);
     } else {
-        fill_pb_error(pbnavitia::Error::bad_filter, "invalid interface version", handler.pb_response.mutable_error());
-        return handler.pb_response;
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "invalid interface version");
+        return;
     }
 
-
-    auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(total_result);
-    pagination->set_startpage(start_page);
-    pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
-                                         handler.pb_response.stop_schedules_size()));
-
-    return handler.pb_response;
+    pb_creator.make_paginate(total_result, start_page, count, std::max(pb_creator.departure_boards_size(),
+                                                                       pb_creator.stop_schedules_size()));
 }
 }
 }

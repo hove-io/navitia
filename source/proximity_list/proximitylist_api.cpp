@@ -42,33 +42,30 @@ namespace navitia { namespace proximitylist {
  */
 typedef std::tuple<nt::idx_t, nt::GeographicalCoord, nt::Type_e> t_result;
 typedef std::pair<nt::idx_t, nt::GeographicalCoord> idx_coord;
-static void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Data& data,
-                      pbnavitia::Response& pb_response, type::GeographicalCoord coord){
-
+static void make_pb(navitia::PbCreator& pb_creator, const std::vector<t_result>& result, uint32_t depth,
+                      const nt::Data& data,type::GeographicalCoord coord){
     for(auto result_item : result){
-        pbnavitia::PtObject* place = pb_response.add_places_nearby();
-        //on récupére la date pour les impacts
-        auto current_date = boost::posix_time::second_clock::universal_time();
+        pbnavitia::PtObject* place = pb_creator.add_places_nearby();
         auto idx = std::get<0>(result_item);
         auto coord_item = std::get<1>(result_item);
         auto type = std::get<2>(result_item);
         switch(type){
         case nt::Type_e::StopArea:
-            navitia::fill_pb_object(data.pt_data->stop_areas[idx], data, place, depth, current_date);
+            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_areas[idx], place);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::StopPoint:
-            navitia::fill_pb_object(data.pt_data->stop_points[idx], data, place, depth, current_date);
+            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_points[idx], place);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::POI:
-            navitia::fill_pb_object(data.geo_ref->pois[idx], data, place, depth, current_date);
+            pb_creator.fill(depth, DumpMessage::Yes,data.geo_ref->pois[idx], place);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::Address:{
             const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx],
                     coord, data.geo_ref->ways[idx]->nearest_number(coord).first);
-            navitia::fill_pb_object(&way_coord, data, place, depth, current_date);
+            pb_creator.fill(depth, DumpMessage::Yes,&way_coord, place);
             place->set_distance(coord.distance_to(coord_item));
             break;
         }
@@ -94,7 +91,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
                          const std::vector<nt::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
                          const type::Data & data) {
-    pbnavitia::Response response;
+    navitia::PbCreator pb_creator(data, pt::not_a_date_time, null_time_period, false);
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;
@@ -103,7 +100,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
             //for addresses we use the street network
             try {
                 auto nb_w = data.geo_ref->nearest_addr(coord);
-                // we'll regenerate the good number in create_pb
+                // we'll regenerate the good number in make_pb
                 result.push_back(t_result(nb_w.second->idx, coord, type));
                 ++total_result;
             } catch(proximitylist::NotFound) {}
@@ -116,13 +113,12 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
             try {
                 indexes = ptref::make_query(type, filter, data);
             } catch(const ptref::parsing_error &parse_error) {
-                fill_pb_error(pbnavitia::Error::unable_to_parse,
-                              "Problem while parsing the query:" + parse_error.more, response.mutable_error());
-                return response;
+                pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                         "Problem while parsing the query:" + parse_error.more);
+                return pb_creator.get_response();
             } catch(const ptref::ptref_error &pt_error) {
-                fill_pb_error(pbnavitia::Error::bad_filter,
-                              "ptref : " + pt_error.more, response.mutable_error());
-                return response;
+                pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more);
+                return pb_creator.get_response();
             }
         }
         switch(type){
@@ -172,12 +168,8 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
             return coord.distance_to(a)< coord.distance_to(b);
         });
     result = paginate(result, count, start_page);
-    create_pb(result, depth, data, response, coord);
-    auto pagination = response.mutable_pagination();
-    pagination->set_totalresult(total_result);
-    pagination->set_startpage(start_page);
-    pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(result.size());
-    return response;
+    make_pb(pb_creator, result, depth, data, coord);
+    pb_creator.make_paginate(total_result, start_page, count, result.size());
+    return pb_creator.get_response();
 }
 }} // namespace navitia::proximitylist

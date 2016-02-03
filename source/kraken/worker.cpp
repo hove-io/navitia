@@ -264,6 +264,7 @@ pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         pbnavitia::API api) {
+
     const auto data = data_manager.get_data();
     int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
     std::vector<std::string> forbidden_uri;
@@ -274,64 +275,67 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
+    PbCreator pb_creator(*data, current_datetime, null_time_period, request.show_codes());
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
-            return timetables::next_departures(request.departure_filter(),
-                    forbidden_uri, from_datetime,
-                    request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, rt_level, request.count(),
-                    request.start_page(), request.show_codes(), current_datetime);
+            timetables::next_departures(pb_creator, request.departure_filter(),
+                                               forbidden_uri, from_datetime,
+                                               request.duration(), request.nb_stoptimes(),
+                                               request.depth(), type::AccessibiliteParams(),
+                                               rt_level, request.count(), request.start_page());
+            break;
         case pbnavitia::NEXT_ARRIVALS:
-            return timetables::next_arrivals(request.arrival_filter(),
+            timetables::next_arrivals(pb_creator, request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, rt_level, request.count(),
-                    request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), rt_level, request.count(),
+                    request.start_page());
+            break;
         case pbnavitia::PREVIOUS_DEPARTURES:
-            return timetables::previous_departures(request.departure_filter(),
+            timetables::previous_departures(pb_creator, request.departure_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, rt_level, request.count(),
-                    request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), rt_level, request.count(),
+                    request.start_page());
+            break;
         case pbnavitia::PREVIOUS_ARRIVALS:
-            return timetables::previous_arrivals(request.arrival_filter(),
+            timetables::previous_arrivals(pb_creator, request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, rt_level, request.count(),
-                    request.start_page(), request.show_codes(), current_datetime);
+                    type::AccessibiliteParams(), rt_level, request.count(),
+                    request.start_page());
+            break;
         case pbnavitia::DEPARTURE_BOARDS:
-            return timetables::departure_board(request.departure_filter(),
+            timetables::departure_board(pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
                                              boost::optional<const std::string>(),
                     forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, rt_level, request.show_codes());
+                    request.count(), request.start_page(), rt_level);
+            break;
         case pbnavitia::ROUTE_SCHEDULES:
-            return timetables::route_schedule(request.departure_filter(),
+            timetables::route_schedule(pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
                     boost::optional<const std::string>(),
                     forbidden_uri,
                     from_datetime,
                     request.duration(), max_date_times, request.depth(),
-                    request.count(), request.start_page(), *data, rt_level, request.show_codes());
+                    request.count(), request.start_page(), rt_level);
+            break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
-            pbnavitia::Response response;
-            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api",
-                    response.mutable_error());
-            return response;
+            pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api");
         }
 
     } catch (const navitia::ptref::parsing_error& error) {
         LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
-        pbnavitia::Response response;
         const auto str_error = "Unknow filter : " + error.more;
-        fill_pb_error(pbnavitia::Error::bad_filter, str_error, response.mutable_error());
-        return response;
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, str_error);
     }
+    return pb_creator.get_response();
 }
 
 

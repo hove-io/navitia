@@ -34,36 +34,38 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 
-RequestHandle::RequestHandle(const std::string &request,
+RequestHandle::RequestHandle(PbCreator& pb_creator,
+                             const std::string &request,
                              const std::vector<std::string>& forbidden_uris,
                              const pt::ptime datetime, uint32_t duration,
-                             const type::Data &data,
                              boost::optional<const std::string> calendar_id,
                              const bool clockwise) :
-    date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
-
+    pb_creator(pb_creator),
+    date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){    
     if (! calendar_id) {
         //we only have to check the production period if we do not have a calendar,
         // since if we have one we are only interested in the time, not the date
-        if(! data.meta->production_date.contains(datetime.date()) ) {
-            fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound",pb_response.mutable_error());
-        } else if( !data.meta->production_date.contains((datetime + boost::posix_time::seconds(duration)).date()) ) {
+        if(! pb_creator.data.meta->production_date.contains(datetime.date()) ) {
+            pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
+        } else if( !pb_creator.data.meta->production_date.contains((datetime + boost::posix_time::seconds(duration)).date()) ) {
              // On regarde si la date + duration ne déborde pas de la période de production
-            fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",pb_response.mutable_error());
+            pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds,
+                                     "date is not in data production period");
         }
     }
 
-    if(! pb_response.has_error()){
-        date_time = DateTimeUtils::set((datetime.date() - data.meta->production_date.begin()).days(), datetime.time_of_day().total_seconds());
+    if(! pb_creator.has_error()){
+        date_time = DateTimeUtils::set((datetime.date() - pb_creator.data.meta->production_date.begin()).days(),
+                                       datetime.time_of_day().total_seconds());
         max_datetime = date_time + duration * (clockwise ? 1 : -1);
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {
-            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, data);
+            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, pb_creator.data);
             for (const auto idx: jpps) { journey_pattern_points.push_back(routing::JppIdx(idx)); }
             total_result = journey_pattern_points.size();
         } catch(const ptref::ptref_error &ptref_error){
-            fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more,pb_response.mutable_error());
+            pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
         }
     }
 

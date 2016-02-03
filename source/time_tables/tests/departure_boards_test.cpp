@@ -75,23 +75,37 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
 
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    pbnavitia::Response resp;
     // normal departure board
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
-
+    }
     // no departure for route "A"
-    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150616T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150616T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
     BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
-
+    }
     // no departure for all routes
-    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150619T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150619T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
@@ -99,31 +113,48 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),0);
     BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
-
+    }
     // no departure for route "B"
-    resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150621T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150621T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
     BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
-
+    }
     // Terminus for route "A"
-    resp = departure_board("stop_point.uri=stop2", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop2", {}, {}, d("20150615T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
     BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
     BOOST_CHECK_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
-
+    }
     // Terminus for route "B"
-    resp = departure_board("stop_point.uri=stop3", {}, {}, d("20150615T094500"), 43200, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop3", {}, {}, d("20150615T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "B");
     BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
-
-    resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120701T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    }
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop2", {}, {}, d("20120701T094500"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
+    }
 }
 
 
@@ -153,7 +184,11 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
 
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", {}, {}, d("20150615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_CHECK(stop_schedule.date_times_size() == 2);
@@ -189,8 +224,10 @@ BOOST_FIXTURE_TEST_CASE(test_no_weekend, calendar_fixture) {
     //when asked on non existent calendar, we get an error
     const boost::optional<const std::string> calendar_id{"bob_the_calendar"};
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
-
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE(resp.has_error());
     BOOST_REQUIRE(! resp.error().message().empty());
 }
@@ -202,8 +239,11 @@ BOOST_FIXTURE_TEST_CASE(test_no_weekend, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
     const boost::optional<const std::string> calendar_id{"weekend_cal"};
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
@@ -225,8 +265,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
     boost::optional<const std::string> calendar_id{"week_cal"};
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
@@ -249,8 +292,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
     boost::optional<const std::string> calendar_id{"not_associated_cal"};
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
@@ -302,8 +348,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
 
     boost::optional<const std::string> calendar_id{"nearly_cal"};
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     //it should match only the 'all' vj
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
@@ -377,10 +426,11 @@ struct small_cal_fixture {
 
 BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"),
-                                                86400, 0, std::numeric_limits<int>::max(),
-                                                1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"), 86400, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     //we should get a nice schedule, first stop at 08:10, last at 07:10
     BOOST_REQUIRE(! resp.has_error());
 
@@ -404,10 +454,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_not_matched_cal, small_cal_fixture) {
 
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("empty_cal"), {}, d("20120615T080000"),
-                                                86400, 0, std::numeric_limits<int>::max(),
-                                                1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", std::string("empty_cal"), {}, d("20120615T080000"),
+                    86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE(! resp.has_error());
     //no error but no results
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
@@ -423,10 +474,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period, small_cal_fixture) {
 
     size_t nb_hour = 5;
     auto duration = nb_hour*60*60;
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"),
-                                               duration, 0, std::numeric_limits<int>::max(),
-                                               1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"),
+                    duration, 0, std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     //we should get a nice schedule, first stop at 08:10, last at 13:10
     BOOST_REQUIRE(! resp.has_error());
 
@@ -453,10 +505,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period_before, small_cal_fixtur
     //we ask for a schedule from 20:00 to 04:00
     size_t nb_hour = 8;
     auto duration = nb_hour*60*60;
-    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T200000"),
-                                               duration, 0, std::numeric_limits<int>::max(),
-                                               1, 10, 0, *(b.data), nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=stop1", std::string("cal"), {}, d("20120615T200000"),
+                    duration, 0, std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
 
+    pbnavitia::Response resp = pb_creator.get_response();
     //we should get a nice schedule, first stop at 20:10, last at 04:10
     BOOST_REQUIRE(! resp.has_error());
 
@@ -479,7 +532,8 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
     navitia::routing::RAPTOR raptor(*(b.data));
     navitia::type::PT_Data& d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*60*60, 0, navitia::DateTimeUtils::inf, nt::RTLevel::Base, 2_min, true);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*60*60, 0,
+            navitia::DateTimeUtils::inf, nt::RTLevel::Base, 2_min, true);
 
     //we must have a journey
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -489,9 +543,10 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
  *  Calling a stop_schedule asking only for base schedule data should return base schedule data 
  */
 BOOST_FIXTURE_TEST_CASE(base_stop_schedule, departure_board_fixture) {
-    pbnavitia::Response resp = departure_board("stop_point.uri=S1", {}, {}, d("20160101T070000"),
-                                               86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data),
-                                               nt::RTLevel::Base);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=S1", {}, {}, d("20160101T070000"),
+                    86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+    pbnavitia::Response resp = pb_creator.get_response()
 
     auto find_sched = [](const std::string& route) {
         return [&route](const pbnavitia::StopSchedule& s) { return s.route().uri() == route; };
@@ -519,9 +574,10 @@ BOOST_FIXTURE_TEST_CASE(base_stop_schedule, departure_board_fixture) {
 // same as above but with realtime data
 // all A's vj have 7 mn delay
 BOOST_FIXTURE_TEST_CASE(rt_stop_schedule, departure_board_fixture) {
-    pbnavitia::Response resp = departure_board("stop_point.uri=S1", {}, {}, d("20160101T070000"),
-                                               86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data),
-                                               nt::RTLevel::RealTime);
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
+    departure_board(pb_creator, "stop_point.uri=S1", {}, {}, d("20160101T070000"),
+                    86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::RealTime);
+    pbnavitia::Response resp = pb_creator.get_response()
 
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
     auto find_sched = [](const std::string& route) {

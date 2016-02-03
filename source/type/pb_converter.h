@@ -279,12 +279,16 @@ template<> typename type_trait<nt::MetaVehicleJourney>::type get_mutable<nt::Met
 }
 
 struct PbCreator {
-    pbnavitia::Response response;
     std::set<const nt::Contributor*> contributors;
     const nt::Data& data;
-    const pt::ptime now;
-    const pt::time_period action_period;
+    pt::ptime now;
+    pt::time_period action_period;
     const bool show_codes;
+    // Raptor
+    size_t nb_sections = 0;
+    std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
+    pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
+
     PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period,
               const bool show_codes):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
@@ -295,12 +299,65 @@ struct PbCreator {
     template<typename N>
     void pb_fill(int depth, const DumpMessage dump_message, const std::vector<N*>& nav_list) {
         auto* pb_object = get_mutable<N>(response);
-        Filler filler(depth, dump_message, *this);
-        filler.fill_pb_object(nav_list, pb_object);
-        filler.fill_pb_object(contributors, response.mutable_feed_publishers());
+        Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
+        finalize(depth, dump_message);
     }
 
+    void finalize(int depth = 0, const DumpMessage dump_message = DumpMessage::Yes){
+        Filler(depth, dump_message, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+    }
+    // Raptor
+    const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
+    std::string register_section();
+    std::string get_section_id(pbnavitia::Journey* j, size_t section_idx) ;
+    void fill_co2_emission(pbnavitia::Section* pb_section, const type::VehicleJourney* vehicle_journey);
+    void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
+    void fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare);
+
+    void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+                              const time_duration& crow_fly_duration, type::Mode_e mode,
+                              pt::ptime origin_time, pbnavitia::Journey* pb_journey);
+
+    void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path,
+                              pbnavitia::Journey* pb_journey, const pt::ptime departure,
+                              int max_depth = 1);
+
+    void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item, const type::EntryPoint &ori_dest);
+
+
+    void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
+                                      const bool has_datetime_estimated,
+                                      const bool has_odt,
+                                      const bool is_zonal);
+
+    void fill_pb_error(const pbnavitia::Error::error_id, const pbnavitia::ResponseType&, const std::string&);
+    void fill_pb_error(const pbnavitia::Error::error_id, const std::string&);
+    pbnavitia::Response& get_response(){
+        Filler(0, DumpMessage::Yes, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+        return response;
+    }
+
+    pbnavitia::PtObject* add_places_nearby();
+    pbnavitia::Journey* add_journeys();
+    pbnavitia::PtObject* add_places();
+    ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
+    bool has_error();
+    bool has_response_type(const pbnavitia::ResponseType& resp_type);
+    void set_response_type(const pbnavitia::ResponseType& resp_type);
+    void sort_journeys();
+    bool empty_journeys();
+    pbnavitia::RouteSchedule* add_route_schedules();
+    pbnavitia::StopSchedule* add_stop_schedules();
+    int route_schedules_size();
+    pbnavitia::Passage* add_next_departures();
+    pbnavitia::Passage* add_next_arrivals();
+    void make_paginate(const int, const int, const int, const int);
+    int departure_boards_size();
+    int stop_schedules_size();
+
 private:
+
+    pbnavitia::Response response;
     struct Filler {
         struct PtObjVisitor;
         const int depth;
@@ -449,6 +506,13 @@ private:
         template<typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
     };
+    // Raptor
+    pbnavitia::Section* create_section(pbnavitia::Journey*, const ng::PathItem&, int);
+    const ng::POI* get_nearest_bss_station(const nt::GeographicalCoord&);
+    const ng::POI* get_nearest_poi(const nt::GeographicalCoord&, const ng::POIType&);
+    const ng::POI* get_nearest_parking(const nt::GeographicalCoord& coord);
+    void finalize_section(pbnavitia::Section*, const ng::PathItem&, const ng::PathItem&, const pt::ptime, int);
+    pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object);
 };
 
 template<typename N, typename P>
@@ -468,66 +532,8 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Da
                                  const DumpMessage dump_message = DumpMessage::Yes){
     PbCreator creator(data, now, action_period, show_codes);
     creator.pb_fill(depth, dump_message, nt_objects);
-    return creator.response;
+    return creator.get_response();
 }
-
-struct EnhancedResponse {
-    pbnavitia::Response response;
-    size_t nb_sections = 0;
-    std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
-    pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
-
-    const std::string& register_section(pbnavitia::Journey* j,
-                                        const routing::PathItem& /*routing_item*/, size_t section_idx) {
-        routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
-        return routing_section_map[{j, section_idx}];
-    }
-
-    std::string register_section() {
-        // For some section (transfer, waiting, streetnetwork, corwfly) we don't need info
-        // about the item
-        return "section_" + boost::lexical_cast<std::string>(nb_sections++);
-    }
-
-    std::string get_section_id(pbnavitia::Journey* j, size_t section_idx) {
-        auto it  = routing_section_map.find({j, section_idx});
-        if (it == routing_section_map.end()) {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
-                           "Impossible to find section id for section idx " << section_idx);
-            return "";
-        }
-        return it->second;
-    }
-};
-
-void fill_co2_emission(pbnavitia::Section *pb_section, const nt::Data& data,
-                       const type::VehicleJourney* vehicle_journey);
-void fill_co2_emission_by_mode(pbnavitia::Section *pb_section, const nt::Data& data,
-                               const std::string& mode_uri);
-
-void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
-                          const time_duration& crow_fly_duration, type::Mode_e mode,
-                          pt::ptime origin_time, const type::Data& data,
-                          EnhancedResponse& response,  pbnavitia::Journey* pb_journey,
-                          const pt::ptime& now, const pt::time_period& action_period);
-
-void fill_fare_section(EnhancedResponse& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);
-
-void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &ori_dest,
-                          const georef::Path & path, const type::Data &data, pbnavitia::Journey* pb_journey,
-        const pt::ptime departure, int max_depth = 1,
-        const pt::ptime& now = pt::not_a_date_time,
-        const pt::time_period& action_period = null_time_period);
-
-void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item,
-                   const type::EntryPoint &ori_dest,
-                   const nt::Data& data);
-
-
-void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
-                                  const bool has_datetime_estimated,
-                                  const bool has_odt,
-                                  const bool is_zonal);
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,
                     pbnavitia::Error* error, int max_depth = 0 ,

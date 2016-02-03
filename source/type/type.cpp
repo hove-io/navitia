@@ -548,7 +548,8 @@ static_data * static_data::get() {
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption")
-                (Type_e::Frame, "frame");
+                (Type_e::Frame, "frame")
+                (Type_e::Admin, "admin");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
