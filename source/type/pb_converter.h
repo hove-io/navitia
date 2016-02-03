@@ -300,12 +300,8 @@ struct PbCreator {
     void pb_fill(int depth, const DumpMessage dump_message, const std::vector<N*>& nav_list) {
         auto* pb_object = get_mutable<N>(response);
         Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
-        finalize(depth, dump_message);
     }
 
-    void finalize(int depth = 0, const DumpMessage dump_message = DumpMessage::Yes){
-        Filler(depth, dump_message, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
-    }
     // Raptor
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
