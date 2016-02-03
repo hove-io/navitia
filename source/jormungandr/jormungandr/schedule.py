@@ -33,6 +33,21 @@ from navitiacommon import type_pb2, request_pb2
 from jormungandr.utils import date_to_timestamp
 
 
+def get_rt_system(stop_schedule):
+    #TODO implem
+    return None
+
+
+def update_passages(stop_schedule, next_rt_passages):
+    #TODO implem
+    raise NotImplementedError
+
+
+def get_route_point(stop_schedule):
+    #TODO implem
+    raise NotImplementedError
+
+
 class MixedSchedule(object):
     """
     class dealing with schedule (arrivals, departure, route)
@@ -74,6 +89,7 @@ class MixedSchedule(object):
             st.calendar = request["calendar"]
         st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = self.instance.send_and_receive(req)
+
         return resp
 
     def route_schedules(self, request):
@@ -92,4 +108,15 @@ class MixedSchedule(object):
         return self.__stop_times(request, api=type_pb2.PREVIOUS_DEPARTURES, departure_filter=request["filter"])
 
     def departure_boards(self, request):
-        return self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
+        resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
+        for stop_schedule in resp.stop_schedules:
+            rt_system_code = get_rt_system(stop_schedule)
+            if not rt_system_code:
+                continue
+            rt_system = self.instance.proxy_manager.get(rt_system_code)
+            if not rt_system:
+                #TODO log
+                continue
+            next_rt_passages = rt_system.next_passage_for_route_point(get_route_point(stop_schedule))
+            update_passages(stop_schedule, next_rt_passages)
+        return resp

@@ -47,7 +47,7 @@ from shapely import geometry
 from flask import g
 import flask
 import pybreaker
-from jormungandr import georef, planner, schedule
+from jormungandr import georef, planner, schedule, rt_schedule
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -85,6 +85,7 @@ class Instance(object):
         self.planner = planner.Kraken(self)
 
         self.schedule = schedule.MixedSchedule(self)
+        self.rt_proxy_manager = rt_schedule.RTProxyManager(self.context)
 
     def get_models(self):
         if self.name not in g.instances_model:
