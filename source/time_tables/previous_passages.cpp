@@ -80,8 +80,8 @@ void previous_passages(PbCreator& pb_creator, const std::string &request,
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
 
-        pb_creator.fill(0, DumpMessage::Yes, dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties());
-        pb_creator.fill(depth, DumpMessage::Yes, dt_stop_time.second->stop_point, passage->mutable_stop_point());
+        pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties());
+        pb_creator.fill(dt_stop_time.second->stop_point, passage->mutable_stop_point(), depth);
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         const type::Route* route = vj->route;
         const type::Line* line = route->line;
@@ -89,12 +89,12 @@ void previous_passages(PbCreator& pb_creator, const std::string &request,
         auto m_vj = passage->mutable_vehicle_journey();
         auto m_route = m_vj->mutable_route();
         auto m_physical_mode = m_vj->mutable_journey_pattern()->mutable_physical_mode();
-        pb_creator.fill(0, DumpMessage::Yes, vj, m_vj);
-        pb_creator.fill(0, DumpMessage::Yes, route, m_route);
-        pb_creator.fill(0, DumpMessage::Yes, line, m_route->mutable_line());
-        pb_creator.fill(0, DumpMessage::Yes, physical_mode, m_physical_mode);
+        pb_creator.fill(vj, m_vj);
+        pb_creator.fill(route, m_route);
+        pb_creator.fill(line, m_route->mutable_line());
+        pb_creator.fill(physical_mode, m_physical_mode);
         const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
-        pb_creator.fill(1, DumpMessage::Yes, &vj_st, passage->mutable_pt_display_informations());
+        pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
     }
     pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
 }

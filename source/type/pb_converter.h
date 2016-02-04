@@ -293,11 +293,12 @@ struct PbCreator {
               const bool show_codes):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
     template<typename N, typename P>
-    void fill(int depth, const DumpMessage dump_message, const N& item, P* proto) {
+    void fill(const N& item, P* proto, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
         Filler(depth, dump_message, *this).fill_pb_object(item, proto);
     }
     template<typename N>
-    void pb_fill(int depth, const DumpMessage dump_message, const std::vector<N*>& nav_list) {
+    void pb_fill(const std::vector<N*>& nav_list, int depth = 0,
+                 const DumpMessage dump_message = DumpMessage::Yes){
         auto* pb_object = get_mutable<N>(response);
         Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
     }
@@ -515,15 +516,6 @@ private:
     pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object);
 };
 
-template<typename N, typename P>
-void fill_pb_object(const N& item, const nt::Data& data, P* proto, int depth = 0,
-        const pt::ptime& now = pt::not_a_date_time,
-        const pt::time_period& action_period = null_time_period,
-        const bool show_codes = false, const DumpMessage dump_message = DumpMessage::Yes) {
-    PbCreator creator(data, now, action_period, show_codes);
-    creator.fill(depth, dump_message, item, proto);
-}
-
 template<typename N>
 pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Data& data, int depth = 0,
                                  const pt::ptime& now = pt::not_a_date_time,
@@ -531,7 +523,7 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Da
                                  const bool show_codes = false,
                                  const DumpMessage dump_message = DumpMessage::Yes){
     PbCreator creator(data, now, action_period, show_codes);
-    creator.pb_fill(depth, dump_message, nt_objects);
+    creator.pb_fill(nt_objects, depth, dump_message);
     return creator.get_response();
 }
 

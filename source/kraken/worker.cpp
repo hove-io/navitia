@@ -342,10 +342,9 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
-    auto coord = this->coord_of_entry_point(ep, data);
-    return proximitylist::find(coord, request.distance(), vector_of_pb_types(request),
-                request.filter(), request.depth(), request.count(),
-                request.start_page(), *data);
+    auto coord = this->coord_of_entry_point(ep, data);    
+    return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
+                               request.depth(), request.count(),request.start_page(), *data);
 }
 
 
@@ -433,47 +432,41 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
 
 
 pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
+
     const auto data = data_manager.get_data();
-    this->init_worker_data(data);
-    pbnavitia::Response pb_response;
+    this->init_worker_data(data);    
+    PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep, data);
-        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data);
-        if(tmp.places_nearby().size() == 1){
-            auto place = pb_response.add_places();
-            place->CopyFrom(tmp.places_nearby(0));
-        }
-        return pb_response;
+        return proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data);
     }
+
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
     if(it_sa != data->pt_data->stop_areas_map.end()) {
-        pbnavitia::PtObject* place = pb_response.add_places();
-        navitia::fill_pb_object(it_sa->second, *data, place, 1);
+        pb_creator.fill(it_sa->second, pb_creator.add_places(), 1);
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
-        if(it_sp != data->pt_data->stop_points_map.end()) {
-            pbnavitia::PtObject* place = pb_response.add_places();
-            navitia::fill_pb_object(it_sp->second, *data, place, 1);
+        if(it_sp != data->pt_data->stop_points_map.end()) {            
+            pb_creator.fill(it_sp->second, pb_creator.add_places(), 1);
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
-                pbnavitia::PtObject* place = pb_response.add_places();
-                navitia::fill_pb_object(data->geo_ref->pois[it_poi->second], *data,place, 1);
+                pb_creator.fill(data->geo_ref->pois[it_poi->second], pb_creator.add_places(), 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
-                    pbnavitia::PtObject* place = pb_response.add_places();
-                    navitia::fill_pb_object(data->geo_ref->admins[it_admin->second], *data, place, 1);
+                    pb_creator.fill(data->geo_ref->admins[it_admin->second], pb_creator.add_places(), 1);
 
                 }else{
-                    fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse : "+request.uri(),  pb_response.mutable_error());
+                    pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                             "Unable to parse : " + request.uri());
                 }
             }
         }
     }
-    return pb_response;
+    return pb_creator.get_response();
 }
 
 template<typename T>
@@ -483,7 +476,7 @@ static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator&
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object");
     } else {
         // FIXME: add every object or (as before) just the first one?
-        pb_creator.fill(0, DumpMessage::Yes, objs.front(), pb_creator.add_places());
+        pb_creator.fill(objs.front(), pb_creator.add_places());
     }
 }
 
@@ -553,10 +546,11 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if (origins.empty() && destinations.empty()) {
         //should never happen, jormungandr filters that, but it never hurts to double check
-        pbnavitia::Response response;
-        fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point given", response.mutable_error());
-        response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
-        return response;
+        navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point given");
+        return pb_creator.get_response();
     }
 
     std::vector<std::string> forbidden;
@@ -601,19 +595,19 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         if (! origins.empty()) {
             if (! request.clockwise()) {
                 // isochrone works only on clockwise
-                pbnavitia::Response response;
-                fill_pb_error(pbnavitia::Error::bad_format, "isochrone works only for clockwise request", response.mutable_error());
-                response.set_response_type(pbnavitia::NO_SOLUTION);
-                return response;
+                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
+                              "isochrone works only for clockwise request");
+                return pb_creator.get_response();
             }
             ep = origins[0];
         } else {
             if (request.clockwise()) {
                 // isochrone works only on clockwise
-                pbnavitia::Response response;
-                fill_pb_error(pbnavitia::Error::bad_format, "reverse isochrone works only for anti-clockwise request", response.mutable_error());
-                response.set_response_type(pbnavitia::NO_SOLUTION);
-                return response;
+                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
+                                         "reverse isochrone works only for anti-clockwise request");
+                return pb_creator.get_response();
             }
             ep = destinations[0];
         }
@@ -766,7 +760,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
     for(const auto& item: result){
         auto* nsp = pb_creator.add_nearest_stop_points();
-        pb_creator.fill(0,DumpMessage::Yes,planner->get_sp(item.first), nsp->mutable_stop_point());
+        pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point());
         nsp->set_access_duration(item.second.total_seconds());
     }
     return pb_creator.get_response();

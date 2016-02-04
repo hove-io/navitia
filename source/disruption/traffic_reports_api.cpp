@@ -331,28 +331,28 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
         auto* pb_traffic_reports = pb_creator.add_traffic_reports();
         pbnavitia::Network* pb_network = pb_traffic_reports->mutable_network();
         for(const auto& impact: dist.network_disruptions){
-            pb_creator.fill(depth-1, DumpMessage::Yes, impact.get(), pb_network);
+            pb_creator.fill(impact.get(), pb_network, depth-1);
         }
-        pb_creator.fill(depth, DumpMessage::No, dist.network, pb_network);
+        pb_creator.fill(dist.network, pb_network, depth, DumpMessage::No);
         for (const auto& line_item: dist.lines) {
             pbnavitia::Line* pb_line = pb_traffic_reports->add_lines();
-            pb_creator.fill(depth-1, DumpMessage::No, line_item.first, pb_line);
+            pb_creator.fill(line_item.first, pb_line, depth-1, DumpMessage::No);
             for(const auto& impact: line_item.second){
-                pb_creator.fill(depth-1, DumpMessage::Yes, impact.get(), pb_line);
+                pb_creator.fill(impact.get(), pb_line, depth-1);
             }
         }
         for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_traffic_reports->add_stop_areas();
-            pb_creator.fill(depth-1, DumpMessage::No, sa_item.first, pb_stop_area);
+            pb_creator.fill(sa_item.first, pb_stop_area, depth-1, DumpMessage::No);
             for(const auto& impact: sa_item.second){
-                pb_creator.fill(depth-1, DumpMessage::Yes, impact.get(), pb_stop_area);
+                pb_creator.fill(impact.get(), pb_stop_area, depth-1);
             }
         }
         for (const auto& vj_item: dist.vehicle_journeys) {
             pbnavitia::VehicleJourney* pb_vehicle_journey = pb_traffic_reports->add_vehicle_journeys();
-            pb_creator.fill(depth-1, DumpMessage::No, vj_item.first, pb_vehicle_journey);
+            pb_creator.fill(vj_item.first, pb_vehicle_journey, depth-1, DumpMessage::No);
             for(const auto& impact: vj_item.second){
-                pb_creator.fill(depth-1, DumpMessage::Yes, impact.get(), pb_vehicle_journey);
+                pb_creator.fill(impact.get(), pb_vehicle_journey, depth-1);
             }
         }
     }

@@ -51,21 +51,21 @@ static void make_pb(navitia::PbCreator& pb_creator, const std::vector<t_result>&
         auto type = std::get<2>(result_item);
         switch(type){
         case nt::Type_e::StopArea:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_areas[idx], place);
+            pb_creator.fill(data.pt_data->stop_areas[idx], place, depth);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::StopPoint:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_points[idx], place);
+            pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::POI:
-            pb_creator.fill(depth, DumpMessage::Yes,data.geo_ref->pois[idx], place);
+            pb_creator.fill(data.geo_ref->pois[idx], place, depth);
             place->set_distance(coord.distance_to(coord_item));
             break;
         case nt::Type_e::Address:{
             const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx],
                     coord, data.geo_ref->ways[idx]->nearest_number(coord).first);
-            pb_creator.fill(depth, DumpMessage::Yes,&way_coord, place);
+            pb_creator.fill(&way_coord, place, depth);
             place->set_distance(coord.distance_to(coord_item));
             break;
         }
@@ -99,7 +99,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
         if(type == nt::Type_e::Address) {
             //for addresses we use the street network
             try {
-                auto nb_w = data.geo_ref->nearest_addr(coord);
+                auto nb_w = pb_creator.data.geo_ref->nearest_addr(coord);
                 // we'll regenerate the good number in make_pb
                 result.push_back(t_result(nb_w.second->idx, coord, type));
                 ++total_result;
@@ -111,7 +111,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
         std::vector<type::idx_t> indexes;
         if(! filter.empty()) {
             try {
-                indexes = ptref::make_query(type, filter, data);
+                indexes = ptref::make_query(type, filter, pb_creator.data);
             } catch(const ptref::parsing_error &parse_error) {
                 pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                          "Problem while parsing the query:" + parse_error.more);
@@ -123,13 +123,13 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
         }
         switch(type){
         case nt::Type_e::StopArea:
-            list = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
+            list = pb_creator.data.pt_data->stop_area_proximity_list.find_within(coord, distance);
             break;
         case nt::Type_e::StopPoint:
-            list = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
+            list = pb_creator.data.pt_data->stop_point_proximity_list.find_within(coord, distance);
             break;
         case nt::Type_e::POI:
-            list = data.geo_ref->poi_proximity_list.find_within(coord, distance);
+            list = pb_creator.data.geo_ref->poi_proximity_list.find_within(coord, distance);
             break;
         default: break;
         }

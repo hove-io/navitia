@@ -1459,7 +1459,7 @@ pbnavitia::Section* PbCreator::create_section(pbnavitia::Journey* pb_journey,
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = this->get_nearest_bss_station(first_item.coordinates.front());
         if (vls_station) {
-            fill(depth, DumpMessage::Yes, vls_station, section->mutable_destination());
+            fill(vls_station, section->mutable_destination(), depth);
         } else {
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
                             "impossible to find the associated BSS rent station poi for coord "
@@ -1472,7 +1472,7 @@ pbnavitia::Section* PbCreator::create_section(pbnavitia::Journey* pb_journey,
         auto way = data.geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
         auto const& way_coord = navitia::WayCoord(way, departure_coord, way->nearest_number(departure_coord).first);
-        fill(depth, DumpMessage::Yes, &way_coord, orig_place);
+        fill(&way_coord, orig_place, depth);
     }
 
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
@@ -1519,7 +1519,7 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
         {
             const auto vls_station = this->get_nearest_bss_station(item.coordinates.front());
             if (vls_station) {
-                fill(depth, DumpMessage::Yes, vls_station, dest_place);
+                fill(vls_station, dest_place, depth);
             } else {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                                 "impossible to find the associated BSS putback station poi for coord "
@@ -1532,7 +1532,7 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
         {
             const auto parking = this->get_nearest_parking(item.coordinates.front());
             if (parking) {
-                fill(depth, DumpMessage::Yes, parking, dest_place);
+                fill(parking, dest_place, depth);
             } else {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                                 "impossible to find the associated parking poi for coord "
@@ -1546,7 +1546,7 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
         const auto& way_coord = navitia::WayCoord(way, coord, way->nearest_number(coord).first);
-        fill(depth, DumpMessage::Yes, &way_coord, dest_place);
+        fill(&way_coord, dest_place, depth);
     }
 
     switch (last_item.transportation) {
@@ -1584,8 +1584,8 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
     pbnavitia::Section* section = pb_journey->add_sections();
     section->set_id(this->register_section());
 
-    fill(2, DumpMessage::Yes, &origin, section->mutable_origin());
-    fill(2, DumpMessage::Yes, &destination, section->mutable_destination());
+    fill(&origin, section->mutable_origin(), 2);
+    fill(&destination, section->mutable_destination(), 2);
 
     section->set_begin_date_time(navitia::to_posix_timestamp(origin_time));
     section->set_duration(crow_fly_duration.total_seconds());

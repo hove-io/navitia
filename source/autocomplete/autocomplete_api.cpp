@@ -45,44 +45,44 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
         pbnavitia::PtObject* place = pb_creator.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_areas[result_item.idx], place);
+            pb_creator.fill(data.pt_data->stop_areas[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Admin:
-            pb_creator.fill(depth, DumpMessage::Yes,data.geo_ref->admins[result_item.idx], place);
+            pb_creator.fill(data.geo_ref->admins[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::StopPoint:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->stop_points[result_item.idx], place);
+            pb_creator.fill(data.pt_data->stop_points[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Address:{
             const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[result_item.idx],
                     result_item.coord, result_item.house_number);
-            pb_creator.fill(depth, DumpMessage::Yes,&way_coord, place);
+            pb_creator.fill(&way_coord, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         }
         case nt::Type_e::POI:
-            pb_creator.fill(depth, DumpMessage::Yes,data.geo_ref->pois[result_item.idx], place);
+            pb_creator.fill(data.geo_ref->pois[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->networks[result_item.idx], place);
+            pb_creator.fill(data.pt_data->networks[result_item.idx], place, depth);
             break;
         case nt::Type_e::CommercialMode:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->commercial_modes[result_item.idx], place);
+            pb_creator.fill(data.pt_data->commercial_modes[result_item.idx], place, depth);
             break;
         case nt::Type_e::Line:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->lines[result_item.idx], place);
+            pb_creator.fill(data.pt_data->lines[result_item.idx], place, depth);
             break;
         case nt::Type_e::Route:
-            pb_creator.fill(depth, DumpMessage::Yes,data.pt_data->routes[result_item.idx], place);
+            pb_creator.fill(data.pt_data->routes[result_item.idx], place, depth);
             break;
         default:
             break;

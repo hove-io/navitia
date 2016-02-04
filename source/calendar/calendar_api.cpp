@@ -80,7 +80,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     size_t total_result = calendar_list.size();
     calendar_list = paginate(calendar_list, count, start_page);
 
-    pb_creator.pb_fill(depth,DumpMessage::Yes,pb_creator.data.get_data<nt::Calendar>(calendar_list));
+    pb_creator.pb_fill(pb_creator.data.get_data<nt::Calendar>(calendar_list),depth);
 
     pb_creator.make_paginate(total_result, start_page, count, pb_creator.calendars_size());
     if (pb_creator.calendars_size() == 0) {

@@ -107,8 +107,9 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_sa) {
     d.pt_data->stop_areas.push_back(sa1);
     d.compute_labels();
 
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_object(sa1, d, pb);
+    pb_creator.fill(sa1, pb);
     BOOST_CHECK_EQUAL(pb->name(), sa1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), sa1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_AREA);
@@ -160,7 +161,8 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_poi) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_object(poi1, d, pb);
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
+    pb_creator.fill(poi1,pb);
     BOOST_CHECK_EQUAL(pb->name(), poi1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), poi1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::POI);
@@ -211,7 +213,8 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_stop_point) {
     d.compute_labels();
 
     auto pb = new pbnavitia::PtObject();
-    navitia::fill_pb_object(stop_point1, d, pb);
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
+    pb_creator.fill(stop_point1, pb);
     BOOST_CHECK_EQUAL(pb->name(), stop_point1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), stop_point1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_POINT);

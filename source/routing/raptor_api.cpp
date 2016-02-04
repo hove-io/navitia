@@ -170,10 +170,10 @@ static void fill_section(PbCreator& pb_creator, pbnavitia::Section *pb_section, 
 
     if (! stop_times.empty()) {
         const auto& vj_stoptimes = navitia::VjStopTimes(vj, stop_times.front(), stop_times.back());
-        pb_creator.fill(1,DumpMessage::Yes,&vj_stoptimes,vj_pt_display_information);
+        pb_creator.fill(&vj_stoptimes,vj_pt_display_information, 1);
     } else {
         const auto& vj_stoptimes = navitia::VjStopTimes(vj, nullptr, nullptr);
-        pb_creator.fill(1,DumpMessage::Yes,&vj_stoptimes,vj_pt_display_information);
+        pb_creator.fill(&vj_stoptimes,vj_pt_display_information, 1);
     }
 
     fill_shape(pb_section, stop_times);
@@ -243,11 +243,11 @@ static void add_direct_path(PbCreator& pb_creator,
             // We add coherence with the origin of the request
             auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
             origin_pb->Clear();
-            pb_creator.fill(2, DumpMessage::Yes, &origin, origin_pb);
+            pb_creator.fill(&origin, origin_pb, 2);
             //We add coherence with the destination object of the request
             auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
             destination_pb->Clear();
-            pb_creator.fill(2, DumpMessage::Yes, &destination, destination_pb);
+            pb_creator.fill(&destination, destination_pb, 2);
             co2_emission_aggregator(pb_journey);
         }
     }
@@ -306,8 +306,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 pb_creator.action_period = bt::time_period(p_deptime, p_arrtime);
-                pb_creator.fill(0,DumpMessage::Yes,item.stop_points[i], stop_time->mutable_stop_point());
-                pb_creator.fill(1,DumpMessage::Yes,item.stop_times[i], stop_time);
+                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 0);
+                pb_creator.fill(item.stop_times[i], stop_time, 1);
 
                 // L'heure de départ du véhicule au premier stop point
                 if(departure_ptime.is_not_a_date_time())
@@ -321,8 +321,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 //in this case we want to display this only point as the departure and the destination of this section
 
                 pb_creator.action_period = bt::time_period(item.departures[0], item.arrivals[0] + bt::seconds(1));
-                pb_creator.fill(1, DumpMessage::Yes, item.stop_points.front(), pb_section->mutable_origin());
-                pb_creator.fill(1, DumpMessage::Yes, item.stop_points.back(), pb_section->mutable_destination());
+                pb_creator.fill(item.stop_points.front(), pb_section->mutable_origin(), 1);
+                pb_creator.fill(item.stop_points.back(), pb_section->mutable_destination(), 1);
             }
             pb_creator.action_period = bt::time_period(departure_ptime, arrival_ptime);
             fill_section(pb_creator, pb_section, vj, item.stop_times);
@@ -379,8 +379,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
             pb_creator.action_period = bt::time_period(item.departure, item.arrival);
             const auto origin_sp = item.stop_points.front();
             const auto destination_sp = item.stop_points.back();
-            pb_creator.fill(1, DumpMessage::Yes, origin_sp, pb_section->mutable_origin());
-            pb_creator.fill(1, DumpMessage::Yes, destination_sp, pb_section->mutable_destination());
+            pb_creator.fill(origin_sp, pb_section->mutable_origin(), 1);
+            pb_creator.fill(destination_sp, pb_section->mutable_destination(), 1);
             pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
         }
         uint64_t dep_time, arr_time;
@@ -402,7 +402,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
     if (vp) {
         const auto& vect_p = vptranslator::translate(*vp);
-        pb_creator.fill(0, DumpMessage::Yes, vect_p, pb_journey->mutable_calendars());
+        pb_creator.fill(vect_p, pb_journey->mutable_calendars(), 0);
     }
 
     compute_most_serious_disruption(pb_journey);
@@ -500,11 +500,10 @@ static void add_pathes(PbCreator& pb_creator,
                                 navitia::from_posix_timestamp(first_section->begin_date_time()),
                                 navitia::from_posix_timestamp(last_section->end_date_time()));
                     // We add coherence with the origin of the request
-                    pb_creator.fill(2, DumpMessage::Yes, &origin, first_section->mutable_origin());
+                    pb_creator.fill(&origin, first_section->mutable_origin(), 2);
                     // We add coherence with the first pt section
                     last_section->mutable_destination()->Clear();
-                    pb_creator.fill(2, DumpMessage::Yes, departure_stop_point,
-                                    last_section->mutable_destination());
+                    pb_creator.fill(departure_stop_point, last_section->mutable_destination(), 2);
                 }
             }
         }
@@ -516,7 +515,7 @@ static void add_pathes(PbCreator& pb_creator,
             section->mutable_origin()->Clear();
             pb_creator.action_period = bt::time_period(navitia::from_posix_timestamp(section->begin_date_time()),
                                                        bt::minutes(1));
-            pb_creator.fill(1, DumpMessage::Yes, &origin, section->mutable_origin());
+            pb_creator.fill(&origin, section->mutable_origin(), 1);
         }
 
         if (journey_end_with_address_odt) {
@@ -527,7 +526,7 @@ static void add_pathes(PbCreator& pb_creator,
             //TODO: the period can probably be better (-1 min shift)
             pb_creator.action_period =  bt::time_period(navitia::from_posix_timestamp(section->end_date_time()),
                                                         bt::minutes(1));
-            pb_creator.fill(1, DumpMessage::Yes, &destination, section->mutable_destination());
+            pb_creator.fill(&destination, section->mutable_destination(), 1);
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
@@ -564,7 +563,7 @@ static void add_pathes(PbCreator& pb_creator,
                     pb_creator.action_period = bt::time_period(
                                        navitia::from_posix_timestamp(section->begin_date_time()),
                                        navitia::from_posix_timestamp(section->end_date_time() + 1));
-                    pb_creator.fill(2, DumpMessage::Yes, arrival_stop_point, section->mutable_origin());
+                    pb_creator.fill(arrival_stop_point, section->mutable_origin(), 2);
                 }
 
                 //We add coherence with the destination object of the request
@@ -572,7 +571,7 @@ static void add_pathes(PbCreator& pb_creator,
                 pb_creator.action_period = bt::time_period(
                                        navitia::from_posix_timestamp(section->begin_date_time()),
                                        navitia::from_posix_timestamp(section->end_date_time() + 1));
-                pb_creator.fill(2, DumpMessage::Yes, &destination, section->mutable_destination());
+                pb_creator.fill(&destination, section->mutable_destination(), 2);
             }
         }
 
@@ -692,9 +691,9 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                                        navitia::to_posix_time(best_lbl, raptor.data));
             if (show_stop_area)
-                pb_creator.fill(0,DumpMessage::Yes,sp->stop_area,pb_journey->mutable_destination());
+                pb_creator.fill(sp->stop_area, pb_journey->mutable_destination());
             else
-                pb_creator.fill(0,DumpMessage::Yes,sp,pb_journey->mutable_destination());
+                pb_creator.fill(sp, pb_journey->mutable_destination());
         }
     }
 }
