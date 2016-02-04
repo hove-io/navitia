@@ -401,7 +401,17 @@ def check_departures(response, reference):
 class TestSchedules(AbstractTestFixture):
 
     def test_classic_stop_schedule(self):
+        """default is Realtime stopschedule"""
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_stop_schedule_rt_sol(stop_sched)
+
+    def test_stop_schedule_base_schedule(self):
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=base_schedule")
 
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)

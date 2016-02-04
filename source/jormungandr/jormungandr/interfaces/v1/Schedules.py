@@ -146,10 +146,10 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args['data_freshness']:
             # The data freshness depends on the API
-            # for route/stop schedule, by default we want the base schedule
-            if self.endpoint in ('route_schedules', 'departure_boards'):
+            # for route_schedule, by default we want the base schedule
+            if self.endpoint == 'route_schedules':
                 args['data_freshness'] = 'base_schedule'
-            # for previous/next departure/arrival, we want the freshest data by default
+            # for stop_schedule and previous/next departure/arrival, we want the freshest data by default
             else:
                 args['data_freshness'] = 'realtime'
 
