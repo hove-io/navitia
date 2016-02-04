@@ -55,7 +55,7 @@ def delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
-def filter_journeys(response_list, instance, request, original_request):
+def filter_journeys(response_list, instance, request):
     """
     Filter by side effect the list of pb responses's journeys
 
@@ -73,7 +73,7 @@ def filter_journeys(response_list, instance, request, original_request):
 
     _filter_similar_journeys(journeys, request)
 
-    _filter_not_coherent_journeys(journeys, instance, request, original_request)
+    _filter_not_coherent_journeys(journeys, instance, request)
 
     _filter_too_long_waiting(journeys, request)
 
@@ -179,7 +179,7 @@ def _filter_too_long_waiting(journeys, request):
             mark_as_dead(j, "too_long_waiting")
             break
 
-def way_later(request, journey, asap_journey, original_request):
+def way_later(request, journey, asap_journey):
     """
     to check if a journey is way later than the asap journey
     we check for each journey the difference between the requested datetime and the arrival datetime
@@ -200,8 +200,8 @@ def way_later(request, journey, asap_journey, original_request):
                        journey pseudo duration
 
     """
-    requested_dt = original_request['datetime']
-    is_clockwise = original_request.get('clockwise', True)
+    requested_dt = request['datetime']
+    is_clockwise = request.get('clockwise', True)
 
     pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
     pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
@@ -210,7 +210,7 @@ def way_later(request, journey, asap_journey, original_request):
     return pseudo_journey_duration > max_value
 
 
-def _filter_not_coherent_journeys(journeys, instance, request, original_request):
+def _filter_not_coherent_journeys(journeys, instance, request):
     """
     Filter not coherent journeys
 
@@ -234,7 +234,7 @@ def _filter_not_coherent_journeys(journeys, instance, request, original_request)
     for j in journeys:
         if _to_be_deleted(j):
             continue
-        if way_later(request, j, asap_journey, original_request):
+        if way_later(request, j, asap_journey):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j.internal_id, asap_journey.internal_id))
 

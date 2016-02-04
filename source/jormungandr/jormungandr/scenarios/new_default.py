@@ -149,6 +149,10 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     return req
 
 
+def _has_pt(j):
+    return any(s.type == response_pb2.PUBLIC_TRANSPORT for s in j.sections)
+
+
 def create_next_kraken_request(request, responses):
     """
     create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
@@ -158,10 +162,16 @@ def create_next_kraken_request(request, responses):
     """
     one_minute = 60
     if request['clockwise']:
-        soonest_departure = min(j.departure_date_time for r in responses for j in r.journeys)
+        try:
+            soonest_departure = min(j.departure_date_time for r in responses for j in r.journeys if _has_pt(j))
+        except ValueError:
+            return None
         new_datetime = soonest_departure + one_minute
     else:
-        tardiest_arrival = max(j.arrival_date_time for r in responses for j in r.journeys)
+        try:
+            tardiest_arrival = max(j.arrival_date_time for r in responses for j in r.journeys if _has_pt(j))
+        except ValueError:
+            return None
         new_datetime = tardiest_arrival - one_minute
 
     request['datetime'] = new_datetime
@@ -603,7 +613,7 @@ class Scenario(simple.Scenario):
         responses = []
         last_nb_journeys = 0
         nb_try = 0
-        while nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys:
+        while nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys and request is not None:
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
@@ -612,10 +622,10 @@ class Scenario(simple.Scenario):
                 # no new journeys found, we stop
                 break
 
-            next_request = create_next_kraken_request(request, tmp_resp)
+            request = create_next_kraken_request(request, tmp_resp)
 
             # we filter unwanted journeys by side effects
-            journey_filter.filter_journeys(responses, instance, request=request, original_request=api_request)
+            journey_filter.filter_journeys(responses, instance, api_request)
 
             cur_nb_journeys = nb_journeys(responses)
             if cur_nb_journeys == 0:
@@ -626,13 +636,12 @@ class Scenario(simple.Scenario):
                 break
 
             last_nb_journeys = cur_nb_journeys
-            request = next_request
 
         pb_resp = merge_responses(responses)
-        sort_journeys(pb_resp, instance.journey_order, request['clockwise'])
+        sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         tag_journeys(pb_resp)
-        type_journeys(pb_resp, request)
-        culling_journeys(pb_resp, request)
+        type_journeys(pb_resp, api_request)
+        culling_journeys(pb_resp, api_request)
         return pb_resp
 
     def call_kraken(self, request_type, request, instance, krakens_call):
