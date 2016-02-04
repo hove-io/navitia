@@ -686,4 +686,13 @@ class Scenario(simple.Scenario):
         return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
 
     def isochrone(self, request, instance):
-        return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
+        updated_request_with_default(request, instance)
+        #we don't want to filter anything!
+        krakens_call = get_kraken_calls(request)
+        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call))
+        if not request['debug']:
+            # on isochrone we can filter the number of max journeys
+            if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
+                del resp.journeys[request["max_nb_journeys"]:]
+
+        return resp
