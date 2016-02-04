@@ -367,10 +367,14 @@ def check_stop_schedule(response, reference):
     """
     check the values in a stopschedule
     check the id of the stoppoint, the id of the routes, the datetimes and the vj used
+
+    Note: the stop_schedule are not sorted, we just must find all reference StopSchedule
     """
-    for (resp, ref) in itertools.izip_longest(response, reference):
-        assert get_not_null(get_not_null(resp, 'stop_point'), 'id') == ref.sp
-        assert get_not_null(get_not_null(resp, 'route'), 'id') == ref.route
+    eq_(len(response), len(reference))
+    for resp in response:
+        ref = next(r for r in reference
+                   if r.sp == get_not_null(get_not_null(resp, 'stop_point'), 'id')
+                   and r.route == get_not_null(get_not_null(resp, 'route'), 'id'))
 
         for (resp_dt, ref_st) in itertools.izip_longest(get_not_null(resp, 'date_times'), ref.date_times):
             eq_(get_not_null(resp_dt, 'date_time'), ref_st.dt)
