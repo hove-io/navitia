@@ -33,12 +33,12 @@ from navitiacommon import type_pb2, request_pb2
 from jormungandr.utils import date_to_timestamp
 
 
-def get_rt_system(stop_schedule):
+def get_realtime_system_code(stop_schedule):
     #TODO implem
     return None
 
 
-def update_passages(stop_schedule, next_rt_passages):
+def update_passages(stop_schedule, next_realtime_passages):
     #TODO implem
     raise NotImplementedError
 
@@ -110,7 +110,7 @@ class MixedSchedule(object):
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
         for stop_schedule in resp.stop_schedules:
-            rt_system_code = get_rt_system(stop_schedule)
+            rt_system_code = get_realtime_system_code(stop_schedule)
             if not rt_system_code:
                 continue
             rt_system = self.instance.proxy_manager.get(rt_system_code)

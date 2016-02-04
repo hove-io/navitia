@@ -28,30 +28,16 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import requests as requests
-from jormungandr.rt_schedule.rt_proxy import RTProxy
 
 
-class Timeo(RTProxy):
+class RealtimeProxyManager(object):
     """
-    class managing calls to timeo external service providing real-time next passages
+    class managing real-time proxies
     """
 
-    def __init__(self, service_url):
-        self.service_url = service_url
+    def __init__(self):
+        self.realtime_proxies = {}
+        #TODO read conf from file
 
-    def next_passage_for_route_point(self, route_point):
-        url = self.get_url(route_point)
-        r = requests.get(url)
-        if r.status_code != 200:
-            raise Exception("Timeo RT service unavailable")
-
-        return self.get_passages(r.json())
-
-    def get_url(self, route_point):
-        #TODO implem
-        return ""
-
-    def get_passages(timeo_resp):
-        #TODO implem
-        return []
+    def get(self, proxy_name):
+        return self.realtime_proxies[proxy_name]

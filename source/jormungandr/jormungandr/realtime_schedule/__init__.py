@@ -1,6 +1,6 @@
-# coding=utf-8
+# encoding: utf-8
 
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -28,14 +28,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from abc import abstractmethod
 
-
-class RTProxy(object):
-    """
-    abstract class managing calls to external service providing real-time next passages
-    """
-
-    @abstractmethod
-    def next_passage_for_route_point(self, route_point):
-        pass
+from jormungandr.realtime_schedule.timeo import Timeo
+from jormungandr.realtime_schedule.realtime_proxy_manager import RealtimeProxyManager

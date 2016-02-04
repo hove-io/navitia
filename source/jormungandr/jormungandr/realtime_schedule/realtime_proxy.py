@@ -1,6 +1,6 @@
-# encoding: utf-8
+# coding=utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -28,6 +28,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from abc import abstractmethod, ABCMeta
 
-from jormungandr.rt_schedule.timeo import Timeo
-from jormungandr.rt_schedule.rt_proxy_manager import RTProxyManager
+
+class RealtimeProxy(object):
+    """
+    abstract class managing calls to external service providing real-time next passages
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def next_passage_for_route_point(self, route_point):
+        pass
