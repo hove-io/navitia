@@ -519,8 +519,14 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
     fill_codes(vj, vehicle_journey);
 }
 
-void PbCreator::Filler::fill_pb_object(const nt::MetaVehicleJourney* nav_mvj, pbnavitia::Trip* pb_trip){
+void PbCreator::Filler::fill_pb_object(const nt::MetaVehicleJourney* nav_mvj, pbnavitia::Trip* pb_trip) {
     pb_trip->set_uri(nav_mvj->uri);
+
+    // the name of the meta vj is the name of it's first vj (all sub vj must have the same name)
+    nav_mvj->for_all_vjs([&pb_trip](const nt::VehicleJourney& vj) {
+        pb_trip->set_name(vj.name);
+        return false; // we stop at the first one
+    });
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::MultiLineString* shape,

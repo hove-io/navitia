@@ -406,6 +406,7 @@ validity_pattern = {
 
 trip = {
     'id': fields.String(attribute="uri"),
+    'name': fields.String(),
 }
 
 code = {
