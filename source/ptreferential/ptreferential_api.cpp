@@ -54,15 +54,15 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return get_response(data.get_data<nt::Line>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::LineGroup:
             return get_response(data.get_data<nt::LineGroup>(rows), data, depth, current_time, action_period, show_codes);
-//        case Type_e::JourneyPattern:{
-//            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
-//            for(const auto& idx : rows){
-//                const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
-//                pb_creator.fill(depth,DumpMessage::Yes,&pair_jp, data, pb_creator.response.add_journey_patterns());
-//            }
-//            pb_creator.finalize();
-//            return pb_creator.response;
-//        }
+        case Type_e::JourneyPattern:{
+            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
+            for(const auto& idx : rows){
+                const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
+                auto* pb_jp = pb_creator.add_journey_patterns();
+                pb_creator.fill(&pair_jp, pb_jp, depth);
+            }
+            return pb_creator.get_response();
+        }
         case Type_e::StopPoint:
             return get_response(data.get_data<nt::StopPoint>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::StopArea:
@@ -73,15 +73,15 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return get_response(data.get_data<nt::PhysicalMode>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::CommercialMode:
             return get_response(data.get_data<nt::CommercialMode>(rows), data, depth, current_time, action_period, show_codes);
-//        case Type_e::JourneyPatternPoint:{
-//            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
-//            for(const auto& idx : rows){
-//                const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
-//                pb_creator.fill(depth,DumpMessage::Yes,&pair_jpp,pb_creator.response.add_journey_pattern_points());
-//            }
-//            pb_creator.finalize();
-//            return pb_creator.response;
-//        }
+        case Type_e::JourneyPatternPoint:{
+            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
+            for(const auto& idx : rows){
+                const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
+                auto* pb_jpp = pb_creator.add_journey_pattern_points();
+                pb_creator.fill(&pair_jpp, pb_jpp, depth);
+            }
+            return pb_creator.get_response();
+        }
         case Type_e::Company:
             return get_response(data.get_data<nt::Company>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Route:
@@ -96,26 +96,24 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return get_response(data.get_data<nt::VehicleJourney>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Calendar:
             return get_response(data.get_data<nt::Calendar>(rows), data, depth, current_time, action_period, show_codes);
-//        case Type_e::MetaVehicleJourney:
-//             data.get_data<nt::MetaVehicleJourney>(rows);
-//            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
-//            for(const auto& idx : rows){
-//                const auto* meta_vj = data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)];
-//                pb_creator.fill(depth,DumpMessage::Yes,meta_vj,pb_creator.response.add_trips());
-//            }
-//            pb_creator.finalize();
-//            return pb_creator.response;
-//        }
-//        case Type_e::Impact:{
-//            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
-//            for(const auto& idx : rows){
-//                auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-//                pb_creator.fill(depth,DumpMessage::Yes,impact.get(), &pb_creator.response);
+        case Type_e::MetaVehicleJourney:{
+            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
+            for(const auto& idx : rows){
+                const auto* meta_vj = data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)];
+                auto* pb_trip = pb_creator.add_trips();
+                pb_creator.fill(meta_vj, pb_trip, depth);
+            }
+            return pb_creator.get_response();
+        }
+        case Type_e::Impact:{
+            navitia::PbCreator pb_creator(data,current_time,action_period,show_codes);
+            for(const auto& idx : rows){
+                auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
+                pb_creator.fill(impact.get(), depth);
 
-//            }
-//            pb_creator.finalize();
-//            return pb_creator.response;
-//        }
+            }
+            return pb_creator.get_response();
+        }
         case Type_e::Contributor:
             return get_response(data.get_data<nt::Contributor>(rows), data, depth, current_time, action_period, show_codes);
         case Type_e::Frame:

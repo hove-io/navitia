@@ -1680,6 +1680,18 @@ pbnavitia::NearestStopPoint* PbCreator::add_nearest_stop_points(){
     return response.add_nearest_stop_points();
 }
 
+pbnavitia::JourneyPattern* PbCreator::add_journey_patterns() {
+    return response.add_journey_patterns();
+}
+
+pbnavitia::JourneyPatternPoint* PbCreator::add_journey_pattern_points(){
+    return response.add_journey_pattern_points();
+}
+
+pbnavitia::Trip* PbCreator::add_trips(){
+    return response.add_trips();
+}
+
 pbnavitia::Journey* PbCreator::add_journeys(){
     return response.add_journeys();
 }

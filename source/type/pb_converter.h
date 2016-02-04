@@ -296,6 +296,12 @@ struct PbCreator {
     void fill(const N& item, P* proto, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
         Filler(depth, dump_message, *this).fill_pb_object(item, proto);
     }
+
+    template<typename N>
+    void fill(const N& item, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
+        Filler(depth, dump_message, *this).fill_pb_object(item, &response);
+    }
+
     template<typename N>
     void pb_fill(const std::vector<N*>& nav_list, int depth = 0,
                  const DumpMessage dump_message = DumpMessage::Yes){
@@ -339,6 +345,9 @@ struct PbCreator {
     pbnavitia::PtObject* add_places();
     pbnavitia::TrafficReports* add_traffic_reports();
     pbnavitia::NearestStopPoint* add_nearest_stop_points();
+    pbnavitia::JourneyPattern* add_journey_patterns();
+    pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
+    pbnavitia::Trip* add_trips();
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);

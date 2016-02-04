@@ -121,17 +121,6 @@ public:
     /** Retourne la structure de données associée au type */
     template<typename T> const typename DataTraitHelper<T>::type& get_data() const;
 
-
-//    template<typename T>
-//    std::vector<typename DataTraitHelper<T>::type::value_type>
-//    get_data(const std::vector<idx_t>& indexes) const
-//    {
-//        std::vector<typename DataTraitHelper<T>::type::value_type> res;
-//        const auto& objs = get_data<T>();
-//        for (const auto& idx: indexes) { res.push_back(objs[idx]); }
-//        return res;
-//    }
-
     template<typename T> typename DataTraitHelper<T>::type
     get_data(const std::vector<idx_t>& indexes) const {
         typename DataTraitHelper<T>::type res;
@@ -139,14 +128,6 @@ public:
         for (const auto& idx: indexes) { res.push_back(objs[idx]); }
         return res;
     }
-    /*
-    template<> typename DataTraitHelper<T>::type
-    get_data<Metavj>(const std::vector<idx_t>& indexes) const {
-        typename std::vector<const MetaVj*> res;
-        const auto& objs = get_data<T>();
-        for (const auto& idx: indexes) { res.push_back(objs[idx]); }
-        return res;
-    }*/
 
     /** Retourne tous les indices d'un type donné
       *
