@@ -105,6 +105,11 @@ def is_valid_route_schedule(schedule, only_time=False):
         is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
 
 
+def is_valid_departures(departures):
+    for departure in departures:
+        is_valid_departure(departure)
+
+
 def is_valid_departure(departure):
     d = get_not_null(departure, 'display_informations')
 
@@ -308,8 +313,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "departures" in response
         assert len(response["departures"]) == 2
 
-        for departure in response["departures"]:
-            is_valid_departure(departure)
+        is_valid_departures(response["departures"])
 
         assert len(response["departures"][0]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][0]["stop_date_time"]["additional_informations"][0] == "date_time_estimated"
@@ -362,6 +366,8 @@ class TestDepartureBoard(AbstractTestFixture):
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])
 
+Departure = namedtuple('Departure', ['sp', 'route', 'dt'])
+
 
 def check_stop_schedule(response, reference):
     """
@@ -379,6 +385,17 @@ def check_stop_schedule(response, reference):
         for (resp_dt, ref_st) in itertools.izip_longest(get_not_null(resp, 'date_times'), ref.date_times):
             eq_(get_not_null(resp_dt, 'date_time'), ref_st.dt)
             eq_(get_not_null(resp_dt, 'links')[0]['id'], ref_st.vj)
+
+
+def check_departures(response, reference):
+    """
+    check the values in a departures
+    """
+    for (resp, ref) in itertools.izip_longest(response, reference):
+        eq_(get_not_null(get_not_null(resp, 'stop_point'), 'id'), ref.sp)
+        eq_(get_not_null(get_not_null(resp, 'route'), 'id'), ref.route)
+        eq_(get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time'), ref.dt)
+
 
 @dataset(["basic_schedule_test"])
 class TestSchedules(AbstractTestFixture):
@@ -398,7 +415,7 @@ class TestSchedules(AbstractTestFixture):
                                           date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
 
     @staticmethod
-    def check_rt_sol(stop_sched):
+    def check_stop_schedule_rt_sol(stop_sched):
         check_stop_schedule(stop_sched,
                             [StopSchedule(sp='S1', route='A:0',
                                           date_times=[SchedDT(dt='20160101T090700',
@@ -424,7 +441,7 @@ class TestSchedules(AbstractTestFixture):
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
-        self.check_rt_sol(stop_sched)
+        self.check_stop_schedule_rt_sol(stop_sched)
 
     def test_stop_schedule_no_dt(self):
         """
@@ -439,7 +456,69 @@ class TestSchedules(AbstractTestFixture):
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
-        self.check_rt_sol(stop_sched)
+        self.check_stop_schedule_rt_sol(stop_sched)
 
+    @staticmethod
+    def check_departure_base_schedule_sol(departures):
+        check_departures(departures, [Departure(sp='S1', route='A:0', dt='20160101T090000'),
+                                      Departure(sp='S1', route='A:0', dt='20160101T100000'),
+                                      Departure(sp='S1', route='A:0', dt='20160101T110000'),
+                                      Departure(sp='S1', route='B:1', dt='20160101T113000'),
+                                      ])
 
+    @staticmethod
+    def check_departure_rt_sol(departures):
+        # RT activated: all A:0 vj are 7 mn late
+        check_departures(departures, [Departure(sp='S1', route='A:0', dt='20160101T090700'),
+                                      Departure(sp='S1', route='A:0', dt='20160101T100700'),
+                                      Departure(sp='S1', route='A:0', dt='20160101T110700'),
+                                      Departure(sp='S1', route='B:1', dt='20160101T113000'),
+                                      ])
 
+    def test_departure(self):
+        """
+        test a departure without nothing
+
+        we should have the current datetime used and the realtime activated
+        """
+        response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_rt_sol(departures)
+
+    def test_departure_base_sched(self):
+        """
+        test a departure, no date time and base schedule, we should get base schedule
+        """
+        response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000"
+                                     "&data_freshness=base_schedule")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_base_schedule_sol(departures)
+
+    def test_departure_dt(self):
+        """
+        test a departure, with a date time
+
+        we should have the wanted datetime used and the realtime activated
+        """
+        response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_rt_sol(departures)
+
+    def test_departure_dt_base_schedule(self):
+        """
+        test a departure, with a date time
+
+        we should have the wanted datetime used and the realtime activated
+        """
+        response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000"
+                                     "&data_freshness=base_schedule")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_base_schedule_sol(departures)
