@@ -155,30 +155,6 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::StopPoint*) { return p
 inline pbnavitia::NavitiaType get_embedded_type(const nt::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
 inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) { return pbnavitia::TRIP; }
 
-inline pbnavitia::Calendar* get_sub_object(const nt::Calendar*,
-                                           pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
-inline pbnavitia::VehicleJourney* get_sub_object(const nt::VehicleJourney*,
-                                                 pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
-inline pbnavitia::Line* get_sub_object(const nt::Line*,
-                                       pbnavitia::PtObject* pt_object) { return pt_object->mutable_line(); }
-inline pbnavitia::Route* get_sub_object(const nt::Route*,
-                                        pbnavitia::PtObject* pt_object) { return pt_object->mutable_route(); }
-inline pbnavitia::Company* get_sub_object(const nt::Company*,
-                                          pbnavitia::PtObject* pt_object) { return pt_object->mutable_company(); }
-inline pbnavitia::Network* get_sub_object(const nt::Network*,
-                                          pbnavitia::PtObject* pt_object) { return pt_object->mutable_network(); }
-inline pbnavitia::Poi* get_sub_object(const ng::POI*,
-                                      pbnavitia::PtObject* pt_object) { return pt_object->mutable_poi(); }
-inline pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin*,
-                                                       pbnavitia::PtObject* pt_object) { return pt_object->mutable_administrative_region(); }
-inline pbnavitia::StopArea* get_sub_object(const nt::StopArea*,
-                                           pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
-inline pbnavitia::StopPoint* get_sub_object(const nt::StopPoint*,
-                                            pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
-inline pbnavitia::CommercialMode* get_sub_object(const nt::CommercialMode*,
-                                                 pbnavitia::PtObject* pt_object) { return pt_object->mutable_commercial_mode(); }
-inline pbnavitia::Trip* get_sub_object(const nt::MetaVehicleJourney*,
-                                       pbnavitia::PtObject* pt_object) { return pt_object->mutable_trip(); }
 
 struct PbCreator {
     const nt::Data& data;
@@ -204,11 +180,11 @@ private:
             dump_message(dump_message), pb_creator(pb_creator){}
 
         Filler copy(int, DumpMessage);
+
         template<typename NAV, typename PB>
-        void fill(NAV* nav_object, PB* pb_object) {
-            if (nav_object == nullptr) {return ;}
-            copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
-        }
+        void fill(NAV* nav_object, PB* pb_object);
+        template<typename NAV, typename F>
+        void fill_with_creator(NAV* nav_object, F creator);
 
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
@@ -329,14 +305,7 @@ private:
 
         // Used for place
         template<typename T>
-        void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
-            if(value == nullptr) { return; }
-
-            copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
-            pt_object->set_name(get_label(value));
-            pt_object->set_uri(value->uri);
-            pt_object->set_embedded_type(get_embedded_type(value));
-        }
+        void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
     };
 };
 
