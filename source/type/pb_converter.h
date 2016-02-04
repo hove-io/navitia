@@ -336,6 +336,8 @@ struct PbCreator {
     pbnavitia::PtObject* add_places_nearby();
     pbnavitia::Journey* add_journeys();
     pbnavitia::PtObject* add_places();
+    pbnavitia::TrafficReports* add_traffic_reports();
+    pbnavitia::NearestStopPoint* add_nearest_stop_points();
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);
@@ -350,6 +352,8 @@ struct PbCreator {
     void make_paginate(const int, const int, const int, const int);
     int departure_boards_size();
     int stop_schedules_size();
+    int traffic_reports_size();
+    int calendars_size();
 
 private:
 

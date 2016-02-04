@@ -477,51 +477,48 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
 }
 
 template<typename T>
-static void fill_or_error(const pbnavitia::PlaceCodeRequest &request,
-                          pbnavitia::Response& pb_response,
-                          const type::Data& data) {
-    const auto& objs = data.pt_data->codes.get_objs<T>(request.type_code(), request.code());
+static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator& pb_creator) {
+    const auto& objs = pb_creator.data.pt_data->codes.get_objs<T>(request.type_code(), request.code());
     if (objs.empty()) {
-        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object");
     } else {
         // FIXME: add every object or (as before) just the first one?
-        navitia::fill_pb_object(objs.front(), data, pb_response.add_places());
+        pb_creator.fill(0, DumpMessage::Yes, objs.front(), pb_creator.add_places());
     }
 }
 
 pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-    pbnavitia::Response pb_response;
+    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
 
     switch(request.type()) {
     case pbnavitia::PlaceCodeRequest::StopArea:
-        fill_or_error<nt::StopArea>(request, pb_response, *data);
+        fill_or_error<nt::StopArea>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Network:
-        fill_or_error<nt::Network>(request, pb_response, *data);
+        fill_or_error<nt::Network>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Company:
-        fill_or_error<nt::Company>(request, pb_response, *data);
+        fill_or_error<nt::Company>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Line:
-        fill_or_error<nt::Line>(request, pb_response, *data);
+        fill_or_error<nt::Line>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Route:
-        fill_or_error<nt::Line>(request, pb_response, *data);
+        fill_or_error<nt::Line>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::VehicleJourney:
-        fill_or_error<nt::VehicleJourney>(request, pb_response, *data);
+        fill_or_error<nt::VehicleJourney>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::StopPoint:
-        fill_or_error<nt::StopPoint>(request, pb_response, *data);
+        fill_or_error<nt::StopPoint>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Calendar:
-        fill_or_error<nt::Calendar>(request, pb_response, *data);
+        fill_or_error<nt::Calendar>(request, pb_creator);
         break;
     }
-
-    return pb_response;
+    return pb_creator.get_response();
 }
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
@@ -766,13 +763,13 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    pbnavitia::Response response;
+    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
     for(const auto& item: result){
-        auto* nsp = response.add_nearest_stop_points();
-        navitia::fill_pb_object(planner->get_sp(item.first), *data, nsp->mutable_stop_point(), 0);
+        auto* nsp = pb_creator.add_nearest_stop_points();
+        pb_creator.fill(0,DumpMessage::Yes,planner->get_sp(item.first), nsp->mutable_stop_point());
         nsp->set_access_duration(item.second.total_seconds());
     }
-    return response;
+    return pb_creator.get_response();
 }
 
 }

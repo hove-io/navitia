@@ -209,7 +209,6 @@ static georef::Path get_direct_path(georef::StreetNetwork& worker,
 }
 
 static void add_direct_path(PbCreator& pb_creator,
-                       const nt::Data& d,
                        const georef::Path& path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
@@ -255,11 +254,8 @@ static void add_direct_path(PbCreator& pb_creator,
 }
 
 static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
-        PbCreator& pb_creator,
-        const navitia::routing::Path& path,
-        const nt::Data& d,
-        bt::ptime now,
-        const bool show_codes){
+                                    PbCreator& pb_creator,
+                                    const navitia::routing::Path& path){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     pb_journey->set_nb_transfers(path.nb_changes);
     pb_journey->set_requested_date_time(navitia::to_posix_timestamp(path.request_time));
@@ -412,7 +408,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     compute_most_serious_disruption(pb_journey);
 
     //fare computation, done at the end for the journey to be complete
-    auto fare = d.fare->compute_fare(path);
+    auto fare = pb_creator.data.fare->compute_fare(path);
     try {
         pb_creator.fill_fare_section(pb_journey, fare);
     } catch(const navitia::exception& e) {
@@ -424,14 +420,13 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
 static void add_pathes(PbCreator& pb_creator,
                        const std::vector<navitia::routing::Path>& paths,
-                       const nt::Data& d,
                        georef::StreetNetwork& worker,
                        const georef::Path& direct_path,
                        const type::EntryPoint& origin,
                        const type::EntryPoint& destination,
                        const std::vector<bt::ptime>& datetimes,
-                       const bool clockwise,
-                       const bool show_codes) {
+                       const bool clockwise) {
+
     pb_creator.now = bt::second_clock::universal_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -473,7 +468,7 @@ static void add_pathes(PbCreator& pb_creator,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, d)){
+            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, pb_creator.data)){
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
@@ -514,7 +509,7 @@ static void add_pathes(PbCreator& pb_creator,
             }
         }
 
-        arrival_time = handle_pt_sections(pb_journey, pb_creator, path, d, pb_creator.now, show_codes);
+        arrival_time = handle_pt_sections(pb_journey, pb_creator, path);
         // for 'taxi like' odt, we want to start from the address, not the 1 stop point
         if (journey_begin_with_address_odt) {
             auto* section = pb_journey->mutable_sections(0);
@@ -537,7 +532,7 @@ static void add_pathes(PbCreator& pb_creator,
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, d)) {
+            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, pb_creator.data)) {
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(path.items.back().departures.back(),
@@ -589,24 +584,22 @@ static void add_pathes(PbCreator& pb_creator,
         co2_emission_aggregator(pb_journey);
     }
 
-    add_direct_path(pb_creator, d, direct_path, origin, destination, datetimes, clockwise);
+    add_direct_path(pb_creator,direct_path, origin, destination, datetimes, clockwise);
 }
 
 static void
 make_pathes(PbCreator& pb_creator,
             const std::vector<navitia::routing::Path>& paths,
-            const nt::Data& d,
             georef::StreetNetwork& worker,
             const georef::Path& direct_path,
             const type::EntryPoint& origin,
             const type::EntryPoint& destination,
             const std::vector<bt::ptime>& datetimes,
-            const bool clockwise,
-            const bool show_codes) {
+            const bool clockwise) {
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
-    add_pathes(pb_creator, paths, d, worker, direct_path,
-               origin, destination, datetimes, clockwise, show_codes);
+    add_pathes(pb_creator, paths, worker, direct_path,
+               origin, destination, datetimes, clockwise);
 
     if (pb_creator.empty_journeys()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
@@ -617,9 +610,7 @@ make_pathes(PbCreator& pb_creator,
 
 
 static void add_pt_pathes(PbCreator& pb_creator,
-                       const std::vector<navitia::routing::Path>& paths,
-                       const nt::Data& d,
-                       const bool show_codes) {
+                       const std::vector<navitia::routing::Path>& paths) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     for(const Path& path : paths) {
@@ -629,7 +620,7 @@ static void add_pt_pathes(PbCreator& pb_creator,
         }
         bt::ptime departure_time = path.items.front().departures.front();
         pbnavitia::Journey* pb_journey = pb_creator.add_journeys();
-        bt::ptime arrival_time = handle_pt_sections(pb_journey, pb_creator, path, d, pb_creator.now, show_codes);
+        bt::ptime arrival_time = handle_pt_sections(pb_journey, pb_creator, path);
 
 
         pb_journey->set_departure_date_time(navitia::to_posix_timestamp(departure_time));
@@ -640,15 +631,11 @@ static void add_pt_pathes(PbCreator& pb_creator,
     }
 }
 
-static pbnavitia::Response make_pt_pathes(
-        const std::vector<navitia::routing::Path>& paths,
-        const nt::Data& d,
-        const bool show_codes) {
-
-    PbCreator pb_creator(d, bt::second_clock::universal_time(), null_time_period, show_codes);
+static pbnavitia::Response make_pt_pathes(PbCreator& pb_creator,
+                                          const std::vector<navitia::routing::Path>& paths) {
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
-    add_pt_pathes(pb_creator, paths, d, show_codes);
+    add_pt_pathes(pb_creator, paths);
     if (pb_creator.empty_journeys()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
                                  pbnavitia::NO_SOLUTION,
@@ -664,9 +651,8 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    DateTime init_dt,
                                    DateTime bound,
                                    int max_duration,
-                                   bool show_codes,
                                    bool show_stop_area) {
-    bt::ptime now = bt::second_clock::universal_time();
+    pb_creator.now = bt::second_clock::universal_time();
     for(const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
@@ -889,7 +875,7 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                   bool show_codes,
                                   uint32_t max_extra_second_pass){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data,pt::not_a_date_time, null_time_period, false);
+    PbCreator pb_creator(raptor.data,pt::not_a_date_time, null_time_period, show_codes);
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -938,7 +924,7 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     if(clockwise){
         std::reverse(pathes.begin(), pathes.end());
     }
-    return make_pt_pathes(pathes, raptor.data, show_codes);
+    return make_pt_pathes(pb_creator, pathes);
 
 }
 
@@ -973,8 +959,7 @@ make_response(RAPTOR &raptor,
     const auto direct_path = get_direct_path(worker, origin, destination);
 
     if(departures.size() == 0 && destinations.size() == 0){
-        make_pathes(pb_creator, pathes, raptor.data, worker, direct_path, origin, destination,
-                               datetimes, clockwise, show_codes);
+        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                      pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
@@ -984,8 +969,7 @@ make_response(RAPTOR &raptor,
     }
 
     if(departures.size() == 0){
-        make_pathes(pb_creator, pathes, raptor.data, worker, direct_path,
-                               origin, destination, datetimes, clockwise, show_codes);
+        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin,
                                      pbnavitia::NO_ORIGIN_POINT, "no origin point");
@@ -994,8 +978,7 @@ make_response(RAPTOR &raptor,
     }
 
     if(destinations.size() == 0){
-        make_pathes(pb_creator, pathes, raptor.data, worker, direct_path,
-                               origin, destination, datetimes, clockwise, show_codes);
+        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_destination,
                                      pbnavitia::NO_DESTINATION_POINT,
@@ -1043,8 +1026,7 @@ make_response(RAPTOR &raptor,
     if(clockwise)
         std::reverse(pathes.begin(), pathes.end());
 
-    make_pathes(pb_creator, pathes, raptor.data, worker, direct_path,
-                       origin, destination, datetimes, clockwise, show_codes);
+    make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
     return pb_creator.get_response();
 }
 
@@ -1137,8 +1119,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
             const type::EntryPoint& m_point = paths_for_m_point.first;
 
             add_isochrone_response(raptor, pb_creator, stop_points, clockwise,
-                                   init_dt, bound, max_duration, show_codes,
-                                   (m_point.type == nt::Type_e::StopArea));
+                                   init_dt, bound, max_duration, (m_point.type == nt::Type_e::StopArea));
         }
     }
 
@@ -1184,7 +1165,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                            accessibilite_params, forbidden, clockwise, rt_level);
 
     add_isochrone_response(raptor, pb_creator, raptor.data.pt_data->stop_points, clockwise,
-                           init_dt, bound, max_duration, show_codes, false);
+                           init_dt, bound, max_duration, false);
     pb_creator.sort_journeys();
     if(pb_creator.empty_journeys()){
          pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,

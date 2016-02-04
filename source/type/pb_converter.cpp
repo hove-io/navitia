@@ -1672,6 +1672,14 @@ pbnavitia::PtObject* PbCreator::add_places(){
     return response.add_places();
 }
 
+pbnavitia::TrafficReports* PbCreator::add_traffic_reports(){
+    return response.add_traffic_reports();
+}
+
+pbnavitia::NearestStopPoint* PbCreator::add_nearest_stop_points(){
+    return response.add_nearest_stop_points();
+}
+
 pbnavitia::Journey* PbCreator::add_journeys(){
     return response.add_journeys();
 }
@@ -1709,6 +1717,13 @@ int PbCreator::stop_schedules_size(){
     return response.stop_schedules_size();
 }
 
+int PbCreator::traffic_reports_size(){
+    return response.traffic_reports_size();
+}
+
+int PbCreator::calendars_size(){
+    return response.calendars_size();
+}
 
 void PbCreator::sort_journeys(){
     std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
