@@ -1230,6 +1230,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
         fp->set_id(c->uri);
         fp->set_name(c->name);
         fp->set_license(c->license);
+        fp->set_url(c->website);
 }
 
 const std::string& PbCreator::register_section(pbnavitia::Journey* j, size_t section_idx) {
