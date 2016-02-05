@@ -111,6 +111,116 @@ static bool is_partial_terminus(const nt::StopTime* stop_time){
 }
 
 namespace {
+template<typename Pb> struct type_trait;
+template<> struct type_trait<nt::Line> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Line>*  type;
+};
+template<> struct type_trait<nt::ValidityPattern> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::ValidityPattern>*  type;
+};
+template<> struct type_trait<nt::StopArea> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopArea>*  type;
+};
+template<> struct type_trait<nt::StopPoint> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopPoint>*  type;
+};
+template<> struct type_trait<nt::Network> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Network>*  type;
+};
+template<> struct type_trait<nt::Route> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Route>*  type;
+};
+template<> struct type_trait<nt::Company> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Company>*  type;
+};
+template<> struct type_trait<nt::CommercialMode> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::CommercialMode>*  type;
+};
+template<> struct type_trait<nt::PhysicalMode> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PhysicalMode>*  type;
+};
+template<> struct type_trait<nt::LineGroup> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::LineGroup>*  type;
+};
+template<> struct type_trait<ng::POI> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Poi>*  type;
+};
+template<> struct type_trait<ng::POIType> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PoiType>*  type;
+};
+template<> struct type_trait<nt::VehicleJourney> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::VehicleJourney>*  type;
+};
+template<> struct type_trait<nt::Calendar> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Calendar>*  type;
+};
+template<> struct type_trait<nt::Contributor> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Contributor>*  type;
+};
+template<> struct type_trait<nt::Frame> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Frame>*  type;
+};
+template<> struct type_trait<nt::StopPointConnection> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Connection>*  type;
+};
+template<> struct type_trait<nt::MetaVehicleJourney> {
+    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Trip>*  type;
+};
+
+template<typename Pb>
+typename type_trait<Pb>::type get_mutable(pbnavitia::Response& resp);
+template<> typename type_trait<nt::Line>::type get_mutable<nt::Line>(pbnavitia::Response& resp){
+    return resp.mutable_lines();
+}
+template<> typename type_trait<nt::ValidityPattern>::type get_mutable<nt::ValidityPattern>(pbnavitia::Response& resp){
+    return resp.mutable_validity_patterns();
+}
+template<> typename type_trait<nt::StopPoint>::type get_mutable<nt::StopPoint>(pbnavitia::Response& resp){
+    return resp.mutable_stop_points();
+}
+template<> typename type_trait<nt::StopArea>::type get_mutable<nt::StopArea>(pbnavitia::Response& resp){
+    return resp.mutable_stop_areas();
+}
+template<> typename type_trait<nt::Network>::type get_mutable<nt::Network>(pbnavitia::Response& resp){
+    return resp.mutable_networks();
+}
+template<> typename type_trait<nt::Route>::type get_mutable<nt::Route>(pbnavitia::Response& resp){
+    return resp.mutable_routes();
+}
+template<> typename type_trait<nt::Company>::type get_mutable<nt::Company>(pbnavitia::Response& resp){
+    return resp.mutable_companies();
+}
+template<> typename type_trait<nt::PhysicalMode>::type get_mutable<nt::PhysicalMode>(pbnavitia::Response& resp){
+    return resp.mutable_physical_modes();
+}
+template<> typename type_trait<nt::CommercialMode>::type get_mutable<nt::CommercialMode>(pbnavitia::Response& resp){
+    return resp.mutable_commercial_modes();
+}
+template<> typename type_trait<nt::LineGroup>::type get_mutable<nt::LineGroup>(pbnavitia::Response& resp){
+    return resp.mutable_line_groups();
+}
+template<> typename type_trait<ng::POI>::type get_mutable<ng::POI>(pbnavitia::Response& resp){
+    return resp.mutable_pois();
+}
+template<> typename type_trait<ng::POIType>::type get_mutable<ng::POIType>(pbnavitia::Response& resp){
+    return resp.mutable_poi_types();
+}
+template<> typename type_trait<nt::VehicleJourney>::type get_mutable<nt::VehicleJourney>(pbnavitia::Response& resp){
+    return resp.mutable_vehicle_journeys();
+}
+template<> typename type_trait<nt::Calendar>::type get_mutable<nt::Calendar>(pbnavitia::Response& resp){
+    return resp.mutable_calendars();
+}
+template<> typename type_trait<nt::Contributor>::type get_mutable<nt::Contributor>(pbnavitia::Response& resp){
+    return resp.mutable_contributors();
+}
+template<> typename type_trait<nt::Frame>::type get_mutable<nt::Frame>(pbnavitia::Response& resp){
+    return resp.mutable_frames();
+}
+template<> typename type_trait<nt::StopPointConnection>::type get_mutable<nt::StopPointConnection>(pbnavitia::Response& resp){
+    return resp.mutable_connections();
+}
+
 template<typename T> nt::Type_e get_type_e() {
     static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
     return nt::Type_e::Unknown;
@@ -123,17 +233,6 @@ template<> nt::Type_e get_type_e<nt::CommercialMode>() {
 }
 template<> nt::Type_e get_type_e<nt::Contributor>() {
     return nt::Type_e::Contributor;
-}
-
-template<typename T> const std::vector<T*>& get_data_vector(const nt::Data&) {
-    static_assert(!std::is_same<T, T>::value, "get_data_vector unimplemented");
-    return {};
-}
-template<> const std::vector<nt::PhysicalMode*>& get_data_vector<nt::PhysicalMode>(const nt::Data& data) {
-    return data.pt_data->physical_modes;
-}
-template<> const std::vector<nt::CommercialMode*>& get_data_vector<nt::CommercialMode>(const nt::Data& data) {
-    return data.pt_data->commercial_modes;
 }
 
 pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin*, pbnavitia::PtObject* pt_object) {
@@ -1232,6 +1331,29 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
         fp->set_license(c->license);
         fp->set_url(c->website);
 }
+
+template<typename N>
+void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth, const DumpMessage dump_message){
+    auto* pb_object = get_mutable<N>(response);
+    Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
+}
+template void PbCreator::pb_fill(const std::vector<ng::POI*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<ng::POIType*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Company*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Contributor*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Frame*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Network*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Route*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::StopArea*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>& nav_list, int depth, const DumpMessage dump_message);
 
 const std::string& PbCreator::register_section(pbnavitia::Journey* j, size_t section_idx) {
     routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);

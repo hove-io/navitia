@@ -156,128 +156,6 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::CommercialMode*) { ret
 inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) { return pbnavitia::TRIP; }
 
 
-namespace {
-
-template<typename Pb> struct type_trait;
-template<> struct type_trait<nt::Line> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Line>*  type;
-};
-template<> struct type_trait<nt::ValidityPattern> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::ValidityPattern>*  type;
-};
-template<> struct type_trait<nt::StopArea> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopArea>*  type;
-};
-template<> struct type_trait<nt::StopPoint> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopPoint>*  type;
-};
-template<> struct type_trait<nt::Network> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Network>*  type;
-};
-template<> struct type_trait<nt::Route> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Route>*  type;
-};
-template<> struct type_trait<nt::Company> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Company>*  type;
-};
-template<> struct type_trait<nt::CommercialMode> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::CommercialMode>*  type;
-};
-template<> struct type_trait<nt::PhysicalMode> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PhysicalMode>*  type;
-};
-template<> struct type_trait<nt::LineGroup> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::LineGroup>*  type;
-};
-template<> struct type_trait<ng::POI> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Poi>*  type;
-};
-template<> struct type_trait<ng::POIType> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PoiType>*  type;
-};
-template<> struct type_trait<nt::VehicleJourney> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::VehicleJourney>*  type;
-};
-template<> struct type_trait<nt::Calendar> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Calendar>*  type;
-};
-template<> struct type_trait<nt::Contributor> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Contributor>*  type;
-};
-template<> struct type_trait<nt::Frame> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Frame>*  type;
-};
-template<> struct type_trait<nt::StopPointConnection> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Connection>*  type;
-};
-template<> struct type_trait<nt::MetaVehicleJourney> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Trip>*  type;
-};
-
-template<typename Pb>
-typename type_trait<Pb>::type get_mutable(pbnavitia::Response& resp);
-
-template<> typename type_trait<nt::Line>::type get_mutable<nt::Line>(pbnavitia::Response& resp){
-    return resp.mutable_lines();
-}
-
-template<> typename type_trait<nt::ValidityPattern>::type get_mutable<nt::ValidityPattern>(pbnavitia::Response& resp){
-    return resp.mutable_validity_patterns();
-}
-
-template<> typename type_trait<nt::StopPoint>::type get_mutable<nt::StopPoint>(pbnavitia::Response& resp){
-    return resp.mutable_stop_points();
-}
-
-template<> typename type_trait<nt::StopArea>::type get_mutable<nt::StopArea>(pbnavitia::Response& resp){
-    return resp.mutable_stop_areas();
-}
-
-template<> typename type_trait<nt::Network>::type get_mutable<nt::Network>(pbnavitia::Response& resp){
-    return resp.mutable_networks();
-}
-
-template<> typename type_trait<nt::Route>::type get_mutable<nt::Route>(pbnavitia::Response& resp){
-    return resp.mutable_routes();
-}
-template<> typename type_trait<nt::Company>::type get_mutable<nt::Company>(pbnavitia::Response& resp){
-    return resp.mutable_companies();
-}
-template<> typename type_trait<nt::PhysicalMode>::type get_mutable<nt::PhysicalMode>(pbnavitia::Response& resp){
-    return resp.mutable_physical_modes();
-}
-template<> typename type_trait<nt::CommercialMode>::type get_mutable<nt::CommercialMode>(pbnavitia::Response& resp){
-    return resp.mutable_commercial_modes();
-}
-template<> typename type_trait<nt::LineGroup>::type get_mutable<nt::LineGroup>(pbnavitia::Response& resp){
-    return resp.mutable_line_groups();
-}
-template<> typename type_trait<ng::POI>::type get_mutable<ng::POI>(pbnavitia::Response& resp){
-    return resp.mutable_pois();
-}
-template<> typename type_trait<ng::POIType>::type get_mutable<ng::POIType>(pbnavitia::Response& resp){
-    return resp.mutable_poi_types();
-}
-template<> typename type_trait<nt::VehicleJourney>::type get_mutable<nt::VehicleJourney>(pbnavitia::Response& resp){
-    return resp.mutable_vehicle_journeys();
-}
-template<> typename type_trait<nt::Calendar>::type get_mutable<nt::Calendar>(pbnavitia::Response& resp){
-    return resp.mutable_calendars();
-}
-template<> typename type_trait<nt::Contributor>::type get_mutable<nt::Contributor>(pbnavitia::Response& resp){
-    return resp.mutable_contributors();
-}
-template<> typename type_trait<nt::Frame>::type get_mutable<nt::Frame>(pbnavitia::Response& resp){
-    return resp.mutable_frames();
-}
-template<> typename type_trait<nt::StopPointConnection>::type get_mutable<nt::StopPointConnection>(pbnavitia::Response& resp){
-    return resp.mutable_connections();
-}
-template<> typename type_trait<nt::MetaVehicleJourney>::type get_mutable<nt::MetaVehicleJourney>(pbnavitia::Response& resp){
-    return resp.mutable_trips();
-}
-}
-
 struct PbCreator {
     std::set<const nt::Contributor*> contributors;
     const nt::Data& data;
@@ -304,10 +182,7 @@ struct PbCreator {
 
     template<typename N>
     void pb_fill(const std::vector<N*>& nav_list, int depth = 0,
-                 const DumpMessage dump_message = DumpMessage::Yes){
-        auto* pb_object = get_mutable<N>(response);
-        Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
-    }
+                 const DumpMessage dump_message = DumpMessage::Yes);
 
     // Raptor
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
@@ -375,7 +250,7 @@ private:
 
         PbCreator& pb_creator;
         Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator): depth(depth),
-            dump_message(dump_message), pb_creator(pb_creator){};
+            dump_message(dump_message), pb_creator(pb_creator){}
 
         Filler copy(int, DumpMessage);
 
