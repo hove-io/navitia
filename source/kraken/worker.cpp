@@ -437,7 +437,7 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
 pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
     const auto data = data_manager.get_data();
-    this->init_worker_data(data);    
+    this->init_worker_data(data);
     PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {

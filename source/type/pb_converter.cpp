@@ -111,113 +111,116 @@ static bool is_partial_terminus(const nt::StopTime* stop_time){
 }
 
 namespace {
-template<typename Pb> struct type_trait;
-template<> struct type_trait<nt::Line> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Line>*  type;
+template<typename Pb> struct NavitiaToProto;
+template<> struct NavitiaToProto<nt::Line> {
+    typedef pbnavitia::Line  type;
 };
-template<> struct type_trait<nt::ValidityPattern> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::ValidityPattern>*  type;
+template<> struct NavitiaToProto<nt::ValidityPattern> {
+    typedef pbnavitia::ValidityPattern type;
 };
-template<> struct type_trait<nt::StopArea> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopArea>*  type;
+template<> struct NavitiaToProto<nt::StopArea> {
+    typedef pbnavitia::StopArea type;
 };
-template<> struct type_trait<nt::StopPoint> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::StopPoint>*  type;
+template<> struct NavitiaToProto<nt::StopPoint> {
+    typedef pbnavitia::StopPoint type;
 };
-template<> struct type_trait<nt::Network> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Network>*  type;
+template<> struct NavitiaToProto<nt::Network> {
+    typedef pbnavitia::Network type;
 };
-template<> struct type_trait<nt::Route> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Route>*  type;
+template<> struct NavitiaToProto<nt::Route> {
+    typedef pbnavitia::Route type;
 };
-template<> struct type_trait<nt::Company> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Company>*  type;
+template<> struct NavitiaToProto<nt::Company> {
+    typedef pbnavitia::Company type;
 };
-template<> struct type_trait<nt::CommercialMode> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::CommercialMode>*  type;
+template<> struct NavitiaToProto<nt::CommercialMode> {
+    typedef pbnavitia::CommercialMode type;
 };
-template<> struct type_trait<nt::PhysicalMode> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PhysicalMode>*  type;
+template<> struct NavitiaToProto<nt::PhysicalMode> {
+    typedef pbnavitia::PhysicalMode type;
 };
-template<> struct type_trait<nt::LineGroup> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::LineGroup>*  type;
+template<> struct NavitiaToProto<nt::LineGroup> {
+    typedef pbnavitia::LineGroup type;
 };
-template<> struct type_trait<ng::POI> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Poi>*  type;
+template<> struct NavitiaToProto<ng::POI> {
+    typedef pbnavitia::Poi type;
 };
-template<> struct type_trait<ng::POIType> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::PoiType>*  type;
+template<> struct NavitiaToProto<ng::POIType> {
+    typedef pbnavitia::PoiType type;
 };
-template<> struct type_trait<nt::VehicleJourney> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::VehicleJourney>*  type;
+template<> struct NavitiaToProto<nt::VehicleJourney> {
+    typedef pbnavitia::VehicleJourney type;
 };
-template<> struct type_trait<nt::Calendar> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Calendar>*  type;
+template<> struct NavitiaToProto<nt::Calendar> {
+    typedef pbnavitia::Calendar type;
 };
-template<> struct type_trait<nt::Contributor> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Contributor>*  type;
+template<> struct NavitiaToProto<nt::Contributor> {
+    typedef pbnavitia::Contributor type;
 };
-template<> struct type_trait<nt::Frame> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Frame>*  type;
+template<> struct NavitiaToProto<nt::Frame> {
+    typedef pbnavitia::Frame type;
 };
-template<> struct type_trait<nt::StopPointConnection> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Connection>*  type;
+template<> struct NavitiaToProto<nt::StopPointConnection> {
+    typedef pbnavitia::Connection type;
 };
-template<> struct type_trait<nt::MetaVehicleJourney> {
-    typedef ::google::protobuf::RepeatedPtrField<pbnavitia::Trip>*  type;
+template<> struct NavitiaToProto<nt::MetaVehicleJourney> {
+    typedef pbnavitia::Trip type;
 };
 
+template<typename T>
+using NavToProtoCollec = ::google::protobuf::RepeatedPtrField<typename NavitiaToProto<T>::type>*;
+
 template<typename Pb>
-typename type_trait<Pb>::type get_mutable(pbnavitia::Response& resp);
-template<> typename type_trait<nt::Line>::type get_mutable<nt::Line>(pbnavitia::Response& resp){
+NavToProtoCollec<Pb> get_mutable(pbnavitia::Response& resp);
+template<> NavToProtoCollec<nt::Line> get_mutable<nt::Line>(pbnavitia::Response& resp){
     return resp.mutable_lines();
 }
-template<> typename type_trait<nt::ValidityPattern>::type get_mutable<nt::ValidityPattern>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::ValidityPattern> get_mutable<nt::ValidityPattern>(pbnavitia::Response& resp){
     return resp.mutable_validity_patterns();
 }
-template<> typename type_trait<nt::StopPoint>::type get_mutable<nt::StopPoint>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::StopPoint> get_mutable<nt::StopPoint>(pbnavitia::Response& resp){
     return resp.mutable_stop_points();
 }
-template<> typename type_trait<nt::StopArea>::type get_mutable<nt::StopArea>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::StopArea> get_mutable<nt::StopArea>(pbnavitia::Response& resp){
     return resp.mutable_stop_areas();
 }
-template<> typename type_trait<nt::Network>::type get_mutable<nt::Network>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Network> get_mutable<nt::Network>(pbnavitia::Response& resp){
     return resp.mutable_networks();
 }
-template<> typename type_trait<nt::Route>::type get_mutable<nt::Route>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Route> get_mutable<nt::Route>(pbnavitia::Response& resp){
     return resp.mutable_routes();
 }
-template<> typename type_trait<nt::Company>::type get_mutable<nt::Company>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Company> get_mutable<nt::Company>(pbnavitia::Response& resp){
     return resp.mutable_companies();
 }
-template<> typename type_trait<nt::PhysicalMode>::type get_mutable<nt::PhysicalMode>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::PhysicalMode> get_mutable<nt::PhysicalMode>(pbnavitia::Response& resp){
     return resp.mutable_physical_modes();
 }
-template<> typename type_trait<nt::CommercialMode>::type get_mutable<nt::CommercialMode>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::CommercialMode> get_mutable<nt::CommercialMode>(pbnavitia::Response& resp){
     return resp.mutable_commercial_modes();
 }
-template<> typename type_trait<nt::LineGroup>::type get_mutable<nt::LineGroup>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::LineGroup> get_mutable<nt::LineGroup>(pbnavitia::Response& resp){
     return resp.mutable_line_groups();
 }
-template<> typename type_trait<ng::POI>::type get_mutable<ng::POI>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<ng::POI> get_mutable<ng::POI>(pbnavitia::Response& resp){
     return resp.mutable_pois();
 }
-template<> typename type_trait<ng::POIType>::type get_mutable<ng::POIType>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<ng::POIType> get_mutable<ng::POIType>(pbnavitia::Response& resp){
     return resp.mutable_poi_types();
 }
-template<> typename type_trait<nt::VehicleJourney>::type get_mutable<nt::VehicleJourney>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::VehicleJourney> get_mutable<nt::VehicleJourney>(pbnavitia::Response& resp){
     return resp.mutable_vehicle_journeys();
 }
-template<> typename type_trait<nt::Calendar>::type get_mutable<nt::Calendar>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Calendar> get_mutable<nt::Calendar>(pbnavitia::Response& resp){
     return resp.mutable_calendars();
 }
-template<> typename type_trait<nt::Contributor>::type get_mutable<nt::Contributor>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Contributor> get_mutable<nt::Contributor>(pbnavitia::Response& resp){
     return resp.mutable_contributors();
 }
-template<> typename type_trait<nt::Frame>::type get_mutable<nt::Frame>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::Frame> get_mutable<nt::Frame>(pbnavitia::Response& resp){
     return resp.mutable_frames();
 }
-template<> typename type_trait<nt::StopPointConnection>::type get_mutable<nt::StopPointConnection>(pbnavitia::Response& resp){
+template<> NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointConnection>(pbnavitia::Response& resp){
     return resp.mutable_connections();
 }
 

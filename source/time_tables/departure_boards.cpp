@@ -122,7 +122,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
 
     //Mapping route/stop_point
-    std::vector<stop_point_line> sps_routes;    
+    std::vector<stop_point_line> sps_routes;
     for(auto jpp_idx : handler.journey_pattern_points) {
         const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
         const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
