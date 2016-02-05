@@ -248,6 +248,7 @@ struct builder {
     void generate_dummy_basis();
     void manage_admin();
     void build_autocomplete();
+    void fill_missing_destinations();
 };
 
 }

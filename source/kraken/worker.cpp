@@ -96,6 +96,19 @@ std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
     return result;
 }
 
+static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
+    switch (pb_level) {
+    case pbnavitia::RTLevel::BASE:
+        return type::RTLevel::Base;
+    case pbnavitia::RTLevel::ADAPTED:
+        return type::RTLevel::Adapted;
+    case pbnavitia::RTLevel::REAL_TIME:
+        return type::RTLevel::RealTime;
+    default:
+        throw navitia::recoverable_exception("unhandled realtime level");
+    }
+}
+
 template<class T>
 std::vector<std::string> vector_of_admins(const T & admin){
     std::vector<std::string> result;
@@ -261,31 +274,32 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
+    auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    type::AccessibiliteParams(), *data, rt_level, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    type::AccessibiliteParams(), *data, rt_level, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_DEPARTURES:
             return timetables::previous_departures(request.departure_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    type::AccessibiliteParams(), *data, rt_level, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::PREVIOUS_ARRIVALS:
             return timetables::previous_arrivals(request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), *data, type::RTLevel::Adapted, request.count(),
+                    type::AccessibiliteParams(), *data, rt_level, request.count(),
                     request.start_page(), request.show_codes(), current_datetime);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
@@ -294,7 +308,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, type::RTLevel::Base, request.show_codes());
+                    request.count(), request.start_page(), *data, rt_level, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
@@ -302,7 +316,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri,
                     from_datetime,
                     request.duration(), max_date_times, request.depth(),
-                    request.count(), request.start_page(), *data, type::RTLevel::Base, request.show_codes());
+                    request.count(), request.start_page(), *data, rt_level, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
@@ -506,24 +520,6 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_response;
 }
 
-static type::RTLevel get_realtime_level(const pbnavitia::JourneysRequest& request) {
-    // for retrocompatibility, we must handle both the new and the old way of setting the rt_level
-    // retrocompatibility will be droped after the migration
-    if (request.has_realtime_level()) {
-        switch (request.realtime_level()) {
-        case pbnavitia::RTLevel::BASE:
-            return type::RTLevel::Base;
-        case pbnavitia::RTLevel::ADAPTED:
-            return type::RTLevel::Adapted;
-        case pbnavitia::RTLevel::REAL_TIME:
-            return type::RTLevel::RealTime;
-        default:
-            throw navitia::exception("unhandled realtime level");
-        }
-    }
-    return type::RTLevel::Base;
-}
-
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
@@ -596,7 +592,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
 
-    const auto rt_level = get_realtime_level(request);
+    const auto rt_level = get_realtime_level(request.realtime_level());
 
     switch(api) {
     case pbnavitia::ISOCHRONE: {

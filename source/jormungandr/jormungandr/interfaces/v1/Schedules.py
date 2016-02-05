@@ -89,6 +89,14 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        #Note: no default param for data freshness, the default depends on the API
+        parser_get.add_argument("data_freshness",
+                                description='freshness of the data. '
+                                            'base_schedule is the long term planned schedule. '
+                                            'adapted_schedule is for planned ahead disruptions (strikes, '
+                                            'maintenances, ...). '
+                                            'realtime is to have the freshest possible data',
+                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
@@ -115,25 +123,35 @@ class Schedules(ResourceUri, ResourceUtc):
         timezone.set_request_timezone(self.region)
 
         if not args["from_datetime"] and not args["until_datetime"]:
-            args['from_datetime'] = datetime.datetime.now()
-            if args["calendar"]:  # if we have a calendar 00:00 is fine
+            # no datetime given, default is the current time, and we activate the realtime
+            args['from_datetime'] = args['_current_datetime']
+            if args["calendar"]:  # if we have a calendar, the dt is only used for sorting, so 00:00 is fine
                 args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)
-            else:
-                args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
+
+            if not args['data_freshness']:
+                args['data_freshness'] = 'realtime'
+        elif not args.get('calendar'):
+            #if a calendar is given all times will be given in local (because the calendar might span over dst)
+            if args['from_datetime']:
+                args['from_datetime'] = self.convert_to_utc(args['from_datetime'])
+            if args['until_datetime']:
+                args['until_datetime'] = self.convert_to_utc(args['until_datetime'])
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['from_datetime']
-
-        if not args.get('calendar'):
-            #if a calendar is given all times will be given in local (because it might span over dst)
-            if args['from_datetime']:
-                new_datetime = self.convert_to_utc(args['from_datetime'])
-                args['from_datetime'] = utils.date_to_timestamp(new_datetime)
-            if args['until_datetime']:
-                new_datetime = self.convert_to_utc(args['until_datetime'])
-                args['until_datetime'] = utils.date_to_timestamp(new_datetime)
-        else:
+        if args['from_datetime']:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
+        if args['until_datetime']:
+            args['until_datetime'] = utils.date_to_timestamp(args['until_datetime'])
+
+        if not args['data_freshness']:
+            # The data freshness depends on the API
+            # for route_schedule, by default we want the base schedule
+            if self.endpoint == 'route_schedules':
+                args['data_freshness'] = 'base_schedule'
+            # for stop_schedule and previous/next departure/arrival, we want the freshest data by default
+            else:
+                args['data_freshness'] = 'realtime'
 
         if not args["from_datetime"] and args["until_datetime"]\
                 and self.endpoint[:4] == "next":

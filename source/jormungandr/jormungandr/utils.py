@@ -31,7 +31,7 @@ import calendar
 from collections import deque
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 
 
 def str_to_time_stamp(str):
@@ -176,3 +176,15 @@ def walk_protobuf(pb_object, visitor):
         visitor(elem[0], elem[1])
 
         add_elt(elem[0], elem[1])
+
+
+def realtime_level_to_pbf(level):
+    if level == 'base_schedule':
+        return type_pb2.BASE
+    elif level == 'adapted_schedule':
+        return type_pb2.ADAPTED
+    elif level == 'realtime':
+        return type_pb2.REAL_TIME
+    else:
+        raise ValueError('Impossible to convert in pbf')
+
