@@ -39,7 +39,7 @@ namespace navitia { namespace timetables {
   Il est persistant tout le long de la requête
 */
 struct RequestHandle {
-    PbCreator pb_creator;
+    PbCreator& pb_creator;
     DateTime date_time, max_datetime;
     std::vector<routing::JppIdx> journey_pattern_points;
     int total_result;

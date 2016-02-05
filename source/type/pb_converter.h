@@ -170,6 +170,10 @@ struct PbCreator {
     PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period,
               const bool show_codes = false):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
+
+    PbCreator(const PbCreator&) = delete;
+    PbCreator& operator=(const PbCreator&) = delete;
+
     template<typename N, typename P>
     void fill(const N& item, P* proto, int depth, const DumpMessage dump_message=DumpMessage::Yes) {
         Filler(depth, dump_message, *this).fill_pb_object(item, proto);
