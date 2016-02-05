@@ -162,13 +162,13 @@ struct PbCreator {
     pt::ptime now;
     pt::time_period action_period;
     const bool show_codes;
-    // Raptor
+    // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
     pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
     PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period,
-              const bool show_codes):
+              const bool show_codes = false):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
     template<typename N, typename P>
     void fill(const N& item, P* proto, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
@@ -184,7 +184,7 @@ struct PbCreator {
     void pb_fill(const std::vector<N*>& nav_list, int depth = 0,
                  const DumpMessage dump_message = DumpMessage::Yes);
 
-    // Raptor
+    // Raptor api
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
     std::string get_section_id(pbnavitia::Journey* j, size_t section_idx) ;
@@ -391,7 +391,7 @@ private:
         template<typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
     };
-    // Raptor
+    // Raptor api
     pbnavitia::Section* create_section(pbnavitia::Journey*, const ng::PathItem&, int);
     const ng::POI* get_nearest_bss_station(const nt::GeographicalCoord&);
     const ng::POI* get_nearest_poi(const nt::GeographicalCoord&, const ng::POIType&);

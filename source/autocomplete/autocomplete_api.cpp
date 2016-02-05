@@ -192,7 +192,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  int search_type,
                                  const navitia::type::Data &d) {
 
-    navitia::PbCreator pb_creator(d,pt::not_a_date_time,null_time_period, false);
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
         return pb_creator.get_response();
@@ -215,7 +215,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         case nt::Type_e::StopArea:
             if (search_type==0) {
                 result = d.pt_data->stop_area_autocomplete.find_complete(q,
-                        nbmax,valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
+                        nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
@@ -324,7 +324,7 @@ pbnavitia::Response autocomplete(const std::string &q,
     }
 
 
-    //Sort the list of objects (sort by object type ,score, quality and name)
+    //Sort the list of objects (sort by object type , score, quality and name)
     //delete unwanted objects at the end of the list
     auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
         //Sort by object type
