@@ -394,9 +394,44 @@ static bool keep_vj(const nt::VehicleJourney* vj,
 
 static std::vector<idx_t>
 filter_vj_on_period(const std::vector<type::idx_t>& indexes,
-                    const boost::optional<bt::ptime>& since,
-                    const boost::optional<bt::ptime>& until,
+                    const  bt::time_period& period,
                     const type::Data& data) {
+
+    std::vector<idx_t> res;
+    for (const idx_t idx: indexes) {
+        const auto* vj = data.pt_data->vehicle_journeys[idx];
+        if (! keep_vj(vj, period)) { continue; }
+        res.push_back(idx);
+    }
+    return res;
+}
+
+static std::vector<idx_t>
+filter_impact_on_period(const std::vector<type::idx_t>& indexes,
+                    const  bt::time_period& period,
+                    const type::Data& data) {
+
+    std::vector<idx_t> res;
+    for (const idx_t idx: indexes) {
+        auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
+
+        // to keep an impact, we want the intersection between its application periods
+        // and the period to be non empy
+        for (const auto& application_period: impact->application_periods) {
+            if (application_period.intersection(period).is_null()) { continue; }
+            res.push_back(idx);
+            break;
+        }
+    }
+    return res;
+}
+
+static std::vector<idx_t>
+filter_on_period(const std::vector<type::idx_t>& indexes,
+                 const navitia::type::Type_e requested_type,
+                 const boost::optional<boost::posix_time::ptime>& since,
+                 const boost::optional<boost::posix_time::ptime>& until,
+                 const type::Data& data) {
 
     // we create the right period using since, until and the production period
     if (since && until && until < since) {
@@ -421,27 +456,14 @@ filter_vj_on_period(const std::vector<type::idx_t>& indexes,
             end = *until;
         }
     }
-    bt::time_period period {start, end};
-
-    std::vector<idx_t> res;
-    for (const idx_t idx: indexes) {
-        const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (! keep_vj(vj, period)) { continue; }
-        res.push_back(idx);
-    }
-    return res;
-}
-
-static std::vector<idx_t>
-filter_on_period(const std::vector<type::idx_t>& indexes,
-                 const navitia::type::Type_e requested_type,
-                 const boost::optional<boost::posix_time::ptime>& since,
-                 const boost::optional<boost::posix_time::ptime>& until,
-                 const type::Data& data) {
+    // we want end to be in the period, so we add one seconds
+    bt::time_period period {start, end + bt::seconds(1)};
 
     switch (requested_type) {
     case nt::Type_e::VehicleJourney:
-        return filter_vj_on_period(indexes, since, until, data);
+        return filter_vj_on_period(indexes, period, data);
+    case nt::Type_e::Impact:
+        return filter_impact_on_period(indexes, period, data);
     default:
         throw parsing_error(parsing_error::error_type::global_error,
                             "cannot filter on validity period for this type");
