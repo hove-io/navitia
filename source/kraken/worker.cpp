@@ -440,7 +440,13 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep, data);
-        return proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data);
+        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data);
+        pbnavitia::Response pb_response;
+        if(tmp.places_nearby().size() == 1){
+            auto place = pb_response.add_places();
+            place->CopyFrom(tmp.places_nearby(0));
+        }
+        return pb_response;
     }
 
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
