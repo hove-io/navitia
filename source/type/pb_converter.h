@@ -214,9 +214,9 @@ struct PbCreator {
 
     void fill_pb_error(const pbnavitia::Error::error_id, const pbnavitia::ResponseType&, const std::string&);
     void fill_pb_error(const pbnavitia::Error::error_id, const std::string&);
-    pbnavitia::Response& get_response(){
-        Filler(0, DumpMessage::Yes, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
-        return response;
+    pbnavitia::Response get_response(){
+        Filler(0, DumpMessage::No, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+        return std::move(response);
     }
 
     pbnavitia::PtObject* add_places_nearby();

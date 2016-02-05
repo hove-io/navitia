@@ -640,7 +640,7 @@ static pbnavitia::Response make_pt_pathes(PbCreator& pb_creator,
                                  pbnavitia::NO_SOLUTION,
                                  "no solution found for this journey");
     }
-    return std::move(pb_creator.get_response());
+    return pb_creator.get_response();
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
@@ -669,7 +669,7 @@ static void add_isochrone_response(RAPTOR& raptor,
             if(duration > max_duration) {
                 continue;
             }
-            auto pb_journey =  pb_creator.add_journeys();
+            auto pb_journey = pb_creator.add_journeys();
 
             uint64_t departure;
             uint64_t arrival;
@@ -878,7 +878,7 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
     auto datetime = datetimes.front();
 
@@ -950,7 +950,7 @@ make_response(RAPTOR &raptor,
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
     worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data, worker);
@@ -964,7 +964,7 @@ make_response(RAPTOR &raptor,
                                      pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                      "no origin point nor destination point");
         }
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     if(departures.size() == 0){
@@ -973,7 +973,7 @@ make_response(RAPTOR &raptor,
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin,
                                      pbnavitia::NO_ORIGIN_POINT, "no origin point");
         }
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     if(destinations.size() == 0){
@@ -983,7 +983,7 @@ make_response(RAPTOR &raptor,
                                      pbnavitia::NO_DESTINATION_POINT,
                                      "no destination point");
         }
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
 
@@ -1026,7 +1026,7 @@ make_response(RAPTOR &raptor,
         std::reverse(pathes.begin(), pathes.end());
 
     make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
-    return std::move(pb_creator.get_response());
+    return pb_creator.get_response();
 }
 
 pbnavitia::Response
@@ -1044,7 +1044,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {datetimes_str}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     std::vector<std::pair<type::EntryPoint, routing::map_stop_point_duration > > departures;
@@ -1072,18 +1072,18 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                  pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                  "no origin point nor destination point");
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     if(departures.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_origin, pbnavitia::NO_ORIGIN_POINT, "no origin point");
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     if(arrivals.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_destination, pbnavitia::NO_DESTINATION_POINT,
                                  "no destination point");
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
@@ -1126,7 +1126,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
                                  pbnavitia::NO_SOLUTION, "no solution found for this journey");
     }
-    return std::move(pb_creator.get_response());
+    return pb_creator.get_response();
 }
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
@@ -1144,7 +1144,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     auto tmp_datetime = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || tmp_datetime.size() == 0 ||
             pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
     datetime = tmp_datetime.front();
     worker.init(origin);
@@ -1152,7 +1152,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
     if(departures.size() == 0){
         pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
-        return std::move(pb_creator.get_response());
+        return pb_creator.get_response();
     }
 
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
@@ -1170,7 +1170,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
          pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,
                                   "no solution found for this isochrone");
      }
-    return std::move(pb_creator.get_response());
+    return pb_creator.get_response();
 }
 
 
