@@ -415,6 +415,8 @@ filter_impact_on_period(const std::vector<type::idx_t>& indexes,
     for (const idx_t idx: indexes) {
         auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
 
+        if (! impact) { continue; }
+
         // to keep an impact, we want the intersection between its application periods
         // and the period to be non empy
         for (const auto& application_period: impact->application_periods) {
