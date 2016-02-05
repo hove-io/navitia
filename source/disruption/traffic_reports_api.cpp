@@ -310,69 +310,58 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
                                 size_t start_page,
                                 const std::string& filter,
                                 const std::vector<std::string>& forbidden_uris) {
-    pbnavitia::Response pb_response;
 
     bt::ptime now_dt = bt::from_time_t(posix_now_dt);
-    auto action_period = bt::time_period(now_dt, bt::seconds(1));
+    PbCreator pb_creator(d, now_dt, bt::time_period(now_dt, bt::seconds(1)), false);
 
     TrafficReport result;
     try {
         result.disruptions_list(filter, forbidden_uris, d, now_dt);
     } catch(const ptref::parsing_error& parse_error) {
-        fill_pb_error(pbnavitia::Error::unable_to_parse,
-                "Unable to parse filter" + parse_error.more, pb_response.mutable_error());
-        return pb_response;
+        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
+        return pb_creator.get_response();
     } catch(const ptref::ptref_error& ptref_error) {
-        fill_pb_error(pbnavitia::Error::bad_filter,
-                "ptref : "  + ptref_error.more, pb_response.mutable_error());
-        return pb_response;
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
+        return pb_creator.get_response();
     }
 
     size_t total_result = result.get_disrupts_size();
     std::vector<NetworkDisrupt> disrupts = paginate(result.get_disrupts(), count, start_page);
     for (const NetworkDisrupt& dist: disrupts) {
-        auto* pb_traffic_reports = pb_response.add_traffic_reports();
+        auto* pb_traffic_reports = pb_creator.add_traffic_reports();
         pbnavitia::Network* pb_network = pb_traffic_reports->mutable_network();
         for(const auto& impact: dist.network_disruptions){
-            navitia::fill_pb_object(impact.get(), d, pb_network, depth-1, now_dt, action_period);
+            pb_creator.fill(impact.get(), pb_network, depth-1);
         }
-        navitia::fill_pb_object(dist.network, d, pb_network, depth, bt::not_a_date_time, action_period, false);
+        pb_creator.fill(dist.network, pb_network, depth, DumpMessage::No);
         for (const auto& line_item: dist.lines) {
             pbnavitia::Line* pb_line = pb_traffic_reports->add_lines();
-            navitia::fill_pb_object(line_item.first, d, pb_line, depth-1, bt::not_a_date_time, action_period, false);
+            pb_creator.fill(line_item.first, pb_line, depth-1, DumpMessage::No);
             for(const auto& impact: line_item.second){
-                navitia::fill_pb_object(impact.get(), d, pb_line, depth-1, now_dt, action_period);
+                pb_creator.fill(impact.get(), pb_line, depth-1);
             }
         }
         for (const auto& sa_item: dist.stop_areas) {
             pbnavitia::StopArea* pb_stop_area = pb_traffic_reports->add_stop_areas();
-            navitia::fill_pb_object(sa_item.first, d, pb_stop_area, depth-1,
-                                    bt::not_a_date_time, action_period, false);
+            pb_creator.fill(sa_item.first, pb_stop_area, depth-1, DumpMessage::No);
             for(const auto& impact: sa_item.second){
-                navitia::fill_pb_object(impact.get(), d, pb_stop_area, depth-1, now_dt, action_period);
+                pb_creator.fill(impact.get(), pb_stop_area, depth-1);
             }
         }
         for (const auto& vj_item: dist.vehicle_journeys) {
             pbnavitia::VehicleJourney* pb_vehicle_journey = pb_traffic_reports->add_vehicle_journeys();
-            navitia::fill_pb_object(vj_item.first, d, pb_vehicle_journey, depth-1,
-                                    bt::not_a_date_time, action_period, false);
+            pb_creator.fill(vj_item.first, pb_vehicle_journey, depth-1, DumpMessage::No);
             for(const auto& impact: vj_item.second){
-                navitia::fill_pb_object(impact.get(), d, pb_vehicle_journey, depth-1, now_dt, action_period);
+                pb_creator.fill(impact.get(), pb_vehicle_journey, depth-1);
             }
         }
     }
-    auto pagination = pb_response.mutable_pagination();
-    pagination->set_totalresult(total_result);
-    pagination->set_startpage(start_page);
-    pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(pb_response.traffic_reports_size());
-
-    if (pb_response.traffic_reports_size() == 0) {
-        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this disruption",
-        pb_response.mutable_error());
-        pb_response.set_response_type(pbnavitia::NO_SOLUTION);
+    pb_creator.make_paginate(total_result, start_page, count, pb_creator.traffic_reports_size());
+    if (pb_creator.traffic_reports_size() == 0) {
+        pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,
+                                 "no solution found for this disruption");
     }
-    return pb_response;
+    return pb_creator.get_response();
 }
 
 }}//namespace navitia::disruption

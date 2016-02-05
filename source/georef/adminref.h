@@ -42,6 +42,7 @@ namespace navitia {
         typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
 
         struct Admin : nt::Header, nt::Nameable {
+            const static type::Type_e type = type::Type_e::Admin;
             /**
               http://wiki.openstreetmap.org/wiki/Key:admin_level#admin_level
               Level = 2  : Pays

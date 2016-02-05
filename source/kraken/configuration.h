@@ -58,12 +58,14 @@ namespace navitia { namespace kraken{
             bool is_realtime_enabled() const;
             int kirin_timeout() const;
             int kirin_retry_timeout() const;
+            bool display_contributors() const;
 
             std::vector<std::string> rt_topics() const;
     };
 
     boost::program_options::options_description get_options_description(
             const boost::optional<std::string> name = {},
-            const boost::optional<std::string> zmq = {});
+            const boost::optional<std::string> zmq = {},
+            const boost::optional<bool> display_contributors = {});
 
 }}//namespace
