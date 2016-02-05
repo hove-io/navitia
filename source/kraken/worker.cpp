@@ -193,6 +193,9 @@ void Worker::metadatas(pbnavitia::Response& response) {
 
 void Worker::feed_publisher(pbnavitia::Response& response){
     const auto d = data_manager.get_data();
+    if (!conf.display_contributors()){
+        response.clear_feed_publishers();
+    }
     auto pb_feed_publisher = response.add_feed_publishers();
     // instance_name is required
     pb_feed_publisher->set_id(d->meta->instance_name);
