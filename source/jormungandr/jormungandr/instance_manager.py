@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from flask import json
 
 from shapely import geometry
 import ConfigParser
@@ -85,23 +86,22 @@ def choose_best_instance(instances):
 
 class InstanceManager(object):
 
-    """ Permet de coordonner les différents NAViTiA gérés par le front-end
-    Un identifiant correspond à une socket ZMQ Navitia où se connecter
-    Plusieurs identifiants peuvent se connecter à une même socket
+    """
+    Handle the different Kraken instances
 
-    De plus il est possible de définir la zone géographique (au format WKT)
-    couverte par un identifiant
+    a kraken instance's id is associated to a zmq socket and possibly some custom configuration
     """
 
-    def __init__(self, ini_files=None, instances_dir=None, start_ping=False):
-        # if a .ini file is defined in the settings we take it
-        # else we load all .ini file found in the INSTANCES_DIR
-        if ini_files is None and instances_dir is None:
-            raise ValueError("ini_files or instance_dir has to be set")
-        if ini_files:
-            self.ini_files = ini_files
+    def __init__(self, conf_files=None, instances_dir=None, start_ping=False):
+        # if a configuration file is defined in the settings we take it
+        # else we load all .ini/.json files found in the INSTANCES_DIR
+        if conf_files is None and instances_dir is None:
+            raise ValueError("conf_files or instance_dir has to be set")
+        if conf_files:
+            self.configuration_files = conf_files
         else:
-            self.ini_files = glob.glob(instances_dir + '/*.ini')
+            self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
+                                       glob.glob(instances_dir + '/*.json')
         self.start_ping = start_ping
 
     def initialisation(self):
@@ -115,14 +115,25 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        for file_name in self.ini_files:
+        for file_name in self.configuration_files:
             logging.getLogger(__name__).info("Initialisation, reading file : " + file_name)
-            conf = ConfigParser.ConfigParser()
-            conf.read(file_name)
-            instance = Instance(self.context, conf.get('instance', 'key'))
-            instance.socket_path = conf.get('instance', 'socket')
+            if file_name.endswith('.ini'):
+                # Note: the ini configuration file is kept only temporarily, to migration all the
+                # production configuration slowly
+                conf = ConfigParser.ConfigParser()
+                conf.read(file_name)
+                instance = Instance(self.context, conf.get('instance', 'key'), conf.get('instance', 'socket'))
+            elif file_name.endswith('.json'):
+                config_data = json.loads(open(file_name).read())
+                name = config_data['key']
+                instance = Instance(self.context, name, config_data['zmq_socket'],
+                                    config_data.get('realtime_proxies', []))
+            else:
+                logging.getLogger(__name__).warn('impossible to init an instance with the configuration '
+                                                 'file {}'.format(file_name))
+                continue
 
-            self.instances[conf.get('instance', 'key')] = instance
+            self.instances[instance.name] = instance
 
         #we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)

@@ -68,7 +68,7 @@ cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
 from jormungandr.instance_manager import InstanceManager
 
-i_manager = InstanceManager(ini_files=app.config.get('INI_FILE', None),
+i_manager = InstanceManager(conf_files=app.config.get('INI_FILE', None),
                             instances_dir=app.config.get('INSTANCES_DIR', None),
                             start_ping=app.config.get('START_MONITORING_THREAD', True))
 i_manager.initialisation()

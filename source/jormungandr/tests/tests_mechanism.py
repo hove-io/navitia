@@ -128,7 +128,7 @@ class AbstractTestFixture:
                      .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
-        i_manager.ini_files = app.config['INI_FILES']
+        i_manager.configuration_files = app.config['INI_FILES']
         i_manager.initialisation()
 
         #we block the stat manager not to send anything to rabbit mq
