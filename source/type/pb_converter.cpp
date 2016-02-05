@@ -545,7 +545,6 @@ void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m,
 
     physical_mode->set_name(m->name);
     physical_mode->set_uri(m->uri);
-    add_contributor(m);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
@@ -553,7 +552,6 @@ void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m,
 
     commercial_mode->set_name(m->name);
     commercial_mode->set_uri(m->uri);
-    add_contributor(m);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line){
