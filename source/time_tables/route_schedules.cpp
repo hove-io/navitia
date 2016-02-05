@@ -382,7 +382,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
         auto schedule = pb_creator.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
         auto m_pt_display_informations = schedule->mutable_pt_display_informations();
-        pb_creator.fill(route,m_pt_display_informations);
+        pb_creator.fill(route, m_pt_display_informations, 0);
 
         std::vector<bool> is_vj_set(stop_times.size(), false);
         for (size_t i = 0; i < stop_times.size(); ++i) { table->add_headers(); }
@@ -399,7 +399,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
                     auto vj = dt_stop_time.second->vehicle_journey;
                     const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
-                    pb_creator.fill(&vj_st, vj_display_information);
+                    pb_creator.fill(&vj_st, vj_display_information, 0);
                     // as we only issue headsign for vj in route_schedules:
                     // - need to override headsign with trip headsign (i.e. vj.name)
                     // - issue all headsigns of the vj in headsigns
@@ -417,10 +417,10 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                 auto pb_dt = row->add_date_times();
                 const auto& st_calandar =  navitia::StopTimeCalandar(dt_stop_time.second,
                                                                           dt_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calandar,pb_dt, max_depth);
+                pb_creator.fill(&st_calandar, pb_dt, max_depth);
             }
         }
-        pb_creator.fill(&route->shape,schedule->mutable_geojson());
+        pb_creator.fill(&route->shape, schedule->mutable_geojson(), 0);
     }
     pb_creator.make_paginate(total_result, start_page, count, pb_creator.route_schedules_size());
 }

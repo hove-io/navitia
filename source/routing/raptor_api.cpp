@@ -691,9 +691,9 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                                        navitia::to_posix_time(best_lbl, raptor.data));
             if (show_stop_area)
-                pb_creator.fill(sp->stop_area, pb_journey->mutable_destination());
+                pb_creator.fill(sp->stop_area, pb_journey->mutable_destination(), 0);
             else
-                pb_creator.fill(sp, pb_journey->mutable_destination());
+                pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
         }
     }
 }

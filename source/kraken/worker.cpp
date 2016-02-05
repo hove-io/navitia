@@ -485,7 +485,7 @@ static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator&
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object");
     } else {
         // FIXME: add every object or (as before) just the first one?
-        pb_creator.fill(objs.front(), pb_creator.add_places());
+        pb_creator.fill(objs.front(), pb_creator.add_places(), 0);
     }
 }
 
@@ -769,7 +769,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
     for(const auto& item: result){
         auto* nsp = pb_creator.add_nearest_stop_points();
-        pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point());
+        pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
         nsp->set_access_duration(item.second.total_seconds());
     }
     return pb_creator.get_response();

@@ -65,22 +65,22 @@ render_v1(PbCreator& pb_creator,
         pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second], m_route, depth);
         if (pb_creator.data.pt_data->routes[id_vec.first.second]->line != nullptr){
             auto m_line = m_route->mutable_line();
-            pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second]->line, m_line);
+            pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second]->line, m_line, 0);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
 
-        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second], pt_display_information);
+        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second], pt_display_information, 0);
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
             const auto& st_calendar = navitia::StopTimeCalandar(dt_st.second, dt_st.first, calendar_id);
-            pb_creator.fill(&st_calendar, date_time);
+            pb_creator.fill(&st_calendar, date_time, 0);
             if (dt_st.second != nullptr) {
                 auto vj = dt_st.second->vehicle_journey;
                 if(vj != nullptr) {
                     for (const auto& comment: pb_creator.data.pt_data->comments.get(*vj)) {
-                        pb_creator.fill(&comment, date_time->mutable_properties()->add_notes());
+                        pb_creator.fill(&comment, date_time->mutable_properties()->add_notes(), 0);
                     }
                 }
             }

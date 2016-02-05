@@ -171,17 +171,17 @@ struct PbCreator {
               const bool show_codes = false):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
     template<typename N, typename P>
-    void fill(const N& item, P* proto, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
+    void fill(const N& item, P* proto, int depth, const DumpMessage dump_message=DumpMessage::Yes) {
         Filler(depth, dump_message, *this).fill_pb_object(item, proto);
     }
 
     template<typename N>
-    void fill(const N& item, int depth = 0, const DumpMessage dump_message=DumpMessage::Yes) {
+    void fill(const N& item, int depth , const DumpMessage dump_message=DumpMessage::Yes) {
         Filler(depth, dump_message, *this).fill_pb_object(item, &response);
     }
 
     template<typename N>
-    void pb_fill(const std::vector<N*>& nav_list, int depth = 0,
+    void pb_fill(const std::vector<N*>& nav_list, int depth,
                  const DumpMessage dump_message = DumpMessage::Yes);
 
     // Raptor api
