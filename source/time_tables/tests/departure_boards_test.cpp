@@ -485,6 +485,9 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
 
+/*
+ *  Calling a stop_schedule asking only for base schedule data should return base schedule data 
+ */
 BOOST_FIXTURE_TEST_CASE(base_stop_schedule, departure_board_fixture) {
     pbnavitia::Response resp = departure_board("stop_point.uri=S1", {}, {}, d("20160101T070000"),
                                                86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data),

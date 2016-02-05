@@ -439,11 +439,8 @@ class TestSchedules(AbstractTestFixture):
 
     def test_stop_schedule_realtime(self):
         """
-        test a stop schedule without a from_datetime parameter
-
-        we should have the current datetime used and the realtime activated
-
-        Note: for test purpose we override the current_datetime
+        we give a from_datetime and a data_freshness, we should get the schedule
+        from this datetime and with realtime data
         """
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=realtime")
