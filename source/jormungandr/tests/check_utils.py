@@ -853,6 +853,7 @@ def is_valid_vehicle_journey(vj, depth_check=1):
 
 def is_valid_trip(trip, depth_check=1):
     get_not_null(trip, "id")
+    get_not_null(trip, "name")
 
 
 def is_valid_journey_pattern(jp, depth_check=1):
