@@ -794,7 +794,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
     case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
-    case Type_e::Frame: result.push_back(frame->idx); break;
+    case Type_e::Frame: if (frame) { result.push_back(frame->idx); } break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
