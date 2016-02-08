@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
 
     // we want the vj valid from 11pm the first day to 08:00 (excluded) the second, we still have no vj
     BOOST_CHECK_THROW(query(nt::Type_e::VehicleJourney, "", *(builder.data),
-                            {"20130311T1100"_dt}, {"20130312T0800"_dt}, true),
+                            {"20130311T1100"_dt}, {"20130312T0759"_dt}, true),
                       ptref_error);
 
     // we want the vj valid from 11pm the first day to 08::00 the second, we now have A in the results

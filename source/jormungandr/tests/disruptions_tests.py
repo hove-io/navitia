@@ -412,3 +412,80 @@ class TestDisruptions(AbstractTestFixture):
         eq_(channel['id'], 'sms')
         eq_(channel['name'], 'sms channel')
         eq_(len(channel['types']), 1)
+
+    def test_disruption_date_filtering(self):
+        """
+        test the filtering of the /disruptions API with since/until
+
+        The ease the test we consider only the A line disruptions
+        """
+        response = self.query_region('lines/A/disruptions')
+
+        disruptions = response['disruptions']
+        for d in disruptions:
+            is_valid_disruption(d)
+
+        # No filtering results in the whole 5 disruptions
+        assert len(disruptions) == 5
+
+        #in the disruptoins the earliest one is called 'too_bad_all_lines'
+        # and is active on [20120614T060000, 20120614T115959[
+        too_bad_all_line = next(d for d in disruptions if d['id'] == 'too_bad_all_lines')
+        assert too_bad_all_line['application_periods'][0]['begin'] == '20120614T060000'
+        assert too_bad_all_line['application_periods'][0]['end'] == '20120614T115959'
+
+        # if we ask the all the disruption valid until 20120615, we only got 'too_bad_all_lines'
+        disrup = self.query_region('lines/A/disruptions?until=20120615T000000')['disruptions']
+        assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
+
+        # same if we ask until a date in too_bad_all_line application_periods
+        disrup = self.query_region('lines/A/disruptions?until=20120614T105959')['disruptions']
+        assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
+
+        # same if we ask for the very beginning of the disruption
+        disrup = self.query_region('lines/A/disruptions?until=20120614T060000')['disruptions']
+        assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
+
+        # but the very second before, we got nothing
+        _, code = self.query_region('lines/A/disruptions?until=20120614T055959', check=False)
+        assert code == 404
+
+        # if we ask for all disruption valid since 20120614T115959 (the end of too_bad_all_line),
+        # we got all the disruptions
+        disrup = self.query_region('lines/A/disruptions?since=20120614T115959')['disruptions']
+        assert len(disrup) == 5
+
+        # if we ask for all disruption valid since 20120614T120000 (the second after the end of
+        # too_bad_all_line), we got all of them but 'too_bad_all_lines'
+        disrup = self.query_region('lines/A/disruptions?since=20120614T120000')['disruptions']
+        assert len(disrup) == 4 and not any(d for d in disrup if d['id'] == 'too_bad_all_lines')
+
+    def test_disruption_period_filtering(self):
+        """
+        there are 2 late disruptions 'later_impact' and 'too_bad_route_A:0_and_line'
+        'later_impact' is interesting because it has several application periods:
+         * [20121001T000000, 20121015T115959]
+         * [20121201T000000, 20121215T115959]
+        """
+        # we query it with a period that intersect one of 'later_impact periods, we got the impact
+        disrup = self.query_region('lines/A/disruptions?since=20121016T000000&until=20121217T000000')['disruptions']
+        assert {d['id'] for d in disrup} == {'later_impact'}
+
+        # we query it with a period that doest not intersect one of 'later_impact periods, we got nothing
+        _, code = self.query_region('lines/A/disruptions?since=20121016T000000&until=20121017T000000',
+                                    check=False)
+        assert code == 404
+
+        # we query it with a period [d, d] that intersect one of 'later_impact periods, we got the impact
+        disrup = self.query_region('lines/A/disruptions?since=20121001T000000&until=20121001T000000')['disruptions']
+        assert {d['id'] for d in disrup} == {'later_impact'}
+
+    def test_disruption_invalid_period_filtering(self):
+        """if we query with a since or an until not in the production period, we got an error"""
+        resp, code = self.query_region('disruptions?since=20201016T000000', check=False)
+        assert code == 404
+        assert resp['error']['message'] == 'ptref : invalid filtering period, not in production period'
+
+        resp, code = self.query_region('disruptions?until=20001016T000000', check=False)
+        assert code == 404
+        assert resp['error']['message'] == 'ptref : invalid filtering period, not in production period'
