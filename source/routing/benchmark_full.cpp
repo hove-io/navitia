@@ -263,7 +263,8 @@ int main(int argc, char** argv){
             std::cout << demand.start
                       << ", " << demand.start
                       << ", " << demand.target
-                      << ", " << demand.target
+                      << ", " << static_cast<int>(demand.start_mode)
+                      << ", " << static_cast<int>(demand.target_mode)
                       << ", " << date
                       << ", " << demand.hour
                       << "\n";
