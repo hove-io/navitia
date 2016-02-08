@@ -1,3 +1,21 @@
+navitia2 (2.1.0) unstable; urgency=low
+
+  * Ptref: add a period filter on /disruptions  <https://github.com/CanalTP/navitia/pull/1405>
+  * kraken: feed publisher  <https://github.com/CanalTP/navitia/pull/1398>
+  * Jormun: no from_datetime => current datetime and realtime  <https://github.com/CanalTP/navitia/pull/1397>
+  * jormun: don't apply any "smart" filters on isochrone result... again... <https://github.com/CanalTP/navitia/pull/1402> 
+  * Jormungandr: add a trip name  <https://github.com/CanalTP/navitia/pull/1401>
+  * jormungandr: fix min_nb_journeys in the scenario new_default  <https://github.com/CanalTP/navitia/pull/1400>
+  * Jormungandr: empty boxes for rt schedule connectors  <https://github.com/CanalTP/navitia/pull/1399>
+  * kraken: periodically retry to load realtime data  <https://github.com/CanalTP/navitia/pull/1395>
+  * jormungandr: handle Kraken priority  <https://github.com/CanalTP/navitia/pull/1392>
+  * Jormungandr: Extract module schedule  <https://github.com/CanalTP/navitia/pull/1394>
+  * kraken: refactoring pb_converter  <https://github.com/CanalTP/navitia/pull/1367>
+  * Tyr: add tests on tyr api  <https://github.com/CanalTP/navitia/pull/1391>
+  * RT: push unique impact into mvj's impacte_by list  <https://github.com/CanalTP/navitia/pull/1390>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Mon, 08 Feb 2016 11:02:03 +0100
+
 navitia2 (2.0.0) unstable; urgency=low
 
   * Kraken: Disruptions on stop point and stop area  <https://github.com/CanalTP/navitia/pull/1370>
