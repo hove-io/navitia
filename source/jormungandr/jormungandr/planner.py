@@ -16,18 +16,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
+from jormungandr import utils
 from navitiacommon import request_pb2, type_pb2
-
-def realtime_level_to_pbf(level):
-    if level == 'base_schedule':
-        return type_pb2.BASE
-    elif level == 'adapted_schedule':
-        return type_pb2.ADAPTED
-    elif level == 'realtime':
-        return type_pb2.REAL_TIME
-    else:
-        raise ValueError('Impossible to convert in pbf')
 
 
 class JourneyParameters(object):
@@ -69,7 +59,7 @@ class Kraken(object):
 
         req.journeys.datetimes.append(datetime)
         req.journeys.clockwise = clockwise
-        req.journeys.realtime_level = realtime_level_to_pbf(journey_parameters.realtime_level)
+        req.journeys.realtime_level = utils.realtime_level_to_pbf(journey_parameters.realtime_level)
         req.journeys.max_duration = journey_parameters.max_duration
         req.journeys.max_transfers = journey_parameters.max_transfers
         req.journeys.wheelchair = journey_parameters.wheelchair

@@ -67,7 +67,8 @@ struct mock_kraken {
         //we mock a command line load
         po::options_description desc = navitia::kraken::get_options_description(
                     boost::optional<std::string>("default"),
-                    boost::optional<std::string>("42")); //not used
+                    boost::optional<std::string>("42"),
+                    boost::optional<bool>(true)); //not used
         auto other_options = conf.load_from_command_line(desc, argc, argv);
 
         //this option is not parsed by get_options_description because it is used only here

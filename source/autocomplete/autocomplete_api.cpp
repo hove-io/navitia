@@ -40,46 +40,49 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
                             const nt::Type_e type,
                             uint32_t depth,
                             const nt::Data& data,
-                            pbnavitia::Response& pb_response){
+                            navitia::PbCreator& pb_creator){
     for(auto result_item : result){
-        pbnavitia::PtObject* place = pb_response.add_places();
+        pbnavitia::PtObject* place = pb_creator.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_placemark(data.pt_data->stop_areas[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->stop_areas[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Admin:
-            fill_pb_placemark(data.geo_ref->admins[result_item.idx], data, place, depth);
+            pb_creator.fill(data.geo_ref->admins[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_placemark(data.pt_data->stop_points[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->stop_points[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
-        case nt::Type_e::Address:
-            fill_pb_placemark(data.geo_ref->ways[result_item.idx], data, place, result_item.house_number, result_item.coord, depth);
+        case nt::Type_e::Address:{
+            const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[result_item.idx],
+                    result_item.coord, result_item.house_number);
+            pb_creator.fill(&way_coord, place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
+        }
         case nt::Type_e::POI:
-            fill_pb_placemark(data.geo_ref->pois[result_item.idx], data, place, depth);
+            pb_creator.fill(data.geo_ref->pois[result_item.idx], place, depth);
             place->set_quality(result_item.quality);
             place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
-            fill_pb_placemark(data.pt_data->networks[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->networks[result_item.idx], place, depth);
             break;
         case nt::Type_e::CommercialMode:
-            fill_pb_placemark(data.pt_data->commercial_modes[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->commercial_modes[result_item.idx], place, depth);
             break;
         case nt::Type_e::Line:
-            fill_pb_placemark(data.pt_data->lines[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->lines[result_item.idx], place, depth);
             break;
         case nt::Type_e::Route:
-            fill_pb_placemark(data.pt_data->routes[result_item.idx], data, place, depth);
+            pb_creator.fill(data.pt_data->routes[result_item.idx], place, depth);
             break;
         default:
             break;
@@ -189,10 +192,10 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  int search_type,
                                  const navitia::type::Data &d) {
 
-    pbnavitia::Response pb_response;
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
     if (q.empty()) {
-        fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent", pb_response.mutable_error());
-        return pb_response;
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
+        return pb_creator.get_response();
     }
     int nbmax_temp = nbmax;
     //For each object type we search in the dictionnary and keep (nbmax x 3) objects in the result.
@@ -212,7 +215,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         case nt::Type_e::StopArea:
             if (search_type==0) {
                 result = d.pt_data->stop_area_autocomplete.find_complete(q,
-                        nbmax,valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
+                        nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
@@ -300,8 +303,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         if (search_type == 0) {
             update_quality(result, query_word_vec.size());
         }
-
-        create_place_pb(result, type, depth, d, pb_response);
+        create_place_pb(result, type, depth, d, pb_creator);
     }
 
     //If n-gram is used to get de result we base on quality computed
@@ -317,12 +319,12 @@ pbnavitia::Response autocomplete(const std::string &q,
 
     if (search_type != 0) {
         nbmax = nbmax_temp;
-        auto mutable_places = pb_response.mutable_places();
+        auto mutable_places = pb_creator.get_mutable_places();
         sort_and_truncate(*mutable_places, nbmax, compare_by_quality);
     }
 
 
-    //Sort the list of objects (sort by object type ,score, quality and name)
+    //Sort the list of objects (sort by object type , score, quality and name)
     //delete unwanted objects at the end of the list
     auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
         //Sort by object type
@@ -344,17 +346,13 @@ pbnavitia::Response autocomplete(const std::string &q,
     };
 
     nbmax = nbmax_temp;
-    auto mutable_places = pb_response.mutable_places();
+    auto mutable_places = pb_creator.get_mutable_places();
     sort_and_truncate(*mutable_places, nbmax, compare_attributs);
     const int result_size = mutable_places->size();
 
     //Pagination
-    auto pagination = pb_response.mutable_pagination();
-    pagination->set_totalresult(result_size);
-    pagination->set_startpage(0);
-    pagination->set_itemsperpage(nbmax);
-    pagination->set_itemsonpage(result_size);
-    return pb_response;
+    pb_creator.make_paginate(result_size, 0, nbmax, result_size);
+    return pb_creator.get_response();
 }
 
 }} //namespace navitia::autocomplete

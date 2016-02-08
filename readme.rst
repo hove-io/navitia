@@ -62,6 +62,8 @@ Transportation data (in the `GTFS <https://developers.google.com/transit/gtfs/>`
 
 .. image:: documentation/diagrams/Navitia_simple_architecture.png
 
+More information here: https://github.com/CanalTP/navitia/wiki/Architecture
+
 Tools
 ======
 #. Gcc as the C++ compiler (g++)

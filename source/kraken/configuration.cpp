@@ -37,7 +37,9 @@ namespace po = boost::program_options;
 
 namespace navitia { namespace kraken{
 
-po::options_description get_options_description(const boost::optional<std::string> name, const boost::optional<std::string> zmq){
+po::options_description get_options_description(const boost::optional<std::string> name,
+                                                const boost::optional<std::string> zmq,
+                                                const boost::optional<bool> display_contributors ){
     po::options_description desc("Allowed options");
     desc.add_options()
         ("GENERAL.database", po::value<std::string>()->default_value("data.nav.lz4"), "path to the data file")
@@ -55,6 +57,12 @@ po::options_description get_options_description(const boost::optional<std::strin
                                         "enable loading of realtime data")
         ("GENERAL.kirin_timeout", po::value<int>()->default_value(60000),
                                   "timeout in ms for loading realtime data from kirin")
+        ("GENERAL.kirin_retry_timeout", po::value<int>()->default_value(5*60*1000),
+                                  "timeout in ms before retrying to load realtime data")
+
+        ("GENERAL.display_contributors", display_contributors ?
+             po::value<bool>()->default_value(*display_contributors) : po::value<bool>()->default_value(false),
+         "display all contributors in feed publishers")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -154,5 +162,16 @@ std::vector<std::string> Configuration::rt_topics() const{
         return std::vector<std::string>();
     }
     return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+}
+
+int Configuration::kirin_retry_timeout() const{
+    return vm["GENERAL.kirin_retry_timeout"].as<int>();
+}
+
+bool Configuration::display_contributors() const{
+    if(!this->vm.count("GENERAL.display_contributors")){
+        return false;
+    }
+    return vm["GENERAL.display_contributors"].as<bool>();
 }
 }}//namespace

@@ -568,7 +568,6 @@ def is_valid_stop_point(stop_point, depth_check=1):
     """
     check the structure of a stop point
     """
-
     get_not_null(stop_point, "name")
     is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")
@@ -853,6 +852,7 @@ def is_valid_vehicle_journey(vj, depth_check=1):
 
 def is_valid_trip(trip, depth_check=1):
     get_not_null(trip, "id")
+    get_not_null(trip, "name")
 
 
 def is_valid_journey_pattern(jp, depth_check=1):

@@ -35,7 +35,7 @@ from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import DisruptionsField
 from make_links import add_id_links
-from fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord
+from fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -61,6 +61,7 @@ places = {
     "places": NonNullList(NonNullNested(place)),
     "error": PbField(error, attribute='error'),
     "disruptions": DisruptionsField,
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 ww_admin = {

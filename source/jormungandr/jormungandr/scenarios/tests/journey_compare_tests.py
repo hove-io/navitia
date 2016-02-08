@@ -497,7 +497,7 @@ def test_too_late_journeys():
     journey3.arrival_date_time = 13000
 
     journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
-                                                 MockInstance(), request, request)
+                                                 MockInstance(), request)
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -520,7 +520,7 @@ def test_not_too_late_journeys():
     journey2.arrival_date_time = 3200
 
     journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
-                                                 MockInstance(), request, request)
+                                                 MockInstance(), request)
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -548,7 +548,7 @@ def test_not_too_late_journeys_non_clockwise():
     journey3.arrival_date_time = 9000
 
     journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
-                                                 MockInstance(), request, request)
+                                                 MockInstance(), request)
 
     assert 'to_delete' in journey1.tags
     assert 'to_delete' not in journey2.tags

@@ -39,16 +39,18 @@ namespace navitia { namespace timetables {
   Il est persistant tout le long de la requête
 */
 struct RequestHandle {
-    pbnavitia::Response pb_response;
+    PbCreator& pb_creator;
     DateTime date_time, max_datetime;
     std::vector<routing::JppIdx> journey_pattern_points;
     int total_result;
 
-    RequestHandle(const std::string& request,
-                  const std::vector<std::string>& forbidden_uris,
-                  const boost::posix_time::ptime datetime, uint32_t duration,
-                  const type::Data& data,
-                  boost::optional<const std::string> calendar_id, const bool clockwise = true);
+    RequestHandle(
+            PbCreator& pb_creator,
+            const std::string& request,
+            const std::vector<std::string>& forbidden_uris,
+            const boost::posix_time::ptime datetime,
+            uint32_t duration,
+            boost::optional<const std::string> calendar_id, const bool clockwise = true);
 };
 }
 

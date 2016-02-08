@@ -506,6 +506,19 @@ std::vector<idx_t> MetaVehicleJourney::get(Type_e type, const PT_Data& data) con
     return result;
 }
 
+bool MetaVehicleJourney::is_already_impacted_by(const boost::shared_ptr<disruption::Impact>& impact) {
+    return std::any_of(std::begin(impacted_by), std::end(impacted_by),
+            [&](const boost::weak_ptr<nt::disruption::Impact>& i) {
+                return i.lock() == impact;});
+}
+
+
+void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact) {
+    if (! is_already_impacted_by(impact)) {
+        impacted_by.push_back(impact);
+    }
+}
+
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {
@@ -535,7 +548,8 @@ static_data * static_data::get() {
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption")
-                (Type_e::Frame, "frame");
+                (Type_e::Frame, "frame")
+                (Type_e::Admin, "admin");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
@@ -780,7 +794,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
     case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
-    case Type_e::Frame: result.push_back(frame->idx); break;
+    case Type_e::Frame: if (frame) { result.push_back(frame->idx); } break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }

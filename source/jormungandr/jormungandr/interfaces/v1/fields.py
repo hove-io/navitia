@@ -406,6 +406,7 @@ validity_pattern = {
 
 trip = {
     'id': fields.String(attribute="uri"),
+    'name': fields.String(),
 }
 
 code = {
@@ -752,7 +753,8 @@ instance_parameters = {
     'max_duration': fields.Raw,
     'walking_transfer_penalty': fields.Raw,
     'night_bus_filter_max_factor': fields.Raw,
-    'night_bus_filter_base_factor': fields.Raw
+    'night_bus_filter_base_factor': fields.Raw,
+    'priority': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)

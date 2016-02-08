@@ -3,9 +3,78 @@
 #include "time_tables/departure_boards.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
+#include "type/pt_data.h"
+#include "kraken/realtime.h"
+
+namespace ntest = navitia::test;
 
 /**
- * Data set for departure board
+ * basic data set for departure board
+ *
+ * Also used with realtime proxy
+ *
+ *          A:s
+ *           v RouteA
+ *           v
+ *           v
+ *         |-----------|      RouteB
+ *B:s > > >| S1> > > > |> > > > B:e
+ *         | v         |
+ *         | v         |
+ *         | S2        |
+ *         |-----------|
+ *           v         SA1
+ *           v
+ *           v
+ *          A:e
+ */
+struct departure_board_fixture {
+    ed::builder b;
+    departure_board_fixture(): b("20160101") {
+        b.sa("SA1")("S1")("S2");
+
+        b.vj("A").uri("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
+        b.vj("A").uri("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
+        b.vj("A").uri("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
+
+        b.vj("B").uri("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
+
+        b.finish();
+        b.data->pt_data->index();
+        b.data->complete();
+
+        // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
+        auto trip_update1 = ntest::make_delay_message("A:vj1", "20160101", {
+                std::make_tuple("A:s", "20160101T0807"_pts, "20160101T0807"_pts),
+                std::make_tuple("S1", "20160101T0907"_pts, "20160101T0907"_pts),
+                std::make_tuple("S2", "20160101T1007"_pts, "20160101T1007"_pts),
+                std::make_tuple("A:e", "20160101T1107"_pts, "20160101T1107"_pts),
+            });
+        navitia::handle_realtime("delay_vj1", "20160101T1337"_dt, trip_update1, *b.data);
+
+        auto trip_update2 = ntest::make_delay_message("A:vj2", "20160101", {
+                std::make_tuple("A:s", "20160101T0907"_pts, "20160101T0907"_pts),
+                std::make_tuple("S1", "20160101T1007"_pts, "20160101T1007"_pts),
+                std::make_tuple("S2", "20160101T1107"_pts, "20160101T1107"_pts),
+                std::make_tuple("A:e", "20160101T1207"_pts, "20160101T1207"_pts),
+            });
+        navitia::handle_realtime("delay_vj2", "20160101T1337"_dt, trip_update2, *b.data);
+
+        auto trip_update3 = ntest::make_delay_message("A:vj3", "20160101", {
+                std::make_tuple("A:s", "20160101T1007"_pts, "20160101T1007"_pts),
+                std::make_tuple("S1", "20160101T1107"_pts, "20160101T1107"_pts),
+                std::make_tuple("S2", "20160101T1207"_pts, "20160101T1207"_pts),
+                std::make_tuple("A:e", "20160101T1307"_pts, "20160101T1307"_pts),
+            });
+        navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data);
+
+        b.data->build_raptor();
+        b.data->build_uri();
+    }
+};
+
+/**
+ * Data set for departure board with calendar
  */
 struct calendar_fixture {
     ed::builder b;
@@ -129,3 +198,6 @@ struct calendar_fixture {
         b.data->geo_ref->init();
     }
 };
+
+
+

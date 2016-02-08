@@ -34,9 +34,10 @@ from check_utils import *
 
 
 class MockKraken:
-    def __init__(self, kraken_instance, is_free):
+    def __init__(self, kraken_instance, is_free, priority):
         self.is_free = is_free
         self.kraken_instance = kraken_instance
+        self.priority = priority
 
 @dataset(["main_routing_test", "empty_routing_test"])
 class TestOverlappingCoverage(AbstractTestFixture):
@@ -46,9 +47,9 @@ class TestOverlappingCoverage(AbstractTestFixture):
     def setup(self):
         from jormungandr import i_manager
         self.instance_map = {
-            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True),
+            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True, 0),
             #the bad one is the non free one, so it will be chosen first
-            'empty_routing_test': MockKraken(i_manager.instances['empty_routing_test'], False),
+            'empty_routing_test': MockKraken(i_manager.instances['empty_routing_test'], False, 0),
         }
         self.real_method = models.Instance.get_by_name
 

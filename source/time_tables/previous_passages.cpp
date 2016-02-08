@@ -44,18 +44,17 @@ using navitia::routing::StopEvent;
 namespace navitia { namespace timetables {
 
 template<typename Visitor>
-pbnavitia::Response
-previous_passages(const std::string &request,
+void previous_passages(PbCreator& pb_creator, const std::string &request,
               const std::vector<std::string>& forbidden_uris,
               const pt::ptime datetime,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               const type::AccessibiliteParams & accessibilite_params,
-              const type::Data & data, const type::RTLevel rt_level, Visitor vis, uint32_t count,
-              uint32_t start_page, const bool show_codes, const boost::posix_time::ptime current_datetime) {
-    RequestHandle handler(request, forbidden_uris, datetime, duration, data, {}, false);
+              const type::RTLevel rt_level, Visitor vis, uint32_t count,
+              uint32_t start_page) {
+    RequestHandle handler(pb_creator, request, forbidden_uris, datetime, duration, {}, false);
 
-    if(handler.pb_response.has_error()) {
-        return handler.pb_response;
+    if(pb_creator.has_error()) {
+        return;
     }
 
     boost::remove_erase_if(handler.journey_pattern_points, vis.predicate);
@@ -64,28 +63,25 @@ previous_passages(const std::string &request,
                                  StopEvent::pick_up : StopEvent::drop_off;
     auto passages_dt_st = get_stop_times(stop_event, handler.journey_pattern_points,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
-                                         data, rt_level, accessibilite_params);
+                                         pb_creator.data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
     for (auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage* passage;
         if (stop_event == StopEvent::pick_up) {
-            passage = handler.pb_response.add_next_departures();
+            passage = pb_creator.add_next_departures();
         } else {
-            passage = handler.pb_response.add_next_arrivals();
+            passage = pb_creator.add_next_arrivals();
         }
-        pt::time_period action_period(navitia::to_posix_time(dt_stop_time.first, data), pt::seconds(1));
-        auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
-        auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
+        pb_creator.action_period = pt::time_period(navitia::to_posix_time(dt_stop_time.first, pb_creator.data), pt::seconds(1));
+        auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
+        auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
 
-        fill_pb_object(dt_stop_time.second, data, passage->mutable_stop_date_time()->mutable_properties(),
-                       0, current_datetime, action_period);
-
-        fill_pb_object(dt_stop_time.second->stop_point, data, passage->mutable_stop_point(),
-                depth, current_datetime, action_period);
+        pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
+        pb_creator.fill(dt_stop_time.second->stop_point, passage->mutable_stop_point(), depth);
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         const type::Route* route = vj->route;
         const type::Line* line = route->line;
@@ -93,28 +89,21 @@ previous_passages(const std::string &request,
         auto m_vj = passage->mutable_vehicle_journey();
         auto m_route = m_vj->mutable_route();
         auto m_physical_mode = m_vj->mutable_journey_pattern()->mutable_physical_mode();
-        fill_pb_object(vj, data, m_vj, 0, current_datetime, action_period, show_codes);
-        fill_pb_object(route, data, m_route, 0, current_datetime, action_period, show_codes);
-        fill_pb_object(line, data, m_route->mutable_line(), 0, current_datetime, action_period, show_codes);
-        fill_pb_object(physical_mode, data, m_physical_mode, 0, current_datetime, action_period);
-        fill_pb_object(vj, data, passage->mutable_pt_display_informations(),
-                       dt_stop_time.second, nullptr, 1, current_datetime, action_period);
+        pb_creator.fill(vj, m_vj, 0);
+        pb_creator.fill(route, m_route, 0);
+        pb_creator.fill(line, m_route->mutable_line(), 0);
+        pb_creator.fill(physical_mode, m_physical_mode, 0);
+        const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
+        pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
     }
-    auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(total_result);
-    pagination->set_startpage(start_page);
-    pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(passages_dt_st.size());
-    return handler.pb_response;
+    pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
 }
 
-
-pbnavitia::Response previous_departures(const std::string &request,
+void previous_departures(PbCreator& pb_creator, const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
-        const bool show_codes, const boost::posix_time::ptime current_datetime) {
+        const type::RTLevel rt_level, uint32_t count, uint32_t start_page) {
 
     struct vis_previous_departures {
         struct predicate_t {
@@ -132,31 +121,17 @@ pbnavitia::Response previous_departures(const std::string &request,
         vis_previous_departures(const type::Data& data) :
             api_pb(pbnavitia::PREVIOUS_DEPARTURES), predicate(data) {}
     };
-    vis_previous_departures vis(data);
-    return previous_passages(request,
-                             forbidden_uris,
-                             datetime,
-                             duration,
-                             nb_stoptimes,
-                             depth,
-                             accessibilite_params,
-                             data,
-                             rt_level,
-                             vis,
-                             count,
-                             start_page,
-                             show_codes,
-                             current_datetime
-    );
+    vis_previous_departures vis(pb_creator.data);
+    previous_passages(pb_creator, request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
+                      accessibilite_params, rt_level, vis, count, start_page);
 }
 
 
-pbnavitia::Response previous_arrivals(const std::string &request,
+void previous_arrivals(PbCreator& pb_creator, const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::Data & data, const type::RTLevel rt_level, uint32_t count, uint32_t start_page,
-        const bool show_codes, const boost::posix_time::ptime current_datetime) {
+        const type::RTLevel rt_level, uint32_t count, uint32_t start_page) {
 
     struct vis_previous_arrivals {
         struct predicate_t {
@@ -172,9 +147,9 @@ pbnavitia::Response previous_arrivals(const std::string &request,
         vis_previous_arrivals(const type::Data& data) :
             api_pb(pbnavitia::PREVIOUS_ARRIVALS), predicate(data) {}
     };
-    vis_previous_arrivals vis(data);
-    return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
-            accessibilite_params, data, rt_level, vis,count , start_page, show_codes, current_datetime);
+    vis_previous_arrivals vis(pb_creator.data);
+    previous_passages(pb_creator, request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
+            accessibilite_params, rt_level, vis, count, start_page);
 }
 
 

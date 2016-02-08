@@ -159,7 +159,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
         } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
@@ -194,7 +194,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (auto& stu: impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
             }
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
@@ -218,27 +218,100 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
         }
 
+        // Get all impacted VJs and compute the corresponding base_canceled vp
         std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;
-        for (const auto* vj: pt_data.vehicle_journeys) {
-            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " may be impacted");
 
+        /*
+         * In this loop, we'are going to find all Vjs that are impacted by the closure of the stop point
+         * and the validity pattern of the new Vj to be created in the next step
+         *
+         * */
+        for (const auto* vj: pt_data.vehicle_journeys) {
+
+            /*
+             * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
+             *
+             * Since the validity pattern runs only by day not by hour, we'll compute in detail to
+             * check if the vj is really impacted or not.
+             *
+             * */
             if ((vj->validity_patterns[rt_level]->days & impact_vp.days).none()) {
                 continue;
             }
 
+            LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " may be impacted");
+
             nt::ValidityPattern new_vp{vj->validity_patterns[rt_level]->beginning_date};
 
+            /*
+             * In this loop, we check in detail if the vj is impacted.
+             *
+             * If the stop time corresponding to the impacted stop point falls in the impact period,
+             * we say that this vj is impacted and the computed validity pattern will be the vp of the new vj.
+             *
+             *
+             *  Day     1              2               3               4               5               6        ...
+             *          ---------------------------------------------------------------------------------------------
+             * SP_bob         8:30           8:30             8:30           8:30           8:30           8:30 ...(vj)
+             *
+             * Period_bob           |--------------|
+             *                    17:00          14:00
+             *
+             * Period_pop                            |------|
+             *                                     17:00   8:00
+             *
+             * Let's say we have a vj passes on stop point SP_bob at 8:30 every day.
+             *
+             * Here comes the first impact bob which will have SP_bob closed, like it's figured in the comment,
+             * even though this impact begins on Day1, it impacts only on Day2 actually. So the new vj's validity
+             * pattern will be like "...00010"
+             *
+             * Here comes another impact pop on SP_bob, this time the impact pop won't make any effects on vj, because
+             * none of corresponding stop time falls in its period, the new vj's validity pattern will be like "..0000".
+             *
+             * */
             for(const auto& period : impact->application_periods) {
                 new_vp.days |= vj->get_vp_of_sp(*stop_point, rt_level, period).days;
             }
 
             if(new_vp.days.none()){
                 // The vj doesn't stop at the impacted stop_point during all the given impact periods
+                LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " is not impacted");
                 continue;
             }
             LOG4CPLUS_TRACE(log,  "VJ: "<< vj->uri << " is impacted");
 
+            /*
+             * >> A shift? WTF is this? <<<
+             *
+             *  Day     1              2               3               4               5               6      ...
+             *          ------------------------------------------------------------------------------------------
+             *   VJ               |------------|
+             *                  23:00         12:00
+             *
+             *  Delayed_VJ                         |------------|
+             *                                   23:00         12:00
+             *
+             *
+             *  impacted_vj                              |-----|
+             *                                          1:00  12:00
+             *
+             *
+             * Like it's showed in the figure, a vj circulates from 23:00 Day1 to 12:00 Day2, its vp is "...0001"
+             *
+             * We get a delay message and the vj is delayed for 24 hours, the dalayed_vj has a vp "...010" with a
+             * shift equals to 1.(The 1 means the Delayed_VJ has shift one day regarding to it's base vj, this is
+             * important for computing the base vj's vp at adapted/realtime level.)
+             *
+             * Now we have to close some stop point of Delayed_vj on Day2 for some stupid reasons, the new impacted
+             * vj circulates actually only on Day3 ("....00100").
+             *
+             * This case is testd in apply_disruption_test/test_shift_of_a_disrupted_delayed_train. One can play with
+             * that test for a better understanding.
+             *
+             * */
             new_vp.days >>= vj->shift;
+
             vj_vp_pairs.emplace_back(vj, new_vp);
         }
 
@@ -252,13 +325,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     continue;
                 }
                 nt::StopTime new_st = st.clone();
+                // Here the first arrival/departure time may be > 24hours.
+                // Check the test case: apply_disruption_test/test_shift_of_a_disrupted_delayed_train for more details
                 new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_stop_times.push_back(std::move(new_st));
             }
 
             auto mvj = vj->meta_vj;
-            mvj->impacted_by.push_back(impact);
+            mvj->push_unique_impact(impact);
 
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             std::string new_vj_uri = mvj->uri + ":" +
@@ -284,6 +359,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 new_vj->physical_mode = pt_data.physical_modes[0];
                 new_vj->name = new_vj_uri;
             }
+            /*
+             * Properties manually added to guarantee the good behavior for raptor and consistency.
+             * */
             new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
             new_vj->company = vj->company;
             new_vj->vehicle_journey_type = vj->vehicle_journey_type;
