@@ -138,7 +138,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     size_t total_result = sps_routes.size();
     sps_routes = paginate(sps_routes, count, start_page);
     //Trie des vecteurs de date_times stop_times
-    auto sort_predicate = [](datetime_stop_time dt1, datetime_stop_time dt2) {
+    auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
                     return dt1.first < dt2.first;
                 };
     // On regroupe entre eux les stop_times appartenant
@@ -161,10 +161,10 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             std::vector<routing::datetime_stop_time> tmp;
             if (! calendar_id) {
                 tmp = routing::get_stop_times(routing::StopEvent::pick_up, {jpp_idx}, handler.date_time,
-                                     handler.max_datetime, max_date_times, data, rt_level);
+                        handler.max_datetime, max_date_times, pb_creator.data, rt_level);
             } else {
                 tmp = routing::get_stop_times({jpp_idx}, DateTimeUtils::hour(handler.date_time),
-                                     DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);
+                        DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
