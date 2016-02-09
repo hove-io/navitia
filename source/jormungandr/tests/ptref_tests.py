@@ -489,9 +489,23 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
 @dataset(["main_routing_test"])
 class TestPtRefRoutingCov(AbstractTestFixture):
 
-    def test_with_coord(self):
+    def test_with_coords(self):
         """test with a coord in the pt call, so a place nearby is actually called"""
         response = self.query_region("coords/{coord}/stop_areas".format(coord=r_coord))
+
+        stops = get_not_null(response, 'stop_areas')
+
+        for s in stops:
+            is_valid_stop_area(s)
+
+        #the default is the search for all stops within 200m, so we should have A and C
+        eq_(len(stops), 2)
+
+        assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
+
+    def test_with_coord(self):
+        """some but with coord and not coords"""
+        response = self.query_region("coord/{coord}/stop_areas".format(coord=r_coord))
 
         stops = get_not_null(response, 'stop_areas')
 

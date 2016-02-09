@@ -283,7 +283,7 @@ places_nearby = {
 }
 
 places_types = {'stop_areas', 'stop_points', 'pois',
-                'addresses', 'coords', 'places'}  # add admins when possible
+                'addresses', 'coords', 'places', 'coord'}  # add admins when possible
 
 class PlacesNearby(ResourceUri):
 
