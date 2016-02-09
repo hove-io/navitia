@@ -125,7 +125,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
     try {
         type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
 
-        //if it is a idx, we consider it to be a stop area idx
+        //if it iCached s a idx, we consider it to be a stop area idx
         entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
     } catch (boost::bad_lexical_cast) {
         // else we use the same way to identify an entry point as the api
@@ -290,7 +290,7 @@ int main(int argc, char** argv){
               georef_worker,
               type::RTLevel::Base,
               2_min,
-              departure_datetime + DateTimeUtils::SECONDS_PER_DAY,
+              DateTimeUtils::SECONDS_PER_DAY,
               10,
               false,
               nb_second_pass);
