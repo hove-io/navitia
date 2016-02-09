@@ -358,7 +358,7 @@ void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_o
     copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
-    add_contributor(value);
+//    add_contributor(value);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
