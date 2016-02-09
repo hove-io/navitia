@@ -643,7 +643,8 @@ def addresses(is_collection):
 
 def coords(is_collection):
     class Coords(Coord):
-
         """ Not implemented yet"""
         pass
     return Coords
+
+coord = coords

@@ -76,6 +76,24 @@ class TestPlaces(AbstractTestFixture):
         assert(len(response['places_nearby']) > 0)
         is_valid_places(response['places_nearby'])
 
+    def test_places_nearby_with_coord(self):
+        """check places_nearby with /coord"""
+
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("coord/{}/places_nearby".format(id))
+
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+
+    def test_places_nearby_with_coords(self):
+        """check places_nearby with /coords"""
+
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("coords/{}/places_nearby".format(id))
+
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+
     def test_wrong_places_nearby(self):
         """test that a wrongly formated query do not work on places_neaby"""
 

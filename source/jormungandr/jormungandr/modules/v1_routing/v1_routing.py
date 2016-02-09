@@ -125,6 +125,7 @@ class V1Routing(AModule):
 
         self.add_resource(Coord.Coord,
                           '/coord/<lon:lon>;<lat:lat>',
+                          '/coords/<lon:lon>;<lat:lat>',
                           endpoint='coord')
 
         collecs = converters_collection_type.collections_to_resource_type.keys()

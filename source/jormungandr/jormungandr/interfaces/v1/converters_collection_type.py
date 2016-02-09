@@ -32,7 +32,7 @@ collections_to_resource_type = {
     "networks": "network", "commercial_modes": "commercial_mode",
     "physical_modes": "physical_mode", "companies": "company",
     "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
-    "addresses": "address", "coords": "coord",
+    "addresses": "address", "coords": "coord", "coord": "coord",
     "journey_pattern_points": "journey_pattern_point",
     "journey_patterns": "journey_pattern",
     "pois": "poi", "poi_types": "poi_type",
