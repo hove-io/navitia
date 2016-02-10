@@ -30,6 +30,7 @@ www.navitia.io
 #include "timezone_manager.h"
 #include "type.h"
 #include "meta_data.h"
+#include "utils/logger.h"
 
 namespace navitia {
 namespace type {
@@ -79,6 +80,13 @@ int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
         if ((vp_shift.first.days & vp.days).any()) { return vp_shift.second; }
     }
     // by construction, this should not be possible
+    // we add a debug log
+    std::stringstream ss;
+    ss << "vp " << vp.days << " does not match any tz periods: ";
+    for (const auto& vp_shift: time_changes) {
+        ss << " tz offset " << vp_shift.second << ": " << vp_shift.first.days;
+    }
+    LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), ss.str());
     throw navitia::recoverable_exception("no intersection with a timezone found");
 }
 
