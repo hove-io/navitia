@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
 struct associated_cal_fixture {
     associated_cal_fixture() {
         data.meta.production_date = {"20140101"_d, "20150101"_d};
-        data.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
+        data.tz_wrapper.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
 
         // Same vehicleJourney.validity_pattern : Associated vehicle_journey
         always_on_cal = new ed::types::Calendar(data.meta.production_date.begin());

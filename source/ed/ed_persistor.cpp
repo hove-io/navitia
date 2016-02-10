@@ -308,7 +308,7 @@ void EdPersistor::persist(const ed::Data& data){
     this->insert_feed_info(data.feed_infos);
     LOG4CPLUS_INFO(logger, "End: insert feed_info");
     LOG4CPLUS_INFO(logger, "Begin: insert timezone");
-    this->insert_timezones(data.tz_handler);
+    this->insert_timezones(data.tz_wrapper.tz_handler);
     LOG4CPLUS_INFO(logger, "End: insert timezone");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
