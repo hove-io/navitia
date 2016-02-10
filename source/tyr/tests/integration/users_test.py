@@ -3,7 +3,6 @@ import json
 import pytest
 from navitiacommon import models
 from tyr import app
-import random
 
 
 @pytest.fixture
