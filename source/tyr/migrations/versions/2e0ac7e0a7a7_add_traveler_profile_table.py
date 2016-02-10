@@ -50,3 +50,4 @@ def downgrade():
 
     #https://bitbucket.org/zzzeek/alembic/issues/159/opdrop_column-never-ends-with-an-enum
     sa.Enum(name='fallback_mode').drop(op.get_bind(), checkfirst=False)
+    sa.Enum(name='traveler_type').drop(op.get_bind(), checkfirst=False)
