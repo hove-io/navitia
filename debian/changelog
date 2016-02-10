@@ -1,3 +1,9 @@
+navitia2 (2.1.1) unstable; urgency=low
+
+  * Kraken: unable feed publisher, perf are too bad  <https://github.com/CanalTP/navitia/pull/1407> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Wed, 10 Feb 2016 09:02:57 +0100
+
 navitia2 (2.1.0) unstable; urgency=low
 
   * Ptref: add a period filter on /disruptions  <https://github.com/CanalTP/navitia/pull/1405>
