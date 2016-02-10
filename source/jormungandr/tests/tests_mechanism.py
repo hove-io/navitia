@@ -106,18 +106,21 @@ class AbstractTestFixture:
 
     @classmethod
     def create_dummy_ini(cls):
-        conf_template = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                          'test_jormungandr.ini'))
-        conf_template_str = conf_template.read()
+        conf_template_str = """{{
+    "key": "{instance_name}",
+    "zmq_socket": "ipc:///tmp/{instance_name}"
+}}
+        """
         for name in cls.krakens_pool:
-            f = open(os.path.join(krakens_dir, name) + '.ini', 'w')
+            f = open(os.path.join(krakens_dir, name) + '.json', 'w')
             logging.debug("writing ini file {} for {}".format(f.name, name))
-            f.write(conf_template_str.format(instance_name=name))
+            r = conf_template_str.format(instance_name=name)
+            f.write(r)
             f.close()
 
         #we set the env var that will be used to init jormun
-        app.config['INI_FILES'] = [
-            os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests', k + '.ini')
+        return [
+            os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests', k + '.json')
             for k in cls.krakens_pool
         ]
 
@@ -127,8 +130,8 @@ class AbstractTestFixture:
         logging.info("Initing the tests {}, let's pop the krakens"
                      .format(cls.__name__))
         cls.launch_all_krakens()
-        cls.create_dummy_ini()
-        i_manager.configuration_files = app.config['INI_FILES']
+        instances_config_files = cls.create_dummy_ini()
+        i_manager.configuration_files = instances_config_files
         i_manager.initialisation()
 
         #we block the stat manager not to send anything to rabbit mq

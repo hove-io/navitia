@@ -92,16 +92,14 @@ class InstanceManager(object):
     a kraken instance's id is associated to a zmq socket and possibly some custom configuration
     """
 
-    def __init__(self, conf_files=None, instances_dir=None, start_ping=False):
+    def __init__(self, instances_dir=None, start_ping=False):
         # if a configuration file is defined in the settings we take it
         # else we load all .ini/.json files found in the INSTANCES_DIR
-        if conf_files is None and instances_dir is None:
+        if instances_dir is None:
             raise ValueError("conf_files or instance_dir has to be set")
-        if conf_files:
-            self.configuration_files = conf_files
-        else:
-            self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
-                                       glob.glob(instances_dir + '/*.json')
+
+        self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
+                                   glob.glob(instances_dir + '/*.json')
         self.start_ping = start_ping
 
     def initialisation(self):
@@ -124,10 +122,11 @@ class InstanceManager(object):
                 conf.read(file_name)
                 instance = Instance(self.context, conf.get('instance', 'key'), conf.get('instance', 'socket'))
             elif file_name.endswith('.json'):
-                config_data = json.loads(open(file_name).read())
-                name = config_data['key']
-                instance = Instance(self.context, name, config_data['zmq_socket'],
-                                    config_data.get('realtime_proxies', []))
+                with open(file_name) as f:
+                    config_data = json.load(f)
+                    name = config_data['key']
+                    instance = Instance(self.context, name, config_data['zmq_socket'],
+                                        config_data.get('realtime_proxies', []))
             else:
                 logging.getLogger(__name__).warn('impossible to init an instance with the configuration '
                                                  'file {}'.format(file_name))
