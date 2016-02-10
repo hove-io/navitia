@@ -61,7 +61,7 @@ struct EdTZWrapper {
 
     //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same
     //we thus only put a default tz used if the stop area does not define one
-    boost::local_time::time_zone_ptr boost_timezone = nullptr;
+    boost::local_time::time_zone_ptr boost_timezone = boost::local_time::time_zone_ptr();
 
     std::string tz_name;
 

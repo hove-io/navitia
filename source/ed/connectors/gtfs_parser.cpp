@@ -128,7 +128,7 @@ std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
     }
     //we fetch the default dataset timezone
-    return {"", nullptr};
+    return {"", boost::local_time::time_zone_ptr()};
 }
 
 
