@@ -51,7 +51,7 @@ Route1
 */
     ed::Data data;
     data.meta.production_date = {"20140101"_d, "20150101"_d};
-    data.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
+    data.tz_wrapper.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
     auto *route = new ed::types::Route();
     route->idx = 0;
     data.routes.push_back(route);
