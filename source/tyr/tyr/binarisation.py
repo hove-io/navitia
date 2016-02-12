@@ -49,6 +49,7 @@ from tyr import celery, redis
 from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg
 from contextlib import contextmanager
+import glob
 
 
 def unzip_if_needed(filename):
@@ -207,6 +208,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
+
+    if os.path.isdir(osm_filename):
+        osm_filename = glob.glob('{}/*.pbf'.format(osm_filename))[0]
 
     logger = get_instance_logger(instance)
     try:
