@@ -86,8 +86,8 @@ void Data::build_block_id() {
         if(vj1->block_id != vj2->block_id) {
             return vj1->block_id < vj2->block_id;
         } else {
-            auto offset1 = tz_handler.get_first_utc_offset(*vj1->validity_pattern);
-            auto offset2 = tz_handler.get_first_utc_offset(*vj2->validity_pattern);
+            auto offset1 = tz_wrapper.tz_handler.get_first_utc_offset(*vj1->validity_pattern);
+            auto offset2 = tz_wrapper.tz_handler.get_first_utc_offset(*vj2->validity_pattern);
 
             // we don't want to link the splited vjs
             if (offset1 != offset2) {
@@ -115,11 +115,11 @@ void Data::build_block_id() {
                 // This is not supposed to happen
                 // @TODO: Add a parameter to avoid too long connection
                 // they can be for instance due to bad data
-                if(vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
+                if (vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
 
                     //we add another check that the vjs are on the same offset (that they are not the from vj split on different dst)
-                    if (tz_handler.get_first_utc_offset(*vj->validity_pattern) ==
-                            tz_handler.get_first_utc_offset(*prev_vj->validity_pattern)) {
+                    if (tz_wrapper.tz_handler.get_first_utc_offset(*vj->validity_pattern) ==
+                            tz_wrapper.tz_handler.get_first_utc_offset(*prev_vj->validity_pattern)) {
                         prev_vj->next_vj = vj;
                         vj->prev_vj = prev_vj;
                     }
@@ -185,6 +185,9 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
         }
         vp.beginning_date = begin_date;
         vp.days <<= 1;
+
+        // we also need to shift the timezone dst period
+        tz_wrapper.build_tz(meta.production_date);
     }
     vp.days >>= 1;
 }
@@ -702,6 +705,119 @@ void Data::finalize_frequency() {
             }
         }
     }
+}
+
+
+/*
+ * we need the list of dst periods over the years of the validity period
+ *
+ *                                  validity period
+ *                              [-----------------------]
+ *                        2013                                  2014
+ *       <------------------------------------><-------------------------------------->
+ *[           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
+ *
+ * We thus create a partition of the time with all period with the UTC offset
+ *
+ *       [    +7h       )[  +8h    )[       +7h          )[   +8h     )[      +7h     )
+ */
+std::vector<EdTZWrapper::PeriodWithUtcShift>
+EdTZWrapper::get_dst_periods(const boost::gregorian::date_period& validity_period) const {
+
+    if (validity_period.is_null()) {
+        return {};
+    }
+    std::vector<int> years;
+    //we want to have all the overlapping year
+    //so add each time 1 year and continue till the first day of the year is after the end of the period (cf gtfs_parser_test.boost_periods)
+    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+        years.push_back((*y_it).year());
+    }
+
+    BOOST_ASSERT(! years.empty());
+
+    std::vector<PeriodWithUtcShift> res;
+    for (int year: years) {
+        if (! res.empty()) {
+            //if res is not empty we add the additional period without the dst
+            //from the previous end date to the beggining of the dst next year
+            res.push_back({ {res.back().period.end(), boost_timezone->dst_local_start_time(year).date()},
+                            boost_timezone->base_utc_offset() });
+        } else {
+            //for the first elt, we add a non dst
+            auto first_day_of_year = boost::gregorian::date(year, 1, 1);
+            if (boost_timezone->dst_local_start_time(year).date() != first_day_of_year) {
+                res.push_back({ {first_day_of_year, boost_timezone->dst_local_start_time(year).date()},
+                                boost_timezone->base_utc_offset() });
+            }
+        }
+        res.push_back({ {boost_timezone->dst_local_start_time(year).date(), boost_timezone->dst_local_end_time(year).date()},
+                        boost_timezone->base_utc_offset() + boost_timezone->dst_offset() });
+    }
+    //we add the last non DST period
+    res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
+                    boost_timezone->base_utc_offset() });
+
+    //we want the shift in seconds, and it is in minute in the tzdb
+    for (auto& p_shift: res) {
+        p_shift.utc_shift *= 60;
+    }
+    return res;
+}
+
+
+void EdTZWrapper::build_tz(const boost::gregorian::date_period& validity_period) {
+    const auto& splited_production_period = split_over_dst(validity_period);
+    tz_handler = nt::TimeZoneHandler(tz_name, validity_period.begin(), splited_production_period);
+}
+
+nt::TimeZoneHandler::dst_periods
+EdTZWrapper::split_over_dst(const boost::gregorian::date_period& validity_period) const {
+    nt::TimeZoneHandler::dst_periods res;
+
+    if (! boost_timezone) {
+        LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
+        return res;
+    }
+
+    boost::posix_time::time_duration utc_offset = boost_timezone->base_utc_offset();
+
+    if (! boost_timezone->has_dst()) {
+        //no dst -> easy way out, no split, we just have to take the utc offset into account
+        res[utc_offset.total_seconds() / 60].push_back(validity_period);
+        return res;
+    }
+
+    std::vector<PeriodWithUtcShift> dst_periods = get_dst_periods(validity_period);
+
+    //we now compute all intersection between periods
+    //to use again the example of get_dst_periods:
+    //                                      validity period
+    //                                  [----------------------------]
+    //                            2013                                  2014
+    //           <------------------------------------><-------------------------------------->
+    //    [           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
+    //
+    // we create the periods:
+    //
+    //                                  [+8)[       +7h          )[+8h)
+    //
+    // all period_with_utc_shift are grouped by dst offsets.
+    // ie in the previous example there are 2 period_with_utc_shift:
+    //                        1/        [+8)                      [+8h)
+    //                        2/            [       +7h          )
+    for (const auto& dst_period: dst_periods) {
+
+        if (! validity_period.intersects(dst_period.period)) {
+            //no intersection, we don't consider it
+            continue;
+        }
+        auto intersec = validity_period.intersection(dst_period.period);
+
+        res[dst_period.utc_shift].push_back(intersec);
+    }
+
+    return res;
 }
 
 Georef::~Georef(){

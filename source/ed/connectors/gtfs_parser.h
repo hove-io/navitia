@@ -57,12 +57,9 @@ nt::RTLevel get_rtlevel_enum(const std::string& str);
  * just used to separate those
  */
 struct TzHandler {
-    TzHandler() : tz_db(ed::utils::fill_tz_db()) {}
+    TzHandler(): tz_db(ed::utils::fill_tz_db()) {}
 
     boost::local_time::tz_database tz_db;
-    //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same
-    //we thus only put a default tz used if the stop area does not define one
-    std::pair<std::string, boost::local_time::time_zone_ptr> default_timezone; //associate the tz with it's name (like 'Europe/paris')
     //we need to store the tz of the sp because it will be usefull is no parent stop area is found for the stop_point
     //(and hence the sp is promoted to sa)
     std::unordered_map<ed::types::StopPoint*, std::string> stop_point_tz;
@@ -127,24 +124,6 @@ struct GtfsData {
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
-//a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to
-struct PeriodWithUtcShift {
-    PeriodWithUtcShift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
-        period(p), utc_shift(dur.total_seconds() / 60)
-    {}
-    PeriodWithUtcShift(boost::gregorian::date_period p, int dur) :
-        period(p), utc_shift(dur)
-    {}
-    boost::gregorian::date_period period;
-    int utc_shift; //shift in minutes
-
-    //add info to handle the cornercase of the day of the DST (the time of the shift)
-};
-
-std::vector<PeriodWithUtcShift>
-get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
-navitia::type::TimeZoneHandler::dst_periods
-split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
 

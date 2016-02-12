@@ -154,7 +154,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
 
     if (! is_first_line) {
         //we created a default agency, with a default time zone, but this will be overidden if we read at least one agency
-        if (gtfs_data.tz.default_timezone.first != timezone_name) {
+        if (data.tz_wrapper.tz_name != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
                             " all the time zone are not equals, only the first one will be considered as the default timezone");
         }
@@ -171,9 +171,8 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
         throw navitia::exception("Error while reading " + csv.filename +
                                  + " timezone " + timezone_name + " is not valid for agency " + network->uri);
     }
-    gtfs_data.tz.default_timezone = {timezone_name, tz};
-    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.tz.default_timezone.first
-                   << " -> " << gtfs_data.tz.default_timezone.second->std_zone_name());
+    data.tz_wrapper = ed::EdTZWrapper(timezone_name, tz);
+    LOG4CPLUS_INFO(logger, "default agency tz " << data.tz_wrapper.tz_name << " -> " << tz->std_zone_name());
 
 }
 
