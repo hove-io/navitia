@@ -125,7 +125,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
     try {
         type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
 
-        //if it iCached s a idx, we consider it to be a stop area idx
+        //if it is a cached idx, we consider it to be a stop area idx
         entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
     } catch (boost::bad_lexical_cast) {
         // else we use the same way to identify an entry point as the api

@@ -342,9 +342,16 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
 }
 
 
+/*
+ * Discrete VJs and Frequency VJs are looped differently when computing the next stop time
+ *
+ * For Frequency VJs, we need to loop over its active period since several vjs are instantiated actually
+ *
+ * For Discrete VJs, there is no need to do that, because we get only one VJ.
+ *
+ * */
 template<typename F>
 static void vj_loop(const nt::DiscreteVehicleJourney*, F f) {
-    // Discrete Vehicle Journey doesn't need to loop
     f(0);
 }
 
@@ -355,7 +362,7 @@ static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f) {
     }
 }
 
-using DtSt = std::pair<DateTime, const type::StopTime*>;
+
 template<typename VJ_T>
 static void fill_cache(const DateTime from,
         const DateTime to,
@@ -363,38 +370,38 @@ static void fill_cache(const DateTime from,
         const type::AccessibiliteParams& accessibilite_params,
         const JourneyPattern& jp,
         const std::vector<const VJ_T*>& vjs,
-        IdxMap<JourneyPatternPoint, std::vector<DtSt>>& arrival,
-        IdxMap<JourneyPatternPoint, std::vector<DtSt>>& departure){
+        IdxMap<JourneyPatternPoint, std::vector<CachedNextStopTime::DtSt>>& arrival_cache,
+        IdxMap<JourneyPatternPoint, std::vector<CachedNextStopTime::DtSt>>& departure_cache){
 
     const int to_int = static_cast<int>(DateTimeUtils::date(to));
-    int from_int = static_cast<int>(DateTimeUtils::date(from)) - 1;
-    from_int = from_int > 0 ? from_int : 0;
+    // In case of Vj that passes midnight, we should compute one day before "from"
+    const int from_int = std::max(static_cast<int>(DateTimeUtils::date(from)) - 1, 0);
 
-    for (const auto* vj :  vjs) {
+    for (const auto* vj : vjs) {
         if (! vj->accessible(accessibilite_params.vehicle_properties)) {
             continue;
         }
         // test validity pattern of vj
         const auto* vp = vj->validity_patterns[rt_level];
-        for (int day = from_int; day <=  to_int ; ++day) {
+        for (int day = from_int; day <= to_int ; ++day) {
             if (! vp->check(day)) {
                 continue;
             }
             const auto shift = navitia::DateTimeUtils::SECONDS_PER_DAY * day;
-            size_t i= 0;
+            size_t i = 0;
             for (const auto& st : vj->stop_time_list) {
                 auto jpp_idx = jp.jpps[i];
                 auto loop_impl = [&](DateTime freq_shift){
                     if (st.drop_off_allowed()) {
                         auto arrival_time = st.arrival_time + shift + freq_shift;
                         if (from <= arrival_time && arrival_time <= to) {
-                            arrival[jpp_idx].emplace_back(arrival_time,&st);
+                            arrival_cache[jpp_idx].emplace_back(arrival_time, &st);
                         }
                     }
                     if (st.pick_up_allowed()) {
                         auto departure_time = st.departure_time + shift + freq_shift;
                         if (departure_time <= to && from <= departure_time ) {
-                            departure[jpp_idx].emplace_back(departure_time,&st);
+                            departure_cache[jpp_idx].emplace_back(departure_time, &st);
                         }
                     }
                 };
@@ -441,11 +448,10 @@ CachedNextStopTime::next_stop_time(const StopEvent stop_event,
     const auto& v = stop_event == StopEvent::pick_up ? departure[jpp_idx] : arrival[jpp_idx];
     const type::StopTime* null_st = nullptr;
     decltype(v.begin()) search;
+    auto cmp = [](const DtSt& a, const DtSt& b) noexcept { return a.first < b.first; };
     if (clockwise) {
-        auto cmp = [](const DtSt& a, const DtSt& b) { return a.first < b.first; };
         search = boost::lower_bound(v, std::make_pair(dt, null_st), cmp);
     } else {
-        auto cmp = [](const DtSt& a, const DtSt& b) { return a.first < b.first; };
         search = boost::upper_bound(v, std::make_pair(dt, null_st), cmp);
         if (search == v.begin()) {
             search = v.end();

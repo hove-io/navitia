@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     BOOST_CHECK_EQUAL(res.items[0].arrival.time_of_day().total_seconds(), 9200);
 
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 7800, 0, DateTimeUtils::set(0, 10000), type::RTLevel::Base, 2_min, true);
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);//?
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
     res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].arrival.time_of_day().total_seconds(), 9200);
@@ -1953,7 +1953,6 @@ BOOST_AUTO_TEST_CASE(good_connection_when_walking_as_fast_as_bus) {
     auto res1 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
                                "8:00"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
     test_good_connection_when_walking_as_fast_as_bus(res1);
-    std::cout << "-----------------ok-----------------" << std::endl;
     // non clockwise test
     auto res2 = raptor.compute(d.stop_areas_map.at("A"), d.stop_areas_map.at("E"),
                                "12:00"_t, 0, 0, type::RTLevel::Base, 2_min, false);
