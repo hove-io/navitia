@@ -64,6 +64,7 @@ class RealtimeProxyManager(object):
                 log.warn('impossible to build rt proxy {}, cannot find class: {}'.format(proxy_id, cls))
                 continue
             rt_proxy = attr(**args)
+            rt_proxy.id = proxy_id  # all services must have an ID
             self.realtime_proxies[proxy_id] = rt_proxy
 
     def get(self, proxy_name):
