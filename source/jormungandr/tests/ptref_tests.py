@@ -166,22 +166,22 @@ class TestPtRef(AbstractTestFixture):
         assert(ctr["license"] == 'ls-c1')
 
 
-    def test_frames(self):
-        """test frame formating"""
-        response = self.query_region("v1/frames")
+    def test_datasets(self):
+        """test dataset formating"""
+        response = self.query_region("v1/datasets")
 
-        frames = get_not_null(response, 'frames')
+        datasets = get_not_null(response, 'datasets')
 
-        assert len(frames) == 1
+        assert len(datasets) == 1
 
-        fr = frames[0]
-        assert(fr["id"] == 'f1')
-        assert(fr["description"] == 'desc-f1')
-        assert(fr["system"] == 'sys-f1')
+        ds = datasets[0]
+        assert(ds["id"] == 'f1')
+        assert(ds["description"] == 'desc-f1')
+        assert(ds["system"] == 'sys-f1')
 
-    def test_contributor_by_frame(self):
-        """test contributor by frame formating"""
-        response = self.query_region("frames/f1/contributors")
+    def test_contributor_by_dataset(self):
+        """test contributor by dataset formating"""
+        response = self.query_region("datasets/f1/contributors")
         ctrs = get_not_null(response, 'contributors')
         assert len(ctrs) == 1
 
@@ -190,11 +190,11 @@ class TestPtRef(AbstractTestFixture):
         assert(ctr["website"] == 'ws-c1')
         assert(ctr["license"] == 'ls-c1')
 
-    def test_frame_by_contributor(self):
-        """test frame by contributor formating"""
-        response = self.query_region("contributors/c1/frames")
+    def test_dataset_by_contributor(self):
+        """test dataset by contributor formating"""
+        response = self.query_region("contributors/c1/datasets")
 
-        frs = get_not_null(response, 'frames')
+        frs = get_not_null(response, 'datasets')
         assert len(frs) == 1
 
         fr = frs[0]
