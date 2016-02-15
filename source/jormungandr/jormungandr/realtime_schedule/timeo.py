@@ -85,7 +85,7 @@ class Timeo(RealtimeProxy):
     def get_passages(self, timeo_resp):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
-        st_responses = timeo_resp.get('StopTimesResponse', [])
+        st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
             logging.getLogger(__name__).warning('invalid timeo response: {}'.format(timeo_resp))
@@ -123,24 +123,23 @@ class Timeo(RealtimeProxy):
         line = route_point.fetch_line_id(self.id)
         route = route_point.fetch_route_id(self.id)
 
-        if not stop or not line or not route:
+        if not all((stop, line, route)):
             # one a the id is missing, we'll not find any realtime
             logging.getLogger(__name__).debug('missing realtime id for {obj}: '
                                               'stop code={s}, line code={l}, route code={r}'.
                                               format(obj=route_point, s=stop, l=line, r=route))
             return None
 
-        stop_id_url = "StopDescription=?" \
-                      "StopTimeoCode={stop}" \
-                      "&LineTimeoCode={line}" \
-                      "&Way={route}" \
-                      "&NextStopTimeNumber={count}" \
-                      "&StopTimeType={data_freshness};".\
-            format(stop=stop,
-                   line=line,
-                   route=route,
-                   count='5',  # TODO better pagination
-                   data_freshness='TR')
+        stop_id_url = ("StopDescription=?"
+                       "StopTimeoCode={stop}"
+                       "&LineTimeoCode={line}"
+                       "&Way={route}"
+                       "&NextStopTimeNumber={count}"
+                       "&StopTimeType={data_freshness};").format(stop=stop,
+                                                                 line=line,
+                                                                 route=route,
+                                                                 count='5',  # TODO better pagination
+                                                                 data_freshness='TR')
 
         url = "{base_url}?{base_params}&{stop_id}".format(base_url=self.service_url,
                                                           base_params=base_params,
