@@ -413,42 +413,62 @@ static void fill_cache(const DateTime from,
     }
 }
 
-void CachedNextStopTime::load(const type::Data& data,
-        const DateTime from,
-        const DateTime to,
-        const type::RTLevel rt_level,
-        const type::AccessibiliteParams& accessibilite_params) {
+bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const {
+    if (from != other.from) {
+        return from < other.from;
+    } else if (rt_level != other.rt_level) {
+        return rt_level < other.rt_level;
+    }
+    return accessibilite_params < other.accessibilite_params;
+}
+
+CachedNextStopTime CachedNextStopTimeManager::Fun::operator()(const CachedNextStopTimeKey& key) const {
+    CachedNextStopTime result;
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, "Cache miss : " << ++cache_miss);
     const auto& jp_container = data.dataRaptor->jp_container;
 
-    departure.assign(jp_container.get_jpps_values());
-    arrival.assign(jp_container.get_jpps_values());
+    result.departure.assign(jp_container.get_jpps_values());
+    result.arrival.assign(jp_container.get_jpps_values());
+    DateTime dt_from = DateTimeUtils::set(key.from, 0);
+    DateTime dt_to = DateTimeUtils::set(key.from + 2, 0);
 
     for( const auto& jp : jp_container.get_jps_values() ) {
-        fill_cache(from, to, rt_level, accessibilite_params, jp,
-                jp.discrete_vjs, arrival, departure);
-        fill_cache(from, to, rt_level, accessibilite_params, jp,
-                jp.freq_vjs, arrival, departure);
+        fill_cache(dt_from, dt_to, key.rt_level, key.accessibilite_params, jp,
+                jp.discrete_vjs, result.arrival, result.departure);
+        fill_cache(dt_from, dt_to, key.rt_level, key.accessibilite_params, jp,
+                jp.freq_vjs, result.arrival, result.departure);
     }
-    auto compare = [](const DtSt& lhs, const DtSt& rhs) noexcept{
+    auto compare = [](const CachedNextStopTime::DtSt& lhs, const CachedNextStopTime::DtSt& rhs) noexcept{
         return lhs.first < rhs.first;
     };
-    for (const auto& jpp_dtst : arrival) {
+    for (const auto& jpp_dtst : result.arrival) {
         boost::sort(jpp_dtst.second, compare);
     }
-    for (const auto& jpp_dtst : departure) {
+    for (const auto& jpp_dtst : result.departure) {
         boost::sort(jpp_dtst.second, compare);
     }
+    return result;
+}
+
+void CachedNextStopTimeManager::load(const DateTime from,
+                                     const type::RTLevel rt_level,
+                                     const type::AccessibiliteParams& accessibilite_params) {
+    CachedNextStopTimeKey key(DateTimeUtils::date(from), rt_level, accessibilite_params);
+    cache = &lru(key);
 }
 
 std::pair<const type::StopTime*, DateTime>
-CachedNextStopTime::next_stop_time(const StopEvent stop_event,
+CachedNextStopTimeManager::next_stop_time(const StopEvent stop_event,
         const JppIdx jpp_idx,
         const DateTime dt,
         const bool clockwise) const {
-    const auto& v = stop_event == StopEvent::pick_up ? departure[jpp_idx] : arrival[jpp_idx];
+    const auto& v = stop_event == StopEvent::pick_up ? cache->departure[jpp_idx] : cache->arrival[jpp_idx];
     const type::StopTime* null_st = nullptr;
     decltype(v.begin()) search;
-    auto cmp = [](const DtSt& a, const DtSt& b) noexcept { return a.first < b.first; };
+    auto cmp = [](const CachedNextStopTime::DtSt& a, const CachedNextStopTime::DtSt& b) noexcept {
+        return a.first < b.first;
+    };
     if (clockwise) {
         search = boost::lower_bound(v, std::make_pair(dt, null_st), cmp);
     } else {

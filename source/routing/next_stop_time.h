@@ -33,7 +33,9 @@ www.navitia.io
 #include "routing/stop_event.h"
 #include "routing/raptor_utils.h"
 #include "utils/idx_map.h"
+#include "utils/lru.h"
 #include "type/rt_level.h"
+#include "type/type.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/upper_bound.hpp>
@@ -197,12 +199,28 @@ private:
     const type::Data& data;
 };
 
-struct CachedNextStopTime {
-    explicit CachedNextStopTime() {}
+struct CachedNextStopTimeKey {
+    uint32_t from; //first day concerned by the cache
+    type::RTLevel rt_level; //RT-level of the cache
+    type::AccessibiliteParams accessibilite_params; //accessibility of the cache
+    CachedNextStopTimeKey(uint32_t from, type::RTLevel rt_level,
+                          const type::AccessibiliteParams& accessibilite_params) :
+        from(from), rt_level(rt_level), accessibilite_params(accessibilite_params) {}
 
-    void load(const type::Data& d,
-              const DateTime from,
-              const DateTime to,
+    bool operator<(const CachedNextStopTimeKey& other) const;
+};
+
+struct CachedNextStopTime {
+    using DtSt = std::pair<DateTime, const type::StopTime*>;
+    IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
+    IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+};
+
+struct CachedNextStopTimeManager {
+    explicit CachedNextStopTimeManager(const type::Data& d, size_t miss = 0, size_t max_cache = 10) :
+            lru({d, miss}, max_cache) {}
+
+    void load(const DateTime from,
               const type::RTLevel rt_level,
               const type::AccessibiliteParams& accessibilite_params);
 
@@ -216,9 +234,17 @@ struct CachedNextStopTime {
                    const bool clockwise) const;
 
 private:
-    using DtSt = std::pair<DateTime, const type::StopTime*>;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+    struct Fun {
+        typedef CachedNextStopTimeKey const& argument_type;
+        typedef CachedNextStopTime result_type;
+        const type::Data& data;
+        mutable size_t cache_miss;
+        Fun(const type::Data& d, size_t miss = 0): data(d), cache_miss(miss) {}
+        CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;
+    };
+
+    Lru<Fun> lru;
+    const CachedNextStopTime* cache;
 };
 
 DateTime get_next_stop_time(const StopEvent stop_event,

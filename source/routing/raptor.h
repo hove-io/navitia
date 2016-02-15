@@ -70,7 +70,7 @@ struct RAPTOR
 {
     const navitia::type::Data& data;
 
-    CachedNextStopTime cached_next_st;
+    CachedNextStopTimeManager cached_next_st;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
@@ -93,6 +93,7 @@ struct RAPTOR
 
     explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
+        cached_next_st(data),
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
@@ -210,7 +211,7 @@ struct RAPTOR
                            const std::vector<std::string>& forbidden_uri,
                            bool clockwise);
 
-    ~RAPTOR() {}
+    ~RAPTOR() = default;
 };
 
 

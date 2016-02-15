@@ -144,29 +144,29 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
-    navitia::routing::RAPTOR raptor(*(b.data));
+    auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
                               "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
     //on the theoric level, we should get one solution
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
     //on the realtime level, we should also get one solution, since for the moment there is no cancellation
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    navitia::test::handle_realtime_test(feed_id, timestamp, trip_update, *b.data, raptor);
 
     //on the theoric level, we should still get one solution
-    res = compute(nt::RTLevel::Base);
+    res = compute(nt::RTLevel::Base, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 
     //on the realtime we should now have no solution
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 0);
 }
 
@@ -182,31 +182,31 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
-    navitia::routing::RAPTOR raptor(*(b.data));
+    auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
-    auto compute = [&](nt::RTLevel level) {
+    auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"),
                               "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
     };
 
     //on the theoric and realtime level, we should arrive at 9:00 (with line A)
-    auto res = compute(nt::RTLevel::Base);
+    auto res = compute(nt::RTLevel::Base, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 
     // we cancel the vj1
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
+    navitia::test::handle_realtime_test(feed_id, timestamp, trip_update, *b.data, raptor);
 
     // on the theoric, nothing has changed
-    res = compute(nt::RTLevel::Base);
+    res = compute(nt::RTLevel::Base, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0900"_dt);
 
     // but on the realtime we now arrive at 09:30
-    res = compute(nt::RTLevel::RealTime);
+    res = compute(nt::RTLevel::RealTime, *raptor);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0930"_dt);
 }
