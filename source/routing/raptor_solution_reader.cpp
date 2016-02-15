@@ -125,7 +125,7 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
             *prev_s->get_out_st->stop_point,
             *cur_s.get_in_st->stop_point);
         assert(conn != nullptr);
-        const auto new_st_dt = reader.raptor.cached_next_st.next_stop_time(
+        const auto new_st_dt = reader.raptor.next_stop_time(
             StopEvent::pick_up,
             cur_jpp_idx,
             prev_s->get_out_dt + conn->duration,
@@ -507,7 +507,7 @@ struct RaptorSolutionReader {
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
-            const auto begin_st_dt = raptor.cached_next_st.next_stop_time(
+            const auto begin_st_dt = raptor.next_stop_time(
                         v.stop_event(), jpp.idx, begin_dt, v.clockwise());
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
@@ -544,7 +544,7 @@ struct RaptorSolutionReader {
         const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
         for (const auto jpp: raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
-            const auto begin_st_dt = raptor.cached_next_st.next_stop_time(
+            const auto begin_st_dt = raptor.next_stop_time(
                                 v.stop_event(), jpp.idx, begin_dt, v.clockwise());
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }

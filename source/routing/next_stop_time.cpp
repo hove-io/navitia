@@ -422,10 +422,8 @@ bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const 
     return accessibilite_params < other.accessibilite_params;
 }
 
-CachedNextStopTime CachedNextStopTimeManager::Fun::operator()(const CachedNextStopTimeKey& key) const {
+CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const CachedNextStopTimeKey& key) const {
     CachedNextStopTime result;
-    auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_INFO(logger, "Cache miss : " << ++cache_miss);
     const auto& jp_container = data.dataRaptor->jp_container;
 
     result.departure.assign(jp_container.get_jpps_values());
@@ -451,41 +449,18 @@ CachedNextStopTime CachedNextStopTimeManager::Fun::operator()(const CachedNextSt
     return result;
 }
 
-void CachedNextStopTimeManager::load(const DateTime from,
-                                     const type::RTLevel rt_level,
-                                     const type::AccessibiliteParams& accessibilite_params) {
+CachedNextStopTimeManager::~CachedNextStopTimeManager() {
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, "Cache miss : " << lru.get_nb_cache_miss() << " / " << lru.get_nb_calls());
+}
+
+const CachedNextStopTime* CachedNextStopTimeManager::load(
+        const DateTime from,
+        const type::RTLevel rt_level,
+        const type::AccessibiliteParams& accessibilite_params) {
     CachedNextStopTimeKey key(DateTimeUtils::date(from), rt_level, accessibilite_params);
-    cache = &lru(key);
+    return &lru(key);
 }
-
-std::pair<const type::StopTime*, DateTime>
-CachedNextStopTimeManager::next_stop_time(const StopEvent stop_event,
-        const JppIdx jpp_idx,
-        const DateTime dt,
-        const bool clockwise) const {
-    const auto& v = stop_event == StopEvent::pick_up ? cache->departure[jpp_idx] : cache->arrival[jpp_idx];
-    const type::StopTime* null_st = nullptr;
-    decltype(v.begin()) search;
-    auto cmp = [](const CachedNextStopTime::DtSt& a, const CachedNextStopTime::DtSt& b) noexcept {
-        return a.first < b.first;
-    };
-    if (clockwise) {
-        search = boost::lower_bound(v, std::make_pair(dt, null_st), cmp);
-    } else {
-        search = boost::upper_bound(v, std::make_pair(dt, null_st), cmp);
-        if (search == v.begin()) {
-            search = v.end();
-        } else if (!v.empty()) {
-            --search;
-        }
-    }
-    if (search != v.end()) {
-        return {search->second, search->first};
-    }
-    return {nullptr, 0};
-}
-
-
 
 inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
     return val >= bound.first && val <= bound.second;

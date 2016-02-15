@@ -200,10 +200,12 @@ private:
 };
 
 struct CachedNextStopTimeKey {
-    uint32_t from; //first day concerned by the cache
+    using Day = size_t;
+
+    Day from; //first day concerned by the cache
     type::RTLevel rt_level; //RT-level of the cache
     type::AccessibiliteParams accessibilite_params; //accessibility of the cache
-    CachedNextStopTimeKey(uint32_t from, type::RTLevel rt_level,
+    CachedNextStopTimeKey(Day from, type::RTLevel rt_level,
                           const type::AccessibiliteParams& accessibilite_params) :
         from(from), rt_level(rt_level), accessibilite_params(accessibilite_params) {}
 
@@ -217,33 +219,25 @@ struct CachedNextStopTime {
 };
 
 struct CachedNextStopTimeManager {
-    explicit CachedNextStopTimeManager(const type::Data& d, size_t miss = 0, size_t max_cache = 10) :
-            lru({d, miss}, max_cache) {}
+    explicit CachedNextStopTimeManager(const type::Data& d, size_t max_cache = 10) :
+            lru({d}, max_cache) {}
 
-    void load(const DateTime from,
-              const type::RTLevel rt_level,
-              const type::AccessibiliteParams& accessibilite_params);
+    ~CachedNextStopTimeManager();
 
-    // Returns the next stop time at given journey pattern point
-    // either a vehicle that leaves or that arrives depending on
-    // clockwise.
-    std::pair<const type::StopTime*, DateTime>
-    next_stop_time(const StopEvent stop_event,
-                   const JppIdx jpp_idx,
-                   const DateTime dt,
-                   const bool clockwise) const;
+    const CachedNextStopTime* load(const DateTime from,
+                                   const type::RTLevel rt_level,
+                                   const type::AccessibiliteParams& accessibilite_params);
 
 private:
-    struct Fun {
+    struct CacheCreator {
         typedef CachedNextStopTimeKey const& argument_type;
         typedef CachedNextStopTime result_type;
         const type::Data& data;
-        mutable size_t cache_miss;
-        Fun(const type::Data& d, size_t miss = 0): data(d), cache_miss(miss) {}
+        CacheCreator(const type::Data& d): data(d) {}
         CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;
     };
 
-    Lru<Fun> lru;
+    Lru<CacheCreator> lru;
     const CachedNextStopTime* cache;
 };
 

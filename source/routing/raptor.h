@@ -71,6 +71,7 @@ struct RAPTOR
     const navitia::type::Data& data;
 
     CachedNextStopTimeManager cached_next_st;
+    const CachedNextStopTime* current_cache;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
@@ -117,6 +118,15 @@ struct RAPTOR
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];
     }
+
+    // Returns the next stop time at given journey pattern point
+    // either a vehicle that leaves or that arrives depending on
+    // clockwise.
+    std::pair<const type::StopTime*, DateTime>
+    next_stop_time(const StopEvent stop_event,
+                   const JppIdx jpp_idx,
+                   const DateTime dt,
+                   const bool clockwise) const;
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path>
