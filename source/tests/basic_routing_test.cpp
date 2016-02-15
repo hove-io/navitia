@@ -50,6 +50,11 @@ www.navitia.io
  *   8h     9h
  *   8h               9h
  */
+static boost::gregorian::date_period period(std::string beg, std::string end) {
+    boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
+    boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
+    return {start_date, end_date};
+}
 
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
@@ -67,6 +72,31 @@ int main(int argc, const char* const argv[]) {
     b.vj("l9")("I1", 8*3600)("I3", 9*3600);
     b.connection("B", "C", 2*60);
     b.connection("F", "G", 2*60);
+    for(auto* vj : b.data->pt_data->vehicle_journeys){
+        if (vj->uri == "vj:l4:3"){
+            navitia::type::Frame* fr = new navitia::type::Frame();
+            fr->idx = b.data->pt_data->frames.size();
+            fr->uri = "base_frame";
+            fr->name = "base frame";
+            fr->validation_period = period("20160101", "20161230");
+            fr->vehiclejourney_list.push_back(vj);
+            vj->frame = fr;
+
+            navitia::type::Contributor* cr = new navitia::type::Contributor();
+            cr->idx = b.data->pt_data->contributors.size();
+            cr->uri = "base_contributor";
+            cr->name = "base contributor";
+            cr->license = "L-contributor";
+            cr->website = "www.canaltp.fr";
+            cr->frame_list.push_back(fr);
+            fr->contributor = cr;
+
+            b.data->pt_data->frames.push_back(fr);
+            b.data->pt_data->contributors.push_back(cr);
+            break;
+        }
+    }
+
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
