@@ -1,3 +1,10 @@
+navitia2 (2.1.2) unstable; urgency=low
+
+  * jormungandr: api frames renamed to datasets <https://github.com/CanalTP/navitia/pull/1412> 
+  * Ed: fix timezone generation <https://github.com/CanalTP/navitia/pull/1410>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Mon, 15 Feb 2016 10:02:25 +0100
+
 navitia2 (2.1.1) unstable; urgency=low
 
   * Kraken: unable feed publisher, perf are too bad  <https://github.com/CanalTP/navitia/pull/1407> 
