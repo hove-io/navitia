@@ -216,6 +216,15 @@ struct CachedNextStopTime {
     using DtSt = std::pair<DateTime, const type::StopTime*>;
     IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
     IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+
+    // Returns the next stop time at given journey pattern point
+    // either a vehicle that leaves or that arrives depending on
+    // clockwise.
+    std::pair<const type::StopTime*, DateTime>
+    next_stop_time(const StopEvent stop_event,
+                   const JppIdx jpp_idx,
+                   const DateTime dt,
+                   const bool clockwise) const;
 };
 
 struct CachedNextStopTimeManager {
@@ -238,7 +247,6 @@ private:
     };
 
     Lru<CacheCreator> lru;
-    const CachedNextStopTime* cache;
 };
 
 DateTime get_next_stop_time(const StopEvent stop_event,
