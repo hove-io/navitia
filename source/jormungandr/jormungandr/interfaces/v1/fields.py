@@ -609,7 +609,7 @@ contributor = {
     "license": fields.String()
 }
 
-frame = {
+dataset = {
     "id": fields.String(attribute='uri'),
     "description": fields.String(attribute='desc'),
     "system": fields.String(),
