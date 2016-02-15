@@ -571,7 +571,8 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
 
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
-        return nearest_addr(coord).second->admin_list;
+        const auto& filter = [](const Way& w){return w.admin_list.empty();};
+        return nearest_addr(coord, filter).second->admin_list;
     } catch (proximitylist::NotFound&) {
         return {};
     }
@@ -629,15 +630,23 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
     }
     if (res) { return *res; }
     throw proximitylist::NotFound();
+
 }
 
 std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& coord) const {
+    const auto& filter = [](const Way& w){return w.name.empty();};
+    return nearest_addr(coord, filter);
+}
+
+
+std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& coord,
+    const std::function<bool(const Way&)>& filter) const {
     // first, we collect each ways with its distance to the coord
     std::map<const Way*, double> way_dist;
     for (const auto& pair_coord: pl.find_within(coord)) {
         BOOST_FOREACH (edge_t e, boost::out_edges(pair_coord.first, graph)) {
             const Way* w = ways[graph[e].way_idx];
-            if (w->name.empty()) { continue; }
+            if (filter(*w)) { continue; }
             if (way_dist.count(w) == 0) {
                 way_dist[w] = coord.distance_to(w->projected_centroid(graph));
             }

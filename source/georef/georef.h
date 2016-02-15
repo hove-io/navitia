@@ -42,6 +42,7 @@ www.navitia.io
 #include <boost/serialization/set.hpp>
 #include <map>
 #include <set>
+#include <functional>
 
 
 namespace nt = navitia::type;
@@ -326,6 +327,8 @@ struct GeoRef {
         return nearest_edge(coordinates, pl, offsets[mode]);
     }
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord&) const;
+    std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord& coord,
+                                            const std::function<bool(const Way&)>& filter) const;
 
     void add_way(const Way& w);
 
