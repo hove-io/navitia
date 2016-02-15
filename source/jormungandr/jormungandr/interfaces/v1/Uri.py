@@ -35,7 +35,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, line_group, \
     physical_mode, commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, trip, connection, error, PbField, contributor, frame
+    journey_pattern, trip, connection, error, PbField, contributor, dataset
 from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri, protect
@@ -609,17 +609,17 @@ def contributors(is_collection):
     return Contributors
 
 
-def frames(is_collection):
-    class Frames(Uri):
+def datasets(is_collection):
+    class Datasets(Uri):
 
-        """ Retrieves frames"""
+        """ Retrieves datasets"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "frames")
+            Uri.__init__(self, is_collection, "datasets")
             self.collections = [
-                ("frames",
-                 NonNullList(fields.Nested(frame,
-                                           display_null=False))),
+                ("datasets",
+                 NonNullList(fields.Nested(dataset,
+                                           display_null=False), attribute='frames')),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),
@@ -629,7 +629,7 @@ def frames(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
-    return Frames
+    return Datasets
 
 
 def addresses(is_collection):

@@ -128,114 +128,7 @@ std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
     }
     //we fetch the default dataset timezone
-    return default_timezone;
-}
-
-
-/*
- * we need the list of dst periods over the years of the validity period
- *
- *                                  validity period
- *                              [-----------------------]
- *                        2013                                  2014
- *       <------------------------------------><-------------------------------------->
- *[           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
- *
- * We thus create a partition of the time with all period with the UTC offset
- *
- *       [    +7h       )[  +8h    )[       +7h          )[   +8h     )[      +7h     )
- */
-std::vector<PeriodWithUtcShift> get_dst_periods(const boost::gregorian::date_period& validity_period,
-                                                const boost::local_time::time_zone_ptr& tz) {
-
-    if (validity_period.is_null()) {
-        return {};
-    }
-    std::vector<int> years;
-    //we want to have all the overlapping year
-    //so add each time 1 year and continue till the first day of the year is after the end of the period (cf gtfs_parser_test.boost_periods)
-    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
-        years.push_back((*y_it).year());
-    }
-
-    BOOST_ASSERT(! years.empty());
-
-    std::vector<PeriodWithUtcShift> res;
-    for (int year: years) {
-        if (! res.empty()) {
-            //if res is not empty we add the additional period without the dst
-            //from the previous end date to the beggining of the dst next year
-            res.push_back({ {res.back().period.end(), tz->dst_local_start_time(year).date()},
-                            tz->base_utc_offset() });
-        } else {
-            //for the first elt, we add a non dst
-            auto first_day_of_year = boost::gregorian::date(year, 1, 1);
-            if (tz->dst_local_start_time(year).date() != first_day_of_year) {
-                res.push_back({ {first_day_of_year, tz->dst_local_start_time(year).date()},
-                                tz->base_utc_offset() });
-            }
-        }
-        res.push_back({ {tz->dst_local_start_time(year).date(), tz->dst_local_end_time(year).date()},
-                        tz->base_utc_offset() + tz->dst_offset() });
-    }
-    //we add the last non DST period
-    res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
-                    tz->base_utc_offset() });
-
-    //we want the shift in seconds, and it is in minute in the tzdb
-    for (auto& p_shift: res) {
-        p_shift.utc_shift *= 60;
-    }
-    return res;
-}
-
-nt::TimeZoneHandler::dst_periods
-split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
-    nt::TimeZoneHandler::dst_periods res;
-
-    if (! tz) {
-        LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
-        return res;
-    }
-
-    boost::posix_time::time_duration utc_offset = tz->base_utc_offset();
-
-    if (! tz->has_dst()) {
-        //no dst -> easy way out, no split, we just have to take the utc offset into account
-        res[utc_offset.total_seconds() / 60].push_back(validity_period);
-        return res;
-    }
-
-    std::vector<PeriodWithUtcShift> dst_periods = get_dst_periods(validity_period, tz);
-
-    //we now compute all intersection between periods
-    //to use again the example of get_dst_periods:
-    //                                      validity period
-    //                                  [----------------------------]
-    //                            2013                                  2014
-    //           <------------------------------------><-------------------------------------->
-    //    [           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
-    //
-    // we create the periods:
-    //
-    //                                  [+8)[       +7h          )[+8h)
-    //
-    // all period_with_utc_shift are grouped by dst offsets.
-    // ie in the previous example there are 2 period_with_utc_shift:
-    //                        1/        [+8)                      [+8h)
-    //                        2/            [       +7h          )
-    for (const auto& dst_period: dst_periods) {
-
-        if (! validity_period.intersects(dst_period.period)) {
-            //no intersection, we don't consider it
-            continue;
-        }
-        auto intersec = validity_period.intersection(dst_period.period);
-
-        res[dst_period.utc_shift].push_back(intersec);
-    }
-
-    return res;
+    return {"", boost::local_time::time_zone_ptr()};
 }
 
 
@@ -249,12 +142,13 @@ ed::types::Network* GtfsData::get_or_create_default_network(ed::Data& data) {
         network_map[default_network->uri] = default_network;
 
         //with the default agency comes the default timezone (only if none was provided before)
-        if (tz.default_timezone.first.empty()) {
+        if (data.tz_wrapper.tz_name.empty()) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "no time zone defined, we create a default one for paris");
             const std::string default_tz = UTC_TIMEZONE;//"Europe/Paris";
             auto timezone = tz.tz_db.time_zone_from_region(default_tz);
             BOOST_ASSERT(timezone);
-            tz.default_timezone = {default_tz, timezone};
+
+            data.tz_wrapper = ed::EdTZWrapper(default_tz, timezone);
         }
     }
     return default_network;
@@ -346,8 +240,8 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 
     std::string timezone_name = row[time_zone_c];
 
-    if (gtfs_data.tz.default_timezone.second) {
-        if (gtfs_data.tz.default_timezone.first != timezone_name) {
+    if (! data.tz_wrapper.tz_name.empty()) {
+        if (data.tz_wrapper.tz_name != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
                             " all the time zone are not equals, only the first one will be considered as the default timezone");
         }
@@ -364,9 +258,9 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
         throw navitia::exception("Error while reading " + csv.filename +
                                  + " timezone " + timezone_name + " is not valid for agency " + network->uri);
     }
-    gtfs_data.tz.default_timezone = {timezone_name, tz};
-    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.tz.default_timezone.first
-                   << " -> " << gtfs_data.tz.default_timezone.second->std_zone_name());
+    data.tz_wrapper = ed::EdTZWrapper(timezone_name, tz);
+    LOG4CPLUS_INFO(logger, "default agency tz " << timezone_name
+                   << " -> " << tz->std_zone_name());
 
     return network;
 }
@@ -461,7 +355,7 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
             sa->time_zone_with_name = gtfs_data.tz.get_tz(it_tz->second);
         } else {
             //we fetch the defautl dataset timezone
-            sa->time_zone_with_name = gtfs_data.tz.default_timezone;
+            sa->time_zone_with_name = {data.tz_wrapper.tz_name, data.tz_wrapper.boost_timezone};
         }
         nb_added_sa ++;
     }
@@ -522,8 +416,10 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         if (has_col(timezone_c, row)) {
             auto tz_name = row[timezone_c];
             sa->time_zone_with_name = gtfs_data.tz.get_tz(tz_name);
-        } else {
-            sa->time_zone_with_name = gtfs_data.tz.default_timezone;
+        }
+        if (! sa->time_zone_with_name.second) {
+            // if no timezone has been found, we set the default one
+            sa->time_zone_with_name = {data.tz_wrapper.tz_name, data.tz_wrapper.boost_timezone};
         }
         if (has_col(desc_c, row)) {
             add_gtfs_comment(gtfs_data, data, sa, row[desc_c]);
@@ -811,18 +707,14 @@ static boost::gregorian::date_period compute_smallest_active_period(const nt::Va
  */
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
     // we start by filling the global tz_handler
-    auto splited_production_period = split_over_dst(data.meta.production_date,
-                                                    gtfs_data.tz.default_timezone.second);
-    data.tz_handler = nt::TimeZoneHandler(gtfs_data.tz.default_timezone.first,
-                                          data.meta.production_date.begin(),
-                                          splited_production_period);
+    data.tz_wrapper.build_tz(data.meta.production_date);
 
     for (const auto& name_and_vp: gtfs_data.tz.non_split_vp) {
         const nt::ValidityPattern& original_vp = name_and_vp.second;
 
         boost::gregorian::date_period smallest_active_period = compute_smallest_active_period(original_vp);
 
-        auto split_periods = split_over_dst(smallest_active_period, gtfs_data.tz.default_timezone.second);
+        auto split_periods = data.tz_wrapper.split_over_dst(smallest_active_period);
 
         BOOST_ASSERT(! split_periods.empty() || smallest_active_period.is_null()); //by construction it cannot be empty if the validity period is not null
 
@@ -1120,7 +1012,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         nm::StopTime* stop_time = new nm::StopTime();
 
         //we need to convert the stop times in UTC
-        int utc_offset = data.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
+        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
 
         stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
         stop_time->departure_time = to_utc(row[departure_c], utc_offset);
@@ -1170,7 +1062,7 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         }
 
         //we need to convert the stop times in UTC
-        int utc_offset = data.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
+        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
 
         vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
         vj_it->second->end_time = to_utc(row[end_time_c], utc_offset);

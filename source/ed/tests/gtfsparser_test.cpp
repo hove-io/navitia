@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
     BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
 
-    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "Africa/Abidjan");
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.tz_name, "Africa/Abidjan");
     //we check that for all the period, it returns the same UTC shift: 0
     for (boost::gregorian::day_iterator it(data.meta.production_date.begin()); it < data.meta.production_date.end(); ++it) {
-        BOOST_CHECK_EQUAL(data.tz_handler.get_utc_offset(*it), 0);
+        BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_utc_offset(*it), 0);
     }
 
     //=> no stop area in the file, so one area has been created for each stop point
@@ -443,10 +443,10 @@ static void check_gtfs_google_example(const ed::Data& data) {
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->route != nullptr);
     }
 
-    BOOST_CHECK_EQUAL(data.tz_handler.tz_name, "America/Los_Angeles");
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_name, "America/Los_Angeles");
     //we check that the shift for vj[0] is -480 minutes and -420 for vj[1]
-    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
-    BOOST_CHECK_EQUAL(data.tz_handler.get_first_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_first_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_first_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
 
     //Stop time
     BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 2);
@@ -563,20 +563,25 @@ BOOST_AUTO_TEST_CASE(boost_year_iterator) {
     }
 }
 
+// wrapper to acess protected method
+struct TZWrapperGetter: ed::EdTZWrapper {};
+
 /*
  * test the get_dst_periods method
  *
  * the returned periods must be a partition of the validity period => all day must be in exactly one period
  */
-BOOST_AUTO_TEST_CASE(get_dst_periods) {
+BOOST_FIXTURE_TEST_CASE(get_dst_periods_test, TZWrapperGetter) {
     boost::gregorian::date_period validity_period {"20120101"_d, "20150102"_d};
     ed::connectors::GtfsData gtfs_data;
     auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
+    boost_timezone = tz_pair.second;
+    tz_name = tz_pair.first;
 
-    BOOST_REQUIRE(tz_pair.second);
+    BOOST_REQUIRE(boost_timezone);
     BOOST_REQUIRE_EQUAL(tz_pair.first, "Europe/Paris");
 
-    auto res = ed::connectors::get_dst_periods(validity_period, tz_pair.second);
+    auto res = get_dst_periods(validity_period);
 
     for (boost::gregorian::day_iterator d(validity_period.begin()); d < validity_period.end(); ++d) {
         //we must find all day in exactly one period
@@ -613,7 +618,9 @@ BOOST_AUTO_TEST_CASE(split_over_dst) {
 
     boost::gregorian::date_period vj_validity_period {"20120201"_d, "20121105"_d};
 
-    auto split_periods = ed::connectors::split_over_dst(vj_validity_period, tz_pair.second);
+    ed::EdTZWrapper tz_wrapper {tz_pair.first, tz_pair.second};
+
+    auto split_periods = tz_wrapper.split_over_dst(vj_validity_period);
 
     BOOST_REQUIRE_EQUAL(split_periods.size(), 2);
 
