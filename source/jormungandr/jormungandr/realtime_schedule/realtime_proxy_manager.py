@@ -51,21 +51,32 @@ class RealtimeProxyManager(object):
             try:
                 cls = configuration['class']
                 proxy_id = configuration['id']
-            except ValueError:
+            except KeyError:
                 log.warn('impossible to build a realtime proxy, missing mandatory field in configuration')
                 continue
             args = configuration.get('args', {})
 
             try:
+                if '.' not in cls:
+                    log.warn('impossible to build rt proxy {}, wrongly formated class: {}'.format(proxy_id,
+                                                                                                cls))
+                    continue
+
                 module_path, name = cls.rsplit('.', 1)
                 module = import_module(module_path)
                 attr = getattr(module, name)
             except ImportError:
                 log.warn('impossible to build rt proxy {}, cannot find class: {}'.format(proxy_id, cls))
                 continue
-            rt_proxy = attr(**args)
+
+            try:
+                rt_proxy = attr(**args)
+            except TypeError as e:
+                log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e.message))
+                continue
+
             rt_proxy.id = proxy_id  # all services must have an ID
             self.realtime_proxies[proxy_id] = rt_proxy
 
     def get(self, proxy_name):
-        return self.realtime_proxies[proxy_name]
+        return self.realtime_proxies.get(proxy_name)
