@@ -354,6 +354,22 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][0]['arrival_date_time'],  "20120614T160000")
         eq_(response['journeys'][0]['type'], "best")
 
+        feed_publishers = response["feed_publishers"]
+        for feed_publisher in feed_publishers:
+            is_valid_feed_publisher(feed_publisher)
+
+        feed_publisher = feed_publishers[0]
+        assert (feed_publisher["id"] == "builder")
+        assert (feed_publisher["name"] == "canal tp")
+        assert (feed_publisher["license"] == "ODBL")
+        assert (feed_publisher["url"] == "www.canaltp.fr")
+
+        feed_publisher = feed_publishers[1]
+        assert (feed_publisher["id"] == "base_contributor")
+        assert (feed_publisher["name"] == "base contributor")
+        assert (feed_publisher["license"] == "L-contributor")
+        assert (feed_publisher["url"] == "www.canaltp.fr")
+
     def test_novalidjourney_on_first_call_debug(self):
         """
         On this call the first call to kraken returns a journey
