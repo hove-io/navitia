@@ -36,13 +36,13 @@ from jormungandr.schedule import NextRTPassage
 from datetime import datetime, time
 
 
-def to_duration(hour_str):
+def _to_duration(hour_str):
     t = datetime.strptime(hour_str, "%H:%M:%S")
     return time(hour=t.hour, minute=t.minute, second=t.second)
 
 
 def _get_dt(hour_str):
-    hour = to_duration(hour_str)
+    hour = _to_duration(hour_str)
     # we then have to complete the hour with the date to have a datetime
     # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
     now = datetime.now()
@@ -64,32 +64,34 @@ class Timeo(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, service_url, service_args):
+    def __init__(self, service_url, service_args, timeout=10):
         self.service_url = service_url
         self.service_args = service_args
+        self.timeout = timeout  # timeout in seconds
 
     def next_passage_for_route_point(self, route_point):
-        url = self.make_url(route_point)
+        url = self._make_url(route_point)
         if not url:
             return None
 
-        r = requests.get(url)
+        r = requests.get(url, timeout=self.timeout)
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Timeo RT service unavailable, impossible to query : {}'
                                               .format(r.url))
             return None
 
-        return self.get_passages(r.json())
+        return self._get_passages(r.json())
 
-    def get_passages(self, timeo_resp):
+    @staticmethod
+    def _get_passages(timeo_resp):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
             logging.getLogger(__name__).warning('invalid timeo response: {}'.format(timeo_resp))
-            return []
+            return None
 
         next_st = st_responses[0]['NextStopTimesMessage']
 
@@ -102,7 +104,7 @@ class Timeo(RealtimeProxy):
 
         return next_passages
 
-    def make_url(self, route_point):
+    def _make_url(self, route_point):
         """
         the route point identifier is set with the StopDescription argument
          this argument is split in 3 arguments (given between '?' and ';' symbol....)
