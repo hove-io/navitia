@@ -194,7 +194,7 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
             forbidden_uri,
             rt_level);
 
-    current_cache = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
+    next_st = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
                                         rt_level,
                                         accessibilite_params);
 
@@ -496,7 +496,7 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                                                  accessibilite_params,
                                                  forbidden,
                                                  rt_level);
-    current_cache = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
+    next_st = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
                                         rt_level,
                                         accessibilite_params);
 
@@ -682,7 +682,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
                     if (prec_labels.transfer_is_initialized(jpp.sp_idx) &&
                         (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
-                        const auto tmp_st_dt = current_cache->next_stop_time(
+                        const auto tmp_st_dt = next_st->next_stop_time(
                             visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
 
                         if (tmp_st_dt.first != nullptr) {

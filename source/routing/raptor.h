@@ -71,7 +71,7 @@ struct RAPTOR
     const navitia::type::Data& data;
 
     CachedNextStopTimeManager cached_next_st_manager;
-    const CachedNextStopTime* current_cache;
+    const CachedNextStopTime* next_st = nullptr;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
@@ -92,9 +92,9 @@ struct RAPTOR
     // set to store if the stop_point is valid
     boost::dynamic_bitset<> valid_stop_points;
 
-    explicit RAPTOR(const navitia::type::Data& data) :
+    explicit RAPTOR(const navitia::type::Data& data, size_t cache_size = 10) :
         data(data),
-        cached_next_st_manager(data),
+        cached_next_st_manager(data, cache_size),
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),

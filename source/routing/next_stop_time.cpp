@@ -429,7 +429,7 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
     result.departure.assign(jp_container.get_jpps_values());
     result.arrival.assign(jp_container.get_jpps_values());
     DateTime dt_from = DateTimeUtils::set(key.from, 0);
-    DateTime dt_to = DateTimeUtils::set(key.from + 2, 0);
+    DateTime dt_to = DateTimeUtils::set(key.from + 2, 0); //cache window is 2-days wide (journeys : 24h max)
 
     for( const auto& jp : jp_container.get_jps_values() ) {
         fill_cache(dt_from, dt_to, key.rt_level, key.accessibilite_params, jp,

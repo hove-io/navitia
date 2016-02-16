@@ -228,11 +228,12 @@ struct CachedNextStopTime {
 };
 
 struct CachedNextStopTimeManager {
-    explicit CachedNextStopTimeManager(const type::Data& d, size_t max_cache = 10) :
-            lru({d}, max_cache) {}
+    explicit CachedNextStopTimeManager(const type::Data& data, size_t max_cache) :
+            lru({data}, max_cache) {}
 
     ~CachedNextStopTimeManager();
 
+    // WARNING: returned pointer is invalidated by next load() call
     const CachedNextStopTime* load(const DateTime from,
                                    const type::RTLevel rt_level,
                                    const type::AccessibiliteParams& accessibilite_params);
