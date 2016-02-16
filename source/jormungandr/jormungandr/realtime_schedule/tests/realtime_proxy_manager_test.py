@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from nose.tools.nontrivial import raises
+import pytz
 from jormungandr.realtime_schedule.realtime_proxy_manager import RealtimeProxyManager
 
 
@@ -38,6 +39,7 @@ def realtime_proxy_creation_test():
                   'id': 'proxy_id',
                   'class': 'jormungandr.realtime_schedule.timeo.Timeo',
                   'args': {
+                      "timezone": "Europe/Paris",
                       'service_url': 'http://custom_url.com',
                       'service_args': {
                           'serviceID': 'custom_id',
@@ -91,6 +93,7 @@ def wrong_argument_test():
                   'id': 'proxy_id',
                   'class': 'jormungandr.realtime_schedule.timeo.Timeo',
                   'args': {
+                      "timezone": "Europe/Paris",
                       'service_args': {
                           'serviceID': 'custom_id',
                           'EntityID': 'custom_entity',
@@ -103,6 +106,29 @@ def wrong_argument_test():
     assert manager.get('proxy_id') is None
 
 
+@raises(pytz.UnknownTimeZoneError)
+def wrong_timezone_test():
+    """
+    test with a timeo proxy, but with a wrong timezone
+    an error should be raised
+    """
+    config = [{
+                  'id': 'proxy_id',
+                  'class': 'jormungandr.realtime_schedule.timeo.Timeo',
+                  'args': {
+                      "timezone": "bobette",
+                      'service_url': 'http://custom_url.com',
+                      'service_args': {
+                          'serviceID': 'custom_id',
+                          'EntityID': 'custom_entity',
+                          'Media': 'custom_media'
+                      }
+                  }
+              }]
+
+    RealtimeProxyManager(config)  # should raise an Exception
+
+
 def multi_proxy_creation_test():
     """
     2 bad and one good proxy, the good one should be create
@@ -113,6 +139,7 @@ def multi_proxy_creation_test():
             'class': 'jormungandr.realtime_schedule.timeo.Timeo',
             'args': {
                 'service_url': 'http://custom_url.com',
+                "timezone": "Europe/Paris",
                 'service_args': {
                     'serviceID': 'custom_id',
                     'EntityID': 'custom_entity',

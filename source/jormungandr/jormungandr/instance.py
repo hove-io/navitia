@@ -118,7 +118,6 @@ class Instance(object):
             g.scenario = scenario
             return scenario
 
-
         instance_db = self.get_models()
         scenario_name = instance_db.scenario if instance_db else 'default'
         if not self._scenario or scenario_name != self._scenario_name:
@@ -128,7 +127,7 @@ class Instance(object):
             module = import_module('jormungandr.scenarios.{}'.format(scenario_name))
             self._scenario = module.Scenario()
 
-        #we save the used scenario for futur use
+        #we save the used scenario for future use
         g.scenario = self._scenario
         return self._scenario
 

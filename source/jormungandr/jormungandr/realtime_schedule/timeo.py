@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from flask import logging, g
+from flask import logging
 import pytz
 import requests as requests
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
@@ -41,22 +41,11 @@ def _to_duration(hour_str):
     return time(hour=t.hour, minute=t.minute, second=t.second)
 
 
-def _get_dt(hour_str):
-    hour = _to_duration(hour_str)
-    # we then have to complete the hour with the date to have a datetime
-    # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
-    now = datetime.now()
-    dt = datetime.combine(now.date(), hour)
-
-    tz = g.timezone
-
-    if not tz:
-        logging.getLogger(__name__).error('no timezone provided, returning localtime in schedule')
-        return dt
-
-    utc_dt = tz.normalize(tz.localize(dt)).astimezone(pytz.utc)
-
-    return utc_dt
+def _get_current_date():
+    """
+    encapsulate the current date in a method to be able to mock it
+    """
+    return datetime.now()
 
 
 class Timeo(RealtimeProxy):
@@ -64,10 +53,14 @@ class Timeo(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, service_url, service_args, timeout=10):
+    def __init__(self, id, service_url, service_args, timezone, timeout=10):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
+        self.id = id
+
+        # Note: if the timezone is not know, pytz raise an error
+        self.timezone = pytz.timezone(timezone)
 
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
@@ -83,8 +76,7 @@ class Timeo(RealtimeProxy):
 
         return self._get_passages(r.json())
 
-    @staticmethod
-    def _get_passages(timeo_resp):
+    def _get_passages(self, timeo_resp):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')
@@ -98,7 +90,7 @@ class Timeo(RealtimeProxy):
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop
-            dt = _get_dt(next_expected_st['NextStop'])
+            dt = self._get_dt(next_expected_st['NextStop'])
             next_passage = NextRTPassage(dt)
             next_passages.append(next_passage)
 
@@ -148,3 +140,14 @@ class Timeo(RealtimeProxy):
                                                           stop_id=stop_id_url)
 
         return url
+
+    def _get_dt(self, hour_str):
+        hour = _to_duration(hour_str)
+        # we then have to complete the hour with the date to have a datetime
+        # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
+        now = _get_current_date()
+        dt = datetime.combine(now.date(), hour)
+
+        utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
+
+        return utc_dt
