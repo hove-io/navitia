@@ -600,7 +600,71 @@ BOOST_FIXTURE_TEST_CASE(get_dst_periods_test, TZWrapperGetter) {
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(get_dst_periods_test_one_rear, TZWrapperGetter) {
+    boost::gregorian::date_period validity_period {"20150801"_d, "20160731"_d};
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
+    boost_timezone = tz_pair.second;
+    tz_name = tz_pair.first;
+
+    BOOST_REQUIRE(boost_timezone);
+    BOOST_REQUIRE_EQUAL(tz_pair.first, "Europe/Paris");
+
+    auto res = get_dst_periods(validity_period);
+
+    for (boost::gregorian::day_iterator d(validity_period.begin()); d < validity_period.end(); ++d) {
+        //we must find all day in exactly one period
+        int nb_found = 0;
+        for (auto p: res) {
+            if (p.period.contains(*d)) {
+                ++nb_found;
+            }
+        }
+        if (nb_found == 0) {
+            std::cout << "day " << *d << " found in no period" << std::endl;
+        } else if (nb_found > 1) {
+            std::cout << "day " << *d << " found in more than one period" << std::endl;
+        }
+        BOOST_CHECK_EQUAL(nb_found, 1);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(get_dst_periods_test_Sao_Paulo, TZWrapperGetter) {
+    boost::gregorian::date_period validity_period {"20150801"_d, "20160731"_d};
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.tz.get_tz("America/Sao_Paulo");
+    boost_timezone = tz_pair.second;
+    tz_name = tz_pair.first;
+
+    BOOST_REQUIRE(boost_timezone);
+    BOOST_REQUIRE_EQUAL(tz_pair.first, "America/Sao_Paulo");
+
+    auto res = get_dst_periods(validity_period);
+
+    for (boost::gregorian::day_iterator d(validity_period.begin()); d < validity_period.end(); ++d) {
+        //we must find all day in exactly one period
+        int nb_found = 0;
+        for (auto p: res) {
+            if (p.period.contains(*d)) {
+                ++nb_found;
+            }
+        }
+        if (nb_found == 0) {
+            std::cout << "day " << *d << " found in no period" << std::endl;
+        } else if (nb_found > 1) {
+            std::cout << "day " << *d << " found in more than one period" << std::endl;
+        }
+        BOOST_CHECK_EQUAL(nb_found, 1);
+    }
+}
+
 /*
+ * Configuration in tz_db_wrapper.h :
+ * << "Europe/Paris,CET,CET,CEST,CEST,+01:00:00,+01:00:00,-1;0;3,+02:00:00,-1;0;10,+03:00:00" << "\n"
+ * -> DST starts last sunday of mars(-1;0;3), ends last sunday of october(-1;0;10)
+ * -> with time difference of 1 hour to 2 hours (+01:00:00,+01:00:00)
+ * -> Hour changed from 2:00:00 am(+02:00:00) to 3:00:00 am (+03:00:00)
+ *
  * Test that split_over_dst correctly split the sub_period
  *
  * Period is :
@@ -612,7 +676,7 @@ BOOST_FIXTURE_TEST_CASE(get_dst_periods_test, TZWrapperGetter) {
  *    one on the winter utc shift with 2 periods
  *    one on the summer utc shift with 1 period
  */
-BOOST_AUTO_TEST_CASE(split_over_dst) {
+BOOST_AUTO_TEST_CASE(split_over_dst_paris) {
     ed::connectors::GtfsData gtfs_data;
     auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
 
@@ -638,6 +702,53 @@ BOOST_AUTO_TEST_CASE(split_over_dst) {
     BOOST_CHECK_EQUAL(summer_periods.at(0).begin(), "20120325"_d);
     BOOST_CHECK_EQUAL(summer_periods.at(0).last(), "20121027"_d);
 }
+
+
+/*
+ * Configuration in tz_db_wrapper.h :
+ * << "America/Sao_Paulo,BRT,BRT,BRST,BRST,-02:00:00,-01:00:00,3;0;2,+00:00:00,3;0;10,+00:00:00" << "\n"
+ * -> DST starts last sunday of feb(3;0;2), ends third sunday of october(3;0;10)
+ * -> with time difference of -3 hours to -2 hours (-02:00:00,-01:00:00)
+ * -> Hour changed from 00:00:00 am(+00:00:00) to 00:00:00 am (+00:00:00)
+ *
+ * Test that split_over_dst correctly split the sub_period
+ *
+ * Period is :
+ *
+ *         01/08/2015----------------------------------31/07/2016
+ *                summer dst  |  winter dst      | summer dst
+ *
+ *    we must have 2 groups:
+ *    one on the summer utc shift with 2 periods
+ *    one on the winter utc shift with 1 period
+ */
+BOOST_AUTO_TEST_CASE(split_over_dst_one_year_sao_paulo) {
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.tz.get_tz("America/Sao_Paulo");
+
+    boost::gregorian::date_period vj_validity_period {"20150801"_d, "20160731"_d};
+
+    ed::EdTZWrapper tz_wrapper {tz_pair.first, tz_pair.second};
+
+    auto split_periods = tz_wrapper.split_over_dst(vj_validity_period);
+
+    BOOST_REQUIRE_EQUAL(split_periods.size(), 2);
+
+    const auto summer_utc_shift = -3 * 60 * 60;
+    const auto& summer_periods = split_periods.at(summer_utc_shift);
+    BOOST_REQUIRE_EQUAL(summer_periods.size(), 2);
+    BOOST_CHECK_EQUAL(summer_periods.at(0).begin(), "20150801"_d);
+    BOOST_CHECK_EQUAL(summer_periods.at(0).last(), "20151017"_d);
+    BOOST_CHECK_EQUAL(summer_periods.at(1).begin(), "20160221"_d);
+    BOOST_CHECK_EQUAL(summer_periods.at(1).last(), "20160730"_d);
+
+    const auto winter_utc_shift = -2 * 60 * 60;
+    const auto& winter_periods = split_periods.at(winter_utc_shift);
+    BOOST_REQUIRE_EQUAL(winter_periods.size(), 1);
+    BOOST_CHECK_EQUAL(winter_periods.at(0).begin(), "20151018"_d);
+    BOOST_CHECK_EQUAL(winter_periods.at(0).last(), "20160220"_d);
+}
+
 
 BOOST_AUTO_TEST_CASE(parse_with_feed_info) {
     ed::Data data;
