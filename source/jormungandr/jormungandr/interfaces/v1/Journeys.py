@@ -554,7 +554,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("bike_speed", type=float_gt_0)
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
-        parser_get.add_argument("forbidden_uris[]", type=str, action="append")
+        parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
@@ -578,7 +578,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
-        parser_get.add_argument("_override_scenario", type=str, description="debug param to specify a custom scenario")
+        parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", type=int)

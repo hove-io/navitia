@@ -436,6 +436,15 @@ class TestPtRef(AbstractTestFixture):
         for l in lines:
             is_valid_line(l)
 
+    def test_filter_query_with_strange_char_in_filter(self):
+        """test that the ptref mechanism works an object with a weird id passed in filter args"""
+        response = self.query_region('lines?filter=stop_point.uri="stop_point:stop_with name bob \\\" , é"')
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 1
+        for l in lines:
+            is_valid_line(l)
+
     def test_journey_with_strange_char(self):
         #we use an encoded url to be able to check the links
         query = 'journeys?from=stop_with name bob \" , é&to=stop_area:stop1&datetime=20140105T070000'

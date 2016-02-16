@@ -139,7 +139,7 @@ class Places(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=str, action="append",
+        self.parsers["get"].add_argument("type[]", type=unicode, action="append",
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
@@ -151,7 +151,7 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("search_type", type=int, default=0,
                                          description="Type of search:\
                                          firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=str,
+        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
                                          action="append",
                                          description="If filled, will\
                                          restrained the search within the\
@@ -293,13 +293,13 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        self.parsers["get"].add_argument("type[]", type=str,
+        self.parsers["get"].add_argument("type[]", type=unicode,
                                          action="append",
                                          default=["stop_area", "stop_point",
                                                   "poi"],
                                          description="Type of the objects to\
                                          return")
-        self.parsers["get"].add_argument("filter", type=str, default="",
+        self.parsers["get"].add_argument("filter", type=unicode, default="",
                                          description="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
                                          description="Distance range of the\

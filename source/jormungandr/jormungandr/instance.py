@@ -314,7 +314,7 @@ class Instance(object):
                 socket.close()
                 if not quiet:
                     logger = logging.getLogger(__name__)
-                    logger.error('request on %s failed: %s', self.socket_path, str(request))
+                    logger.error('request on %s failed: %s', self.socket_path, unicode(request))
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):
