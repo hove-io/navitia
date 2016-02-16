@@ -467,7 +467,7 @@ class StatManager(object):
             stat_coord.lon = float(to_lon)
 
         except ValueError as e:
-            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', str(e))
+            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', unicode(e))
 
     def fill_sections(self, stat_journey, resp_journey):
         previous_section = None

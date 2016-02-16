@@ -104,9 +104,9 @@ class Calendars(ResourceUri):
                                 description="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("start_date", type=str, default="",
+        parser_get.add_argument("start_date", type=unicode, default="",
                                 description="Start date")
-        parser_get.add_argument("end_date", type=str, default="",
+        parser_get.add_argument("end_date", type=unicode, default="",
                                 description="End date")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",

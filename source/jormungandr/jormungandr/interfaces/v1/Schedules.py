@@ -61,7 +61,7 @@ class Schedules(ResourceUri, ResourceUtc):
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("filter", type=str)
+        parser_get.add_argument("filter", type=unicode)
         parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
                                 the schedules", default=None)
@@ -83,7 +83,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
-        parser_get.add_argument("calendar", type=str,
+        parser_get.add_argument("calendar", type=unicode,
                                 description="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")

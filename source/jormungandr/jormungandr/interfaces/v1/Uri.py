@@ -103,7 +103,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="filters objects not valid after this date")
 
         if is_collection:
-            parser.add_argument("filter", type=str, default="",
+            parser.add_argument("filter", type=unicode, default="",
                                 description="The filter parameter")
         self.collection = collection
         self.method_decorators.insert(0, ManageError())

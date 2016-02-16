@@ -65,7 +65,7 @@ def render(dico, formats, callback, status=200):
                            status=404)
         result = render_from_protobuf(r, 'json')
     else:
-        error = "Unknown file format format('" + str(formats) + "')"
+        error = "Unknown file format format('" + unicode(formats) + "')"
         error += ". Please choose .json, .txt, .xml or .pb"
         r = generate_error(error, status=404)
         result = render_from_protobuf(r, 'json')
