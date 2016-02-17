@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(split_over_dst_one_year_sao_paulo) {
  * -> Hour changed from 20:00:00 am(+02:00:00) to 20:00:00 am (+02:00:00)
  *
  * 01/08/2015----------------------------------31/07/2016
- *     winter dst |    summer dst        | winter dst
+ *     summer dst |    winter dst        | summer dst
  *
 */
 BOOST_AUTO_TEST_CASE(split_over_dst_one_year_new_york) {
