@@ -64,7 +64,14 @@ def update_passages(stop_schedule, next_realtime_passages):
     Update the stopschedule response with the new realtime passages
 
     for the moment we remove all base schedule data and replace them with the realtime
+
+    If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
+    so we use the base schedule
     """
+    if next_realtime_passages is None:
+        logging.getLogger(__name__).debug('no next passages, using base schedule')
+        return
+
     logging.getLogger(__name__).debug('next passages: : {}'
                                      .format(["dt: {}".format(d.datetime) for d in next_realtime_passages]))
 
@@ -78,8 +85,6 @@ def update_passages(stop_schedule, next_realtime_passages):
         time = (passage.datetime - midnight).total_seconds()
         new_dt.time = int(time)
         new_dt.date = date_to_timestamp(midnight)
-
-    return
 
 
 class RoutePoint(object):
