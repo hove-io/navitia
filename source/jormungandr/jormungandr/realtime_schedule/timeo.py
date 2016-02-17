@@ -68,7 +68,13 @@ class Timeo(RealtimeProxy):
         if not url:
             return None
 
-        r = requests.get(url, timeout=self.timeout)
+        try:
+            r = requests.get(url, timeout=self.timeout)
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('Timeo RT service timeout, using base '
+                                              'schedule (error: {}'.format(t))
+            return None
+
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Timeo RT service unavailable, impossible to query : {}'
