@@ -74,7 +74,7 @@ def make_url_invalid_code_test():
     """
     test make_url when RoutePoint does not have a mandatory code
 
-    we should get any url
+    we should not get any url
     """
     timeo = Timeo(id='tata', timezone='Europe/Paris', service_url='http://bob.com/tata',
                   service_args={'a': 'bobette', 'b': '12'})
@@ -165,7 +165,6 @@ def get_passages_test():
     """
     timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
                   service_args={'a': 'bobette', 'b': '12'})
-
 
     mock_response = mock_good_timeo_response()
 

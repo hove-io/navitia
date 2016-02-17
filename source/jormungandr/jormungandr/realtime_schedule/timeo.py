@@ -32,7 +32,7 @@ from flask import logging
 import pytz
 import requests as requests
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
-from jormungandr.schedule import NextRTPassage
+from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
 
 
@@ -92,7 +92,7 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop
             dt = self._get_dt(next_expected_st['NextStop'])
-            next_passage = NextRTPassage(dt)
+            next_passage = RealTimePassage(dt)
             next_passages.append(next_passage)
 
         return next_passages

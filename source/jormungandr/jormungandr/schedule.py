@@ -43,7 +43,7 @@ def get_realtime_system_code(route_point):
     """
     If a line is associated to a realtime proxy system it has a property with the name of the system
     """
-    line = route_point.route.line
+    line = route_point.pb_route.line
 
     rt_system = [p.value for p in line.properties if p.name == RT_PROXY_PROPERTY_NAME]
 
@@ -54,7 +54,7 @@ def get_realtime_system_code(route_point):
     return rt_system[0]
 
 
-class NextRTPassage(object):
+class RealTimePassage(object):
     def __init__(self, datetime):
         self.datetime = datetime
 
@@ -89,8 +89,8 @@ def update_passages(stop_schedule, next_realtime_passages):
 
 class RoutePoint(object):
     def __init__(self, stop_point, route):
-        self.stop_point = stop_point
-        self.route = route
+        self.pb_stop_point = stop_point
+        self.pb_route = route
 
     @staticmethod
     def _get_code(obj, rt_proxy_id):
@@ -98,13 +98,13 @@ class RoutePoint(object):
 
     # Cache this ?
     def fetch_stop_id(self, rt_proxy_id):
-        return self._get_code(self.stop_point, rt_proxy_id)
+        return self._get_code(self.pb_stop_point, rt_proxy_id)
 
     def fetch_line_id(self, rt_proxy_id):
-        return self._get_code(self.route.line, rt_proxy_id)
+        return self._get_code(self.pb_route.line, rt_proxy_id)
 
     def fetch_route_id(self, rt_proxy_id):
-        return self._get_code(self.route, rt_proxy_id)
+        return self._get_code(self.pb_route, rt_proxy_id)
 
 
 def get_route_point(stop_schedule):
