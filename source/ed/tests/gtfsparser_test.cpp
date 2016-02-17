@@ -600,7 +600,7 @@ BOOST_FIXTURE_TEST_CASE(get_dst_periods_test, TZWrapperGetter) {
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(get_dst_periods_test_one_rear, TZWrapperGetter) {
+BOOST_FIXTURE_TEST_CASE(get_dst_periods_test_one_year, TZWrapperGetter) {
     boost::gregorian::date_period validity_period {"20150801"_d, "20160731"_d};
     ed::connectors::GtfsData gtfs_data;
     auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
