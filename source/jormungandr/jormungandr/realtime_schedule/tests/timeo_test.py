@@ -29,9 +29,9 @@
 # www.navitia.io
 import datetime
 from dateutil.parser import parse
-from flask import json
 import mock
 import pytz
+from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
 
@@ -85,8 +85,10 @@ def make_url_invalid_code_test():
 
 
 class MockResponse(object):
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, status_code, url, *args, **kwargs):
         self.data = data
+        self.status_code = status_code
+        self.url = url
 
     def json(self):
         return self.data
@@ -98,16 +100,16 @@ class MockRequests(object):
         self.responses = responses
 
     def get(self, url, *args, **kwargs):
-        return MockResponse(json.loads(self.responses[url]))
+        return MockResponse(self.responses[url][0], self.responses[url][1], url)
 
 
 def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
     """
     small helper to ease the reading of the tests
     >>> _dt("8:15")
-    datetime.datetime(2016, 5, 6, 8, 15)
+    datetime.datetime(2016, 2, 7, 8, 15)
     >>> _dt("9:15", day=2)
-    datetime.datetime(2016, 5, 2, 9, 15)
+    datetime.datetime(2016, 2, 2, 9, 15)
     """
     d = parse(dt_to_parse)
     pytz.UTC.localize(d)
@@ -115,15 +117,7 @@ def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
     return d.replace(year=year, month=month, day=day, tzinfo=pytz.UTC)
 
 
-def get_passages_test():
-    """
-    test the next departures get from timeo's response
-
-    the timezone is UTC for convenience
-    """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
-
+def mock_good_timeo_response():
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
         "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
@@ -161,6 +155,19 @@ def get_passages_test():
             }
         ]
     }
+    return mock_response
+
+def get_passages_test():
+    """
+    test the next departures get from timeo's response
+
+    the timezone is UTC for convenience
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+
+    mock_response = mock_good_timeo_response()
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
@@ -173,3 +180,109 @@ def get_passages_test():
         assert passages[1].datetime == _dt('15:55:04')
         assert passages[2].datetime == _dt('16:10:04')
 
+
+def get_passages_test_no_passages():
+    """
+    test that if timeo returns 0 response, we return an empty list
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    mock_response = {
+        "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
+        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "StopTimesResponse": [
+            {
+                "StopID": "StopPoint_OLS01070201",
+                "StopTimeoCode": "3331",
+                "StopLongName": "André Malraux",
+                "StopShortName": "André Malraux",
+                "StopVocalName": "André Malraux",
+                "ReferenceTime": "15:30:06",
+                "NextStopTimesMessage": {
+                    "LineID": "line_id",
+                    "LineTimeoCode": "line_toto",
+                    "Way": "route_tata",
+                    "LineMainDirection": "Bicharderies",
+                    "NextExpectedStopTime": []  # emtpy list
+                }
+            }
+        ]
+    }
+
+    # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
+    # the current day with the timeo's response
+    with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
+        passages = timeo._get_passages(mock_response)
+
+        assert len(passages) == 0
+
+
+def get_passages_test_wrong_response():
+    """
+    test that if timeo returns a not valid response, we get None (and not an empty list)
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    mock_response = {
+        "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
+        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}]
+    }
+
+    # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
+    # the current day with the timeo's response
+    with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
+        passages = timeo._get_passages(mock_response)
+
+        assert passages is None
+
+
+def next_passage_for_route_point_test():
+    """
+    test the whole next_passage_for_route_point
+    mock the http call to return a good timeo response, we should get some next_passages
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    mock_requests = MockRequests({
+        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
+        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;':
+        (mock_good_timeo_response(), 200)
+    })
+
+    route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
+    # we mock the http call to return the hard coded mock_response
+    with mock.patch('requests.get', mock_requests.get):
+        with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
+            passages = timeo.next_passage_for_route_point(route_point)
+
+            assert len(passages) == 3
+
+            assert passages[0].datetime == _dt('15:40:04')
+            assert passages[1].datetime == _dt('15:55:04')
+            assert passages[2].datetime == _dt('16:10:04')
+
+
+def next_passage_for_route_point_timeo_failure_test():
+    """
+    test the whole next_passage_for_route_point
+
+    the timeo's response is in error (status = 404), we should get 'None'
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    mock_requests = MockRequests({
+        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
+        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;':
+        (mock_good_timeo_response(), 404)
+    })
+
+    route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
+    with mock.patch('requests.get', mock_requests.get):
+        with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
+            passages = timeo.next_passage_for_route_point(route_point)
+
+            assert passages is None

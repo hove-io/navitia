@@ -45,6 +45,7 @@ def _get_current_date():
     """
     encapsulate the current date in a method to be able to mock it
     """
+    # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
     return datetime.now()
 
 
@@ -144,7 +145,6 @@ class Timeo(RealtimeProxy):
     def _get_dt(self, hour_str):
         hour = _to_duration(hour_str)
         # we then have to complete the hour with the date to have a datetime
-        # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
         now = _get_current_date()
         dt = datetime.combine(now.date(), hour)
 
