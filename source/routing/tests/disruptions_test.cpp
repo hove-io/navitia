@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     j->set_max_duration(1337);
     j->set_max_transfers(42);
     j->set_wheelchair(false);
-    j->set_realtime_level(pbnavitia::RTLevel::ADAPTED);
+    j->set_realtime_level(pbnavitia::RTLevel::ADAPTED_SCHEDULE);
     j->add_datetimes(navitia::test::to_posix_timestamp("20120614T080000"));
     j->mutable_streetnetwork_params()->set_origin_mode("walking");
     j->mutable_streetnetwork_params()->set_destination_mode("walking");

@@ -86,6 +86,8 @@ def update_passages(stop_schedule, next_realtime_passages):
         new_dt.time = int(time)
         new_dt.date = date_to_timestamp(midnight)
 
+        new_dt.realtime_level = type_pb2.REAL_TIME
+
 
 class RoutePoint(object):
     def __init__(self, stop_point, route):

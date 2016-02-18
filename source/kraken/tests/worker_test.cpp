@@ -52,7 +52,7 @@ static pbnavitia::Request create_request(bool wheelchair, std::string destinatio
     pbnavitia::JourneysRequest* j = req.mutable_journeys();
     j->set_clockwise(true);
     j->set_wheelchair(wheelchair);
-    j->set_realtime_level(pbnavitia::ADAPTED);
+    j->set_realtime_level(pbnavitia::ADAPTED_SCHEDULE);
     j->set_max_duration(std::numeric_limits<int32_t>::max());
     j->set_max_transfers(42);
     j->add_datetimes(navitia::test::to_posix_timestamp("20150314T080000"));

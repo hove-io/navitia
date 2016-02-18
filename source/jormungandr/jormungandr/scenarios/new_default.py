@@ -133,9 +133,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request['data_freshness'] == 'realtime':
         req.journeys.realtime_level = type_pb2.REAL_TIME
     elif request['data_freshness'] == 'adapted_schedule':
-        req.journeys.realtime_level = type_pb2.ADAPTED
+        req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
     else:
-        req.journeys.realtime_level = type_pb2.BASE
+        req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
     req.journeys.show_codes = request["show_codes"]
 
     if "details" in request and request["details"]:
