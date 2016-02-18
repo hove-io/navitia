@@ -287,23 +287,18 @@ class add_journey_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200:
+            if objects[1] != 200 or 'journeys' not in objects[0]:
                 return objects
-            if "journeys" not in objects[0]:
-                return objects
-            if "uri" in kwargs:
-                del kwargs["uri"]
-            if "lon" in kwargs and "lat" in kwargs:
-                del kwargs["lon"]
-                del kwargs["lat"]
             for journey in objects[0]['journeys']:
                 if "sections" not in journey:#this mean it's an isochrone...
-                    kwargs["datetime"] = journey["requested_date_time"]
-                    kwargs["to"] = journey["to"]["id"]
-                    kwargs["from"] = journey["from"]["id"]
-                    if 'datetime_represents' in request.args:
-                        kwargs['datetime_represents'] = request.args['datetime_represents']
-                    journey['links'] = [create_external_link("v1.journeys", rel="journeys", **kwargs)]
+                    args = dict(request.args)
+                    if 'to' not in args:
+                        args['to'] = journey['to']['id']
+                    if 'from' not in args:
+                        args['from'] = journey['from']['id']
+                    if 'region' in kwargs:
+                        args['region'] = kwargs['region']
+                    journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
             return objects
         return wrapper
 

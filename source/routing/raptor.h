@@ -153,22 +153,6 @@ struct RAPTOR
                 const size_t max_extra_second_pass = 0);
 
 
-    /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
-     * stop points de départs, vers plusieurs stoppoints d'arrivée,
-     * à une heure donnée.
-     */
-    std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-    compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
-                   const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
-                   const DateTime& departure_datetime,
-                   const nt::RTLevel rt_level,
-                   const DateTime& bound,
-                   const uint32_t max_transfers,
-                   const type::AccessibiliteParams& accessibilite_params,
-                   const std::vector<std::string>& forbidden_uri,
-                   bool clockwise);
-
-
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
