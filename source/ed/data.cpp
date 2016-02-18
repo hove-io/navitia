@@ -736,33 +736,34 @@ EdTZWrapper::get_dst_periods(const boost::gregorian::date_period& validity_perio
 
     BOOST_ASSERT(! years.empty());
     bool is_dst_start_smaller = true;
+    auto utc_offset = boost_timezone->base_utc_offset();
 
     std::vector<PeriodWithUtcShift> res;
     for (int year: years) {
+
+        auto saving_start_time = boost_timezone->dst_local_start_time(year).date();
+        auto saving_end_time = boost_timezone->dst_local_end_time(year).date();
         is_dst_start_smaller = (boost_timezone->dst_local_start_time(year).date() < boost_timezone->dst_local_end_time(year).date());
+        if (is_dst_start_smaller) {
+            saving_start_time = boost_timezone->dst_local_start_time(year).date();
+            saving_end_time = boost_timezone->dst_local_end_time(year).date();
+            utc_offset = boost_timezone->base_utc_offset();
+        } else {
+            saving_start_time = boost_timezone->dst_local_end_time(year).date();
+            saving_end_time = boost_timezone->dst_local_start_time(year).date();
+            utc_offset = boost_timezone->base_utc_offset() + boost_timezone->dst_offset();
+        }
+
         if (! res.empty()) {
             //if res is not empty we add the additional period without the dst
             //from the previous end date to the beggining of the dst next year
-            if (is_dst_start_smaller) {
-                res.push_back({ {res.back().period.end(), boost_timezone->dst_local_start_time(year).date()},
-                                boost_timezone->base_utc_offset() });
-            } else {
-                res.push_back({ {res.back().period.end(), boost_timezone->dst_local_end_time(year).date()},
-                                boost_timezone->base_utc_offset() + boost_timezone->dst_offset() });
-            }
+            res.push_back({ {res.back().period.end(), saving_start_time}, utc_offset });
 
         } else {
             //for the first elt, we add a non dst
             auto first_day_of_year = boost::gregorian::date(year, 1, 1);
             if (boost_timezone->dst_local_start_time(year).date() != first_day_of_year) {
-                if (is_dst_start_smaller) {
-                    res.push_back({ {first_day_of_year, boost_timezone->dst_local_start_time(year).date()},
-                                    boost_timezone->base_utc_offset() });
-                } else {
-                    res.push_back({ {first_day_of_year, boost_timezone->dst_local_end_time(year).date()},
-                                    boost_timezone->base_utc_offset() + boost_timezone->dst_offset() });
-                }
-
+                res.push_back({ {first_day_of_year, saving_start_time}, utc_offset });
             }
         }
         if (is_dst_start_smaller){
@@ -775,14 +776,7 @@ EdTZWrapper::get_dst_periods(const boost::gregorian::date_period& validity_perio
     }
 
     //we add the last non DST period
-    if (is_dst_start_smaller) {
-        res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
-                        boost_timezone->base_utc_offset() });
-    } else {
-        res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
-                        boost_timezone->base_utc_offset()  + boost_timezone->dst_offset()});
-    }
-
+    res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)}, utc_offset});
 
     //we want the shift in seconds, and it is in minute in the tzdb
     for (auto& p_shift: res) {
