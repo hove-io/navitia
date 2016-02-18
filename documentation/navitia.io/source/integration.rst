@@ -870,7 +870,7 @@ Main parameters
 | nop      | data_freshness        | enum             | Define the freshness of data to use to    | base_schedule   |
 |          |                       |                  | compute journeys                          |                 |
 |          |                       |                  |                                           |                 |
-|          |                       |                  | * real_time                               |                 |
+|          |                       |                  | * realtime                                |                 |
 |          |                       |                  | * base_schedule                           |                 |
 |          |                       |                  |                                           |                 |
 |          |                       |                  | when using the following parameter        |                 |
@@ -879,7 +879,7 @@ Main parameters
 |          |                       |                  | response.                                 |                 |
 |          |                       |                  | You can then display the disruption       |                 |
 |          |                       |                  | message to the traveler and make a        |                 |
-|          |                       |                  | real_time request to get a new            |                 |
+|          |                       |                  | realtime request to get a new             |                 |
 |          |                       |                  | undisrupted solution.                     |                 |
 |          |                       |                  |                                           |                 |
 +----------+-----------------------+------------------+-------------------------------------------+-----------------+
@@ -954,7 +954,7 @@ Other parameters
 |          |                       |           | into account, and thus avoid disrupted    |                 |
 |          |                       |           | public transport.                         |                 |
 |          |                       |           | Rq: "disruption_active=true" =            |                 |
-|          |                       |           |     "data_freshness=real_time"            |                 |
+|          |                       |           |     "data_freshness=realtime"             |                 |
 |          |                       |           | Use "data_freshness" parameter instead    |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
@@ -1040,7 +1040,7 @@ ______________
 |                     |                          | * STOP_MOVED                                                 |
 |                     |                          |                                                              |
 |                     |                          | In order to get a undisrupted journey, you just have to add  |
-|                     |                          | a "&data_freshness=real_time" parameter                      |
+|                     |                          | a "&data_freshness=realtime" parameter                       |
 +---------------------+--------------------------+--------------------------------------------------------------+
 
 
@@ -1242,13 +1242,13 @@ Parameters
 | nop      | data_freshness      | enum              | Define the freshness of data | base_schedule |
 |          |                     |                   | to use                       |               |
 |          |                     |                   |                              |               |
-|          |                     |                   | * real_time                  |               |
+|          |                     |                   | * realtime                   |               |
 |          |                     |                   | * base_schedule              |               |
 |          |                     |                   |                              |               |
 +----------+---------------------+-------------------+------------------------------+---------------+
-| nop      | forbidden_uris[]    | id               | If you want to avoid lines,   |               |
-|          |                     |                  | modes, networks, etc.         |               |
-+----------+---------------------+------------------+-------------------------------+---------------+
+| nop      | forbidden_uris[]    | id                | If you want to avoid lines,   |               |
+|          |                     |                   | modes, networks, etc.         |               |
++----------+---------------------+------------------ +-------------------------------+---------------+
 
 Objects
 #######
@@ -1333,7 +1333,7 @@ Parameters
 | nop      | data_freshness      | enum             | Define the freshness of data to use   | base_schedule |
 |          |                     |                  | to compute journeys                   |               |
 |          |                     |                  |                                       |               |
-|          |                     |                  | * real_time                           |               |
+|          |                     |                  | * realtime                            |               |
 |          |                     |                  | * base_schedule                       |               |
 |          |                     |                  |                                       |               |
 +----------+---------------------+------------------+---------------------------------------+---------------+
@@ -1372,10 +1372,10 @@ Parameters
 |          |                     |                  | between from_datetime                 |               |
 |          |                     |                  | and the retrieved datetimes.          |               |
 +----------+---------------------+------------------+---------------------------------------+---------------+
-| nop      | data_freshness      | enum             | Define the freshness of data to use   | real_time     |
+| nop      | data_freshness      | enum             | Define the freshness of data to use   | realtime      |
 |          |                     |                  | to compute journeys                   |               |
 |          |                     |                  |                                       |               |
-|          |                     |                  | * real_time                           |               |
+|          |                     |                  | * realtime                            |               |
 |          |                     |                  | * base_schedule                       |               |
 |          |                     |                  |                                       |               |
 +----------+---------------------+------------------+---------------------------------------+---------------+
