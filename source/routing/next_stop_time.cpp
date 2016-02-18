@@ -351,13 +351,25 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
  *
  * */
 template<typename F>
-static void vj_loop(const nt::DiscreteVehicleJourney*, F f) {
+static void vj_loop(const nt::DiscreteVehicleJourney*, F f, nt::RTLevel) {
     f(0);
 }
 
 template<typename F>
-static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f) {
-    for (auto freq_shift = vj->start_time; freq_shift <= vj->end_time; freq_shift+= vj->headway_secs) {
+static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f, nt::RTLevel rt_level) {
+    int start_time = vj->start_time;
+    int end_time = vj->end_time;
+    // start date is relative to the production begin date
+    auto start_date = DateTimeUtils::date(start_time);
+    // end_time may be smaller than start_time because of the UTC conversion
+    if (vj->start_time > vj->end_time ) {
+        // In this case, the vj passes midnight, it begins actually on yesterday
+        if (! vj->is_valid(start_date - 1, rt_level)) {
+            return;
+        }
+        start_time -= 86400;
+    }
+    for (auto freq_shift = start_time; freq_shift <= end_time; freq_shift+= vj->headway_secs) {
         f(freq_shift);
     }
 }
@@ -391,7 +403,7 @@ static void fill_cache(const DateTime from,
             size_t i = 0;
             for (const auto& st : vj->stop_time_list) {
                 auto jpp_idx = jp.jpps[i];
-                auto loop_impl = [&](DateTime freq_shift){
+                auto loop_impl = [&](long freq_shift){
                     if (st.drop_off_allowed()) {
                         auto arrival_time = st.arrival_time + shift + freq_shift;
                         if (from <= arrival_time && arrival_time <= to) {
@@ -406,7 +418,7 @@ static void fill_cache(const DateTime from,
                     }
                 };
                 // loop is done differently according to the type of Vehicle Journey
-                vj_loop(vj, loop_impl);
+                vj_loop(vj, loop_impl, rt_level);
                 ++i;
             }
         }
