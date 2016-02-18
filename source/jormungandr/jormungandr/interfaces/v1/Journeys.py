@@ -588,15 +588,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         self.method_decorators.append(complete_links(self))
 
-        # manage post protocol (n-m calculation)
-        self.parsers["post"] = deepcopy(parser_get)
-        parser_post = self.parsers["post"]
-        parser_post.add_argument("details", type=boolean, default=False, location="json")
-        for index, elem in enumerate(parser_post.args):
-            if elem.name in ["from", "to"]:
-                parser_post.args[index].type = list
-                parser_post.args[index].dest = elem.name
-            parser_post.args[index].location = "json"
 
     @add_debug_info()
     @add_fare_links()
@@ -763,88 +754,3 @@ class Journeys(ResourceUri, ResourceUtc):
         er.message = "No journey found"
 
         return resp
-
-    @add_journey_pagination()
-    @add_journey_href()
-    @marshal_with(journeys)
-    @ManageError()
-    def post(self, region=None, lon=None, lat=None, uri=None):
-        args = self.parsers['post'].parse_args()
-        if args.get('traveler_type') is not None:
-            traveler_profile = TravelerProfile.make_travelers_profile(region, args['traveler_type'])
-            traveler_profile.override_params(args)
-
-        # We set default modes for fallback modes.
-        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
-        # fallback modes will always have a value, and traveler_type will never override fallback modes.
-        if args.get('origin_mode') is None:
-            args['origin_mode'] = ['walking']
-        if args.get('destination_mode') is None:
-            args['destination_mode'] = ['walking']
-
-        #check that we have at least one departure and one arrival
-        if len(args['from']) == 0:
-            abort(400, message="from argument must contain at least one item")
-        if len(args['to']) == 0:
-            abort(400, message="to argument must contain at least one item")
-
-        # TODO : Changer le protobuff pour que ce soit propre
-        if args['destination_mode'] == 'vls':
-            args['destination_mode'] = 'bss'
-        if args['origin_mode'] == 'vls':
-            args['origin_mode'] = 'bss'
-
-        if args['max_duration_to_pt']:
-            #retrocompatibility: max_duration_to_pt override all individual value by mode
-            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
-
-        #count override min_nb_journey or max_nb_journey
-        if 'count' in args and args['count']:
-            args['min_nb_journeys'] = args['count']
-            args['max_nb_journeys'] = args['count']
-
-        if region:
-            self.region = i_manager.get_region(region)
-            set_request_timezone(self.region)
-
-        if not region:
-            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            self.region = compute_regions(args)
-
-        #store json data into 4 arrays
-        args['origin'] = []
-        args['origin_access_duration'] = []
-        args['destination'] = []
-        args['destination_access_duration'] = []
-        for loop in [('from', 'origin', True), ('to', 'destination', False)]:
-            for location in args[loop[0]]:
-                if "access_duration" in location:
-                    args[loop[1]+'_access_duration'].append(location["access_duration"])
-                else:
-                    args[loop[1]+'_access_duration'].append(0)
-                stop_uri = location["uri"]
-                stop_uri = transform_id(stop_uri)
-                args[loop[1]].append(stop_uri)
-
-        #default Date
-        if not "datetime" in args or not args['datetime']:
-            args['datetime'] = datetime.now()
-            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
-
-        # we save the original datetime for debuging purpose
-        args['original_datetime'] = args['datetime']
-        original_datetime = args['original_datetime']
-
-        #we add the interpreted parameters to the stats
-        self._register_interpreted_parameters(args)
-
-        new_datetime = self.convert_to_utc(original_datetime)
-        args['datetime'] = date_to_timestamp(new_datetime)
-
-        api = 'nm_journeys'
-
-        response = i_manager.dispatch(args, api, instance_name=self.region)
-        return response

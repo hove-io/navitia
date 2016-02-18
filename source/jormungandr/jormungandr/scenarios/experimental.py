@@ -168,9 +168,6 @@ class Scenario(new_default.Scenario):
 
 
 
-    def nm_journeys(self, request, instance):
-        return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
-
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
 

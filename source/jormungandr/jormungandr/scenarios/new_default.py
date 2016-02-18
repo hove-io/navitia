@@ -682,9 +682,6 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
-    def nm_journeys(self, request, instance):
-        return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
-
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
         #we don't want to filter anything!
