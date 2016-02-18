@@ -367,7 +367,7 @@ static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f, nt::RTLevel rt_l
         if (! vj->is_valid(start_date - 1, rt_level)) {
             return;
         }
-        start_time -= 86400;
+        start_time -= DateTimeUtils::SECONDS_PER_DAY;
     }
     for (auto freq_shift = start_time; freq_shift <= end_time; freq_shift+= vj->headway_secs) {
         f(freq_shift);
