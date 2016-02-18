@@ -644,6 +644,7 @@ static pbnavitia::Response make_pt_pathes(PbCreator& pb_creator,
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
+                                   type::EntryPoint origin,
                                    PbCreator& pb_creator,
                                    const std::vector<type::StopPoint*> stop_points,
                                    bool clockwise,
@@ -689,7 +690,14 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_journey->set_nb_transfers(round - 1);
             pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                                        navitia::to_posix_time(best_lbl, raptor.data));
-            pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
+            if(clockwise){
+                pb_creator.fill(&origin, pb_journey->mutable_origin(), 0);
+                pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
+            }else{
+                pb_creator.fill(sp, pb_journey->mutable_origin(), 0);
+                pb_creator.fill(&origin, pb_journey->mutable_destination(), 0);
+
+            }
         }
     }
 }
@@ -1060,7 +1068,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     raptor.isochrone(departures, init_dt, bound, max_transfers,
                            accessibilite_params, forbidden, clockwise, rt_level);
 
-    add_isochrone_response(raptor, /*origin, clockwise,*/ pb_creator, raptor.data.pt_data->stop_points, clockwise,
+    add_isochrone_response(raptor, origin, pb_creator, raptor.data.pt_data->stop_points, clockwise,
                            init_dt, bound, max_duration);
     pb_creator.sort_journeys();
     if(pb_creator.empty_journeys()){

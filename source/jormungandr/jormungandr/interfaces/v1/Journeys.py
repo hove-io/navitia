@@ -294,17 +294,17 @@ class add_journey_href(object):
             if "region" in kwargs:
                 del kwargs["region"]
             if "uri" in kwargs:
-                kwargs["from"] = kwargs["uri"].split("/")[-1]
                 del kwargs["uri"]
             if "lon" in kwargs and "lat" in kwargs:
-                if not "from" in kwargs:
-                    kwargs["from"] = kwargs["lon"] + ';' + kwargs["lat"]
                 del kwargs["lon"]
                 del kwargs["lat"]
             for journey in objects[0]['journeys']:
-                if "sections" not in journey:
+                if "sections" not in journey:#this mean it's an isochrone...
                     kwargs["datetime"] = journey["requested_date_time"]
                     kwargs["to"] = journey["to"]["id"]
+                    kwargs["from"] = journey["from"]["id"]
+                    if 'datetime_represents' in request.args:
+                        kwargs['datetime_represents'] = request.args['datetime_represents']
                     journey['links'] = [create_external_link("v1.journeys", rel="journeys", **kwargs)]
             return objects
         return wrapper
