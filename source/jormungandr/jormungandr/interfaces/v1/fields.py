@@ -96,7 +96,11 @@ class DateTime(fields.Raw):
     def output(self, key, obj):
         tz = get_timezone()
 
-        value = fields.get_value(key if self.attribute is None else self.attribute, obj)
+        attribute = self.attribute or key
+        if not obj.HasField(attribute):
+            return self.default
+
+        value = fields.get_value(attribute, obj)
 
         if value is None:
             return self.default
@@ -645,7 +649,9 @@ connection = {
 
 stop_date_time = {
     "departure_date_time": DateTime(),
+    "base_departure_date_time": DateTime(),
     "arrival_date_time": DateTime(),
+    "base_arrival_date_time": DateTime(),
     "stop_point": PbField(stop_point),
     "additional_informations": additional_informations,
     "links": stop_time_properties_links

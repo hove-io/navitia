@@ -190,7 +190,9 @@ section = {
     "transfer_type": enum_type(),
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
     "departure_date_time": DateTime(attribute="begin_date_time"),
+    "base_departure_date_time": DateTime(attribute="base_begin_date_time"),
     "arrival_date_time": DateTime(attribute="end_date_time"),
+    "base_arrival_date_time": DateTime(attribute="base_end_date_time"),
     "co2_emission": Co2Emission(),
 }
 
