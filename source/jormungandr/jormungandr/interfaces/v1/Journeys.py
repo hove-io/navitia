@@ -291,8 +291,6 @@ class add_journey_href(object):
                 return objects
             if "journeys" not in objects[0]:
                 return objects
-            if "region" in kwargs:
-                del kwargs["region"]
             if "uri" in kwargs:
                 del kwargs["uri"]
             if "lon" in kwargs and "lat" in kwargs:
