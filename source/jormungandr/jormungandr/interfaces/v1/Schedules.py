@@ -83,6 +83,10 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
+        parser_get.add_argument("forbidden_uris[]", type=unicode,
+                                description="forbidden uris",
+                                dest="forbidden_uris[]",
+                                action="append")
         parser_get.add_argument("calendar", type=unicode,
                                 description="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
