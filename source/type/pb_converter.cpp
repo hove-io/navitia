@@ -1146,7 +1146,9 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj_stoptimes->vj->uri);
-    this->add_contributor(vj_stoptimes->vj);
+    if (vj_stoptimes->vj->frame && vj_stoptimes->vj->frame->contributor){
+        this->pb_creator.contributors.insert(vj_stoptimes->vj->frame->contributor);
+    }
     if (depth > 0 && vj_stoptimes->vj->route) {
         fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;});
         uris->set_route(vj_stoptimes->vj->route->uri);
