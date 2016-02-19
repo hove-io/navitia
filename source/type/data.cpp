@@ -426,9 +426,25 @@ void Data::build_associated_calendar() {
     }
 }
 
+static void buid_frames(navitia::type::VehicleJourney* vj){
+    if(!vj->frame) { return; }
+    if (vj->route && (!navitia::contains(vj->route->frame_list, vj->frame))){
+        vj->route->frame_list.push_back(vj->frame);
+    }
+    if (!navitia::contains(vj->frame->vehiclejourney_list, vj)){
+        vj->frame->vehiclejourney_list.push_back(vj);
+    }
+    for(navitia::type::StopTime& st : vj->stop_time_list){
+        if(st.stop_point && (!navitia::contains(st.stop_point->frame_list, vj->frame))){
+            st.stop_point->frame_list.push_back(vj->frame);
+        }
+    }
+}
+
 void Data::build_relations(){
     // physical_mode_list of line
-    for (const auto* vj: pt_data->vehicle_journeys) {
+    for (auto* vj: pt_data->vehicle_journeys) {
+        buid_frames(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
         if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
             != vj->route->line->physical_mode_list.end()) {
