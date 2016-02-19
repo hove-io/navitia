@@ -288,7 +288,7 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig, const nt::StopTime* st
     auto validity_pattern_dt_day = dt_orig.date();
     validity_pattern_dt_day -= boost::gregorian::days(st_orig->vehicle_journey->shift);
     auto hour_of_day_orig = (is_departure ? st_orig->departure_time : st_orig->arrival_time);
-    validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / (60*60*24));
+    validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / DateTimeUtils::SECONDS_PER_DAY);
     // from the "base validity_pattern" day, we simply have to apply stop_time from base_vj (st_base)
     auto hour_of_day_base = (is_departure ? st_base->departure_time : st_base->arrival_time);
     return bt::ptime(validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base));
