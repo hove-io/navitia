@@ -256,10 +256,12 @@ static void add_direct_path(PbCreator& pb_creator,
 static const nt::StopTime* get_base_stop_time(const nt::StopTime* st_orig) {
     const nt::StopTime* st_base = nullptr;
     size_t nb_st_found = 0;
-    if (st_orig->vehicle_journey == st_orig->vehicle_journey->get_corresponding_base()) {
-        return st_orig;
-    }
-    for (const auto& st_it : st_orig->vehicle_journey->get_corresponding_base()->stop_time_list) {
+    if (st_orig == nullptr || st_orig->vehicle_journey == nullptr) { return nullptr; }
+    auto base_vj = st_orig->vehicle_journey->get_corresponding_base();
+    if (base_vj == nullptr) { return nullptr; }
+
+    if (st_orig->vehicle_journey == base_vj) { return st_orig; }
+    for (const auto& st_it : base_vj->stop_time_list) {
         if (st_orig->stop_point == st_it.stop_point) {
             st_base = &st_it;
             ++nb_st_found;
@@ -274,12 +276,20 @@ static const nt::StopTime* get_base_stop_time(const nt::StopTime* st_orig) {
     return st_base;
 }
 
+/**
+ * Compute base passage from amended passage, knowing amended and base stop-times
+ */
 static bt::ptime get_base_dt(const nt::StopTime* st_orig, const nt::StopTime* st_base,
                              const bt::ptime& dt_orig, bool is_departure) {
+    if (st_orig == nullptr || st_base == nullptr) { return bt::not_a_date_time; }
+    // compute the "base validity_pattern" day of dt_orig:
+    // * shift back if amended-vj is shifted compared to base-vj
+    // * shift back if the hour in stop-time of amended-vj is >24h
     auto validity_pattern_dt_day = dt_orig.date();
     validity_pattern_dt_day -= boost::gregorian::days(st_orig->vehicle_journey->shift);
     auto hour_of_day_orig = (is_departure ? st_orig->departure_time : st_orig->arrival_time);
     validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / (60*60*24));
+    // from the "base validity_pattern" day, we simply have to apply stop_time from base_vj (st_base)
     auto hour_of_day_base = (is_departure ? st_base->departure_time : st_base->arrival_time);
     return bt::ptime(validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base));
 }
@@ -335,10 +345,12 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 stop_time->set_departure_date_time(dep_time);
 
                 auto base_st = get_base_stop_time(item.stop_times[i]);
-                auto base_dep_dt = get_base_dt(item.stop_times[i], base_st, item.departures[i], true);
-                stop_time->set_base_departure_date_time(navitia::to_posix_timestamp(base_dep_dt));
-                auto base_arr_dt = get_base_dt(item.stop_times[i], base_st, item.arrivals[i], false);
-                stop_time->set_base_arrival_date_time(navitia::to_posix_timestamp(base_arr_dt));
+                if (base_st != nullptr) {
+                    auto base_dep_dt = get_base_dt(item.stop_times[i], base_st, item.departures[i], true);
+                    stop_time->set_base_departure_date_time(navitia::to_posix_timestamp(base_dep_dt));
+                    auto base_arr_dt = get_base_dt(item.stop_times[i], base_st, item.arrivals[i], false);
+                    stop_time->set_base_arrival_date_time(navitia::to_posix_timestamp(base_arr_dt));
+                }
 
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
@@ -435,11 +447,15 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
         if(item.type == ItemType::public_transport) {
             auto base_dep_st = get_base_stop_time(item.stop_times.front());
-            auto base_dep_dt = get_base_dt(item.stop_times.front(), base_dep_st, item.departure, true);
-            pb_section->set_base_begin_date_time(navitia::to_posix_timestamp(base_dep_dt));
+            if (base_dep_st != nullptr) {
+                auto base_dep_dt = get_base_dt(item.stop_times.front(), base_dep_st, item.departure, true);
+                pb_section->set_base_begin_date_time(navitia::to_posix_timestamp(base_dep_dt));
+            }
             auto base_arr_st = get_base_stop_time(item.stop_times.back());
-            auto base_arr_dt = get_base_dt(item.stop_times.back(), base_arr_st, item.arrival, false);
-            pb_section->set_base_end_date_time(navitia::to_posix_timestamp(base_arr_dt));
+            if (base_arr_st != nullptr) {
+                auto base_arr_dt = get_base_dt(item.stop_times.back(), base_arr_st, item.arrival, false);
+                pb_section->set_base_end_date_time(navitia::to_posix_timestamp(base_arr_dt));
+            }
         }
 
         arrival_time = item.arrival;
