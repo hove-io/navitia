@@ -31,7 +31,6 @@ www.navitia.io
 #include "next_stop_time.h"
 
 #include "dataraptor.h"
-#include "get_stop_times.h"
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
@@ -351,20 +350,19 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
  *
  * */
 template<typename F>
-static void vj_loop(const nt::DiscreteVehicleJourney*, F f, nt::RTLevel) {
+static void vj_loop(const nt::DiscreteVehicleJourney*, F f) {
     f(0);
 }
 
 template<typename F>
-static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f, nt::RTLevel rt_level) {
+static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f) {
     int start_time = vj->start_time;
     int end_time = vj->end_time;
     // start date is relative to the production begin date
-    auto start_date = DateTimeUtils::date(start_time);
     // end_time may be smaller than start_time because of the UTC conversion
     if (vj->start_time > vj->end_time ) {
-        // In this case, the vj passes midnight, it begins actually on yesterday
-        end_time += DateTimeUtils::SECONDS_PER_DAY;
+        // In this case, the vj passes midnight
+        end_time += static_cast<int>(DateTimeUtils::SECONDS_PER_DAY);
     }
     for (auto freq_shift = start_time; freq_shift <= end_time; freq_shift+= vj->headway_secs) {
         f(freq_shift);
@@ -415,7 +413,7 @@ static void fill_cache(const DateTime from,
                     }
                 };
                 // loop is done differently according to the type of Vehicle Journey
-                vj_loop(vj, loop_impl, rt_level);
+                vj_loop(vj, loop_impl);
                 ++i;
             }
         }

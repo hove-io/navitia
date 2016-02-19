@@ -42,12 +42,12 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
 static DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, const DateTime bound) {
+    auto depart_clockwise = departure_datetime + DateTimeUtils::SECONDS_PER_DAY;
+    auto depart_anticlockwise = departure_datetime > DateTimeUtils::SECONDS_PER_DAY ?
+            departure_datetime - DateTimeUtils::SECONDS_PER_DAY : 0;
     return clockwise ?
-        std::min(departure_datetime + DateTimeUtils::SECONDS_PER_DAY, bound) :
-        std::max(departure_datetime > DateTimeUtils::SECONDS_PER_DAY ?
-                 departure_datetime - DateTimeUtils::SECONDS_PER_DAY :
-                 0,
-                 bound);
+        std::min(depart_clockwise, bound) :
+        std::max(depart_anticlockwise, bound);
 }
 
 /*
@@ -492,13 +492,13 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                   bool clockwise,
                   const nt::RTLevel rt_level) {
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
-    const auto valid_jpps = set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                                                 accessibilite_params,
-                                                 forbidden,
-                                                 rt_level);
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+                         accessibilite_params,
+                         forbidden,
+                         rt_level);
     next_st = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
-                                        rt_level,
-                                        accessibilite_params);
+                                          rt_level,
+                                          accessibilite_params);
 
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
@@ -507,7 +507,7 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
 }
 
 // Returns valid_jpps
-boost::dynamic_bitset<> RAPTOR::set_valid_jp_and_jpp(
+void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams& accessibilite_params,
     const std::vector<std::string>& forbidden,
@@ -615,8 +615,6 @@ boost::dynamic_bitset<> RAPTOR::set_valid_jp_and_jpp(
     // feasible ones.
     jpps_from_sp = data.dataRaptor->jpps_from_sp;
     jpps_from_sp.filter_jpps(valid_journey_pattern_points);
-
-    return std::move(valid_journey_pattern_points);
 }
 
 template<typename Visitor>
