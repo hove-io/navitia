@@ -180,11 +180,11 @@ def walk_protobuf(pb_object, visitor):
 
 def realtime_level_to_pbf(level):
     if level == 'base_schedule':
-        return type_pb2.BASE
+        return type_pb2.BASE_SCHEDULE
     elif level == 'adapted_schedule':
-        return type_pb2.ADAPTED
+        return type_pb2.ADAPTED_SCHEDULE
     elif level == 'realtime':
-        return type_pb2.REAL_TIME
+        return type_pb2.REALTIME
     else:
         raise ValueError('Impossible to convert in pbf')
 

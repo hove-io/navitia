@@ -193,11 +193,27 @@ class PbEnum(fields.Raw):
     def format(self, value):
         return str.lower(self.pb_enum_type.Name(value))
 
+
 class NonNullList(fields.List):
 
     def __init__(self, *args, **kwargs):
         super(NonNullList, self).__init__(*args, **kwargs)
         self.display_empty = False
+
+
+class NonNullString(fields.Raw):
+    """
+    Print a string if it is not null
+    """
+    def __init__(self, *args, **kwargs):
+        super(NonNullString, self).__init__(*args, **kwargs)
+
+    def output(self, key, obj):
+        k = key if self.attribute is None else self.attribute
+        if not obj or not obj.HasField(k):
+            return None
+        else:
+            return fields.get_value(k, obj)
 
 
 class additional_informations(fields.Raw):

@@ -169,7 +169,8 @@ class Schedules(ResourceUri, ResourceUtc):
 date_time = {
     "date_time": SplitDateTime(date='date', time='time'),
     "additional_informations": additional_informations(),
-    "links": stop_time_properties_links()
+    "links": stop_time_properties_links(),
+    'data_freshness': enum_type(attribute='realtime_level'),
 }
 
 row = {

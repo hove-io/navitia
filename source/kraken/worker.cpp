@@ -98,11 +98,11 @@ std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
 
 static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
     switch (pb_level) {
-    case pbnavitia::RTLevel::BASE:
+    case pbnavitia::RTLevel::BASE_SCHEDULE:
         return type::RTLevel::Base;
-    case pbnavitia::RTLevel::ADAPTED:
+    case pbnavitia::RTLevel::ADAPTED_SCHEDULE:
         return type::RTLevel::Adapted;
-    case pbnavitia::RTLevel::REAL_TIME:
+    case pbnavitia::RTLevel::REALTIME:
         return type::RTLevel::RealTime;
     default:
         throw navitia::recoverable_exception("unhandled realtime level");

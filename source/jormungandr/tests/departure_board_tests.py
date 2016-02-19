@@ -33,6 +33,17 @@ from check_utils import *
 import datetime
 
 
+def is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time):
+    dt = dt_wrapper["date_time"]
+    if only_time:
+        get_valid_time(dt)
+    else:
+        get_valid_datetime(dt)
+    #TODO remove href_mandatory=False after link refactor, they should always be there :)
+    check_links(dt_wrapper, tester, href_mandatory=False)
+    is_valid_rt_level(get_not_null(dt_wrapper, 'data_freshness'))
+
+
 def is_valid_stop_schedule(schedules, tester, only_time=False):
     """
     check the structure of a departure board response
@@ -47,13 +58,7 @@ def is_valid_stop_schedule(schedules, tester, only_time=False):
 
         assert len(datetimes) != 0, "we have to have date_times"
         for dt_wrapper in datetimes:
-            dt = dt_wrapper["date_time"]
-            if only_time:
-                get_valid_time(dt)
-            else:
-                get_valid_datetime(dt)
-            #TODO remove href_mandatory=False after link refactor, they should always be there :)
-            check_links(dt_wrapper, tester, href_mandatory=False)
+            is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time)
 
         #TODO remove href_mandatory=False after link refactor, they should always be there :)
         check_links(schedule, tester, href_mandatory=False)
