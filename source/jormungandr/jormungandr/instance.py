@@ -48,6 +48,7 @@ from flask import g
 import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule
+from jormungandr.instrumentation import function_trace
 
 type_to_pttype = {
       "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -290,7 +291,7 @@ class Instance(object):
         except pybreaker.CircuitBreakerError, e:
             raise DeadSocketException(self.name, self.socket_path)
 
-
+    @function_trace()
     def _send_and_receive(self,
                          request,
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
