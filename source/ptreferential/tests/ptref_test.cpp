@@ -703,9 +703,9 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
     b.generate_dummy_basis();
-    b.vj("A")("stop1", 8000, 8050);
+    auto* vj_a = b.vj("A")("stop1", 8000, 8050).make();
     b.lines["A"]->code = "line_A";
-    b.vj("C")("stop2", 8000, 8050);
+    auto* vj_c = b.vj("C")("stop2", 8000, 8050).make();
     b.lines["C"]->code = "line C";
 
     //contributor "c1" contains dataset "d1" and "d2"
@@ -726,9 +726,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d1" is assigned to vehicle_journey "vj:A:0"
-    auto * vj= b.data->pt_data->vehicle_journeys.front();
-    dataset->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
+    vj_a->dataset = dataset;
 
     dataset = new navitia::type::Dataset();
     dataset->idx = b.data->pt_data->datasets.size();
@@ -739,9 +737,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d2" is assigned to vehicle_journey "vj:C:1"
-    vj= b.data->pt_data->vehicle_journeys.back();
-    dataset->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
+    vj_c->dataset = dataset;
 
     //Here contributor c2 contains datasets d3
     contributor = new navitia::type::Contributor();
@@ -779,15 +775,15 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.back()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d1", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d2", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::Route, "dataset.uri=d1", *(b.data));
+    indexes = make_query(nt::Type_e::Route, "frame.uri=f1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
 
