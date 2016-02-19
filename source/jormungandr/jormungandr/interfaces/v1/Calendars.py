@@ -35,22 +35,7 @@ from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
 from fields import fields, enum_type, NonNullList,\
-    NonNullNested, NonNullProtobufNested, PbField, error, pagination, code
-
-
-class NonNullString(fields.Raw):
-    """
-    Print a string if it is not null
-    """
-    def __init__(self, *args, **kwargs):
-        super(NonNullString, self).__init__(*args, **kwargs)
-
-    def output(self, key, obj):
-        k = key if self.attribute is None else self.attribute
-        if not obj or not obj.HasField(k):
-            return None
-        else:
-            return fields.get_value(k, obj)
+    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
 
 
 week_pattern = {
@@ -104,9 +89,9 @@ class Calendars(ResourceUri):
                                 description="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("start_date", type=str, default="",
+        parser_get.add_argument("start_date", type=unicode, default="",
                                 description="Start date")
-        parser_get.add_argument("end_date", type=str, default="",
+        parser_get.add_argument("end_date", type=unicode, default="",
                                 description="End date")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",

@@ -46,7 +46,7 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-std::vector<std::vector<datetime_stop_time> >
+std::vector<std::vector<routing::datetime_stop_time> >
 get_all_route_stop_times(const nt::Route* route,
                          const DateTime& date_time,
                          const DateTime& max_datetime,
@@ -54,7 +54,7 @@ get_all_route_stop_times(const nt::Route* route,
                          const type::Data& d,
                          const type::RTLevel rt_level,
                          const boost::optional<const std::string> calendar_id) {
-    std::vector<std::vector<datetime_stop_time> > result;
+    std::vector<std::vector<routing::datetime_stop_time> > result;
 
     const auto& journey_patterns =  d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
 
@@ -66,7 +66,7 @@ get_all_route_stop_times(const nt::Route* route,
         first_journey_pattern_points.push_back(jp.jpps.front());
     }
 
-    std::vector<datetime_stop_time> first_dt_st;
+    std::vector<routing::datetime_stop_time> first_dt_st;
     if (! calendar_id) {
         // If there is no calendar we get all stop times in
         // the desired timeframe
@@ -81,7 +81,7 @@ get_all_route_stop_times(const nt::Route* route,
 
     // we need to load the next datetimes for each jp
     for (const auto& ho : first_dt_st) {
-        result.push_back(std::vector<datetime_stop_time>());
+        result.push_back(std::vector<routing::datetime_stop_time>());
         DateTime dt = ho.first;
         for (const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
             if (! stop_time.is_frequency()) {
@@ -133,10 +133,10 @@ namespace {
 //  7
 //  9  7 =>  1
 // score:   -2
-int score(const std::vector<datetime_stop_time>& v1,
-          const std::vector<datetime_stop_time>& v2) {
+int score(const std::vector<routing::datetime_stop_time>& v1,
+          const std::vector<routing::datetime_stop_time>& v2) {
     int res = 0;
-    boost::range::for_each(v1, v2, [&](const datetime_stop_time& a, const datetime_stop_time& b) {
+    boost::range::for_each(v1, v2, [&](const routing::datetime_stop_time& a, const routing::datetime_stop_time& b) {
             if (a.second == nullptr || b.second == nullptr) { return; }
             if (a.first < b.first) {
                 --res;
@@ -158,7 +158,7 @@ struct Edge {
         return a.target < b.target;
     }
 };
-std::vector<Edge> create_edges(std::vector<std::vector<datetime_stop_time>>& v) {
+std::vector<Edge> create_edges(std::vector<std::vector<routing::datetime_stop_time>>& v) {
     std::vector<Edge> edges;
     for (uint32_t i = 0; i < v.size(); ++i) {
         for (uint32_t j = i + 1; j < v.size(); ++j) {
@@ -293,12 +293,12 @@ std::vector<uint32_t> compute_order(const size_t nb_vertices, const std::vector<
                    << ", nb_topo_sort = " << is_dag.nb_call);
     return std::move(is_dag.order);
 }
-void ranked_pairs_sort(std::vector<std::vector<datetime_stop_time>>& v) {
+void ranked_pairs_sort(std::vector<std::vector<routing::datetime_stop_time>>& v) {
     const auto edges = create_edges(v);
     const auto order = compute_order(v.size(), edges);
 
     // reordering v according to the given order
-    std::vector<std::vector<datetime_stop_time>> res;
+    std::vector<std::vector<routing::datetime_stop_time>> res;
     res.reserve(v.size());
     for (const auto& idx: order) {
         res.push_back(std::move(v[idx]));
@@ -307,22 +307,22 @@ void ranked_pairs_sort(std::vector<std::vector<datetime_stop_time>>& v) {
 }
 }
 
-static std::vector<std::vector<datetime_stop_time> >
-make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
+static std::vector<std::vector<routing::datetime_stop_time> >
+make_matrice(const std::vector<std::vector<routing::datetime_stop_time> >& stop_times,
              const Thermometer& thermometer,
              const type::Data&) {
     // result group stop_times by stop_point, tmp by vj.
     const size_t thermometer_size = thermometer.get_thermometer().size();
-    std::vector<std::vector<datetime_stop_time> > 
-        result(thermometer_size, std::vector<datetime_stop_time>(stop_times.size())),
-        tmp(stop_times.size(), std::vector<datetime_stop_time>(thermometer_size));
+    std::vector<std::vector<routing::datetime_stop_time> > 
+        result(thermometer_size, std::vector<routing::datetime_stop_time>(stop_times.size())),
+        tmp(stop_times.size(), std::vector<routing::datetime_stop_time>(thermometer_size));
     // We match every stop_time with the journey pattern
     int y=0;
-    for(const std::vector<datetime_stop_time>& vec : stop_times) {
+    for(const auto& vec : stop_times) {
         const auto* vj = vec.front().second->vehicle_journey;
         std::vector<uint32_t> orders = thermometer.stop_times_order(*vj);
         int order = 0;
-        for(datetime_stop_time dt_stop_time : vec) {
+        for(const auto& dt_stop_time : vec) {
             tmp.at(y).at(orders.at(order)) = dt_stop_time;
             ++order;
         }
@@ -393,7 +393,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
             pb_creator.fill(sp, row->mutable_stop_point(), max_depth);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
-                datetime_stop_time dt_stop_time  = matrice[i][j];
+                const auto& dt_stop_time  = matrice[i][j];
                 if (!is_vj_set[j] && dt_stop_time.second != nullptr) {
                     pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();

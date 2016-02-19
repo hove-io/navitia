@@ -31,13 +31,13 @@ www.navitia.io
 #pragma once
 #include "type/pb_converter.h"
 #include "routing/routing.h"
-#include "get_stop_times.h"
+#include "routing/get_stop_times.h"
 
 
 namespace navitia { namespace timetables {
 typedef std::vector<DateTime> vector_datetime;
 typedef std::pair<uint32_t, uint32_t> stop_point_line;
-typedef std::vector<datetime_stop_time> vector_dt_st;
+typedef std::vector<routing::datetime_stop_time> vector_dt_st;
 
 void departure_board(PbCreator& pb_creator, const std::string &filter,
                      boost::optional<const std::string> calendar_id,

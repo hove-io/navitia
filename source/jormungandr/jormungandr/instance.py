@@ -50,26 +50,27 @@ import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule
 
 type_to_pttype = {
-      "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
-      "network" : request_pb2.PlaceCodeRequest.Network,
-      "company" : request_pb2.PlaceCodeRequest.Company,
-      "line" : request_pb2.PlaceCodeRequest.Line,
-      "route" : request_pb2.PlaceCodeRequest.Route,
-      "vehicle_journey" : request_pb2.PlaceCodeRequest.VehicleJourney,
-      "stop_point" : request_pb2.PlaceCodeRequest.StopPoint,
-      "calendar" : request_pb2.PlaceCodeRequest.Calendar
+      "stop_area": request_pb2.PlaceCodeRequest.StopArea,
+      "network": request_pb2.PlaceCodeRequest.Network,
+      "company": request_pb2.PlaceCodeRequest.Company,
+      "line": request_pb2.PlaceCodeRequest.Line,
+      "route": request_pb2.PlaceCodeRequest.Route,
+      "vehicle_journey": request_pb2.PlaceCodeRequest.VehicleJourney,
+      "stop_point": request_pb2.PlaceCodeRequest.StopPoint,
+      "calendar": request_pb2.PlaceCodeRequest.Calendar
 }
 
 @app.before_request
 def _init_g():
     g.instances_model = {}
 
+
 class Instance(object):
 
-    def __init__(self, context, name):
+    def __init__(self, context, name, zmq_socket, realtime_proxies_configuration=[]):
         self.geom = None
         self._sockets = Queue.Queue()
-        self.socket_path = None
+        self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
         self.nb_created_socket = 0
@@ -85,7 +86,7 @@ class Instance(object):
         self.planner = planner.Kraken(self)
 
         self.schedule = schedule.MixedSchedule(self)
-        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager()
+        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration)
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -117,7 +118,6 @@ class Instance(object):
             g.scenario = scenario
             return scenario
 
-
         instance_db = self.get_models()
         scenario_name = instance_db.scenario if instance_db else 'default'
         if not self._scenario or scenario_name != self._scenario_name:
@@ -127,7 +127,7 @@ class Instance(object):
             module = import_module('jormungandr.scenarios.{}'.format(scenario_name))
             self._scenario = module.Scenario()
 
-        #we save the used scenario for futur use
+        #we save the used scenario for future use
         g.scenario = self._scenario
         return self._scenario
 
@@ -313,7 +313,7 @@ class Instance(object):
                 socket.close()
                 if not quiet:
                     logger = logging.getLogger(__name__)
-                    logger.error('request on %s failed: %s', self.socket_path, str(request))
+                    logger.error('request on %s failed: %s', self.socket_path, unicode(request))
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):

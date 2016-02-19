@@ -267,8 +267,5 @@ class Scenario(object):
     def journeys(self, request, instance):
         raise NotImplementedError()
 
-    def nm_journeys(self, request, instance):
-        raise NotImplementedError()
-
     def isochrone(self, request, instance):
         raise NotImplementedError()

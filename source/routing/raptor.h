@@ -70,7 +70,8 @@ struct RAPTOR
 {
     const navitia::type::Data& data;
 
-    NextStopTime next_st;
+    CachedNextStopTimeManager cached_next_st_manager;
+    const CachedNextStopTime* next_st = nullptr;
 
     /// Contains the different labels used by raptor.
     /// Each element of index i in this vector represents the labels with i transfers
@@ -91,9 +92,9 @@ struct RAPTOR
     // set to store if the stop_point is valid
     boost::dynamic_bitset<> valid_stop_points;
 
-    explicit RAPTOR(const navitia::type::Data& data) :
+    explicit RAPTOR(const navitia::type::Data& data, size_t cache_size = 10) :
         data(data),
-        next_st(data),
+        cached_next_st_manager(data, cache_size),
         best_labels_pts(data.pt_data->stop_points),
         best_labels_transfers(data.pt_data->stop_points),
         count(0),
@@ -153,22 +154,6 @@ struct RAPTOR
                 const size_t max_extra_second_pass = 0);
 
 
-    /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
-     * stop points de départs, vers plusieurs stoppoints d'arrivée,
-     * à une heure donnée.
-     */
-    std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-    compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
-                   const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
-                   const DateTime& departure_datetime,
-                   const nt::RTLevel rt_level,
-                   const DateTime& bound,
-                   const uint32_t max_transfers,
-                   const type::AccessibiliteParams& accessibilite_params,
-                   const std::vector<std::string>& forbidden_uri,
-                   bool clockwise);
-
-
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
@@ -187,13 +172,12 @@ struct RAPTOR
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
     void set_valid_jp_and_jpp(uint32_t date,
-                              const type::AccessibiliteParams& accessibilite_params,
+                              const type::AccessibiliteParams&,
                               const std::vector<std::string>& forbidden,
                               const nt::RTLevel rt_level);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
-                      bool clockwise,
+    void boucleRAPTOR(bool clockwise,
                       const nt::RTLevel rt_level,
                       const uint32_t max_transfers);
 
@@ -210,7 +194,6 @@ struct RAPTOR
     ///Main loop
     template<typename Visitor>
     void raptor_loop(Visitor visitor,
-                     const type::AccessibiliteParams& accessibilite_params,
                      const nt::RTLevel rt_level,
                      uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
@@ -229,7 +212,7 @@ struct RAPTOR
                            const std::vector<std::string>& forbidden_uri,
                            bool clockwise);
 
-    ~RAPTOR() {}
+    ~RAPTOR() = default;
 };
 
 

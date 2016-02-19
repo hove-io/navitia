@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,19 +27,3 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-collections_to_resource_type = {
-    "stop_points": "stop_point", "routes": "route",
-    "networks": "network", "commercial_modes": "commercial_mode",
-    "physical_modes": "physical_mode", "companies": "company",
-    "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
-    "addresses": "address", "coords": "coord", "coord": "coord",
-    "journey_pattern_points": "journey_pattern_point",
-    "journey_patterns": "journey_pattern",
-    "pois": "poi", "poi_types": "poi_type",
-    "connections": "connection", "vehicle_journeys": "vehicle_journey",
-    "disruptions": "disruption", "trips": "trip", "contributors": "contributor",
-    "datasets": "frame"}
-
-resource_type_to_collection = dict((resource_type, collection)
-                                   for (collection, resource_type)
-                                   in collections_to_resource_type.iteritems())

@@ -86,7 +86,7 @@ int main(int argn, char** argv){
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
-    int nb_threads = conf.nb_thread();
+    int nb_threads = conf.nb_threads();
     // Launch pool of worker threads
     LOG4CPLUS_INFO(logger, "starting workers threads");
     for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {

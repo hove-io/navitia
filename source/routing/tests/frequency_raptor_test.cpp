@@ -380,3 +380,50 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq) {
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
 }
+
+/*
+ * In this case, we test the case where a freq vj's end_time is smaller than the start_time
+ * due to the UTC conversion
+ *
+ * 0-------------------------------------86400(midnight)
+ *  -------end                 start--------
+ *         6:00                20:00
+ * */
+BOOST_AUTO_TEST_CASE(freq_vj_end_time_is_smaller_than_start_time) {
+    ed::builder b("20120614");
+
+    b.frequency_vj("A", "20:00"_t, "6:00"_t, "1:00"_t, "network_bob", "00111100")
+            ("stop1", "20:00"_t, "20:10"_t)
+            ("stop2", "21:00"_t, "21:10"_t)
+            ("stop3", "22:00"_t, "22:10"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto compute = [&](int day) {
+        return raptor.compute(d.stop_areas_map.at("stop1"),
+                              d.stop_areas_map.at("stop3"), "21:30"_t,
+                              day,
+                              DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+    };
+
+    auto res = compute(1);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+    res = compute(2);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+
+    res = compute(3);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+
+    res = compute(5);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+
+    res = compute(6);
+    BOOST_REQUIRE_EQUAL(res.size(), 0);
+
+}

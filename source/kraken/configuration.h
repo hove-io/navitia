@@ -45,7 +45,7 @@ namespace navitia { namespace kraken{
             std::string zmq_socket_path() const;
             std::string instance_name() const;
             boost::optional<std::string> chaos_database() const;
-            int nb_thread() const;
+            int nb_threads() const;
 
             std::string broker_host() const;
             int broker_port() const;
@@ -59,6 +59,7 @@ namespace navitia { namespace kraken{
             int kirin_timeout() const;
             int kirin_retry_timeout() const;
             bool display_contributors() const;
+            size_t raptor_cache_size() const;
 
             std::vector<std::string> rt_topics() const;
     };

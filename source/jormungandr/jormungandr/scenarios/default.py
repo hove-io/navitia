@@ -108,11 +108,11 @@ class Scenario(simple.Scenario):
         req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
 
         if request['data_freshness'] == 'realtime':
-            req.journeys.realtime_level = type_pb2.REAL_TIME
+            req.journeys.realtime_level = type_pb2.REALTIME
         elif request['data_freshness'] == 'adapted_schedule':
-            req.journeys.realtime_level = type_pb2.ADAPTED
+            req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
         else:
-            req.journeys.realtime_level = type_pb2.BASE
+            req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
 
         req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
@@ -449,18 +449,6 @@ class Scenario(simple.Scenario):
 
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
-
-    def nm_journeys(self, request, instance):
-        updated_request_with_default(request, instance)
-        req = self.parse_journey_request(type_pb2.NMPLANNER, request)
-
-        # call to kraken
-        # TODO: check mode size
-        req.journeys.streetnetwork_params.origin_mode = self.origin_modes[0]
-        req.journeys.streetnetwork_params.destination_mode = self.destination_modes[0]
-        resp = instance.send_and_receive(req)
-
-        return resp
 
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)

@@ -63,6 +63,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.display_contributors", display_contributors ?
              po::value<bool>()->default_value(*display_contributors) : po::value<bool>()->default_value(false),
          "display all contributors in feed publishers")
+        ("GENERAL.raptor_cache_size", po::value<int>()->default_value(10), "maximum number of stored raptor caches")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -118,8 +119,12 @@ boost::optional<std::string> Configuration::chaos_database() const{
     }
     return result;
 }
-int Configuration::nb_thread() const{
-    return this->vm["GENERAL.nb_threads"].as<int>();
+int Configuration::nb_threads() const{
+    int nb_threads = vm["GENERAL.nb_threads"].as<int>();
+    if (nb_threads < 0) {
+        throw std::invalid_argument("nb_threads cannot be negative");
+    }
+    return size_t(nb_threads);
 }
 
 bool Configuration::is_realtime_enabled() const{
@@ -173,5 +178,16 @@ bool Configuration::display_contributors() const{
         return false;
     }
     return vm["GENERAL.display_contributors"].as<bool>();
+}
+
+size_t Configuration::raptor_cache_size() const{
+    if (! vm.count("GENERAL.raptor_cache_size")) {
+        return 10;
+    }
+    int raptor_cache_size = vm["GENERAL.raptor_cache_size"].as<int>();
+    if (raptor_cache_size < 0) {
+        throw std::invalid_argument("raptor_cache_size cannot be negative");
+    }
+    return size_t(raptor_cache_size);
 }
 }}//namespace

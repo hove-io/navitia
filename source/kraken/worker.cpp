@@ -98,11 +98,11 @@ std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
 
 static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
     switch (pb_level) {
-    case pbnavitia::RTLevel::BASE:
+    case pbnavitia::RTLevel::BASE_SCHEDULE:
         return type::RTLevel::Base;
-    case pbnavitia::RTLevel::ADAPTED:
+    case pbnavitia::RTLevel::ADAPTED_SCHEDULE:
         return type::RTLevel::Adapted;
-    case pbnavitia::RTLevel::REAL_TIME:
+    case pbnavitia::RTLevel::REALTIME:
         return type::RTLevel::RealTime;
     default:
         throw navitia::recoverable_exception("unhandled realtime level");
@@ -144,7 +144,7 @@ pbnavitia::Response Worker::status() {
     status->set_last_load_status(d->last_load);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded));
-    status->set_nb_threads(conf.nb_thread());
+    status->set_nb_threads(conf.nb_threads());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
     status->set_status(get_string_status(d));
     status->set_is_realtime_loaded(d->is_realtime_loaded);
@@ -213,7 +213,7 @@ void Worker::feed_publisher(pbnavitia::Response& response){
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(data->data_identifier != this->last_data_identifier || !planner){
-        planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data));
+        planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data, conf.raptor_cache_size()));
         street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
         this->last_data_identifier = data->data_identifier;
 
@@ -626,12 +626,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                                 rt_level, request.max_duration(),
                                                 request.max_transfers(), request.show_codes());
     }
-    case pbnavitia::NMPLANNER:
-        return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
-                request.clockwise(), accessibilite_params,
-                forbidden, *street_network_worker,
-                rt_level, request.max_duration(),
-                request.max_transfers(), request.show_codes());
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],

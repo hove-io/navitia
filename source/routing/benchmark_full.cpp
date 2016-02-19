@@ -125,7 +125,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
     try {
         type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
 
-        //if it is a idx, we consider it to be a stop area idx
+        //if it is a cached idx, we consider it to be a stop area idx
         entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
     } catch (boost::bad_lexical_cast) {
         // else we use the same way to identify an entry point as the api
@@ -244,7 +244,7 @@ int main(int argc, char** argv){
     // Calculs des itinéraires
     std::vector<Result> results;
     data.build_raptor();
-    RAPTOR router(data);
+    RAPTOR router(data, 10);
     auto georef_worker = georef::StreetNetwork(*data.geo_ref);
 
     std::cout << "On lance le benchmark de l'algo " << std::endl;
@@ -263,7 +263,8 @@ int main(int argc, char** argv){
             std::cout << demand.start
                       << ", " << demand.start
                       << ", " << demand.target
-                      << ", " << demand.target
+                      << ", " << static_cast<int>(demand.start_mode)
+                      << ", " << static_cast<int>(demand.target_mode)
                       << ", " << date
                       << ", " << demand.hour
                       << "\n";
@@ -281,14 +282,15 @@ int main(int argc, char** argv){
         destination.streetnetwork_params.max_duration = navitia::seconds(30*60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
+        const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
         auto resp = make_response(router, origin, destination,
-              {DateTimeUtils::set(date.days(), demand.hour)}, true,
+              {departure_datetime}, true,
               accessibilite_params,
               {},
               georef_worker,
               type::RTLevel::Base,
               2_min,
-              std::numeric_limits<int>::max(),
+              DateTimeUtils::SECONDS_PER_DAY,
               10,
               false,
               nb_second_pass);

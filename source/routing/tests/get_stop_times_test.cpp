@@ -32,17 +32,17 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include "tests/utils_test.h"
-#include "time_tables/get_stop_times.h"
+#include "routing/get_stop_times.h"
 #include "ed/build_helper.h"
 #include "routing/dataraptor.h"
 
 using namespace navitia;
-using namespace navitia::timetables;
+using namespace navitia::routing;
 using navitia::routing::StopEvent;
 
-static std::pair<const routing::JourneyPattern&, const routing::JourneyPatternPoint&>
+static std::pair<const JourneyPattern&, const JourneyPatternPoint&>
 get_first_jp_jpp(const ed::builder &b, const std::string& sa) {
-    const auto sp_idx = routing::SpIdx(*b.data->pt_data->stop_areas_map[sa]->stop_point_list.front());
+    const auto sp_idx = SpIdx(*b.data->pt_data->stop_areas_map[sa]->stop_point_list.front());
     const auto& jpp = b.data->dataRaptor->jpps_from_sp[sp_idx].front();
     return {b.data->dataRaptor->jp_container.get(jpp.jp_idx),
             b.data->dataRaptor->jp_container.get(jpp.idx)};
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test1){
     b.data->pt_data->index();
     b.data->build_raptor();
 
-    std::vector<navitia::routing::JppIdx> jpps;
+    std::vector<JppIdx> jpps;
     for (const auto& jpp: b.data->dataRaptor->jp_container.get_jpps())
         jpps.push_back(jpp.first);
 
@@ -63,17 +63,17 @@ BOOST_AUTO_TEST_CASE(test1){
                                  navitia::DateTimeUtils::set(1, 0), 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->order() == 0;}));
+                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 0;}));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
+                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
 
     result = get_stop_times(StopEvent::drop_off, jpps, navitia::DateTimeUtils::set(0, 86399),
                             navitia::DateTimeUtils::min, 100, *b.data, nt::RTLevel::Base, {});
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
+                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->order() == 2;}));
+                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 2;}));
 
 
 }
@@ -335,9 +335,9 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 
 struct departure_helper {
     departure_helper(): b("20150907") {}
-    std::vector<navitia::routing::JppIdx> get_jpp_idx (const std::string& stop_point_id) {
-        std::vector<navitia::routing::JppIdx>  jpp_stop;
-        const auto sp_idx = routing::SpIdx(*b.data->pt_data->stop_points_map.at(stop_point_id));
+    std::vector<JppIdx> get_jpp_idx (const std::string& stop_point_id) {
+        std::vector<JppIdx>  jpp_stop;
+        const auto sp_idx = SpIdx(*b.data->pt_data->stop_points_map.at(stop_point_id));
         const auto& vec_jpp_stop = b.data->dataRaptor->jpps_from_sp[sp_idx];
         for (const auto& jpp : vec_jpp_stop) {
             jpp_stop.push_back(jpp.idx);
@@ -456,10 +456,10 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_lolipop, departure_helper) {
  */
 BOOST_AUTO_TEST_CASE(queue_comp_test_clockwise) {
     bool clockwise{true};
-    navitia::timetables::JppStQueue q({clockwise});
-    q.push({routing::JppIdx(0), nullptr, 12});
-    q.push({routing::JppIdx(1), nullptr, 42});
-    q.push({routing::JppIdx(2), nullptr, 6});
+    JppStQueue q({clockwise});
+    q.push({JppIdx(0), nullptr, 12});
+    q.push({JppIdx(1), nullptr, 42});
+    q.push({JppIdx(2), nullptr, 6});
 
     //for clockwise, we want the smallest first
     BOOST_CHECK_EQUAL(q.top().dt, 6);
@@ -469,10 +469,10 @@ BOOST_AUTO_TEST_CASE(queue_comp_test_clockwise) {
 
 BOOST_AUTO_TEST_CASE(queue_comp_test_anti_clockwise) {
     bool clockwise{false};
-    navitia::timetables::JppStQueue q({clockwise});
-    q.push({routing::JppIdx(0), nullptr, 12});
-    q.push({routing::JppIdx(1), nullptr, 42});
-    q.push({routing::JppIdx(2), nullptr, 6});
+    JppStQueue q({clockwise});
+    q.push({JppIdx(0), nullptr, 12});
+    q.push({JppIdx(1), nullptr, 42});
+    q.push({JppIdx(2), nullptr, 6});
 
     //for clockwise, we want the greatest first
     BOOST_CHECK_EQUAL(q.top().dt, 42);

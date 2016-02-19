@@ -168,7 +168,7 @@ boost::local_time::tz_database fill_tz_db() {
           << "America/Rosario,ART,ART,,,-03:00:00,+00:00:00,,,,+00:00:00" << "\n"
           << "America/Santiago,CLT,CLT,CLST,CLST,-04:00:00,+01:00:00,2;0;10,+00:00:00,2;0;3,+00:00:00" << "\n"
           << "America/Santo_Domingo,AST,AST,,,-04:00:00,+00:00:00,,,,+00:00:00" << "\n"
-          << "America/Sao_Paulo,BRT,BRT,BRST,BRST,-03:00:00,+01:00:00,2;0;10,+00:00:00,3;0;2,+00:00:00" << "\n"
+          << "America/Sao_Paulo,BRT,BRT,BRST,BRST,-03:00:00,+01:00:00,3;0;10,+00:00:00,3;0;2,+00:00:00" << "\n"
           << "America/Scoresbysund,EGT,EGT,EGST,EGST,-01:00:00,+01:00:00,-1;0;3,+00:00:00,-1;0;10,+01:00:00" << "\n"
           << "America/Shiprock,MST,MST,MDT,MDT,-07:00:00,+01:00:00,2;0;3,+02:00:00,1;0;11,+02:00:00" << "\n"
           << "America/St_Johns,NST,NST,NDT,NDT,-03:30:00,+01:00:00,1;0;4,+00:01:00,-1;0;10,+00:01:00" << "\n"

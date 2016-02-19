@@ -265,7 +265,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_filter, route_schedule_calendar_fixture) {
 
 namespace ba = boost::adaptors;
 using vec_dt = std::vector<navitia::DateTime>;
-static navitia::DateTime get_dt(const ntt::datetime_stop_time& p) { return p.first; }
+static navitia::DateTime get_dt(const navitia::routing::datetime_stop_time& p) { return p.first; }
 
 /*
  * Test get_all_route_stop_times with a calendar

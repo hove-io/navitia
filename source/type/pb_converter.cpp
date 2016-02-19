@@ -379,6 +379,19 @@ PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message){
     return PbCreator::Filler(depth, dump_message, pb_creator);
 }
 
+static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level) {
+    switch (realtime_level) {
+    case nt::RTLevel::Base:
+        return pbnavitia::BASE_SCHEDULE;
+    case nt::RTLevel::Adapted:
+        return pbnavitia::ADAPTED_SCHEDULE;
+    case nt::RTLevel::RealTime:
+        return pbnavitia::REALTIME;
+    default:
+        throw navitia::exception("realtime level case not handled");
+    }
+}
+
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib){
 
     contrib->set_uri(cb->uri);
@@ -395,20 +408,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* fr
     frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
     frame->set_desc(fr->desc);
     frame->set_system(fr->system);
-
-    switch (fr->realtime_level){
-    case nt::RTLevel::Base:
-        frame->set_realtime_level(pbnavitia::BASE);
-        break;
-    case nt::RTLevel::Adapted:
-        frame->set_realtime_level(pbnavitia::ADAPTED);
-        break;
-    case nt::RTLevel::RealTime:
-        frame->set_realtime_level(pbnavitia::REAL_TIME);
-        break;
-    default:
-        break;
-    }
+    frame->set_realtime_level(to_pb_realtime_level(fr->realtime_level));
     fill(fr->contributor, frame);
 }
 
@@ -1146,7 +1146,9 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj_stoptimes->vj->uri);
-    this->add_contributor(vj_stoptimes->vj);
+    if (vj_stoptimes->vj->frame && vj_stoptimes->vj->frame->contributor){
+        this->pb_creator.contributors.insert(vj_stoptimes->vj->frame->contributor);
+    }
     if (depth > 0 && vj_stoptimes->vj->route) {
         fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;});
         uris->set_route(vj_stoptimes->vj->route->uri);
@@ -1213,6 +1215,8 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
     }
 
     rs_date_time->set_time(navitia::DateTimeUtils::hour(stop_time_calendar->date_time));
+
+    rs_date_time->set_realtime_level(to_pb_realtime_level(stop_time_calendar->stop_time->vehicle_journey->realtime_level));
 
     if (! stop_time_calendar->calendar_id) {
         //for calendar we don't want to have a date

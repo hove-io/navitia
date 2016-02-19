@@ -43,9 +43,9 @@ def extremes(resp, request):
         if arg != "datetime" and arg != "clockwise":
             if isinstance(request.args.get(arg), type([])):
                 for v in request.args.get(arg):
-                    query_args += arg + "=" + str(v) + "&"
+                    query_args += arg + "=" + unicode(v) + "&"
             else:
-                query_args += arg + "=" + str(request.args.get(arg)) + "&"
+                query_args += arg + "=" + unicode(request.args.get(arg)) + "&"
 
     before = after = None
     if asap_journey.arrival_date_time and asap_journey.departure_date_time:

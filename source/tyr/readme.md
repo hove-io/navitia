@@ -79,6 +79,23 @@ with dev_settings.py the tyr settings file
 
 With those 2 files, running the commande ```honcho start``` in the tyr directory will launch all tyr services.
 
+##Running tests
+
+You need to install the dependancies for developements:
+```
+pip install -r requirement_dev.txt
+```
+You will need docker on your machine, it will be used for spawning a database.
+
+then run the test:
+```
+PYTHONPATH=../navitiacommon py.test tests
+```
+Or if you use honcho:
+```
+honcho run py.test tests
+```
+
 
 ## Data integration
 
@@ -94,7 +111,7 @@ With the authentication we can associate a user account to
 
 For the authentication webservice to work, tyr_beat and tyr_worker need to be run.
 
-### Subcription 
+### Subcription
 
 Subscription is done via calls to Tyr webservice. Tyr handles:
 

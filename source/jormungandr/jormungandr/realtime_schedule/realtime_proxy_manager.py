@@ -28,6 +28,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from importlib import import_module
+import logging
 
 
 class RealtimeProxyManager(object):
@@ -35,9 +37,45 @@ class RealtimeProxyManager(object):
     class managing real-time proxies
     """
 
-    def __init__(self):
+    def __init__(self, proxies_configuration):
+        """
+        Read the dict configuration to build realtime proxies
+        Each entry contains 3 values:
+            * id: the id of the system
+            * class: the class (the full python path) handling the proxy
+            * args: the argument to forward to the class contructor
+        """
         self.realtime_proxies = {}
-        #TODO read conf from file
+        log = logging.getLogger(__name__)
+        for configuration in proxies_configuration:
+            try:
+                cls = configuration['class']
+                proxy_id = configuration['id']
+            except KeyError:
+                log.warn('impossible to build a realtime proxy, missing mandatory field in configuration')
+                continue
+            args = configuration.get('args', {})
+
+            try:
+                if '.' not in cls:
+                    log.warn('impossible to build rt proxy {}, wrongly formated class: {}'.format(proxy_id,
+                                                                                                cls))
+                    continue
+
+                module_path, name = cls.rsplit('.', 1)
+                module = import_module(module_path)
+                attr = getattr(module, name)
+            except ImportError:
+                log.warn('impossible to build rt proxy {}, cannot find class: {}'.format(proxy_id, cls))
+                continue
+
+            try:
+                rt_proxy = attr(id=proxy_id, **args)  # all services must have an ID
+            except TypeError as e:
+                log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e.message))
+                continue
+
+            self.realtime_proxies[proxy_id] = rt_proxy
 
     def get(self, proxy_name):
-        return self.realtime_proxies[proxy_name]
+        return self.realtime_proxies.get(proxy_name)

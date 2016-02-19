@@ -2,6 +2,8 @@
 
 #include "type/datetime.h"
 #include "type/kirin.pb.h"
+#include "routing/raptor.h"
+#include "kraken/realtime.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <set>
@@ -13,6 +15,15 @@
  */
 namespace navitia {
 namespace test {
+
+inline void handle_realtime_test(const std::string& id,
+                                 const boost::posix_time::ptime& timestamp,
+                                 const transit_realtime::TripUpdate& trip_update,
+                                 const type::Data& data,
+                                 std::unique_ptr<navitia::routing::RAPTOR>& raptor) {
+    navitia::handle_realtime(id, timestamp, trip_update, data);
+    raptor = std::move(std::make_unique<navitia::routing::RAPTOR>(data));
+}
 
 inline uint64_t to_posix_timestamp(const std::string& str) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(str));

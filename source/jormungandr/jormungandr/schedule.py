@@ -28,25 +28,93 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
+import pytz
 from jormungandr import utils
 
-from navitiacommon import type_pb2, request_pb2
+from navitiacommon import type_pb2, request_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp
+import datetime
+
+RT_PROXY_PROPERTY_NAME = 'realtime_system'
 
 
-def get_realtime_system_code(stop_schedule):
-    #TODO implem
-    return None
+def get_realtime_system_code(route_point):
+    """
+    If a line is associated to a realtime proxy system it has a property with the name of the system
+    """
+    line = route_point.pb_route.line
+
+    rt_system = [p.value for p in line.properties if p.name == RT_PROXY_PROPERTY_NAME]
+
+    if not rt_system:
+        return None
+
+    # for the moment we consider that there can be only one rt_system
+    return rt_system[0]
+
+
+class RealTimePassage(object):
+    def __init__(self, datetime):
+        self.datetime = datetime
 
 
 def update_passages(stop_schedule, next_realtime_passages):
-    #TODO implem
-    raise NotImplementedError
+    """
+    Update the stopschedule response with the new realtime passages
+
+    for the moment we remove all base schedule data and replace them with the realtime
+
+    If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
+    so we use the base schedule
+    """
+    if next_realtime_passages is None:
+        logging.getLogger(__name__).debug('no next passages, using base schedule')
+        return
+
+    logging.getLogger(__name__).debug('next passages: : {}'
+                                     .format(["dt: {}".format(d.datetime) for d in next_realtime_passages]))
+
+    # we clean up the old schedule
+    del stop_schedule.date_times[:]
+    for passage in next_realtime_passages:
+        new_dt = stop_schedule.date_times.add()
+        midnight = datetime.datetime.combine(passage.datetime.date(), time=datetime.time(0))
+        pytz.utc.localize(midnight)
+        midnight = midnight.replace(tzinfo=pytz.UTC)
+        time = (passage.datetime - midnight).total_seconds()
+        new_dt.time = int(time)
+        new_dt.date = date_to_timestamp(midnight)
+
+        new_dt.realtime_level = type_pb2.REALTIME
+
+
+class RoutePoint(object):
+    def __init__(self, stop_point, route):
+        self.pb_stop_point = stop_point
+        self.pb_route = route
+
+    @staticmethod
+    def _get_code(obj, rt_proxy_id):
+        return next((c.value for c in obj.codes if c.type == rt_proxy_id), None)
+
+    # Cache this ?
+    def fetch_stop_id(self, rt_proxy_id):
+        return self._get_code(self.pb_stop_point, rt_proxy_id)
+
+    def fetch_line_id(self, rt_proxy_id):
+        return self._get_code(self.pb_route.line, rt_proxy_id)
+
+    def fetch_route_id(self, rt_proxy_id):
+        return self._get_code(self.pb_route, rt_proxy_id)
 
 
 def get_route_point(stop_schedule):
-    #TODO implem
-    raise NotImplementedError
+    rp = RoutePoint(stop_point=stop_schedule.stop_point, route=stop_schedule.route)
+
+    # TODO we need to check that we have at least a line in the route
+
+    return rp
 
 
 class MixedSchedule(object):
@@ -111,14 +179,24 @@ class MixedSchedule(object):
 
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
+
+        if request['data_freshness'] != 'realtime':
+            return resp
+
         for stop_schedule in resp.stop_schedules:
-            rt_system_code = get_realtime_system_code(stop_schedule)
+            route_point = get_route_point(stop_schedule)
+            if not route_point:
+                continue
+
+            rt_system_code = get_realtime_system_code(route_point)
             if not rt_system_code:
                 continue
-            rt_system = self.instance.proxy_manager.get(rt_system_code)
+
+            rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
             if not rt_system:
-                #TODO log
+                logging.getLogger(__name__).info('impossible to find {}, no realtime added'.format(rt_system_code))
                 continue
-            next_rt_passages = rt_system.next_passage_for_route_point(get_route_point(stop_schedule))
+
+            next_rt_passages = rt_system.next_passage_for_route_point(route_point)
             update_passages(stop_schedule, next_rt_passages)
         return resp

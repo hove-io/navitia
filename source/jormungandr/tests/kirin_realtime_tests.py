@@ -37,7 +37,8 @@ from tests.tests_mechanism import dataset
 from jormungandr.utils import str_to_time_stamp
 from tests import gtfs_realtime_pb2, kirin_pb2
 from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, get_used_vj, \
-    get_arrivals, get_valid_time, is_valid_disruption
+    get_arrivals, get_valid_time, is_valid_disruption, check_journey, Journey, Section, \
+    SectionStopDT
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
 
@@ -186,6 +187,27 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T080520'])
         eq_(get_used_vj(new_response), [[], ['vjA:modified:0:vjA_delayed']])
+
+        pt_journey = new_response['journeys'][1]
+
+        check_journey(pt_journey,
+                      Journey(sections=[Section(departure_date_time='20120614T080208', arrival_date_time='20120614T080225',
+                                                base_departure_date_time=None, base_arrival_date_time=None,
+                                                stop_date_times=[]),
+                                        Section(departure_date_time='20120614T080225', arrival_date_time='20120614T080400',
+                                                base_departure_date_time='20120614T080100', base_arrival_date_time='20120614T080102',
+                                                stop_date_times=[SectionStopDT(departure_date_time='20120614T080225',
+                                                                               arrival_date_time='20120614T080224',
+                                                                               base_departure_date_time='20120614T080100',
+                                                                               base_arrival_date_time='20120614T080100'),
+                                                                 SectionStopDT(
+                                                                     departure_date_time='20120614T080400',
+                                                                     arrival_date_time='20120614T080400',
+                                                                     base_departure_date_time='20120614T080102',
+                                                                     base_arrival_date_time='20120614T080102')]),
+                                        Section(departure_date_time='20120614T080400', arrival_date_time='20120614T080520',
+                                                base_departure_date_time=None, base_arrival_date_time=None,
+                                                stop_date_times=[])]))
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")

@@ -72,7 +72,7 @@ class Ptobjects(ResourceUri):
         self.parsers["get"].add_argument("search_type", type=int, default=0,
                                          description="Type of search:\
                                          firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=str,
+        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
                                          action="append",
                                          description="If filled, will\
                                          restrained the search within the\

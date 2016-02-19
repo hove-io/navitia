@@ -265,17 +265,17 @@ def change_ids(new_journeys, journey_count):
     """
     #we need to change the fare id, the section id and the fare ref in the journey
     for ticket in new_journeys.tickets:
-        ticket.id = ticket.id + '_' + str(journey_count)
+        ticket.id = ticket.id + '_' + unicode(journey_count)
         for i in range(len(ticket.section_id)):
-            ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
+            ticket.section_id[i] = ticket.section_id[i] + '_' + unicode(journey_count)
 
     for new_journey in new_journeys.journeys:
         for i in range(len(new_journey.fare.ticket_id)):
             new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                            + '_' + str(journey_count)
+                                            + '_' + unicode(journey_count)
 
         for section in new_journey.sections:
-            section.id = section.id + '_' + str(journey_count)
+            section.id = section.id + '_' + unicode(journey_count)
 
 
 def fill_uris(resp):

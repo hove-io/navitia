@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 #include "type/type.h"
 #include "routing/routing.h"
-#include "get_stop_times.h"
+#include "routing/get_stop_times.h"
 #include "type/pb_converter.h"
 
 namespace navitia { namespace timetables {
@@ -39,7 +39,7 @@ namespace navitia { namespace timetables {
 typedef std::vector<std::string> vector_string;
 typedef std::pair<DateTime, const type::StopTime*> vector_date_time;
 
-std::vector<std::vector<datetime_stop_time> >
+std::vector<std::vector<routing::datetime_stop_time> >
 get_all_route_stop_times(const navitia::type::Route* route,
                          const DateTime& dateTime,
                          const DateTime& max_datetime,

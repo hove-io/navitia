@@ -3,7 +3,7 @@ import json
 import pytest
 from navitiacommon import models
 from tyr import app
-import random
+import urllib
 
 
 @pytest.fixture
@@ -72,6 +72,64 @@ def test_add_user():
     """
     user = {'login': 'user1', 'email': 'user1@example.com'}
     resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+    check(resp)
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+
+def test_add_user_with_plus():
+    """
+    creation of a user with a "+" in the email
+    """
+    user = {'login': 'user1+test@example.com', 'email': 'user1+test@example.com'}
+    resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+    check(resp)
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+
+def test_add_user_with_plus_no_json():
+    """
+    creation of a user with a "+" in the email
+    """
+    user = {'login': 'user1+test@example.com', 'email': 'user1+test@example.com'}
+    resp = api_post('/v0/users/', data=user)
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+    check(resp)
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+
+def test_add_user_with_plus_in_query():
+    """
+    creation of a user with a "+" in the email
+    """
+    user = {'email': 'user1+test@example.com', 'login': 'user1+test@example.com'}
+    _, status = api_post('/v0/users/?login={email}&email={email}'.format(email=user['email']),
+                         check=False)
+    assert status == 400
+
+    resp = api_post('/v0/users/?login={email}&email={email}'.format(email=urllib.quote(user['email'])))
     def check(u):
         for k,_ in user.iteritems():
             assert u[k] == user[k]

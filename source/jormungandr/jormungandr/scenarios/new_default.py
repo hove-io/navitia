@@ -131,11 +131,11 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
     req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
     if request['data_freshness'] == 'realtime':
-        req.journeys.realtime_level = type_pb2.REAL_TIME
+        req.journeys.realtime_level = type_pb2.REALTIME
     elif request['data_freshness'] == 'adapted_schedule':
-        req.journeys.realtime_level = type_pb2.ADAPTED
+        req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
     else:
-        req.journeys.realtime_level = type_pb2.BASE
+        req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
     req.journeys.show_codes = request["show_codes"]
 
     if "details" in request and request["details"]:
@@ -681,9 +681,6 @@ class Scenario(simple.Scenario):
 
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
-
-    def nm_journeys(self, request, instance):
-        return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
 
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)

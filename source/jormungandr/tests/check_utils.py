@@ -27,7 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from collections import deque, defaultdict
+from collections import deque, defaultdict, namedtuple
+from itertools import izip_longest
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -396,6 +397,60 @@ def is_valid_feed_publisher(feed_publisher):
     get_not_null(feed_publisher, 'name')
     get_not_null(feed_publisher, 'license')
     get_not_null(feed_publisher, 'url')
+
+
+def is_valid_isochrone_response(response, tester, query_str):
+    if isinstance(query_str, basestring):
+        query_dict = query_from_str(query_str)
+    else:
+        query_dict = query_str
+
+    journeys = get_not_null(response, "journeys")
+
+    assert len(journeys) > 0, "we must at least have one journey"
+    for j in journeys:
+        is_valid_isochrone(j, tester, query_dict)
+
+    check_internal_links(response, tester)
+
+    #check other links
+    #Don't work for now :'(
+    #check_links(response, tester)
+
+
+    # more checks on links, we want the prev/next/first/last,
+    # to have forwarded all params, (and the time must be right)
+
+
+    feed_publishers = get_not_null(response, "feed_publishers")
+    for feed_publisher in feed_publishers:
+        is_valid_feed_publisher(feed_publisher)
+
+    if query_dict.get('debug', False):
+        assert 'debug' in response
+    else:
+        assert 'debug' not in response
+
+def is_valid_isochrone(journey, tester, query):
+    arrival = get_valid_datetime(journey['arrival_date_time'])
+    departure = get_valid_datetime(journey['departure_date_time'])
+    request = get_valid_datetime(journey['requested_date_time'])
+
+    assert arrival >= departure
+
+    if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
+        #for 'departure after' query, the departure must be... after \o/
+        assert departure >= request
+    else:
+        assert arrival <= request
+
+    journey_links = get_links_dict(journey)
+
+    assert 'journeys' in journey_links
+
+    additional_args = query_from_str(journey_links['journeys']['href'])
+    for k, v in query.iteritems():
+        eq_(additional_args[k], v)
 
 
 def is_valid_journey_response(response, tester, query_str):
@@ -899,6 +954,10 @@ def is_valid_label(label):
     return m is not None
 
 
+def is_valid_rt_level(level):
+    assert level in ('base_schedule', 'adapted_schedule', 'realtime')
+
+
 def get_disruptions(obj, response):
     """
     unref disruption links are return the list of disruptions
@@ -1021,3 +1080,26 @@ def get_arrivals(response):
     return a list with the journeys arrival times
     """
     return [j['arrival_date_time'] for j in get_not_null(response, 'journeys')]
+
+
+Journey = namedtuple('Journey', ['sections'])
+Section = namedtuple('Section', ['departure_date_time', 'arrival_date_time',
+                                 'base_departure_date_time', 'base_arrival_date_time',
+                                 'stop_date_times'])
+SectionStopDT = namedtuple('SectionStopDT', ['departure_date_time', 'arrival_date_time',
+                                             'base_departure_date_time', 'base_arrival_date_time'])
+
+def check_journey(journey, ref_journey):
+    """
+    check the values in a journey
+    """
+    for section, ref_section in izip_longest(journey['sections'], ref_journey.sections):
+        eq_(section.get('departure_date_time'), ref_section.departure_date_time)
+        eq_(section.get('arrival_date_time'), ref_section.arrival_date_time)
+        eq_(section.get('base_departure_date_time'), ref_section.base_departure_date_time)
+        eq_(section.get('base_arrival_date_time'), ref_section.base_arrival_date_time)
+        for stop_dt, ref_stop_dt in izip_longest(section.get('stop_date_times', []), ref_section.stop_date_times):
+            eq_(stop_dt.get('departure_date_time'), ref_stop_dt.departure_date_time)
+            eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
+            eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)
+            eq_(stop_dt.get('base_arrival_date_time'), ref_stop_dt.base_arrival_date_time)
