@@ -38,25 +38,29 @@ void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj,
     std::string prev_name = vj.name;
     vj.name = new_name;
     headsign_mvj[vj.name].insert(vj.meta_vj);
-    update_headsign_mvj_after_remove(vj, prev_name);
+    if (prev_name != vj.name) {
+        update_headsign_mvj_after_remove(vj, prev_name);
+    }
 }
 
 void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj,
                                                        const std::string& removed_headsign) {
     // unregister meta-vj from headsign only if necessary
-    auto has_mvj = [&] (const VehicleJourney* it_vj) {return it_vj->meta_vj == vj.meta_vj;};
-    if (navitia::contains_if(get_vj_from_headsign(removed_headsign), has_mvj)) {
+    bool need_remove = true;
+    vj.meta_vj->for_all_vjs([&](const VehicleJourney& cur_vj){
+            if (has_headsign_or_name(cur_vj, removed_headsign)) {
+                need_remove = false;
+            }
+        });
+    if (! need_remove) { return; }
+
+    auto it_headsign_mvj = headsign_mvj.find(removed_headsign);
+    if (it_headsign_mvj == headsign_mvj.end()) {
         return;
     }
-    {
-        auto it_headsign_mvj = headsign_mvj.find(removed_headsign);
-        if (it_headsign_mvj == headsign_mvj.end()) {
-            return;
-        }
-        it_headsign_mvj->second.erase(vj.meta_vj);
-        if (it_headsign_mvj->second.empty()) {
-            headsign_mvj.erase(it_headsign_mvj);
-        }
+    it_headsign_mvj->second.erase(vj.meta_vj);
+    if (it_headsign_mvj->second.empty()) {
+        headsign_mvj.erase(it_headsign_mvj);
     }
 }
 
@@ -146,8 +150,7 @@ HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
 void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time,
                                                    const std::string& headsign) {
     const VehicleJourney* vj = stop_time.vehicle_journey;
-    assert(navitia::contains_if(get_vj_from_headsign(vj->name),
-           [&] (const VehicleJourney* it_vj) {return it_vj->meta_vj == vj->meta_vj;}));
+    assert(find_or_default(vj->name, headsign_mvj).count(vj->meta_vj));
     std::string prev_headsign_for_stop_time = get_headsign(stop_time);
     if (headsign == prev_headsign_for_stop_time) {
         return;
