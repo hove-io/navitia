@@ -446,12 +446,9 @@ void Data::build_relations(){
     for (auto* vj: pt_data->vehicle_journeys) {
         buid_frames(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
-        if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
-            != vj->route->line->physical_mode_list.end()) {
-            // physical_mode already in line
-            continue;
+        if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)){
+            vj->route->line->physical_mode_list.push_back(vj->physical_mode);
         }
-        vj->route->line->physical_mode_list.push_back(vj->physical_mode);
     }
 }
 
