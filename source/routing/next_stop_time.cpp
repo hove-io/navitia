@@ -364,10 +364,7 @@ static void vj_loop(const nt::FrequencyVehicleJourney* vj, F f, nt::RTLevel rt_l
     // end_time may be smaller than start_time because of the UTC conversion
     if (vj->start_time > vj->end_time ) {
         // In this case, the vj passes midnight, it begins actually on yesterday
-        if (! vj->is_valid(start_date - 1, rt_level)) {
-            return;
-        }
-        start_time -= DateTimeUtils::SECONDS_PER_DAY;
+        end_time += DateTimeUtils::SECONDS_PER_DAY;
     }
     for (auto freq_shift = start_time; freq_shift <= end_time; freq_shift+= vj->headway_secs) {
         f(freq_shift);
