@@ -108,7 +108,7 @@ class Scenario(simple.Scenario):
         req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
 
         if request['data_freshness'] == 'realtime':
-            req.journeys.realtime_level = type_pb2.REAL_TIME
+            req.journeys.realtime_level = type_pb2.REALTIME
         elif request['data_freshness'] == 'adapted_schedule':
             req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
         else:

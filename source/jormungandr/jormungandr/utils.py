@@ -184,7 +184,7 @@ def realtime_level_to_pbf(level):
     elif level == 'adapted_schedule':
         return type_pb2.ADAPTED_SCHEDULE
     elif level == 'realtime':
-        return type_pb2.REAL_TIME
+        return type_pb2.REALTIME
     else:
         raise ValueError('Impossible to convert in pbf')
 

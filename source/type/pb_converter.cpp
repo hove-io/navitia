@@ -387,7 +387,7 @@ static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel real
     case nt::RTLevel::Adapted:
         return pbnavitia::ADAPTED_SCHEDULE;
     case nt::RTLevel::RealTime:
-        return pbnavitia::REAL_TIME;
+        return pbnavitia::REALTIME;
     default:
         throw navitia::exception("realtime level case not handled");
     }

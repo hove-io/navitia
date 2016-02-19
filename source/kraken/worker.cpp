@@ -102,7 +102,7 @@ static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
         return type::RTLevel::Base;
     case pbnavitia::RTLevel::ADAPTED_SCHEDULE:
         return type::RTLevel::Adapted;
-    case pbnavitia::RTLevel::REAL_TIME:
+    case pbnavitia::RTLevel::REALTIME:
         return type::RTLevel::RealTime;
     default:
         throw navitia::recoverable_exception("unhandled realtime level");

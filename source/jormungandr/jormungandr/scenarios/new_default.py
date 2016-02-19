@@ -131,7 +131,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
     req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
     if request['data_freshness'] == 'realtime':
-        req.journeys.realtime_level = type_pb2.REAL_TIME
+        req.journeys.realtime_level = type_pb2.REALTIME
     elif request['data_freshness'] == 'adapted_schedule':
         req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
     else:
