@@ -147,7 +147,13 @@ nt::VehicleJourney* VJ::make() {
     } else {
         vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
     }
-
+    // default Frame
+    if (!vj->frame){
+        auto it = pt_data.frames_map.find("default:frame");
+        if (it != pt_data.frames_map.end()){
+            vj->frame = it->second;
+        }
+    }
     //add physical mode
     if (!physical_mode.empty()) {
         auto it = pt_data.physical_modes_map.find(physical_mode);
@@ -591,6 +597,22 @@ void builder::connection(const std::string & name1, const std::string & name2, f
         this->data->pt_data->physical_modes.push_back(mode);
         this->data->pt_data->physical_modes_map[mode->uri] = mode;
     }
+    // default frame and contributor
+    navitia::type::Contributor * contributor = new navitia::type::Contributor();
+    contributor->idx = this->data->pt_data->contributors.size();
+    contributor->uri = "default:contributor";
+    contributor->name = "default contributor";
+    this->data->pt_data->contributors.push_back(contributor);
+    this->data->pt_data->contributors_map[contributor->uri] = contributor;
+
+    navitia::type::Frame * frame = new navitia::type::Frame();
+    frame->idx = this->data->pt_data->frames.size();
+    frame->uri = "default:frame";
+    frame->name = "default frame";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    this->data->pt_data->frames.push_back(frame);
+    this->data->pt_data->frames_map[frame->uri] = frame;
  }
 
 void builder::build_blocks() {
