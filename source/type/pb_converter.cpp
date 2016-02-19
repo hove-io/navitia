@@ -383,7 +383,6 @@ static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel real
     switch (realtime_level) {
     case nt::RTLevel::Base:
         return pbnavitia::BASE_SCHEDULE;
-        break;
     case nt::RTLevel::Adapted:
         return pbnavitia::ADAPTED_SCHEDULE;
     case nt::RTLevel::RealTime:

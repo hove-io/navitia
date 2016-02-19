@@ -27,7 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from collections import deque, defaultdict
+from collections import deque, defaultdict, namedtuple
+from itertools import izip_longest
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -1079,3 +1080,26 @@ def get_arrivals(response):
     return a list with the journeys arrival times
     """
     return [j['arrival_date_time'] for j in get_not_null(response, 'journeys')]
+
+
+Journey = namedtuple('Journey', ['sections'])
+Section = namedtuple('Section', ['departure_date_time', 'arrival_date_time',
+                                 'base_departure_date_time', 'base_arrival_date_time',
+                                 'stop_date_times'])
+SectionStopDT = namedtuple('SectionStopDT', ['departure_date_time', 'arrival_date_time',
+                                             'base_departure_date_time', 'base_arrival_date_time'])
+
+def check_journey(journey, ref_journey):
+    """
+    check the values in a journey
+    """
+    for section, ref_section in izip_longest(journey['sections'], ref_journey.sections):
+        eq_(section.get('departure_date_time'), ref_section.departure_date_time)
+        eq_(section.get('arrival_date_time'), ref_section.arrival_date_time)
+        eq_(section.get('base_departure_date_time'), ref_section.base_departure_date_time)
+        eq_(section.get('base_arrival_date_time'), ref_section.base_arrival_date_time)
+        for stop_dt, ref_stop_dt in izip_longest(section.get('stop_date_times', []), ref_section.stop_date_times):
+            eq_(stop_dt.get('departure_date_time'), ref_stop_dt.departure_date_time)
+            eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
+            eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)
+            eq_(stop_dt.get('base_arrival_date_time'), ref_stop_dt.base_arrival_date_time)
