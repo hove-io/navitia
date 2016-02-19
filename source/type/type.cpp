@@ -753,6 +753,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data& data) const {
             });
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Frame: return indexes(frame_list);
     default: break;
     }
     return result;
@@ -815,6 +816,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
             result.push_back(stop_cnx->idx);
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Frame: return indexes(frame_list);
     default: break;
     }
     return result;
