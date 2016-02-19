@@ -1146,8 +1146,8 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj_stoptimes->vj->uri);
-    if (vj_stoptimes->vj->dataset && vj_stoptimes->vj->dataset->contributor){
-        this->pb_creator.contributors.insert(vj_stoptimes->vj->dataset->contributor);
+    if (vj_stoptimes->vj->frame && vj_stoptimes->vj->frame->contributor){
+        this->pb_creator.contributors.insert(vj_stoptimes->vj->frame->contributor);
     }
     if (depth > 0 && vj_stoptimes->vj->route) {
         fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;});
@@ -1349,7 +1349,7 @@ template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int
 template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Company*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Contributor*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Dataset*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Frame*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Network*>& nav_list, int depth, const DumpMessage dump_message);
