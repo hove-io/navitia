@@ -467,55 +467,6 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     return result;
 }
 
-std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& departures,
-                       const std::vector<std::pair<type::EntryPoint, map_stop_point_duration>>& arrivals,
-                       const DateTime& departure_datetime,
-                       const nt::RTLevel rt_level,
-                       const DateTime& bound,
-                       const uint32_t max_transfers,
-                       const type::AccessibiliteParams& accessibilite_params,
-                       const std::vector<std::string>& forbidden_uri,
-                       bool clockwise) {
-    std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden_uri,
-                         rt_level);
-
-    map_stop_point_duration calc_dep_map;
-    for (const auto& n_point : (clockwise ? departures : arrivals)) {
-        calc_dep_map.insert(n_point.second.begin(), n_point.second.end());
-    }
-
-    clear(clockwise, bound);
-    init(calc_dep_map, departure_datetime, clockwise, accessibilite_params.properties);
-
-    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
-
-    for(const auto& m_point : (clockwise ? arrivals : departures)) {
-        const type::EntryPoint& m_entry_point = m_point.first;
-
-        std::vector<Path> paths;
-
-        // just returns destination stop points
-        for (auto& m_stop_point : m_point.second) {
-            Path path;
-            path.nb_changes = 0;
-            PathItem path_item;
-            const navitia::type::StopPoint* sp = get_sp(m_stop_point.first);
-            path_item.stop_points.push_back(sp);
-            path_item.type = ItemType::public_transport;
-            path.items.push_back(path_item);
-            paths.push_back(path);
-        }
-
-        result.push_back(std::make_pair(m_entry_point, paths));
-    }
-
-    return result;
-}
-
 void
 RAPTOR::isochrone(const map_stop_point_duration& departures,
                   const DateTime& departure_datetime,

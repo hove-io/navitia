@@ -398,6 +398,60 @@ def is_valid_feed_publisher(feed_publisher):
     get_not_null(feed_publisher, 'url')
 
 
+def is_valid_isochrone_response(response, tester, query_str):
+    if isinstance(query_str, basestring):
+        query_dict = query_from_str(query_str)
+    else:
+        query_dict = query_str
+
+    journeys = get_not_null(response, "journeys")
+
+    assert len(journeys) > 0, "we must at least have one journey"
+    for j in journeys:
+        is_valid_isochrone(j, tester, query_dict)
+
+    check_internal_links(response, tester)
+
+    #check other links
+    #Don't work for now :'(
+    #check_links(response, tester)
+
+
+    # more checks on links, we want the prev/next/first/last,
+    # to have forwarded all params, (and the time must be right)
+
+
+    feed_publishers = get_not_null(response, "feed_publishers")
+    for feed_publisher in feed_publishers:
+        is_valid_feed_publisher(feed_publisher)
+
+    if query_dict.get('debug', False):
+        assert 'debug' in response
+    else:
+        assert 'debug' not in response
+
+def is_valid_isochrone(journey, tester, query):
+    arrival = get_valid_datetime(journey['arrival_date_time'])
+    departure = get_valid_datetime(journey['departure_date_time'])
+    request = get_valid_datetime(journey['requested_date_time'])
+
+    assert arrival >= departure
+
+    if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
+        #for 'departure after' query, the departure must be... after \o/
+        assert departure >= request
+    else:
+        assert arrival <= request
+
+    journey_links = get_links_dict(journey)
+
+    assert 'journeys' in journey_links
+
+    additional_args = query_from_str(journey_links['journeys']['href'])
+    for k, v in query.iteritems():
+        eq_(additional_args[k], v)
+
+
 def is_valid_journey_response(response, tester, query_str):
     if isinstance(query_str, basestring):
         query_dict = query_from_str(query_str)

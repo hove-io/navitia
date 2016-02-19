@@ -450,18 +450,6 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
-    def nm_journeys(self, request, instance):
-        updated_request_with_default(request, instance)
-        req = self.parse_journey_request(type_pb2.NMPLANNER, request)
-
-        # call to kraken
-        # TODO: check mode size
-        req.journeys.streetnetwork_params.origin_mode = self.origin_modes[0]
-        req.journeys.streetnetwork_params.destination_mode = self.destination_modes[0]
-        resp = instance.send_and_receive(req)
-
-        return resp
-
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
         req = self.parse_journey_request(type_pb2.ISOCHRONE, request)

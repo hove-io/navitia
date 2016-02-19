@@ -626,12 +626,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                                 rt_level, request.max_duration(),
                                                 request.max_transfers(), request.show_codes());
     }
-    case pbnavitia::NMPLANNER:
-        return routing::make_nm_response(*planner, origins, destinations, datetimes[0],
-                request.clockwise(), accessibilite_params,
-                forbidden, *street_network_worker,
-                rt_level, request.max_duration(),
-                request.max_transfers(), request.show_codes());
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
