@@ -1,3 +1,24 @@
+navitia2 (2.2.0) unstable; urgency=low
+
+  * type: fix a performance bug in headsign_handler when all vjs have the same name  <https://github.com/CanalTP/navitia/pull/1426>
+  * Kraken: Implementation of cached next_stop_time  <https://github.com/CanalTP/navitia/pull/1406>
+  * RT: add base departure/arrival in journey  <https://github.com/CanalTP/navitia/pull/1424>
+  * Jormungandr: add a rt level in stop schedule  <https://github.com/CanalTP/navitia/pull/1423>
+  * All: Improvement of isochrone and remove nm api  <https://github.com/CanalTP/navitia/pull/1421>
+  * kraken: optimization in fill_section  <https://github.com/CanalTP/navitia/pull/1422>
+  * Ed: Southern day saving time handling  <https://github.com/CanalTP/navitia/pull/1419>
+  * doc: add forbidden_uris on schedules apis  <https://github.com/CanalTP/navitia/pull/1420>
+  * Jormungandr: first draft for realtime proxy handling  <https://github.com/CanalTP/navitia/pull/1413>
+  * jormun: we want unicode everywhere and mostly for input parameters  <https://github.com/CanalTP/navitia/pull/1418>
+  * tyr: add test on user creation with "+" in their email  <https://github.com/CanalTP/navitia/pull/1415>
+  * kraken: fix a regression in the association of stop_point to admins  <https://github.com/CanalTP/navitia/pull/1414>
+  * tyr: handle directory with an osm file in it  <https://github.com/CanalTP/navitia/pull/1411>
+  * Jormugandr: load instance configuration as json  <https://github.com/CanalTP/navitia/pull/1404>
+  * tyr: add test on instances api  <https://github.com/CanalTP/navitia/pull/1409>
+  * Jormun: in the interface we want to handle /coord and /coords the same way  <https://github.com/CanalTP/navitia/pull/1408>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 19 Feb 2016 18:02:58 +0100
+
 navitia2 (2.1.3) unstable; urgency=low
 
   * Jormungandr: Fix feed publishers journeys <https://github.com/CanalTP/navitia/pull/1416>
