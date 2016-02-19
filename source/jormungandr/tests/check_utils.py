@@ -899,6 +899,10 @@ def is_valid_label(label):
     return m is not None
 
 
+def is_valid_rt_level(level):
+    assert level in ('base_schedule', 'adapted_schedule', 'realtime')
+
+
 def get_disruptions(obj, response):
     """
     unref disruption links are return the list of disruptions
