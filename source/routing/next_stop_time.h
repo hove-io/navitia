@@ -33,11 +33,14 @@ www.navitia.io
 #include "routing/stop_event.h"
 #include "routing/raptor_utils.h"
 #include "utils/idx_map.h"
+#include "utils/lru.h"
 #include "type/rt_level.h"
+#include "type/type.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/upper_bound.hpp>
 #include <boost/optional.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 namespace navitia {
 
@@ -46,6 +49,7 @@ struct PT_Data;
 class Data;
 struct FrequencyVehicleJourney;
 typedef std::bitset<8> VehicleProperties;
+struct AccessibiliteParams;
 }
 
 namespace routing {
@@ -193,6 +197,57 @@ struct NextStopTime {
 
 private:
     const type::Data& data;
+};
+
+struct CachedNextStopTimeKey {
+    using Day = size_t;
+
+    Day from; //first day concerned by the cache
+    type::RTLevel rt_level; //RT-level of the cache
+    type::AccessibiliteParams accessibilite_params; //accessibility of the cache
+    CachedNextStopTimeKey(Day from, type::RTLevel rt_level,
+                          const type::AccessibiliteParams& accessibilite_params) :
+        from(from), rt_level(rt_level), accessibilite_params(accessibilite_params) {}
+
+    bool operator<(const CachedNextStopTimeKey& other) const;
+};
+
+struct CachedNextStopTime {
+    using DtSt = std::pair<DateTime, const type::StopTime*>;
+    IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
+    IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+
+    // Returns the next stop time at given journey pattern point
+    // either a vehicle that leaves or that arrives depending on
+    // clockwise.
+    std::pair<const type::StopTime*, DateTime>
+    next_stop_time(const StopEvent stop_event,
+                   const JppIdx jpp_idx,
+                   const DateTime dt,
+                   const bool clockwise) const;
+};
+
+struct CachedNextStopTimeManager {
+    explicit CachedNextStopTimeManager(const type::Data& data, size_t max_cache) :
+            lru({data}, max_cache) {}
+
+    ~CachedNextStopTimeManager();
+
+    // WARNING: returned pointer is invalidated by next load() call
+    const CachedNextStopTime* load(const DateTime from,
+                                   const type::RTLevel rt_level,
+                                   const type::AccessibiliteParams& accessibilite_params);
+
+private:
+    struct CacheCreator {
+        typedef CachedNextStopTimeKey const& argument_type;
+        typedef CachedNextStopTime result_type;
+        const type::Data& data;
+        CacheCreator(const type::Data& d): data(d) {}
+        CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;
+    };
+
+    Lru<CacheCreator> lru;
 };
 
 DateTime get_next_stop_time(const StopEvent stop_event,

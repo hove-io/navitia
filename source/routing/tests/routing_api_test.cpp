@@ -1293,6 +1293,7 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
         seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
         + seconds(1);
     destination.streetnetwork_params.speed_factor = speed_factor;
+    datetimes = {navitia::test::to_posix_timestamp("20120614T070000")};
 
     ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
     nr::RAPTOR raptor(*this->b.data);

@@ -914,13 +914,22 @@ struct StreetNetworkParams{
     bool enable_direct_path = true;
 };
 /**
-  Gestion de l'accessibilié
+  Accessibility management
   */
 struct AccessibiliteParams{
-    Properties properties;  // Accissibilié StopPoint, Correspondance, ..
-    VehicleProperties vehicle_properties; // Accissibilié VehicleJourney
+    Properties properties;  // Accessibility StopPoint, Connection, ...
+    VehicleProperties vehicle_properties; // Accessibility VehicleJourney
 
     AccessibiliteParams(){}
+
+    bool operator<(const AccessibiliteParams& other) const {
+        if (properties.to_ulong() != other.properties.to_ulong()) {
+            return properties.to_ulong() < other.properties.to_ulong();
+        } else if (vehicle_properties.to_ulong() != other.vehicle_properties.to_ulong()) {
+            return vehicle_properties.to_ulong() < other.vehicle_properties.to_ulong();
+        }
+        return false;
+    }
 };
 
 /** Type pour gérer le polymorphisme en entrée de l'API
