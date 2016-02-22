@@ -257,9 +257,25 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     // Physical_mode = Metro
     b.vj("A","00001111","",true,"", "","physical_mode:0x1")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500,8500);
     // Physical_mode = Tram
-    b.vj("C")("stop3", 9000,9050)("stop4", 9200,9250);
+    auto* vj_c = b.vj("C")("stop3", 9000,9050)("stop4", 9200,9250).make();
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+
+    navitia::type::Contributor* contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c1";
+    contributor->name = "name-c1";
+    b.data->pt_data->contributors.push_back(contributor);
+
+    navitia::type::Frame* frame = new navitia::type::Frame();
+    frame->idx = b.data->pt_data->frames.size();
+    frame->uri = "f1";
+    frame->name = "name-f1";
+    frame->contributor = contributor;
+    contributor->frame_list.push_back(frame);
+    b.data->pt_data->frames.push_back(frame);
+    vj_c->frame = frame;
+
     b.data->build_relations();
     b.finish();
 
@@ -273,6 +289,27 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(0)->name, "Tram");
+
+    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
+
+    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop2", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
+
+    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop3", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.back())->uri, "f1");
+
+    indexes = make_query(nt::Type_e::Contributor, "frame.uri=default:frame", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "default:contributor");
+
+    indexes = make_query(nt::Type_e::Contributor, "frame.uri=f1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "c1");
 }
 
 BOOST_AUTO_TEST_CASE(get_indexes_test){
