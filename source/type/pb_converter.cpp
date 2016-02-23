@@ -707,7 +707,9 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
-    add_contributor(vj);
+    if(vj->frame && vj->frame->contributor){
+        this->pb_creator.contributors.insert(vj->frame->contributor);
+    }
     fill_comments(vj, vehicle_journey);
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->realtime_level == nt::RTLevel::Adapted);
