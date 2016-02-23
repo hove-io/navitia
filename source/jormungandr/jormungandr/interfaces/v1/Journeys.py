@@ -577,7 +577,7 @@ class Journeys(ResourceUri, ResourceUtc):
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", type=int)
-        parser_get.add_argument("_night_bus_filter_max_factor", type=float_gt_0)
+        parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
 
