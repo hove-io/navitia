@@ -65,7 +65,7 @@ def test_update_instances(create_instance):
               "scenario": "new_default",
               "bss_speed": 2.1,
               "min_bss": 40,
-              "night_bus_filter_max_factor": 1,
+              "night_bus_filter_max_factor": 1.5,
               "max_car_duration_to_pt": 800}
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
 
