@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(find_path_test){
         if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern &&
                 node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType &&
                 node_pred.first != Type_e::Contributor && node_pred.first != Type_e::Impact &&
-                node_pred.first != Type_e::Frame)
+                node_pred.first != Type_e::Dataset)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(code_request) {
     BOOST_CHECK_EQUAL(b.data->pt_data->stop_areas.at(res.at(0))->uri, "A");
 }
 
-BOOST_AUTO_TEST_CASE(contributor_and_frame) {
+BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
     b.generate_dummy_basis();
@@ -708,55 +708,55 @@ BOOST_AUTO_TEST_CASE(contributor_and_frame) {
     b.vj("C")("stop2", 8000, 8050);
     b.lines["C"]->code = "line C";
 
-    //contributor "c1" contains frame "f1" and "f2"
-    //contributor "c2" contains frame "f3"
-    //Here contributor c1 contains frames f1 and f2
+    //contributor "c1" contains dataset "d1" and "d2"
+    //contributor "c2" contains dataset "d3"
+    //Here contributor c1 contains datasets d1 and d2
     navitia::type::Contributor * contributor = new navitia::type::Contributor();
     contributor->idx = b.data->pt_data->contributors.size();
     contributor->uri = "c1";
     contributor->name = "name-c1";
     b.data->pt_data->contributors.push_back(contributor);
 
-    navitia::type::Frame * frame = new navitia::type::Frame();
-    frame->idx = b.data->pt_data->frames.size();
-    frame->uri = "f1";
-    frame->name = "name-f1";
-    frame->contributor = contributor;
-    contributor->frame_list.push_back(frame);
-    b.data->pt_data->frames.push_back(frame);
+    navitia::type::Dataset * dataset = new navitia::type::Dataset();
+    dataset->idx = b.data->pt_data->datasets.size();
+    dataset->uri = "d1";
+    dataset->name = "name-d1";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    b.data->pt_data->datasets.push_back(dataset);
 
-    //frame "f1" is assigned to vehicle_journey "vj:A:0"
+    //dataset "d1" is assigned to vehicle_journey "vj:A:0"
     auto * vj= b.data->pt_data->vehicle_journeys.front();
-    frame->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+    dataset->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
 
-    frame = new navitia::type::Frame();
-    frame->idx = b.data->pt_data->frames.size();
-    frame->uri = "f2";
-    frame->name = "name-f2";
-    frame->contributor = contributor;
-    contributor->frame_list.push_back(frame);
-    b.data->pt_data->frames.push_back(frame);
+    dataset = new navitia::type::Dataset();
+    dataset->idx = b.data->pt_data->datasets.size();
+    dataset->uri = "d2";
+    dataset->name = "name-d2";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    b.data->pt_data->datasets.push_back(dataset);
 
-    //frame "f2" is assigned to vehicle_journey "vj:C:1"
+    //dataset "d2" is assigned to vehicle_journey "vj:C:1"
     vj= b.data->pt_data->vehicle_journeys.back();
-    frame->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->frame = frame;
+    dataset->vehiclejourney_list.push_back(vj);
+    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
 
-    //Here contributor c2 contains frames f3
+    //Here contributor c2 contains datasets d3
     contributor = new navitia::type::Contributor();
     contributor->idx = b.data->pt_data->contributors.size();
     contributor->uri = "c2";
     contributor->name = "name-c2";
     b.data->pt_data->contributors.push_back(contributor);
 
-    frame = new navitia::type::Frame();
-    frame->idx = b.data->pt_data->frames.size();
-    frame->uri = "f3";
-    frame->name = "name-f3";
-    frame->contributor = contributor;
-    contributor->frame_list.push_back(frame);
-    b.data->pt_data->frames.push_back(frame);
+    dataset = new navitia::type::Dataset();
+    dataset->idx = b.data->pt_data->datasets.size();
+    dataset->uri = "d3";
+    dataset->name = "name-d3";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    b.data->pt_data->datasets.push_back(dataset);
 
     b.data->build_relations();
     b.finish();
@@ -765,42 +765,42 @@ BOOST_AUTO_TEST_CASE(contributor_and_frame) {
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->contributors[indexes.front()]->uri, "c1");
 
-    indexes = make_query(nt::Type_e::Frame, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "dataset.uri=d1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f1");
+    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d1");
 
-    indexes = make_query(nt::Type_e::Frame, "contributor.uri=c1", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "contributor.uri=c1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f1");
-    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.back()]->uri, "f2");
+    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d1");
+    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.back()]->uri, "d2");
 
     indexes = make_query(nt::Type_e::VehicleJourney, "contributor.uri=c1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 2);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.back()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f2", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::Route, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::Route, "dataset.uri=d1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
 
-    indexes = make_query(nt::Type_e::Line, "frame.uri=f2", *(b.data));
+    indexes = make_query(nt::Type_e::Line, "dataset.uri=d2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
 
-    indexes = make_query(nt::Type_e::Frame, "contributor.uri=c2", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "contributor.uri=c2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->frames[indexes.front()]->uri, "f3");
+    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d3");
 
-    //no vehicle_journey for frame "f3"
-    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "frame.uri=f3", *(b.data)),
+    //no vehicle_journey for dataset "d3"
+    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "dataset.uri=d3", *(b.data)),
                       ptref_error);
 
     //no vehicle_journey for contributor "c2"
