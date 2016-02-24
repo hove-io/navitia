@@ -358,7 +358,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in second',
                             location=('json', 'values'), default=instance.walking_transfer_penalty)
 
-        parser.add_argument('night_bus_filter_max_factor', type=int, help='night bus filter param',
+        parser.add_argument('night_bus_filter_max_factor', type=float, help='night bus filter param',
                             location=('json', 'values'), default=instance.night_bus_filter_max_factor)
 
         parser.add_argument('night_bus_filter_base_factor', type=int, help='night bus filter param',

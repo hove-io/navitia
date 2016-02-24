@@ -307,6 +307,25 @@ class TestJourneys(AbstractTestFixture):
         eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
         eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080612']))
 
+    def test_journeys_float_night_bus_filter_max_factor(self):
+        """night_bus_filter_max_factor can be a float (and can be null)"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
+                         "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
+                    _night_bus_filter_max_factor=2.8)
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, query)
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
+                         "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
+                    _night_bus_filter_max_factor=0)
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, query)
+
 
 @dataset([])
 class TestJourneysNoRegion(AbstractTestFixture):
