@@ -426,18 +426,22 @@ void Data::build_associated_calendar() {
     }
 }
 
-
-static void build_frames(navitia::type::VehicleJourney* vj){
-    if(!vj->frame) { return; }
-    if (vj->route && (!navitia::contains(vj->route->frame_list, vj->frame))){
-        vj->route->frame_list.push_back(vj->frame);
+/*
+    > Fill dataset_list for route and stoppoint
+    > Fill vehiclejourney_list for dataset
+    > These lists are used by ptref
+*/
+static void build_datasets(navitia::type::VehicleJourney* vj){
+    if(!vj->dataset) { return; }
+    if (vj->route && (!navitia::contains(vj->route->dataset_list, vj->dataset))){
+        vj->route->dataset_list.push_back(vj->dataset);
     }
-    if (!navitia::contains(vj->frame->vehiclejourney_list, vj)){
-        vj->frame->vehiclejourney_list.push_back(vj);
+    if (!navitia::contains(vj->dataset->vehiclejourney_list, vj)){
+        vj->dataset->vehiclejourney_list.push_back(vj);
     }
     for(navitia::type::StopTime& st : vj->stop_time_list){
-        if(st.stop_point && (!navitia::contains(st.stop_point->frame_list, vj->frame))){
-            st.stop_point->frame_list.push_back(vj->frame);
+        if(st.stop_point && (!navitia::contains(st.stop_point->dataset_list, vj->dataset))){
+            st.stop_point->dataset_list.push_back(vj->dataset);
         }
     }
 }
@@ -445,7 +449,7 @@ static void build_frames(navitia::type::VehicleJourney* vj){
 void Data::build_relations(){
     // physical_mode_list of line
     for (auto* vj: pt_data->vehicle_journeys) {
-        build_frames(vj);
+        build_datasets(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
         if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)){
             vj->route->line->physical_mode_list.push_back(vj->physical_mode);

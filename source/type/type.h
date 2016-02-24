@@ -296,8 +296,6 @@ struct Network : public Header, HasMessages {
 
 };
 
-struct Frame;
-
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
     std::string website;
@@ -305,7 +303,7 @@ struct Contributor : public Header, Nameable{
     std::vector<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & website & license & frame_list;
+        ar & idx & name & uri & website & license & dataset_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Contributor & other) const { return this < &other; }
@@ -991,5 +989,7 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
+#if BOOST_VERSION <= 105700
 BOOST_CLASS_EXPORT_KEY(navitia::type::DiscreteVehicleJourney)
 BOOST_CLASS_EXPORT_KEY(navitia::type::FrequencyVehicleJourney)
+#endif

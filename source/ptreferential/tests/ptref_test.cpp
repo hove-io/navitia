@@ -267,14 +267,14 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     contributor->name = "name-c1";
     b.data->pt_data->contributors.push_back(contributor);
 
-    navitia::type::Frame* frame = new navitia::type::Frame();
-    frame->idx = b.data->pt_data->frames.size();
-    frame->uri = "f1";
-    frame->name = "name-f1";
-    frame->contributor = contributor;
-    contributor->frame_list.push_back(frame);
-    b.data->pt_data->frames.push_back(frame);
-    vj_c->frame = frame;
+    navitia::type::Dataset* dataset = new navitia::type::Dataset();
+    dataset->idx = b.data->pt_data->datasets.size();
+    dataset->uri = "f1";
+    dataset->name = "name-f1";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    b.data->pt_data->datasets.push_back(dataset);
+    vj_c->dataset = dataset;
 
     b.data->build_relations();
     b.finish();
@@ -290,24 +290,24 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(0)->name, "Tram");
 
-    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop1", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
 
-    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop2", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
 
-    indexes = make_query(nt::Type_e::Frame, "stop_point.uri=stop3", *(b.data));
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop3", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.front())->uri, "default:frame");
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->frames.at(indexes.back())->uri, "f1");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.back())->uri, "f1");
 
-    indexes = make_query(nt::Type_e::Contributor, "frame.uri=default:frame", *(b.data));
+    indexes = make_query(nt::Type_e::Contributor, "dataset.uri=default:dataset", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "default:contributor");
 
-    indexes = make_query(nt::Type_e::Contributor, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::Contributor, "dataset.uri=f1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "c1");
 }
@@ -812,15 +812,15 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.back()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
 
-    indexes = make_query(nt::Type_e::VehicleJourney, "frame.uri=f2", *(b.data));
+    indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d2", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:C:1");
 
-    indexes = make_query(nt::Type_e::Route, "frame.uri=f1", *(b.data));
+    indexes = make_query(nt::Type_e::Route, "dataset.uri=d1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
 
