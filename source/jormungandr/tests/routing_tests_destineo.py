@@ -35,7 +35,7 @@ from nose.tools import eq_
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestJourneysDestineo(TestJourneys):
     """
     Test the structure of the journeys response

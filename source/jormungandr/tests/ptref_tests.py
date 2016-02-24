@@ -33,7 +33,7 @@ from tests.tests_mechanism import dataset, AbstractTestFixture
 from check_utils import *
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestPtRef(AbstractTestFixture):
     """
     Test the structure of the ptref response
@@ -481,7 +481,7 @@ class TestPtRef(AbstractTestFixture):
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
 
 
-@dataset(["main_ptref_test", "main_routing_test"])
+@dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
     def test_external_code(self):
         """test the strange and ugly external code api"""
@@ -495,7 +495,8 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
         _, status = self.query_no_assert("v1/coverage/lines/bob")
         eq_(status, 404)
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_with_coords(self):

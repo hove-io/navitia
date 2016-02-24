@@ -62,14 +62,8 @@ class AbstractTestFixture:
     """
     @classmethod
     def launch_all_krakens(cls):
-        krakens_exe = cls.data_sets
-        for kraken_name in krakens_exe:
-            additional_args = []
-            if isinstance(kraken_name, tuple):
-                # if elt in data_sets is a tuble, the second elt is a list with additional args
-                additional_args = kraken_name[1]
-                kraken_name = kraken_name[0]
-
+        for (kraken_name, conf) in cls.data_sets.iteritems():
+            additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
 
@@ -105,18 +99,18 @@ class AbstractTestFixture:
             kraken_process.kill()
 
     @classmethod
-    def create_dummy_ini(cls):
-        conf_template_str = """{{
-    "key": "{instance_name}",
-    "zmq_socket": "ipc:///tmp/{instance_name}"
-}}
-        """
+    def create_dummy_json(cls):
+        conf_template_str = ('{{ \n'
+                             '    "key": "{instance_name}",\n'
+                             '    "zmq_socket": "ipc:///tmp/{instance_name}",\n'
+                             '    "realtime_proxies": {proxy_conf}\n'
+                             '}}')
         for name in cls.krakens_pool:
-            f = open(os.path.join(krakens_dir, name) + '.json', 'w')
-            logging.debug("writing ini file {} for {}".format(f.name, name))
-            r = conf_template_str.format(instance_name=name)
-            f.write(r)
-            f.close()
+            proxy_conf = cls.data_sets[name].get('proxy_conf', '{}')
+            with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
+                logging.debug("writing ini file {} for {}".format(f.name, name))
+                r = conf_template_str.format(instance_name=name, proxy_conf=proxy_conf)
+                f.write(r)
 
         #we set the env var that will be used to init jormun
         return [
@@ -130,7 +124,7 @@ class AbstractTestFixture:
         logging.info("Initing the tests {}, let's pop the krakens"
                      .format(cls.__name__))
         cls.launch_all_krakens()
-        instances_config_files = cls.create_dummy_ini()
+        instances_config_files = cls.create_dummy_json()
         i_manager.configuration_files = instances_config_files
         i_manager.initialisation()
 

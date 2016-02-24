@@ -59,8 +59,10 @@ def _dt(h, m, s):
     """syntaxic sugar"""
     return datetime(1900, 1, 1, hour=h, minute=m, second=s)
 
+MAIN_ROUTING_TEST_SETTING = {'main_routing_test': {'kraken_args': ['--BROKER.rt_topics='+rt_topic,
+                                                                   'spawn_maintenance_worker']}}
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
     def test_vj_deletion(self):
         """
@@ -120,7 +122,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         #eq_(len(new_base['disruptions']), 1)
         assert new_base['journeys'] == response['journeys']
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
     def test_vj_delay(self):
         """
@@ -254,7 +256,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(len(self.query_region('vehicle_journeys/vjB?_current_datetime=20120614T1337')['disruptions']), 1)
 
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
     def test_vj_delay_day_after(self):
         """

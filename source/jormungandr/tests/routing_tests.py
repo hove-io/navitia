@@ -35,7 +35,8 @@ from nose.tools import eq_
 from overlapping_routing_tests import  MockKraken
 from jormungandr import instance_manager
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestJourneys(AbstractTestFixture):
     """
     Test the structure of the journeys response
@@ -308,7 +309,7 @@ class TestJourneys(AbstractTestFixture):
         eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080612']))
 
 
-@dataset([])
+@dataset({})
 class TestJourneysNoRegion(AbstractTestFixture):
     """
     If no region loaded we must have a polite error while asking for a journey
@@ -333,7 +334,7 @@ class TestJourneysNoRegion(AbstractTestFixture):
         assert error_regexp.match(response['error']['message'])
 
 
-@dataset(["basic_routing_test"])
+@dataset({"basic_routing_test": {}})
 class TestLongWaitingDurationFilter(AbstractTestFixture):
     """
     Test if the filter on long waiting duration is working
@@ -427,7 +428,8 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 1)
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestShapeInGeoJson(AbstractTestFixture):
     """
     Test if the shape is used in the GeoJson
@@ -453,7 +455,8 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
 
-@dataset(["main_routing_test", "basic_routing_test"])
+
+@dataset({"main_routing_test": {}, "basic_routing_test": {}})
 class TestOneDeadRegion(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead
@@ -472,14 +475,14 @@ class TestOneDeadRegion(AbstractTestFixture):
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
 
-@dataset(["basic_routing_test"])
+@dataset({"basic_routing_test": {}})
 class TestIsochrone(AbstractTestFixture):
     def test_isochrone(self):
         response = self.query_region("journeys?from=I1&datetime=20120615T070000")
         assert(len(response['journeys']) == 2)
 
 
-@dataset(["main_routing_without_pt_test", "main_routing_test"])
+@dataset({"main_routing_without_pt_test": {}, "main_routing_test": {}})
 class TestWithoutPt(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead

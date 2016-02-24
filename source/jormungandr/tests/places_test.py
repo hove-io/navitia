@@ -32,7 +32,7 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestPlaces(AbstractTestFixture):
     """
     Test places responses
