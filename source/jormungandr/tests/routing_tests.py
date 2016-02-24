@@ -312,28 +312,19 @@ class TestJourneys(AbstractTestFixture):
 
         query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
                          "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
-            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T08",
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
                     _night_bus_filter_max_factor=2.8)
 
         response = self.query_region(query)
         is_valid_journey_response(response, self.tester, query)
 
-        #and the second should be 0 initialized
-        journeys = get_not_null(response, "journeys")
-        assert journeys[0]["requested_date_time"] == "20120614T080000"
-
-
         query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
                          "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
-            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T08",
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
                     _night_bus_filter_max_factor=0)
 
         response = self.query_region(query)
         is_valid_journey_response(response, self.tester, query)
-
-        #and the second should be 0 initialized
-        journeys = get_not_null(response, "journeys")
-        assert journeys[0]["requested_date_time"] == "20120614T080000"
 
 
 @dataset([])
