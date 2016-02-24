@@ -325,9 +325,9 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert contributors");
     this->insert_contributors(data.contributors);
     LOG4CPLUS_INFO(logger, "End: insert contributors");    
-    LOG4CPLUS_INFO(logger, "Begin: insert frames");
-    this->insert_frames(data.frames);
-    LOG4CPLUS_INFO(logger, "End: insert frames");
+    LOG4CPLUS_INFO(logger, "Begin: insert datasets");
+    this->insert_datasets(data.datasets);
+    LOG4CPLUS_INFO(logger, "End: insert datasets");
     LOG4CPLUS_INFO(logger, "Begin: insert stops properties");
     this->insert_sa_sp_properties(data);
     LOG4CPLUS_INFO(logger, "End: insert stops properties");
@@ -601,18 +601,18 @@ void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& co
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_frames(const std::vector<types::Frame*>& frames){
-    this->lotus.prepare_bulk_insert("navitia.frame",
+void EdPersistor::insert_datasets(const std::vector<types::Dataset*>& datasets){
+    this->lotus.prepare_bulk_insert("navitia.dataset",
             {"id", "uri", "description", "system", "start_date", "end_date", "contributor_id"});
-    for(types::Frame* frame : frames){
+    for(types::Dataset* dataset : datasets){
         std::vector<std::string> values;
-        values.push_back(std::to_string(frame->idx));
-        values.push_back(navitia::encode_uri(frame->uri));
-        values.push_back(frame->desc);
-        values.push_back(frame->system);
-        values.push_back(bg::to_iso_extended_string(frame->validation_period.begin()));
-        values.push_back(bg::to_iso_extended_string(frame->validation_period.end()));
-        values.push_back(std::to_string(frame->contributor->idx));
+        values.push_back(std::to_string(dataset->idx));
+        values.push_back(navitia::encode_uri(dataset->uri));
+        values.push_back(dataset->desc);
+        values.push_back(dataset->system);
+        values.push_back(bg::to_iso_extended_string(dataset->validation_period.begin()));
+        values.push_back(bg::to_iso_extended_string(dataset->validation_period.end()));
+        values.push_back(std::to_string(dataset->contributor->idx));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -972,7 +972,7 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
-            {"id", "uri", "name", "validity_pattern_id", "frame_id",
+            {"id", "uri", "name", "validity_pattern_id", "dataset_id",
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "route_id", "physical_mode_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
@@ -989,8 +989,8 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         }else{
             values.push_back(lotus.null_value);
         }
-        if (vj->frame != NULL){
-            values.push_back(std::to_string(vj->frame->idx));
+        if (vj->dataset != NULL){
+            values.push_back(std::to_string(vj->dataset->idx));
         }else{
             values.push_back(lotus.null_value);
         }

@@ -126,7 +126,7 @@ struct TripsFusioHandler : public GenericHandler {
         ext_code_c,
         geometry_id_c,
         contributor_id_c,
-        frame_id_c;
+        dataset_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -152,6 +152,7 @@ struct ContributorFusioHandler : public GenericHandler {
     const std::vector<std::string> required_headers() const { return {"contributor_name", "contributor_id"}; }
 };
 
+//TODO: remove FrameFusioHandler after complete migration(fusio, ntfs, fusio2ed, ...)
 struct FrameFusioHandler : public GenericHandler {
     FrameFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, contributor_c, start_date_c, end_date_c, type_c, desc_c, system_c;
@@ -159,6 +160,15 @@ struct FrameFusioHandler : public GenericHandler {
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"frame_id", "contributor_id",
         "frame_start_date", "frame_end_date"}; }
+};
+
+struct DatasetFusioHandler : public GenericHandler {
+    DatasetFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, contributor_c, start_date_c, end_date_c, type_c, desc_c, system_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"dataset_id", "contributor_id",
+        "dataset_start_date", "dataset_end_date"}; }
 };
 
 struct LineFusioHandler : public GenericHandler{

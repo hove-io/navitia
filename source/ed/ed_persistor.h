@@ -91,7 +91,7 @@ private:
     void insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes);
     void insert_companies(const std::vector<types::Company*>& companies);
     void insert_contributors(const std::vector<types::Contributor*>& contributors);
-    void insert_frames(const std::vector<types::Frame*>& frames);
+    void insert_datasets(const std::vector<types::Dataset*>& datasets);
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);
