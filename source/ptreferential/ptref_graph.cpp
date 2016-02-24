@@ -135,6 +135,10 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::Contributor), g);
 
     // From a Route we can have datasets
+    // The weight is used to force the use of a path among two paths possible
+    // Example: Search physical modes of stop_point with weight=3
+    // force use path stop_point >> jpp >> jp >> vehiclejourney >> physical_mode
+    // instead path stop_point >> frame >> vehiclejourney >> physical_mode
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::Route), Edge(2), g);
     // From a StopPoint we can have datasets
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::StopPoint), Edge(3), g);
