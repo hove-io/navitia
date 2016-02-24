@@ -619,7 +619,7 @@ def datasets(is_collection):
             self.collections = [
                 ("datasets",
                  NonNullList(fields.Nested(dataset,
-                                           display_null=False), attribute='frames')),
+                                           display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", DisruptionsField),

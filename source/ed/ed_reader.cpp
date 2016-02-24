@@ -62,7 +62,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_physical_modes(data, work);
     this->fill_companies(data, work);
     this->fill_contributors(data, work);
-    this->fill_frames(data, work);
+    this->fill_datasets(data, work);
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
@@ -385,36 +385,36 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
     }
 }
 
-void EdReader::fill_frames(nt::Data& data, pqxx::work& work){
+void EdReader::fill_datasets(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, uri, description, system, start_date, end_date, "
-                          "contributor_id FROM navitia.frame";
+                          "contributor_id FROM navitia.dataset";
     size_t nb_unknown_contributor(0);
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         auto contributor_it = this->contributor_map.find(const_it["contributor_id"].as<idx_t>());
         if(contributor_it == this->contributor_map.end()) {
             LOG4CPLUS_TRACE(log, "impossible to find contributor" << const_it["contributor_id"]
-                    << ", we cannot assoicate it to frame " << const_it["uri"]);
+                    << ", we cannot assoicate it to dataset " << const_it["uri"]);
             nb_unknown_contributor++;
             continue;
         }
 
-        nt::Frame* frame = new nt::Frame();
-        const_it["uri"].to(frame->uri);
-        const_it["description"].to(frame->desc);
-        const_it["system"].to(frame->system);
+        nt::Dataset* dataset = new nt::Dataset();
+        const_it["uri"].to(dataset->uri);
+        const_it["description"].to(dataset->desc);
+        const_it["system"].to(dataset->system);
         boost::gregorian::date start(bg::from_string(const_it["start_date"].as<std::string>()));
         boost::gregorian::date end(bg::from_string(const_it["end_date"].as<std::string>()));
-        frame->validation_period = bg::date_period(start, end);
-        frame->contributor = contributor_it->second;
-        frame->idx = data.pt_data->frames.size();
+        dataset->validation_period = bg::date_period(start, end);
+        dataset->contributor = contributor_it->second;
+        dataset->idx = data.pt_data->datasets.size();
 
-        frame->contributor->frame_list.push_back(frame);
-        data.pt_data->frames.push_back(frame);
-        this->frame_map[const_it["id"].as<idx_t>()] = frame;
+        dataset->contributor->dataset_list.push_back(dataset);
+        data.pt_data->datasets.push_back(dataset);
+        this->dataset_map[const_it["id"].as<idx_t>()] = dataset;
     }
     if (nb_unknown_contributor){
-        LOG4CPLUS_WARN(log, nb_unknown_contributor << "contributor not found for frame");
+        LOG4CPLUS_WARN(log, nb_unknown_contributor << "contributor not found for dataset");
     }
 }
 
@@ -772,7 +772,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.is_frequency as is_frequency, "
         "vj.meta_vj_name as meta_vj_name, "
         "vj.vj_class as vj_class, "
-        "vj.frame_id as frame_id, "
+        "vj.dataset_id as dataset_id, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -883,11 +883,11 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
                 data.pt_data->comments.add(vj, comment);
             }
         }
-        if (! const_it["frame_id"].is_null()) {
-            auto frame_it = this->frame_map.find(const_it["frame_id"].as<idx_t>());
-            if(frame_it != this->frame_map.end()) {
-                vj->frame = frame_it->second;
-                vj->frame->vehiclejourney_list.push_back(vj);
+        if (! const_it["dataset_id"].is_null()) {
+            auto dataset_it = this->dataset_map.find(const_it["dataset_id"].as<idx_t>());
+            if(dataset_it != this->dataset_map.end()) {
+                vj->dataset = dataset_it->second;
+                vj->dataset->vehiclejourney_list.push_back(vj);
             }
         }
     }

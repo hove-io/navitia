@@ -354,16 +354,16 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);    
     BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 3);
 
-    BOOST_REQUIRE_EQUAL(data.pt_data->frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->datasets.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->frames[0]->contributor);
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->desc, "frame_test");
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->uri, "f1");
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->validation_period,
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->datasets[0]->contributor);
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->desc, "dataset_test");
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->uri, "d1");
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->validation_period,
             boost::gregorian::date_period("20150826"_d, "20150926"_d));
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->realtime_level == nt::RTLevel::Base, true);
-    BOOST_CHECK_EQUAL(data.pt_data->frames[0]->system, "obiti");
-    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->frame->uri, "f1");
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->dataset->uri, "d1");
 
     check_ntfs(data);
 }

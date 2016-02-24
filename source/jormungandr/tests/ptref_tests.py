@@ -175,13 +175,13 @@ class TestPtRef(AbstractTestFixture):
         assert len(datasets) == 1
 
         ds = datasets[0]
-        assert(ds["id"] == 'f1')
-        assert(ds["description"] == 'desc-f1')
-        assert(ds["system"] == 'sys-f1')
+        assert(ds["id"] == 'd1')
+        assert(ds["description"] == 'desc-d1')
+        assert(ds["system"] == 'sys-d1')
 
     def test_contributor_by_dataset(self):
         """test contributor by dataset formating"""
-        response = self.query_region("datasets/f1/contributors")
+        response = self.query_region("datasets/d1/contributors")
         ctrs = get_not_null(response, 'contributors')
         assert len(ctrs) == 1
 
@@ -198,7 +198,7 @@ class TestPtRef(AbstractTestFixture):
         assert len(frs) == 1
 
         fr = frs[0]
-        assert(fr["id"] == 'f1')
+        assert(fr["id"] == 'd1')
 
     def test_line(self):
         """test line formating"""

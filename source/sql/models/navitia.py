@@ -62,7 +62,7 @@ contributor = Table('contributor', metadata,*[
     Column('license', TEXT(), primary_key=False, nullable=True),],
     schema='navitia')
 
-frame = Table('frame', metadata,*[
+dataset = Table('dataset', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('description', TEXT(), primary_key=False, nullable=True),
@@ -70,7 +70,7 @@ frame = Table('frame', metadata,*[
     Column('start_date', DATE(), primary_key=False, nullable=False),
     Column('end_date', DATE(), primary_key=False, nullable=False),
     Column('contributor_id', BIGINT(), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['contributor_id'], [u'navitia.contributor.id'], name=u'contributor_frame_fkey')
+    ForeignKeyConstraint(['contributor_id'], [u'navitia.contributor.id'], name=u'contributor_dataset_fkey')
     ],
     schema='navitia')
 
@@ -274,7 +274,7 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('is_frequency', BOOLEAN(), primary_key=False),
     Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), server_default=u'Theoric', default=u'Theoric', primary_key=False, nullable=False),
     Column('meta_vj_name', TEXT(), primary_key=False),
-    Column('frame_id', BIGINT(), primary_key=False, nullable=True),
+    Column('dataset_id', BIGINT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['vehicle_properties_id'], [u'navitia.vehicle_properties.id'], name=u'vehicle_journey_vehicle_properties_id_fkey'),
     ForeignKeyConstraint(['validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['previous_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_previous_vehicle_journey_id_fkey'),
@@ -284,7 +284,7 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     ForeignKeyConstraint(['adapted_validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_adapted_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['company_id'], [u'navitia.company.id'], name=u'vehicle_journey_company_id_fkey'),
     ForeignKeyConstraint(['theoric_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_theoric_vehicle_journey_id_fkey'),
-    ForeignKeyConstraint(['frame_id'], [u'navitia.frame.id'], name=u'vehicle_journey_frame_id_fkey'),],
+    ForeignKeyConstraint(['dataset_id'], [u'navitia.dataset.id'], name=u'vehicle_journey_dataset_id_fkey'),],
     schema='navitia')
 
 

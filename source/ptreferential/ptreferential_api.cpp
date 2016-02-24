@@ -132,8 +132,8 @@ static pbnavitia::Response extract_data(const type::Data& data,
         case Type_e::Contributor:
             return get_response(data.get_data<nt::Contributor>(rows), data, depth, current_time,
                                 action_period, show_codes);
-        case Type_e::Frame:
-            return get_response(data.get_data<nt::Frame>(rows), data, depth, current_time,
+        case Type_e::Dataset:
+            return get_response(data.get_data<nt::Dataset>(rows), data, depth, current_time,
                                 action_period, show_codes);
         default: return {};
         }

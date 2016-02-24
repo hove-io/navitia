@@ -294,23 +294,23 @@ struct Network : public Header, HasMessages {
 
 };
 
-struct Frame;
+struct Dataset;
 
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
     std::string website;
     std::string license;
-    std::vector<Frame*> frame_list;
+    std::vector<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & website & license & frame_list;
+        ar & idx & name & uri & website & license & dataset_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
-struct Frame : public Header, Nameable{
-    const static Type_e type = Type_e::Frame;
+struct Dataset : public Header, Nameable{
+    const static Type_e type = Type_e::Dataset;
     Contributor* contributor=nullptr;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
     boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
@@ -322,7 +322,7 @@ struct Frame : public Header, Nameable{
         ar & idx & uri & contributor & realtime_level & validation_period & desc & system & vehiclejourney_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Frame & other) const { return this < &other; }
+    bool operator<(const Dataset & other) const { return this < &other; }
 };
 
 struct Company : public Header, Nameable {
@@ -550,7 +550,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
-    Frame* frame = nullptr;
+    Dataset* dataset = nullptr;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -569,7 +569,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & shift & frame;
+            & meta_vj & shift & dataset;
     }
 
     virtual ~VehicleJourney();

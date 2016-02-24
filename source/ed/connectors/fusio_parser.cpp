@@ -46,54 +46,54 @@ typename C::mapped_type get_object(const C& map, const std::string& obj_id, cons
     return o;
 }
 /*
-Add default frame for all contributor without frame
+Add default dataset for all contributor without any dataset
 */
-static void default_frames(GtfsData& gdata, Data& data){
+static void default_datasets(GtfsData& gdata, Data& data){
     for(auto* contributor: data.contributors){
         bool exist = false;
-        for(const auto frame : data.frames){
-            if (frame->contributor->uri == contributor->uri){
+        for(const auto dataset : data.datasets){
+            if (dataset->contributor->uri == contributor->uri){
                 exist = true;
                 break;
             }
         }
         if (! exist){
-            auto frame = std::make_unique<ed::types::Frame>();
-            frame->contributor = contributor;
-            frame->uri = "default_frame:" + contributor->uri;
-            frame->validation_period = data.meta.production_date;
-            frame->desc = "default frame: " + contributor->name;
-            frame->idx = data.frames.size() + 1;
-            data.frames.push_back(frame.get());
-            gdata.frame_map[frame->uri] = frame.get();
-            frame.release();
+            auto dataset = std::make_unique<ed::types::Dataset>();
+            dataset->contributor = contributor;
+            dataset->uri = "default_dataset:" + contributor->uri;
+            dataset->validation_period = data.meta.production_date;
+            dataset->desc = "default dataset: " + contributor->name;
+            dataset->idx = data.datasets.size() + 1;
+            data.datasets.push_back(dataset.get());
+            gdata.dataset_map[dataset->uri] = dataset.get();
+            dataset.release();
         }
     }
 }
 
-static ed::types::Frame* get_first_frame_by_contributor(const Data& data,
+static ed::types::Dataset* get_first_dataset_by_contributor(const Data& data,
                                                   const std::string& contributor_id){
-    for(auto* frame : data.frames){
-        if(frame->contributor->uri == contributor_id){
-            return frame;
+    for(auto* dataset : data.datasets){
+        if(dataset->contributor->uri == contributor_id){
+            return dataset;
         }
     }
     return nullptr;
 }
 
-static ed::types::Frame* get_frame(GtfsData& gdata, Data& data,
+static ed::types::Dataset* get_dataset(GtfsData& gdata, Data& data,
                                    const std::string& contributor_id,
-                                   const std::string& frame_id = ""){
+                                   const std::string& dataset_id = ""){
 
-    ed::types::Frame* to_return = nullptr;
-    if(!frame_id.empty()){
-        auto it_frame = gdata.frame_map.find(frame_id);
-        if (it_frame != gdata.frame_map.end()) {
-            to_return = it_frame->second;
+    ed::types::Dataset* to_return = nullptr;
+    if(!dataset_id.empty()){
+        auto it_dataset = gdata.dataset_map.find(dataset_id);
+        if (it_dataset != gdata.dataset_map.end()) {
+            to_return = it_dataset->second;
         }
     }
     if (to_return == nullptr){
-        to_return = get_first_frame_by_contributor(data, contributor_id);
+        to_return = get_first_dataset_by_contributor(data, contributor_id);
     }
 
     return to_return;
@@ -451,7 +451,11 @@ void TripsFusioHandler::init(Data& d) {
     ext_code_c = csv.get_pos_col("external_code");
     geometry_id_c = csv.get_pos_col("geometry_id");
     contributor_id_c = csv.get_pos_col("contributor_id");
-    frame_id_c = csv.get_pos_col("frame_id");
+    dataset_id_c = csv.get_pos_col("dataset_id");
+    // TODO remove frame_id when migrated
+    if (dataset_id_c ==-1 ){
+        dataset_id_c = csv.get_pos_col("frame_id");
+    }
 }
 
 std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool){
@@ -540,12 +544,12 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         return;
     }
 
-    ed::types::Frame* frame = nullptr;
+    ed::types::Dataset* dataset = nullptr;
     if (is_valid(contributor_id_c, row)){
-        if (is_valid(frame_id_c, row)){
-            frame = get_frame(gtfs_data, data, row[contributor_id_c], row[frame_id_c]);
+        if (is_valid(dataset_id_c, row)){
+            dataset = get_dataset(gtfs_data, data, row[contributor_id_c], row[dataset_id_c]);
         }else{
-            frame = get_frame(gtfs_data, data, row[contributor_id_c]);
+            dataset = get_dataset(gtfs_data, data, row[contributor_id_c]);
         }
     }
 
@@ -555,7 +559,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             data.add_object_code(vj, row[ext_code_c]);
         }
 
-        vj->frame = frame;
+        vj->dataset = dataset;
         //if a physical_mode is given we override the value
         vj->physical_mode = nullptr;
         if (is_valid(physical_mode_c, row)){
@@ -701,25 +705,92 @@ void FrameFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         throw navitia::exception(error);
     }
 
-    ed::types::Frame * frame = new ed::types::Frame();
-    frame->contributor = contributor->second;
-    frame->uri = row[id_c];
-    frame->validation_period = boost::gregorian::date_period(start_date, end_date);
+    ed::types::Dataset * dataset = new ed::types::Dataset();
+    dataset->contributor = contributor->second;
+    dataset->uri = row[id_c];
+    dataset->validation_period = boost::gregorian::date_period(start_date, end_date);
 
     if (is_valid(type_c, row)){
-        frame->realtime_level = get_rtlevel_enum(row[type_c]);
+        dataset->realtime_level = get_rtlevel_enum(row[type_c]);
     }
 
     if (is_valid(desc_c, row)){
-        frame->desc = row[desc_c];
+        dataset->desc = row[desc_c];
     }
     if (is_valid(system_c, row)){
-        frame->system = row[system_c];
+        dataset->system = row[system_c];
     }
 
-    frame->idx = data.frames.size() + 1;
-    data.frames.push_back(frame);
-    gtfs_data.frame_map[frame->uri] = frame;
+    dataset->idx = data.datasets.size() + 1;
+    data.datasets.push_back(dataset);
+    gtfs_data.dataset_map[dataset->uri] = dataset;
+}
+
+void DatasetFusioHandler::init(Data&){
+    id_c = csv.get_pos_col("dataset_id");
+    contributor_c = csv.get_pos_col("contributor_id");
+    start_date_c = csv.get_pos_col("dataset_start_date");
+    end_date_c = csv.get_pos_col("dataset_end_date");
+    type_c = csv.get_pos_col("dataset_type");
+    desc_c = csv.get_pos_col("dataset_desc");
+    system_c = csv.get_pos_col("dataset_system");    
+}
+
+void DatasetFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
+
+    boost::gregorian::date start_date(boost::gregorian::not_a_date_time),
+            end_date(boost::gregorian::not_a_date_time);
+    std::string error;
+    if(! is_first_line && ! is_valid(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has more than one dataset and no dataset_id column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto contributor = gtfs_data.contributor_map.find(row[contributor_c]);
+    if (contributor == gtfs_data.contributor_map.end()) {
+        error = "DatasetFusioHandler, contributor_id invalid: " + row[contributor_c];
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    try{
+        start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
+    }catch(const std::exception& e) {
+        error = "DatasetFusioHandler, dataset_start_date invalid: "
+                        + row[start_date_c] + ", Error: " + std::string(e.what());
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    try{
+        end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
+    }catch(const std::exception& e) {
+        error = "DatasetFusioHandler, dataset_end_date invalid: "
+                        + row[end_date_c] + ", Error: " + std::string(e.what());
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
+
+    ed::types::Dataset * dataset = new ed::types::Dataset();
+    dataset->contributor = contributor->second;
+    dataset->uri = row[id_c];
+    dataset->validation_period = boost::gregorian::date_period(start_date, end_date);
+
+    if (is_valid(type_c, row)){
+        dataset->realtime_level = get_rtlevel_enum(row[type_c]);
+    }
+
+    if (is_valid(desc_c, row)){
+        dataset->desc = row[desc_c];
+    }
+    if (is_valid(system_c, row)){
+        dataset->system = row[system_c];
+    }
+
+    dataset->idx = data.datasets.size() + 1;
+    data.datasets.push_back(dataset);
+    gtfs_data.dataset_map[dataset->uri] = dataset;
 }
 
 void LineFusioHandler::init(Data &){
@@ -1626,9 +1697,14 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
     }
 
     parse<ContributorFusioHandler>(data, "contributors.txt");
-    parse<FrameFusioHandler>(data, "frames.txt");
+    //TODO: remove frames.txt when all the components (export NTFS, fusio2ed, ...) are delivered.
+    if (boost::filesystem::exists(this->path + "/datasets.txt")) {
+        parse<DatasetFusioHandler>(data, "datasets.txt");
+    } else {
+        parse<FrameFusioHandler>(data, "frames.txt");
+    }
 
-    default_frames(gtfs_data, data);
+    default_datasets(gtfs_data, data);
 
     if (! parse<CompanyFusioHandler>(data, "companies.txt")) {
         parse<CompanyFusioHandler>(data, "company.txt");
