@@ -83,7 +83,7 @@ class Uri:
             self.is_region = False
             lonlatsplitted = self.region_or_coord_part.split(";")
             if len(lonlatsplitted) != 2:
-                raise InvalidUriException(", unable to parse lon: {lon} or lat: {lat} ".format(self.lon, self.lat))
+                raise InvalidUriException(", unable to parse lon or lat " + self.region_or_coord_part)
             lon = lonlatsplitted[0]
             lat = lonlatsplitted[1]
             try:
