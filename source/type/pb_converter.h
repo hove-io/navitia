@@ -346,7 +346,7 @@ private:
 
         void fill_pb_object(const nt::Contributor*, pbnavitia::FeedPublisher*);
         void fill_pb_object(const nt::Contributor*, pbnavitia::Contributor*);
-        void fill_pb_object(const nt::Frame*, pbnavitia::Frame*);
+        void fill_pb_object(const nt::Dataset*, pbnavitia::Dataset*);
         void fill_pb_object(const nt::StopArea*, pbnavitia::StopArea*);
         void fill_pb_object(const nt::StopPoint*, pbnavitia::StopPoint*);
         void fill_pb_object(const nt::Company*, pbnavitia::Company*);

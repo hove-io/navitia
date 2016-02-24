@@ -52,7 +52,7 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
     FUN(Route, routes)\
     FUN(Contributor, contributors)\
     FUN(Calendar, calendars) \
-    FUN(Frame, frames)
+    FUN(Dataset, datasets)
 
 enum class Type_e {
     ValidityPattern                 = 0,
@@ -84,7 +84,7 @@ enum class Type_e {
     LineGroup                       = 25,
     MetaVehicleJourney              = 26,
     Impact                          = 27,
-    Frame                           = 28
+    Dataset                         = 28
 };
 
 enum class Mode_e {

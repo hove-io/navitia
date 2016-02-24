@@ -548,7 +548,7 @@ static_data * static_data::get() {
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption")
-                (Type_e::Frame, "frame")
+                (Type_e::Dataset, "dataset")
                 (Type_e::Admin, "admin");
 
         boost::assign::insert(temp->modes_string)
@@ -794,7 +794,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
     case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
     case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
-    case Type_e::Frame: if (frame) { result.push_back(frame->idx); } break;
+    case Type_e::Dataset: if (dataset) { result.push_back(dataset->idx); } break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
@@ -833,7 +833,7 @@ std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const
 }
 bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
 
-std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
+std::vector<idx_t> Dataset::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Contributor: result.push_back(contributor->idx); break;
@@ -846,7 +846,7 @@ std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
 std::vector<idx_t> Contributor::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::Frame: return indexes(frame_list);
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;

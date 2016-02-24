@@ -157,8 +157,8 @@ template<> struct NavitiaToProto<nt::Calendar> {
 template<> struct NavitiaToProto<nt::Contributor> {
     typedef pbnavitia::Contributor type;
 };
-template<> struct NavitiaToProto<nt::Frame> {
-    typedef pbnavitia::Frame type;
+template<> struct NavitiaToProto<nt::Dataset> {
+    typedef pbnavitia::Dataset type;
 };
 template<> struct NavitiaToProto<nt::StopPointConnection> {
     typedef pbnavitia::Connection type;
@@ -217,8 +217,8 @@ template<> NavToProtoCollec<nt::Calendar> get_mutable<nt::Calendar>(pbnavitia::R
 template<> NavToProtoCollec<nt::Contributor> get_mutable<nt::Contributor>(pbnavitia::Response& resp){
     return resp.mutable_contributors();
 }
-template<> NavToProtoCollec<nt::Frame> get_mutable<nt::Frame>(pbnavitia::Response& resp){
-    return resp.mutable_frames();
+template<> NavToProtoCollec<nt::Dataset> get_mutable<nt::Dataset>(pbnavitia::Response& resp){
+    return resp.mutable_datasets();
 }
 template<> NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointConnection>(pbnavitia::Response& resp){
     return resp.mutable_connections();
@@ -400,16 +400,16 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Con
     contrib->set_website(cb->website);
 }
 
-void PbCreator::Filler::fill_pb_object(const nt::Frame* fr, pbnavitia::Frame* frame){
+void PbCreator::Filler::fill_pb_object(const nt::Dataset* ds, pbnavitia::Dataset* dataset){
 
-    frame->set_uri(fr->uri);
+    dataset->set_uri(ds->uri);
     pt::time_duration td = pt::time_duration(0, 0, 0, 0);
-    frame->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.begin(), td)));
-    frame->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(fr->validation_period.end(),td)));
-    frame->set_desc(fr->desc);
-    frame->set_system(fr->system);
-    frame->set_realtime_level(to_pb_realtime_level(fr->realtime_level));
-    fill(fr->contributor, frame);
+    dataset->set_start_validation_date(navitia::to_posix_timestamp(pt::ptime(ds->validation_period.begin(), td)));
+    dataset->set_end_validation_date(navitia::to_posix_timestamp(pt::ptime(ds->validation_period.end(),td)));
+    dataset->set_desc(ds->desc);
+    dataset->set_system(ds->system);
+    dataset->set_realtime_level(to_pb_realtime_level(ds->realtime_level));
+    fill(ds->contributor, dataset);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
@@ -1146,8 +1146,8 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj_stoptimes->vj->uri);
-    if (vj_stoptimes->vj->frame && vj_stoptimes->vj->frame->contributor){
-        this->pb_creator.contributors.insert(vj_stoptimes->vj->frame->contributor);
+    if (vj_stoptimes->vj->dataset && vj_stoptimes->vj->dataset->contributor){
+        this->pb_creator.contributors.insert(vj_stoptimes->vj->dataset->contributor);
     }
     if (depth > 0 && vj_stoptimes->vj->route) {
         fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;});
@@ -1349,7 +1349,7 @@ template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int
 template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Company*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Contributor*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Frame*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<nt::Dataset*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Network*>& nav_list, int depth, const DumpMessage dump_message);
