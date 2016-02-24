@@ -991,3 +991,5 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
+BOOST_CLASS_EXPORT_KEY(navitia::type::DiscreteVehicleJourney)
+BOOST_CLASS_EXPORT_KEY(navitia::type::FrequencyVehicleJourney)
