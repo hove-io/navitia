@@ -73,13 +73,13 @@ int main(int argc, const char* const argv[]) {
     b.connection("B", "C", 2*60);
     b.connection("F", "G", 2*60);
 
-    navitia::type::Frame* fr = new navitia::type::Frame();
-    fr->idx = b.data->pt_data->frames.size();
-    fr->uri = "base_frame";
-    fr->name = "base frame";
-    fr->validation_period = period("20160101", "20161230");
-    fr->vehiclejourney_list.push_back(vj);
-    vj->frame = fr;
+    navitia::type::Dataset* ds = new navitia::type::Dataset();
+    ds->idx = b.data->pt_data->datasets.size();
+    ds->uri = "base_dataset";
+    ds->name = "base dataset";
+    ds->validation_period = period("20160101", "20161230");
+    ds->vehiclejourney_list.push_back(vj);
+    vj->dataset = ds;
 
     navitia::type::Contributor* cr = new navitia::type::Contributor();
     cr->idx = b.data->pt_data->contributors.size();
@@ -87,10 +87,10 @@ int main(int argc, const char* const argv[]) {
     cr->name = "base contributor";
     cr->license = "L-contributor";
     cr->website = "www.canaltp.fr";
-    cr->frame_list.push_back(fr);
-    fr->contributor = cr;
+    cr->dataset_list.push_back(ds);
+    ds->contributor = cr;
 
-    b.data->pt_data->frames.push_back(fr);
+    b.data->pt_data->datasets.push_back(ds);
     b.data->pt_data->contributors.push_back(cr);
 
     b.data->pt_data->index();
