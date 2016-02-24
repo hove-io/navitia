@@ -106,7 +106,7 @@ class AbstractTestFixture:
                              '    "realtime_proxies": {proxy_conf}\n'
                              '}}')
         for name in cls.krakens_pool:
-            proxy_conf = cls.data_sets[name].get('proxy_conf', '{}')
+            proxy_conf = cls.data_sets[name].get('proxy_conf', '[]')
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
                 r = conf_template_str.format(instance_name=name, proxy_conf=proxy_conf)
