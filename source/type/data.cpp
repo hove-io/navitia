@@ -63,7 +63,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 56; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 57; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -426,16 +426,34 @@ void Data::build_associated_calendar() {
     }
 }
 
+/*
+    > Fill dataset_list for route and stoppoint
+    > Fill vehiclejourney_list for dataset
+    > These lists are used by ptref
+*/
+static void build_datasets(navitia::type::VehicleJourney* vj){
+    if(!vj->dataset) { return; }
+    if (vj->route && (!navitia::contains(vj->route->dataset_list, vj->dataset))){
+        vj->route->dataset_list.push_back(vj->dataset);
+    }
+    if (!navitia::contains(vj->dataset->vehiclejourney_list, vj)){
+        vj->dataset->vehiclejourney_list.push_back(vj);
+    }
+    for(navitia::type::StopTime& st : vj->stop_time_list){
+        if(st.stop_point && (!navitia::contains(st.stop_point->dataset_list, vj->dataset))){
+            st.stop_point->dataset_list.push_back(vj->dataset);
+        }
+    }
+}
+
 void Data::build_relations(){
     // physical_mode_list of line
-    for (const auto* vj: pt_data->vehicle_journeys) {
+    for (auto* vj: pt_data->vehicle_journeys) {
+        build_datasets(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
-        if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
-            != vj->route->line->physical_mode_list.end()) {
-            // physical_mode already in line
-            continue;
+        if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)){
+            vj->route->line->physical_mode_list.push_back(vj->physical_mode);
         }
-        vj->route->line->physical_mode_list.push_back(vj->physical_mode);
     }
 }
 

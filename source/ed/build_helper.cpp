@@ -147,7 +147,13 @@ nt::VehicleJourney* VJ::make() {
     } else {
         vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
     }
-
+    // default dataset
+    if (!vj->dataset){
+        auto it = pt_data.datasets_map.find("default:dataset");
+        if (it != pt_data.datasets_map.end()){
+            vj->dataset = it->second;
+        }
+    }
     //add physical mode
     if (!physical_mode.empty()) {
         auto it = pt_data.physical_modes_map.find(physical_mode);
@@ -591,6 +597,22 @@ void builder::connection(const std::string & name1, const std::string & name2, f
         this->data->pt_data->physical_modes.push_back(mode);
         this->data->pt_data->physical_modes_map[mode->uri] = mode;
     }
+    // default dataset and contributor
+    navitia::type::Contributor * contributor = new navitia::type::Contributor();
+    contributor->idx = this->data->pt_data->contributors.size();
+    contributor->uri = "default:contributor";
+    contributor->name = "default contributor";
+    this->data->pt_data->contributors.push_back(contributor);
+    this->data->pt_data->contributors_map[contributor->uri] = contributor;
+
+    navitia::type::Dataset * dataset = new navitia::type::Dataset();
+    dataset->idx = this->data->pt_data->datasets.size();
+    dataset->uri = "default:dataset";
+    dataset->name = "default dataset";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    this->data->pt_data->datasets.push_back(dataset);
+    this->data->pt_data->datasets_map[dataset->uri] = dataset;
  }
 
 void builder::build_blocks() {

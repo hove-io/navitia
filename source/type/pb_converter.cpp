@@ -1146,7 +1146,9 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj_stoptimes->vj->uri);
-    if (vj_stoptimes->vj->dataset && vj_stoptimes->vj->dataset->contributor){
+    if (vj_stoptimes->vj->dataset && vj_stoptimes->vj->dataset->contributor
+        // Only contributor with license
+        &&(!vj_stoptimes->vj->dataset->contributor->license.empty())){
         this->pb_creator.contributors.insert(vj_stoptimes->vj->dataset->contributor);
     }
     if (depth > 0 && vj_stoptimes->vj->route) {

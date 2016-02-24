@@ -753,6 +753,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data& data) const {
             });
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;
@@ -815,6 +816,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
             result.push_back(stop_cnx->idx);
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;
@@ -900,8 +902,8 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
 }
 
 }} //namespace navitia::type
-
 #if BOOST_VERSION <= 105700
-BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
-BOOST_CLASS_EXPORT_GUID(navitia::type::FrequencyVehicleJourney, "FrequencyVehicleJourney")
+BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::VehicleJourney)
+BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::DiscreteVehicleJourney)
+BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::FrequencyVehicleJourney)
 #endif

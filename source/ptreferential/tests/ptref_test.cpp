@@ -257,9 +257,25 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     // Physical_mode = Metro
     b.vj("A","00001111","",true,"", "","physical_mode:0x1")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500,8500);
     // Physical_mode = Tram
-    b.vj("C")("stop3", 9000,9050)("stop4", 9200,9250);
+    auto* vj_c = b.vj("C")("stop3", 9000,9050)("stop4", 9200,9250).make();
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+
+    navitia::type::Contributor* contributor = new navitia::type::Contributor();
+    contributor->idx = b.data->pt_data->contributors.size();
+    contributor->uri = "c1";
+    contributor->name = "name-c1";
+    b.data->pt_data->contributors.push_back(contributor);
+
+    navitia::type::Dataset* dataset = new navitia::type::Dataset();
+    dataset->idx = b.data->pt_data->datasets.size();
+    dataset->uri = "f1";
+    dataset->name = "name-f1";
+    dataset->contributor = contributor;
+    contributor->dataset_list.push_back(dataset);
+    b.data->pt_data->datasets.push_back(dataset);
+    vj_c->dataset = dataset;
+
     b.data->build_relations();
     b.finish();
 
@@ -273,6 +289,27 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(0)->name, "Tram");
+
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop2", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+
+    indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop3", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.back())->uri, "f1");
+
+    indexes = make_query(nt::Type_e::Contributor, "dataset.uri=default:dataset", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "default:contributor");
+
+    indexes = make_query(nt::Type_e::Contributor, "dataset.uri=f1", *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "c1");
 }
 
 BOOST_AUTO_TEST_CASE(get_indexes_test){
@@ -703,9 +740,9 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
     b.generate_dummy_basis();
-    b.vj("A")("stop1", 8000, 8050);
+    auto* vj_a = b.vj("A")("stop1", 8000, 8050).make();
     b.lines["A"]->code = "line_A";
-    b.vj("C")("stop2", 8000, 8050);
+    auto* vj_c = b.vj("C")("stop2", 8000, 8050).make();
     b.lines["C"]->code = "line C";
 
     //contributor "c1" contains dataset "d1" and "d2"
@@ -726,9 +763,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d1" is assigned to vehicle_journey "vj:A:0"
-    auto * vj= b.data->pt_data->vehicle_journeys.front();
-    dataset->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
+    vj_a->dataset = dataset;
 
     dataset = new navitia::type::Dataset();
     dataset->idx = b.data->pt_data->datasets.size();
@@ -739,9 +774,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d2" is assigned to vehicle_journey "vj:C:1"
-    vj= b.data->pt_data->vehicle_journeys.back();
-    dataset->vehiclejourney_list.push_back(vj);
-    b.data->pt_data->vehicle_journeys.front()->dataset = dataset;
+    vj_c->dataset = dataset;
 
     //Here contributor c2 contains datasets d3
     contributor = new navitia::type::Contributor();

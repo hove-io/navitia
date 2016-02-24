@@ -139,6 +139,7 @@ struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
+struct Dataset;
 
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
@@ -152,6 +153,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
+    std::vector<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         // The *_list are not serialized here to avoid stack abuse
@@ -159,7 +161,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
         //
         // stop_point_connection_list is managed by StopPointConnection
         ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
-            & admin_list & _properties & impacts;
+            & admin_list & _properties & impacts & dataset_list;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
@@ -293,8 +295,6 @@ struct Network : public Header, HasMessages {
     }
 
 };
-
-struct Dataset;
 
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
@@ -619,6 +619,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
+    std::vector<Dataset*> dataset_list;
 
     type::hasOdtProperties get_odt_properties() const;
 
@@ -632,7 +633,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape & direction_type;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type & dataset_list;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -988,3 +989,7 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
+#if BOOST_VERSION <= 105700
+BOOST_CLASS_EXPORT_KEY(navitia::type::DiscreteVehicleJourney)
+BOOST_CLASS_EXPORT_KEY(navitia::type::FrequencyVehicleJourney)
+#endif
