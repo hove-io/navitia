@@ -73,7 +73,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::IMPACT: return nt::Type_e::Impact;
     case pbnavitia::TRIP: return nt::Type_e::MetaVehicleJourney;
     case pbnavitia::CONTRIBUTOR: return nt::Type_e::Contributor;
-    case pbnavitia::FRAME: return nt::Type_e::Frame;
+    case pbnavitia::DATASET: return nt::Type_e::Dataset;
     default: return nt::Type_e::Unknown;
     }
 }
