@@ -40,7 +40,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestJourneysNewDefault(AbstractTestFixture):
     """
     Test the new default scenario
@@ -106,7 +106,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
         assert len(response["journeys"]) >= 3
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
     """Test the new default scenario with ptref_test data"""
 

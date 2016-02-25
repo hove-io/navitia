@@ -40,7 +40,7 @@ def always_in_error(self, start_time, func_call):
     raise StatError()
 
 
-@dataset(["main_routing_test"])
+@dataset({'main_routing_test': {}})
 class TestNoStats(AbstractTestFixture):
 
     def setup(self):

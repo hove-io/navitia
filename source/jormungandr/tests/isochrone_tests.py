@@ -32,7 +32,7 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 
 
-@dataset(["basic_routing_test"])
+@dataset({"basic_routing_test": {}})
 class TestIsochrone(AbstractTestFixture):
     """
     Test the structure of the journeys response

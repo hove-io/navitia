@@ -30,7 +30,8 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 import logging
 
-@dataset(["main_routing_test", "null_status_test"])
+
+@dataset({"main_routing_test":{}, "null_status_test":{}})
 class TestNullStatus(AbstractTestFixture):
     """
     Test with an empty coverage

@@ -45,7 +45,11 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
                                     blocking, start_period, end_period)
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
+                                                                   '--BROKER.rt_topics='+rt_topic,
+                                                                   'spawn_maintenance_worker']}}
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptions(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -101,7 +105,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         eq_(channel['types'][1], 'email')
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -137,7 +141,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptions2(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -180,7 +184,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -295,7 +299,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.run_check('stop_point:stopA', 'stop_point')
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -395,7 +399,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         return disruption_by_obj
 
 
-@dataset([("main_routing_test", ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -456,7 +460,8 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
-@dataset([('main_routing_test', ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
     """
     Add disruption on stop point:
@@ -512,7 +517,8 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
         is_valid_journey_response(response, self.tester, journey_query)
         assert len(response['journeys']) == 2
 
-@dataset([('main_routing_test', ['--BROKER.sleeptime=0', '--BROKER.rt_topics='+rt_topic, 'spawn_maintenance_worker'])])
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
     """
     Add disruption on stop area:

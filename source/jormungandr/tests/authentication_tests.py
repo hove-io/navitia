@@ -165,7 +165,7 @@ class AbstractTestAuthentication(AbstractTestFixture):
         models.Instance.get_by_name = self.old_instance_getter
 
 
-@dataset(["main_routing_test", "departure_board_test"])
+@dataset({"main_routing_test": {}, "departure_board_test": {}})
 class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_coverage(self):
@@ -210,7 +210,8 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert get_not_null(r, 'error')['message'] \
                    == "The region the_marvelous_unknown_region doesn't exists"
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestIfUserIsBlocked(AbstractTestAuthentication):
 
     def test_status_code(self):
@@ -227,8 +228,7 @@ class TestIfUserIsBlocked(AbstractTestAuthentication):
                 assert(self.app.get(request).status_code == status_code)
 
 
-
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestIfUserIsNotBlocked(AbstractTestAuthentication):
 
     def test_status_code(self):
@@ -242,7 +242,7 @@ class TestIfUserIsNotBlocked(AbstractTestAuthentication):
                 assert(self.app.get(request).status_code == status_code)
                 
 
-@dataset(["main_routing_test", "departure_board_test", "empty_routing_test"])
+@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}})
 class TestOverlappingAuthentication(AbstractTestAuthentication):
 
     def test_coverage(self):

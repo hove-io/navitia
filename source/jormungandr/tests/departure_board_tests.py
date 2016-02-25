@@ -139,7 +139,7 @@ def get_real_notes(obj, full_response):
     return [real_notes[n['id']] for n in get_not_null(obj, 'links') if n['type'] == 'notes']
 
 
-@dataset(["departure_board_test"])
+@dataset({"departure_board_test":{}})
 class TestDepartureBoard(AbstractTestFixture):
     """
     Test the structure of the departure board api
@@ -402,7 +402,7 @@ def check_departures(response, reference):
         eq_(get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time'), ref.dt)
 
 
-@dataset(["basic_schedule_test"])
+@dataset({"basic_schedule_test": {}})
 class TestSchedules(AbstractTestFixture):
 
     def test_classic_stop_schedule(self):
