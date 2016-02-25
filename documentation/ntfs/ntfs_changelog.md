@@ -27,10 +27,15 @@
 * Version 0.5 du 25/10/2015 (version technique, pas de modification effective de format)
     * Gestion du champ line_text_color
     * Gestion du fichier equipments.txt
-* Version 0.6 du 24/112015
-    * Ajout de la gestion des services (fichier frames.txt) et modification des contributeurs pour ajouter une licence et un site web 
+* Version 0.6 du 24/11/2015
+    * Ajout de la gestion des services (fichier frames.txt) et modification des contributeurs pour ajouter une licence et un site web
     * Ajout de la gestion des données adaptées (dans feed_info.txt une clé "revised_networks" listant les réseaux impactés par une grève ou une autre perturbation)
     * Modification de l'identifiant des calendriers et des calendriers de période
     * Modification des commentaires : Ajout d'un label optionnel et modification du nom du champ "comment_name" en "comment_value"
     * Modification du champ "is_forward" en "direction_type" dans le fichier routes.txt et passage en champ de type chaine
+* Version 0.6 du 25/02/2016
+    * "frame" remplacé par "dataset" dans les attributs du fichier frames.txt
+    * Fichier frames.txt rennomé à datasets.txt
+    * Attribut frame_id remplacé par dataset_id dans le fichier trips.txt
+    * Attribut frame_id supprimé dans le fichier stops.txt
 
