@@ -58,12 +58,6 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             return next_passages
         return None
 
-
-def _make_df_checker(data_freshness):
-    def _check_data_freshness(date_time):
-        assert date_time['data_freshness'] == data_freshness
-    return _check_data_freshness
-
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDepartures(AbstractTestFixture):
 
@@ -77,9 +71,8 @@ class TestDepartures(AbstractTestFixture):
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
         assert ["20160102T113242", "20160102T114242"] == next_passage_dts
 
-        df_checker = _make_df_checker('realtime')
         for dt in stop_schedules:
-            df_checker(dt)
+            assert dt['data_freshness'] == 'realtime'
 
 
     def test_stop_schedule_base(self):
@@ -90,9 +83,8 @@ class TestDepartures(AbstractTestFixture):
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
         assert "20160102T113000" in next_passage_dts
 
-        df_checker = _make_df_checker('base_schedule')
         for dt in stop_schedules:
-            df_checker(dt)
+            assert dt['data_freshness'] == 'base_schedule'
 
     def test_empty_stop_schedule(self):
         query = self.query_template.format(sp='C:S1', dt='20160102T1100',
@@ -102,9 +94,8 @@ class TestDepartures(AbstractTestFixture):
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
         assert len(next_passage_dts) == 0
 
-        df_checker = _make_df_checker('base_schedule')
         for dt in stop_schedules:
-            df_checker(dt)
+            assert dt['data_freshness'] == 'base_schedule'
 
     def test_stop_schedule_stop_ponit_has_no_rt(self):
         query = self.query_template.format(sp='S1', dt='20160102T1030',
@@ -116,16 +107,14 @@ class TestDepartures(AbstractTestFixture):
         next_passage_dts = [dt["date_time"] for dt in stop_schedule_A['date_times']]
         assert ['20160102T110000', '20160103T090000', '20160103T100000'] == next_passage_dts
 
-        df_checker = _make_df_checker('base_schedule')
         for dt in stop_schedule_A['date_times']:
-            df_checker(dt)
+            assert dt['data_freshness'] == 'base_schedule'
 
         stop_schedule_B = response['stop_schedules'][1]
         assert stop_schedule_B['route']['name'] == 'B'
         next_passage_dts = [dt["date_time"] for dt in stop_schedule_B['date_times']]
         assert ['20160102T113000'] == next_passage_dts
 
-        df_checker = _make_df_checker('base_schedule')
         for dt in stop_schedule_B['date_times']:
-            df_checker(dt)
+            assert dt['data_freshness'] == 'base_schedule'
 
