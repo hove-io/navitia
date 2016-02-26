@@ -425,19 +425,19 @@ void GeoRef::build_autocomplete_list(){
 }
 
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes_map(){
+/** poitype_map load: mapping external codes -> POIType*/
+void GeoRef::build_poitypes_map() {
    this->poitype_map.clear();
-   for(const POIType* ptype : poitypes){
-       this->poitype_map[ptype->uri] = ptype->idx;
+   for (POIType* ptype : poitypes) {
+       this->poitype_map[ptype->uri] = ptype;
    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois_map(){
-    this->poi_map.clear();
-   for(const POI* poi : pois){
-       this->poi_map[poi->uri] = poi->idx;
+/** poi_map load: mapping external codes -> POI*/
+void GeoRef::build_pois_map() {
+   this->poi_map.clear();
+   for (POI* poi : pois) {
+       this->poi_map[poi->uri] = poi;
    }
 }
 

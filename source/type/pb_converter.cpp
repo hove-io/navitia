@@ -1266,20 +1266,19 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
     } else if (point->type == nt::Type_e::POI) {
         const auto it = pb_creator.data.geo_ref->poi_map.find(point->uri);
         if (it != pb_creator.data.geo_ref->poi_map.end()) {
-            fill_with_creator(pb_creator.data.geo_ref->pois[it->second], [&](){return place;});
+            fill_with_creator(it->second, [&](){return place;});
         }
     } else if (point->type == nt::Type_e::Admin) {
         const auto it = pb_creator.data.geo_ref->admin_map.find(point->uri);
         if (it != pb_creator.data.geo_ref->admin_map.end()) {
             fill_with_creator(pb_creator.data.geo_ref->admins[it->second], [&](){return place;});
         }
-    } else if (point->type == nt::Type_e::Coord){
-        try{
+    } else if (point->type == nt::Type_e::Coord) {
+        try {
             auto address = pb_creator.data.geo_ref->nearest_addr(point->coordinates);
             const auto& way_coord = WayCoord(address.second, point->coordinates, address.first);
             fill_pb_object(&way_coord, place);
-
-        }catch(navitia::proximitylist::NotFound){
+        } catch(navitia::proximitylist::NotFound) {
             //we didn't find a address at this coordinate, we fill the address manually with the coord, so we have a valid output
             place->set_name("");
             place->set_uri(point->coordinates.uri());
@@ -1289,7 +1288,6 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
             c->set_lon(point->coordinates.lon());
             c->set_lat(point->coordinates.lat());
         }
-
     }
 }
 
@@ -1532,9 +1530,8 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
 }
 
 const ng::POI* PbCreator::get_nearest_bss_station(const nt::GeographicalCoord& coord){
-    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
-    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
-    return this->get_nearest_poi(coord, poi_type);
+    const auto* poi_type = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
+    return this->get_nearest_poi(coord, *poi_type);
 }
 
 const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, const ng::POIType& poi_type) {
@@ -1550,9 +1547,8 @@ const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, co
 }
 
 const ng::POI* PbCreator::get_nearest_parking(const nt::GeographicalCoord& coord){
-    nt::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
-    const ng::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
-    return get_nearest_poi(coord, poi_type);
+    const auto* poi_type = data.geo_ref->poitype_map["poi_type:amenity:parking"];
+    return get_nearest_poi(coord, *poi_type);
 }
 
 pbnavitia::RouteSchedule* PbCreator::add_route_schedules(){

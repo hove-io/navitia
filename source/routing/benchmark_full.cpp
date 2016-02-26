@@ -108,8 +108,7 @@ static type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entr
     case type::Type_e::POI: {
             auto poi = data.geo_ref->poi_map.find(entry_point.uri);
             if (poi != data.geo_ref->poi_map.end()){
-                const auto geo_poi = data.geo_ref->pois[poi->second];
-                return geo_poi->coord;
+                return poi->second->coord;
             }
         }
         break;

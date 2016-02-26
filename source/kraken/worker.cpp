@@ -383,8 +383,7 @@ type::GeographicalCoord Worker::coord_of_entry_point(
     } else if(entry_point.type == Type_e::POI){
         auto poi = data->geo_ref->poi_map.find(entry_point.uri);
         if (poi != data->geo_ref->poi_map.end()){
-            const auto geo_poi = data->geo_ref->pois[poi->second];
-            result = geo_poi->coord;
+            result = poi->second->coord;
         }
     }
     return result;
@@ -462,7 +461,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
-                pb_creator.fill(data->geo_ref->pois[it_poi->second], pb_creator.add_places(), 1);
+                pb_creator.fill(it_poi->second, pb_creator.add_places(), 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
