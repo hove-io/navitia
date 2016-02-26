@@ -21,13 +21,15 @@ def upgrade():
     op.rename_table("frame", "dataset", schema='navitia')
     op.add_column('vehicle_journey', sa.Column('dataset_id', sa.BIGINT(), nullable=True), schema='navitia')
     op.execute("UPDATE navitia.vehicle_journey SET dataset_id=frame_id")
+    op.execute("ALTER TABLE vehicle_journey DROP CONSTRAINT IF EXISTS vehicle_journey_frame_id_fkey")
     op.drop_column('vehicle_journey', 'frame_id', schema='navitia')
-    pass
+    op.create_foreign_key('vehicle_journey_dataset_id_fkey', 'vehicle_journey', 'dataset', ['dataset_id'], ['id'])
 
 
 def downgrade():
     op.rename_table("dataset", "frame", schema='navitia')
     op.add_column('vehicle_journey', sa.Column('frame_id', sa.BIGINT(), nullable=True), schema='navitia')
     op.execute("UPDATE navitia.vehicle_journey SET frame_id=dataset_id")
+    op.execute("ALTER TABLE vehicle_journey DROP CONSTRAINT IF EXISTS vehicle_journey_dataset_id_fkey")
     op.drop_column('vehicle_journey', 'dataset_id', schema='navitia')
-    pass
+    op.create_foreign_key('vehicle_journey_frame_id_fkey', 'vehicle_journey', 'frame', ['frame_id'], ['id'])
