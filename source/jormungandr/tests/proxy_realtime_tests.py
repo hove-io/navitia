@@ -34,7 +34,7 @@ import datetime
 import pytz
 
 MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
-                     ' "class": "proxy_realtime_tests.MockedTestProxy",\n'
+                     ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
                      ' "args": { } }]')
 
 
