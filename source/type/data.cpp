@@ -508,6 +508,7 @@ Data::get_data<type_name>() const {\
     return this->pt_data->collection_name;\
 }
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
+#undef GET_DATA
 
 template<> const std::vector<georef::POI*>&
 Data::get_data<georef::POI>() const {
@@ -540,6 +541,48 @@ Data::get_data<routing::JourneyPatternPoint>() const {
 
 template<> const std::vector<boost::weak_ptr<type::disruption::Impact>>&
 Data::get_data<type::disruption::Impact>() const {
+    return pt_data->disruption_holder.get_weak_impacts();
+}
+
+#define GET_ASSOCIATIVE_DATA(type_name, collection_name)\
+template<> const ContainerTrait<type_name>::associative_type& \
+Data::get_assoc_data<type_name>() const {\
+    return this->pt_data->collection_name##_map;\
+}
+ITERATE_NAVITIA_PT_TYPES(GET_ASSOCIATIVE_DATA)
+#undef GET_ASSOCIATIVE_DATA
+
+template<> const ContainerTrait<georef::POI>::associative_type&
+Data::get_assoc_data<georef::POI>() const {
+    return this->geo_ref->poi_map;
+}
+template<> const ContainerTrait<georef::POIType>::associative_type&
+Data::get_assoc_data<georef::POIType>() const {
+    return this->geo_ref->poitype_map;
+}
+template<> const ContainerTrait<StopPointConnection>::associative_type&
+Data::get_assoc_data<StopPointConnection>() const {
+    return this->pt_data->stop_point_connections;
+}
+template<> const ContainerTrait<MetaVehicleJourney>::associative_type&
+Data::get_assoc_data<MetaVehicleJourney>() const {
+    return this->pt_data->meta_vjs;
+}
+
+// JP and JPP can't work with automatic build clause
+template<> const ContainerTrait<routing::JourneyPattern>::associative_type&
+Data::get_assoc_data<routing::JourneyPattern>() const {
+    static const ContainerTrait<routing::JourneyPattern>::associative_type res;
+    return res;
+}
+template<> const ContainerTrait<routing::JourneyPatternPoint>::associative_type&
+Data::get_assoc_data<routing::JourneyPatternPoint>() const {
+    static const ContainerTrait<routing::JourneyPatternPoint>::associative_type res;
+    return res;
+}
+
+template<> const ContainerTrait<type::disruption::Impact>::associative_type&
+Data::get_assoc_data<type::disruption::Impact>() const {
     return pt_data->disruption_holder.get_weak_impacts();
 }
 

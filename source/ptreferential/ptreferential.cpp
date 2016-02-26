@@ -186,6 +186,40 @@ std::vector<idx_t> filtered_indexes(const T& data, const C& clause) {
     return result;
 }
 
+namespace {
+
+// has_string_lookup is used to know if we can search for an element by it's uri in the container
+// (ie for maps, ObjFactory, ...)
+template <typename Container>
+constexpr auto has_string_lookup(const Container& c, int)
+-> decltype(find_or_default(std::string(), c), std::true_type{}) {
+    return std::true_type{};
+}
+template <typename Container>
+inline constexpr std::false_type has_string_lookup(const Container&, ...) {
+    return std::false_type{};
+}
+
+template<typename T, typename Container>
+std::vector<idx_t> filter_by_uri(const Container& data, const std::string& uri, std::false_type) {
+    // by refault, we loop over all element to find the one
+    return filtered_indexes(data, WHERE(ptr_uri<T>(), Operator_e::EQ, uri));
+}
+
+template<typename T, typename Container>
+std::vector<idx_t> filter_by_uri(const Container& c, const std::string& uri, std::true_type) {
+    // for associative containers we can do a better search
+    auto elt = find_or_default(uri, c);
+    if (elt) { return {elt->idx}; }
+    return {};
+}
+}
+
+template<typename T, typename Container>
+std::vector<idx_t> filtered_indexes_by_uri(const Container& container, const std::string& uri) {
+    return filter_by_uri<T>(container, uri, has_string_lookup(container, 0));
+}
+
 template<typename T>
 static
 typename boost::enable_if<
@@ -283,6 +317,9 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
         if (const auto jpp_idx = d.dataRaptor->jp_container.get_jpp_from_id(filter.value)) {
             indexes.push_back(jpp_idx->val);
         }
+    } else if (filter.attribute == "uri" && filter.op == EQ) {
+        // for filtering with uri we can look up in the maps
+        indexes = filtered_indexes_by_uri<T>(d.get_assoc_data<T>(), filter.value);
     } else {
         const auto& data = d.get_data<T>();
         indexes = filtered_indexes(data, build_clause<T>({filter}));
