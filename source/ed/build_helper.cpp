@@ -150,9 +150,12 @@ nt::VehicleJourney* VJ::make() {
 
     //add physical mode
     if (!physical_mode.empty()) {
-        auto it = pt_data.physical_modes_map.find(physical_mode);
-        if (it != pt_data.physical_modes_map.end()){
-            vj->physical_mode = it->second;
+        // at this moment, the physical_modes_map might not be filled, we look up in the vector
+        auto it = boost::find_if(pt_data.physical_modes, [this](const nt::PhysicalMode* phy) {
+            return phy->uri == this->physical_mode;
+        });
+        if (it != std::end(pt_data.physical_modes)) {
+            vj->physical_mode = *it;
         }
     }
     if (!vj->physical_mode) {

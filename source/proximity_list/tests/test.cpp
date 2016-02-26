@@ -325,6 +325,7 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
     }
     data.geo_ref->init();
     data.build_proximity_list();
+    data.build_uri();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);

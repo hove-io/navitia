@@ -334,7 +334,7 @@ class TestPtRef(AbstractTestFixture):
 
         is_valid_stop_area(stops[0], depth_check=2)
         modes = get_not_null(stops[0], 'physical_modes')
-        assert len(modes) == 2
+        assert len(modes) == 1
         modes = get_not_null(stops[0], 'commercial_modes')
         assert len(modes) == 1
 

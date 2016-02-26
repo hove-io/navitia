@@ -118,6 +118,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
 
     b.data->build_relations();
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto stop_area = new pbnavitia::StopArea();
     boost::gregorian::date d1(2014,06,14);
