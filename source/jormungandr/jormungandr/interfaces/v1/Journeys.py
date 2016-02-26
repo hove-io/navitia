@@ -197,7 +197,7 @@ section = {
 }
 
 cost = {
-    'value': fields.Float(),
+    'value': fields.String(),
     'currency': fields.String(),
 }
 
