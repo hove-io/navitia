@@ -58,7 +58,7 @@ class Timeo(RealtimeProxy):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
-        self.id = id
+        self.service_id = id
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
@@ -120,9 +120,9 @@ class Timeo(RealtimeProxy):
 
         base_params = '&'.join([k + '=' + v for k, v in self.service_args.iteritems()])
 
-        stop = route_point.fetch_stop_id(self.id)
-        line = route_point.fetch_line_id(self.id)
-        route = route_point.fetch_route_id(self.id)
+        stop = route_point.fetch_stop_id(self.service_id)
+        line = route_point.fetch_line_id(self.service_id)
+        route = route_point.fetch_route_id(self.service_id)
 
         if not all((stop, line, route)):
             # one a the id is missing, we'll not find any realtime
