@@ -796,8 +796,7 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
         if (it_poi == data.geo_ref->poi_map.end()) {
             return {};
         }
-        const auto poi = data.geo_ref->pois[it_poi->second];
-        return poi->admin_list;
+        return it_poi->second->admin_list;
     }
     //else we look for the coordinate's admin
     return data.geo_ref->find_admins(ep.coordinates);

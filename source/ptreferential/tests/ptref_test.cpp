@@ -213,6 +213,7 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Line, "", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
@@ -278,6 +279,7 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
 
     b.data->build_relations();
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Line, "line.uri=A", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
@@ -321,6 +323,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     b.connection("stop3", "stop2", 10*60);
     b.finish();
     b.data->pt_data->index();
+    b.data->pt_data->build_uri();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
     Filter filter;
@@ -401,6 +404,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Line, "line.uri=A", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
@@ -443,6 +447,7 @@ BOOST_AUTO_TEST_CASE(line_code) {
     b.lines["C"]->code = "line C";
     b.data->build_relations();
     b.finish();
+    b.data->pt_data->build_uri();
 
     //find line by code
     auto indexes = make_query(nt::Type_e::Line, "line.code=line_A", *(b.data));
@@ -488,6 +493,7 @@ BOOST_AUTO_TEST_CASE(after_filter) {
     b.vj("C")("stop6", 9000,9050)("stop2", 9200,9250)("stop7", 10000);
     b.vj("D")("stop5", 9000,9050)("stop2", 9200,9250)("stop3", 10000);
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::StopArea, "AFTER(stop_area.uri=stop2)", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 3);
@@ -560,6 +566,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     builder.vj("B", "1011")("stop3", "10:00"_t);
     builder.vj("C", "1000")("stop3", "10:00"_t);
     builder.finish();
+    builder.data->pt_data->build_uri();
     nt::idx_t a = 0;
     nt::idx_t b = 1;
     nt::idx_t c = 2;
@@ -793,6 +800,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     b.data->build_relations();
     b.finish();
+    b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Contributor, "contributor.uri=c1", *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
