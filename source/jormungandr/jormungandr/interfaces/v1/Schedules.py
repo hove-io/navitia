@@ -42,7 +42,7 @@ import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
-from flask.ext.restful.types import natural, boolean
+from flask.ext.restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.resources_utc import ResourceUtc
 from make_links import create_external_link

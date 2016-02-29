@@ -31,7 +31,7 @@
 import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
-from flask.ext.restful.types import boolean
+from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
@@ -197,7 +197,7 @@ section = {
 }
 
 cost = {
-    'value': fields.Float(),
+    'value': fields.String(),
     'currency': fields.String(),
 }
 

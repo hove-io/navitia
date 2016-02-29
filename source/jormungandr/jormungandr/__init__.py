@@ -39,6 +39,7 @@ from flask.ext.cors import CORS
 import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest
+from jormungandr import compat
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
@@ -47,7 +48,7 @@ if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
 
 app.request_class = NavitiaRequest
 CORS(app, vary_headers=True, allow_credentials=True, send_wildcard=False,
-		headers=['Access-Control-Request-Headers', 'Authorization'])
+        headers=['Access-Control-Request-Headers', 'Authorization'])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 if 'LOGGER' in app.config:
@@ -59,6 +60,9 @@ else:  # Default is std out
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 got_request_exception.connect(log_exception, app)
+
+#we want the old behavior for reqparse
+compat.patch_reqparse()
 
 rest_api = Api(app, catch_all_404s=True)
 

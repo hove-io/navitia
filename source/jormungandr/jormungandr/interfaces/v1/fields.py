@@ -490,8 +490,8 @@ display_informations_vj = {
 }
 
 coord = {
-    "lon": fields.Float(),
-    "lat": fields.Float()
+    "lon": fields.String(),
+    "lat": fields.String()
 }
 
 generic_type = {
