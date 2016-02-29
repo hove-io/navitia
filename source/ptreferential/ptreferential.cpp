@@ -202,7 +202,7 @@ inline constexpr std::false_type has_string_lookup(const Container&, ...) {
 
 template<typename T, typename Container>
 std::vector<idx_t> filter_by_uri(const Container& data, const std::string& uri, std::false_type) {
-    // by refault, we loop over all element to find the one
+    // by default, we loop over all element to find the one
     return filtered_indexes(data, WHERE(ptr_uri<T>(), Operator_e::EQ, uri));
 }
 
