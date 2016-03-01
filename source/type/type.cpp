@@ -902,8 +902,3 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
 }
 
 }} //namespace navitia::type
-#if BOOST_VERSION <= 105700
-BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::VehicleJourney)
-BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::DiscreteVehicleJourney)
-BOOST_CLASS_EXPORT_IMPLEMENT(navitia::type::FrequencyVehicleJourney)
-#endif
