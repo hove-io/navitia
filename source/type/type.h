@@ -1005,7 +1005,3 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
-#if BOOST_VERSION <= 105700
-BOOST_CLASS_EXPORT_KEY(navitia::type::DiscreteVehicleJourney)
-BOOST_CLASS_EXPORT_KEY(navitia::type::FrequencyVehicleJourney)
-#endif
