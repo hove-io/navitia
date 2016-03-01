@@ -28,6 +28,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function
+from functools import cmp_to_key
 import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -36,17 +38,17 @@ from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
 from jormungandr.interfaces.v1.fields import DisruptionsField
-from fields import display_informations_vj, error, place,\
+from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, Co2Emission, PbEnum, feed_publisher
 
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
-from ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from functools import wraps
-from fields import DateTime
+from jormungandr.interfaces.v1.fields import DateTime
 from jormungandr.timezone import set_request_timezone
-from make_links import create_external_link, create_internal_link
-from errors import ManageError
+from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
+from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, float_gt_0
 from operator import itemgetter
@@ -273,7 +275,7 @@ class add_debug_info(object):
 
             if hasattr(g, 'errors_by_region'):
                 get_debug()['errors_by_region'] = {}
-                for region, er in g.errors_by_region.iteritems():
+                for region, er in g.errors_by_region.items():
                     get_debug()['errors_by_region'][region] = er.message
 
             if hasattr(g, 'regions_called'):
@@ -490,7 +492,7 @@ def compute_regions(args):
 
     sorted_regions = list(possible_regions)
 
-    regions = sorted(sorted_regions, cmp=instances_comparator)
+    regions = sorted(sorted_regions, key=cmp_to_key(instances_comparator))
 
     return regions
 
@@ -732,14 +734,14 @@ class Journeys(ResourceUri, ResourceUtc):
 
             return response
 
-        for response in responses.itervalues():
+        for response in responses.values():
             if not response.HasField("error"):
                 return response
 
 
         # if no response have been found for all the possible regions, we have a problem
         # if all response had the same error we give it, else we give a generic 'no solution' error
-        first_response = responses.itervalues().next()
+        first_response = responses.values()[0]
         if all(r.error.id == first_response.error.id for r in responses.values()):
             return first_response
 

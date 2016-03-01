@@ -27,13 +27,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
+
 import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
-from jormungandr.renderers import render_from_protobuf
 from jormungandr.interfaces.common import pb_odt_level
-from qualifier import qualifier_one
+from jormungandr.scenarios.qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
 from flask import current_app

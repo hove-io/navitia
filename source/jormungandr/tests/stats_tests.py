@@ -26,8 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+
+from __future__ import absolute_import, print_function
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 from jormungandr import stat_manager
 from jormungandr.stat_manager import StatManager
 #from mock import patch

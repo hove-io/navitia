@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from jormungandr import app, cache
 from navitiacommon import models
@@ -127,6 +128,6 @@ class TravelerProfile(object):
 
 default_traveler_profiles = {}
 
-for (traveler_type, params) in default_traveler_profile_params.iteritems():
+for (traveler_type, params) in default_traveler_profile_params.items():
     default_traveler_profiles[traveler_type] = TravelerProfile(is_from_db=False, **params)
 

@@ -29,8 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
-import Queue
+import queue
 from threading import Lock
 from flask.ext.restful import abort
 import zmq
@@ -69,7 +70,7 @@ class Instance(object):
 
     def __init__(self, context, name, zmq_socket, realtime_proxies_configuration=[]):
         self.geom = None
-        self._sockets = Queue.Queue()
+        self._sockets = queue.Queue()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -269,7 +270,7 @@ class Instance(object):
         socket = None
         try:
             socket = self._sockets.get(block=False)
-        except Queue.Empty:
+        except queue.Empty:
             socket = context.socket(zmq.REQ)
             socket.connect(self.socket_path)
             self.lock.acquire()
@@ -287,7 +288,7 @@ class Instance(object):
         """
         try:
             return self.breaker.call(self._send_and_receive, *args, **kwargs)
-        except pybreaker.CircuitBreakerError, e:
+        except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
 

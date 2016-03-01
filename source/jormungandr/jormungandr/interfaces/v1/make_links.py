@@ -27,11 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask import url_for
 from collections import OrderedDict
 from functools import wraps
 from sqlalchemy.sql.elements import _type_from_args
-from converters_collection_type import resource_type_to_collection,\
+from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
 from flask.ext.restful.utils import unpack
 
@@ -125,7 +126,7 @@ class add_pagination_links(object):
                 data, code, header = unpack(objects)
             else:
                 data = objects
-            for key, value in data.iteritems():
+            for key, value in data.items():
                 if endpoint is None and key == "regions":
                     endpoint = "v1.coverage"
                 elif pagination is None and key == "pagination":
@@ -277,7 +278,7 @@ class add_id_links(generate_links):
                     endpoint = "v1." + kwargs["collection"] + ".id"
 
                     collection = kwargs["collection"]
-                    to_pass = {k: v for k, v in kwargs.iteritems() if k != "collection"}
+                    to_pass = {k: v for k, v in kwargs.items() if k != "collection"}
                     data["links"].append(create_external_link(url=endpoint, rel=collection,
                                                               _type=obj, templated=True,
                                                               **to_pass))
@@ -293,7 +294,7 @@ class add_id_links(generate_links):
                and ("href" not in data) \
                and collection_name:
                 self.data.add(collection_name)
-            for key, value in data.iteritems():
+            for key, value in data.items():
                 self.get_objets(value, key)
         if isinstance(data, (list, tuple)):
             for item in data:

@@ -27,8 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from collections import deque, defaultdict, namedtuple
-from itertools import izip_longest
+from future.moves.itertools import zip_longest
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -273,7 +274,7 @@ def check_links(object, tester, href_mandatory=True):
     """
     links = get_links_dict(object)
 
-    for link_name, link in links.iteritems():
+    for link_name, link in links.items():
         def get_bool(name):
             """ give boolean if in dict, else False"""
             if name in link:
@@ -449,7 +450,7 @@ def is_valid_isochrone(journey, tester, query):
     assert 'journeys' in journey_links
 
     additional_args = query_from_str(journey_links['journeys']['href'])
-    for k, v in query.iteritems():
+    for k, v in query.items():
         eq_(additional_args[k], v)
 
 
@@ -491,7 +492,7 @@ def is_valid_journey_response(response, tester, query_str):
         url = journeys_links[l]['href']
 
         additional_args = query_from_str(url)
-        for k, v in additional_args.iteritems():
+        for k, v in additional_args.items():
             if k == 'datetime':
                 #TODO check datetime
                 continue
@@ -1093,12 +1094,12 @@ def check_journey(journey, ref_journey):
     """
     check the values in a journey
     """
-    for section, ref_section in izip_longest(journey['sections'], ref_journey.sections):
+    for section, ref_section in zip_longest(journey['sections'], ref_journey.sections):
         eq_(section.get('departure_date_time'), ref_section.departure_date_time)
         eq_(section.get('arrival_date_time'), ref_section.arrival_date_time)
         eq_(section.get('base_departure_date_time'), ref_section.base_departure_date_time)
         eq_(section.get('base_arrival_date_time'), ref_section.base_arrival_date_time)
-        for stop_dt, ref_stop_dt in izip_longest(section.get('stop_date_times', []), ref_section.stop_date_times):
+        for stop_dt, ref_stop_dt in zip_longest(section.get('stop_date_times', []), ref_section.stop_date_times):
             eq_(stop_dt.get('departure_date_time'), ref_stop_dt.departure_date_time)
             eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
             eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)

@@ -29,16 +29,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import marshal_with, reqparse
 from flask.globals import g
 from jormungandr import i_manager, timezone
-from fields import PbField, error, network, line,\
+from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
-from VehicleJourney import vehicle_journey
-from ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
-from errors import ManageError
+from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta

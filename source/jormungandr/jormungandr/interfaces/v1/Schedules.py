@@ -29,23 +29,24 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import fields, marshal_with, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
-from fields import stop_point, route, pagination, PbField, stop_date_time, \
+from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum, feed_publisher
-from ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
-from errors import ManageError
+from jormungandr.interfaces.v1.errors import ManageError
 from flask.ext.restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.resources_utc import ResourceUtc
-from make_links import create_external_link
+from jormungandr.interfaces.v1.make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2

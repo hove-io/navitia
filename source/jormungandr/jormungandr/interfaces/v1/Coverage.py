@@ -29,13 +29,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
-from make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
-from converters_collection_type import collections_to_resource_type
+from jormungandr.interfaces.v1.make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
+from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
-from fields import NonNullNested, FieldDateTime
+from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 
 
 region_fields = {
@@ -66,6 +67,6 @@ class Coverage(StatedResource):
     @marshal_with(regions_fields)
     def get(self, region=None, lon=None, lat=None):
         resp = i_manager.regions(region, lon, lat)
-        if resp.has_key("regions"):
-            resp["regions"] = sorted(resp["regions"], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
+        if 'region' in resp:
+            resp['regions'] = sorted(resp['regions'], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
         return resp, 200

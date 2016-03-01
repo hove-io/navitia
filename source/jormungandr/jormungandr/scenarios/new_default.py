@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from copy import deepcopy
 import itertools
 import logging
@@ -582,13 +583,13 @@ def merge_responses(responses):
 
         errors = {r.error.id: r.error for r in responses if r.HasField('error')}
         if len(errors) == 1:
-            merged_response.error.id = next(errors.itervalues()).id
-            merged_response.error.message = next(errors.itervalues()).message
+            merged_response.error.id = errors.values()[0].id
+            merged_response.error.message = errors.values()[0].message
         else:
             # we need to merge the errors
             merged_response.error.id = response_pb2.Error.no_solution
             merged_response.error.message = "several errors occured: \n * {}"\
-                .format("\n * ".join([m.message for m in errors.itervalues()]))
+                .format("\n * ".join([m.message for m in errors.values()]))
 
     return merged_response
 

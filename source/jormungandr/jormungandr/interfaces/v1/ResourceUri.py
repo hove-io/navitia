@@ -27,13 +27,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import Resource, abort
-from converters_collection_type import collections_to_resource_type
-from converters_collection_type import resource_type_to_collection
+from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
+from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection
 from jormungandr import utils
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.stat_manager import manage_stat_caller
-from make_links import add_id_links, clean_links, add_pagination_links
+from jormungandr.interfaces.v1.make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict, deque
 from flask import url_for
@@ -173,14 +174,14 @@ class complete_links(object):
     def complete(self, data, collect):
         queue = deque()
         result = deque()
-        queue.extend(data.itervalues())
+        queue.extend(data.values())
         collect_type = collect["type"]
         del_types = collect["del"]
         while queue:
             elem = queue.pop()
             if isinstance(elem, (list, tuple)):
                 queue.extend(elem)
-            elif hasattr(elem, 'iterkeys'):
+            elif hasattr(elem, 'keys'):
                 if elem.get('type') == collect_type:
                     if collect_type == "notes":
                         result.append({"id": elem['id'], "value": elem['value'], "type": collect_type})
@@ -190,7 +191,7 @@ class complete_links(object):
 
                     map(elem.pop, del_types)
                 else:
-                    queue.extend(elem.itervalues())
+                    queue.extend(elem.values())
         return result
 
     def __call__(self, f):

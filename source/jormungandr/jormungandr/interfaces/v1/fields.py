@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function
 from functools import wraps
 from flask.ext.restful import fields, marshal
 from copy import deepcopy
@@ -182,7 +183,7 @@ class enum_type(fields.Raw):
         except ValueError:
             return None
         enum = obj.DESCRIPTOR.fields_by_name[key].enum_type.values_by_number
-        return str.lower(enum[getattr(obj, key)].name)
+        return enum[getattr(obj, key)].name.lower()
 
 
 class PbEnum(fields.Raw):
@@ -195,7 +196,7 @@ class PbEnum(fields.Raw):
         self.pb_enum_type = pb_enum_type
 
     def format(self, value):
-        return str.lower(self.pb_enum_type.Name(value))
+        return self.pb_enum_type.Name(value).lower()
 
 
 class NonNullList(fields.List):
@@ -226,7 +227,7 @@ class additional_informations(fields.Raw):
         properties = obj.properties
         descriptor = properties.DESCRIPTOR
         enum = descriptor.enum_types_by_name["AdditionalInformation"]
-        return [str.lower(enum.values_by_number[v].name) for v
+        return [enum.values_by_number[v].name.lower() for v
                 in properties.additional_informations]
 
 
@@ -235,7 +236,7 @@ class equipments(fields.Raw):
         equipments = obj.has_equipments
         descriptor = equipments.DESCRIPTOR
         enum = descriptor.enum_types_by_name["Equipment"]
-        return [str.lower(enum.values_by_number[v].name) for v
+        return [enum.values_by_number[v].name.lower() for v
                 in equipments.has_equipments]
 
 
@@ -243,14 +244,14 @@ class disruption_status(fields.Raw):
     def output(self, key, obj):
         status = obj.status
         enum = type_pb2._ACTIVESTATUS
-        return str.lower(enum.values_by_number[status].name)
+        return enum.values_by_number[status].name.lower()
 
 class channel_types(fields.Raw):
     def output(self, key, obj):
         channel = obj
         descriptor = channel.DESCRIPTOR
         enum = descriptor.enum_types_by_name["ChannelType"]
-        return [str.lower(enum.values_by_number[v].name) for v
+        return [enum.values_by_number[v].name.lower() for v
                 in channel.channel_types]
 
 
@@ -407,7 +408,7 @@ class FieldDateTime(fields.Raw):
     DateTime in timezone of region
     """
     def output(self, key, region):
-        if region.has_key("timezone") and region.has_key(key):
+        if 'timezone' in region and key in region:
             dt = datetime.datetime.utcfromtimestamp(region[key])
             tz = pytz.timezone(region["timezone"])
             if tz:

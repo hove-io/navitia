@@ -26,13 +26,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function
 import logging
 
 from navitiacommon import models
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 from nose.tools import eq_
-from overlapping_routing_tests import  MockKraken
+from .overlapping_routing_tests import  MockKraken
 from jormungandr import instance_manager
 
 
