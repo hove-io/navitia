@@ -218,11 +218,7 @@ For example, you can request navitia with a WGS84 coordinate as:
 <https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174>
 
 In response, you will get the coverage id, a very useful label and a
-ressource id. See right example.
-
-``` plaintext
-https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174
-```
+ressource id:
 
 ``` json
 {
@@ -241,10 +237,6 @@ The coverage id is *"regions": ["fr-idf"]* so you can ask Navitia on
 accessible local mobility services:
 
 <https://api.navitia.io/v1/coverage/fr-idf/>
-
-``` plaintext
-https://api.navitia.io/v1/coverage/fr-idf/
-```
 
 ``` json
 {
@@ -367,9 +359,12 @@ Examples:
 -   <http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
 -   <http://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
 
-Warning: this last request gives the stop areas used by the vehicle
-journeys containing the headsign CANE, *not* the stop areas where it
-exists a stop time with the headsign CANE.
+
+<aside class="warning">
+    This last request gives the stop areas used by the vehicle
+    journeys containing the headsign CANE, *not* the stop areas where it
+    exists a stop time with the headsign CANE.
+</aside>
 
 ##### since / until
 
@@ -382,8 +377,10 @@ Example:
 
 -   <https://api.navitia.io/v1/coverage/fr_idf/vehicle_journeys?since=20150912T120000&until=20150913T110000>
 
-Warning: this filter is applied using only the first stop time of a
-vehicle journey, "since" is included and "until" is excluded.
+<aside class="warning">
+    This filter is applied using only the first stop time of a
+    vehicle journey, "since" is included and "until" is excluded.
+</aside>
 
 #### Filter
 
@@ -401,16 +398,12 @@ is the one provided, especially lines themselves and routes.
 Examples :
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4>
--   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code="métro 347">
+-   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code=\"métro\ 347\">
 
 #### Examples
 
 Response example for this request
 <https://api.navitia.io/v1/coverage/fr-idf/physical_modes>
-
-``` plaintext
-https://api.navitia.io/v1/coverage/fr-idf/physical_modes
-```
 
 ``` json
 {
@@ -539,9 +532,7 @@ Differents kind of objects can be returned (sorted as):
     filter)
 
 <aside class="warning">
-Warning
-<br>
-There is no pagination for this api
+    There is no pagination for this api.
 </aside>
 
 #### Parameters
@@ -587,9 +578,7 @@ coordinates. It returns, in addition of classic objects, a collection of
 [places](#place).
 
 <aside class="warning">
-Warning
-<br>
-There is no pagination for this api
+    There is no pagination for this api.
 </aside>
 
 #### Parameters
@@ -657,36 +646,26 @@ The other one, the most used, is to access the 'journey' api endpoint:
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}> .
 
 <aside class="notice">
-    Note
-    <br><br>
-
     Navitia.io handle lot's of different data sets (regions). Some of them
     can overlap. For example opendata data sets can overlap with private
     data sets.
-    <br><br>
-
+    <br>
     When using the journeys endpoint the data set used to compute the
     journey is chosen using the possible datasets of the origin and the
     destination.
-    <br><br>
-
+    <br>
     For the moment it is not yet possible to compute journeys on different
     data sets, but it will one day be possible (with a cross-data-set
     system).
-    <br><br>
-
+    <br>
     If you want to use a specific data set, use the journey api within the
-    data set: <https://api.navitia.io/v1/coverage/{your_dataset}/journeys>
+    data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
 </aside>
 
 <aside class="notice">
-    Note
-    <br><br>
-
     Neither the 'from' nor the 'to' parameter of the journey are required,
     but obviously one of them has to be provided.
-    <br><br>
-
+    <br>
     If only one is defined an isochrone is computed with every possible
     journeys from or to the point.
 </aside>
@@ -755,8 +734,6 @@ Here is a typical journey, all sections are detailed below
   status              | *enum*                       | Status from the whole journey taking into acount the most disturbing information retrieved on every object used. Can be: <ul><li>NO_SERVICE</li><li>REDUCED_SERVICE</li><li>SIGNIFICANT_DELAYS</li><li>DETOUR</li><li>ADDITIONAL_SERVICE</li><li>MODIFIED_SERVICE</li><li>OTHER_EFFECT</li><li>UNKNOWN_EFFECT</li><li>STOP_MOVED</li></ul> In order to get a undisrupted journey, you just have to add a "&data_freshness=real_time" parameter
 
 <aside class="notice">
-    Note:
-    <br><br>
     When used with just a "from" or a "to" parameter, it will not contain any sections.
 </aside>
 
@@ -1253,13 +1230,9 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |route|*optional* [route](#route)|Embedded route|
 
 <aside class="notice">
-    Note
-    <br><br>
-
     Using /places API, navitia would returned objects among
     administrative_region, stop_area, poi, address and stop_point types
-    <br><br>
-
+    <br>
     Using /pt_objects API, navitia would returned objects among network,
     commercial_mode, stop_area, line and route types
 </aside>

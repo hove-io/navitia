@@ -14,10 +14,8 @@ We provide:
 * sexy things such as isochrones
 
 <aside class="notice">
-Note:
-
-We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
-We will add it to navitia.io
+    We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
+    We will add it to navitia.io
 </aside>
 
 
@@ -51,8 +49,9 @@ To provide additional arguments to the API, add them at the end of the query wit
 
 Have a look at the examples below to learn what API we provide and how to use them.
 
-.. note::
+<aside class="notice">
     The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
+</aside>
 
 
 Examples
@@ -131,9 +130,9 @@ In the ``links`` section there is for example this link: ``"href": "http://api.n
 
 
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax.
-In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
+In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region:
 
-```
+``` json
 {
     "start_production_date": "20140105",
     "status": "running",
@@ -194,7 +193,7 @@ Getting help
 
 All available functions are documented on
 
-- [integration](#integration)
+- [integration](#navitia-documentation-v1-interface)
 
 A mailing list is available to ask question: navitia@googlegroups.com
 
@@ -214,9 +213,10 @@ If you plan to build something successful, contact us to get an access with more
 
 For the moment, the service is not hosted on a powerful server, so please don't make more than one request per second.
 
-.. warning::
+<aside class="warning">
   Authentication is not required now, but will soon become (within april 2014).
   Please contact us for details.
+</aside>
 
 
 ### About the data

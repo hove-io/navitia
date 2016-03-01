@@ -46,7 +46,7 @@ Route
 A route is a collection of journey pattern that match the same commercial direction.
 
 <aside class="warning">
-    The GTFS specification uses the term *route* for the object we call *line*. It does not
+    The GTFS specification uses the term <b>route</b> for the object we call <b>line</b>. It does not
     have this notion of commercial direction.
 </aside>
 
