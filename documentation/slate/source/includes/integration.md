@@ -18,34 +18,37 @@ See [authentication](#authentication) section to find out **how to use your toke
 If you use a web browser, you only have to paste it in the user area,
 with no password. Or, in a simplier way, you can add your token in the
 address bar like :
+
+``` plaintext
 https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage/fr-idf/networks
+```
 
 ### Some easy examples
 
-- Geographical coverage of the service > https://api.navitia.io/v1/coverage
+- Geographical coverage of the service > <https://api.navitia.io/v1/coverage>
 - Where am I? (WGS 84 coordinates)
-    - https://api.navitia.io/v1/coord/2.377310;48.847002
+    - <https://api.navitia.io/v1/coord/2.377310;48.847002>
     - I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
 - Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
-    - https://api.navitia.io/v1/coverage/fr-idf
+    - <https://api.navitia.io/v1/coverage/fr-idf>
 - Networks available? (see what [network](#network) is)
-    - https://api.navitia.io/v1/coverage/fr-idf/networks
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks>
     - pwooo, many networks on this coverage ;)
 - Is there any Metro lines or networks?
     - there is an api for that. See [pt_objects](#pt-objects)
-    - https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro
+    - <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro>
     - Response contain one network, one mode, and many lines
 - Let's try some filtering (see [ptreferential](#ptreferential))
     - filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
-    - https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/>
     - physical modes managed by this network
-    - https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes>
     - metro lines
-    - https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines>
 - By the way, what stuff are close to me?
-    - https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
-    - or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
-    - or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+    - <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby>
+    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines>
+    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules>
     - or ...
 
 ### Resources
@@ -221,14 +224,6 @@ ressource id. See right example.
 https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174
 ```
 
-``` shell
-curl "http://_TOKEN_@api.navitia.io/v1/coord/2.37691590563854;48.8467597481174"
-```
-
-``` python
-r = requests.get('http://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174', auth=('_TOKEN_', ''))
-```
-
 ``` json
 {
     "regions": [
@@ -249,14 +244,6 @@ accessible local mobility services:
 
 ``` plaintext
 https://api.navitia.io/v1/coverage/fr-idf/
-```
-
-``` shell
-curl "http://_TOKEN_@api.navitia.io/v1/coverage/fr-idf/"
-```
-
-``` python
-r = requests.get('http://api.navitia.io/v1/coverage/fr-idf/', auth=('_TOKEN_', ''))
 ```
 
 ``` json
@@ -318,18 +305,18 @@ This tiny parameter can expand Navitia power by making it more wordy.
 Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
-	- https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201
+	- <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201>
 	- The id is "line:OIF:100110001:1OIF439"
 - Get routes for this line
-	- https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes
+	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes>
 - Want to get a tiny response? Just add "depth=0"
-	- https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=0
+	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=0>
 	- The response is lighter (parent lines disappear for example)
 - Want more informations, just add "depth=2"
-	- https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=2
+	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=2>
 	- The response is a little more verbose (with some geojson appear in response)
 - Wanna fat more informations, let's try "depth=3"
-	- https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=3
+	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=3>
 	- Big response: all stop_points are shown
 - Wanna spam the internet bandwidth? Try "depth=42"
 	- No. There is a technical limit with "depth=3"
@@ -414,8 +401,7 @@ is the one provided, especially lines themselves and routes.
 Examples :
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4>
--   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code>="métro
-    347"
+-   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code="métro 347">
 
 #### Examples
 
@@ -424,14 +410,6 @@ Response example for this request
 
 ``` plaintext
 https://api.navitia.io/v1/coverage/fr-idf/physical_modes
-```
-
-``` shell
-curl http://_TOKEN_@api.navitia.io/v1/coverage/fr-idf/physical_modes
-```
-
-``` python
-r = requests.get('http://api.navitia.io/v1/coverage/fr-idf/physical_modes', auth=('_TOKEN_', ''))
 ```
 
 ``` json
@@ -524,7 +502,7 @@ There is no pagination for this api
 #### Example
 
 Response example for :
-<https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bus%20ratp%20%39&type>[]=line&type[]=route
+<https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bus%20ratp%20%39&type[]=line&type[]=route>
 
 ``` json
 {
@@ -633,7 +611,7 @@ Filters can be added:
     -   "distance=10000" Paris is not so big
     -   "type[]=poi" to take pois only
     -   "filter=poi_type.id=poi_type:amenity:parking" to get parking
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type>[]=poi&filter=poi_type.id=poi_type:amenity:parking
+    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
 
 #### Example
 
@@ -672,11 +650,11 @@ the selected public transport object or coordinates.
 
 There are two ways to access this api.
 
-The first one is: https://api.navitia.io/v1/{a_path_to_resource}/journeys it will
+The first one is: <https://api.navitia.io/v1/{a_path_to_resource}/journeys> it will
 retrieve all the journeys from the resource (*isochrones*).
 
 The other one, the most used, is to access the 'journey' api endpoint:
-https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime} .
+<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}> .
 
 <aside class="notice">
     Note
@@ -698,7 +676,7 @@ https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datet
     <br><br>
 
     If you want to use a specific data set, use the journey api within the
-    data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
+    data set: <https://api.navitia.io/v1/coverage/{your_dataset}/journeys>
 </aside>
 
 <aside class="notice">
@@ -845,7 +823,7 @@ direction       | int                    | Angle (in degree) between the previou
 
 This api gives you access to schedules of routes. The response is made
 of an array of route_schedule, and another one of [note](#note). You can
-access it via that kind of url: https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules
+access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>
 
 #### Parameters
 
@@ -891,7 +869,7 @@ stop_point | [stop_point](#stop-point)        | The stop point of the row
 
 This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
-one of [note](#note). You can access it via that kind of url: https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules
+one of [note](#note). You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 #### Parameters
 
@@ -943,7 +921,7 @@ called for an overall coverage or for a specific object.
 
 #### Parameters
 
-You can access it via that kind of url: https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports
+You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
 
 For example:
 
@@ -1356,7 +1334,7 @@ Severity object can be used to make visual grouping.
 | color         | > string     | HTML color for classification                  |
 | priority      | > integer    | given by the agency : 0 is strongest priority. it can be null |
 | name          | > string     | name of severity                               |
-| effect        | > Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-re altime/reference#Effect> |
+| effect        | > Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect> |
 
 #### Channel
 
@@ -1451,9 +1429,8 @@ The
 algorithm used in Navitia is a multi-objective algorithm. Thus it might
 return multiple journeys if it cannot know that one is better than the
 other. For example it cannot decide that a one hour trip with no
-connection is better than a 45 minutes trip with one connection (it is
-called the [pareto
-front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
+connection is better than a 45 minutes trip with one connection
+(it is called the [pareto front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
 
 If the user asks for more journeys than the number of journeys given by
 RAPTOR (with the parameter `min_nb_journeys` or `count`), Navitia will

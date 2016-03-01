@@ -1,10 +1,8 @@
 ---
 title: Documentation Navitia.io
 
-language_tabs:
-  - plaintext: URL
-  - shell: cURL
-  - python: Python
+#language_tabs:
+#  - plaintext: URL
 
 toc_footers:
   - <a href='http://navitia.io/register/'>Get an access</a>
