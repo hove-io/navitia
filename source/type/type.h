@@ -319,7 +319,7 @@ struct Dataset : public Header, Nameable{
     std::vector<VehicleJourney*> vehiclejourney_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & contributor & realtime_level & validation_period & desc & system & vehiclejourney_list;
+        ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Dataset & other) const { return this < &other; }
@@ -563,7 +563,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
-    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
+
+    template<class Archive> void save(Archive& ar, const unsigned int ) const {
         ar & name & uri & route & physical_mode & company & validity_patterns
             & idx & stop_time_list & realtime_level
             & vehicle_journey_type
@@ -571,6 +572,21 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
             & next_vj & prev_vj
             & meta_vj & shift & dataset;
     }
+    template<class Archive> void load(Archive& ar, const unsigned int ) {
+        ar & name & uri & route & physical_mode & company & validity_patterns
+            & idx & stop_time_list & realtime_level
+            & vehicle_journey_type
+            & odt_message & _vehicle_properties
+            & next_vj & prev_vj
+            & meta_vj & shift & dataset;
+
+        // due to circular references we can't load the vjs in the dataset using only boost::serialize
+        // so we need to save the vj in it's dataset
+        if (dataset) {
+            dataset->vehiclejourney_list.push_back(this);
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     virtual ~VehicleJourney();
     //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
