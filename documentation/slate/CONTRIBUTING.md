@@ -13,7 +13,7 @@ plus some Slate widgets (such as notices).
 
 ## Preview changes
 
-Once some changes has be done, Slate needs to build HTML sources from Markdown files.
+Once some changes has been done, Slate needs to build HTML sources from Markdown files.
 
 First, check that Slate dependencies are installed:
 
