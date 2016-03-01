@@ -133,7 +133,7 @@ In the ``links`` section there is for example this link: ``"href": "http://api.n
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax.
 In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
 
-<pre>
+```
 {
     "start_production_date": "20140105",
     "status": "running",
@@ -141,7 +141,7 @@ In this case it needs a region id. This id can the found in the ``regions`` sect
     "id": "ny",
     "end_production_date": "20140406"
 }
-</pre>
+```
 
 To query for the public transport lines of New York we thus have to call: <http://api.navitia.io/v1/coverage/ny/lines>
 
