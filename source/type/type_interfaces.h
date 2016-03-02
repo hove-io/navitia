@@ -84,7 +84,8 @@ enum class Type_e {
     LineGroup                       = 25,
     MetaVehicleJourney              = 26,
     Impact                          = 27,
-    Dataset                         = 28
+    Dataset                         = 28,
+    size                            = 29
 };
 
 enum class Mode_e {

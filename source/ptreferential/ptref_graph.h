@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/type.h"
 #include <boost/graph/adjacency_list.hpp>
+#include "utils/flat_enum_map.h"
 
 namespace navitia { namespace ptref {
 
@@ -46,7 +47,7 @@ struct Jointures {
     typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
     typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
-    std::map<type::Type_e, vertex_t> vertex_map;
+    navitia::flat_enum_map<type::Type_e, vertex_t> vertex_map;
     Graph g;
     Jointures();
 };
