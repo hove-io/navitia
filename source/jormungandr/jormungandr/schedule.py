@@ -35,6 +35,7 @@ from jormungandr import utils
 from navitiacommon import type_pb2, request_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp
 import datetime
+from copy import deepcopy
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
 
@@ -59,7 +60,7 @@ class RealTimePassage(object):
         self.datetime = datetime
 
 
-def update_passages(stop_schedule, next_realtime_passages):
+def _update_stop_schedule(stop_schedule, next_realtime_passages):
     """
     Update the stopschedule response with the new realtime passages
 
@@ -69,7 +70,6 @@ def update_passages(stop_schedule, next_realtime_passages):
     so we use the base schedule
     """
     if next_realtime_passages is None:
-        logging.getLogger(__name__).debug('no next passages, using base schedule')
         return
 
     logging.getLogger(__name__).debug('next passages: : {}'
@@ -89,10 +89,57 @@ def update_passages(stop_schedule, next_realtime_passages):
         new_dt.realtime_level = type_pb2.REALTIME
 
 
+def _update_passages(passages, route_point, next_realtime_passages):
+    if next_realtime_passages is None:
+        return
+
+    # create the template for the realtime passages
+    template = deepcopy(passages[0])
+    template.pt_display_informations.ClearField("headsign")
+    template.pt_display_informations.ClearField("direction")
+    template.pt_display_informations.ClearField("physical_mode")
+    template.pt_display_informations.ClearField("description")
+    template.pt_display_informations.ClearField("uris")
+    template.pt_display_informations.ClearField("has_equipments")
+    del template.pt_display_informations.messages[:]
+    del template.pt_display_informations.impacts[:]
+    del template.pt_display_informations.notes[:]
+    del template.pt_display_informations.headsigns[:]
+    template.stop_date_time.ClearField("arrival_date_time")
+    template.stop_date_time.ClearField("departure_date_time")
+    template.stop_date_time.ClearField("base_arrival_date_time")
+    template.stop_date_time.ClearField("base_departure_date_time")
+    template.stop_date_time.ClearField("properties")
+
+    # filter passages with entries of the asked route_point
+    idx_to_del = []
+    for i, p in enumerate(passages):
+        if RoutePoint(p.stop_point, p.route) == route_point:
+            idx_to_del.append(i)
+    for i in idx_to_del[::-1]:
+        del passages[i]
+
+    # append the realtime passages
+    for rt_passage in next_realtime_passages:
+        new_passage = deepcopy(template)
+        new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
+        new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
+        passages.extend([new_passage])
+
+
 class RoutePoint(object):
     def __init__(self, stop_point, route):
         self.pb_stop_point = stop_point
         self.pb_route = route
+
+    def __key(self):
+        return (self.pb_stop_point.uri, self.pb_route.uri)
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
 
     @staticmethod
     def _get_code(obj, rt_proxy_id):
@@ -109,7 +156,7 @@ class RoutePoint(object):
         return self._get_code(self.pb_route, rt_proxy_id)
 
 
-def get_route_point(stop_schedule):
+def _get_route_point_from_stop_schedule(stop_schedule):
     rp = RoutePoint(stop_point=stop_schedule.stop_point, route=stop_schedule.route)
 
     # TODO we need to check that we have at least a line in the route
@@ -125,6 +172,29 @@ class MixedSchedule(object):
 
     def __init__(self, instance):
         self.instance = instance
+
+    def _get_next_realtime_passages(self, route_point):
+        log = logging.getLogger(__name__)
+
+        if not route_point:
+            return None
+
+        rt_system_code = get_realtime_system_code(route_point)
+        if not rt_system_code:
+            return None
+
+        rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
+        if not rt_system:
+            log.info('impossible to find {}, no realtime added'.format(rt_system_code))
+            return None
+
+        next_rt_passages = rt_system.next_passage_for_route_point(route_point)
+        if next_rt_passages is None:
+            log.debug('no next passages, using base schedule')
+            return None
+
+        return next_rt_passages
+
 
     def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
         req = request_pb2.Request()
@@ -169,7 +239,31 @@ class MixedSchedule(object):
         return self.__stop_times(request, api=type_pb2.NEXT_ARRIVALS, arrival_filter=request["filter"])
 
     def next_departures(self, request):
-        return self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
+        log = logging.getLogger(__name__)
+
+        resp = self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
+        if request['data_freshness'] != 'realtime':
+            return resp
+
+        route_points = set()
+        for passage in resp.next_departures:
+            route_points.add(RoutePoint(stop_point=passage.stop_point, route=passage.route))
+
+        for route_point in route_points:
+            next_rt_passages = self._get_next_realtime_passages(route_point)
+            _update_passages(resp.next_departures, route_point, next_rt_passages)
+
+        # sort
+        def comparator(p1, p2):
+            return cmp(p1.stop_date_time.departure_date_time,
+                       p2.stop_date_time.departure_date_time)
+        resp.next_departures.sort(comparator)
+
+        # handle pagination
+        del resp.next_departures[resp.pagination.itemsPerPage:]
+        resp.pagination.itemsOnPage = len(resp.next_departures)
+
+        return resp
 
     def previous_arrivals(self, request):
         return self.__stop_times(request, api=type_pb2.PREVIOUS_ARRIVALS, arrival_filter=request["filter"])
@@ -184,19 +278,7 @@ class MixedSchedule(object):
             return resp
 
         for stop_schedule in resp.stop_schedules:
-            route_point = get_route_point(stop_schedule)
-            if not route_point:
-                continue
-
-            rt_system_code = get_realtime_system_code(route_point)
-            if not rt_system_code:
-                continue
-
-            rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
-            if not rt_system:
-                logging.getLogger(__name__).info('impossible to find {}, no realtime added'.format(rt_system_code))
-                continue
-
-            next_rt_passages = rt_system.next_passage_for_route_point(route_point)
-            update_passages(stop_schedule, next_rt_passages)
+            route_point = _get_route_point_from_stop_schedule(stop_schedule)
+            next_rt_passages = self._get_next_realtime_passages(route_point)
+            _update_stop_schedule(stop_schedule, next_rt_passages)
         return resp
