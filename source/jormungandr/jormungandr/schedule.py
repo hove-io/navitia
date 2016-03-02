@@ -33,7 +33,7 @@ import pytz
 from jormungandr import utils
 
 from navitiacommon import type_pb2, request_pb2, response_pb2
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, pb_del_if
 import datetime
 from copy import deepcopy
 
@@ -112,12 +112,7 @@ def _update_passages(passages, route_point, next_realtime_passages):
     template.stop_date_time.ClearField("properties")
 
     # filter passages with entries of the asked route_point
-    idx_to_del = []
-    for i, p in enumerate(passages):
-        if RoutePoint(p.stop_point, p.route) == route_point:
-            idx_to_del.append(i)
-    for i in idx_to_del[::-1]:
-        del passages[i]
+    pb_del_if(passages, lambda p: RoutePoint(p.stop_point, p.route) == route_point)
 
     # append the realtime passages
     for rt_passage in next_realtime_passages:
@@ -245,9 +240,8 @@ class MixedSchedule(object):
         if request['data_freshness'] != 'realtime':
             return resp
 
-        route_points = set()
-        for passage in resp.next_departures:
-            route_points.add(RoutePoint(stop_point=passage.stop_point, route=passage.route))
+        route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route)
+                        for passage in resp.next_departures}
 
         for route_point in route_points:
             next_rt_passages = self._get_next_realtime_passages(route_point)
