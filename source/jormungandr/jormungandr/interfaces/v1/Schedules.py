@@ -251,7 +251,7 @@ class StopSchedules(Schedules):
 
 
 passage = {
-    "route": PbField(route, attribute="vehicle_journey.route"),
+    "route": PbField(route),
     "stop_point": PbField(stop_point),
     "stop_date_time": PbField(stop_date_time),
     "display_informations": PbField(display_informations_vj,
