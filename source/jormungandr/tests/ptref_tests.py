@@ -133,7 +133,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_show_codes_propagation(self):
         """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
-        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys?show_codes=true")
+        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
