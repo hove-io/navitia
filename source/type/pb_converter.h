@@ -168,7 +168,7 @@ struct PbCreator {
     pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
     PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period,
-              const bool show_codes = false):
+              const bool show_codes = true):
         data(data), now(now), action_period(action_period),show_codes(show_codes) {}
 
     PbCreator(const PbCreator&) = delete;
@@ -408,7 +408,7 @@ template<typename N>
 pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Data& data, int depth = 0,
                                  const pt::ptime& now = pt::not_a_date_time,
                                  const pt::time_period& action_period = null_time_period,
-                                 const bool show_codes = false,
+                                 const bool show_codes = true,
                                  const DumpMessage dump_message = DumpMessage::Yes){
     PbCreator creator(data, now, action_period, show_codes);
     creator.pb_fill(nt_objects, depth, dump_message);
