@@ -76,7 +76,7 @@ class TrafficReport(ResourceUri):
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
-                                dest="forbidden_id[]",
+                                dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action="append")
         parser_get.add_argument("forbidden_uris[]", type=unicode,
@@ -96,8 +96,8 @@ class TrafficReport(ResourceUri):
         args = self.parsers["get"].parse_args()
 
         # for retrocompatibility purpose
-        for forbid_id in args.get('forbidden_id[]', []):
-            args.get('forbidden_uris[]', []).append(forbid_id)
+        for forbid_id in args['__temporary_forbidden_id[]']:
+            args['forbidden_uris[]'].append(forbid_id)
 
         if uri:
             if uri[-1] == "/":
