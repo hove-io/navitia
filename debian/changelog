@@ -1,3 +1,10 @@
+navitia2 (2.2.1) unstable; urgency=low
+
+  * Jormungandr: forbidden_id/_uris debug  <https://github.com/CanalTP/navitia/pull/1445>
+  * kraken: check a nullptr in the reader  <https://github.com/CanalTP/navitia/pull/1447>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Thu, 03 Mar 2016 19:03:27 +0100
+
 navitia2 (2.2.0) unstable; urgency=low
 
   * type: fix a performance bug in headsign_handler when all vjs have the same name  <https://github.com/CanalTP/navitia/pull/1426>
