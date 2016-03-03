@@ -489,3 +489,28 @@ class TestDisruptions(AbstractTestFixture):
         resp, code = self.query_region('disruptions?until=20001016T000000', check=False)
         assert code == 404
         assert resp['error']['message'] == 'ptref : invalid filtering period, not in production period'
+
+    def test_forbidden_uris_on_disruptions(self):
+        """test forbidden uri for disruptions"""
+        response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions")
+        assert code == 200
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 9
+
+        #filtering disruptions on line A
+        response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_uris[]=A")
+        assert code == 200
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 4
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=A")
+        assert code == 200
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 4
+
+        # when we forbid another id, we find again all our disruptions
+        response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=bloubliblou")
+        assert code == 200
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 9

@@ -84,4 +84,26 @@ class TestCalendar(AbstractTestFixture):
         assert calendars
         check_valid_calendar(calendars[0])
 
+    def test_forbidden_uris_on_calendars(self):
+        """test forbidden uri for calendars"""
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday")
 
+        calendars = get_not_null(response, 'calendars')
+        assert len(calendars) == 1
+
+        assert calendars[0]['id'] == 'monday'
+
+        #there is only one calendar, so when we forbid it's id, we find nothing
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
+                                              "?forbidden_uris[]=monday")
+        assert code == 404
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
+                                              "?forbidden_id[]=monday")
+        assert code == 404
+
+        # when we forbid another id, we find again our calendar
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
+                                              "?forbidden_uris[]=tuesday")
+        assert code == 200
