@@ -179,6 +179,14 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert(len(response['regions']) == 1)
             assert(response['regions'][0]['id'] == "main_routing_test")
 
+    def test_auth_required(self):
+        """
+        if no token is given we are asked to log in (code 401) and a chalenge is sent (header WWW-Authenticate)
+        """
+        response_obj = self.app.get('/v1/coverage')
+        assert response_obj.status_code == 401
+        assert 'WWW-Authenticate' in response_obj.headers
+
     def test_status_code(self):
         """
         We query the api with user 1 who have access to the main routintg test and not to the departure board

@@ -64,7 +64,7 @@ got_request_exception.connect(log_exception, app)
 #we want the old behavior for reqparse
 compat.patch_reqparse()
 
-rest_api = Api(app, catch_all_404s=True)
+rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 
 from navitiacommon.models import db
 db.init_app(app)
