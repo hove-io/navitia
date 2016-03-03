@@ -36,6 +36,7 @@ www.navitia.io
 #include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
@@ -138,55 +139,42 @@ BOOST_FIXTURE_TEST_SUITE(companies_test, Params)
 
 BOOST_AUTO_TEST_CASE(comanies_list) {
     auto indexes = make_query(navitia::type::Type_e::Company, "", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[1]]->uri, "C2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C1", "C2"}));
 }
 
 
 BOOST_AUTO_TEST_CASE(comany_by_uri) {
     auto indexes = make_query(navitia::type::Type_e::Company, "company.uri=C1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C1"}));
 }
 
 BOOST_AUTO_TEST_CASE(lines_by_company) {
     auto indexes = make_query(navitia::type::Type_e::Line, "company.uri=C1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[0]]->uri, "C1-L1");
-    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[1]]->uri, "C1-L2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(indexes, data), std::set<std::string>({"C1-L1", "C1-L2"}));
 
     indexes = make_query(navitia::type::Type_e::Line, "company.uri=C2", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 3);
-    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[0]]->uri, "C2-L1");
-    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[1]]->uri, "C2-L2");
-    BOOST_CHECK_EQUAL(data.pt_data->lines[indexes[2]]->uri, "C2-L3");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(indexes, data), std::set<std::string>({"C2-L1", "C2-L2", "C2-L3"}));
 }
 
 BOOST_AUTO_TEST_CASE(comanies_by_line) {
     auto indexes = make_query(navitia::type::Type_e::Company, "line.uri=C1-L1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C1"}));
 }
 
 BOOST_AUTO_TEST_CASE(networks_by_company) {
     auto indexes = make_query(navitia::type::Type_e::Network, "company.uri=C1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->networks[indexes.front()]->uri, "N1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Network>(indexes, data), std::set<std::string>({"N1"}));
 
     indexes = make_query(navitia::type::Type_e::Network, "company.uri=C2", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->networks[indexes.front()]->uri, "N2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Network>(indexes, data), std::set<std::string>({"N2"}));
 }
 
 BOOST_AUTO_TEST_CASE(companies_by_network) {
     auto indexes = make_query(navitia::type::Type_e::Company, "network.uri=N1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C1"}));
 
     indexes = make_query(navitia::type::Type_e::Company, "network.uri=N2", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C2"}));
 
     BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Company, "network.uri=N3", data), ptref_error);
 }
@@ -195,19 +183,15 @@ BOOST_AUTO_TEST_CASE(routes_by_company) {
     BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Route, "company.uri=C1", data), ptref_error);
 
     auto indexes = make_query(navitia::type::Type_e::Route, "company.uri=C2", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(data.pt_data->routes[indexes[0]]->uri, "C2-L1-R1");
-    BOOST_CHECK_EQUAL(data.pt_data->routes[indexes[1]]->uri, "C2-L1-R2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(indexes, data), std::set<std::string>({"C2-L1-R1", "C2-L1-R2"}));
 }
 
 BOOST_AUTO_TEST_CASE(companies_by_route) {
     auto indexes = make_query(navitia::type::Type_e::Company, "route.uri=C2-L1-R1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C2"}));
 
     indexes = make_query(navitia::type::Type_e::Company, "route.uri=C2-L1-R2", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(data.pt_data->companies[indexes[0]]->uri, "C2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C2"}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

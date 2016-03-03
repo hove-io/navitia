@@ -36,13 +36,14 @@ www.navitia.io
 #include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
 
 namespace navitia{namespace ptref {
-template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
+template<typename T> type::Indexes get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
 }}
 
 
@@ -57,7 +58,7 @@ class Params{
 public:
     nt::Data data;
     std::vector<std::string> forbidden;
-    std::vector<nt::idx_t> final_idx;
+    nt::Indexes final_idx;
     nt::Network* current_ntw;
     nt::Line* current_ln;
     nt::Route* current_rt;
@@ -157,7 +158,7 @@ public:
 
 
     //helper for the tests
-    std::vector<nt::idx_t> make_query(nt::Type_e requested_type,
+    nt::Indexes make_query(nt::Type_e requested_type,
                                         const nt::OdtLevel_e odt_level) {
         return navitia::ptref::make_query(requested_type, "", forbidden, odt_level, boost::none, boost::none, data);
     }
@@ -204,8 +205,7 @@ BOOST_AUTO_TEST_CASE(test2) {
     set_estimated("VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal),
                       ptref_error);
@@ -233,16 +233,13 @@ BOOST_AUTO_TEST_CASE(test3) {
     set_zonal("VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line1"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::all);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -306,11 +303,9 @@ BOOST_AUTO_TEST_CASE(test5) {
     set_estimated("VJ212");
     set_zonal("VJ212");
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops), ptref_error);
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -334,16 +329,13 @@ BOOST_AUTO_TEST_CASE(test6) {
     set_zonal("VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops);
-    BOOST_CHECK_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal);
-    BOOST_CHECK_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line1"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::all);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -366,18 +358,13 @@ BOOST_AUTO_TEST_CASE(test7) {
     set_zonal("VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal);
-    BOOST_REQUIRE_EQUAL(final_idx.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines[final_idx.front()]->uri, "Line1");
-
-
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line1"}));
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::all);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);

@@ -57,7 +57,6 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
 
-
 namespace bt = boost::posix_time;
 
 namespace navitia{ namespace ptref{
@@ -176,11 +175,11 @@ struct GetterType<ObjFactory<T>> {
 };
 
 template<typename T, typename C>
-std::vector<idx_t> filtered_indexes(const T& data, const C& clause) {
-    std::vector<idx_t> result;
+boost::container::flat_set<idx_t> filtered_indexes(const T& data, const C& clause) {
+    boost::container::flat_set<idx_t> result;
     for (size_t i = 0; i < data.size(); ++i) {
         if (ClauseType<T, C>::is_clause_tested(GetterType<T>::get(data, i), clause)) {
-            result.push_back(i);
+            result.insert(i);
         }
     }
     return result;
@@ -201,22 +200,22 @@ inline constexpr std::false_type has_string_lookup(const Container&, ...) {
 }
 
 template<typename T, typename Container>
-std::vector<idx_t> filter_by_uri(const Container& data, const std::string& uri, std::false_type) {
+Indexes filter_by_uri(const Container& data, const std::string& uri, std::false_type) {
     // by default, we loop over all element to find the one
     return filtered_indexes(data, WHERE(ptr_uri<T>(), Operator_e::EQ, uri));
 }
 
 template<typename T, typename Container>
-std::vector<idx_t> filter_by_uri(const Container& c, const std::string& uri, std::true_type) {
+Indexes filter_by_uri(const Container& c, const std::string& uri, std::true_type) {
     // for associative containers we can do a better search
     auto elt = find_or_default(uri, c);
-    if (elt) { return {elt->idx}; }
-    return {};
+    if (elt) { return Indexes({elt->idx}); }
+    return Indexes{};
 }
 }
 
 template<typename T, typename Container>
-std::vector<idx_t> filtered_indexes_by_uri(const Container& container, const std::string& uri) {
+Indexes filtered_indexes_by_uri(const Container& container, const std::string& uri) {
     return filter_by_uri<T>(container, uri, has_string_lookup(container, 0));
 }
 
@@ -226,11 +225,11 @@ typename boost::enable_if<
     typename boost::mpl::contains<
         nt::CodeContainer::SupportedTypes,
         T>::type,
-    std::vector<idx_t>>::type
+    Indexes>::type
 get_indexes_from_code(const Data& d, const std::string& key, const std::string& value) {
-    std::vector<idx_t> res;
+    Indexes res;
     for (const auto* obj: d.pt_data->codes.get_objs<T>(key, value)) {
-        res.push_back(obj->idx);
+        res.insert(obj->idx); // TODO: use bulk insert there ?
     }
     return res;
 }
@@ -240,15 +239,15 @@ typename boost::disable_if<
     typename boost::mpl::contains<
         nt::CodeContainer::SupportedTypes,
         T>::type,
-    std::vector<idx_t>>::type
+    Indexes>::type
 get_indexes_from_code(const Data&, const std::string&, const std::string&) {
     // there is no codes for unsupporded types, thus the result is empty
-    return {};
+    return Indexes{};
 }
 
 template<typename T>
-std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
-    std::vector<idx_t> indexes;
+Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
+    Indexes indexes;
     if(filter.op == DWITHIN) {
         std::vector<std::string> splited;
         boost::algorithm::split(splited, filter.value, boost::algorithm::is_any_of(","));
@@ -271,9 +270,9 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             case Type_e::POI: tmp = d.geo_ref->poi_proximity_list.find_within(coord, distance);break;
             default: throw ptref_error("The requested object can not be used a DWITHIN clause");
             }
-            for(auto pair : tmp) {
-                indexes.push_back(pair.first);
-            }
+            std::vector<idx_t> tmp_idx;
+            for (const auto& p : tmp) { tmp_idx.push_back(p.first); }
+            indexes.insert(tmp_idx.begin(), tmp_idx.end());
         }
     }
 
@@ -290,7 +289,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             for (const auto& other_jpp_idx : jp.jpps) {
                 const auto& other_jpp = d.dataRaptor->jp_container.get(other_jpp_idx);
                 if (other_jpp.order > jpp.order) {
-                    indexes.push_back(other_jpp_idx.val);
+                    indexes.insert(other_jpp_idx.val); // TODO bulk insert ? (I don't think it's usefull)
                 }
             }
         }
@@ -299,7 +298,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             && filter.method == "has_headsign"
             && filter.args.size() == 1) {
             for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.args.at(0))) {
-                indexes.push_back(vj->idx);
+                indexes.insert(vj->idx); //TODO bulk insert ?
             }
         } else if (filter.method == "has_code" && filter.args.size() == 2) {
             indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
@@ -310,12 +309,12 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
     } else if (filter.object == "journey_pattern" && filter.op == EQ &&
                in(filter.attribute, {"uri", "name"})) {
         if (const auto jp_idx = d.dataRaptor->jp_container.get_jp_from_id(filter.value)) {
-            indexes.push_back(jp_idx->val);
+            indexes.insert(jp_idx->val);
         }
     } else if (filter.object == "journey_pattern_point" && filter.op == EQ &&
                in(filter.attribute, {"uri", "name"})) {
         if (const auto jpp_idx = d.dataRaptor->jp_container.get_jpp_from_id(filter.value)) {
-            indexes.push_back(jpp_idx->val);
+            indexes.insert(jpp_idx->val);
         }
     } else if (filter.attribute == "uri" && filter.op == EQ) {
         // for filtering with uri we can look up in the maps
@@ -350,59 +349,43 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-static std::vector<type::idx_t>::iterator
-sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
-    std::sort(list_idx.begin(), list_idx.end());
-    return std::unique(list_idx.begin(), list_idx.end());
+Indexes get_difference(Indexes& idxs1, Indexes& idxs2) {
+    Indexes tmp_indexes;
+    std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
+    std::set_difference(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
+    return tmp_indexes;
 }
 
-std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
-                                 std::vector<type::idx_t>& list_idx2){
-   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
-   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
-
-   std::vector<idx_t> tmp_indexes;
-   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-   std::set_difference(list_idx1.begin(), new_end_1,
-           list_idx2.begin(), new_end_2, it);
+Indexes get_intersection(Indexes& idxs1, Indexes& idxs2) {
+   Indexes tmp_indexes;
+   std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
+   std::set_intersection(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
    return tmp_indexes;
 }
 
-std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
-                                      std::vector<type::idx_t>& list_idx2){
-   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
-   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
-
-   std::vector<idx_t> tmp_indexes;
-   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-   std::set_intersection(list_idx1.begin(), new_end_1, list_idx2.begin(), new_end_2, it);
-   return tmp_indexes;
-}
-
-std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexes,
+Indexes manage_odt_level(const Indexes& final_indexes,
                                           const navitia::type::Type_e requested_type,
                                           const navitia::type::OdtLevel_e odt_level,
                                           const type::Data & data){
-    if((!final_indexes.empty()) && (requested_type == navitia::type::Type_e::Line)
-            && (odt_level != navitia::type::OdtLevel_e::all)){
-        std::vector<idx_t> odt_level_idx;
+    if ((!final_indexes.empty()) && (requested_type == navitia::type::Type_e::Line)) {
+        Indexes odt_level_idx;
         for(const idx_t idx : final_indexes){
             const navitia::type::Line* line = data.pt_data->lines[idx];
             navitia::type::hasOdtProperties odt_property = line->get_odt_properties();
             switch(odt_level){
                 case navitia::type::OdtLevel_e::scheduled:
                     if (odt_property.is_scheduled()){
-                        odt_level_idx.push_back(idx);
+                        odt_level_idx.insert(idx);
                     };
                     break;
                 case navitia::type::OdtLevel_e::with_stops:
                     if (odt_property.is_with_stops()){
-                        odt_level_idx.push_back(idx);
+                        odt_level_idx.insert(idx);
                     };
                     break;
                 case navitia::type::OdtLevel_e::zonal:
                     if (odt_property.is_zonal()){
-                        odt_level_idx.push_back(idx);
+                        odt_level_idx.insert(idx);
                     };
                     break;
                 case navitia::type::OdtLevel_e::all:
@@ -430,26 +413,26 @@ static bool keep_vj(const nt::VehicleJourney* vj,
     return false;
 }
 
-static std::vector<idx_t>
-filter_vj_on_period(const std::vector<type::idx_t>& indexes,
+static Indexes
+filter_vj_on_period(const Indexes& indexes,
                     const  bt::time_period& period,
                     const type::Data& data) {
 
-    std::vector<idx_t> res;
+    Indexes res;
     for (const idx_t idx: indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
         if (! keep_vj(vj, period)) { continue; }
-        res.push_back(idx);
+        res.insert(idx);
     }
     return res;
 }
 
-static std::vector<idx_t>
-filter_impact_on_period(const std::vector<type::idx_t>& indexes,
+static Indexes
+filter_impact_on_period(const Indexes& indexes,
                     const  bt::time_period& period,
                     const type::Data& data) {
 
-    std::vector<idx_t> res;
+    Indexes res;
     for (const idx_t idx: indexes) {
         auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
 
@@ -459,15 +442,15 @@ filter_impact_on_period(const std::vector<type::idx_t>& indexes,
         // and the period to be non empy
         for (const auto& application_period: impact->application_periods) {
             if (application_period.intersection(period).is_null()) { continue; }
-            res.push_back(idx);
+            res.insert(idx);
             break;
         }
     }
     return res;
 }
 
-static std::vector<idx_t>
-filter_on_period(const std::vector<type::idx_t>& indexes,
+static Indexes
+filter_on_period(const Indexes& indexes,
                  const navitia::type::Type_e requested_type,
                  const boost::optional<boost::posix_time::ptime>& since,
                  const boost::optional<boost::posix_time::ptime>& until,
@@ -510,7 +493,7 @@ filter_on_period(const std::vector<type::idx_t>& indexes,
     }
 }
 
-std::vector<idx_t> make_query(const Type_e requested_type,
+Indexes make_query(const Type_e requested_type,
                               const std::string& request,
                               const std::vector<std::string>& forbidden_uris,
                               const type::OdtLevel_e odt_level,
@@ -523,7 +506,7 @@ std::vector<idx_t> make_query(const Type_e requested_type,
         filters = parse(request);
     }
 
-    type::static_data * static_data = type::static_data::get();
+    type::static_data* static_data = type::static_data::get();
     for(Filter & filter : filters){
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
@@ -532,14 +515,15 @@ std::vector<idx_t> make_query(const Type_e requested_type,
                     "Filter Unknown object type: " + filter.object);
         }
     }
-    std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
+
+    Indexes final_indexes = data.get_all_index(requested_type);
     // When we have no objets asked(like for example companies)
-    if(final_indexes.empty()){
+    if (final_indexes.empty()) {
         throw ptref_error("Filters: No requested object in the database");
     }
 
-    std::vector<idx_t> indexes;
-    for(const Filter & filter : filters){
+    Indexes indexes;
+    for (const Filter& filter : filters) {
         switch(filter.navitia_type){
 #define GET_INDEXES(type_name, collection_name)\
         case Type_e::type_name:\
@@ -591,7 +575,7 @@ std::vector<idx_t> make_query(const Type_e requested_type,
 
         Filter filter_forbidden(caption_type, "uri", Operator_e::EQ, forbidden_uri);
         filter_forbidden.navitia_type = type_;
-        std::vector<idx_t> forbidden_idx;
+        Indexes forbidden_idx;
         switch(type_){
 #define GET_INDEXES_FORBID(type_name, collection_name)\
         case Type_e::type_name:\
@@ -623,7 +607,9 @@ std::vector<idx_t> make_query(const Type_e requested_type,
         final_indexes = get_difference(final_indexes, forbidden_idx);
     }
     // Manage OdtLevel
-    final_indexes = manage_odt_level(final_indexes, requested_type, odt_level, data);
+    if (odt_level != navitia::type::OdtLevel_e::all) {
+        final_indexes = manage_odt_level(final_indexes, requested_type, odt_level, data);
+    }
 
     // filter on validity periods
     if (since || until) {
@@ -660,7 +646,7 @@ std::vector<idx_t> make_query(const Type_e requested_type,
     return final_indexes;
 }
 
-std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+Indexes make_query(const type::Type_e requested_type,
                                     const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::Data &data) {
@@ -673,7 +659,7 @@ std::vector<type::idx_t> make_query(const type::Type_e requested_type,
                       data);
 }
 
-std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+Indexes make_query(const type::Type_e requested_type,
                                     const std::string& request,
                                     const type::Data &data) {
     const std::vector<std::string> forbidden_uris;

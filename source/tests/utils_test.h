@@ -100,6 +100,30 @@ std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
 }
 }
 
+// small helper especially usefull for ptref tests
+// get list of pointers from indexes
+template <typename T>
+std::set<const T*> get_objects(const nt::Indexes& indexes, const nt::Data& data) {
+    const auto& obj_col = data.get_data<T>();
+    std::set<const T*> objs;
+    for (const auto idx: indexes) {
+        objs.insert(obj_col[idx]);
+    }
+    return objs;
+}
+
+// get uris from indexes
+template <typename T>
+std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data) {
+    const auto& objs = get_objects<T>(indexes, data);
+    std::set<std::string> uris;
+    for (const auto* obj: objs) {
+        uris.insert(obj->uri);
+    }
+    return uris;
+}
+
+
 /*
  * BOOST_CHECK_EQUAL_COLLECTIONS does not work well with a temporary collection, thus this macro
  * (and it's easier to use)
