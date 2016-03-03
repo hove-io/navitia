@@ -45,6 +45,9 @@ namespace navitia { namespace ptref {
  */
 
 Jointures::Jointures() {
+    for (auto p: vertex_map) {
+        p.second = boost::graph_traits<Graph>::null_vertex();
+    }
 #define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
     vertex_map[Type_e::JourneyPattern] = boost::add_vertex(Type_e::JourneyPattern, g);
@@ -155,9 +158,11 @@ Jointures::Jointures() {
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre
 // Si le prédécesseur est égal au type, c'est qu'il n'y a pas de chemin
 std::map<Type_e,Type_e> find_path(Type_e source) {
-    Jointures j;
-    if(j.vertex_map.find(source) == j.vertex_map.end()){
-        throw ptref_error("Type doesnot exist as a vertex");
+    // the ptref graph is a graph on types, it does not depend of the data, thus it is a static variable
+    static const Jointures j;
+
+    if (j.vertex_map[source] == boost::graph_traits<Jointures::Graph>::null_vertex()) {
+        throw ptref_error("Type does not exist as a vertex");
     }
 
     std::vector<Jointures::vertex_t> predecessors(boost::num_vertices(j.g));
@@ -167,7 +172,6 @@ std::map<Type_e,Type_e> find_path(Type_e source) {
 
 
     std::map<Type_e, Type_e> result;
-
 
     for(Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
         result[j.g[u]] = j.g[predecessors[u]];

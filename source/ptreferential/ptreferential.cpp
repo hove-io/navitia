@@ -337,7 +337,8 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
 std::vector<Filter> parse(std::string request){
     std::string::iterator begin = request.begin();
     std::vector<Filter> filters;
-    select_r<std::string::iterator> s;
+    // the spirit parser does not depend of the data, it can be static
+    static const select_r<std::string::iterator> s;
     if (qi::phrase_parse(begin, request.end(), s, qi::space, filters)) {
         if(begin != request.end()) {
             std::string unparsed(begin, request.end());
