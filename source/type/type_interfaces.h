@@ -31,6 +31,7 @@ www.navitia.io
 #include <bitset>
 #include <iostream>
 #include "utils/idx_map.h"
+#include <boost/container/flat_set.hpp>
 
 namespace navitia {
 namespace type {
@@ -121,10 +122,12 @@ struct Nameable {
 
 struct PT_Data;
 
+using Indexes = boost::container::flat_set<idx_t>;
+
 struct Header {
     idx_t idx = invalid_idx; // Index of the object in the main structure
     std::string uri; // unique indentifier of the object
-    std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
+    Indexes get(Type_e, const PT_Data&) const {return Indexes{};}
 };
 
 typedef std::bitset<10> Properties;

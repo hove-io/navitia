@@ -36,7 +36,7 @@ namespace navitia{ namespace ptref{
 /// build the protobuf response of a pt ref query
 pbnavitia::Response extract_data(const type::Data& data,
                                  const type::Type_e requested_type,
-                                 const std::vector<type::idx_t> & rows,
+                                 const type::Indexes & rows,
                                  const int depth,
                                  const boost::posix_time::ptime& current_time); //this date is used to filter the disruptions
 

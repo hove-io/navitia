@@ -159,7 +159,7 @@ public:
     template<typename T> const typename ContainerTrait<T>::associative_type& get_assoc_data() const;
 
     template<typename T> typename ContainerTrait<T>::vect_type
-    get_data(const std::vector<idx_t>& indexes) const {
+    get_data(const Indexes& indexes) const {
         typename ContainerTrait<T>::vect_type res;
         const auto& objs = get_data<T>();
         for (const auto& idx: indexes) { res.push_back(objs[idx]); }
@@ -170,18 +170,19 @@ public:
       *
       * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
       */
-    std::vector<idx_t> get_all_index(Type_e type) const;
+    Indexes get_all_index(Type_e type) const;
 
+    size_t get_nb_obj(Type_e type) const;
 
     /** Étant donné une liste d'indexes pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const;
+    Indexes get_target_by_source(Type_e source, Type_e target, Indexes source_idx) const;
 
     /** Étant donné un index pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
+    Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
 
     bool last_load = true;
