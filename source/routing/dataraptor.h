@@ -101,6 +101,7 @@ struct dataRAPTOR {
     JppsFromJp jpps_from_jp;
 
     NextStopTimeData next_stop_time_data;
+    std::unique_ptr<CachedNextStopTimeManager> cached_next_st_manager;
 
     JourneyPatternContainer jp_container;
 
@@ -112,7 +113,7 @@ struct dataRAPTOR {
     flat_enum_map<type::RTLevel, std::vector<boost::dynamic_bitset<>>> jp_validity_patterns;
 
     dataRAPTOR() {}
-    void load(const navitia::type::PT_Data&);
+    void load(const navitia::type::PT_Data&, size_t cache_size = 10);
 };
 
 }}

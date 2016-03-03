@@ -55,6 +55,7 @@ struct AccessibiliteParams;
 namespace routing {
 
 struct JourneyPatternContainer;
+struct dataRAPTOR;
 
 struct NextStopTimeData {
     typedef boost::iterator_range<std::vector<const type::StopTime*>::const_iterator> StopTimeIter;
@@ -228,26 +229,26 @@ struct CachedNextStopTime {
 };
 
 struct CachedNextStopTimeManager {
-    explicit CachedNextStopTimeManager(const type::Data& data, size_t max_cache) :
-            lru({data}, max_cache) {}
-
+    explicit CachedNextStopTimeManager(const dataRAPTOR& dataRaptor, size_t max_cache) :
+            lru({dataRaptor}, max_cache) {}
+    CachedNextStopTimeManager& operator=(CachedNextStopTimeManager&&) = default;
     ~CachedNextStopTimeManager();
 
-    // WARNING: returned pointer is invalidated by next load() call
-    const CachedNextStopTime* load(const DateTime from,
-                                   const type::RTLevel rt_level,
-                                   const type::AccessibiliteParams& accessibilite_params);
+    std::shared_ptr<const CachedNextStopTime>
+    load(const DateTime from,
+         const type::RTLevel rt_level,
+         const type::AccessibiliteParams& accessibilite_params);
 
 private:
     struct CacheCreator {
         typedef CachedNextStopTimeKey const& argument_type;
         typedef CachedNextStopTime result_type;
-        const type::Data& data;
-        CacheCreator(const type::Data& d): data(d) {}
+        const dataRAPTOR& dataRaptor;
+        CacheCreator(const dataRAPTOR& d): dataRaptor(d) {}
         CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;
     };
 
-    Lru<CacheCreator> lru;
+    ConcurrentLru<CacheCreator> lru;
 };
 
 DateTime get_next_stop_time(const StopEvent stop_event,

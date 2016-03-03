@@ -238,7 +238,7 @@ public:
     /** Set admins*/
     void build_administrative_regions();
     /** Construit les données raptor */
-    void build_raptor();
+    void build_raptor(size_t cache_size = 10);
 
     void build_associated_calendar();
 

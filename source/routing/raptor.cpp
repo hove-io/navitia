@@ -194,9 +194,11 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
             forbidden_uri,
             rt_level);
 
-    next_st = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
-                                        rt_level,
-                                        accessibilite_params);
+    assert(data.dataRaptor->cached_next_st_manager);
+    next_st = data.dataRaptor->cached_next_st_manager->load(
+        clockwise ? departure_datetime : bound,
+        rt_level,
+        accessibilite_params);
 
     clear(clockwise, bound);
     init(dep, departure_datetime, clockwise, accessibilite_params.properties);
@@ -496,9 +498,11 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                          accessibilite_params,
                          forbidden,
                          rt_level);
-    next_st = cached_next_st_manager.load(clockwise ? departure_datetime : bound,
-                                          rt_level,
-                                          accessibilite_params);
+    assert(data.dataRaptor->cached_next_st_manager);
+    next_st = data.dataRaptor->cached_next_st_manager->load(
+        clockwise ? departure_datetime : bound,
+        rt_level,
+        accessibilite_params);
 
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
