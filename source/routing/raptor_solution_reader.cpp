@@ -130,7 +130,7 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
             cur_jpp_idx,
             prev_s->get_out_dt + conn->duration,
             true);
-        if (new_st_dt.second < cur_s.get_in_dt) {
+        if (new_st_dt.first && new_st_dt.second < cur_s.get_in_dt) {
             const auto out_st_dt = get_out_st_dt(new_st_dt,
                                                  jp_container.get_jpp(*cur_s.get_out_st),
                                                  jp_container);
