@@ -80,13 +80,16 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Maximum number of schedule per\
                                 stop_point/route")
         parser_get.add_argument("forbidden_id[]", type=unicode,
-                                description="forbidden ids",
-                                dest="forbidden_uris[]",
-                                action="append")
+                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                dest="forbidden_id[]",
+                                default=[],
+                                action='append')
         parser_get.add_argument("forbidden_uris[]", type=unicode,
                                 description="forbidden uris",
                                 dest="forbidden_uris[]",
-                                action="append")
+                                default=[],
+                                action='append')
+
         parser_get.add_argument("calendar", type=unicode,
                                 description="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
@@ -109,6 +112,11 @@ class Schedules(ResourceUri, ResourceUtc):
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
+
+        # for retrocompatibility purpose
+        for forbid_id in args.get('forbidden_id[]', []):
+            args.get('forbidden_uris[]', []).append(forbid_id)
+
         args["nb_stoptimes"] = args["count"]
         args["interface_version"] = 1
 
