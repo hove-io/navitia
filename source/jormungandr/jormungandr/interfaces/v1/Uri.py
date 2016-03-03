@@ -72,7 +72,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="The depth of your object")
         parser.add_argument("forbidden_id[]", type=unicode,
                             description="DEPRECATED, replaced by forbidden_uris[]",
-                            dest="forbidden_id[]",
+                            dest="__temporary_forbidden_id[]",
                             default=[],
                             action="append")
         parser.add_argument("forbidden_uris[]", type=unicode,
@@ -122,8 +122,8 @@ class Uri(ResourceUri, ResourceUtc):
                 args["filter"] = f
 
         # for retrocompatibility purpose
-        for forbid_id in args.get('forbidden_id[]', []):
-            args.get('forbidden_uris[]', []).append(forbid_id)
+        for forbid_id in args['__temporary_forbidden_id[]']:
+            args['forbidden_uris[]'].append(forbid_id)
 
         if "odt_level" in args and args["odt_level"] != "all" and "lines" not in collection:
             abort(404, message="bad request: odt_level filter can only be applied to lines")
