@@ -66,7 +66,7 @@ class Scenario(object):
         req.calendars.end_date = request['end_date']
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.ptref.forbidden_uri.append(forbidden_uri)
+                req.calendars.forbidden_uris.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
         return resp
@@ -82,7 +82,7 @@ class Scenario(object):
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.ptref.forbidden_uri.append(forbidden_uri)
+                req.traffic_reports.forbidden_uris.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
         return resp
