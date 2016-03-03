@@ -94,9 +94,15 @@ class Calendars(ResourceUri):
         parser_get.add_argument("end_date", type=unicode, default="",
                                 description="End date")
         parser_get.add_argument("forbidden_id[]", type=unicode,
-                                description="forbidden ids",
+                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                dest="__temporary_forbidden_id[]",
+                                default=[],
+                                action='append')
+        parser_get.add_argument("forbidden_uris[]", type=unicode,
+                                description="forbidden uris",
                                 dest="forbidden_uris[]",
-                                action="append")
+                                default=[],
+                                action='append')
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
 
@@ -105,6 +111,10 @@ class Calendars(ResourceUri):
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
+
+        # for retrocompatibility purpose
+        for forbid_id in args['__temporary_forbidden_id[]']:
+            args['forbidden_uris[]'].append(forbid_id)
 
         if id:
             args["filter"] = "calendar.uri=" + id

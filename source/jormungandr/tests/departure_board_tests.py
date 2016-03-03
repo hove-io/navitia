@@ -429,6 +429,38 @@ class TestSchedules(AbstractTestFixture):
                              StopSchedule(sp='S1', route='B:1',
                                           date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
 
+    def test_forbidden_uris_on_schedules(self):
+        """test forbidden uri for schedules"""
+        response, code = self.query_no_assert("v1/coverage/basic_schedule_test/stop_points/S1/stop_schedules"
+                                              "?from_datetime=20160101T080000&data_freshness=base_schedule")
+        assert code == 200
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 2
+
+        #filtering stop_schedules on line A
+        response, code = self.query_no_assert("v1/coverage/basic_schedule_test/stop_points/S1/stop_schedules"
+                                              "?from_datetime=20160101T080000&data_freshness=base_schedule"
+                                              "&forbidden_uris[]=A")
+        assert code == 200
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 1
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/basic_schedule_test/stop_points/S1/stop_schedules"
+                                              "?from_datetime=20160101T080000&data_freshness=base_schedule"
+                                              "&forbidden_id[]=A")
+        assert code == 200
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 1
+
+        # for retrocompatibility purpose forbidden_id[] is the same
+        response, code = self.query_no_assert("v1/coverage/basic_schedule_test/stop_points/S1/stop_schedules"
+                                              "?from_datetime=20160101T080000&data_freshness=base_schedule"
+                                              "&forbidden_id[]=bloubliblou")
+        assert code == 200
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 2
+
     @staticmethod
     def check_stop_schedule_rt_sol(stop_sched):
         check_stop_schedule(stop_sched,

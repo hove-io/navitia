@@ -75,8 +75,14 @@ class TrafficReport(ResourceUri):
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=unicode,
-                                description="forbidden ids",
+                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                dest="__temporary_forbidden_id[]",
+                                default=[],
+                                action="append")
+        parser_get.add_argument("forbidden_uris[]", type=unicode,
+                                description="forbidden uris",
                                 dest="forbidden_uris[]",
+                                default=[],
                                 action="append")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
@@ -88,6 +94,10 @@ class TrafficReport(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
+
+        # for retrocompatibility purpose
+        for forbid_id in args['__temporary_forbidden_id[]']:
+            args['forbidden_uris[]'].append(forbid_id)
 
         if uri:
             if uri[-1] == "/":
