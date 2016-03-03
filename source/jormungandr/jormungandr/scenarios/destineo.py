@@ -40,6 +40,7 @@ from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_wa
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
         is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
 import itertools
+from jormungandr.utils import pb_del_if
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -350,16 +351,9 @@ class Scenario(default.Scenario):
 
 
     def _remove_non_pt_walk(self, journeys):
-        to_delete = []
-        for idx, journey in enumerate(journeys):
-            if journey.type == 'non_pt_walk':
-                to_delete.append(idx)
-
+        nb_deleted = pb_del_if(journeys, lambda j: j.type == 'non_pt_walk')
         logger = logging.getLogger(__name__)
-        logger.debug('remove %s non_pt_walk journey', len(to_delete))
-        to_delete.sort(reverse=True)
-        for idx in to_delete:
-            del journeys[idx]
+        logger.debug('remove %s non_pt_walk journey', nb_deleted)
 
     def _choose_best_alternatives(self, journeys):
         to_keep = []

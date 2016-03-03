@@ -45,6 +45,7 @@ import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
 from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
 from jormungandr.scenarios.helpers import fallback_mode_comparator
+from jormungandr.utils import pb_del_if
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -372,12 +373,7 @@ class Scenario(simple.Scenario):
                 deleted_sections.add(section.id)
             del resp.journeys[idx]
 
-        ticket_to_delete = set()
-        for idx, t in enumerate(resp.tickets):
-            if len(set(t.section_id) - deleted_sections) == 0:
-                ticket_to_delete.add(idx)
-        for idx in sorted(ticket_to_delete, reverse=True):
-            del resp.tickets[idx]
+        pb_del_if(resp.tickets, lambda t: set(t.section_id).issubset(deleted_sections))
 
     def delete_journeys(self, resp, request, final_filter):
         """
