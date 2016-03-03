@@ -407,6 +407,35 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
         eq_(response['journeys'][1]['type'], "best")
 
+    def test_journeys_without_show_codes(self):
+        '''
+        Test journeys api without show_codes.
+        The API's response contains the codes
+        '''
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+        eq_(len(response['journeys'][0]['sections']), 4)
+        first_section = response['journeys'][0]['sections'][0]
+        eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
+        eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+
+    def test_journeys_with_show_codes(self):
+        '''
+        Test journeys api with show_codes = false.
+        The API's response contains the codes
+        '''
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&show_codes=false"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+        eq_(len(response['journeys'][0]['sections']), 4)
+        first_section = response['journeys'][0]['sections'][0]
+        eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
+        eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
 
     def test_remove_one_journey_from_batch(self):
         """

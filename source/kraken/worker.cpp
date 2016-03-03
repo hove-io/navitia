@@ -278,7 +278,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    PbCreator pb_creator(*data, current_datetime, null_time_period, request.show_codes());
+    PbCreator pb_creator(*data, current_datetime, null_time_period, true);
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
@@ -623,20 +623,20 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                                 request.clockwise(), accessibilite_params,
                                                 forbidden, *street_network_worker,
                                                 rt_level, request.max_duration(),
-                                                request.max_transfers(), request.show_codes());
+                                                request.max_transfers(), true);
     }
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
+                request.max_transfers(), true, request.max_extra_second_pass());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
+                request.max_transfers(), true, request.max_extra_second_pass());
     }
 }
 
@@ -651,7 +651,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
                                     forbidden_uri,
                                     get_odt_level(request.odt_level()),
                                     request.depth(),
-                                    request.show_codes(),
+                                    true,
                                     request.start_page(),
                                     request.count(),
                                     boost::make_optional(request.has_since_datetime(),

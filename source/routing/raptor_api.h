@@ -65,7 +65,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const navitia::time_duration& transfer_penalty,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                                  bool show_codes = false,
+                                  bool show_codes = true,
                                   uint32_t max_extra_second_pass = 0);
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
@@ -77,7 +77,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::RTLevel rt_level,
                                    int max_duration = 3600,
                                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                                   bool show_codes = false);
+                                   bool show_codes = true);
 
 pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                   const std::vector<type::EntryPoint> &origins,
@@ -90,7 +90,7 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                   const navitia::time_duration& transfer_penalty,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                                  bool show_codes = false,
+                                  bool show_codes = true,
                                   uint32_t max_extra_second_pass = 0);
 
 routing::map_stop_point_duration
