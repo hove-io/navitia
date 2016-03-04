@@ -524,14 +524,10 @@ Indexes make_query(const Type_e requested_type,
     }
 
     Indexes final_indexes;
-    //final_indexes = data.get_all_index(requested_type);
-    // When we have no objets asked(like for example companies)
     if (! data.get_nb_obj(requested_type)) {
-    //if (final_indexes.empty()) {
         throw ptref_error("Filters: No requested object in the database");
     }
 
-    //Indexes indexes;
     if (filters.empty()) {
         final_indexes = data.get_all_index(requested_type);
     } else {
