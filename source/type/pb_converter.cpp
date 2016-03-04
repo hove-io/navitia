@@ -314,7 +314,7 @@ template<> pbnavitia::NavitiaType get_pb_type<nt::MetaVehicleJourney>(){ return 
 template <typename Target, typename Source>
 std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
     const nt::Type_e type_e = get_type_e<Target>();
-    std::vector<nt::idx_t> indexes;
+    nt::Indexes indexes;
     std::string request;
     try{
         request = nt::static_data::get()->captionByType(nav_obj->type) +

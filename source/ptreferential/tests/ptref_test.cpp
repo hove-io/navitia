@@ -40,11 +40,11 @@ www.navitia.io
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
 #include "tests/utils_test.h"
-
 #include "kraken/apply_disruption.h"
+#include <boost/range/adaptors.hpp>
 
 namespace navitia{namespace ptref {
-template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
+template<typename T> nt::Indexes get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
 }}
 
 namespace nt = navitia::type;
@@ -282,36 +282,32 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Line, "line.uri=A", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.size(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(0)->name, "Car");
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(1)->name, "Metro");
+    auto objects = get_objects<nt::Line>(indexes, *b.data);
+    BOOST_REQUIRE_EQUAL(objects.size(), 1);
+    BOOST_REQUIRE_EQUAL((*objects.begin())->physical_mode_list.size(), 2);
+    BOOST_CHECK_EQUAL((*objects.begin())->physical_mode_list.at(0)->name, "Car");
+    BOOST_CHECK_EQUAL((*objects.begin())->physical_mode_list.at(1)->name, "Metro");
 
     indexes = make_query(nt::Type_e::Line, "line.uri=C", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines.at(indexes.front())->physical_mode_list.at(0)->name, "Tram");
+    objects = get_objects<nt::Line>(indexes, *b.data);
+    BOOST_REQUIRE_EQUAL(objects.size(), 1);
+    BOOST_REQUIRE_EQUAL((*objects.begin())->physical_mode_list.size(), 1);
+    BOOST_CHECK_EQUAL((*objects.begin())->physical_mode_list.at(0)->name, "Tram");
 
     indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"default:dataset"}));
 
     indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop2", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"default:dataset"}));
 
     indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop3", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.front())->uri, "default:dataset");
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->datasets.at(indexes.back())->uri, "f1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"default:dataset", "f1"}));
 
     indexes = make_query(nt::Type_e::Contributor, "dataset.uri=default:dataset", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "default:contributor");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"default:dataset"}));
 
     indexes = make_query(nt::Type_e::Contributor, "dataset.uri=f1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->contributors.at(indexes.front())->uri, "c1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Contributor>(indexes, *b.data), std::set<std::string>({"c1"}));
 }
 
 BOOST_AUTO_TEST_CASE(get_indexes_test){
@@ -332,16 +328,13 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     filter.op = EQ;
     filter.value = "stop1";
     auto indexes = get_indexes<nt::StopArea>(filter, Type_e::Line, *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(indexes[0], 0);
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0}));
 
     // On cherche les stopareas de la ligneA
     filter.navitia_type = Type_e::Line;
     filter.value = "A";
     indexes = get_indexes<nt::Line>(filter, Type_e::StopArea, *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(indexes[0], 0);
-    BOOST_CHECK_EQUAL(indexes[1], 1);
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
 BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
@@ -391,7 +384,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({0, 1}));
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
 
@@ -451,12 +444,14 @@ BOOST_AUTO_TEST_CASE(line_code) {
 
     //find line by code
     auto indexes = make_query(nt::Type_e::Line, "line.code=line_A", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line_A");
+    auto objects = get_objects<nt::Line>(indexes, *b.data);
+    BOOST_REQUIRE_EQUAL(objects.size(), 1);
+    BOOST_CHECK_EQUAL((*objects.begin())->code, "line_A");
 
     indexes = make_query(nt::Type_e::Line, "line.code=\"line C\"", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
+    objects = get_objects<nt::Line>(indexes, *b.data);
+    BOOST_REQUIRE_EQUAL(objects.size(), 1);
+    BOOST_CHECK_EQUAL((*objects.begin())->code, "line C");
 
     //no line B
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "line.code=\"line B\"", *(b.data)),
@@ -464,8 +459,9 @@ BOOST_AUTO_TEST_CASE(line_code) {
 
     //find route by line code
     indexes = make_query(nt::Type_e::Route, "line.code=line_A", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
+    auto routes = get_objects<nt::Route>(indexes, *b.data);
+    BOOST_REQUIRE_EQUAL(routes.size(), 1);
+    BOOST_CHECK_EQUAL((*routes.begin())->line->code, "line_A");
 
     //route has no code attribute, no filter can be used
     indexes = make_query(nt::Type_e::Line, "route.code=test", *(b.data));
@@ -535,20 +531,19 @@ BOOST_AUTO_TEST_CASE(find_path_test){
 }
 
 //helper to get default values
-static std::vector<nt::idx_t> query(nt::Type_e requested_type, std::string request,
+static nt::Indexes query(nt::Type_e requested_type, std::string request,
                                     const nt::Data& data,
                                     const boost::optional<boost::posix_time::ptime>& since = boost::none,
                                     const boost::optional<boost::posix_time::ptime>& until = boost::none,
                                     bool fail = false) {
     try {
-       return navitia::ptref::make_query(
-                   requested_type, request, {}, nt::OdtLevel_e::all, since, until, data);
+       return navitia::ptref::make_query(requested_type, request, {}, nt::OdtLevel_e::all, since, until, data);
     } catch (const navitia::ptref::ptref_error& e) {
         if (fail) {
             throw e;
         }
         BOOST_CHECK_MESSAGE(false, " error on ptref request " + std::string(e.what()));
-        return {};
+        return nt::Indexes{};
     }
 }
 
@@ -580,7 +575,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
                          R"(trip.uri="vehicle_journey 0")",
                          *(builder.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(indexes.front());
+    const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(*indexes.begin());
     BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vehicle_journey 0");
 
     // looking for MetaVJ 0 another way
@@ -703,8 +698,7 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
     const auto res = make_query(nt::Type_e::VehicleJourney,
                                 R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
                                 *(b.data));
-    BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res.at(0), 1);
+    BOOST_CHECK_EQUAL_RANGE(res, nt::make_indexes({1}));
 }
 
 BOOST_AUTO_TEST_CASE(headsign_sa_request) {
@@ -739,8 +733,8 @@ BOOST_AUTO_TEST_CASE(code_request) {
     const auto res = make_query(nt::Type_e::StopArea,
                                 R"(stop_area.has_code(UIC, 8727100))",
                                 *(b.data));
-    BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_areas.at(res.at(0))->uri, "A");
+
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"A"}));
 }
 
 BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
@@ -803,42 +797,31 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     b.data->pt_data->build_uri();
 
     auto indexes = make_query(nt::Type_e::Contributor, "contributor.uri=c1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->contributors[indexes.front()]->uri, "c1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Contributor>(indexes, *b.data), std::set<std::string>({"c1"}));
 
     indexes = make_query(nt::Type_e::Dataset, "dataset.uri=d1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"d1"}));
 
     indexes = make_query(nt::Type_e::Dataset, "contributor.uri=c1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d1");
-    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.back()]->uri, "d2");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"d1", "d2"}));
 
     indexes = make_query(nt::Type_e::VehicleJourney, "contributor.uri=c1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.back()]->uri, "vj:C:1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data), std::set<std::string>({"vj:A:0", "vj:C:1"}));
 
     indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:A:0");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data), std::set<std::string>({"vj:A:0"}));
 
     indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d2", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys[indexes.front()]->uri, "vj:C:1");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data), std::set<std::string>({"vj:C:1"}));
 
     indexes = make_query(nt::Type_e::Route, "dataset.uri=d1", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->routes[indexes.front()]->line->code, "line_A");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(indexes, *b.data), std::set<std::string>({"A:0"}));
 
     indexes = make_query(nt::Type_e::Line, "dataset.uri=d2", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines[indexes.front()]->code, "line C");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(indexes, *b.data), std::set<std::string>({"C:1"}));
 
     indexes = make_query(nt::Type_e::Dataset, "contributor.uri=c2", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->datasets[indexes.front()]->uri, "d3");
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"d3"}));
 
     //no vehicle_journey for dataset "d3"
     BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "dataset.uri=d3", *(b.data)),

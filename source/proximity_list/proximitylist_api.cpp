@@ -108,7 +108,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
         }
 
         vector_idx_coord list;
-        std::vector<type::idx_t> indexes;
+        type::Indexes indexes;
         if(! filter.empty()) {
             try {
                 indexes = ptref::make_query(type, filter, pb_creator.data);

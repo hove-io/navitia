@@ -101,7 +101,7 @@ struct parsing_error : public ptref_error{
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+type::Indexes make_query(const type::Type_e requested_type,
                                     const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::OdtLevel_e odt_level,
@@ -109,12 +109,12 @@ std::vector<type::idx_t> make_query(const type::Type_e requested_type,
                                     const boost::optional<boost::posix_time::ptime>& until,
                                     const type::Data& data);
 
-std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+type::Indexes make_query(const type::Type_e requested_type,
                                     const std::string& request,
                                     const std::vector<std::string>& forbidden_uris,
                                     const type::Data& data);
 
-std::vector<type::idx_t> make_query(const type::Type_e requested_type,
+type::Indexes make_query(const type::Type_e requested_type,
                                     const std::string& request,
                                     const type::Data& data);
 
@@ -124,19 +124,15 @@ std::vector<type::idx_t> make_query(const type::Type_e requested_type,
 std::map<Type_e,Type_e> find_path(Type_e source);
 
 /// À parti d'un élément, on veut retrouver tous ceux de destination
-std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);
+navitia::type::Indexes get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);
 
 
 std::vector<Filter> parse(std::string request);
 
-std::vector<type::idx_t>::iterator sort_and_get_new_end(std::vector<type::idx_t>& list_idx);
+type::Indexes get_difference(const type::Indexes&, const type::Indexes&);
+type::Indexes get_intersection(const type::Indexes&, const type::Indexes&);
 
-std::vector<type::idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
-                                        std::vector<type::idx_t>& list_idx2);
-
-std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
-                                        std::vector<type::idx_t>& list_idx2);
-std::vector<type::idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexes,
+type::Indexes manage_odt_level(const type::Indexes& final_indexes,
                                           const navitia::type::Type_e requested_type,
                                           const navitia::type::OdtLevel_e,
                                           const type::Data & data);

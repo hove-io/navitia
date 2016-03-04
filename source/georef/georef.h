@@ -402,7 +402,7 @@ struct POIType : public nt::Nameable, nt::Header{
         ar &idx &uri &name;
     }
 
-    std::vector<type::idx_t> get(type::Type_e type, const GeoRef & data) const;
+    type::Indexes get(type::Type_e type, const GeoRef & data) const;
 };
 
 
@@ -424,7 +424,7 @@ struct POI : public nt::Nameable, nt::Header{
         ar &idx & uri & name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name & label;
     }
 
-    std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;
+    type::Indexes get(type::Type_e type, const GeoRef &) const;
 
     private:
 };

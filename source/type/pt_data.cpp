@@ -201,16 +201,16 @@ void PT_Data::index(){
     ITERATE_NAVITIA_PT_TYPES(INDEX)
 }
 
-std::vector<idx_t>
+Indexes
 PT_Data::get_impacts_idx(const std::vector<boost::shared_ptr<disruption::Impact>>& impacts) const {
-    std::vector<idx_t> result;
+    Indexes result;
     idx_t i = 0;
     const auto & impacts_pool = disruption_holder.get_weak_impacts();
     for (const auto& impact: impacts_pool) {
         auto impact_sptr = impact.lock();
         assert(impact_sptr);
         if (navitia::contains(impacts, impact_sptr)){
-            result.push_back(i);
+            result.insert(i); //TODO use bulk insert ?
         }
         ++i;
     }

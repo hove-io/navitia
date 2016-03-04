@@ -166,7 +166,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopPoint & other) const { return this < &other; }
 
 };
@@ -196,7 +196,7 @@ struct StopPointConnection: public Header, hasProperties{
         destination->stop_point_connection_list.push_back(this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const StopPointConnection &other) const;
 
@@ -260,7 +260,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     }
 
     std::vector<StopPoint*> stop_point_list;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
@@ -283,7 +283,7 @@ struct Network : public Header, HasMessages {
             & mail & website & fax & sort & line_list & impacts;
     }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Network & other) const {
         if(this->sort != other.sort) {
             return this->sort < other.sort;
@@ -305,7 +305,7 @@ struct Contributor : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & website & license & dataset_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
@@ -321,7 +321,7 @@ struct Dataset : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Dataset & other) const { return this < &other; }
 };
 
@@ -341,7 +341,7 @@ struct Company : public Header, Nameable {
         ar & idx & name & uri & address_name & address_number &
         address_type_name & phone_number & mail & website & fax & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Company & other) const { return this < &other; }
 };
 
@@ -351,7 +351,7 @@ struct CommercialMode : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const CommercialMode & other) const { return this < &other; }
 
 };
@@ -364,7 +364,7 @@ struct PhysicalMode : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & co2_emission & vehicle_journey_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     PhysicalMode() {}
     bool operator<(const PhysicalMode & other) const { return this < &other; }
@@ -436,7 +436,7 @@ struct Line : public Header, Nameable, HasMessages {
                 & impacts & calendar_list & shape & closing_time
                 & opening_time & properties & line_group_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const Line & other) const {
         if(this->network != other.network){
@@ -467,7 +467,7 @@ struct LineGroup : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & main_line & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const LineGroup & other) const { return this < &other; }
 };
 
@@ -559,7 +559,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     bool has_boarding() const;
     bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    Indexes get(Type_e type, const PT_Data& data) const;
     std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
@@ -652,7 +652,7 @@ struct Route : public Header, Nameable, HasMessages {
             & frequency_vehicle_journey_list & impacts & shape & direction_type & dataset_list;
     }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Route & other) const { return this < &other; }
 
     std::string get_label() const;
@@ -796,7 +796,7 @@ struct Calendar : public Nameable, public Header {
 
     bool operator<(const Calendar & other) const { return this < &other; }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern;
     }
@@ -883,7 +883,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     const std::string& get_label() const { return uri; } // for the moment the label is just the uri
 
-    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    Indexes get(Type_e type, const PT_Data& data) const;
 
     void push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact);
 

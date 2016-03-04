@@ -33,7 +33,7 @@ www.navitia.io
 #include "boost/functional/hash.hpp"
 namespace navitia { namespace timetables {
 
-typedef std::vector<type::idx_t> vector_idx;
+typedef std::vector<idx_t> vector_idx;
 typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {

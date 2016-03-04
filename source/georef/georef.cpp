@@ -789,20 +789,20 @@ GeoRef::~GeoRef() {
 }
 
 
-std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
+type::Indexes POI::get(type::Type_e type, const GeoRef &) const {
     switch(type) {
-    case type::Type_e::POIType : return {poitype_idx};
-    default : return {};
+    case type::Type_e::POIType : return type::make_indexes({poitype_idx});
+    default : return type::Indexes{};
     }
 }
 
-std::vector<type::idx_t> POIType::get(type::Type_e type, const GeoRef & data) const {
-    std::vector<type::idx_t> result;
+type::Indexes POIType::get(type::Type_e type, const GeoRef & data) const {
+    type::Indexes result;
     switch(type) {
     case type::Type_e::POI:
         for(const POI* elem : data.pois) {
             if(elem->poitype_idx == idx) {
-                result.push_back(elem->idx);
+                result.insert(elem->idx);
             }
         }
         break;

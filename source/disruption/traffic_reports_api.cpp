@@ -57,20 +57,20 @@ private:
     log4cplus::Logger logger;
 
     NetworkDisrupt& find_or_create(const type::Network* network);
-    void add_stop_areas(const std::vector<type::idx_t>& network_idx,
+    void add_stop_areas(const type::Indexes& network_idx,
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
                       const boost::posix_time::ptime now);
 
-    void add_networks(const std::vector<type::idx_t>& network_idx,
+    void add_networks(const type::Indexes& network_idx,
                       const type::Data &d,
                       const boost::posix_time::ptime now);
     void add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
                       const boost::posix_time::ptime now);
-    void add_vehicle_journeys(const std::vector<type::idx_t>& network_idx,
+    void add_vehicle_journeys(const type::Indexes& network_idx,
                               const std::string& filter,
                               const std::vector<std::string>& forbidden_uris,
                               const type::Data &d,
@@ -120,7 +120,7 @@ NetworkDisrupt& TrafficReport::find_or_create(const type::Network* network){
     return *it;
 }
 
-void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
+void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data& d,
@@ -132,7 +132,7 @@ void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
         if (!filter.empty()) {
             new_filter += " and " + filter;
         }
-        std::vector<type::idx_t> stop_areas;
+        type::Indexes stop_areas;
 
        try {
             stop_areas = ptref::make_query(type::Type_e::StopArea, new_filter, forbidden_uris, d);
@@ -167,7 +167,7 @@ void TrafficReport::add_stop_areas(const std::vector<type::idx_t>& network_idx,
     }
 }
 
-void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network_idx,
+void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
                                          const std::string& filter,
                                          const std::vector<std::string>& forbidden_uris,
                                          const type::Data& d,
@@ -179,7 +179,7 @@ void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network
         if (!filter.empty()) {
             new_filter += " and " + filter;
         }
-        std::vector<type::idx_t> vehicle_journeys;
+        type::Indexes vehicle_journeys;
 
         try {
             vehicle_journeys =
@@ -213,7 +213,7 @@ void TrafficReport::add_vehicle_journeys(const std::vector<type::idx_t>& network
     }
 }
 
-void TrafficReport::add_networks(const std::vector<type::idx_t>& network_idx,
+void TrafficReport::add_networks(const type::Indexes& network_idx,
                       const type::Data &d,
                       const boost::posix_time::ptime now){
 
@@ -232,7 +232,7 @@ void TrafficReport::add_lines(const std::string& filter,
                       const type::Data& d,
                       const boost::posix_time::ptime now){
 
-    std::vector<type::idx_t> line_list;
+    type::Indexes line_list;
     try {
         line_list  = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
     } catch(const ptref::parsing_error &parse_error) {
@@ -292,7 +292,7 @@ void TrafficReport::disruptions_list(const std::string& filter,
                         const type::Data& d,
                         const boost::posix_time::ptime now){
 
-    std::vector<type::idx_t> network_idx = ptref::make_query(type::Type_e::Network, filter,
+    type::Indexes network_idx = ptref::make_query(type::Type_e::Network, filter,
                                                              forbidden_uris, d);
     add_networks(network_idx, d, now);
     add_lines(filter, forbidden_uris, d, now);
