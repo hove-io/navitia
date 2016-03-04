@@ -318,11 +318,11 @@ class add_passages_links:
                 kwargs_links.pop('from_datetime')
             delta = datetime.timedelta(seconds=1)
             dt = datetime.datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
-            if 'until_datetime' in kwargs.get("uri"):
+            if 'until_datetime' in getattr(request, 'full_path'):
                 kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
                 response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
                 kwargs_links.pop('until_datetime')
-            if 'from_datatime' in kwargs.get("uri"):
+            if 'from_datatime' in getattr(request, 'full_path'):
                 kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
                 response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
             return response, status, other
