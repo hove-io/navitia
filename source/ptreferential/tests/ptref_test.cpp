@@ -749,48 +749,28 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     //contributor "c1" contains dataset "d1" and "d2"
     //contributor "c2" contains dataset "d3"
     //Here contributor c1 contains datasets d1 and d2
-    navitia::type::Contributor * contributor = new navitia::type::Contributor();
-    contributor->idx = b.data->pt_data->contributors.size();
-    contributor->uri = "c1";
-    contributor->name = "name-c1";
-    b.data->pt_data->contributors.push_back(contributor);
+    auto* contributor = b.add<nt::Contributor>("c1", "name-c1");
 
-    navitia::type::Dataset * dataset = new navitia::type::Dataset();
-    dataset->idx = b.data->pt_data->datasets.size();
-    dataset->uri = "d1";
-    dataset->name = "name-d1";
+    auto* dataset = b.add<nt::Dataset>("d1", "name-d1");
     dataset->contributor = contributor;
     contributor->dataset_list.push_back(dataset);
-    b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d1" is assigned to vehicle_journey "vj:A:0"
     vj_a->dataset = dataset;
 
-    dataset = new navitia::type::Dataset();
-    dataset->idx = b.data->pt_data->datasets.size();
-    dataset->uri = "d2";
-    dataset->name = "name-d2";
+    dataset = b.add<nt::Dataset>("d2", "name-d2");
     dataset->contributor = contributor;
     contributor->dataset_list.push_back(dataset);
-    b.data->pt_data->datasets.push_back(dataset);
 
     //dataset "d2" is assigned to vehicle_journey "vj:C:1"
     vj_c->dataset = dataset;
 
     //Here contributor c2 contains datasets d3
-    contributor = new navitia::type::Contributor();
-    contributor->idx = b.data->pt_data->contributors.size();
-    contributor->uri = "c2";
-    contributor->name = "name-c2";
-    b.data->pt_data->contributors.push_back(contributor);
+    contributor = b.add<nt::Contributor>("c2", "name-c2");
 
-    dataset = new navitia::type::Dataset();
-    dataset->idx = b.data->pt_data->datasets.size();
-    dataset->uri = "d3";
-    dataset->name = "name-d3";
+    dataset = b.add<nt::Dataset>("d3", "name-d3");
     dataset->contributor = contributor;
     contributor->dataset_list.push_back(dataset);
-    b.data->pt_data->datasets.push_back(dataset);
 
     b.data->build_relations();
     b.finish();

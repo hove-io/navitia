@@ -420,4 +420,22 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comme
                     const pt::ptime& now = pt::not_a_date_time,
                     const pt::time_period& action_period  = null_time_period);
 
+template <typename Target, typename Source>
+std::vector<Target*> ptref_indexes(const Source* nav_obj, const nt::Data& data) {
+    const nt::Type_e type_e = nt::get_type_e<Target>();
+    type::Indexes indexes;
+    std::string request;
+    try{
+        request = nt::static_data::get()->captionByType(nav_obj->type) +
+            ".uri=" + nav_obj->uri;
+        indexes = navitia::ptref::make_query(type_e, request, data);
+    } catch(const navitia::ptref::parsing_error &parse_error) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                        "ptref_indexes, Unable to parse :" + parse_error.more + ", request: " + request);
+    } catch(const navitia::ptref::ptref_error &pt_error) {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
+                        "pb_converter::ptref_indexes, " + pt_error.more + ", request: " + request);
+    }
+    return data.get_data<Target>(indexes);
+}
 }

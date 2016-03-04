@@ -56,6 +56,8 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
+#include <boost/range/adaptors.hpp>
+
 
 namespace bt = boost::posix_time;
 
@@ -330,6 +332,11 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
         current = path[current];
     }
 
+    if (current != requested_type) {
+        // there was no path to find a requested type
+        return Indexes{};
+    }
+
     return indexes;
 }
 
@@ -516,48 +523,57 @@ Indexes make_query(const Type_e requested_type,
         }
     }
 
-    Indexes final_indexes = data.get_all_index(requested_type);
-    // When we have no objets asked(like for example companies)
-    if (final_indexes.empty()) {
+    Indexes final_indexes;
+    if (! data.get_nb_obj(requested_type)) {
         throw ptref_error("Filters: No requested object in the database");
     }
 
-    Indexes indexes;
-    for (const Filter& filter : filters) {
-        switch(filter.navitia_type){
-#define GET_INDEXES(type_name, collection_name)\
-        case Type_e::type_name:\
-            indexes = get_indexes<type_name>(filter, requested_type, data);\
-            break;
-        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
-#undef GET_INDEXES
-        case Type_e::JourneyPattern:
-            indexes = get_indexes<routing::JourneyPattern>(filter, requested_type, data);
-            break;
-        case Type_e::JourneyPatternPoint:
-            indexes = get_indexes<routing::JourneyPatternPoint>(filter, requested_type, data);
-            break;
-        case Type_e::POI:
-            indexes = get_indexes<georef::POI>(filter, requested_type, data);
-            break;
-        case Type_e::POIType:
-            indexes = get_indexes<georef::POIType>(filter, requested_type, data);
-            break;
-        case Type_e::Connection:
-            indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data);
-            break;
-        case Type_e::MetaVehicleJourney:
-            indexes = get_indexes<type::MetaVehicleJourney>(filter, requested_type, data);
-            break;
-        case Type_e::Impact:
-            indexes = get_indexes<type::disruption::Impact>(filter, requested_type, data);
-            break;
-        default:
-            throw parsing_error(parsing_error::partial_error,
-                    "Filter: Unable to find the requested type. Not parsed: >>"
-                    + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
+    if (filters.empty()) {
+        final_indexes = data.get_all_index(requested_type);
+    } else {
+        Indexes indexes;
+        bool first_time = true;
+        for (const Filter& filter : filters) {
+            switch(filter.navitia_type){
+    #define GET_INDEXES(type_name, collection_name)\
+            case Type_e::type_name:\
+                indexes = get_indexes<type_name>(filter, requested_type, data);\
+                break;
+            ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+    #undef GET_INDEXES
+            case Type_e::JourneyPattern:
+                indexes = get_indexes<routing::JourneyPattern>(filter, requested_type, data);
+                break;
+            case Type_e::JourneyPatternPoint:
+                indexes = get_indexes<routing::JourneyPatternPoint>(filter, requested_type, data);
+                break;
+            case Type_e::POI:
+                indexes = get_indexes<georef::POI>(filter, requested_type, data);
+                break;
+            case Type_e::POIType:
+                indexes = get_indexes<georef::POIType>(filter, requested_type, data);
+                break;
+            case Type_e::Connection:
+                indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data);
+                break;
+            case Type_e::MetaVehicleJourney:
+                indexes = get_indexes<type::MetaVehicleJourney>(filter, requested_type, data);
+                break;
+            case Type_e::Impact:
+                indexes = get_indexes<type::disruption::Impact>(filter, requested_type, data);
+                break;
+            default:
+                throw parsing_error(parsing_error::partial_error,
+                        "Filter: Unable to find the requested type. Not parsed: >>"
+                        + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
+            }
+            if (first_time) {
+                final_indexes = indexes;
+            } else {
+                final_indexes = get_intersection(final_indexes, indexes);
+            }
+            first_time = false;
         }
-        final_indexes = get_intersection(final_indexes, indexes);
     }
     //We now filter with forbidden uris
     for(const auto forbidden_uri : forbidden_uris) {

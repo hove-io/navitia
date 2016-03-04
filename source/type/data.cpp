@@ -525,6 +525,10 @@ void Data::compute_labels() {
 template<> const std::vector<type_name*>& \
 Data::get_data<type_name>() const {\
     return this->pt_data->collection_name;\
+} \
+template<> std::vector<type_name*>& \
+Data::get_data<type_name>() {\
+    return this->pt_data->collection_name;\
 }
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 #undef GET_DATA

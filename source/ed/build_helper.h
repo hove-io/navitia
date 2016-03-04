@@ -238,6 +238,26 @@ struct builder {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
     }
 
+    /**
+     * Create and add an object (the object must have an idx, a uri and a name)
+     */
+    template <typename T>
+    T* add(const std::string& uri, const std::string& name) {
+        T* obj = new T();
+        auto& collection = data->get_data<T>();
+        obj->idx = collection.size();
+        obj->uri = uri;
+        obj->name = name;
+        collection.push_back(obj);
+        return obj;
+    }
+
+    template <typename T>
+    T* get(const std::string& uri) const {
+        const auto& collection = data->get_assoc_data<T>();
+        return find_or_default(uri, collection);
+    }
+
     DisruptionCreator disrupt(nt::RTLevel lvl, const std::string& uri);
     Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
