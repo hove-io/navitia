@@ -529,6 +529,10 @@ class TestSchedules(AbstractTestFixture):
 
         departures = response["departures"]
         is_valid_departures(departures)
+        # Since data_freshness is specified, it's set to realtime by default, and there shouldn't be (prev, next) links
+        # for api  navigation
+        assert not [l for l in response.get('links') if l.get('rel') == 'prev']
+        assert not [l for l in response.get('links') if l.get('rel') == 'next']
         self.check_departure_rt_sol(departures)
 
     def test_departure_base_sched(self):
@@ -540,6 +544,9 @@ class TestSchedules(AbstractTestFixture):
 
         departures = response["departures"]
         is_valid_departures(departures)
+        # test if there are 'prev' and 'next' links for api navigation
+        assert next(l for l in response.get('links') if l.get('rel') == 'prev')
+        assert next(l for l in response.get('links') if l.get('rel') == 'next')
         self.check_departure_base_schedule_sol(departures)
 
     def test_departure_dt(self):

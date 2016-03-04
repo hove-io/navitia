@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from flask.ext.restful import fields, marshal_with, reqparse
-from flask import request
+from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
@@ -318,11 +318,12 @@ class add_passages_links:
                 kwargs_links.pop('from_datetime')
             delta = datetime.timedelta(seconds=1)
             dt = datetime.datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
-            kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
-            response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
-            kwargs_links.pop('until_datetime')
-            kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
-            response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
+            if g.stat_interpreted_parameters.get('data_freshness') != 'realtime':
+                kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
+                response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
+                kwargs_links.pop('until_datetime')
+                kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
+                response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
             return response, status, other
         return wrapper
 
