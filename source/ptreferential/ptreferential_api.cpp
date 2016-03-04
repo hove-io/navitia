@@ -42,7 +42,7 @@ namespace navitia{ namespace ptref{
 
 static pbnavitia::Response extract_data(const type::Data& data,
                                         const type::Type_e requested_type,
-                                        const std::vector<type::idx_t>& rows,
+                                        const type::Indexes& rows,
                                         const int depth,
                                         const bool show_codes,
                                         const boost::posix_time::ptime& current_time) {
@@ -132,8 +132,8 @@ static pbnavitia::Response extract_data(const type::Data& data,
         case Type_e::Contributor:
             return get_response(data.get_data<nt::Contributor>(rows), data, depth, current_time,
                                 action_period, show_codes);
-        case Type_e::Frame:
-            return get_response(data.get_data<nt::Frame>(rows), data, depth, current_time,
+        case Type_e::Dataset:
+            return get_response(data.get_data<nt::Dataset>(rows), data, depth, current_time,
                                 action_period, show_codes);
         default: return {};
         }
@@ -152,7 +152,7 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const boost::optional<boost::posix_time::ptime>& until,
                              const type::Data& data,
                              const boost::posix_time::ptime& current_time) {
-    std::vector<type::idx_t> final_indexes;
+    type::Indexes final_indexes;
     pbnavitia::Response pb_response;
     int total_result;
     try {

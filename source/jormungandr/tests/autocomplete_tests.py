@@ -82,7 +82,7 @@ def is_valid_autocomplete(response, depth):
             is_valid_stop_area(get_not_null(place, "stop_area"), depth-1)
 
 
-@dataset(["main_autocomplete_test"])
+@dataset({"main_autocomplete_test": {}})
 class TestAutocomplete(AbstractTestFixture):
     """
     Test the autocomplete responses

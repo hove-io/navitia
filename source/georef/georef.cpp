@@ -425,19 +425,19 @@ void GeoRef::build_autocomplete_list(){
 }
 
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes_map(){
+/** poitype_map load: mapping external codes -> POIType*/
+void GeoRef::build_poitypes_map() {
    this->poitype_map.clear();
-   for(const POIType* ptype : poitypes){
-       this->poitype_map[ptype->uri] = ptype->idx;
+   for (POIType* ptype : poitypes) {
+       this->poitype_map[ptype->uri] = ptype;
    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois_map(){
-    this->poi_map.clear();
-   for(const POI* poi : pois){
-       this->poi_map[poi->uri] = poi->idx;
+/** poi_map load: mapping external codes -> POI*/
+void GeoRef::build_pois_map() {
+   this->poi_map.clear();
+   for (POI* poi : pois) {
+       this->poi_map[poi->uri] = poi;
    }
 }
 
@@ -789,20 +789,20 @@ GeoRef::~GeoRef() {
 }
 
 
-std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
+type::Indexes POI::get(type::Type_e type, const GeoRef &) const {
     switch(type) {
-    case type::Type_e::POIType : return {poitype_idx};
-    default : return {};
+    case type::Type_e::POIType : return type::make_indexes({poitype_idx});
+    default : return type::Indexes{};
     }
 }
 
-std::vector<type::idx_t> POIType::get(type::Type_e type, const GeoRef & data) const {
-    std::vector<type::idx_t> result;
+type::Indexes POIType::get(type::Type_e type, const GeoRef & data) const {
+    type::Indexes result;
     switch(type) {
     case type::Type_e::POI:
         for(const POI* elem : data.pois) {
             if(elem->poitype_idx == idx) {
-                result.push_back(elem->idx);
+                result.insert(elem->idx);
             }
         }
         break;

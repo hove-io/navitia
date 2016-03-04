@@ -41,6 +41,7 @@ www.navitia.io
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/variant.hpp>
 #include <boost/range/algorithm/find.hpp>
+#include <boost/container/container_fwd.hpp>
 #include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
@@ -63,7 +64,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 56; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 58; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -247,10 +248,10 @@ void Data::build_autocomplete(){
     pt_data->compute_score_autocomplete(*geo_ref);
 }
 
-void Data::build_raptor() {
+void Data::build_raptor(size_t cache_size) {
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "Start to build dataRaptor");
-    dataRaptor->load(*this->pt_data);
+    dataRaptor->load(*this->pt_data, cache_size);
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "Finished to build dataRaptor");
 }
@@ -426,16 +427,34 @@ void Data::build_associated_calendar() {
     }
 }
 
+/*
+    > Fill dataset_list for route and stoppoint
+    > Fill vehiclejourney_list for dataset
+    > These lists are used by ptref
+*/
+static void build_datasets(navitia::type::VehicleJourney* vj){
+    if(!vj->dataset) { return; }
+    if (vj->route && (!navitia::contains(vj->route->dataset_list, vj->dataset))){
+        vj->route->dataset_list.push_back(vj->dataset);
+    }
+    if (!navitia::contains(vj->dataset->vehiclejourney_list, vj)){
+        vj->dataset->vehiclejourney_list.push_back(vj);
+    }
+    for(navitia::type::StopTime& st : vj->stop_time_list){
+        if(st.stop_point && (!navitia::contains(st.stop_point->dataset_list, vj->dataset))){
+            st.stop_point->dataset_list.push_back(vj->dataset);
+        }
+    }
+}
+
 void Data::build_relations(){
     // physical_mode_list of line
-    for (const auto* vj: pt_data->vehicle_journeys) {
+    for (auto* vj: pt_data->vehicle_journeys) {
+        build_datasets(vj);
         if (! vj->physical_mode || ! vj->route || ! vj->route->line) { continue; }
-        if (boost::range::find(vj->route->line->physical_mode_list, vj->physical_mode)
-            != vj->route->line->physical_mode_list.end()) {
-            // physical_mode already in line
-            continue;
+        if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)){
+            vj->route->line->physical_mode_list.push_back(vj->physical_mode);
         }
-        vj->route->line->physical_mode_list.push_back(vj->physical_mode);
     }
 }
 
@@ -506,8 +525,13 @@ void Data::compute_labels() {
 template<> const std::vector<type_name*>& \
 Data::get_data<type_name>() const {\
     return this->pt_data->collection_name;\
+} \
+template<> std::vector<type_name*>& \
+Data::get_data<type_name>() {\
+    return this->pt_data->collection_name;\
 }
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
+#undef GET_DATA
 
 template<> const std::vector<georef::POI*>&
 Data::get_data<georef::POI>() const {
@@ -543,53 +567,103 @@ Data::get_data<type::disruption::Impact>() const {
     return pt_data->disruption_holder.get_weak_impacts();
 }
 
-std::vector<idx_t> Data::get_all_index(Type_e type) const {
-    size_t num_elements = 0;
+#define GET_ASSOCIATIVE_DATA(type_name, collection_name)\
+template<> const ContainerTrait<type_name>::associative_type& \
+Data::get_assoc_data<type_name>() const {\
+    return this->pt_data->collection_name##_map;\
+}
+ITERATE_NAVITIA_PT_TYPES(GET_ASSOCIATIVE_DATA)
+#undef GET_ASSOCIATIVE_DATA
+
+template<> const ContainerTrait<georef::POI>::associative_type&
+Data::get_assoc_data<georef::POI>() const {
+    return this->geo_ref->poi_map;
+}
+template<> const ContainerTrait<georef::POIType>::associative_type&
+Data::get_assoc_data<georef::POIType>() const {
+    return this->geo_ref->poitype_map;
+}
+template<> const ContainerTrait<StopPointConnection>::associative_type&
+Data::get_assoc_data<StopPointConnection>() const {
+    return this->pt_data->stop_point_connections;
+}
+template<> const ContainerTrait<MetaVehicleJourney>::associative_type&
+Data::get_assoc_data<MetaVehicleJourney>() const {
+    return this->pt_data->meta_vjs;
+}
+
+// JP and JPP can't work with automatic build clause
+template<> const ContainerTrait<routing::JourneyPattern>::associative_type&
+Data::get_assoc_data<routing::JourneyPattern>() const {
+    static const ContainerTrait<routing::JourneyPattern>::associative_type res;
+    return res;
+}
+template<> const ContainerTrait<routing::JourneyPatternPoint>::associative_type&
+Data::get_assoc_data<routing::JourneyPatternPoint>() const {
+    static const ContainerTrait<routing::JourneyPatternPoint>::associative_type res;
+    return res;
+}
+
+template<> const ContainerTrait<type::disruption::Impact>::associative_type&
+Data::get_assoc_data<type::disruption::Impact>() const {
+    return pt_data->disruption_holder.get_weak_impacts();
+}
+
+size_t Data::get_nb_obj(Type_e type) const {
     switch(type){
     #define GET_NUM_ELEMENTS(type_name, collection_name)\
     case Type_e::type_name:\
-        num_elements = this->pt_data->collection_name.size();break;
+        return this->pt_data->collection_name.size();
     ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
-    case Type_e::JourneyPattern: num_elements = dataRaptor->jp_container.nb_jps(); break;
-    case Type_e::JourneyPatternPoint: num_elements = dataRaptor->jp_container.nb_jpps(); break;
-    case Type_e::POI: num_elements = this->geo_ref->pois.size(); break;
-    case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
+    case Type_e::JourneyPattern: return dataRaptor->jp_container.nb_jps();
+    case Type_e::JourneyPatternPoint: return dataRaptor->jp_container.nb_jpps();
+    case Type_e::POI: return this->geo_ref->pois.size();
+    case Type_e::POIType: return this->geo_ref->poitypes.size();
     case Type_e::Connection:
-        num_elements = this->pt_data->stop_point_connections.size(); break;
-    case Type_e::MetaVehicleJourney: num_elements = this->pt_data->meta_vjs.size(); break;
+        return this->pt_data->stop_point_connections.size();
+    case Type_e::MetaVehicleJourney: return this->pt_data->meta_vjs.size();
     case Type_e::Impact:
-        num_elements = pt_data->disruption_holder.get_weak_impacts().size(); break;
-    default: break;
+        return pt_data->disruption_holder.get_weak_impacts().size();
+    default:
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("data"), "unknow collection, returing 0");
     }
-    std::vector<idx_t> indexes(num_elements);
-    for(size_t i=0; i < num_elements; i++)
-        indexes[i] = i;
+    return 0;
+}
+
+Indexes Data::get_all_index(Type_e type) const {
+    auto num_elements = get_nb_obj(type);
+    Indexes indexes;
+    indexes.reserve(num_elements);
+    for(size_t i=0; i < num_elements; i++) {
+        indexes.insert(i);
+    }
+
     return indexes;
 }
 
-
-
-std::vector<idx_t>
+Indexes
 Data::get_target_by_source(Type_e source, Type_e target,
-                           std::vector<idx_t> source_idx) const {
-    std::vector<idx_t> result;
+                           Indexes source_idx) const {
+    Indexes result;
     result.reserve(source_idx.size());
     for(idx_t idx : source_idx) {
-        std::vector<idx_t> tmp;
-        tmp = get_target_by_one_source(source, target, idx);
-        result.insert(result.end(), tmp.begin(), tmp.end());
+        Indexes tmp = get_target_by_one_source(source, target, idx);
+        result.insert(/*boost::container::ordered_unique_range_t(),
+                        // Note the tag does not work on old boost version,
+                        //   put it back when we stop boost 1.49 support*/
+                        tmp.begin(), tmp.end());
     }
     return result;
 }
 
-std::vector<idx_t>
+Indexes
 Data::get_target_by_one_source(Type_e source, Type_e target,
                                idx_t source_idx) const {
-    std::vector<idx_t> result;
+    Indexes result;
     if(source_idx == invalid_idx)
         return result;
     if(source == target){
-        result.push_back(source_idx);
+        result.insert(source_idx);
         return result;
     }
     const auto& jp_container = dataRaptor->jp_container;
@@ -597,14 +671,14 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         switch (source) {
         case Type_e::Route:
             for (const auto& jpp: jp_container.get_jps_from_route()[routing::RouteIdx(source_idx)]) {
-                result.push_back(jpp.val);
+                result.insert(jpp.val); //TODO use bulk insert ?
             }
             break;
         case Type_e::VehicleJourney:
-            result.push_back(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
+            result.insert(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
             break;
         case Type_e::JourneyPatternPoint:
-            result.push_back(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
+            result.insert(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
             break;
         default: break;
         }
@@ -614,12 +688,12 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         switch (source) {
         case Type_e::StopPoint:
             for (const auto& jpp: dataRaptor->jpps_from_sp[routing::SpIdx(source_idx)]) {
-                result.push_back(jpp.idx.val);
+                result.insert(jpp.idx.val); //TODO use bulk insert ?
             }
             break;
         case Type_e::JourneyPattern:
             for (const auto& jpp_idx: jp_container.get(routing::JpIdx(source_idx)).jpps) {
-                result.push_back(jpp_idx.val);
+                result.insert(jpp_idx.val); //TODO use bulk insert ?
             }
             break;
         default: break;
@@ -630,11 +704,11 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     case Type_e::JourneyPattern: {
         const auto& jp = jp_container.get(routing::JpIdx(source_idx));
         switch(target) {
-        case Type_e::Route: result.push_back(jp.route_idx.val); break;
+        case Type_e::Route: result.insert(jp.route_idx.val); break;
         case Type_e::JourneyPatternPoint: /* already done */ break;
         case Type_e::VehicleJourney:
-            for (const auto& vj: jp.discrete_vjs) { result.push_back(vj->idx); }
-            for (const auto& vj: jp.freq_vjs) { result.push_back(vj->idx); }
+            for (const auto& vj: jp.discrete_vjs) { result.insert(vj->idx); } //TODO use bulk insert ?
+            for (const auto& vj: jp.freq_vjs) { result.insert(vj->idx); } //TODO use bulk insert ?
             break;
         default: break;
         }
@@ -644,7 +718,7 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         switch(target) {
         case Type_e::JourneyPattern: /* already done */ break;
         case Type_e::StopPoint:
-            result.push_back(jp_container.get(routing::JppIdx(source_idx)).sp_idx.val);
+            result.insert(jp_container.get(routing::JppIdx(source_idx)).sp_idx.val);
             break;
         default: break;
         }

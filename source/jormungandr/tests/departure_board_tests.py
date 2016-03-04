@@ -139,7 +139,7 @@ def get_real_notes(obj, full_response):
     return [real_notes[n['id']] for n in get_not_null(obj, 'links') if n['type'] == 'notes']
 
 
-@dataset(["departure_board_test"])
+@dataset({"departure_board_test":{}})
 class TestDepartureBoard(AbstractTestFixture):
     """
     Test the structure of the departure board api
@@ -402,7 +402,7 @@ def check_departures(response, reference):
         eq_(get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time'), ref.dt)
 
 
-@dataset(["basic_schedule_test"])
+@dataset({"basic_schedule_test": {}})
 class TestSchedules(AbstractTestFixture):
 
     def test_classic_stop_schedule(self):
@@ -529,6 +529,10 @@ class TestSchedules(AbstractTestFixture):
 
         departures = response["departures"]
         is_valid_departures(departures)
+        # Since data_freshness is specified, it's set to realtime by default, and there shouldn't be (prev, next) links
+        # for api  navigation
+        assert not [l for l in response.get('links') if l.get('rel') == 'prev']
+        assert not [l for l in response.get('links') if l.get('rel') == 'next']
         self.check_departure_rt_sol(departures)
 
     def test_departure_base_sched(self):
@@ -540,6 +544,9 @@ class TestSchedules(AbstractTestFixture):
 
         departures = response["departures"]
         is_valid_departures(departures)
+        # test if there are 'prev' and 'next' links for api navigation
+        assert next(l for l in response.get('links') if l.get('rel') == 'prev')
+        assert next(l for l in response.get('links') if l.get('rel') == 'next')
         self.check_departure_base_schedule_sol(departures)
 
     def test_departure_dt(self):

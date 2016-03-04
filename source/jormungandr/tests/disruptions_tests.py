@@ -37,7 +37,7 @@ def get_impacts(response):
 default_date_filter = '_current_datetime=20120801T000000'
 
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestDisruptions(AbstractTestFixture):
     """
     Test the structure of the disruption api

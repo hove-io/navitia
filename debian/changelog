@@ -1,3 +1,22 @@
+navitia2 (2.3.0) unstable; urgency=low
+
+  * Ptref: add contributors  <https://github.com/CanalTP/navitia/pull/1453>
+  * Type: use flat_set instead of vector in ptref  <https://github.com/CanalTP/navitia/pull/1448>
+  * Jormun: delete prev next link for realtime  <https://github.com/CanalTP/navitia/pull/1450>
+  * routing: mutualize CachedNextStopTimeManager between threads  <https://github.com/CanalTP/navitia/pull/1446>
+  * kraken: show_codes = true for all APIs  <https://github.com/CanalTP/navitia/pull/1444>
+  * jormun: serve challenge on 401  <https://github.com/CanalTP/navitia/pull/1443>
+  * jormungandr: activate realtime proxy in departures  <https://github.com/CanalTP/navitia/pull/1440>
+  * jormun: upgrade to the new (but patched) version of flask-restful  <https://github.com/CanalTP/navitia/pull/1388>
+  * Ptref: use map for uri look up  <https://github.com/CanalTP/navitia/pull/1435>
+  * Jormun: Add Timeo Integration Tests  <https://github.com/CanalTP/navitia/pull/1433>
+  * documentation: frame renamed to dataset  <https://github.com/CanalTP/navitia/pull/1432>
+  * kraken: Relation frame route stop point  <https://github.com/CanalTP/navitia/pull/1427>
+  * ed, kraken: Rename frame in ed and kraken  <https://github.com/CanalTP/navitia/pull/1430>
+  * Jormungandr: night_bus_filter_max_factor is a float  <https://github.com/CanalTP/navitia/pull/1429>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 04 Mar 2016 18:03:36 +0100
+
 navitia2 (2.2.1) unstable; urgency=low
 
   * Jormungandr: forbidden_id/_uris debug  <https://github.com/CanalTP/navitia/pull/1445>

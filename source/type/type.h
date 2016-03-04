@@ -139,6 +139,7 @@ struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
+struct Dataset;
 
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
@@ -152,6 +153,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
+    std::vector<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         // The *_list are not serialized here to avoid stack abuse
@@ -159,12 +161,12 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
         //
         // stop_point_connection_list is managed by StopPointConnection
         ar & uri & label & name & stop_area & coord & fare_zone & is_zonal & idx & platform_code
-            & admin_list & _properties & impacts;
+            & admin_list & _properties & impacts & dataset_list;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopPoint & other) const { return this < &other; }
 
 };
@@ -194,7 +196,7 @@ struct StopPointConnection: public Header, hasProperties{
         destination->stop_point_connection_list.push_back(this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const StopPointConnection &other) const;
 
@@ -258,7 +260,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     }
 
     std::vector<StopPoint*> stop_point_list;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
@@ -281,7 +283,7 @@ struct Network : public Header, HasMessages {
             & mail & website & fax & sort & line_list & impacts;
     }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Network & other) const {
         if(this->sort != other.sort) {
             return this->sort < other.sort;
@@ -294,23 +296,21 @@ struct Network : public Header, HasMessages {
 
 };
 
-struct Frame;
-
 struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
     std::string website;
     std::string license;
-    std::vector<Frame*> frame_list;
+    std::vector<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & website & license & frame_list;
+        ar & idx & name & uri & website & license & dataset_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
-struct Frame : public Header, Nameable{
-    const static Type_e type = Type_e::Frame;
+struct Dataset : public Header, Nameable{
+    const static Type_e type = Type_e::Dataset;
     Contributor* contributor=nullptr;
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
     boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
@@ -319,10 +319,10 @@ struct Frame : public Header, Nameable{
     std::vector<VehicleJourney*> vehiclejourney_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & contributor & realtime_level & validation_period & desc & system & vehiclejourney_list;
+        ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Frame & other) const { return this < &other; }
+    Indexes get(Type_e type, const PT_Data & data) const;
+    bool operator<(const Dataset & other) const { return this < &other; }
 };
 
 struct Company : public Header, Nameable {
@@ -341,7 +341,7 @@ struct Company : public Header, Nameable {
         ar & idx & name & uri & address_name & address_number &
         address_type_name & phone_number & mail & website & fax & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Company & other) const { return this < &other; }
 };
 
@@ -351,7 +351,7 @@ struct CommercialMode : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const CommercialMode & other) const { return this < &other; }
 
 };
@@ -364,7 +364,7 @@ struct PhysicalMode : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & co2_emission & vehicle_journey_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     PhysicalMode() {}
     bool operator<(const PhysicalMode & other) const { return this < &other; }
@@ -436,7 +436,7 @@ struct Line : public Header, Nameable, HasMessages {
                 & impacts & calendar_list & shape & closing_time
                 & opening_time & properties & line_group_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const Line & other) const {
         if(this->network != other.network){
@@ -467,7 +467,7 @@ struct LineGroup : public Header, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & main_line & line_list;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const LineGroup & other) const { return this < &other; }
 };
 
@@ -550,7 +550,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
-    Frame* frame = nullptr;
+    Dataset* dataset = nullptr;
 
     std::string get_direction() const;
     bool has_datetime_estimated() const;
@@ -559,18 +559,34 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     bool has_boarding() const;
     bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    Indexes get(Type_e type, const PT_Data& data) const;
     std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
 
     bool operator<(const VehicleJourney& other) const;
-    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
+
+    template<class Archive> void save(Archive& ar, const unsigned int ) const {
         ar & name & uri & route & physical_mode & company & validity_patterns
             & idx & stop_time_list & realtime_level
             & vehicle_journey_type
             & odt_message & _vehicle_properties
             & next_vj & prev_vj
-            & meta_vj & shift & frame;
+            & meta_vj & shift & dataset;
     }
+    template<class Archive> void load(Archive& ar, const unsigned int ) {
+        ar & name & uri & route & physical_mode & company & validity_patterns
+            & idx & stop_time_list & realtime_level
+            & vehicle_journey_type
+            & odt_message & _vehicle_properties
+            & next_vj & prev_vj
+            & meta_vj & shift & dataset;
+
+        // due to circular references we can't load the vjs in the dataset using only boost::serialize
+        // so we need to save the vj in it's dataset
+        if (dataset) {
+            dataset->vehiclejourney_list.push_back(this);
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     virtual ~VehicleJourney();
     //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
@@ -619,6 +635,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
+    std::vector<Dataset*> dataset_list;
 
     type::hasOdtProperties get_odt_properties() const;
 
@@ -632,10 +649,10 @@ struct Route : public Header, Nameable, HasMessages {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & destination & discrete_vehicle_journey_list
-            & frequency_vehicle_journey_list & impacts & shape & direction_type;
+            & frequency_vehicle_journey_list & impacts & shape & direction_type & dataset_list;
     }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const Route & other) const { return this < &other; }
 
     std::string get_label() const;
@@ -779,7 +796,7 @@ struct Calendar : public Nameable, public Header {
 
     bool operator<(const Calendar & other) const { return this < &other; }
 
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    Indexes get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern;
     }
@@ -866,7 +883,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     const std::string& get_label() const { return uri; } // for the moment the label is just the uri
 
-    std::vector<idx_t> get(Type_e type, const PT_Data& data) const;
+    Indexes get(Type_e type, const PT_Data& data) const;
 
     void push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact);
 
@@ -977,6 +994,21 @@ std::string get_admin_name(const T* v) {
     }
     return admin_name;
 }
+
+template<typename T> inline Type_e get_type_e() {
+    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
+    return Type_e::Unknown;
+}
+template<> inline Type_e get_type_e<PhysicalMode>() {
+    return Type_e::PhysicalMode;
+}
+template<> inline Type_e get_type_e<CommercialMode>() {
+    return Type_e::CommercialMode;
+}
+template<> inline Type_e get_type_e<Contributor>() {
+    return Type_e::Contributor;
+}
+
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

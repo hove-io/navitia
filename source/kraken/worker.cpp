@@ -73,7 +73,7 @@ static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     case pbnavitia::IMPACT: return nt::Type_e::Impact;
     case pbnavitia::TRIP: return nt::Type_e::MetaVehicleJourney;
     case pbnavitia::CONTRIBUTOR: return nt::Type_e::Contributor;
-    case pbnavitia::FRAME: return nt::Type_e::Frame;
+    case pbnavitia::DATASET: return nt::Type_e::Dataset;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -213,8 +213,8 @@ void Worker::feed_publisher(pbnavitia::Response& response){
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(data->data_identifier != this->last_data_identifier || !planner){
-        planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data, conf.raptor_cache_size()));
-        street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
+        planner = std::make_unique<routing::RAPTOR>(*data);
+        street_network_worker = std::make_unique<georef::StreetNetwork>(*data->geo_ref);
         this->last_data_identifier = data->data_identifier;
 
         LOG4CPLUS_INFO(logger, "Instanciate planner");
@@ -278,7 +278,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    PbCreator pb_creator(*data, current_datetime, null_time_period, request.show_codes());
+    PbCreator pb_creator(*data, current_datetime, null_time_period, true);
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
@@ -383,8 +383,7 @@ type::GeographicalCoord Worker::coord_of_entry_point(
     } else if(entry_point.type == Type_e::POI){
         auto poi = data->geo_ref->poi_map.find(entry_point.uri);
         if (poi != data->geo_ref->poi_map.end()){
-            const auto geo_poi = data->geo_ref->pois[poi->second];
-            result = geo_poi->coord;
+            result = poi->second->coord;
         }
     }
     return result;
@@ -462,7 +461,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
-                pb_creator.fill(data->geo_ref->pois[it_poi->second], pb_creator.add_places(), 1);
+                pb_creator.fill(it_poi->second, pb_creator.add_places(), 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
@@ -624,20 +623,20 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                                 request.clockwise(), accessibilite_params,
                                                 forbidden, *street_network_worker,
                                                 rt_level, request.max_duration(),
-                                                request.max_transfers(), request.show_codes());
+                                                request.max_transfers(), true);
     }
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
+                request.max_transfers(), true, request.max_extra_second_pass());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.show_codes(), request.max_extra_second_pass());
+                request.max_transfers(), true, request.max_extra_second_pass());
     }
 }
 
@@ -652,7 +651,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
                                     forbidden_uri,
                                     get_odt_level(request.odt_level()),
                                     request.depth(),
-                                    request.show_codes(),
+                                    true,
                                     request.start_page(),
                                     request.count(),
                                     boost::make_optional(request.has_since_datetime(),

@@ -90,6 +90,7 @@ struct CodeContainer {
 
     template<typename T>
     void add(const T* obj, const std::string& key, const std::string& val) {
+        assert(obj);
         auto& obj_m = at_key<T>(obj_map);
         obj_m[obj][key].push_back(val);
 

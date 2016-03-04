@@ -217,9 +217,9 @@ struct GeoRef {
     navitia::time_duration default_time_parking_park = seconds(5 * 60);
 
     std::vector<POIType*> poitypes;
-    std::map<std::string, nt::idx_t> poitype_map;
+    std::map<std::string, POIType*> poitype_map;
     std::vector<POI*> pois;
-    std::map<std::string, nt::idx_t> poi_map;
+    std::map<std::string, POI*> poi_map;
     proximitylist::ProximityList<type::idx_t> poi_proximity_list;
     std::vector<Way*> ways;
     std::map<std::string, nt::idx_t> way_map;
@@ -266,8 +266,8 @@ struct GeoRef {
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & ghostwords & poi_proximity_list
-                & nb_vertex_by_mode;
+                & admins & admin_map &  pois & fl_poi & poitypes & poitype_map & poi_map & synonyms
+                & ghostwords & poi_proximity_list & nb_vertex_by_mode;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
@@ -275,8 +275,8 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & ghostwords & poi_proximity_list
-                & nb_vertex_by_mode;
+                & admins & admin_map & pois & fl_poi & poitypes & poitype_map & poi_map & synonyms
+                & ghostwords & poi_proximity_list & nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -402,7 +402,7 @@ struct POIType : public nt::Nameable, nt::Header{
         ar &idx &uri &name;
     }
 
-    std::vector<type::idx_t> get(type::Type_e type, const GeoRef & data) const;
+    type::Indexes get(type::Type_e type, const GeoRef & data) const;
 };
 
 
@@ -424,7 +424,7 @@ struct POI : public nt::Nameable, nt::Header{
         ar &idx & uri & name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name & label;
     }
 
-    std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;
+    type::Indexes get(type::Type_e type, const GeoRef &) const;
 
     private:
 };

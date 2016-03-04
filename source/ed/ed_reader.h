@@ -69,7 +69,7 @@ private:
     std::unordered_map<idx_t, navitia::type::PhysicalMode*> physical_mode_map;
     std::unordered_map<idx_t, navitia::type::Company*> company_map;
     std::unordered_map<idx_t, navitia::type::Contributor*> contributor_map;
-    std::unordered_map<idx_t, navitia::type::Frame*> frame_map;
+    std::unordered_map<idx_t, navitia::type::Dataset*> dataset_map;
     std::unordered_map<idx_t, navitia::type::StopArea*> stop_area_map;
     std::unordered_map<idx_t, navitia::type::StopPoint*> stop_point_map;
     std::unordered_map<idx_t, navitia::type::Line*> line_map;
@@ -111,7 +111,7 @@ private:
     void fill_physical_modes(navitia::type::Data& data, pqxx::work& work);
     void fill_companies(navitia::type::Data& data, pqxx::work& work);
     void fill_contributors(nt::Data& data, pqxx::work& work);
-    void fill_frames(nt::Data& data, pqxx::work& work);
+    void fill_datasets(nt::Data& data, pqxx::work& work);
 
     void fill_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_points(navitia::type::Data& data, pqxx::work& work);

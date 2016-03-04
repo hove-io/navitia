@@ -73,12 +73,12 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
-    // Check frames
-    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.frames[0]->uri, "default_frame:" + data.contributors[0]->uri);
-    BOOST_REQUIRE_EQUAL(data.frames[0]->desc, "default frame: " + data.contributors[0]->name);
-    BOOST_REQUIRE_EQUAL(data.frames[0]->contributor->uri, data.contributors[0]->uri);
-    BOOST_REQUIRE_EQUAL(data.frames[0]->validation_period, data.meta.production_date);
+    // Check datasets
+    BOOST_REQUIRE_EQUAL(data.datasets.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.datasets[0]->uri, "default_dataset:" + data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.datasets[0]->desc, "default dataset: " + data.contributors[0]->name);
+    BOOST_REQUIRE_EQUAL(data.datasets[0]->contributor->uri, data.contributors[0]->uri);
+    BOOST_REQUIRE_EQUAL(data.datasets[0]->validation_period, data.meta.production_date);
 
 
     //timzeone check
@@ -364,13 +364,13 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
         BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
     }
 
-    BOOST_REQUIRE_EQUAL(data.frames.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.datasets.size(), 1);
     BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.contributors[0], data.frames[0]->contributor);
-    BOOST_CHECK_EQUAL(data.frames[0]->desc, "frame_test");
-    BOOST_CHECK_EQUAL(data.frames[0]->uri, "f1");
-    BOOST_CHECK_EQUAL(data.frames[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
-    BOOST_CHECK_EQUAL(data.frames[0]->realtime_level == nt::RTLevel::Base, true);
-    BOOST_CHECK_EQUAL(data.frames[0]->system, "obiti");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->frame->uri, "f1");
+    BOOST_REQUIRE_EQUAL(data.contributors[0], data.datasets[0]->contributor);
+    BOOST_CHECK_EQUAL(data.datasets[0]->desc, "dataset_test");
+    BOOST_CHECK_EQUAL(data.datasets[0]->uri, "d1");
+    BOOST_CHECK_EQUAL(data.datasets[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
+    BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.datasets[0]->system, "obiti");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->dataset->uri, "d1");
 }

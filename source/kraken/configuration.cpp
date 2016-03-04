@@ -185,8 +185,8 @@ size_t Configuration::raptor_cache_size() const{
         return 10;
     }
     int raptor_cache_size = vm["GENERAL.raptor_cache_size"].as<int>();
-    if (raptor_cache_size < 0) {
-        throw std::invalid_argument("raptor_cache_size cannot be negative");
+    if (raptor_cache_size < 1) {
+        throw std::invalid_argument("raptor_cache_size must be strictly positive");
     }
     return size_t(raptor_cache_size);
 }

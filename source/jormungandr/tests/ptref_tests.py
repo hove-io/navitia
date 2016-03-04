@@ -33,7 +33,7 @@ from tests.tests_mechanism import dataset, AbstractTestFixture
 from check_utils import *
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestPtRef(AbstractTestFixture):
     """
     Test the structure of the ptref response
@@ -133,7 +133,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_show_codes_propagation(self):
         """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
-        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys?show_codes=true")
+        response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -175,13 +175,13 @@ class TestPtRef(AbstractTestFixture):
         assert len(datasets) == 1
 
         ds = datasets[0]
-        assert(ds["id"] == 'f1')
-        assert(ds["description"] == 'desc-f1')
-        assert(ds["system"] == 'sys-f1')
+        assert(ds["id"] == 'd1')
+        assert(ds["description"] == 'desc-d1')
+        assert(ds["system"] == 'sys-d1')
 
     def test_contributor_by_dataset(self):
         """test contributor by dataset formating"""
-        response = self.query_region("datasets/f1/contributors")
+        response = self.query_region("datasets/d1/contributors")
         ctrs = get_not_null(response, 'contributors')
         assert len(ctrs) == 1
 
@@ -198,7 +198,7 @@ class TestPtRef(AbstractTestFixture):
         assert len(frs) == 1
 
         fr = frs[0]
-        assert(fr["id"] == 'f1')
+        assert(fr["id"] == 'd1')
 
     def test_line(self):
         """test line formating"""
@@ -334,7 +334,7 @@ class TestPtRef(AbstractTestFixture):
 
         is_valid_stop_area(stops[0], depth_check=2)
         modes = get_not_null(stops[0], 'physical_modes')
-        assert len(modes) == 2
+        assert len(modes) == 1
         modes = get_not_null(stops[0], 'commercial_modes')
         assert len(modes) == 1
 
@@ -481,7 +481,7 @@ class TestPtRef(AbstractTestFixture):
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
 
 
-@dataset(["main_ptref_test", "main_routing_test"])
+@dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
     def test_external_code(self):
         """test the strange and ugly external code api"""
@@ -495,7 +495,8 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
         _, status = self.query_no_assert("v1/coverage/lines/bob")
         eq_(status, 404)
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_with_coords(self):

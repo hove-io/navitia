@@ -31,7 +31,7 @@
 import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
-from flask.ext.restful.types import boolean
+from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
@@ -197,7 +197,7 @@ section = {
 }
 
 cost = {
-    'value': fields.Float(),
+    'value': fields.String(),
     'currency': fields.String(),
 }
 
@@ -577,7 +577,7 @@ class Journeys(ResourceUri, ResourceUtc):
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", type=int)
-        parser_get.add_argument("_night_bus_filter_max_factor", type=int)
+        parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
 

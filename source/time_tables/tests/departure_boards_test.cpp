@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
@@ -178,6 +179,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");

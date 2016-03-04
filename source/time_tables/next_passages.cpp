@@ -87,14 +87,9 @@ void next_passages(PbCreator& pb_creator, const std::string &request,
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         const type::Route* route = vj->route;
         const type::Line* line = route->line;
-        const type::PhysicalMode* physical_mode = vj->physical_mode;
-        auto m_vj = passage->mutable_vehicle_journey();
-        auto m_route = m_vj->mutable_route();
-        auto m_physical_mode = m_vj->mutable_journey_pattern()->mutable_physical_mode();
-        pb_creator.fill(vj, m_vj, 0);
+        auto m_route = passage->mutable_route();
         pb_creator.fill(route, m_route, 0);
         pb_creator.fill(line, m_route->mutable_line(), 0);
-        pb_creator.fill(physical_mode, m_physical_mode, 0);
 
         const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
         pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);

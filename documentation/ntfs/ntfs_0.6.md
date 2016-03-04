@@ -29,13 +29,13 @@ Les données sont formatées de la manière suivante :
 
 # Liste des fichiers du format
 ## Fichiers spéciaux
-    Ces fichiers permettent de décrire précisément d'où viennent les données dans le cas d'un référentiel agrégeant plusieurs sources de données. La notion de _contributor_ correspond à une source de données (un exploitant peut nécessiter l'utilisation de plusieurs contributeurs). La notion de _frame_ correspond à un jeu de données provenant d'un contributeur.
-    Les autres fichiers peuvent référencer un _contributor_id_ et/ou un _frame_id_. Dans le cas où les deux notions sont spécifiées, c'est la notion de _frame_ qui sera prédominante.
+    Ces fichiers permettent de décrire précisément d'où viennent les données dans le cas d'un référentiel agrégeant plusieurs sources de données. La notion de _contributor_ correspond à une source de données (un exploitant peut nécessiter l'utilisation de plusieurs contributeurs). La notion de _dataset_ correspond à un jeu de données provenant d'un contributeur.
+    Les autres fichiers peuvent référencer un _contributor_id_ et/ou un _dataset_id_. Dans le cas où les deux notions sont spécifiées, c'est la notion de _dataset_ qui sera prédominante.
 
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-contributors.txt | Optionnel | Ce fichier contient les contributeurs. 
-frames.txt | Optionnel | Ce fichier contient les sources de données d'un contributeur.
+contributors.txt | Optionnel | Ce fichier contient les contributeurs.
+datasets.txt | Optionnel | Ce fichier contient les sources de données d'un contributeur.
 
 ## Fichiers de base
 Fichier | Contrainte | Commentaire
@@ -183,18 +183,18 @@ contributor_name | chaine | Requis | Nom du contributeur
 contributor_license | chaine | Optionnel | licence d'utilisation des données du contributeur pour le référentiel
 contributor_website | chaine | Optionnel | URL du site web associé au fournisseur de données
 
-### frames.txt (réservé)
+### datasets.txt (réservé)
 Ce fichier liste des jeux de données du contributeur associé contenus dans le référentiel.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-frame_id | chaine | Requis | Identifiant du jeu de données 
+dataset_id | chaine | Requis | Identifiant du jeu de données
 contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fichier contributors)
-frame_start_date | date | Requis | Date de début de prise en compte du jeu de données (peut-être différent de la date de début de validité de l'export source)
-frame_end_date | date | Requis | Date de fin de prise en compte du jeu de données (peut-être différent de la date de fin de validité de l'export source)
-frame_type | entier (1) | Optionnel | Type de données représentant la "fraicheur" 
-frame_desc | chaine | Optionnel | Note indiquant le contenu du jeu de données
-frame_system | chaine | Optionnel | Nom du système source ayant généré les données ou du format des données
+dataset_start_date | date | Requis | Date de début de prise en compte du jeu de données (peut-être différent de la date de début de validité de l'export source)
+dataset_end_date | date | Requis | Date de fin de prise en compte du jeu de données (peut-être différent de la date de fin de validité de l'export source)
+dataset_type | entier (1) | Optionnel | Type de données représentant la "fraicheur"
+dataset_desc | chaine | Optionnel | Note indiquant le contenu du jeu de données
+dataset_system | chaine | Optionnel | Nom du système source ayant généré les données ou du format des données
 
 (1) Spécifie le type de données :
 
@@ -329,8 +329,7 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
-frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni l'arrêt (lien vers le fichier frames). Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. 
+contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. Ce champ est ignoré si le champ dataset_id est renseigné avec un identifiant valide.
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique
@@ -407,8 +406,8 @@ block_id | chaine | Optionnel | Identifiant du prolongement de service
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
-contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors). Ce champ est ignoré si le champ frame_id est renseigné avec un identifiant valide.
-frame_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier frames).
+contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors). Ce champ est ignoré si le champ dataset_id est renseigné avec un identifiant valide.
+dataset_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier datasets).
 base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
 

@@ -274,7 +274,7 @@ class PlaceUri(ResourceUri):
         return response, 200
 
 place_nearby = deepcopy(place)
-place_nearby["distance"] = fields.Float()
+place_nearby["distance"] = fields.String()
 places_nearby = {
     "places_nearby": NonNullList(NonNullNested(place_nearby)),
     "error": PbField(error, attribute='error'),

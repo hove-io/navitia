@@ -32,9 +32,7 @@ import itertools
 import datetime
 from jormungandr.scenarios.utils import compare, get_pseudo_duration
 from navitiacommon import response_pb2
-
-#we can't use reverse(enumerate(list)) without creating a temporary list, so we define our own reverse enumerate
-reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
+from jormungandr.utils import pb_del_if
 
 
 def delete_journeys(responses, request):
@@ -44,12 +42,7 @@ def delete_journeys(responses, request):
 
     nb_deleted = 0
     for r in responses:
-        for idx, j in reverse_enumerate(r.journeys):
-            if not _to_be_deleted(j):
-                continue
-
-            del r.journeys[idx]
-            nb_deleted += 1
+        nb_deleted += pb_del_if(r.journeys, lambda j: _to_be_deleted(j))
 
     if nb_deleted:
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))

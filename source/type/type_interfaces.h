@@ -31,6 +31,7 @@ www.navitia.io
 #include <bitset>
 #include <iostream>
 #include "utils/idx_map.h"
+#include <boost/container/flat_set.hpp>
 
 namespace navitia {
 namespace type {
@@ -52,7 +53,7 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
     FUN(Route, routes)\
     FUN(Contributor, contributors)\
     FUN(Calendar, calendars) \
-    FUN(Frame, frames)
+    FUN(Dataset, datasets)
 
 enum class Type_e {
     ValidityPattern                 = 0,
@@ -84,7 +85,8 @@ enum class Type_e {
     LineGroup                       = 25,
     MetaVehicleJourney              = 26,
     Impact                          = 27,
-    Frame                           = 28
+    Dataset                         = 28,
+    size                            = 29
 };
 
 enum class Mode_e {
@@ -120,10 +122,21 @@ struct Nameable {
 
 struct PT_Data;
 
+using Indexes = boost::container::flat_set<idx_t>;
+
+inline Indexes make_indexes(std::initializer_list<idx_t> l) {
+    Indexes indexes;
+    indexes.reserve(l.size());
+    for (const auto& v: l) {
+        indexes.insert(v);
+    }
+    return indexes;
+}
+
 struct Header {
     idx_t idx = invalid_idx; // Index of the object in the main structure
     std::string uri; // unique indentifier of the object
-    std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
+    Indexes get(Type_e, const PT_Data&) const {return Indexes{};}
 };
 
 typedef std::bitset<10> Properties;

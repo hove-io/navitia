@@ -55,7 +55,7 @@ def check_valid_calendar(cal):
     #check links
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestCalendar(AbstractTestFixture):
 
     def test_calendars(self):

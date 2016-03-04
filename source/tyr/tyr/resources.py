@@ -31,7 +31,7 @@
 
 from flask import abort, current_app, url_for, request
 import flask_restful
-from flask_restful import fields, marshal_with, marshal, reqparse, types
+from flask_restful import fields, marshal_with, marshal, reqparse, inputs
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
@@ -269,7 +269,7 @@ class Instance(flask_restful.Resource):
     @marshal_with(instance_fields)
     def get(self, id=None, name=None):
         parser = reqparse.RequestParser()
-        parser.add_argument('is_free', type=types.boolean, required=False,
+        parser.add_argument('is_free', type=inputs.boolean, required=False,
                 case_sensitive=False, help='boolean for returning only free or private instances')
         args = parser.parse_args()
         if args['is_free'] != None:
@@ -358,7 +358,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in second',
                             location=('json', 'values'), default=instance.walking_transfer_penalty)
 
-        parser.add_argument('night_bus_filter_max_factor', type=int, help='night bus filter param',
+        parser.add_argument('night_bus_filter_max_factor', type=float, help='night bus filter param',
                             location=('json', 'values'), default=instance.night_bus_filter_max_factor)
 
         parser.add_argument('night_bus_filter_base_factor', type=int, help='night bus filter param',
@@ -561,7 +561,7 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def post(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=types.date, required=False,
+        parser.add_argument('valid_until', type=inputs.date, required=False,
                             help='end validity date of the key', location=('json', 'values'))
         parser.add_argument('app_name', type=str, required=True,
                             help='app name associated to this key', location=('json', 'values'))
@@ -592,7 +592,7 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=types.date, required=False,
+        parser.add_argument('valid_until', type=inputs.date, required=False,
                 help='end validity date of the key', location=('json', 'values'))
         parser.add_argument('app_name', type=str, required=True,
                 help='app name associated to this key', location=('json', 'values'))

@@ -492,12 +492,12 @@ const VehicleJourney* VehicleJourney::get_corresponding_base() const {
     return nullptr;
 }
 
-std::vector<idx_t> MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
     case Type_e::VehicleJourney:
         for_all_vjs([&](const VehicleJourney& vj) {
-            result.push_back(vj.idx);
+            result.insert(vj.idx); //TODO use bulk insert ?
         });
     break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
@@ -548,7 +548,7 @@ static_data * static_data::get() {
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption")
-                (Type_e::Frame, "frame")
+                (Type_e::Dataset, "dataset")
                 (Type_e::Admin, "admin");
 
         boost::assign::insert(temp->modes_string)
@@ -574,10 +574,10 @@ Mode_e static_data::modeByCaption(const std::string & mode_str) {
     return instance->modes_string.right.at(mode_str);
 }
 
-template<typename T> std::vector<idx_t> indexes(const std::vector<T*>& elements){
-    std::vector<idx_t> result;
+template<typename T> Indexes indexes(const std::vector<T*>& elements){
+    Indexes result;
     for(T* element : elements){
-        result.push_back(element->idx);
+        result.insert(element->idx);
     }
     return result;
 }
@@ -612,15 +612,15 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
-    std::vector<idx_t> result;
+Indexes Calendar::get(Type_e type, const PT_Data & data) const{
+    Indexes result;
     switch(type) {
     case Type_e::Line:{
         // if the method is slow, adding a list of lines in calendar
         for(Line* line: data.lines) {
             for(Calendar* cal : line->calendar_list) {
                 if(cal == this) {
-                    result.push_back(line->idx);
+                    result.insert(line->idx);
                     break;
                 }
             }
@@ -631,8 +631,8 @@ std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     }
     return result;
 }
-std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
-    std::vector<idx_t> result;
+Indexes StopArea::get(Type_e type, const PT_Data & data) const {
+    Indexes result;
     switch(type) {
     case Type_e::StopPoint: return indexes(this->stop_point_list);
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
@@ -642,8 +642,8 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     return result;
 }
 
-std::vector<idx_t> Network::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes Network::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
@@ -653,8 +653,8 @@ std::vector<idx_t> Network::get(Type_e type, const PT_Data& data) const {
 }
 
 
-std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
-    std::vector<idx_t> result;
+Indexes Company::get(Type_e type, const PT_Data &) const {
+    Indexes result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
     default: break;
@@ -662,8 +662,8 @@ std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
-    std::vector<idx_t> result;
+Indexes CommercialMode::get(Type_e type, const PT_Data &) const {
+    Indexes result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
     default: break;
@@ -671,13 +671,13 @@ std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
-    std::vector<idx_t> result;
+Indexes PhysicalMode::get(Type_e type, const PT_Data & data) const {
+    Indexes result;
     switch(type) {
     case Type_e::VehicleJourney:
         for (const auto* vj: data.vehicle_journeys) {
             if (vj->physical_mode != this) { continue; }
-            result.push_back(vj->idx);
+            result.insert(vj->idx);
         }
         break;
     default: break;
@@ -685,17 +685,17 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     return result;
 }
 
-std::vector<idx_t> Line::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes Line::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
     case Type_e::CommercialMode:
         if (this->commercial_mode){
-            result.push_back(commercial_mode->idx);
+            result.insert(commercial_mode->idx);
         }
         break;
     case Type_e::PhysicalMode: return indexes(physical_mode_list);
     case Type_e::Company: return indexes(company_list);
-    case Type_e::Network: result.push_back(network->idx); break;
+    case Type_e::Network: result.insert(network->idx); break;
     case Type_e::Route: return indexes(route_list);
     case Type_e::Calendar: return indexes(calendar_list);
     case Type_e::LineGroup: return indexes(line_group_list);
@@ -733,8 +733,8 @@ std::string Route::get_label() const {
     return s.str();
 }
 
-std::vector<idx_t> LineGroup::get(Type_e type, const PT_Data&) const {
-    std::vector<idx_t> result;
+Indexes LineGroup::get(Type_e type, const PT_Data&) const {
+    Indexes result;
     switch(type) {
     case Type_e::Line: return indexes(line_list);
     default: break;
@@ -742,17 +742,18 @@ std::vector<idx_t> LineGroup::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
-std::vector<idx_t> Route::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes Route::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
-    case Type_e::Line: result.push_back(line->idx); break;
+    case Type_e::Line: result.insert(line->idx); break;
     case Type_e::VehicleJourney:
         for_each_vehicle_journey([&](const VehicleJourney& vj) {
-                result.push_back(vj.idx);
+                result.insert(vj.idx); //TODO use bulk insert ?
                 return true;
             });
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;
@@ -786,15 +787,15 @@ VehicleJourney::get_impacts() const {
     return result;
 }
 
-std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
-    case Type_e::Route: result.push_back(route->idx); break;
-    case Type_e::Company: result.push_back(company->idx); break;
-    case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
-    case Type_e::ValidityPattern: result.push_back(base_validity_pattern()->idx); break;
-    case Type_e::MetaVehicleJourney: result.push_back(meta_vj->idx); break;
-    case Type_e::Frame: if (frame) { result.push_back(frame->idx); } break;
+    case Type_e::Route: result.insert(route->idx); break;
+    case Type_e::Company: result.insert(company->idx); break;
+    case Type_e::PhysicalMode: result.insert(physical_mode->idx); break;
+    case Type_e::ValidityPattern: result.insert(base_validity_pattern()->idx); break;
+    case Type_e::MetaVehicleJourney: result.insert(meta_vj->idx); break;
+    case Type_e::Dataset: if (dataset) { result.insert(dataset->idx); } break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
     default: break;
     }
@@ -805,27 +806,28 @@ VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 
-std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data& data) const {
-    std::vector<idx_t> result;
+Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
+    Indexes result;
     switch(type) {
-    case Type_e::StopArea: result.push_back(stop_area->idx); break;
+    case Type_e::StopArea: result.insert(stop_area->idx); break;
     case Type_e::Connection:
     case Type_e::StopPointConnection:
         for (const StopPointConnection* stop_cnx : stop_point_connection_list)
-            result.push_back(stop_cnx->idx);
+            result.insert(stop_cnx->idx); //TODO use bulk insert ?
         break;
     case Type_e::Impact: return data.get_impacts_idx(get_impacts());
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const {
-    std::vector<idx_t> result;
+Indexes StopPointConnection::get(Type_e type, const PT_Data & ) const {
+    Indexes result;
     switch(type) {
     case Type_e::StopPoint:
-        result.push_back(this->departure->idx);
-        result.push_back(this->destination->idx);
+        result.insert(this->departure->idx);
+        result.insert(this->destination->idx);
         break;
     default: break;
     }
@@ -833,20 +835,20 @@ std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const
 }
 bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
 
-std::vector<idx_t> Frame::get(Type_e type, const PT_Data&) const {
-    std::vector<idx_t> result;
+Indexes Dataset::get(Type_e type, const PT_Data&) const {
+    Indexes result;
     switch(type) {
-    case Type_e::Contributor: result.push_back(contributor->idx); break;
+    case Type_e::Contributor: result.insert(contributor->idx); break;
     case Type_e::VehicleJourney: return indexes(vehiclejourney_list);
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> Contributor::get(Type_e type, const PT_Data&) const {
-    std::vector<idx_t> result;
+Indexes Contributor::get(Type_e type, const PT_Data&) const {
+    Indexes result;
     switch(type) {
-    case Type_e::Frame: return indexes(frame_list);
+    case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;
@@ -900,8 +902,3 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
 }
 
 }} //namespace navitia::type
-
-#if BOOST_VERSION <= 105700
-BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
-BOOST_CLASS_EXPORT_GUID(navitia::type::FrequencyVehicleJourney, "FrequencyVehicleJourney")
-#endif

@@ -111,6 +111,7 @@ struct route_schedule_fixture {
         b.finish();
         b.data->pt_data->index();
         b.data->build_raptor();
+        b.data->pt_data->build_uri();
 
         boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
@@ -230,6 +231,7 @@ struct route_schedule_calendar_fixture {
         b.finish();
         b.data->pt_data->index();
         b.data->build_raptor();
+        b.data->pt_data->build_uri();
 
         b.data->meta->production_date = boost::gregorian::date_period(begin, end);
     }
@@ -495,6 +497,7 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
 
@@ -539,6 +542,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
@@ -589,6 +593,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
@@ -634,6 +639,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
+    b.data->pt_data->build_uri();
 
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period, false);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,

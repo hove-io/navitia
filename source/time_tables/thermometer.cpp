@@ -63,10 +63,10 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_p
     ++depth;
     ++nb_branches;
     uint32_t lower_bound = lower_bound_, upper_bound = upper_bound_;
-    std::vector<type::idx_t> result;
+    vector_idx result;
 
 
-    std::vector<type::idx_t> possibilities = generate_possibilities(journey_patterns, pre_computed_lb);
+    vector_idx possibilities = generate_possibilities(journey_patterns, pre_computed_lb);
     bool res_bool = possibilities.empty();
     for (auto poss_spidx : possibilities) {
         if (nb_branches > 5000 && !result.empty())
@@ -232,7 +232,7 @@ vector_idx Thermometer::get_thermometer() const {
 
 
 std::vector<uint32_t> Thermometer::stop_times_order(const type::VehicleJourney& vj) const {
-    std::vector<type::idx_t> tmp;
+    vector_idx tmp;
     for (const auto& st: vj.stop_time_list) {
         tmp.push_back(st.stop_point->idx);
     }

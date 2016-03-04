@@ -281,8 +281,8 @@ class Instance(db.Model):
     walking_transfer_penalty = db.Column(db.Integer, default=default_values.walking_transfer_penalty, nullable=False,
                                          server_default='2')
 
-    night_bus_filter_max_factor = db.Column(db.Integer, default=default_values.night_bus_filter_max_factor,
-                                            nullable=False, server_default='30')
+    night_bus_filter_max_factor = db.Column(db.Float, default=default_values.night_bus_filter_max_factor,
+                                            nullable=False)
 
     night_bus_filter_base_factor = db.Column(db.Integer, default=default_values.night_bus_filter_base_factor,
                                              nullable=False, server_default='3600')

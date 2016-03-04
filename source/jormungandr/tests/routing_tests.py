@@ -35,7 +35,8 @@ from nose.tools import eq_
 from overlapping_routing_tests import  MockKraken
 from jormungandr import instance_manager
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestJourneys(AbstractTestFixture):
     """
     Test the structure of the journeys response
@@ -307,8 +308,27 @@ class TestJourneys(AbstractTestFixture):
         eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
         eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080612']))
 
+    def test_journeys_float_night_bus_filter_max_factor(self):
+        """night_bus_filter_max_factor can be a float (and can be null)"""
 
-@dataset([])
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
+                         "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
+                    _night_bus_filter_max_factor=2.8)
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, query)
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
+                         "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T080000",
+                    _night_bus_filter_max_factor=0)
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, query)
+
+
+@dataset({})
 class TestJourneysNoRegion(AbstractTestFixture):
     """
     If no region loaded we must have a polite error while asking for a journey
@@ -333,7 +353,7 @@ class TestJourneysNoRegion(AbstractTestFixture):
         assert error_regexp.match(response['error']['message'])
 
 
-@dataset(["basic_routing_test"])
+@dataset({"basic_routing_test": {}})
 class TestLongWaitingDurationFilter(AbstractTestFixture):
     """
     Test if the filter on long waiting duration is working
@@ -387,6 +407,35 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
         eq_(response['journeys'][1]['type'], "best")
 
+    def test_journeys_without_show_codes(self):
+        '''
+        Test journeys api without show_codes.
+        The API's response contains the codes
+        '''
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+        eq_(len(response['journeys'][0]['sections']), 4)
+        first_section = response['journeys'][0]['sections'][0]
+        eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
+        eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+
+    def test_journeys_with_show_codes(self):
+        '''
+        Test journeys api with show_codes = false.
+        The API's response contains the codes
+        '''
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&show_codes=false"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+        eq_(len(response['journeys'][0]['sections']), 4)
+        first_section = response['journeys'][0]['sections'][0]
+        eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
+        eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
 
     def test_remove_one_journey_from_batch(self):
         """
@@ -427,7 +476,8 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 1)
 
-@dataset(["main_routing_test"])
+
+@dataset({"main_routing_test": {}})
 class TestShapeInGeoJson(AbstractTestFixture):
     """
     Test if the shape is used in the GeoJson
@@ -453,7 +503,8 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
 
-@dataset(["main_routing_test", "basic_routing_test"])
+
+@dataset({"main_routing_test": {}, "basic_routing_test": {}})
 class TestOneDeadRegion(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead
@@ -472,14 +523,14 @@ class TestOneDeadRegion(AbstractTestFixture):
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
 
-@dataset(["basic_routing_test"])
+@dataset({"basic_routing_test": {}})
 class TestIsochrone(AbstractTestFixture):
     def test_isochrone(self):
         response = self.query_region("journeys?from=I1&datetime=20120615T070000")
         assert(len(response['journeys']) == 2)
 
 
-@dataset(["main_routing_without_pt_test", "main_routing_test"])
+@dataset({"main_routing_without_pt_test": {}, "main_routing_test": {}})
 class TestWithoutPt(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead

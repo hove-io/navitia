@@ -32,6 +32,7 @@ from collections import deque
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 from navitiacommon import response_pb2, type_pb2
+from itertools import izip
 
 
 def str_to_time_stamp(str):
@@ -188,3 +189,21 @@ def realtime_level_to_pbf(level):
     else:
         raise ValueError('Impossible to convert in pbf')
 
+
+#we can't use reverse(enumerate(list)) without creating a temporary
+#list, so we define our own reverse enumerate
+def reverse_enumerate(l):
+    return izip(xrange(len(l)-1, -1, -1), reversed(l))
+
+
+def pb_del_if(l, pred):
+    '''
+    Delete the elements such as pred(e) is true in a protobuf list.
+    Return the number of elements deleted.
+    '''
+    nb = 0
+    for i, e in reverse_enumerate(l):
+        if pred(e):
+            del l[i]
+            nb += 1
+    return nb

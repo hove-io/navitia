@@ -39,7 +39,7 @@ class Calendar{
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 public:
     // Return idx calendars list
-    std::vector<type::idx_t> get_calendars(const std::string& filter,
+    type::Indexes get_calendars(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
                     const type::Data &d,
                     const boost::gregorian::date_period filter_period,

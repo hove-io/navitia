@@ -42,17 +42,21 @@ www.navitia.io
 #include "utils/obj_factory.h"
 
 //forward declare
-namespace navitia{
-    namespace georef{
+namespace navitia {
+    namespace georef {
         struct GeoRef;
+        struct POI;
+        struct POIType;
     }
-    namespace fare{
+    namespace fare {
         struct Fare;
     }
-    namespace routing{
+    namespace routing {
         struct dataRAPTOR;
+        struct JourneyPattern;
+        struct JourneyPatternPoint;
     }
-    namespace type{
+    namespace type {
         struct MetaData;
     }
 }
@@ -67,22 +71,53 @@ struct wrong_version : public navitia::exception {
 };
 
 template<typename T>
-struct DataTraitHelper {
-  typedef std::vector<T*> type;
+struct ContainerTrait {
+    typedef std::vector<T*> vect_type;
+    typedef std::unordered_map<std::string, T*> associative_type;
 };
 
 // specialization for impact
 // Instead of pure pointer, we can only get a weak_ptr when requesting impacts 
 template<>
-struct DataTraitHelper<type::disruption::Impact> {
-  typedef std::vector<boost::weak_ptr<type::disruption::Impact>> type;
+struct ContainerTrait<type::disruption::Impact> {
+    typedef std::vector<boost::weak_ptr<type::disruption::Impact>> vect_type;
+    // for impacts, we don't want to have a map, we use the vector as the associative_type
+    typedef vect_type associative_type;
 };
 
+// specialization for StopPointConnection, there is no map too
+template<>
+struct ContainerTrait<type::StopPointConnection> {
+    typedef std::vector<type::StopPointConnection*> vect_type;
+    typedef vect_type associative_type;
+};
+
+template<>
+struct ContainerTrait<navitia::georef::POIType> {
+    typedef std::vector<navitia::georef::POIType*> vect_type;
+    typedef std::map<std::string, navitia::georef::POIType*> associative_type;
+};
+template<>
+struct ContainerTrait<navitia::georef::POI> {
+    typedef std::vector<navitia::georef::POI*> vect_type;
+    typedef std::map<std::string, navitia::georef::POI*> associative_type;
+};
+template<>
+struct ContainerTrait<navitia::routing::JourneyPattern> {
+    typedef std::vector<navitia::routing::JourneyPattern*> vect_type;
+    typedef vect_type associative_type;
+};
+template<>
+struct ContainerTrait<navitia::routing::JourneyPatternPoint> {
+    typedef std::vector<navitia::routing::JourneyPatternPoint*> vect_type;
+    typedef vect_type associative_type;
+};
 // specialization for meta-vj
 // Instead of vector, we can only get an objFactory when requesting meta-vj
 template<>
-struct DataTraitHelper<type::MetaVehicleJourney> {
-  typedef ObjFactory<MetaVehicleJourney> type;
+struct ContainerTrait<type::MetaVehicleJourney> {
+    typedef ObjFactory<MetaVehicleJourney> vect_type;
+    typedef vect_type associative_type;
 };
 
 /** Contient toutes les données théoriques du référentiel transport en communs
@@ -118,12 +153,15 @@ public:
     // functor to find admins
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
-    /** Retourne la structure de données associée au type */
-    template<typename T> const typename DataTraitHelper<T>::type& get_data() const;
+    /** Return the vector containing all the objects of type T*/
+    template<typename T> const typename ContainerTrait<T>::vect_type& get_data() const;
+    template<typename T> typename ContainerTrait<T>::vect_type& get_data();
 
-    template<typename T> typename DataTraitHelper<T>::type
-    get_data(const std::vector<idx_t>& indexes) const {
-        typename DataTraitHelper<T>::type res;
+    template<typename T> const typename ContainerTrait<T>::associative_type& get_assoc_data() const;
+
+    template<typename T> typename ContainerTrait<T>::vect_type
+    get_data(const Indexes& indexes) const {
+        typename ContainerTrait<T>::vect_type res;
         const auto& objs = get_data<T>();
         for (const auto& idx: indexes) { res.push_back(objs[idx]); }
         return res;
@@ -133,18 +171,19 @@ public:
       *
       * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
       */
-    std::vector<idx_t> get_all_index(Type_e type) const;
+    Indexes get_all_index(Type_e type) const;
 
+    size_t get_nb_obj(Type_e type) const;
 
     /** Étant donné une liste d'indexes pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const;
+    Indexes get_target_by_source(Type_e source, Type_e target, Indexes source_idx) const;
 
     /** Étant donné un index pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
+    Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
 
     bool last_load = true;
@@ -201,7 +240,7 @@ public:
     /** Set admins*/
     void build_administrative_regions();
     /** Construit les données raptor */
-    void build_raptor();
+    void build_raptor(size_t cache_size = 10);
 
     void build_associated_calendar();
 

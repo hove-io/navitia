@@ -40,7 +40,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestJourneysExperimental(AbstractTestFixture):
     """
     Test the experiental scenario
@@ -89,7 +89,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert 'journeys' not in response or len(response['journeys']) == 0
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestJourneysExperimentalWithPtref(AbstractTestFixture):
     """Test the experimental scenario with ptref_test data"""
 

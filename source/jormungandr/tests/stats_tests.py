@@ -141,7 +141,7 @@ class MockWrapper:
         self.called = True
 
 
-@dataset(["main_routing_test"])
+@dataset({"main_routing_test": {}})
 class TestStatJourneys(AbstractTestFixture):
 
     def setup(self):
@@ -184,7 +184,7 @@ class TestStatJourneys(AbstractTestFixture):
         assert mock.called
 
 
-@dataset(["main_ptref_test"])
+@dataset({"main_ptref_test": {}})
 class TestStatPlaces(AbstractTestFixture):
 
     def setup(self):
