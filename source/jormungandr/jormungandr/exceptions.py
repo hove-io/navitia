@@ -125,3 +125,11 @@ def log_exception(sender, exception, **extra):
         logger.debug(error)
     else:
         logger.exception(error)
+        try:
+            import newrelic.agent
+            newrelic.agent.record_exception()#will record the exception currently handled
+        except ImportError:
+            pass
+        except:
+            logger = logging.getLogger(__name__)
+            logger.exception('failure while registering exception to newrelic')
