@@ -155,6 +155,7 @@ public:
 
     /** Return the vector containing all the objects of type T*/
     template<typename T> const typename ContainerTrait<T>::vect_type& get_data() const;
+    template<typename T> typename ContainerTrait<T>::vect_type& get_data();
 
     template<typename T> const typename ContainerTrait<T>::associative_type& get_assoc_data() const;
 

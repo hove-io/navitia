@@ -313,21 +313,7 @@ template<> pbnavitia::NavitiaType get_pb_type<nt::MetaVehicleJourney>(){ return 
 
 template <typename Target, typename Source>
 std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
-    const nt::Type_e type_e = get_type_e<Target>();
-    nt::Indexes indexes;
-    std::string request;
-    try{
-        request = nt::static_data::get()->captionByType(nav_obj->type) +
-            ".uri=" + nav_obj->uri;
-        indexes = navitia::ptref::make_query(type_e, request, pb_creator.data);
-    } catch(const navitia::ptref::parsing_error &parse_error) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                        "ptref_indexes, Unable to parse :" + parse_error.more + ", request: " + request);
-    } catch(const navitia::ptref::ptref_error &pt_error) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                        "ptref_indexes, " + pt_error.more + ", request: " + request);
-    }
-    return pb_creator.data.get_data<Target>(indexes);
+    return navitia::ptref_indexes<Target, Source>(nav_obj, pb_creator.data);
 }
 
 template<typename T>
@@ -415,7 +401,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Dataset* ds, pbnavitia::Dataset
 void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopArea* stop_area) {
 
     stop_area->set_uri(sa->uri);
-//    add_contributor(sa);
+    add_contributor(sa);
     stop_area->set_name(sa->name);
     stop_area->set_label(sa->label);
     stop_area->set_timezone(sa->timezone);
@@ -461,7 +447,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
 
     stop_point->set_uri(sp->uri);
-//    add_contributor(sp);
+    add_contributor(sp);
     stop_point->set_name(sp->name);
     stop_point->set_label(sp->label);
     if(!sp->platform_code.empty()) {
@@ -525,7 +511,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company*
 
     company->set_name(c->name);
     company->set_uri(c->uri);
-//    add_contributor(c);
+    add_contributor(c);
 
     fill_codes(c, company);
 }
@@ -534,7 +520,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network*
 
     network->set_name(n->name);
     network->set_uri(n->uri);
-//    add_contributor(n);
+    add_contributor(n);
 
     fill_messages(n, network);
     fill_codes(n, network);
@@ -570,7 +556,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
 
     line->set_name(l->name);
     line->set_uri(l->uri);
-//    add_contributor(l);
+    add_contributor(l);
     if (l->opening_time) {
         line->set_opening_time((*l->opening_time).total_seconds());
     }
@@ -611,7 +597,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
     fill_comments(r, route);
 
     route->set_uri(r->uri);
-//    add_contributor(r);
+    add_contributor(r);
     fill_messages(r, route);
 
     fill_codes(r, route);
@@ -639,7 +625,7 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 
     line_group->set_name(lg->name);
     line_group->set_uri(lg->uri);
-//    add_contributor(lg);
+    add_contributor(lg);
 
     if(depth > 0) {
         fill(lg->line_list, line_group->mutable_lines());
@@ -651,7 +637,7 @@ void PbCreator::Filler::fill_pb_object(const nt::LineGroup* lg,
 void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calendar* pb_cal){
 
     pb_cal->set_uri(cal->uri);
-//    add_contributor(cal);
+    add_contributor(cal);
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
     vp->set_beginning_date(gd::to_iso_string(cal->validity_pattern.beginning_date));

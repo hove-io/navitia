@@ -994,6 +994,21 @@ std::string get_admin_name(const T* v) {
     }
     return admin_name;
 }
+
+template<typename T> inline Type_e get_type_e() {
+    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
+    return Type_e::Unknown;
+}
+template<> inline Type_e get_type_e<PhysicalMode>() {
+    return Type_e::PhysicalMode;
+}
+template<> inline Type_e get_type_e<CommercialMode>() {
+    return Type_e::CommercialMode;
+}
+template<> inline Type_e get_type_e<Contributor>() {
+    return Type_e::Contributor;
+}
+
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum
