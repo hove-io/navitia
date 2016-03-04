@@ -213,8 +213,8 @@ void Worker::feed_publisher(pbnavitia::Response& response){
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(data->data_identifier != this->last_data_identifier || !planner){
-        planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data, conf.raptor_cache_size()));
-        street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
+        planner = std::make_unique<routing::RAPTOR>(*data);
+        street_network_worker = std::make_unique<georef::StreetNetwork>(*data->geo_ref);
         this->last_data_identifier = data->data_identifier;
 
         LOG4CPLUS_INFO(logger, "Instanciate planner");

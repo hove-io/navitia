@@ -243,7 +243,7 @@ int main(int argc, char** argv){
     // Calculs des itinéraires
     std::vector<Result> results;
     data.build_raptor();
-    RAPTOR router(data, 10);
+    RAPTOR router(data);
     auto georef_worker = georef::StreetNetwork(*data.geo_ref);
 
     std::cout << "On lance le benchmark de l'algo " << std::endl;

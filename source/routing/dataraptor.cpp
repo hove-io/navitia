@@ -82,7 +82,7 @@ void dataRAPTOR::JppsFromJp::load(const JourneyPatternContainer& jp_container) {
 }
 
 
-void dataRAPTOR::load(const type::PT_Data& data)
+void dataRAPTOR::load(const type::PT_Data& data, size_t cache_size)
 {
     jp_container.load(data);
     labels_const.init_inf(data.stop_points);
@@ -116,6 +116,8 @@ void dataRAPTOR::load(const type::PT_Data& data)
             min_connection_time = std::min(min_connection_time, conn.duration);
         }
     }
+
+    cached_next_st_manager = std::make_unique<CachedNextStopTimeManager>(*this, cache_size);
 }
 
 }}

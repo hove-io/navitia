@@ -191,7 +191,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     }
     if (data) {
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
-        data->build_raptor();
+        data->build_raptor(conf.raptor_cache_size());
         data_manager.set_data(std::move(data));
         LOG4CPLUS_INFO(logger, "data updated");
     }

@@ -247,10 +247,10 @@ void Data::build_autocomplete(){
     pt_data->compute_score_autocomplete(*geo_ref);
 }
 
-void Data::build_raptor() {
+void Data::build_raptor(size_t cache_size) {
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "Start to build dataRaptor");
-    dataRaptor->load(*this->pt_data);
+    dataRaptor->load(*this->pt_data, cache_size);
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "Finished to build dataRaptor");
 }

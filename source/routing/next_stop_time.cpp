@@ -431,7 +431,7 @@ bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const 
 
 CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const CachedNextStopTimeKey& key) const {
     CachedNextStopTime result;
-    const auto& jp_container = data.dataRaptor->jp_container;
+    const auto& jp_container = dataRaptor.jp_container;
 
     result.departure.assign(jp_container.get_jpps_values());
     result.arrival.assign(jp_container.get_jpps_values());
@@ -489,12 +489,12 @@ CachedNextStopTimeManager::~CachedNextStopTimeManager() {
     LOG4CPLUS_INFO(logger, "Cache miss : " << lru.get_nb_cache_miss() << " / " << lru.get_nb_calls());
 }
 
-const CachedNextStopTime* CachedNextStopTimeManager::load(
-        const DateTime from,
-        const type::RTLevel rt_level,
-        const type::AccessibiliteParams& accessibilite_params) {
+std::shared_ptr<const CachedNextStopTime>
+CachedNextStopTimeManager::load(const DateTime from,
+                                const type::RTLevel rt_level,
+                                const type::AccessibiliteParams& accessibilite_params) {
     CachedNextStopTimeKey key(DateTimeUtils::date(from), rt_level, accessibilite_params);
-    return &lru(key);
+    return lru(key);
 }
 
 inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
