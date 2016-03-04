@@ -2744,3 +2744,52 @@ BOOST_AUTO_TEST_CASE(penalty_on_vj_extentions) {
     BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 09:00:00"));
     BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 10:00:00"));
 }
+
+/* check there is no problem (aka segfault) when there is a vj extension but with two vj that don't have the
+ * same validity  pattern. We need at least 3 vj for using align_left
+ *
+ *                                         A-----B------C------D
+ *                                                \    /
+ *    this vj is not valid the day requested ->    \  / <- this vj is always valid
+ *                                                  E <- vj extension here
+ */
+BOOST_AUTO_TEST_CASE(reader_with_invalid_vj_extensions) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "09:00"_t)("B", "10:00"_t);
+    b.vj("2")("B", "10:10"_t)("C", "10:40"_t);
+    b.vj("10", "0000011", "block1")("B", "10:10"_t)("E", "10:20"_t);
+    b.vj("11", "1111111", "block1")("E", "10:25"_t)("C", "10:40"_t);
+    b.vj("3")("C", "11:00"_t)("D", "12:00"_t);
+    b.connection("A", "A", 60);
+    b.connection("B", "B", 60);
+    b.connection("C", "C", 60);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("A")->stop_point_list.front())] = 0_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("D")->stop_point_list.front())] = 0_min;
+
+    auto res = raptor.compute_all(departures,
+                                  arrivals,
+                                  DateTimeUtils::set(4, "12:05"_t),
+                                  type::RTLevel::Base,
+                                  2_min,
+                                  DateTimeUtils::min,
+                                  10,
+                                  type::AccessibiliteParams(),
+                                  std::vector<std::string>(),
+                                  false);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-05 09:00:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-05 12:00:00"));
+    BOOST_CHECK_EQUAL(res.at(0).items.size(), 5);
+}
+
