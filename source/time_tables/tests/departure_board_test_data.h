@@ -29,6 +29,8 @@ namespace ntest = navitia::test;
  *          A:e
  * Route C:
  * C:S0 > C:S1 > C:S2
+ *
+ * Routes J, K and L pass at stop point S42
  */
 struct departure_board_fixture {
     ed::builder b;
@@ -43,6 +45,21 @@ struct departure_board_fixture {
 
         b.vj("C").uri("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
         b.lines.find("C")->second->properties["realtime_system"] = "KisioDigital";
+
+        // J is late
+        b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
+        b.lines.find("J")->second->properties["realtime_system"] = "KisioDigital";
+
+        b.vj("K")("S41", "09:00"_t)("S42", "10:00"_t)("S43", "11:00"_t);
+        b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
+        b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
+        b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
+        b.lines.find("K")->second->properties["realtime_system"] = "KisioDigital";
+
+        b.vj("L")("S39", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
+        b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
+        b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
+        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
 
         b.finish();
         b.data->pt_data->index();

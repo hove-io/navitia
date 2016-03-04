@@ -42,21 +42,33 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
     def __init__(self, id):
         self.service_id = id
 
-    def next_passage_for_route_point(self, route_point):
+    @staticmethod
+    def _create_next_passages(passages):
         next_passages = []
+        for next_expected_st in passages:
+            t = datetime.datetime.strptime(next_expected_st, "%H:%M:%S")
+            dt = datetime.datetime(year=2016, month=1, day=2,
+                                   hour=t.hour, minute=t.minute, second=t.second,
+                                   tzinfo=pytz.UTC)
+            next_passage = RealTimePassage(dt)
+            next_passages.append(next_passage)
+        return next_passages
+
+    def next_passage_for_route_point(self, route_point):
         if route_point.fetch_stop_id(self.service_id) == "KisioDigital_C:S1":
-            return next_passages
+            return []
 
         if route_point.fetch_stop_id(self.service_id) == "KisioDigital_C:S0":
-            for next_expected_st in ["11:32:42", "11:42:42"]:
-                t = datetime.datetime.strptime(next_expected_st, "%H:%M:%S")
-                dt = datetime.datetime(year=2016, month=1, day=2,
-                                       hour=t.hour, minute=t.minute, second=t.second,
-                                       tzinfo=pytz.UTC)
-                next_passage = RealTimePassage(dt)
-                next_passages.append(next_passage)
-            return next_passages
+            return self._create_next_passages(["11:32:42", "11:42:42"])
+
+        if route_point.pb_stop_point.uri == "S42":
+            if route_point.pb_route.name == "J":
+                return self._create_next_passages(["10:00:00", "10:02:00"])
+            if route_point.pb_route.name == "K":
+                return self._create_next_passages(["10:01:00", "10:04:00"])
+
         return None
+
 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDepartures(AbstractTestFixture):
@@ -118,3 +130,18 @@ class TestDepartures(AbstractTestFixture):
         for dt in stop_schedule_B['date_times']:
             assert dt['data_freshness'] == 'base_schedule'
 
+    def test_departures(self):
+        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+        response = self.query_region(query)
+        departures = [(d['route']['name'], d['stop_date_time']['departure_date_time'])
+                      for d in response['departures']]
+        expected_departures = [
+            #("J", "20160102T100000"), # should be here when empty route point is working
+            ("K", "20160102T100100"),
+            #("J", "20160102T100200"), # same here
+            ("L", "20160102T100300"),
+            ("K", "20160102T100400"),
+            ("L", "20160102T100700"),
+            ("L", "20160102T101100"),
+            ]
+        assert departures == expected_departures
