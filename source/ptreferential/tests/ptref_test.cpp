@@ -328,13 +328,13 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     filter.op = EQ;
     filter.value = "stop1";
     auto indexes = get_indexes<nt::StopArea>(filter, Type_e::Line, *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, nt::Indexes({0}));
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0}));
 
     // On cherche les stopareas de la ligneA
     filter.navitia_type = Type_e::Line;
     filter.value = "A";
     indexes = get_indexes<nt::Line>(filter, Type_e::StopArea, *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, nt::Indexes({0, 1}));
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
 BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 
     navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
     indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, nt::Indexes({0, 1}));
+    BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
 
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
     const auto res = make_query(nt::Type_e::VehicleJourney,
                                 R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
                                 *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(res, nt::Indexes({1}));
+    BOOST_CHECK_EQUAL_RANGE(res, nt::make_indexes({1}));
 }
 
 BOOST_AUTO_TEST_CASE(headsign_sa_request) {

@@ -129,13 +129,9 @@ navitia::type::Indexes get(Type_e source, Type_e destination, type::idx_t source
 
 std::vector<Filter> parse(std::string request);
 
-type::Indexes::iterator sort_and_get_new_end(type::Indexes& list_idx);
+type::Indexes get_difference(const type::Indexes&, const type::Indexes&);
+type::Indexes get_intersection(const type::Indexes&, const type::Indexes&);
 
-type::Indexes get_difference(type::Indexes& list_idx1,
-                                        type::Indexes& list_idx2);
-
-type::Indexes get_intersection(type::Indexes& list_idx1,
-                                        type::Indexes& list_idx2);
 type::Indexes manage_odt_level(const type::Indexes& final_indexes,
                                           const navitia::type::Type_e requested_type,
                                           const navitia::type::OdtLevel_e,

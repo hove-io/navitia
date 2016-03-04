@@ -637,17 +637,17 @@ Indexes Data::get_all_index(Type_e type) const {
     return indexes;
 }
 
-
-
 Indexes
 Data::get_target_by_source(Type_e source, Type_e target,
                            Indexes source_idx) const {
     Indexes result;
     result.reserve(source_idx.size());
     for(idx_t idx : source_idx) {
-        Indexes tmp;
-        tmp = get_target_by_one_source(source, target, idx);
-        result.insert(boost::container::ordered_unique_range_t(), tmp.begin(), tmp.end());
+        Indexes tmp = get_target_by_one_source(source, target, idx);
+        result.insert(/*boost::container::ordered_unique_range_t(),
+                        // Note the tag does not work on old boost version,
+                        //   put it back when we stop boost 1.49 support*/
+                        tmp.begin(), tmp.end());
     }
     return result;
 }

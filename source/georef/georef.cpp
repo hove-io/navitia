@@ -791,7 +791,7 @@ GeoRef::~GeoRef() {
 
 type::Indexes POI::get(type::Type_e type, const GeoRef &) const {
     switch(type) {
-    case type::Type_e::POIType : return {poitype_idx};
+    case type::Type_e::POIType : return type::make_indexes({poitype_idx});
     default : return type::Indexes{};
     }
 }

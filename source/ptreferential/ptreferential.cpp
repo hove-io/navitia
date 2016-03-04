@@ -175,8 +175,8 @@ struct GetterType<ObjFactory<T>> {
 };
 
 template<typename T, typename C>
-boost::container::flat_set<idx_t> filtered_indexes(const T& data, const C& clause) {
-    boost::container::flat_set<idx_t> result;
+Indexes filtered_indexes(const T& data, const C& clause) {
+    Indexes result;
     for (size_t i = 0; i < data.size(); ++i) {
         if (ClauseType<T, C>::is_clause_tested(GetterType<T>::get(data, i), clause)) {
             result.insert(i);
@@ -209,7 +209,7 @@ template<typename T, typename Container>
 Indexes filter_by_uri(const Container& c, const std::string& uri, std::true_type) {
     // for associative containers we can do a better search
     auto elt = find_or_default(uri, c);
-    if (elt) { return Indexes({elt->idx}); }
+    if (elt) { return make_indexes({elt->idx}); }
     return Indexes{};
 }
 }
@@ -349,14 +349,14 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-Indexes get_difference(Indexes& idxs1, Indexes& idxs2) {
+Indexes get_difference(const Indexes& idxs1, const Indexes& idxs2) {
     Indexes tmp_indexes;
     std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
     std::set_difference(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
     return tmp_indexes;
 }
 
-Indexes get_intersection(Indexes& idxs1, Indexes& idxs2) {
+Indexes get_intersection(const Indexes& idxs1, const Indexes& idxs2) {
    Indexes tmp_indexes;
    std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
    std::set_intersection(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
@@ -364,9 +364,9 @@ Indexes get_intersection(Indexes& idxs1, Indexes& idxs2) {
 }
 
 Indexes manage_odt_level(const Indexes& final_indexes,
-                                          const navitia::type::Type_e requested_type,
-                                          const navitia::type::OdtLevel_e odt_level,
-                                          const type::Data & data){
+                         const navitia::type::Type_e requested_type,
+                         const navitia::type::OdtLevel_e odt_level,
+                         const type::Data & data) {
     if ((!final_indexes.empty()) && (requested_type == navitia::type::Type_e::Line)) {
         Indexes odt_level_idx;
         for(const idx_t idx : final_indexes){

@@ -124,6 +124,15 @@ struct PT_Data;
 
 using Indexes = boost::container::flat_set<idx_t>;
 
+inline Indexes make_indexes(std::initializer_list<idx_t> l) {
+    Indexes indexes;
+    indexes.reserve(l.size());
+    for (const auto& v: l) {
+        indexes.insert(v);
+    }
+    return indexes;
+}
+
 struct Header {
     idx_t idx = invalid_idx; // Index of the object in the main structure
     std::string uri; // unique indentifier of the object
