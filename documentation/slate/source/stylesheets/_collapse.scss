@@ -1,7 +1,9 @@
 [data-collapse] > :first-child {
-    background: rgba(0, 0, 0, 0) url("../images/collapse/arrows.png") no-repeat scroll 0 4px;
+    background-image: url("../images/collapse/arrows.png");
+    background-repeat: no-repeat;
+    background-position: 0 4px;
     padding-left: 16px;
 }
 [data-collapse] > .open:first-child {
-    background: rgba(0, 0, 0, 0) url("../images/collapse/arrows.png") no-repeat scroll 0 -36px;
+    background-position: 0 -36px;
 }
