@@ -1,3 +1,9 @@
+navitia2 (2.2.2) unstable; urgency=medium
+
+  * fix a regression in performance of isochrone <https://github.com/CanalTP/navitia/pull/1455>
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Mon, 07 Mar 2016 12:44:58 +0100
+
 navitia2 (2.2.1) unstable; urgency=low
 
   * Jormungandr: forbidden_id/_uris debug  <https://github.com/CanalTP/navitia/pull/1445>
