@@ -89,12 +89,8 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
         new_dt.realtime_level = type_pb2.REALTIME
 
 
-def _update_passages(passages, route_point, next_realtime_passages):
-    if next_realtime_passages is None:
-        return
-
-    # create the template for the realtime passages
-    template = deepcopy(passages[0])
+def _create_template(passage):
+    template = deepcopy(passage)
     template.pt_display_informations.ClearField("headsign")
     template.pt_display_informations.ClearField("direction")
     template.pt_display_informations.ClearField("physical_mode")
@@ -110,6 +106,12 @@ def _update_passages(passages, route_point, next_realtime_passages):
     template.stop_date_time.ClearField("base_arrival_date_time")
     template.stop_date_time.ClearField("base_departure_date_time")
     template.stop_date_time.ClearField("properties")
+    return template
+
+
+def _update_passages(passages, route_point, template, next_realtime_passages):
+    if next_realtime_passages is None:
+        return
 
     # filter passages with entries of the asked route_point
     pb_del_if(passages, lambda p: RoutePoint(p.stop_point, p.route) == route_point)
@@ -240,12 +242,13 @@ class MixedSchedule(object):
         if request['data_freshness'] != 'realtime':
             return resp
 
-        route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route)
+        route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route):
+                        _create_template(passage)
                         for passage in resp.next_departures}
 
-        for route_point in route_points:
+        for route_point, template in route_points.items():
             next_rt_passages = self._get_next_realtime_passages(route_point)
-            _update_passages(resp.next_departures, route_point, next_rt_passages)
+            _update_passages(resp.next_departures, route_point, template, next_rt_passages)
 
         # sort
         def comparator(p1, p2):
