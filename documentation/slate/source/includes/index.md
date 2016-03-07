@@ -195,12 +195,12 @@ All available functions are documented on
 
 - [integration](#navitia-documentation-v1-interface)
 
-A mailing list is available to ask question: navitia@googlegroups.com
+A mailing list is available to ask question: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
 In order to report bug and make requests we created a github navitia project
-<https://github.com/CanalTP/navitia/issues> .
+<https://github.com/CanalTP/navitia/issues>.
 
-At last, we are present on IRC on the network Freenode, channel #navitia.
+At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
 
 
 About…
