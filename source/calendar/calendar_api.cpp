@@ -47,7 +47,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     navitia::type::Indexes calendar_list;
     boost::gregorian::date start_period(boost::gregorian::not_a_date_time);
     boost::gregorian::date end_period(boost::gregorian::not_a_date_time);
-    PbCreator pb_creator(d, boost::posix_time::second_clock::universal_time(), null_time_period, false);
+    PbCreator pb_creator(d, boost::posix_time::second_clock::universal_time(), null_time_period);
     if((!start_date.empty()) && (!end_date.empty())) {
         try{
             start_period = boost::gregorian::from_undelimited_string(start_date);

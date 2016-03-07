@@ -278,7 +278,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    PbCreator pb_creator(*data, current_datetime, null_time_period, true);
+    PbCreator pb_creator(*data, current_datetime, null_time_period);
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
@@ -437,7 +437,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
 
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-    PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+    PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
@@ -491,7 +491,7 @@ static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator&
 pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
+    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period);
 
     switch(request.type()) {
     case pbnavitia::PlaceCodeRequest::StopArea:
@@ -554,7 +554,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if (origins.empty() && destinations.empty()) {
         //should never happen, jormungandr filters that, but it never hurts to double check
-        navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+        navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
         pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                  pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                  "no origin point nor destination point given");
@@ -603,7 +603,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         if (! origins.empty()) {
             if (! request.clockwise()) {
                 // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
                               "isochrone works only for clockwise request");
                 return pb_creator.get_response();
@@ -612,7 +612,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         } else {
             if (request.clockwise()) {
                 // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period, false);
+                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
                                          "reverse isochrone works only for anti-clockwise request");
                 return pb_creator.get_response();
@@ -623,20 +623,20 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                                 request.clockwise(), accessibilite_params,
                                                 forbidden, *street_network_worker,
                                                 rt_level, request.max_duration(),
-                                                request.max_transfers(), true);
+                                                request.max_transfers());
     }
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), true, request.max_extra_second_pass());
+                request.max_transfers(), request.max_extra_second_pass());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), true, request.max_extra_second_pass());
+                request.max_transfers(), request.max_extra_second_pass());
     }
 }
 
@@ -651,7 +651,6 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
                                     forbidden_uri,
                                     get_odt_level(request.odt_level()),
                                     request.depth(),
-                                    true,
                                     request.start_page(),
                                     request.count(),
                                     boost::make_optional(request.has_since_datetime(),
@@ -759,7 +758,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period, false);
+    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period);
     for(const auto& item: result){
         auto* nsp = pb_creator.add_nearest_stop_points();
         pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);

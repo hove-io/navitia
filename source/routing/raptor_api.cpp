@@ -936,10 +936,9 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                   const navitia::time_duration& transfer_penalty,
                                   uint32_t max_duration,
                                   uint32_t max_transfers,
-                                  bool show_codes,
                                   uint32_t max_extra_second_pass){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period);
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1005,11 +1004,10 @@ make_response(RAPTOR &raptor,
               const navitia::time_duration& transfer_penalty,
               uint32_t max_duration,
               uint32_t max_transfers,
-              bool show_codes,
               uint32_t max_extra_second_pass) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period);
     std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
@@ -1102,9 +1100,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    const type::RTLevel rt_level,
-                                   int max_duration, uint32_t max_transfers, bool show_codes) {
+                                   int max_duration, uint32_t max_transfers) {
 
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period);
 
     bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);
