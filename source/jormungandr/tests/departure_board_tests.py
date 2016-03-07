@@ -326,6 +326,17 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["departures"][1]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
 
+    def test_departures_arrivals_without_filters(self):
+        """
+        departure, arrivals api without filters
+        """
+        apis = ['arrivals', 'departures']
+        for api in apis:
+            response, code = self.query_region(api, False)
+            assert code == 400
+            assert 'error' in response
+            assert response['message'] == 'Invalid arguments filter'
+
     def test_vj_comment(self):
         """
         test that a comment on a vehicle journey is linked to each stop_times in stop_schedules
