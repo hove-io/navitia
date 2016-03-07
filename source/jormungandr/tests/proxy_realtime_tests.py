@@ -63,7 +63,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
 
         if route_point.pb_stop_point.uri == "S42":
             if route_point.pb_route.name == "J":
-                return self._create_next_passages(["10:00:00", "10:02:00"])
+                return self._create_next_passages(["10:00:00", "10:03:00"])
             if route_point.pb_route.name == "K":
                 return self._create_next_passages(["10:01:00", "10:04:00"])
 
@@ -138,8 +138,8 @@ class TestDepartures(AbstractTestFixture):
         expected_departures = [
             #("J", "20160102T100000"), # should be here when empty route point is working
             ("K", "20160102T100100"),
-            #("J", "20160102T100200"), # same here
-            ("L", "20160102T100300"),
+            ("L", "20160102T100200"),
+            #("J", "20160102T100300"), # same here
             ("K", "20160102T100400"),
             ("L", "20160102T100700"),
             ("L", "20160102T101100"),
