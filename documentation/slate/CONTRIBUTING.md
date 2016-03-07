@@ -13,9 +13,10 @@ plus some Slate widgets (such as notices).
 
 ## Preview changes
 
-Once some changes has been done, Slate needs to build HTML sources from Markdown files.
+Once some changes have been done, Slate needs to build HTML sources from Markdown files.
 
-First, check that Slate dependencies are installed:
+First, install bundler using `apt-get install bundler` or `gem install bundler`.
+Then check that Slate dependencies are installed:
 
 ``` bash
 cd documentation/slate
@@ -29,6 +30,6 @@ cd documentation/slate
 bundle exec middleman build
 ```
 
-That will generate a `build/` folder with an `index.html` inside which is the doc.
+That will generate a `build/` folder with an `index.html` inside, which is the doc.
 
 Just open `documentation/slate/build/index.html` to see how it will be published.
