@@ -197,7 +197,7 @@ All available functions are documented on
 
 A mailing list is available to ask question: navitia@googlegroups.com
 
-In order to report bug and make requests we created a `github navitia project
+In order to report bug and make requests we created a github navitia project
 <https://github.com/CanalTP/navitia/issues> .
 
 At last, we are present on IRC on the network Freenode, channel #navitia.
@@ -234,4 +234,4 @@ Some data improvement are achieved by Canal TP.
 [Canal TP](http://www.canaltp.fr) is the editor of *navitia*. We are a company based in Paris, leader in
 France for public transport information systems.
 
-If you speak French, visit our `technical blog <http://labs.canaltp.fr> .
+If you speak French, visit our technical blog <http://labs.canaltp.fr> .
