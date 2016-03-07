@@ -1,3 +1,9 @@
+navitia2 (2.3.1) unstable; urgency=low
+
+  * fix performance regression on isochrone <https://github.com/CanalTP/navitia/pull/1456>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 07 Mar 2016 13:03:50 +0100
+
 navitia2 (2.3.0) unstable; urgency=low
 
   * Ptref: add contributors  <https://github.com/CanalTP/navitia/pull/1453>
