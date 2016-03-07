@@ -2,7 +2,8 @@
 stats
 debug
 release*
-build
+/build
+/documentation/slate/build
 Doc
 qtcreator-build
 ui_mainwindow.h
