@@ -706,7 +706,7 @@ static pbnavitia::Response make_pt_pathes(PbCreator& pb_creator,
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
-                                   type::EntryPoint origin,
+                                   const type::EntryPoint& origin,
                                    PbCreator& pb_creator,
                                    const std::vector<type::StopPoint*> stop_points,
                                    bool clockwise,
@@ -714,6 +714,8 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    DateTime bound,
                                    int max_duration) {
     pb_creator.now = bt::second_clock::universal_time();
+    pbnavitia::PtObject pb_origin;
+    pb_creator.fill(&origin, &pb_origin, 0);
     for(const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
@@ -753,12 +755,11 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                                        navitia::to_posix_time(best_lbl, raptor.data));
             if(clockwise){
-                pb_creator.fill(&origin, pb_journey->mutable_origin(), 0);
+                *pb_journey->mutable_origin() = pb_origin;
                 pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
             }else{
                 pb_creator.fill(sp, pb_journey->mutable_origin(), 0);
-                pb_creator.fill(&origin, pb_journey->mutable_destination(), 0);
-
+                *pb_journey->mutable_destination() = pb_origin;
             }
         }
     }
