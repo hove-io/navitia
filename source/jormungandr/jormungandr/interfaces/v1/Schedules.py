@@ -49,6 +49,7 @@ from make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
+from jormungandr.exceptions import InvalidArguments
 
 
 class Schedules(ResourceUri, ResourceUtc):
@@ -121,6 +122,8 @@ class Schedules(ResourceUri, ResourceUtc):
         args["interface_version"] = 1
 
         if uri is None:
+            if not args['filter']:
+                raise InvalidArguments('filter')
             first_filter = args["filter"].lower().split("and")[0].strip()
             parts = first_filter.lower().split("=")
             if len(parts) != 2:
