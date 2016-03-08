@@ -80,4 +80,4 @@ def _make_interval_argument(max_value, min_value):
         return min(max(v, min_value), max_value)
     return to_return
 
-default_count_arg_type = _make_interval_argument(max_value=1000, min_value=1)
+default_count_arg_type = _make_interval_argument(max_value=1000, min_value=0)
