@@ -39,7 +39,7 @@ from fields import place, NonNullList, NonNullNested, PbField, pagination, error
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from elasticsearch import Elasticsearch
@@ -145,7 +145,7 @@ class Places(ResourceUri):
                                                   "administrative_region"],
                                          description="The type of data to\
                                          search")
-        self.parsers["get"].add_argument("count", type=int, default=10,
+        self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="The maximum number of\
                                          places returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
@@ -304,7 +304,7 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("distance", type=int, default=500,
                                          description="Distance range of the\
                                          query")
-        self.parsers["get"].add_argument("count", type=int, default=10,
+        self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="Elements per page")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,

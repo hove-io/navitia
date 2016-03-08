@@ -33,6 +33,7 @@ from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.parsers import default_count_arg_type
 from errors import ManageError
 from fields import fields, enum_type, NonNullList,\
     NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
@@ -85,7 +86,7 @@ class Calendars(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")

@@ -37,7 +37,7 @@ from fields import PbField, error, network, line,\
 from VehicleJourney import vehicle_journey
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import date_time_format
+from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
 from errors import ManageError
 from datetime import datetime
 import aniso8601
@@ -67,7 +67,7 @@ class TrafficReport(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")

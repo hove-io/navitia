@@ -39,7 +39,7 @@ from fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_p
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, option_value
+from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type
 from copy import deepcopy
 
 
@@ -66,7 +66,7 @@ class Ptobjects(ResourceUri):
                                          action="append",default=pt_object_type_values,
                                          description="The type of data to\
                                          search")
-        self.parsers["get"].add_argument("count", type=int, default=10,
+        self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="The maximum number of\
                                          ptobjects returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,

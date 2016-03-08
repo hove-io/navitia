@@ -124,3 +124,13 @@ class TestIsochrone(AbstractTestFixture):
         response = self.query(query)
         assert len(response["journeys"]) == 1
         is_valid_isochrone_response(response, self.tester, query)
+
+    def test_invalid_count(self):
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        response = self.query(query)
+        assert len(response["journeys"]) == 2
+        # invalid count
+        query += "&count=toto"
+        response, code = self.query_no_assert(query)
+        assert code == 400
+        assert response['message'] == "invalid literal for int() with base 10: 'toto'"
