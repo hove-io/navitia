@@ -670,7 +670,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
-        return status();
+        response = status();
+        return response;
     }
     if (request.requested_api() ==  pbnavitia::METADATAS) {
         metadatas(response);
