@@ -312,7 +312,7 @@ pbnavitia::Response traffic_reports(const navitia::type::Data& d,
                                 const std::vector<std::string>& forbidden_uris) {
 
     bt::ptime now_dt = bt::from_time_t(posix_now_dt);
-    PbCreator pb_creator(d, now_dt, bt::time_period(now_dt, bt::seconds(1)), false);
+    PbCreator pb_creator(d, now_dt, bt::time_period(now_dt, bt::seconds(1)));
 
     TrafficReport result;
     try {

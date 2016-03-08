@@ -33,12 +33,6 @@ www.navitia.io
 namespace pbnavitia { class Response;}
 
 namespace navitia{ namespace ptref{
-/// build the protobuf response of a pt ref query
-pbnavitia::Response extract_data(const type::Data& data,
-                                 const type::Type_e requested_type,
-                                 const type::Indexes & rows,
-                                 const int depth,
-                                 const boost::posix_time::ptime& current_time); //this date is used to filter the disruptions
 
 /// execute the pt ref query and return the protobuf response
 pbnavitia::Response query_pb(const type::Type_e requested_type,
@@ -46,7 +40,6 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const std::vector<std::string>& forbidden_uris,
                              const type::OdtLevel_e odt_level,
                              const int depth,
-                             const bool show_codes,
                              const int startPage,
                              const int count,
                              const boost::optional<boost::posix_time::ptime>& since,

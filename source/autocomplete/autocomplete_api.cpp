@@ -192,7 +192,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  int search_type,
                                  const navitia::type::Data &d) {
 
-    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
+    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period);
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
         return pb_creator.get_response();

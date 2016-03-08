@@ -205,7 +205,6 @@ class MixedSchedule(object):
             st.until_datetime = request["until_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
-        st.show_codes = request["show_codes"]
         if "nb_stoptimes" not in request:
             st.nb_stoptimes = 0
         else:

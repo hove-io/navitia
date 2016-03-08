@@ -115,7 +115,6 @@ class Scenario(simple.Scenario):
         else:
             req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
 
-        req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]
 

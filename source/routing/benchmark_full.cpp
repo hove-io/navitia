@@ -291,7 +291,6 @@ int main(int argc, char** argv){
               2_min,
               DateTimeUtils::SECONDS_PER_DAY,
               10,
-              false,
               nb_second_pass);
 
         if (resp.journeys_size() > 0) {

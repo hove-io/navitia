@@ -91,7 +91,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
                          const std::vector<nt::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
                          const type::Data & data) {
-    navitia::PbCreator pb_creator(data, pt::not_a_date_time, null_time_period, false);
+    navitia::PbCreator pb_creator(data, pt::not_a_date_time, null_time_period);
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;

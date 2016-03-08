@@ -26,7 +26,6 @@ class JourneyParameters(object):
                  max_transfers=10,
                  wheelchair=False,
                  forbidden_uris=None,
-                 show_codes=False,
                  realtime_level='base_schedule',
                  max_extra_second_pass=None,
                  walking_transfer_penalty=120):
@@ -34,7 +33,6 @@ class JourneyParameters(object):
         self.max_transfers = max_transfers
         self.wheelchair = wheelchair
         self.forbidden_uris = set(forbidden_uris) if forbidden_uris else set()
-        self.show_codes = show_codes
         self.realtime_level = realtime_level
         self.max_extra_second_pass = max_extra_second_pass
 
@@ -65,7 +63,6 @@ class Kraken(object):
         req.journeys.wheelchair = journey_parameters.wheelchair
         if journey_parameters.max_extra_second_pass:
             req.journeys.max_extra_second_pass = journey_parameters.max_extra_second_pass
-        req.journeys.show_codes = journey_parameters.show_codes
 
         for uri in journey_parameters.forbidden_uris:
             req.journeys.forbidden_uris.append(uri)

@@ -97,7 +97,6 @@ def create_parameters(request):
     return JourneyParameters(max_duration=request['max_duration'],
                              max_transfers=request['max_transfers'],
                              wheelchair=request['wheelchair'] or False,
-                             show_codes=request['show_codes'],
                              realtime_level=request['data_freshness'],
                              max_extra_second_pass=request['max_extra_second_pass'],
                              walking_transfer_penalty=request['_walking_transfer_penalty'],
