@@ -40,7 +40,7 @@ from fields import stop_point, route, pagination, PbField, stop_date_time, \
 from ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, date_time_format
+from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
 from errors import ManageError
 from flask.ext.restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import DisruptionsField
@@ -73,7 +73,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Maximum duration between datetime\
                                 and the retrieved stop time")
         parser_get.add_argument("depth", type=int, default=2)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")

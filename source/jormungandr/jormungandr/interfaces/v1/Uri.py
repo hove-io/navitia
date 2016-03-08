@@ -40,7 +40,7 @@ from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, date_time_format
+from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
 from errors import ManageError
 from Coord import Coord
 from jormungandr.interfaces.v1.fields import DisruptionsField, feed_publisher
@@ -65,7 +65,7 @@ class Uri(ResourceUri, ResourceUtc):
         parser = self.parsers["get"]
         parser.add_argument("start_page", type=int, default=0,
                             description="The page where you want to start")
-        parser.add_argument("count", type=int, default=25,
+        parser.add_argument("count", type=default_count_arg_type, default=25,
                             description="Number of objects you want on a page")
         parser.add_argument("depth", type=depth_argument,
                             default=1,

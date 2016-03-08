@@ -122,5 +122,6 @@ class TestIsochrone(AbstractTestFixture):
         is_valid_isochrone_response(response, self.tester, query)
         query += "&count=1"
         response = self.query(query)
+        print len(response["journeys"])
         assert len(response["journeys"]) == 1
         is_valid_isochrone_response(response, self.tester, query)

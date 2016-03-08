@@ -40,7 +40,7 @@ from fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, Co2Emission, PbEnum, feed_publisher
 
-from jormungandr.interfaces.parsers import option_value, date_time_format
+from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
 from ResourceUri import ResourceUri, complete_links
 from functools import wraps
 from fields import DateTime
@@ -550,7 +550,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
-        parser_get.add_argument("count", type=int)
+        parser_get.add_argument("count", type=default_count_arg_type)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")

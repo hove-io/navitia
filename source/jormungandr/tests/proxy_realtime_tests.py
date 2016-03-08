@@ -144,4 +144,5 @@ class TestDepartures(AbstractTestFixture):
             ("L", "20160102T100700"),
             ("L", "20160102T101100"),
             ]
+        print departures
         assert departures == expected_departures
