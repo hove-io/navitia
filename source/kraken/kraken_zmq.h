@@ -75,29 +75,29 @@ inline void doWork(zmq::context_t& context,
         if(!pb_req.ParseFromArray(request.data(), request.size())){
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
             result.mutable_error()->set_id(pbnavitia::Error::invalid_protobuf_request);
-            continue;
-        }
-        api = pb_req.requested_api();
-        log4cplus::NDCContextCreator ndc(pb_req.request_id());
-        if(api != pbnavitia::METADATAS){
-            LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
-        }
-        try {
-            result = w.dispatch(pb_req);
-            if(api != pbnavitia::METADATAS){
-                LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
-            }
-        } catch (const navitia::recoverable_exception& e) {
-            //on a recoverable an internal server error is returned
-            LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());
-            LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
-            LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
-            result = make_internal_error(e);
-        }
-        if (! data_manager.get_data()->loaded){
-            result.set_publication_date(-1);
         } else {
-            result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
+            api = pb_req.requested_api();
+            log4cplus::NDCContextCreator ndc(pb_req.request_id());
+            if(api != pbnavitia::METADATAS){
+                LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
+            }
+            try {
+                result = w.dispatch(pb_req);
+                if(api != pbnavitia::METADATAS){
+                    LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+                }
+            } catch (const navitia::recoverable_exception& e) {
+                //on a recoverable an internal server error is returned
+                LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());
+                LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
+                LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
+                result = make_internal_error(e);
+            }
+            if (! data_manager.get_data()->loaded){
+                result.set_publication_date(-1);
+            } else {
+                result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
+            }
         }
         zmq::message_t reply(result.ByteSize());
         try{
