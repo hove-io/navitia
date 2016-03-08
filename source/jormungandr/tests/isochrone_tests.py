@@ -131,5 +131,6 @@ class TestIsochrone(AbstractTestFixture):
         assert len(response["journeys"]) == 2
         # invalid count
         query += "&count=toto"
-        response = self.query(query, might_have_additional_args=True)
+        response, code = self.query_no_assert(query)
+        assert code == 400
         assert response['message'] == "invalid literal for int() with base 10: 'toto'"
