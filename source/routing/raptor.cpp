@@ -212,6 +212,11 @@ struct Dom {
     bool clockwise;
     typedef std::pair<size_t, StartingPointSndPhase> Arg;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
+        if (lhs.second.count == rhs.second.count
+                && lhs.second.end_dt == rhs.second.end_dt
+                && lhs.second.fallback_dur == rhs.second.fallback_dur) {
+            return false;
+        }
         return lhs.second.count <= rhs.second.count
             && (clockwise ? lhs.second.end_dt <= rhs.second.end_dt
                           : lhs.second.end_dt >= rhs.second.end_dt)
