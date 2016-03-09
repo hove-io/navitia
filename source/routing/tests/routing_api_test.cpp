@@ -2187,48 +2187,49 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 5);
 
 }
+/*
+  |-------------|                                               |--------------------------|
+  | StopArea:A  |           vj:A                                |      StopArea:B          |
+  |-------------|============================================== |--------------------------|
+  | StopPoint:A |                                               |                          |
+  |-------------|                                               |    StopPoint:B0          |
+                                                                |          ||              |
+                                                                |          ||              |
+                                                                |          ||  stay_in     |
+                                                                |          ||              |
+                                                                |          ||              |
+                                                                |    StopPoint:B1          |
+                                                                |          ||              |
+                                                                |--------------------------|
+                                                                           ||
+                                                                           ||
+                                                                           ||
+  |-------------|                                                          ||
+  | StopArea:A  |                         vj:B                             ||
+  |-------------|============================================================
+  | StopPoint:A |
+  |-------------|
 
+We must have the same answer in the two cases: clockwise = true or false
+
+Before correction if clockwise = true, found in the response StopPoint:B0 >> StopPoint:B1 section
+
+See : http://jira.canaltp.fr/browse/NAVITIAII-2062
+
+*/
 
 BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     ed::builder b("20120614");
-    std::vector<std::string> forbidden;
 
-    auto* stop_areaA = b.add<nt::StopArea>("stop_area:A", "gare A");
-    b.sas["stop_area:A"] = stop_areaA;
-    auto* stop_pointA = b.add<nt::StopPoint>("stop_point:A", "gare A");
-    b.sps["stop_point:A"] = stop_pointA;
-
-    auto* stop_areaB = b.add<nt::StopArea>("stop_area:B", "gare B");
-    b.sas["stop_area:B"] = stop_areaB;
-    auto* stop_pointB0 = b.add<nt::StopPoint>("stop_point:B0", "gare B");
-    auto* stop_pointB1 = b.add<nt::StopPoint>("stop_point:B1", "gare B");
-    b.sps["stop_point:B0"] = stop_pointB0;
-    b.sps["stop_point:B1"] = stop_pointB1;
-
-    auto* stop_areaC = b.add<nt::StopArea>("stop_area:C", "gare C");
-    b.sas["stop_area:C"] = stop_areaC;
-    auto* stop_pointC = b.add<nt::StopPoint>("stop_point:C", "gare C");
-    b.sps["stop_point:C"] = stop_pointC;
+    b.sa("stop_area:A", 0, 0, false)("stop_point:A");
+    b.sa("stop_area:B", 0, 0, false)("stop_point:B1");
+    b.sa("stop_area:B", 0, 0, false)("stop_point:B0");
+    b.sa("stop_area:C", 0, 0, false)("stop_point:C");
 
     b.vj("A", "1111111", "block1", true, "vj:A")("stop_point:A", "8:05"_t, "8:05"_t)
             ("stop_point:B0", "08:40"_t, "08:40"_t);
-
     b.vj("A", "1111111", "block1", true, "vj:B")("stop_point:B1", "08:40"_t, "09:05"_t)
             ("stop_point:C", "11:50"_t, "11:50"_t);
-
-    stop_pointB0->stop_area = stop_areaB;
-    stop_pointB1->stop_area = stop_areaB;
-    stop_areaB->stop_point_list.push_back(stop_pointB1);
-    stop_areaB->stop_point_list.push_back(stop_pointB0);
-
-
-    stop_pointC->stop_area = stop_areaC;
-    stop_areaC->stop_point_list.push_back(stop_pointC);
-
-    stop_pointA->stop_area = stop_areaA;
-    stop_areaA->stop_point_list.push_back(stop_pointA);
-
-
 
     b.generate_dummy_basis();
     b.finish();
@@ -2248,13 +2249,44 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     pbnavitia::Response resp_0 = make_response(raptor, origin, destination,
                                                 {ntest::to_posix_timestamp("20120614T090000")},
                                              false, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+                                             std::vector<std::string>(), sn_worker, nt::RTLevel::Base, 2_min);
 
     pbnavitia::Response resp_1 = make_response(raptor, origin, destination,
                                                 {ntest::to_posix_timestamp("20120614T080000")},
                                              true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base,2_min);
+                                             std::vector<std::string>(), sn_worker, nt::RTLevel::Base,2_min);
+
+    BOOST_CHECK_EQUAL(resp_0.journeys_size() == resp_1.journeys_size(),
+                      resp_0.journeys_size() == 1);
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections_size() == resp_1.journeys(0).sections_size(),
+                      resp_0.journeys(0).sections_size() == 3);
 
 
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(0).type() == resp_1.journeys(0).sections(0).type(),
+                      resp_0.journeys(0).sections(0).type() == pbnavitia::SectionType::CROW_FLY);
 
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(0).origin().uri() == resp_1.journeys(0).sections(0).origin().uri(),
+                      resp_0.journeys(0).sections(0).origin().uri() == "stop_area:A");
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(0).destination().uri() == resp_1.journeys(0).sections(0).destination().uri(),
+                      resp_0.journeys(0).sections(0).destination().uri() == "stop_point:A");
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(1).type() == resp_1.journeys(0).sections(1).type(),
+                      resp_0.journeys(0).sections(1).type() == pbnavitia::SectionType::PUBLIC_TRANSPORT);
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(1).origin().uri() == resp_1.journeys(0).sections(1).origin().uri(),
+                      resp_0.journeys(0).sections(1).origin().uri() == "stop_point:A");
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(1).destination().uri() == resp_1.journeys(0).sections(1).destination().uri(),
+                      resp_0.journeys(0).sections(1).destination().uri() == "stop_point:B0");
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(2).type() == resp_1.journeys(0).sections(2).type(),
+                      resp_0.journeys(0).sections(2).type() == pbnavitia::SectionType::CROW_FLY);
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(2).origin().uri() == resp_1.journeys(0).sections(2).origin().uri(),
+                      resp_0.journeys(0).sections(2).origin().uri() == "stop_point:B0");
+
+    BOOST_CHECK_EQUAL(resp_0.journeys(0).sections(2).destination().uri() == resp_1.journeys(0).sections(2).destination().uri(),
+                      resp_0.journeys(0).sections(2).destination().uri() == "stop_area:B");
 }
