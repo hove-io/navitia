@@ -215,9 +215,10 @@ struct CachedNextStopTimeKey {
 
 struct CachedNextStopTime {
     using DtSt = std::pair<DateTime, const type::StopTime*>;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+    using vDtSt = std::vector<DtSt>;
+    using JppIdxMap = IdxMap<JourneyPatternPoint, vDtSt>;
 
+    CachedNextStopTime(const JppIdxMap& d, const JppIdxMap& a): departure(d), arrival(a) {}
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
     // clockwise.
@@ -226,6 +227,16 @@ struct CachedNextStopTime {
                    const JppIdx jpp_idx,
                    const DateTime dt,
                    const bool clockwise) const;
+
+private:
+    struct DtStFromJpp {
+        vDtSt dtsts;
+        IdxMap<JourneyPatternPoint, uint32_t> until;
+        DtStFromJpp(const JppIdxMap&);
+        boost::iterator_range<vDtSt::const_iterator> operator[](const JppIdx&) const;
+    };
+    DtStFromJpp departure;
+    DtStFromJpp arrival;
 };
 
 struct CachedNextStopTimeManager {

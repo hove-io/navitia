@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/meta_data.h"
 
 #include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 
 namespace navitia { namespace routing {
 
@@ -430,30 +431,46 @@ bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const 
 }
 
 CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const CachedNextStopTimeKey& key) const {
-    CachedNextStopTime result;
+    CachedNextStopTime::JppIdxMap departure, arrival;
     const auto& jp_container = dataRaptor.jp_container;
 
-    result.departure.assign(jp_container.get_jpps_values());
-    result.arrival.assign(jp_container.get_jpps_values());
+    departure.assign(jp_container.get_jpps_values());
+    arrival.assign(jp_container.get_jpps_values());
     DateTime dt_from = DateTimeUtils::set(key.from, 0);
     DateTime dt_to = DateTimeUtils::set(key.from + 2, 0); //cache window is 2-days wide (journeys : 24h max)
 
     for( const auto& jp : jp_container.get_jps_values() ) {
         fill_cache(dt_from, dt_to, key.rt_level, key.accessibilite_params, jp,
-                jp.discrete_vjs, result.arrival, result.departure);
+                jp.discrete_vjs, arrival, departure);
         fill_cache(dt_from, dt_to, key.rt_level, key.accessibilite_params, jp,
-                jp.freq_vjs, result.arrival, result.departure);
+                jp.freq_vjs, arrival, departure);
     }
     auto compare = [](const CachedNextStopTime::DtSt& lhs, const CachedNextStopTime::DtSt& rhs) noexcept{
         return lhs.first < rhs.first;
     };
-    for (const auto& jpp_dtst : result.arrival) {
+    for (const auto& jpp_dtst : arrival) {
         boost::sort(jpp_dtst.second, compare);
     }
-    for (const auto& jpp_dtst : result.departure) {
+    for (const auto& jpp_dtst : departure) {
         boost::sort(jpp_dtst.second, compare);
     }
-    return result;
+    return {departure, arrival};
+}
+
+CachedNextStopTime::DtStFromJpp::DtStFromJpp(const JppIdxMap& map) {
+    until.assign(map, 0);
+    for (const auto& elt: map) {
+        boost::push_back(dtsts, elt.second);
+        until[elt.first] = dtsts.size();
+    }
+    dtsts.shrink_to_fit();
+}
+
+boost::iterator_range<CachedNextStopTime::vDtSt::const_iterator>
+CachedNextStopTime::DtStFromJpp::operator[](const JppIdx& jpp_idx) const {
+    const auto from = jpp_idx.val == 0 ? 0 : until[JppIdx(jpp_idx.val - 1)];
+    const auto begin = dtsts.begin();
+    return boost::make_iterator_range(begin + from, begin + until[jpp_idx]);
 }
 
 std::pair<const type::StopTime*, DateTime>
