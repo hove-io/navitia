@@ -37,6 +37,7 @@ www.navitia.io
 #include "routing/dataraptor.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/algorithm/set_algorithm.hpp>
 
 namespace pt = boost::posix_time;
 using navitia::routing::StopEvent;
@@ -83,6 +84,46 @@ struct PassagesVisitor {
         }
     }
 };
+struct RoutePoint {
+    const type::Route* route;
+    const type::StopPoint* stop_point;
+    bool operator<(const RoutePoint& other) const {
+        if (route->idx != other.route->idx) { return route->idx < other.route->idx; }
+        return stop_point->idx < other.stop_point->idx;
+    }
+};
+std::set<RoutePoint>
+make_route_points(const std::vector<routing::JppIdx>& jpps, const type::Data& data) {
+    std::set<RoutePoint> res;
+    for (const auto& jpp_idx: jpps) {
+        const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
+        const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+        res.insert({data.pt_data->routes[jp.route_idx.val],
+                    data.pt_data->stop_points[jpp.sp_idx.val]});
+    }
+    return res;
+}
+std::set<RoutePoint>
+make_route_points(const std::vector<routing::datetime_stop_time>& dtsts) {
+    std::set<RoutePoint> res;
+    for (const auto& dtst: dtsts) {
+        res.insert({dtst.second->vehicle_journey->route,
+                    dtst.second->stop_point});
+    }
+    return res;
+}
+template<typename T>
+void fill_route_point(PbCreator& pb_creator,
+                      const int depth,
+                      const type::Route* route,
+                      const type::StopPoint* stop_point,
+                      T* pb) {
+    pb_creator.fill(stop_point, pb->mutable_stop_point(), depth);
+    const type::Line* line = route->line;
+    auto m_route = pb->mutable_route();
+    pb_creator.fill(route, m_route, 0);
+    pb_creator.fill(line, m_route->mutable_line(), 0);
+}
 }
 
 
@@ -129,20 +170,25 @@ void passages(PbCreator& pb_creator,
         auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
-
         pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
-        pb_creator.fill(dt_stop_time.second->stop_point, passage->mutable_stop_point(), depth);
-        const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
-        const type::Route* route = vj->route;
-        const type::Line* line = route->line;
-        auto m_route = passage->mutable_route();
-        pb_creator.fill(route, m_route, 0);
-        pb_creator.fill(line, m_route->mutable_line(), 0);
 
+        const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
         pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
+        fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
     }
     pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
+
+    // filling empty route points
+    const auto& all_route_points = make_route_points(handler.journey_pattern_points, pb_creator.data);
+    const auto& filled_route_points = make_route_points(passages_dt_st);
+    std::vector<RoutePoint> empty_route_points;
+    boost::set_difference(all_route_points, filled_route_points, std::back_inserter(empty_route_points));
+    for (const auto& rp: empty_route_points) {
+        auto* pb_route_point = pb_creator.add_route_points();
+        fill_route_point(pb_creator, depth, rp.route, rp.stop_point, pb_route_point);
+        pb_creator.fill(rp.route, pb_route_point->mutable_pt_display_informations(), 1);
+    }
 }
 
 }}// namespace
