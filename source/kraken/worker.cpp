@@ -639,12 +639,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 }
 
-pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
+pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
+                                   const boost::posix_time::ptime& current_time) {
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uri;
     for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
-    }
+    }    
     return navitia::ptref::query_pb(get_type(request.requested_type()),
                                     request.filter(),
                                     forbidden_uri,
@@ -661,7 +662,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
                                     //not important for it to be in
                                     //the production period, it's used
                                     //to filter the disruptions
-                                    bt::from_time_t(request.datetime()));
+                                    current_time);
 }
 
 
@@ -680,6 +681,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", response.mutable_error());
         return response;
     }
+    boost::posix_time::ptime current_time = bt::from_time_t(request._current_datetime());
     switch(request.requested_api()){
         case pbnavitia::places: response = autocomplete(request.places()); break;
         case pbnavitia::pt_objects: response = pt_object(request.pt_objects()); break;
@@ -696,7 +698,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: response = proximity_list(request.places_nearby()); break;
-        case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref()); break;
+        case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_time); break;
         case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports()); break;
         case pbnavitia::calendars : response = calendars(request.calendars()); break;
         case pbnavitia::place_code : response = place_code(request.place_code()); break;
