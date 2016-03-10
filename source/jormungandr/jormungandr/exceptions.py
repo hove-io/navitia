@@ -107,6 +107,14 @@ class InvalidArguments(HTTPException):
         self.code = 400
 
 
+class UnableToParse(HTTPException):
+
+    def __init__(self, msg):
+        super(UnableToParse, self).__init__()
+        self.data = format_error("unable_to_parse", msg)
+        self.code = 400
+
+
 class TechnicalError(HTTPException):
 
     def __init__(self, msg):
