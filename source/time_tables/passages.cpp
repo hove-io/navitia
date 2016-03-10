@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2016, Canal TP and/or its affiliates. All rights reserved.
   
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -47,7 +47,7 @@ namespace navitia { namespace timetables {
 namespace {
 struct PassagesVisitor {
     pbnavitia::API api_pb;
-    const type::Data &data;
+    const type::Data& data;
     bool clockwise() const {
         switch (api_pb) {
         case pbnavitia::NEXT_DEPARTURES:
@@ -72,9 +72,15 @@ struct PassagesVisitor {
             throw std::logic_error("bad api_pb in passages");
         }
     }
+    // Is this jpp useless for passages (domain specific rules).
     bool is_useless(const routing::JppIdx& jpp_idx) const {
         const auto& jpp = data.dataRaptor->jp_container.get(jpp_idx);
         const auto& jp = data.dataRaptor->jp_container.get(jpp.jp_idx);
+
+        // We don't want to put in a {next,previous} departures
+        // (resp. arrivals) the last (resp. first) stop time of the vj
+        // even if we can pick up (resp. drop off) because of a vj
+        // extention.
         switch (stop_event()) {
         case StopEvent::pick_up:
             if (jp.jpps.empty()) { return false; }
