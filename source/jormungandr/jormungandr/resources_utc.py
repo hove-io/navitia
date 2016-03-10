@@ -76,7 +76,7 @@ class ResourceUtc:
             return original_datetime
         try:
             utctime = self.tz().normalize(self.tz().localize(original_datetime)).astimezone(pytz.utc)
-        except ValueError, e:
+        except ValueError as e:
             raise UnableToParse("Unable to parse datetime, " + e.message)
 
         return utctime
