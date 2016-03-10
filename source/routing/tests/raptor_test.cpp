@@ -2793,3 +2793,98 @@ BOOST_AUTO_TEST_CASE(reader_with_invalid_vj_extensions) {
     BOOST_CHECK_EQUAL(res.at(0).items.size(), 5);
 }
 
+/*
+  |-------------|                                               |--------------------------|
+  | StopArea:A  |           vj:A                                |      StopArea:B          |
+  |-------------|============================================== |--------------------------|
+  | StopPoint:A |                                               |                          |
+  |-------------|                                               |    StopPoint:B0          |
+                                                                |          ||              |
+                                                                |          ||              |
+                                                                |          ||  stay_in     |
+                                                                |          ||              |
+                                                                |          ||              |
+                                                                |    StopPoint:B1          |
+                                                                |          ||              |
+                                                                |--------------------------|
+                                                                           ||
+                                                                           ||
+                                                                           ||
+  |-------------|                                                          ||
+  | StopArea:C  |                         vj:B                             ||
+  |-------------|============================================================
+  | StopPoint:C |
+  |-------------|
+
+We must have the same answer in the two cases: clockwise = true or false
+
+Before correction if clockwise = true, found in the response StopPoint:B0 >> StopPoint:B1 section
+
+See : http://jira.canaltp.fr/browse/NAVITIAII-2062
+
+*/
+
+BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
+    ed::builder b("20120614");
+
+    b.sa("stop_area:A", 0, 0, false)("stop_point:A");
+    b.sa("stop_area:B", 0, 0, false)("stop_point:B1")("stop_point:B0");
+    b.sa("stop_area:C", 0, 0, false)("stop_point:C");
+
+    b.vj("A", "1111111", "block1", true, "vj:A")("stop_point:A", "8:05"_t, "8:05"_t)
+            ("stop_point:B0", "08:40"_t, "08:40"_t);
+    b.vj("A", "1111111", "block1", true, "vj:B")("stop_point:B1", "08:40"_t, "09:05"_t)
+            ("stop_point:C", "11:50"_t, "11:50"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*d.stop_areas_map.at("stop_area:A")->stop_point_list.front())] = 0_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.front())] = 0_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.back())] = 0_min;
+
+    auto resp_0 = raptor.compute_all(departures,
+                                     arrivals,
+                                     DateTimeUtils::set(0, "09:00"_t),
+                                     type::RTLevel::Base,
+                                     2_min,
+                                     DateTimeUtils::min,
+                                     10,
+                                     type::AccessibiliteParams(),
+                                     std::vector<std::string>(),
+                                     false);
+
+    auto resp_1 = raptor.compute_all(departures,
+                                     arrivals,
+                                     DateTimeUtils::set(0, "08:00"_t),
+                                     type::RTLevel::Base,
+                                     2_min,
+                                     DateTimeUtils::inf,
+                                     10,
+                                     type::AccessibiliteParams(),
+                                     std::vector<std::string>(),
+                                     true);
+
+    BOOST_REQUIRE_EQUAL(resp_0.size(), 1);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.size(), 1);
+
+    using boost::posix_time::time_from_string;
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().departure, time_from_string("2012-06-14 08:05:00"));
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().arrival, time_from_string("2012-06-14 08:40:00"));
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.front()->uri, "stop_point:A");
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.back()->uri, "stop_point:B0");
+
+    BOOST_REQUIRE_EQUAL(resp_0.size(), resp_1.size());
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.size(), resp_1.at(0).items.size());
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().departure, resp_1.at(0).items.front().departure);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().arrival, resp_1.at(0).items.front().arrival);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().type, resp_1.at(0).items.front().type);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.front()->uri, resp_1.at(0).items.front().stop_points.front()->uri);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.back()->uri, resp_1.at(0).items.front().stop_points.back()->uri);
+}
