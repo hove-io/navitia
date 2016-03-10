@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function
 from flask import logging
 import pytz
 import requests as requests
@@ -118,7 +119,7 @@ class Timeo(RealtimeProxy):
          requests
          """
 
-        base_params = '&'.join([k + '=' + v for k, v in self.service_args.iteritems()])
+        base_params = '&'.join([k + '=' + v for k, v in self.service_args.items()])
 
         stop = route_point.fetch_stop_id(self.rt_system_id)
         line = route_point.fetch_line_id(self.rt_system_id)

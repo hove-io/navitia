@@ -26,14 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from itertools import izip
+from __future__ import absolute_import, print_function
 import logging
 import itertools
 import datetime
 from jormungandr.scenarios.utils import compare, get_pseudo_duration
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if
-
 
 def delete_journeys(responses, request):
 

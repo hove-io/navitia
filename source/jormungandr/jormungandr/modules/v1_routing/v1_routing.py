@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function
 from jormungandr.interfaces.v1 import Uri
 from jormungandr.interfaces.v1 import Coverage
 from jormungandr.interfaces.v1 import Journeys
@@ -42,7 +43,7 @@ from jormungandr.interfaces.v1 import Status
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 
-from resources import Index
+from jormungandr.modules.v1_routing.resources import Index
 
 
 class RegionConverter(BaseConverter):

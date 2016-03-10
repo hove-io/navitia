@@ -27,10 +27,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tests_mechanism import AbstractTestFixture, dataset
+from __future__ import absolute_import, print_function
+
+from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
 from jormungandr.schedule import RealTimePassage
 import datetime
+from nose.tools import eq_
 import pytz
 
 MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
@@ -144,4 +147,4 @@ class TestDepartures(AbstractTestFixture):
             ("L", "20160102T100700"),
             ("L", "20160102T101100"),
             ]
-        assert departures == expected_departures
+        eq_(departures, expected_departures)

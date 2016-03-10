@@ -16,6 +16,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function
 from jormungandr import utils
 from navitiacommon import request_pb2, type_pb2
 
@@ -45,12 +46,12 @@ class Kraken(object):
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
-        for stop_point_id, access_duration in origins.iteritems():
+        for stop_point_id, access_duration in origins.items():
             location = req.journeys.origin.add()
             location.place = stop_point_id
             location.access_duration = access_duration
 
-        for stop_point_id, access_duration in destinations.iteritems():
+        for stop_point_id, access_duration in destinations.items():
             location = req.journeys.destination.add()
             location.place = stop_point_id
             location.access_duration = access_duration

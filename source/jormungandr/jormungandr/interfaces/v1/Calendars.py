@@ -29,13 +29,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
-from ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
-from errors import ManageError
-from fields import fields, enum_type, NonNullList,\
+from jormungandr.interfaces.v1.errors import ManageError
+from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
     NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
 
 

@@ -27,9 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import marshal_with, abort, marshal
 from jormungandr import i_manager
-from ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
 from navitiacommon.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict

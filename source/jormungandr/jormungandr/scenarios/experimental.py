@@ -47,7 +47,7 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
-    section.id = str(uuid.uuid4())
+    section.id = unicode(uuid.uuid4())
     return section
 
 class SectionSorter(object):

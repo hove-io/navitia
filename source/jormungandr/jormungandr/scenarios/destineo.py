@@ -26,6 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function
 from jormungandr.scenarios import default, helpers
 from jormungandr.scenarios.default import is_admin
 import copy
@@ -370,11 +372,11 @@ class Scenario(default.Scenario):
         for idx, journey in enumerate(journeys):
             if journey.type in non_pt_types:
                 to_keep.append(idx)
-            for key, func in functors.iteritems():
+            for key, func in functors.items():
                 if func(journey):
                     mapping[key].append(journey)
 
-        for key, _ in functors.iteritems():
+        for key, _ in functors.items():
             if not best and mapping[key]:
                 best = min(mapping[key], key=attrgetter('duration'))
                 to_keep.append(indexOf(journeys, best))

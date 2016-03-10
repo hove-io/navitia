@@ -27,10 +27,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from fields import instance_status_with_parameters
+from jormungandr.interfaces.v1.fields import instance_status_with_parameters
 from jormungandr import app
 from navitiacommon import models
 
