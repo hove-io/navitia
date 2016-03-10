@@ -163,12 +163,16 @@ class TestPtRef(AbstractTestFixture):
 
     def test_ptref_with_current_datetime(self):
         """
-        stop_area:stop1 without _current_datetime
+        stop_area:stop1 with _current_datetime
         """
         response = self.query_region("stop_areas/stop_area:stop1?_current_datetime=20140115T235959")
+
         disruptions = get_not_null(response, 'disruptions')
+
         assert len(disruptions) == 1
+
         messages = get_not_null(disruptions[0], 'messages')
+
         assert(messages[0]['text']) == 'Disruption on StopArea stop_area:stop1'
 
     def test_contributors(self):
