@@ -182,6 +182,22 @@ class TestDepartureBoard(AbstractTestFixture):
         assert error["message"] == "stop_schedules : calendar does not exist"
         assert error["id"] == "unknown_object"
 
+    def test_datetime_error(self):
+        """
+        datetime invalid, we got an error
+        """
+        datetimes = ["20120615T080000Z", "2012-06-15T08:00:00.222Z"]
+        for datetime in datetimes:
+            response, error_code = self.query_region("stop_points/stop1/stop_schedules?"
+                                         "from_datetime={dd}".format(dd=datetime), check=False)
+
+            assert error_code == 400
+
+            error = get_not_null(response, "error")
+
+            assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
+            assert error["id"] == "unable_to_parse"
+
     def test_on_datetime(self):
         """
         departure board for a given date
