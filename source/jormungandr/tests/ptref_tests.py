@@ -155,7 +155,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_ptref_without_current_datetime(self):
         """
-        stop_area:stop1 wihout message because _current_datetime is NOW()
+        stop_area:stop1 without message because _current_datetime is NOW()
         """
         response = self.query_region("stop_areas/stop_area:stop1")
 
@@ -163,7 +163,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_ptref_with_current_datetime(self):
         """
-        stop_area:stop1 wihout message because _current_datetime is NOW()
+        stop_area:stop1 without _current_datetime
         """
         response = self.query_region("stop_areas/stop_area:stop1?_current_datetime=20140115T235959")
         disruptions = get_not_null(response, 'disruptions')
