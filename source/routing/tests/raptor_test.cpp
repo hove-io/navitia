@@ -2831,9 +2831,9 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     b.sa("stop_area:B", 0, 0, false)("stop_point:B1")("stop_point:B0");
     b.sa("stop_area:C", 0, 0, false)("stop_point:C");
 
-    b.vj("A", "1111111", "block1", true, "vj:A")("stop_point:A", "8:05"_t, "8:05"_t)
+    b.vj("A").uri("vj:A").block_id("B1")("stop_point:A", "8:05"_t, "8:05"_t)
             ("stop_point:B0", "08:40"_t, "08:40"_t);
-    b.vj("A", "1111111", "block1", true, "vj:B")("stop_point:B1", "08:40"_t, "09:05"_t)
+    b.vj("A").uri("vj:B").block_id("B1")("stop_point:B1", "08:40"_t, "09:05"_t)
             ("stop_point:C", "11:50"_t, "11:50"_t);
 
     b.data->pt_data->index();
@@ -2841,13 +2841,12 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
-    const type::PT_Data& d = *b.data->pt_data;
 
     routing::map_stop_point_duration departures, arrivals;
 
-    departures[SpIdx(*d.stop_areas_map.at("stop_area:A")->stop_point_list.front())] = 0_min;
-    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.front())] = 0_min;
-    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.back())] = 0_min;
+    departures[SpIdx(*b.get<nt::StopPoint>("stop_point:A"))] = 0_min;
+    arrivals[SpIdx(*b.get<nt::StopPoint>("stop_point:B1"))] = 0_min;
+    arrivals[SpIdx(*b.get<nt::StopPoint>("stop_point:B0"))] = 0_min;
 
     auto resp_0 = raptor.compute_all(departures,
                                      arrivals,
