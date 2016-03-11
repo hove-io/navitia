@@ -42,6 +42,7 @@ import datetime
 from copy import deepcopy
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
+RT_PROXY_DATA_FRESHNESS = 'real_time'
 
 
 def get_realtime_system_code(route_point):
@@ -119,6 +120,7 @@ def _create_template_from_passage(passage):
     template.stop_date_time.ClearField("base_arrival_date_time")
     template.stop_date_time.ClearField("base_departure_date_time")
     template.stop_date_time.ClearField("properties")
+    template.stop_date_time.ClearField("data_freshness")
     return template
 
 
@@ -142,6 +144,7 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         new_passage = deepcopy(template)
         new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
         new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
+        new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
 
         # we also add the direction in the note
         if rt_passage.direction:
