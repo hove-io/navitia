@@ -27,16 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.scenarios import new_default
-import logging
 import copy
 
 
 class Scenario(new_default.Scenario):
 
     def journeys(self, request, instance):
-        logger = logging.getLogger(__name__)
-        logger.debug('journeys with STIF scenario')
-
         original_request = copy.deepcopy(request)
         # set special STIF values:
         # - call one next journey
