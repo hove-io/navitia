@@ -172,6 +172,7 @@ class Scenario(object):
         req.places_nearby.depth = request["depth"]
         req.places_nearby.count = request["count"]
         req.places_nearby.start_page = request["start_page"]
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if request["type[]"]:
             for type in request["type[]"]:
                 if type not in pb_type:
