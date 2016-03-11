@@ -321,7 +321,7 @@ def test_similar_journeys():
     journey2.duration = 43
     journey2.sections[0].uris.vehicle_journey = 'bob'
 
-    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
 
     assert len(list(journeys_gen(responses))) == 1
 
@@ -340,7 +340,7 @@ def test_similar_journeys_test2():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bob'
 
-    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
 
     assert len(list(journeys_gen(responses))) == 1
 
@@ -359,7 +359,7 @@ def test_similar_journeys_test3():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -391,7 +391,7 @@ def test_similar_journeys_different_transfer():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -416,7 +416,7 @@ def test_similar_journeys_walking_bike():
     journey2.sections[-1].type = response_pb2.STREET_NETWORK
     journey2.sections[-1].street_network.mode = response_pb2.Bike
 
-    journey_filter._filter_similar_journeys(list(journeys_gen(responses)), {})
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -445,7 +445,7 @@ def test_similar_journeys_car_park():
     journey2.sections.add()
     journey2.sections[-1].type = response_pb2.PARK
 
-    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
+    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_vj_generator)
 
 
 def test_similar_journeys_bss_park():
@@ -471,7 +471,7 @@ def test_similar_journeys_bss_park():
     journey2.sections[-1].type = response_pb2.STREET_NETWORK
     journey2.sections[-1].street_network.mode = response_pb2.Bss
 
-    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_generator)
+    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_vj_generator)
 
 class MockInstance(object):
     def __init__(self):

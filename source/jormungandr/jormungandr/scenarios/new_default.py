@@ -609,11 +609,15 @@ class Scenario(simple.Scenario):
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
+        min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
         responses = []
         last_nb_journeys = 0
         nb_try = 0
-        while nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys and request is not None:
+        while (nb_journeys(responses) < min_asked_journeys \
+                and nb_try < min_asked_journeys \
+                and request is not None) \
+                or nb_try < min_journeys_calls:
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
@@ -637,7 +641,9 @@ class Scenario(simple.Scenario):
 
             last_nb_journeys = cur_nb_journeys
 
+        journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
+
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         tag_journeys(pb_resp)
         type_journeys(pb_resp, api_request)
