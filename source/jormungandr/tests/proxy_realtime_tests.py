@@ -139,10 +139,10 @@ class TestDepartures(AbstractTestFixture):
         departures = [(d['route']['name'], d['stop_date_time']['departure_date_time'])
                       for d in response['departures']]
         expected_departures = [
-            #("J", "20160102T100000"), # should be here when empty route point is working
+            ("J", "20160102T100000"),
             ("K", "20160102T100100"),
             ("L", "20160102T100200"),
-            #("J", "20160102T100300"), # same here
+            ("J", "20160102T100300"),
             ("K", "20160102T100400"),
             ("L", "20160102T100700"),
             ("L", "20160102T101100"),

@@ -1805,6 +1805,10 @@ pbnavitia::Trip* PbCreator::add_trips(){
     return response.add_trips();
 }
 
+pbnavitia::RoutePoint* PbCreator::add_route_points(){
+    return response.add_route_points();
+}
+
 pbnavitia::Journey* PbCreator::add_journeys(){
     return response.add_journeys();
 }

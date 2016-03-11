@@ -33,15 +33,17 @@ www.navitia.io
 namespace navitia { namespace timetables {
 
 
-void next_departures(PbCreator& pb_creator, const std::string &request,
-        const std::vector<std::string>& forbidden_uris,
-        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
-        const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::RTLevel rt_level, uint32_t count, uint32_t start_page);
-void next_arrivals(PbCreator& pb_creator, const std::string &request,
-        const std::vector<std::string>& forbidden_uris,
-        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
-        const int depth, const type::AccessibiliteParams & accessibilite_params,
-        const type::RTLevel rt_level, uint32_t count, uint32_t start_page);
+void passages(PbCreator& pb_creator,
+              const std::string& request,
+              const std::vector<std::string>& forbidden_uris,
+              const pt::ptime datetime,
+              const uint32_t duration,
+              const uint32_t nb_stoptimes,
+              const int depth,
+              const type::AccessibiliteParams& accessibilite_params,
+              const type::RTLevel rt_level,
+              const pbnavitia::API api_pb,
+              const uint32_t count,
+              const uint32_t start_page);
 
 }}

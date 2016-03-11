@@ -36,8 +36,7 @@ www.navitia.io
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/route_schedules.h"
-#include "time_tables/next_passages.h"
-#include "time_tables/previous_passages.h"
+#include "time_tables/passages.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/traffic_reports_api.h"
 #include "calendar/calendar_api.h"
@@ -283,32 +282,32 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
-            timetables::next_departures(pb_creator, request.departure_filter(),
-                                               forbidden_uri, from_datetime,
-                                               request.duration(), request.nb_stoptimes(),
-                                               request.depth(), type::AccessibiliteParams(),
-                                               rt_level, request.count(), request.start_page());
+            timetables::passages(pb_creator, request.departure_filter(),
+                                 forbidden_uri, from_datetime,
+                                 request.duration(), request.nb_stoptimes(),
+                                 request.depth(), type::AccessibiliteParams(),
+                                 rt_level, api, request.count(), request.start_page());
             break;
         case pbnavitia::NEXT_ARRIVALS:
-            timetables::next_arrivals(pb_creator, request.arrival_filter(),
-                    forbidden_uri, from_datetime,
-                    request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), rt_level, request.count(),
-                    request.start_page());
+            timetables::passages(pb_creator, request.arrival_filter(),
+                                 forbidden_uri, from_datetime,
+                                 request.duration(), request.nb_stoptimes(),
+                                 request.depth(), type::AccessibiliteParams(),
+                                 rt_level, api, request.count(), request.start_page());
             break;
         case pbnavitia::PREVIOUS_DEPARTURES:
-            timetables::previous_departures(pb_creator, request.departure_filter(),
-                    forbidden_uri, until_datetime,
-                    request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), rt_level, request.count(),
-                    request.start_page());
+            timetables::passages(pb_creator, request.departure_filter(),
+                                 forbidden_uri, until_datetime,
+                                 request.duration(), request.nb_stoptimes(),
+                                 request.depth(), type::AccessibiliteParams(),
+                                 rt_level, api, request.count(), request.start_page());
             break;
         case pbnavitia::PREVIOUS_ARRIVALS:
-            timetables::previous_arrivals(pb_creator, request.arrival_filter(),
-                    forbidden_uri, until_datetime,
-                    request.duration(), request.nb_stoptimes(), request.depth(),
-                    type::AccessibiliteParams(), rt_level, request.count(),
-                    request.start_page());
+            timetables::passages(pb_creator, request.arrival_filter(),
+                                 forbidden_uri, until_datetime,
+                                 request.duration(), request.nb_stoptimes(),
+                                 request.depth(), type::AccessibiliteParams(),
+                                 rt_level, api, request.count(), request.start_page());
             break;
         case pbnavitia::DEPARTURE_BOARDS:
             timetables::departure_board(pb_creator, request.departure_filter(),

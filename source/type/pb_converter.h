@@ -225,6 +225,7 @@ struct PbCreator {
     pbnavitia::JourneyPattern* add_journey_patterns();
     pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
     pbnavitia::Trip* add_trips();
+    pbnavitia::RoutePoint* add_route_points();
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);
