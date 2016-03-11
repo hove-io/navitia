@@ -97,7 +97,7 @@ class TestPlaces(AbstractTestFixture):
 
         assert len(response['disruptions']) == 0
 
-    def test_places_nearby_with_coords(self):
+    def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
 
         id = "8.9831195195e-05;0.000898311281954"
