@@ -50,13 +50,14 @@ struct departure_board_fixture {
         b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
         b.lines.find("J")->second->properties["realtime_system"] = "KisioDigital";
 
-        b.vj("K")("S41", "09:00"_t)("S42", "10:00"_t)("S43", "11:00"_t);
+        b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
         b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
         b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
         b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
+        b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
         b.lines.find("K")->second->properties["realtime_system"] = "KisioDigital";
 
-        b.vj("L")("S39", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
+        b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
         b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
         b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
         b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
