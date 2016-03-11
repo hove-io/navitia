@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 import calendar
 from collections import deque
 from datetime import datetime
@@ -71,16 +71,16 @@ def walk_dict(tree, visitor):
     ...     print("{}={}".format(name, val))
 
     >>> walk_dict(bob, my_visitor)
-    titi={'b': 1}
+    titi={u'b': 1}
     b=1
-    titi={'a': 1}
+    titi={u'a': 1}
     a=1
     tete=ltuple2
     tete=ltuple1
     tete=tuple1
     tutu=1
-    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
-    nested_bob={'bob': 3}
+    toto={u'bobette': 13, u'bob': 12, u'nested_bob': {u'bob': 3}}
+    nested_bob={u'bob': 3}
     bob=3
     bob=12
     bobette=13
@@ -93,9 +93,9 @@ def walk_dict(tree, visitor):
     ...         return True
 
     >>> walk_dict(bob, my_stoper_visitor)
-    titi={'b': 1}
+    titi={u'b': 1}
     b=1
-    titi={'a': 1}
+    titi={u'a': 1}
     a=1
     tete=ltuple2
     """

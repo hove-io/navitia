@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from flask import Blueprint
 from jormungandr.module_resource import ModuleResourcesManager, ModuleResource
 
@@ -109,7 +109,8 @@ class AModule(object):
         :type kwargs:
         """
         if 'endpoint' in kwargs:
-            kwargs['endpoint'] = self.name + '.' + kwargs['endpoint']
+            #on python2 we got a str ascii and in pytho 3 a str unicode, it's what we want!
+            kwargs['endpoint'] = str(self.name + '.' + kwargs['endpoint'])
 
         urls_list = list()
         for url in urls:

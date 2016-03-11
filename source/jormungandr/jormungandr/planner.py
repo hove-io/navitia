@@ -16,7 +16,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from jormungandr import utils
 from navitiacommon import request_pb2, type_pb2
 

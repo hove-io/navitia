@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from jormungandr.interfaces.v1 import Uri
 from jormungandr.interfaces.v1 import Coverage
 from jormungandr.interfaces.v1 import Journeys
