@@ -33,6 +33,7 @@ from collections import namedtuple
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
 from jormungandr.schedule import RealTimePassage
+from check_utils import is_valid_stop_date_time, get_not_null
 import datetime
 from nose.tools import eq_
 import pytz
@@ -159,3 +160,48 @@ class TestDepartures(AbstractTestFixture):
             DepartureCheck(route="L", dt="20160102T101100", direction='S43'),
             ]
         eq_(departures, expected_departures)
+
+    def test_departures_realtime_informations(self):
+        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+        response = self.query_region(query)
+
+        assert "departures" in response
+        assert len(response["departures"]) == 5
+
+        dep_data_freshness = [(d['route']['name'], d['stop_date_time']['data_freshness'])
+                      for d in response['departures']]
+        expected_data_freshness = [
+            ("K", "realtime"),
+            ("L", "base_schedule"),
+            ("K", "realtime"),
+            ("L", "base_schedule"),
+            ("L", "base_schedule"),
+            ]
+        assert dep_data_freshness == expected_data_freshness
+
+        #stop_time with data_freshness = realtime
+        d = get_not_null(response["departures"][0], "stop_date_time")
+        get_not_null(d, "arrival_date_time")
+        get_not_null(d, "departure_date_time")
+        get_not_null(d, "data_freshness")
+        assert d["data_freshness"] == "realtime"
+        assert "base_arrival_date_time" not in d
+        assert "base_departure_date_time" not in d
+
+        #For realtime some attributs in display_informations are deleted
+        disp_info = get_not_null(response["departures"][0], "display_informations")
+        assert len(disp_info["physical_mode"]) == 0
+        assert len(disp_info["direction"]) == 0
+        assert len(disp_info["headsign"]) == 0
+
+        #stop_time with data_freshness = base_schedule
+        d = get_not_null(response["departures"][1], "stop_date_time")
+        #verify that all the attributs are present
+        is_valid_stop_date_time(d)
+        assert d["data_freshness"] == "base_schedule"
+
+        #For base_schedule verify some attributs in display_informations
+        d = get_not_null(response["departures"][1], "display_informations")
+        get_not_null(d, "physical_mode")
+        get_not_null(d, "direction")
+        get_not_null(d, "headsign")

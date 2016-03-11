@@ -339,9 +339,11 @@ class TestDepartureBoard(AbstractTestFixture):
 
         assert len(response["departures"][0]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][0]["stop_date_time"]["additional_informations"][0] == "date_time_estimated"
+        assert response["departures"][0]["stop_date_time"]["data_freshness"] == "base_schedule"
 
         assert len(response["departures"][1]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
+        assert response["departures"][1]["stop_date_time"]["data_freshness"] == "base_schedule"
 
     def test_departures_arrivals_without_filters(self):
         """
