@@ -79,7 +79,7 @@ class Scenario(object):
         req.traffic_reports.filter = request['filter']
         req.traffic_reports.count = request['count']
         req.traffic_reports.start_page = request['start_page']
-        req.traffic_reports._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
