@@ -163,6 +163,13 @@ struct data_set {
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
 
+        b.impact(nt::RTLevel::RealTime, "Disruption On line:A")
+                .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                .msg("Disruption on Line line:A", nt::disruption::ChannelType::email)
+                .on(nt::Type_e::Line, "line:A")
+                .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
+                .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
+
         //contributor "c1" contains dataset "d1"
         navitia::type::Contributor* contributor = new navitia::type::Contributor();
         contributor->idx = b.data->pt_data->contributors.size();
