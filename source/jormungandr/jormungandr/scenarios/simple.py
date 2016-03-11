@@ -146,6 +146,7 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = request["uri"]
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         return instance.send_and_receive(req)
 
     def route_schedules(self, request, instance):

@@ -275,7 +275,9 @@ class PlaceUri(ResourceUri):
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
-        args = {"uri": transform_id(id)}
+        args = {
+            "uri": transform_id(id),
+            "_current_datetime": datetime.datetime.utcnow()}
         response = i_manager.dispatch(args, "place_uri",
                                       instance_name=self.region)
         return response, 200
