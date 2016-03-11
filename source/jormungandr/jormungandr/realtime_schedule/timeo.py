@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function
 from flask import logging
 import pytz
 import requests as requests
+from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
@@ -64,16 +65,28 @@ class Timeo(RealtimeProxy):
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
 
+    def __repr__(self):
+        """
+         used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        return self.rt_system_id
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+    def call_timeo(self, url):
+        try:
+            return requests.get(url, timeout=self.timeout)
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('Timeo RT service timeout, using base '
+                                              'schedule (error: {}'.format(t))
+            return None
+
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
         if not url:
             return None
 
-        try:
-            r = requests.get(url, timeout=self.timeout)
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error('Timeo RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+        r = self.call_timeo(url)
+        if not r:
             return None
 
         if r.status_code != 200:
