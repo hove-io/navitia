@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/range/algorithm/set_algorithm.hpp>
+#include "type/type_utils.h"
 
 namespace pt = boost::posix_time;
 using navitia::routing::StopEvent;
@@ -176,9 +177,19 @@ void passages(PbCreator& pb_creator,
         auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
+
+        //find base datetime
+        auto base_st = get_base_stop_time(dt_stop_time.second);
+        if (base_st != nullptr) {
+            auto base_ptime = navitia::to_posix_time(dt_stop_time.first, pb_creator.data);
+            auto base_dep_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, true);
+            passage->mutable_stop_date_time()->set_base_departure_date_time(navitia::to_posix_timestamp(base_dep_dt));
+            passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_dep_dt));
+        }
         pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
 
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
+        passage->mutable_stop_date_time()->set_data_freshness(to_pb_realtime_level(vj->realtime_level));
         const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
         pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
         fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
