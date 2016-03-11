@@ -230,10 +230,18 @@ struct CachedNextStopTime {
 
 private:
     struct DtStFromJpp {
+        DtStFromJpp(const JppIdxMap& jpp_idx_map);
+        // Returns the range corresponding to jpp_idx_map[jpp_idx],
+        // i.e. from dtsts[until[prev(jpp_idx)]] to
+        // dtsts[until[jpp_idx]] (excluded).
+        boost::iterator_range<vDtSt::const_iterator> operator[](const JppIdx& jpp_idx) const;
+    private:
+        // Every vectors of jpp_idx_map concatenated in order
+        // (flatten(jpp_idx_map.values())).
         vDtSt dtsts;
+        // dtsts[until[jpp_idx]] correspond to the end of
+        // jpp_idx_map[jpp_idx], and to the begin of jpp_idx_map[next(jpp_idx)]
         IdxMap<JourneyPatternPoint, uint32_t> until;
-        DtStFromJpp(const JppIdxMap&);
-        boost::iterator_range<vDtSt::const_iterator> operator[](const JppIdx&) const;
     };
     DtStFromJpp departure;
     DtStFromJpp arrival;
