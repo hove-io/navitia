@@ -1,3 +1,9 @@
+navitia2 (2.3.2) unstable; urgency=low
+
+  *  jormungandr: fix a bug in departures using proxy realtime informations <https://github.com/CanalTP/navitia/pull/1461>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 11 Mar 2016 10:03:17 +0100
+
 navitia2 (2.3.1) unstable; urgency=low
 
   * fix performance regression on isochrone <https://github.com/CanalTP/navitia/pull/1456>
