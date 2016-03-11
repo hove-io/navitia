@@ -229,11 +229,12 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
             vector_of_admins(request), request.search_type(), *data, current_time);
 }
 
-pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
+pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request,
+                                      const boost::posix_time::ptime& current_time) {
     const auto data = data_manager.get_data();
     return navitia::autocomplete::autocomplete(request.q(),
             vector_of_pb_types(request), request.depth(), request.count(),
-            vector_of_admins(request), request.search_type(), *data, bt::second_clock::universal_time());
+            vector_of_admins(request), request.search_type(), *data, current_time);
 }
 
 pbnavitia::Response Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request,
@@ -689,7 +690,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     boost::posix_time::ptime current_time = bt::from_time_t(request._current_datetime());
     switch(request.requested_api()){
         case pbnavitia::places: response = autocomplete(request.places(), current_time); break;
-        case pbnavitia::pt_objects: response = pt_object(request.pt_objects()); break;
+        case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_time); break;
         case pbnavitia::place_uri: response = place_uri(request.place_uri()); break;
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:

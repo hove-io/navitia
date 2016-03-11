@@ -92,7 +92,8 @@ class Worker {
                                             const boost::posix_time::ptime& current_time);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request,
                                       const boost::posix_time::ptime& current_time);
-        pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);
+        pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request,
+                                      const boost::posix_time::ptime& current_time);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
 };
