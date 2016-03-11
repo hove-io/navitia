@@ -65,6 +65,7 @@ class Scenario(object):
         req.calendars.start_page = request['start_page']
         req.calendars.start_date = request['start_date']
         req.calendars.end_date = request['end_date']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.calendars.forbidden_uris.append(forbidden_uri)
