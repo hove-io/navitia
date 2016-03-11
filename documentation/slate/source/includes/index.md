@@ -1,6 +1,7 @@
 Welcome to navitia.io
 =====================
 
+(pronounce [navi-sia])
 
 An API to build cool stuff with public transport
 -------------------------------------------------
@@ -34,6 +35,16 @@ There are no restrictions in using our API. However, please don't make more than
 Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
 
+### Using my token
+If you use a web browser, you only have to paste it in the user area,
+with no password. Or, in a simplier way, you can add your token in the
+address bar like :
+
+``` plaintext
+https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage/fr-idf/networks
+```
+
+See [authentication](#authentication) section to find out more details on **how to use your token**.
 
 ### Overview
 
@@ -62,7 +73,7 @@ This chapter shows some usages with the minimal required arguments. However, thi
 
 ### A simple route computation
 
-Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco the 18th of January at 08:00 AM.
+Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco.
 We need to use the ``journeys`` API.
 
 
@@ -78,7 +89,7 @@ The arguments are the following:
 * ``to=-122.402770;37.794682``
 * ``datetime=20140118T0800``
 
-Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800>.
+Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>.
 
 
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
@@ -87,27 +98,23 @@ a journey can be faster than an other but requires more changes or more walking.
 This API has more options explained in the reference as:
 
 * Forbid certain lines, routes or modes
-  For example you can forbid the line 1030 and the cable car mode with the url:
-  <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800&forbidden_uris[]=line:OSF:1030&forbidden_uris[]=commercial_mode:cablecar>
+  For example you can forbid the line 1 and the cable car mode with the url:
+  <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&forbidden_uris[]=line:OSF:10867&forbidden_uris[]=commercial_mode:cablecar>
 
 * Latest departure
   To get the latest departure, you can query for some journeys arriving before the end of the service
-  <http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20140613T0300&datetime_represents=arrival>
+  <http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160402T0300&datetime_represents=arrival>
 
-* You can also limit the maximum duration to reach the public transport system (to limit the walking/biking/driving parts):
-  <https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800>
+* You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys):
+  <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&traveler_type=slow_walker>
 
-* Enable biking, driving or use of bike sharing system
+* Enable biking, driving or use of bike sharing system on Paris area
   For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure:
-  <https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800&first_section_mode[]=bss>
-
-  you can also allow walking and bike with:
-  <https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800&first_section_mode[]=bike&first_section_mode[]=walking>
-
-  to allow a different fallback mode at the arrival mode, use ``last_section_mode[]``
+  <https://api.navitia.io/v1/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&first_section_mode[]=bss>
 
 
-### A quick journey in the API
+
+### A quick exploration of the API
 
 *navitia* allows to dive into the public transport data.
 
@@ -115,7 +122,7 @@ To better understand how the API works let's ask the API the different main poss
 
 The ``links`` section of the answer contains the different possible interactions with the API.
 
-As you can see there are several possibilities like for example ``coverage`` to navigate through the covered regions data or ``journeys`` to compute a journey.
+As you can see there are several possibilities like for example [coverage](#coverage) to navigate through the covered regions data or [journeys](#journeys) to compute a journey.
 
 
 Now let's see what interactions are possible with ``coverage``: <http://api.navitia.io/v1/coverage>
@@ -129,7 +136,8 @@ This request will give you:
 In the ``links`` section there is for example this link: ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 
-This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax.
+This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
+The parameters are identified with the ``{`` ``}`` syntax.
 In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region:
 
 ``` json
@@ -137,53 +145,73 @@ In this case it needs a region id. This id can the found in the ``regions`` sect
     "start_production_date": "20140105",
     "status": "running",
     "shape": "POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))",
-    "id": "ny",
+    "id": "us-ny",
     "end_production_date": "20140406"
 }
 ```
 
-To query for the public transport lines of New York we thus have to call: <http://api.navitia.io/v1/coverage/ny/lines>
+To query for the public transport lines of New York we thus have to call: <http://api.navitia.io/v1/coverage/us-ny/lines>
 
 
 Easy isn't it?
 
 We could push the exploration further and:
 
-* get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): <http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/>
-* get the upcoming departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
-  <http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/departures/>
-* get all the upcoming departures in the first stop area found in the last request, for the network mta:
-  <http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/networks/network:mta/departures/>
+- Geographical coverage of the service > <https://api.navitia.io/v1/coverage>
+- Where am I? (WGS 84 coordinates)
+    - <https://api.navitia.io/v1/coord/2.377310;48.847002>
+    - I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+- Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
+    - <https://api.navitia.io/v1/coverage/fr-idf>
+- Networks available? (see what [network](#network) is)
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks>
+    - pwooo, many networks on this coverage ;)
+- Is there any Metro lines or networks?
+    - there is an api for that. See [pt_objects](#pt-objects)
+    - <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro>
+    - Response contain one network, one mode, and many lines
+- Let's try some filtering (see [ptreferential](#ptreferential))
+    - filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/>
+    - physical modes managed by this network
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes>
+    - metro lines
+    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines>
+- By the way, what stuff are close to me?
+    - <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby>
+    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines>
+    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules>
+    - or ...
+
 
 
 ### What places have a name that start with 'tran'
 
-The ``places`` API finds any object whose name matches the first letters of the query.
+The [/places](#places) API finds any object whose name matches the first letters of the query.
 
-To find the objects that start with "tran" the request should be: <http://api.navitia.io/v1/coverage/ny/places?q=tran>
+To find the objects that start with "tran" the request should be: <http://api.navitia.io/v1/coverage/fr-idf/places?q=eiff>
 
 This API is fast enough to use it for autocompleting a user request.
 
 
 ### What places are within 1000 meters
 
-The ``places_nearby`` API finds any object within a certain radius as a crow flies.
+The [/places_nearby](#places-nearby) API finds any object within a certain radius as a crow flies.
 This API is not accessible from the main endpoint but has to be applied on a stop point, an address, some coordinates,...
 
-All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: <http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby>
+All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: <http://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/places_nearby>
 
-We could, in the same fashion, ask for the objects around a particuliar stop area (``stop_area:BCO:SA:CTP-BCO550123`` for example): <http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/places_nearby>
+We could, in the same fashion, ask for the objects around a particuliar stop area (``stop_area:OSF:SA:CTP4025`` for example): <http://api.navitia.io/v1/coverage/us-ca/stop_areas/stop_area:OSF:SA:CTP4025/places_nearby>
 
 Optionally you can select what object types to return and change the radius.
 
 
-### What stations can be reached in the next 60 minutes
-
+### What stations can be reached in the next 20 minutes
 
 The API can computes *all* the reachable stop points from an origin within a given maximum travel duration.
 
 All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request:
-<http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/journeys>
+<http://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200>
 
 It returns for each destination stop point the earliest arrival and a link to the journey detail.
 
@@ -191,17 +219,16 @@ It returns for each destination stop point the earliest arrival and a link to th
 Getting help
 ------------
 
-All available functions are documented on
-
-- [integration](#navitia-documentation-v1-interface)
+All available functions are documented in [integration part](#navitia-documentation-v1-interface)
 
 A mailing list is available to ask question: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
 In order to report bug and make requests we created a github navitia project
 <https://github.com/CanalTP/navitia/issues>.
 
-At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
+Stay tuned on twitter @navitia.
 
+At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
 
 About…
 ------
@@ -210,13 +237,7 @@ About…
 ### About the service
 
 If you plan to build something successful, contact us to get an access with more vitamins and even more support.
-
-For the moment, the service is not hosted on a powerful server, so please don't make more than one request per second.
-
-<aside class="warning">
-  Authentication is not required now, but will soon become (within april 2014).
-  Please contact us for details.
-</aside>
+And if you wanna build really hard stuff with it, don't be doubtful and take the source code <https://github.com/CanalTP/navitia>
 
 
 ### About the data
@@ -226,12 +247,12 @@ The street network is extracted from [OpenStreetMap](http://www.openstreetmap.or
 
 The public transport data are provided by networks that provide their timetables as open data.
 
-Some data improvement are achieved by Canal TP.
+Some data improvement are achieved by Kisio Digital.
 
 
-### About Canal TP
+### About Kisio Digital
 
-[Canal TP](http://www.canaltp.fr) is the editor of *navitia*. We are a company based in Paris, leader in
+[Kisio Digital](http://www.canaltp.fr) is the editor of *navitia*. We are a company based in Paris, leader in
 France for public transport information systems.
 
 If you speak French, visit our technical blog <http://labs.canaltp.fr> .
