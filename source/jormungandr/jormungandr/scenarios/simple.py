@@ -123,6 +123,7 @@ class Scenario(object):
         req.pt_objects.depth = request['depth']
         req.pt_objects.count = request['count']
         req.pt_objects.search_type = request['search_type']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["type[]"]:
             for type in request["type[]"]:
                 req.pt_objects.types.append(pt_object_type[type])
