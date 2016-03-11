@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/request.pb.h"
+#include "type/pt_data.h"
 
 namespace navitia {
 
@@ -49,6 +50,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  int nbmax,
                                  const std::vector <std::string> &admins,
                                  int search_type,
-                                 const type::Data &d);
+                                 const type::Data &d,
+                                 const boost::posix_time::ptime& current_time);
 }
 }
