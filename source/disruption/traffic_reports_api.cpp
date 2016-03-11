@@ -304,18 +304,18 @@ void TrafficReport::disruptions_list(const std::string& filter,
 } // anonymous namespace
 
 pbnavitia::Response traffic_reports(const navitia::type::Data& d,
-                                const boost::posix_time::ptime& current_time,
+                                const boost::posix_time::ptime& current_datetime,
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page,
                                 const std::string& filter,
                                 const std::vector<std::string>& forbidden_uris) {
 
-    PbCreator pb_creator(d, current_time, bt::time_period(current_time, bt::seconds(1)));
+    PbCreator pb_creator(d, current_datetime, bt::time_period(current_datetime, bt::seconds(1)));
 
     TrafficReport result;
     try {
-        result.disruptions_list(filter, forbidden_uris, d, current_time);
+        result.disruptions_list(filter, forbidden_uris, d, current_datetime);
     } catch(const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
         return pb_creator.get_response();

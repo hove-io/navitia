@@ -133,7 +133,7 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const boost::optional<boost::posix_time::ptime>& since,
                              const boost::optional<boost::posix_time::ptime>& until,
                              const type::Data& data,
-                             const boost::posix_time::ptime& current_time) {
+                             const boost::posix_time::ptime& current_datetime) {
     type::Indexes final_indexes;
     pbnavitia::Response pb_response;
     int total_result;
@@ -149,7 +149,7 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
     total_result = final_indexes.size();
     final_indexes = paginate(final_indexes, count, startPage);
 
-    pb_response = extract_data(data, requested_type, final_indexes, depth, current_time);
+    pb_response = extract_data(data, requested_type, final_indexes, depth, current_datetime);
     auto pagination = pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
     pagination->set_startpage(startPage);

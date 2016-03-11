@@ -80,22 +80,22 @@ class Worker {
         void feed_publisher(pbnavitia::Response& response);
         pbnavitia::Response status();
         pbnavitia::Response autocomplete(const pbnavitia::PlacesRequest &request,
-                                         const boost::posix_time::ptime& current_time);
+                                         const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_uri(const pbnavitia::PlaceUriRequest &request,
-                                      const boost::posix_time::ptime& current_time);
+                                      const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api,
-                                            const boost::posix_time::ptime& current_time);
+                                            const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_time);
+                                           const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
         pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request,
-                                   const boost::posix_time::ptime& current_time);
+                                   const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response traffic_reports(const pbnavitia::TrafficReportsRequest &request,
-                                            const boost::posix_time::ptime& current_time);
+                                            const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request,
-                                      const boost::posix_time::ptime& current_time);
+                                      const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request,
-                                      const boost::posix_time::ptime& current_time);
+                                      const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
 };

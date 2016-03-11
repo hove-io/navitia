@@ -51,6 +51,6 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector <std::string> &admins,
                                  int search_type,
                                  const type::Data &d,
-                                 const boost::posix_time::ptime& current_time);
+                                 const boost::posix_time::ptime& current_datetime);
 }
 }

@@ -50,5 +50,5 @@ typedef std::vector<std::pair<type::idx_t, type::GeographicalCoord>> vector_idx_
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
                          const std::vector<type::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data& data, const boost::posix_time::ptime& current_time);
+                         const type::Data& data, const boost::posix_time::ptime& current_datetime);
 }} // namespace navitia::proximitylist

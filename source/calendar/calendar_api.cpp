@@ -36,7 +36,7 @@ www.navitia.io
 namespace navitia { namespace calendar {
 
 pbnavitia::Response calendars(const navitia::type::Data &d,
-                              const boost::posix_time::ptime& current_time,
+                              const boost::posix_time::ptime& current_datetime,
                               const std::string &start_date,
                               const std::string &end_date,
                               const size_t depth,
@@ -48,7 +48,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     navitia::type::Indexes calendar_list;
     boost::gregorian::date start_period(boost::gregorian::not_a_date_time);
     boost::gregorian::date end_period(boost::gregorian::not_a_date_time);
-    PbCreator pb_creator(d, current_time, null_time_period);
+    PbCreator pb_creator(d, current_datetime, null_time_period);
     if((!start_date.empty()) && (!end_date.empty())) {
         try{
             start_period = boost::gregorian::from_undelimited_string(start_date);
@@ -70,7 +70,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
 
     try{
         Calendar calendar;
-        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, current_time);
+        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, current_datetime);
     } catch(const ptref::parsing_error &parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, parse_error.more);
         return pb_creator.get_response();
