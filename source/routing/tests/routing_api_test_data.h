@@ -548,7 +548,8 @@ struct routing_api_data {
                     .severity("info")
                     .on(nt::Type_e::StopArea, "stopA")
                     .msg("no luck", nt::disruption::ChannelType::sms)
-                    .msg("try again", nt::disruption::ChannelType::sms);
+                    .msg("try again", nt::disruption::ChannelType::sms)
+                    .publish(default_period);
 
         //we create one disruption on line A
         b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A")
