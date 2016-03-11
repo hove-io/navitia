@@ -2884,6 +2884,8 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     BOOST_CHECK_EQUAL(resp_0.at(0).items.front().departure, resp_1.at(0).items.front().departure);
     BOOST_CHECK_EQUAL(resp_0.at(0).items.front().arrival, resp_1.at(0).items.front().arrival);
     BOOST_CHECK_EQUAL(resp_0.at(0).items.front().type, resp_1.at(0).items.front().type);
-    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.front()->uri, resp_1.at(0).items.front().stop_points.front()->uri);
-    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.back()->uri, resp_1.at(0).items.front().stop_points.back()->uri);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.front()->uri,
+                      resp_1.at(0).items.front().stop_points.front()->uri);
+    BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.back()->uri,
+                      resp_1.at(0).items.front().stop_points.back()->uri);
 }
