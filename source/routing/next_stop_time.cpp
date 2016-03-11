@@ -431,7 +431,7 @@ bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const 
 }
 
 CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const CachedNextStopTimeKey& key) const {
-    CachedNextStopTime::JppIdxMap departure, arrival;
+    CachedNextStopTime::vDtStByJpp departure, arrival;
     const auto& jp_container = dataRaptor.jp_container;
 
     departure.assign(jp_container.get_jpps_values());
@@ -457,7 +457,7 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
     return {departure, arrival};
 }
 
-CachedNextStopTime::DtStFromJpp::DtStFromJpp(const JppIdxMap& map) {
+CachedNextStopTime::DtStFromJpp::DtStFromJpp(const vDtStByJpp& map) {
     until.assign(map, 0);
     for (const auto& elt: map) {
         boost::push_back(dtsts, elt.second);
