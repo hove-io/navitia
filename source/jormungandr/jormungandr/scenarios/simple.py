@@ -96,6 +96,7 @@ class Scenario(object):
         req.places.depth = request['depth']
         req.places.count = request['count']
         req.places.search_type = request['search_type']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["type[]"]:
             for type in request["type[]"]:
                 if type not in pb_type:
