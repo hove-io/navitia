@@ -438,11 +438,12 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
 }
 
 
-pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
+pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
+                                      const boost::posix_time::ptime& current_time) {
 
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-    PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
+    PbCreator pb_creator(*data, current_time, null_time_period);
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
@@ -691,7 +692,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     switch(request.requested_api()){
         case pbnavitia::places: response = autocomplete(request.places(), current_time); break;
         case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_time); break;
-        case pbnavitia::place_uri: response = place_uri(request.place_uri()); break;
+        case pbnavitia::place_uri: response = place_uri(request.place_uri(), current_time); break;
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
