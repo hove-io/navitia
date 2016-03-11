@@ -82,9 +82,11 @@ class Worker {
         pbnavitia::Response autocomplete(const pbnavitia::PlacesRequest &request);
         pbnavitia::Response place_uri(const pbnavitia::PlaceUriRequest &request);
         pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api);
-        pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request);
+        pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
+                                           const boost::posix_time::ptime& current_time);
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
-        pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request, const boost::posix_time::ptime&);
+        pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request,
+                                   const boost::posix_time::ptime& current_time);
         pbnavitia::Response traffic_reports(const pbnavitia::TrafficReportsRequest &request);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request);
         pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);

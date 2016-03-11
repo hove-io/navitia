@@ -341,12 +341,13 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 }
 
 
-pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
+pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request,
+                                           const boost::posix_time::ptime& current_time) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
-    auto coord = this->coord_of_entry_point(ep, data);    
+    auto coord = this->coord_of_entry_point(ep, data);
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                               request.depth(), request.count(),request.start_page(), *data);
+                               request.depth(), request.count(),request.start_page(), *data, current_time);
 }
 
 
@@ -441,7 +442,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep, data);
-        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data);
+        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data, pb_creator.now);
         pbnavitia::Response pb_response;
         if(tmp.places_nearby().size() == 1){
             auto place = pb_response.add_places();
@@ -697,7 +698,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
-        case pbnavitia::places_nearby: response = proximity_list(request.places_nearby()); break;
+        case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_time); break;
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_time); break;
         case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports()); break;
         case pbnavitia::calendars : response = calendars(request.calendars()); break;
