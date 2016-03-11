@@ -129,7 +129,7 @@ def _create_template_from_pb_route_point(pb_route_point):
     template.pt_display_informations.CopyFrom(pb_route_point.pt_display_informations)
     template.route.CopyFrom(pb_route_point.route)
     template.stop_point.CopyFrom(pb_route_point.stop_point)
-    return template
+    return _create_template_from_passage(template)
 
 
 def _update_passages(passages, route_point, template, next_realtime_passages):

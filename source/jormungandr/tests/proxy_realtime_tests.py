@@ -33,10 +33,11 @@ from collections import namedtuple
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
 from jormungandr.schedule import RealTimePassage
-from check_utils import is_valid_stop_date_time, get_not_null
 import datetime
 from nose.tools import eq_
 import pytz
+from .check_utils import is_valid_stop_date_time, get_not_null
+
 
 MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
                      ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
@@ -166,13 +167,15 @@ class TestDepartures(AbstractTestFixture):
         response = self.query_region(query)
 
         assert "departures" in response
-        assert len(response["departures"]) == 5
+        assert len(response["departures"]) == 7
 
         dep_data_freshness = [(d['route']['name'], d['stop_date_time']['data_freshness'])
                       for d in response['departures']]
         expected_data_freshness = [
+            ("J", "realtime"),
             ("K", "realtime"),
             ("L", "base_schedule"),
+            ("J", "realtime"),
             ("K", "realtime"),
             ("L", "base_schedule"),
             ("L", "base_schedule"),
@@ -195,13 +198,13 @@ class TestDepartures(AbstractTestFixture):
         assert len(disp_info["headsign"]) == 0
 
         #stop_time with data_freshness = base_schedule
-        d = get_not_null(response["departures"][1], "stop_date_time")
+        d = get_not_null(response["departures"][2], "stop_date_time")
         #verify that all the attributs are present
         is_valid_stop_date_time(d)
         assert d["data_freshness"] == "base_schedule"
 
         #For base_schedule verify some attributs in display_informations
-        d = get_not_null(response["departures"][1], "display_informations")
+        d = get_not_null(response["departures"][2], "display_informations")
         get_not_null(d, "physical_mode")
         get_not_null(d, "direction")
         get_not_null(d, "headsign")
