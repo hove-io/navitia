@@ -270,7 +270,8 @@ pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
-        pbnavitia::API api) {
+                                            pbnavitia::API api,
+                                            const boost::posix_time::ptime& current_time) {
 
     const auto data = data_manager.get_data();
     int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
@@ -281,8 +282,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
-    bt::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    PbCreator pb_creator(*data, current_datetime, null_time_period);
+
+    PbCreator pb_creator(*data, current_time, null_time_period);
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
@@ -699,7 +700,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PREVIOUS_DEPARTURES:
         case pbnavitia::PREVIOUS_ARRIVALS:
         case pbnavitia::DEPARTURE_BOARDS:
-            response = next_stop_times(request.next_stop_times(), request.requested_api()); break;
+            response = next_stop_times(request.next_stop_times(), request.requested_api(), current_time); break;
         case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:

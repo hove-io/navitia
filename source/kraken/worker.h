@@ -83,7 +83,8 @@ class Worker {
                                          const boost::posix_time::ptime& current_time);
         pbnavitia::Response place_uri(const pbnavitia::PlaceUriRequest &request,
                                       const boost::posix_time::ptime& current_time);
-        pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api);
+        pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api,
+                                            const boost::posix_time::ptime& current_time);
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
                                            const boost::posix_time::ptime& current_time);
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
