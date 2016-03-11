@@ -235,13 +235,14 @@ pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request
             vector_of_admins(request), request.search_type(), *data);
 }
 
-pbnavitia::Response Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
+pbnavitia::Response Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request,
+                                            const boost::posix_time::ptime& current_time){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
     return navitia::disruption::traffic_reports(*data,
-                                                request._current_datetime(),
+                                                current_time,
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),
@@ -700,7 +701,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_time); break;
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_time); break;
-        case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports()); break;
+        case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
+                                                                     current_time); break;
         case pbnavitia::calendars : response = calendars(request.calendars()); break;
         case pbnavitia::place_code : response = place_code(request.place_code()); break;
         case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;

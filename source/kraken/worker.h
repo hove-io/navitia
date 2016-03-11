@@ -87,7 +87,8 @@ class Worker {
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
         pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request,
                                    const boost::posix_time::ptime& current_time);
-        pbnavitia::Response traffic_reports(const pbnavitia::TrafficReportsRequest &request);
+        pbnavitia::Response traffic_reports(const pbnavitia::TrafficReportsRequest &request,
+                                            const boost::posix_time::ptime& current_time);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request);
         pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
