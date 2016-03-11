@@ -70,7 +70,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
 
     try{
         Calendar calendar;
-        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period);
+        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, current_time);
     } catch(const ptref::parsing_error &parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, parse_error.more);
         return pb_creator.get_response();
