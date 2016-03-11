@@ -36,10 +36,11 @@ www.navitia.io
 namespace navitia { namespace calendar {
 
 pbnavitia::Response calendars(const navitia::type::Data &d,
+                              const boost::posix_time::ptime& current_time,
                               const std::string &start_date,
                               const std::string &end_date,
-                                const size_t depth,
-                                size_t count,
-                                size_t start_page, const std::string &filter,
-                                const std::vector<std::string>& forbidden_uris);
+                              const size_t depth,
+                              size_t count,
+                              size_t start_page, const std::string &filter,
+                              const std::vector<std::string>& forbidden_uris);
 }}

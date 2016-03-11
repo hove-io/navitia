@@ -250,12 +250,14 @@ pbnavitia::Response Worker::traffic_reports(const pbnavitia::TrafficReportsReque
                                                 forbidden_uris);
 }
 
-pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request){
+pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request,
+                                      const boost::posix_time::ptime& current_time){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
     return navitia::calendar::calendars(*data,
+                                        current_time,
                                         request.start_date(),
                                         request.end_date(),
                                         request.depth(),
@@ -703,7 +705,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_time); break;
         case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
                                                                      current_time); break;
-        case pbnavitia::calendars : response = calendars(request.calendars()); break;
+        case pbnavitia::calendars : response = calendars(request.calendars(), current_time); break;
         case pbnavitia::place_code : response = place_code(request.place_code()); break;
         case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
         default:
