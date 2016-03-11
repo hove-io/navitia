@@ -30,6 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function
+import hashlib
 
 import logging
 import pytz
@@ -59,8 +60,9 @@ def get_realtime_system_code(route_point):
 
 
 class RealTimePassage(object):
-    def __init__(self, datetime):
+    def __init__(self, datetime, direction=None):
         self.datetime = datetime
+        self.direction = direction
 
 
 def _update_stop_schedule(stop_schedule, next_realtime_passages):
@@ -90,6 +92,14 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
         new_dt.date = date_to_timestamp(midnight)
 
         new_dt.realtime_level = type_pb2.REALTIME
+
+        # we also add the direction in the note
+        if passage.direction:
+            note = type_pb2.Note()
+            note.note = passage.direction
+            note_uri = hashlib.md5(note.note).hexdigest()
+            note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
+            new_dt.properties.notes.extend([note])
 
 
 def _create_template_from_passage(passage):
@@ -132,6 +142,11 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         new_passage = deepcopy(template)
         new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
         new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
+
+        # we also add the direction in the note
+        if rt_passage.direction:
+            new_passage.pt_display_informations.direction = rt_passage.direction
+
         passages.extend([new_passage])
 
 
@@ -202,7 +217,6 @@ class MixedSchedule(object):
             return None
 
         return next_rt_passages
-
 
     def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
         req = request_pb2.Request()
