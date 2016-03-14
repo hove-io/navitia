@@ -4,74 +4,6 @@ Navitia documentation: v1 interface
 This document describes how to call navitia via the v1 interface, and
 the returned resources. 
 
-Ressources
-----------
-
-The only endpoint of this version of the api is :
-<https://api.navitia.io/v1/>
-
-All the resources return a response containing a links object, a paging
-object, and the requested object.
-
--   **Coverage** : List of the region covered by navitia
-
-| url | Result |
-|----------------------------------------------|-------------------------------------|
-| `get` /coverage                              | List of the areas covered by navitia|
-| `get` /coverage/*region_id*                  | Information about a specific region |
-| `get` /coverage/*region_id*/coords/*lon;lat* | Information about a specific region |
-
--   **Public transportation objects** : List of the public transport
-    objects of a region
-
-| url | Result |
-|---------------------------------------------------------|-------------------------------------|
-| `get` /coverage/*region_id*/*collection_name*           | Collection of objects of a region   |
-| `get` /coverage/region_id/collection_name/object_id     | Information about a specific region |
-| `get` /coverage/*lon;lat*/*collection_name*             | Collection of objects of a region   |
-| `get` /coverage/*lon;lat*/*collection_name*/*object_id* | Information about a specific region |
-
--   **Journeys** : Compute journeys
-
-| url | Result |
-|------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/journeys | List of journeys                    |
-| `get` /journeys                          | List of journeys                    |
-
--   **Route Schedules** : Compute route schedules for a given resource
-
-| url | Result |
-|-------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/route_schedules | List of the route schedules         |
-
--   **Stop Schedules** : Compute stop schedules grouped by stop_point/route for a given resource
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/stop_schedules | List of the stop schedules          |
-
--   **Departures** and **Arrivals** : List of the next multi-route departures/arrivals for a given resource
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/departures     | List of the departures              |
-| `get` /coverage/*resource_path*/arrivals       |   List of the arrivals              |
-
--   **Places** and **PT_objects** : Search in the datas
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/places                         | List of geographical objects        |
-| `get` /coverage/pt_objects                     | List of public transport objects    |
-
-
--   **Places nearby** : List of objects near an object or a coord
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/places_nearby  | List of objects near the resource   |
-| `get` /coverage/*lon;lat*/places_nearby        | List of objects near the resource   |
-
 Authentication
 --------------
 
@@ -81,11 +13,80 @@ you a authentication key to the API.
 You must use the [Basic HTTP authentication](http://tools.ietf.org/html/rfc2617#section-2), 
 where the username is the key, and without password.
 
-For example, in a [Curl](https://en.wikipedia.org/wiki/CURL) way, you can request:
+For example, in a [Curl](https://en.wikipedia.org/wiki/CURL) way, you can request either :
 
 ``` plaintext
-curl https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage
+curl https://api.navitia.io/v1/coverage -u my-token-is-mine-and-i-will-never-clearly-give-it:
 ```
+
+or
+
+``` plaintext
+curl https://my-token-is-mine-and-i-will-never-clearly-give-it@api.navitia.io/v1/Ressources
+```
+
+Ressources overview
+-------------------
+
+The only endpoint of this version of the api is :
+<https://api.navitia.io/v1/>
+
+All the resources return a response containing a links object, a paging
+object, and the requested object.
+
+-   **[Coverage](#coverage)** : List of the region covered by navitia
+
+| url | Result |
+|----------------------------------------------|-------------------------------------|
+| `get` /coverage                              | List of the areas covered by navitia|
+| `get` /coverage/*region_id*                  | Information about a specific region |
+| `get` /coverage/*region_id*/coords/*lon;lat* | Information about a specific region |
+
+-   **[Public transportation objects](#pt-ref)** : List of the public transport
+    objects of a region
+
+| url | Result |
+|---------------------------------------------------------|-------------------------------------|
+| `get` /coverage/*region_id*/*collection_name*           | Collection of objects of a region   |
+| `get` /coverage/region_id/collection_name/object_id     | Information about a specific region |
+| `get` /coverage/*lon;lat*/*collection_name*             | Collection of objects of a region   |
+| `get` /coverage/*lon;lat*/*collection_name*/*object_id* | Information about a specific region |
+
+-   **[Journeys](#journeys)** : Compute journeys
+
+| url | Result |
+|------------------------------------------|-------------------------------------|
+| `get` /coverage/*resource_path*/journeys | List of journeys or isochrones      |
+| `get` /journeys                          | List of journeys or isochrones      |
+
+
+-   **[Route Schedules](#route-schedules)**, **[Stop Schedules](#stop-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)** : 
+Compute time tables for a given resource
+
+| url | Result |
+|-------------------------------------------------|-------------------------------------|
+| `get` /coverage/*resource_path*/route_schedules | List of the entire route schedules for a given resource                                 |
+| `get` /coverage/*resource_path*/stop_schedules  | List of the stop schedules grouped by ``stop_point/route`` for a given resource         |
+| `get` /coverage/*resource_path*/departures      | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `get` /coverage/*resource_path*/arrivals        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+
+
+-   **[Places](#places)** and **[PT_objects](#pt-objects)** : Search in the datas
+
+| url | Result |
+|------------------------------------------------|-------------------------------------|
+| `get` /coverage/places                         | List of geographical objects        |
+| `get` /coverage/pt_objects                     | List of public transport objects    |
+
+
+-   **[Places nearby](#places-nearby)** : List of objects near an object or a coord
+
+| url | Result |
+|------------------------------------------------|-------------------------------------|
+| `get` /coord/*lon;lat*/places_nearby           | List of objects near the resource without any region id   |
+| `get` /coverage/*lon;lat*/places_nearby        | List of objects near the resource without any region id   |
+| `get` /coverage/*resource_path*/places_nearby  | List of objects near the resource   |
+
 
 Paging
 ------
@@ -151,19 +152,19 @@ Some link sections look like
 
 That means you will find inside the same stream ( *"internal": true* ) a
 *disruptions* section ( *"rel": "disruptions"* ) containing some
-[disruption](#disruption)s objects ( *"type": "disruption"* ) where you can find the
+[disruptions](#disruption) objects ( *"type": "disruption"* ) where you can find the
 details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"*
 ).
 
 Apis
 ----
 
-### <a href="coverage"></a>Coverage (/coverage)
+### <a name="coverage"></a>Coverage (/coverage)
 
 You can easily navigate through regions covered by navitia.io, with the
 coverage api. The only arguments are the ones of [paging](#paging).
 
-### Inverted geocoding (/coord)
+### <a name="coord"></a>Inverted geocoding (/coord)
 
 Very simple service: you give Navitia some coordinates, it answers you
 where you are:
@@ -225,7 +226,7 @@ accessible local mobility services:
 }
 ```
 
-### Public transportation objects exploration (/networks or /lines or /routes...)
+### <a name="pt-ref"></a>Public transportation objects exploration (/networks or /lines or /routes...)
 
 Once you have selected a region, you can explore the public
 transportation objects easily with these apis. You just need to add at
@@ -397,7 +398,7 @@ Other examples
 -   Line list for one mode
     -   <https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines>
 
-### <a href="pt-objects"></a> Public Transport objects autocomplete (/pt_objects)
+### <a name="pt-objects"></a>Public Transport objects autocomplete (/pt_objects)
 
 This api search in public transport objects via their names. It's a kind
 of magical autocomplete on public transport data. It returns, in
@@ -643,7 +644,7 @@ The other one, the most used, is to access the 'journey' api endpoint:
     journeys from or to the point.
 </aside>
 
-#### Main parameters
+#### <a name="journeys-parameters"></a>Main parameters
 
 | Required  | Name                    | Type          | Description                                                                           | Default value |
 |-----------|-------------------------|---------------|---------------------------------------------------------------------------------------|---------------|
@@ -769,7 +770,7 @@ direction       | int                    | Angle (in degree) between the previou
 |cost|[cost](#cost)|Cost of the ticket|
 |links|array of [link](#link)|Link to the [section](#section) using this ticket|
 
-### Route Schedules and time tables (/route_schedules)
+### <a name="route-schedules"></a>Route Schedules and time tables (/route_schedules)
 
 This api gives you access to schedules of routes. The response is made
 of an array of route_schedule, and another one of [note](#note). You can
@@ -817,7 +818,7 @@ Field      | Type                             | Description
 date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport formated date time
 stop_point | [stop_point](#stop-point)              | The stop point of the row
 
-### Stop Schedules and other kind of time tables (/stop_schedules)
+### <a name="stop-schedules"></a>Stop Schedules and other kind of time tables (/stop_schedules)
 
 This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
@@ -842,7 +843,7 @@ nop      | data_freshness   | enum                           | Define the freshn
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
-### Departures (/departures)
+### <a name="departures"></a>Departures (/departures)
 
 This api retrieves a list of departures from a datetime of a selected
 object. Departures are ordered chronologically in ascending order.
@@ -865,12 +866,12 @@ nop      | data_freshness   | enum                            | Define the fresh
 |stop_date_time|Array of [stop_date_time](#stop_date_time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
-### Arrivals (/arrivals)
+### <a name="arrivals"></a>Arrivals (/arrivals)
 
 This api retrieves a list of arrivals from a datetime of a selected
 object. Arrivals are ordered chronologically in ascending order.
 
-### Traffic reports (/traffic_reports)
+### <a name="traffic-reports"></a>Traffic reports (/traffic_reports)
 
 This service provides the state of public transport traffic. It can be
 called for an overall coverage or for a specific object.
@@ -1036,6 +1037,7 @@ Here is a typical response
 "link": { ... },
 "pagination": { ... }
 }
+
 ```
 
 This typical response means:
@@ -1179,7 +1181,7 @@ Here is the valid id list:
 -   physical_mode:Tramway
 
 You can use these ids in the forbidden_uris[] parameter from
-[journeys_parameters](#journeys-parameters) for exemple.
+[journeys parameters](#journeys-parameters) for exemple.
 
 #### Company
 
@@ -1343,7 +1345,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |date_time|[pt-date-time](#pt-date-time)|A public transport date time|
 |stop_point|[stop_point](#stop-point)|A stop point|
 
-##### <a href="embedded-type"></a> Embedded type
+##### <a name="embedded-type"></a> Embedded type
 
 Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* API are managing.
 

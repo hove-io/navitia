@@ -14,7 +14,7 @@ We provide:
 * exploration of public transport data
 * sexy things such as isochrones
 
-<aside class="notice">
+<aside class="success">
     We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
     We will add it to navitia.io
 </aside>
@@ -40,9 +40,9 @@ If you use a web browser, you only have to paste it in the user area,
 with no password. Or, in a simplier way, you can add your token in the
 address bar like :
 
-``` plaintext
-https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage/fr-idf/networks
-```
+<aside class="success">
+https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage/fr-idf/networks
+</aside>
 
 See [authentication](#authentication) section to find out more details on **how to use your token**.
 
@@ -60,7 +60,7 @@ To provide additional arguments to the API, add them at the end of the query wit
 
 Have a look at the examples below to learn what API we provide and how to use them.
 
-<aside class="notice">
+<aside class="success">
     The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
 </aside>
 
@@ -85,18 +85,14 @@ The arguments are the following:
 
 * ``from=-122.4752;37.80826``
 * ``to=-122.402770;37.794682``
-Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20160422T0800>.
+Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>.
 
-<aside class="notice">
-A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
+<aside class="success">
+A ``journeys`` request might return multiple journeys. Those journeys are said to be equivalent. For instance
 a journey can be faster than an other but requires more changes or more walking.
 </aside>
 
 This API has more options explained in the reference as:
-
-* Forbid certain lines, routes or modes
-  For example you can forbid the line 1 and the cable car mode with the url:
-  <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&forbidden_uris[]=line:OSF:10867&forbidden_uris[]=commercial_mode:cablecar>
 
 * The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``. 
   For example, if you want to compute a journey on friday, April 22 ``datetime=20160422T0800``
@@ -108,6 +104,10 @@ This API has more options explained in the reference as:
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys):
   <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&traveler_type=slow_walker>
+
+* Forbid certain lines, routes or modes
+  For example you can forbid the line 1 and the cable car mode with the url:
+  <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&forbidden_uris[]=line:OSF:10867&forbidden_uris[]=commercial_mode:cablecar>
 
 * Enable biking, driving or use of bike sharing system on Paris area
   For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure:
