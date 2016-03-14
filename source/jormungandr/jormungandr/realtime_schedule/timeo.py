@@ -110,9 +110,10 @@ class Timeo(RealtimeProxy):
 
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
-            # for the moment we handle only the NextStop
+            # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            next_passage = RealTimePassage(dt)
+            direction = next_expected_st.get('Destination')
+            next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
         return next_passages

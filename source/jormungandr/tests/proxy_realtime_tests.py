@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from collections import namedtuple
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
@@ -48,12 +49,12 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
     @staticmethod
     def _create_next_passages(passages):
         next_passages = []
-        for next_expected_st in passages:
+        for next_expected_st, direction in passages:
             t = datetime.datetime.strptime(next_expected_st, "%H:%M:%S")
             dt = datetime.datetime(year=2016, month=1, day=2,
                                    hour=t.hour, minute=t.minute, second=t.second,
                                    tzinfo=pytz.UTC)
-            next_passage = RealTimePassage(dt)
+            next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
         return next_passages
 
@@ -62,22 +63,24 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             return []
 
         if route_point.fetch_stop_id(self.service_id) == "KisioDigital_C:S0":
-            return self._create_next_passages(["11:32:42", "11:42:42"])
+            return self._create_next_passages([("11:32:42", "l'infini"), ("11:42:42", "l'au dela")])
 
         if route_point.pb_stop_point.uri == "S42":
             if route_point.pb_route.name == "J":
-                return self._create_next_passages(["10:00:00", "10:03:00"])
+                return self._create_next_passages([("10:00:00", None), ("10:03:00", None)])
             if route_point.pb_route.name == "K":
-                return self._create_next_passages(["10:01:00", "10:04:00"])
+                return self._create_next_passages([("10:01:00", "bob"), ("10:04:00", None)])
 
         return None
+
+
+DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'direction'])
 
 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDepartures(AbstractTestFixture):
 
     query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
-
 
     def test_stop_schedule(self):
         query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
@@ -89,6 +92,12 @@ class TestDepartures(AbstractTestFixture):
         for dt in stop_schedules:
             assert dt['data_freshness'] == 'realtime'
 
+        notes = {n['id']: n for n in response.get('notes', [])}
+
+        directions = [notes[l['id']]['value'] for dt in stop_schedules for l in dt['links'] if l['rel'] ==
+                      'notes']
+
+        assert directions == ["l'infini", "l'au dela"]
 
     def test_stop_schedule_base(self):
         query = self.query_template.format(sp='C:S0', dt='20160102T1100',
@@ -112,7 +121,7 @@ class TestDepartures(AbstractTestFixture):
         for dt in stop_schedules:
             assert dt['data_freshness'] == 'base_schedule'
 
-    def test_stop_schedule_stop_ponit_has_no_rt(self):
+    def test_stop_schedule_stop_point_has_no_rt(self):
         query = self.query_template.format(sp='S1', dt='20160102T1030',
                                            data_freshness='')
         response = self.query_region(query)
@@ -136,15 +145,17 @@ class TestDepartures(AbstractTestFixture):
     def test_departures(self):
         query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
         response = self.query_region(query)
-        departures = [(d['route']['name'], d['stop_date_time']['departure_date_time'])
+        departures = [DepartureCheck(route=d['route']['name'],
+                                     dt=d['stop_date_time']['departure_date_time'],
+                                     direction=d['display_informations']['direction'])
                       for d in response['departures']]
         expected_departures = [
-            ("J", "20160102T100000"),
-            ("K", "20160102T100100"),
-            ("L", "20160102T100200"),
-            ("J", "20160102T100300"),
-            ("K", "20160102T100400"),
-            ("L", "20160102T100700"),
-            ("L", "20160102T101100"),
+            DepartureCheck(route="J", dt="20160102T100000", direction='S43'),
+            DepartureCheck(route="K", dt="20160102T100100", direction='bob'),  # rt we got the given direction
+            DepartureCheck(route="L", dt="20160102T100200", direction='S43'),
+            DepartureCheck(route="J", dt="20160102T100300", direction='S43'),
+            DepartureCheck(route="K", dt="20160102T100400", direction=''),  # rt but no direction
+            DepartureCheck(route="L", dt="20160102T100700", direction='S43'),
+            DepartureCheck(route="L", dt="20160102T101100", direction='S43'),
             ]
         eq_(departures, expected_departures)
