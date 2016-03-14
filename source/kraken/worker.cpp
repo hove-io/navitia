@@ -529,7 +529,8 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_creator.get_response();
 }
 
-pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
+pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
+                                     const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
@@ -561,7 +562,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if (origins.empty() && destinations.empty()) {
         //should never happen, jormungandr filters that, but it never hurts to double check
-        navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
         pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                  pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                  "no origin point nor destination point given");
@@ -610,7 +611,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         if (! origins.empty()) {
             if (! request.clockwise()) {
                 // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
                               "isochrone works only for clockwise request");
                 return pb_creator.get_response();
@@ -619,7 +620,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         } else {
             if (request.clockwise()) {
                 // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, pt::not_a_date_time, null_time_period);
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
                                          "reverse isochrone works only for anti-clockwise request");
                 return pb_creator.get_response();
@@ -629,20 +630,21 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
                                                 request.clockwise(), accessibilite_params,
                                                 forbidden, *street_network_worker,
-                                                rt_level, request.max_duration(),
+                                                rt_level, current_datetime, request.max_duration(),
                                                 request.max_transfers());
     }
 
     case pbnavitia::pt_planner:
         return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
-                forbidden, rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                forbidden, rt_level, current_datetime,
+                seconds{request.walking_transfer_penalty()}, request.max_duration(),
                 request.max_transfers(), request.max_extra_second_pass());
     default:
         return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
                 request.max_transfers(), request.max_extra_second_pass());
     }
 }
@@ -704,7 +706,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
-        case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
+        case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
+                                                     current_datetime); break;
         case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
         case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
         case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
