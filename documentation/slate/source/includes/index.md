@@ -114,7 +114,6 @@ This API has more options explained in the reference as:
   <https://api.navitia.io/v1/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&first_section_mode[]=bss&first_section_mode[]=walking&first_section_mode[]=bike>
 
 
-
 ### A quick exploration of the API
 
 *navitia* allows to dive into the public transport data.

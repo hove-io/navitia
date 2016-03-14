@@ -13,7 +13,6 @@ includes:
   - index
   - integration
   - public_transport
-  - details
   - errors
 
 search: true

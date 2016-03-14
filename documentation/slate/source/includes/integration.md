@@ -164,7 +164,9 @@ Apis
 ### <a name="coverage"></a>Coverage (/coverage)
 
 You can easily navigate through regions covered by navitia.io, with the
-coverage api. The only arguments are the ones of [paging](#paging).
+coverage api. The shape of the region is provided in GeoJSON.
+
+The only arguments are the ones of [paging](#paging).
 
 ### <a name="coord"></a>Inverted geocoding (/coord)
 
@@ -324,7 +326,7 @@ Examples:
 
 <aside class="warning">
     This last request gives the stop areas used by the vehicle
-    journeys containing the headsign CANE, *not* the stop areas where it
+    journeys containing the headsign CANE, <b>not</b> the stop areas where it
     exists a stop time with the headsign CANE.
 </aside>
 
@@ -633,12 +635,19 @@ The other one, the most used, is to access the 'journey' api endpoint:
     system).
 </aside>
 
+In the [examples](#examples), positions are given by coordinates and no network is specified.
+However when no coordinates are provided, you need to provide on what region you want to request as
+<https://api.navitia.io/v1/coverage/us-ca/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>
+
+The list of regions covered by navitia is available through [coverage](#coverage).
+
+
 <aside class="notice">
     If you want to use a specific data set, use the journey api within the
     data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
 </aside>
 
-<aside class="notice">
+<aside class="success">
     Neither the 'from' nor the 'to' parameter of the journey are required,
     but obviously one of them has to be provided.
     <br>
@@ -1349,15 +1358,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 
 ##### <a name="embedded-type"></a> Embedded type
 
-Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* API are managing.
-
-<aside class="notice">
-    This enum is used by 3 API:<br>
-    Using /places API, navitia would returned objects among administrative_region, stop_area, poi, address and stop_point types<br>
-    Using /pt_objects API, navitia would returned objects among network, commercial_mode, stop_area, line and route types<br>
-    Using /disruptions API, navitia would returned objects among network, commercial_mode, stop_area, line, route and trips types<br>
-
-</aside>
+Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* services are managing.
 
 
 |Value|Description|
@@ -1372,6 +1373,14 @@ Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](
 |address|a point located in a street|
 |poi|a point of interest|
 
+<aside class="notice">
+    This enum is used by 3 services :<br>
+    <ul>
+    <li>Using <b>places</b> service, navitia would returned objects among administrative_region, stop_area, poi, address and stop_point types<br>
+    <li>Using <b>pt_objects</b> service, navitia would returned objects among network, commercial_mode, stop_area, line and route types<br>
+    <li>Using <b>disruptions</b> service, navitia would returned objects among network, commercial_mode, stop_area, line, route and trips types<br>
+    </ul>
+</aside>
 
 
 #### equipment
