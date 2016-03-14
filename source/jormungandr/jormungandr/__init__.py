@@ -34,7 +34,7 @@ import logging
 import logging.config
 import os
 from flask import Flask, got_request_exception
-from flask.ext.restful import Api
+from flask_restful import Api
 from flask.ext.cache import Cache
 from flask.ext.cors import CORS
 import sys
