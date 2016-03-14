@@ -42,7 +42,7 @@ import datetime
 from copy import deepcopy
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
-RT_PROXY_DATA_FRESHNESS = 'real_time'
+RT_PROXY_DATA_FRESHNESS = 'realtime'
 
 
 def get_realtime_system_code(route_point):
@@ -264,7 +264,7 @@ class MixedSchedule(object):
 
     def next_departures(self, request):
         resp = self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route):
@@ -299,7 +299,7 @@ class MixedSchedule(object):
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
 
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         for stop_schedule in resp.stop_schedules:
