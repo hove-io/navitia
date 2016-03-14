@@ -655,7 +655,8 @@ stop_date_time = {
     "base_arrival_date_time": DateTime(),
     "stop_point": PbField(stop_point),
     "additional_informations": additional_informations,
-    "links": stop_time_properties_links
+    "links": stop_time_properties_links,
+    "data_freshness": enum_type()
 }
 
 

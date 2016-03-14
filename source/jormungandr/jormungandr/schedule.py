@@ -42,6 +42,7 @@ import datetime
 from copy import deepcopy
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
+RT_PROXY_DATA_FRESHNESS = 'realtime'
 
 
 def get_realtime_system_code(route_point):
@@ -119,6 +120,7 @@ def _create_template_from_passage(passage):
     template.stop_date_time.ClearField("base_arrival_date_time")
     template.stop_date_time.ClearField("base_departure_date_time")
     template.stop_date_time.ClearField("properties")
+    template.stop_date_time.ClearField("data_freshness")
     return template
 
 
@@ -127,7 +129,7 @@ def _create_template_from_pb_route_point(pb_route_point):
     template.pt_display_informations.CopyFrom(pb_route_point.pt_display_informations)
     template.route.CopyFrom(pb_route_point.route)
     template.stop_point.CopyFrom(pb_route_point.stop_point)
-    return template
+    return _create_template_from_passage(template)
 
 
 def _update_passages(passages, route_point, template, next_realtime_passages):
@@ -142,6 +144,7 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         new_passage = deepcopy(template)
         new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
         new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
+        new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
 
         # we also add the direction in the note
         if rt_passage.direction:
@@ -261,7 +264,7 @@ class MixedSchedule(object):
 
     def next_departures(self, request):
         resp = self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route):
@@ -296,7 +299,7 @@ class MixedSchedule(object):
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
 
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         for stop_schedule in resp.stop_schedules:
