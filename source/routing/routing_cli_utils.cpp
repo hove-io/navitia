@@ -75,7 +75,7 @@ namespace navitia { namespace cli {
             }
             pb::Response resp = make_response(*raptor, origin, destination, {ntest::to_posix_timestamp(date)},
                     clockwise, navitia::type::AccessibiliteParams(), forbidden,
-                    sn_worker, type::RTLevel::Base, 2_min, true);
+                    sn_worker, type::RTLevel::Base, boost::gregorian::not_a_date_time, 2_min, true);
 
             if (vm.count("protobuf")) {
                 std::cout << resp.DebugString() << "\n";

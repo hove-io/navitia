@@ -282,16 +282,11 @@ int main(int argc, char** argv){
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
         const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
-        auto resp = make_response(router, origin, destination,
-              {departure_datetime}, true,
-              accessibilite_params,
-              {},
-              georef_worker,
-              type::RTLevel::Base,
-              2_min,
-              DateTimeUtils::SECONDS_PER_DAY,
-              10,
-              nb_second_pass);
+        auto resp = make_response(router, origin,
+                                  destination, {departure_datetime}, true,
+                                  accessibilite_params, {}, georef_worker, type::RTLevel::Base,
+                                  boost::gregorian::not_a_date_time, 2_min,
+                                  DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
 
         if (resp.journeys_size() > 0) {
             ++ nb_reponses;
