@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import logging
+import pybreaker
 import pytz
 import requests as requests
 from jormungandr import cache, app
@@ -61,6 +62,8 @@ class Timeo(RealtimeProxy):
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
+                                                reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
@@ -72,20 +75,32 @@ class Timeo(RealtimeProxy):
         return self.rt_system_id
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
-    def call_timeo(self, url):
+    def _call_timeo(self, url):
+        """
+        http call to timeo
+
+        The call is handled by a circuit breaker not to continue calling timeo if the service is dead.
+
+        The call is also cached
+        """
         try:
-            return requests.get(url, timeout=self.timeout)
+            return self.breaker.call(requests.get, url, timeout=self.timeout)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('Timeo RT service dead, using base '
+                                              'schedule (error: {}'.format(e))
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Timeo RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-            return None
+        except:
+            logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
+        return None
 
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
         if not url:
             return None
 
-        r = self.call_timeo(url)
+        r = self._call_timeo(url)
         if not r:
             return None
 
