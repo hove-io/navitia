@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, division
 import os
 # set default config file if not defined in other tests
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:

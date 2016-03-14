@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, division
 collections_to_resource_type = {
     "stop_points": "stop_point", "routes": "route",
     "networks": "network", "commercial_modes": "commercial_mode",

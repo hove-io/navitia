@@ -27,7 +27,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, division
 import urllib
 from .check_utils import journey_basic_query
 from .tests_mechanism import dataset, AbstractTestFixture

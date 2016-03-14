@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager

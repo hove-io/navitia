@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
