@@ -67,6 +67,8 @@ class TestIsochrone(AbstractTestFixture):
         assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
         assert response["journeys"][1]["from"]["id"] == "A"
 
+        assert len(response['disruptions']) == 0
+
     def test_stop_point_isochrone_coord_no_transfers(self):
         #same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
         #we should be able to touch only 'B'
