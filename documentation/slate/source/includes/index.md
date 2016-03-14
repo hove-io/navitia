@@ -80,20 +80,17 @@ We need to use the ``journeys`` API.
 The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
 The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: ``longitute;latitude``.
 
-The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
-
 The arguments are the following:
 
 
 * ``from=-122.4752;37.80826``
 * ``to=-122.402770;37.794682``
-* ``datetime=20140118T0800``
+Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20160422T0800>.
 
-Hence, the complete URL: <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>.
-
-
+<aside class="notice">
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
 a journey can be faster than an other but requires more changes or more walking.
+</aside>
 
 This API has more options explained in the reference as:
 
@@ -101,16 +98,20 @@ This API has more options explained in the reference as:
   For example you can forbid the line 1 and the cable car mode with the url:
   <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&forbidden_uris[]=line:OSF:10867&forbidden_uris[]=commercial_mode:cablecar>
 
+* The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``. 
+  For example, if you want to compute a journey on friday, April 22 ``datetime=20160422T0800``
+  <http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160422T0800>
+
 * Latest departure
   To get the latest departure, you can query for some journeys arriving before the end of the service
-  <http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160402T0300&datetime_represents=arrival>
+  <http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160422T2359&datetime_represents=arrival>
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys):
   <http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&traveler_type=slow_walker>
 
 * Enable biking, driving or use of bike sharing system on Paris area
   For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure:
-  <https://api.navitia.io/v1/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&first_section_mode[]=bss>
+  <https://api.navitia.io/v1/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&first_section_mode[]=bss&first_section_mode[]=walking&first_section_mode[]=bike>
 
 
 
@@ -185,7 +186,7 @@ We could push the exploration further and:
 
 
 
-### What places have a name that start with 'tran'
+### What places have a name that start with 'eiff'
 
 The [/places](#places) API finds any object whose name matches the first letters of the query.
 

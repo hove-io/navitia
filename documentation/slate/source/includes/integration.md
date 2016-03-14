@@ -1,12 +1,8 @@
 Navitia documentation: v1 interface
 ===================================
 
-vocabulary
-----------
-
 This document describes how to call navitia via the v1 interface, and
-the returned resources. You can read a mobility lexicon at
-<https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md>
+the returned resources. 
 
 Ressources
 ----------
@@ -54,23 +50,20 @@ object, and the requested object.
 |------------------------------------------------|-------------------------------------|
 | `get` /coverage/*resource_path*/stop_schedules | List of the stop schedules          |
 
--   **Departures** : List of the next multi-route departures for a given resource
+-   **Departures** and **Arrivals** : List of the next multi-route departures/arrivals for a given resource
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|
 | `get` /coverage/*resource_path*/departures     | List of the departures              |
-
--   **Arrivals** : List of the next multi-route arrivals for a given resource
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
 | `get` /coverage/*resource_path*/arrivals       |   List of the arrivals              |
 
--   **Places** : Search in the datas
+-   **Places** and **PT_objects** : Search in the datas
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|
-| `get` /coverage/places                         | List of objects                     |
+| `get` /coverage/places                         | List of geographical objects        |
+| `get` /coverage/pt_objects                     | List of public transport objects    |
+
 
 -   **Places nearby** : List of objects near an object or a coord
 
@@ -85,9 +78,14 @@ Authentication
 You must authenticate to use **navitia.io**. When you register we give
 you a authentication key to the API.
 
-You must use the [Basic HTTP
-authentication](http://tools.ietf.org/html/rfc2617#section-2), where the
-username is the key, and without password.
+You must use the [Basic HTTP authentication](http://tools.ietf.org/html/rfc2617#section-2), 
+where the username is the key, and without password.
+
+For example, in a [Curl](https://en.wikipedia.org/wiki/CURL) way, you can request:
+
+``` plaintext
+curl https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage
+```
 
 Paging
 ------
@@ -781,10 +779,12 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 Required | Name             | Type      | Description                                                                              | Default Value
 ---------|------------------|-----------|------------------------------------------------------------------------------------------|--------------
-yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                          |
+yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
 nop      | duration         | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
 nop      | max_date_times   | int       | Maximum number of columns per schedule.                                                  |
-nop      | data_freshness   | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+nop      | forbidden_uris[] | id        | If you want to avoid lines, modes, networks, etc.                                        | 
+nop      | data_freshness   | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
+
 
 #### Objects
 
@@ -828,9 +828,9 @@ one of [note](#note). You can access it via that kind of url: <https://api.navit
 Required | Name           | Type                    | Description        | Default Value
 ---------|----------------|-------------------------|--------------------|--------------
 yep      | from_datetime  | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
-nop      | duration       | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | data_freshness | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+nop      | duration         | int                            | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
 nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    | 
+nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
 
 
 #### Stop_schedule object
@@ -853,8 +853,8 @@ Required | Name           | Type                    | Description        | Defau
 ---------|----------------|-------------------------|--------------------|--------------
 yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
 nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    | 
+nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 
 
 #### Departure objects
