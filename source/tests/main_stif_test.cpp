@@ -36,8 +36,7 @@ www.navitia.io
 
 using namespace navitia::georef;
 /*
- * Here we test prepare a data for autocomplete test
- * The data contains One Admin, 6 stop_areas and three addresses
+ * Here we test prepare a data for stif test
  */
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
