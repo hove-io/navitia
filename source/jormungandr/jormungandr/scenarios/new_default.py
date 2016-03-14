@@ -41,6 +41,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
+from jormungandr.utils import date_to_timestamp
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -84,6 +85,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     #TODO: bench if the creation of the request each time is expensive
     req = request_pb2.Request()
     req.requested_api = requested_type
+    req._current_datetime = date_to_timestamp(request['_current_datetime'])
 
     if "origin" in request and request["origin"]:
         if requested_type != type_pb2.NMPLANNER:
