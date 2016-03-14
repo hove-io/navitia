@@ -61,10 +61,11 @@ EXCHANGE_NAME = 'stat_persistor_exchange'
 
 #Cache configuration, see https://pythonhosted.org/Flask-Cache/ for more information
 CACHE_CONFIGURATION = {
-    'CACHE_TYPE': 'simple',
+    'CACHE_TYPE': 'null',  # by default cache is not activated
     'TIMEOUT_PTOBJECTS': 600,
     'TIMEOUT_AUTHENTICATION': 600,
     'TIMEOUT_PARAMS': 600,
+    'TIMEOUT_TIMEO': 60,
 }
 
 # List of enabled modules
