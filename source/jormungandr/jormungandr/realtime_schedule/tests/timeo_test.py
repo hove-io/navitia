@@ -285,3 +285,45 @@ def next_passage_for_route_point_timeo_failure_test():
             passages = timeo.next_passage_for_route_point(route_point)
 
             assert passages is None
+
+
+def timeo_circuit_breaker_test():
+    """
+    Test the circuit breaker around Timeo
+
+    We test that after 2 fail by timeo, no more calls are done
+    (we don't test the timeout, it's the 'circuit_breaker' library responsability)
+
+    time fail on the first response, gives a godd response afterward, then fail on all call
+
+    There should be only 4 timeo calls
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    timeo.breaker.fail_max = 2
+    timeo.breaker.reset_timeout = 99999
+
+    good_response = {'all_is_ok'}, 200
+
+    class Mocker:
+        timeo_call = 0
+        def get(self, *args, **kwargs):
+            self.timeo_call += 1
+            if self.timeo_call == 2:
+                return good_response
+            raise Exception('test error')
+
+    m = Mocker()
+    with mock.patch('requests.get', m.get):
+        responses = [timeo._call_timeo('http://bob.com') for _ in range(0, 6)]
+
+        assert responses == [None,
+                             good_response,
+                             None,
+                             None,
+                             None,
+                             None]
+
+        # we should have called timeo only 4 times
+        assert m.timeo_call == 4
