@@ -66,6 +66,11 @@ def access_log(response, *args, **kwargs):
     logger.info(u'"%s %s?%s" %s', request.method, request.path, query_string, response.status_code)
     return response
 
+@app.after_request
+def add_request_id(response, *args, **kwargs):
+    response.headers['navitia-request-id'] = request.id
+    return response
+
 
 # If modules are configured, then load and run them
 if 'MODULES' in rest_api.app.config:
