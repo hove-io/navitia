@@ -79,7 +79,7 @@ class ManageError(object):
                 response_pb2.Error.bad_format: 400,
                 response_pb2.Error.no_solution: 200
             }
-            if response.HasField("error") and\
+            if response.HasField(b"error") and\
                response.error.id in errors:
                 code = errors[response.error.id]
                 if code == 400 and "filter" not in request.args:
@@ -87,6 +87,6 @@ class ManageError(object):
                     code = 404
 
             else:
-                response.ClearField("error")
+                response.ClearField(b"error")
             return response, code
         return wrapper
