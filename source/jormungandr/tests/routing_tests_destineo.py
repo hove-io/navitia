@@ -26,11 +26,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from tests_mechanism import AbstractTestFixture, dataset
-from routing_tests import TestJourneys
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .routing_tests import TestJourneys
+from .check_utils import *
 from nose.tools import eq_
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance

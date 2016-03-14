@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import Resource
 from jormungandr.modules_loader import ModulesLoader
 from jormungandr.interfaces.v1.make_links import create_external_link

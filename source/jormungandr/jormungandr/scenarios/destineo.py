@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.scenarios import default, helpers
 from jormungandr.scenarios.default import is_admin
 import copy

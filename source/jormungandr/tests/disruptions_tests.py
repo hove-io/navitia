@@ -26,8 +26,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from __future__ import absolute_import, print_function, unicode_literals, division
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 def get_impacts(response):

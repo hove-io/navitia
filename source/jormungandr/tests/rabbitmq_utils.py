@@ -26,9 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import uuid
-from tests.check_utils import get_not_null
-from tests.tests_mechanism import AbstractTestFixture
+from .check_utils import get_not_null
+from .tests_mechanism import AbstractTestFixture
 from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
