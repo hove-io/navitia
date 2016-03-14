@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 @dataset({"basic_routing_test": {}})

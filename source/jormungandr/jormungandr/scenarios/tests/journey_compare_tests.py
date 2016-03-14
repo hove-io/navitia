@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
 from jormungandr.scenarios.journey_filter import _to_be_deleted

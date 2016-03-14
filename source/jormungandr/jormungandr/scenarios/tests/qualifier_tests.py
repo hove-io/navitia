@@ -26,10 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 from nose.tools import eq_
-
-from ...scenarios import qualifier
+from jormungandr.scenarios import qualifier
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
 
@@ -212,8 +212,8 @@ def standard_choice_test():
 
     standard = qualifier.choose_standard(journeys, qualifier.arrival_crit)
 
-    print qualifier.has_car(standard)
-    print "standard ", standard.arrival_date_time
+    print(qualifier.has_car(standard))
+    print("standard ", standard.arrival_date_time)
     eq_(standard, journey_1)
 
 def standard_choice_with_pt_test():
@@ -258,8 +258,8 @@ def standard_choice_with_pt_test():
 
     standard = qualifier.choose_standard(journeys, qualifier.arrival_crit)
 
-    print qualifier.has_car(standard)
-    print "standard ", standard.arrival_date_time
+    print(qualifier.has_car(standard))
+    print("standard ", standard.arrival_date_time)
     eq_(standard, journey_1)
 
 def choose_standard_pt_car():

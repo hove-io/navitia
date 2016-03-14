@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.scenarios import new_default
 """

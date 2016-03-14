@@ -26,12 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from tests import gtfs_realtime_pb2
-from tests_mechanism import dataset
-from check_utils import *
-import chaos_pb2
+from __future__ import absolute_import, print_function, unicode_literals, division
+from . import gtfs_realtime_pb2
+from .tests_mechanism import dataset
+from .check_utils import *
+from . import chaos_pb2
 from jormungandr import utils
-from rabbitmq_utils import RabbitMQCnxFixture, rt_topic
+from .rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
 
 class ChaosDisruptionsFixture(RabbitMQCnxFixture):

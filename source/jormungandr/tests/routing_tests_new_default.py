@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
-from tests.tests_mechanism import AbstractTestFixture
+from .tests_mechanism import AbstractTestFixture
 
 from .tests_mechanism import dataset
 from .check_utils import *
