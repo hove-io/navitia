@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -32,55 +32,30 @@ www.navitia.io
 #include "mock_kraken.h"
 #include "type/type.h"
 #include "type/pt_data.h"
+#include "tests/utils_test.h"
 
 using namespace navitia::georef;
 /*
- * Here we test prepare a data for autocomplete test
- * The data contains One Admin, 6 stop_areas and three addresses
+ * Here we test prepare a data for stif test
  */
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     ed::builder b = {"20140614"};
 
-    b.sa("IUT", 0, 0);
-    b.sa("Gare", 0, 0);
-    b.sa("Becharles", 0, 0);
-    b.sa("Luther King", 0, 0);
-    b.sa("Napoleon III", 0, 0);
-    b.sa("MPT kerfeunteun", 0, 0);
-    b.data->pt_data->index();
+    b.generate_dummy_basis();
 
-    Way w;
-    w.idx = 0;
-    w.name = "rue DU TREGOR";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
-    w.name = "rue VIS";
-    w.uri = w.name;
-    w.idx = 1;
-    b.data->geo_ref->add_way(w);
-    w.idx = 2;
-    w.name = "quai NEUF";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
-
-    Admin* ad = new Admin;
-    ad->name = "Quimper";
-    ad->uri = "Quimper";
-    ad->level = 8;
-    ad->postal_codes.push_back("29000");
-    ad->idx = 0;
-    b.data->geo_ref->admins.push_back(ad);
-    b.manage_admin();
-    b.build_autocomplete();
-
+    b.vj("A")("stopA", "08:00"_t)("stopB", "10:00"_t);
+    b.vj("A")("stopA", "10:00"_t)("stopB", "12:00"_t);
+    b.vj("B")("stopA", "09:00"_t)("stopC", "10:00"_t);
+    b.vj("C")("stopC", "10:30"_t)("stopB", "11:00"_t);
+    b.connection("stopC", "stopC", 0);
 
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
 
-    mock_kraken kraken(b, "main_autocomplete_test", argc, argv);
+    mock_kraken kraken(b, "main_stif_test", argc, argv);
     return 0;
 }
 

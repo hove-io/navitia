@@ -553,6 +553,8 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
         parser_get.add_argument("count", type=default_count_arg_type)
+        parser_get.add_argument("_min_journeys_calls", type=int)
+        parser_get.add_argument("_final_line_filter", type=boolean)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")

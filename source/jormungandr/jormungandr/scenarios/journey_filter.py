@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import itertools
 import datetime
-from jormungandr.scenarios.utils import compare, get_pseudo_duration
+from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if
 
@@ -63,7 +63,7 @@ def filter_journeys(response_list, instance, request):
 
     _filter_too_short_heavy_journeys(journeys, request)
 
-    _filter_similar_journeys(journeys, request)
+    _filter_similar_vj_journeys(journeys, request)
 
     _filter_not_coherent_journeys(journeys, instance, request)
 
@@ -74,7 +74,26 @@ def filter_journeys(response_list, instance, request):
     return response_list
 
 
-def _get_worst_similar_vjs(j1, j2, request):
+def final_filter_journeys(response_list, instance, request):
+    """
+    Filter by side effect the list of pb responses's journeys
+    Final pass : we remove similar journeys (same lines and stop_points of change)
+    """
+
+    # for clarity purpose we build a temporary list
+    journeys = [j for r in response_list for j in r.journeys]
+
+    final_line_filter = get_or_default(request, '_final_line_filter', False)
+    if final_line_filter:
+        _filter_similar_line_journeys(journeys, request)
+
+    delete_journeys(response_list, request)
+
+    return response_list
+
+
+
+def _get_worst_similar(j1, j2, request):
     """
     Decide which is the worst journey between 2 similar journeys.
 
@@ -107,25 +126,36 @@ def mark_as_dead(journey, *reasons):
         journey.tags.append('deleted_because_' + reason)
 
 
-def _filter_similar_journeys(journeys, request):
+def _filter_similar_vj_journeys(journeys, request):
+    _filter_similar_journeys(journeys, request, similar_journeys_vj_generator)
+
+
+def _filter_similar_line_journeys(journeys, request):
+    _filter_similar_journeys(journeys, request, similar_journeys_line_generator)
+
+
+def _filter_similar_journeys(journeys, request, similar_journey_generator):
     """
-    we filter the journeys with the same vjs
+    we filter similar journeys
+    The given generator tells which part of journeys are compared
 
     in case of similar journeys we let _get_worst_similar_vjs decide which one to delete
     """
+
     logger = logging.getLogger(__name__)
     for j1, j2 in itertools.combinations(journeys, 2):
         if _to_be_deleted(j1) or _to_be_deleted(j2):
             continue
-        if compare(j1, j2, similar_journeys_generator):
+        if compare(j1, j2, similar_journey_generator):
             #chose the best
-            worst = _get_worst_similar_vjs(j1, j2, request)
+            worst = _get_worst_similar(j1, j2, request)
             logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
                                                                                 j2.internal_id,
                                                                                 worst.internal_id))
 
             mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
+
 
 def _filter_too_short_heavy_journeys(journeys, request):
     """
@@ -233,7 +263,37 @@ def _filter_not_coherent_journeys(journeys, instance, request):
             mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
 
 
-def similar_journeys_generator(journey):
+def is_walk_after_parking(journey, idx_section):
+    '''
+    True if section at given index is a walking after/before parking car/bss, False otherwise
+    '''
+    is_park_section = lambda section: section.type in (response_pb2.PARK,
+                                                       response_pb2.LEAVE_PARKING,
+                                                       response_pb2.BSS_PUT_BACK,
+                                                       response_pb2.BSS_RENT)
+
+    s = journey.sections[idx_section]
+    if s.type == response_pb2.STREET_NETWORK and s.street_network.mode == response_pb2.Walking and \
+        ((idx_section - 1 >= 0 and is_park_section(journey.sections[idx_section - 1])) or
+         (idx_section + 1 < len(journey.sections) and is_park_section(journey.sections[idx_section + 1]))):
+        return True
+    return False
+
+
+def similar_journeys_vj_generator(journey):
+    for idx, s in enumerate(journey.sections):
+        # special case, we don't want to consider the walking section after/before parking a car
+        # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
+        if is_walk_after_parking(journey, idx):
+            continue
+
+        if s.type == response_pb2.PUBLIC_TRANSPORT:
+            yield "pt:" + s.pt_display_informations.uris.vehicle_journey
+        elif s.type == response_pb2.STREET_NETWORK:
+            yield "sn:" + unicode(s.street_network.mode)
+
+
+def similar_journeys_line_generator(journey):
     is_park_section = lambda section: section.type in (response_pb2.PARK,
                                                        response_pb2.LEAVE_PARKING,
                                                        response_pb2.BSS_PUT_BACK,
@@ -242,14 +302,13 @@ def similar_journeys_generator(journey):
     for idx, s in enumerate(journey.sections):
         # special case, we don't want to consider the walking section after/before parking a car
         # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
-        if s.type == response_pb2.STREET_NETWORK:
-            if s.street_network.mode == response_pb2.Walking and \
-                ((idx - 1 >= 0 and is_park_section(journey.sections[idx - 1])) or
-                 (idx + 1 < len(journey.sections) and is_park_section(journey.sections[idx + 1]))):
-                    continue
+        if is_walk_after_parking(journey, idx):
+            continue
 
+        yield "orig:" + s.origin.uri
+        yield "dest:" + s.destination.uri
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "pt:" + s.pt_display_informations.uris.vehicle_journey
+            yield "pt:" + s.pt_display_informations.uris.line
         elif s.type == response_pb2.STREET_NETWORK:
             yield "sn:" + unicode(s.street_network.mode)
 
