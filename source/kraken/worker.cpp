@@ -321,7 +321,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                                              boost::optional<const std::string>(),
                     forbidden_uri, from_datetime,
                     request.duration(),
-                    request.depth(), max_date_times, request.interface_version(),
+                    request.depth(), max_date_times,
                     request.count(), request.start_page(), rt_level);
             break;
         case pbnavitia::ROUTE_SCHEDULES:

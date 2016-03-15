@@ -43,7 +43,7 @@ namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
 
 static void
-render_v1(PbCreator& pb_creator,
+render(PbCreator& pb_creator,
           const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_route, vector_dt_st>& map_route_stop_point,
           DateTime datetime,
@@ -98,7 +98,6 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 const pt::ptime date,
                 uint32_t duration, uint32_t depth,
                 uint32_t max_date_times,
-                int interface_version,
                 int count, int start_page, const type::RTLevel rt_level) {
 
     RequestHandle handler(pb_creator, request, forbidden_uris, date,  duration, calendar_id);
