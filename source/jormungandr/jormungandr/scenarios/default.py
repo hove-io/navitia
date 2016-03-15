@@ -46,7 +46,7 @@ import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
 from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
 from jormungandr.scenarios.helpers import fallback_mode_comparator
-from jormungandr.utils import pb_del_if
+from jormungandr.utils import pb_del_if, date_to_timestamp
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -59,6 +59,7 @@ class Scenario(simple.Scenario):
         """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
         req.requested_api = requested_type
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if "origin" in request and request["origin"]:
             if requested_type != type_pb2.NMPLANNER:
                 origins = ([request["origin"]], [0])

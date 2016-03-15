@@ -134,6 +134,14 @@ struct data_set {
         comments.add(b.data->pt_data->vehicle_journeys[0], "hello");
         comments.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(),
                                       "stop time is blocked");
+        // Disruption on stoparea
+        using btp = boost::posix_time::time_period;
+        b.impact(nt::RTLevel::RealTime, "Disruption 1")
+                .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                .msg("Disruption on StopArea stop_area:stop1", nt::disruption::ChannelType::email)
+                .on(nt::Type_e::StopArea, "stop_area:stop1")
+                .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
+                .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
        // Company added
         navitia::type::Company* cmp = new navitia::type::Company();
         cmp->line_list.push_back(b.lines["line:A"]);
@@ -154,6 +162,13 @@ struct data_set {
         b.lines["line:A"]->line_group_list.push_back(lg);
         comments.add(lg, "I'm a happy comment");
         b.data->pt_data->line_groups.push_back(lg);
+
+        b.impact(nt::RTLevel::RealTime, "Disruption On line:A")
+                .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                .msg("Disruption on Line line:A", nt::disruption::ChannelType::email)
+                .on(nt::Type_e::Line, "line:A")
+                .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
+                .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
 
         //contributor "c1" contains dataset "d1"
         navitia::type::Contributor* contributor = new navitia::type::Contributor();

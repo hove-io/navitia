@@ -224,6 +224,7 @@ class MixedSchedule(object):
     def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
         req = request_pb2.Request()
         req.requested_api = api
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         st = req.next_stop_times
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
@@ -251,7 +252,6 @@ class MixedSchedule(object):
         if request.get("calendar"):
             st.calendar = request["calendar"]
         st.realtime_level = utils.realtime_level_to_pbf(request['data_freshness'])
-        st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = self.instance.send_and_receive(req)
 
         return resp

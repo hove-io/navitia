@@ -39,7 +39,7 @@ from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from elasticsearch import Elasticsearch
@@ -47,6 +47,7 @@ from elasticsearch.connection.http_urllib3 import ConnectionError
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal
+import datetime
 
 
 class Lit(fields.Raw):
@@ -159,6 +160,12 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          description="The depth of objects")
+        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                         description="The datetime used to consider the state of the pt object"
+                                                     " Default is the current date and it is used for debug."
+                                                     " Note: it will mainly change the disruptions that concern "
+                                                     "the object The timezone should be specified in the format,"
+                                                     " else we consider it as UTC")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -268,7 +275,9 @@ class PlaceUri(ResourceUri):
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
-        args = {"uri": transform_id(id)}
+        args = {
+            "uri": transform_id(id),
+            "_current_datetime": datetime.datetime.utcnow()}
         response = i_manager.dispatch(args, "place_uri",
                                       instance_name=self.region)
         return response, 200
@@ -284,6 +293,7 @@ places_nearby = {
 
 places_types = {'stop_areas', 'stop_points', 'pois',
                 'addresses', 'coords', 'places', 'coord'}  # add admins when possible
+
 
 class PlacesNearby(ResourceUri):
 
@@ -313,6 +323,13 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
+
+        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                         description="The datetime used to consider the state of the pt object"
+                                                     " Default is the current date and it is used for debug."
+                                                     " Note: it will mainly change the disruptions that concern "
+                                                     "the object The timezone should be specified in the format,"
+                                                     " else we consider it as UTC")
 
     @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):

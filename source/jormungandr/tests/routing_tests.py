@@ -376,6 +376,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][0]['arrival_date_time'],  "20120614T160000")
         eq_(response['journeys'][0]['type'], "best")
 
+        assert len(response["disruptions"]) == 0
         feed_publishers = response["feed_publishers"]
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)

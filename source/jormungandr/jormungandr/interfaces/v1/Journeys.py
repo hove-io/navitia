@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.fields import display_informations_vj, error, pla
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, Co2Emission, PbEnum, feed_publisher
 
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from functools import wraps
 from jormungandr.interfaces.v1.fields import DateTime
@@ -584,6 +584,13 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
+        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
+                                description="The datetime used to consider the state of the pt object"
+                                            " Default is the current date and it is used for debug."
+                                            " Note: it will mainly change the disruptions that concern "
+                                            "the object The timezone should be specified in the format,"
+                                            " else we consider it as UTC")
+
 
         self.method_decorators.append(complete_links(self))
 

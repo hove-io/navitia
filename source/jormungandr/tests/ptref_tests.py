@@ -153,6 +153,28 @@ class TestPtRef(AbstractTestFixture):
             code_uic = [c for c in codes if c['type'] == 'code_uic']
             assert len(code_uic) == 1 and code_uic[0]['value'] == 'bobette'
 
+    def test_ptref_without_current_datetime(self):
+        """
+        stop_area:stop1 without message because _current_datetime is NOW()
+        """
+        response = self.query_region("stop_areas/stop_area:stop1")
+
+        assert len(response['disruptions']) == 0
+
+    def test_ptref_with_current_datetime(self):
+        """
+        stop_area:stop1 with _current_datetime
+        """
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime=20140115T235959")
+
+        disruptions = get_not_null(response, 'disruptions')
+
+        assert len(disruptions) == 1
+
+        messages = get_not_null(disruptions[0], 'messages')
+
+        assert(messages[0]['text']) == 'Disruption on StopArea stop_area:stop1'
+
     def test_contributors(self):
         """test contributor formating"""
         response = self.query_region("v1/contributors")

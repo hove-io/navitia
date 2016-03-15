@@ -50,7 +50,6 @@ render_v1(PbCreator& pb_creator,
           DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
           uint32_t depth) {
-    pb_creator.now = pt::second_clock::universal_time();
     pb_creator.action_period = pt::time_period(to_posix_time(datetime, pb_creator.data),
                                                to_posix_time(max_datetime, pb_creator.data));
 

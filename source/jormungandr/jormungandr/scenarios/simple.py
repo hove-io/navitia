@@ -65,6 +65,7 @@ class Scenario(object):
         req.calendars.start_page = request['start_page']
         req.calendars.start_date = request['start_date']
         req.calendars.end_date = request['end_date']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.calendars.forbidden_uris.append(forbidden_uri)
@@ -79,7 +80,7 @@ class Scenario(object):
         req.traffic_reports.filter = request['filter']
         req.traffic_reports.count = request['count']
         req.traffic_reports.start_page = request['start_page']
-        req.traffic_reports._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -95,6 +96,7 @@ class Scenario(object):
         req.places.depth = request['depth']
         req.places.count = request['count']
         req.places.search_type = request['search_type']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["type[]"]:
             for type in request["type[]"]:
                 if type not in pb_type:
@@ -121,6 +123,7 @@ class Scenario(object):
         req.pt_objects.depth = request['depth']
         req.pt_objects.count = request['count']
         req.pt_objects.search_type = request['search_type']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["type[]"]:
             for type in request["type[]"]:
                 req.pt_objects.types.append(pt_object_type[type])
@@ -143,6 +146,7 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = request["uri"]
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         return instance.send_and_receive(req)
 
     def route_schedules(self, request, instance):
@@ -172,6 +176,7 @@ class Scenario(object):
         req.places_nearby.depth = request["depth"]
         req.places_nearby.count = request["count"]
         req.places_nearby.start_page = request["start_page"]
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if request["type[]"]:
             for type in request["type[]"]:
                 if type not in pb_type:
@@ -192,7 +197,7 @@ class Scenario(object):
         req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
-        req.ptref.datetime = date_to_timestamp(request["_current_datetime"])
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if request["odt_level"]:
             req.ptref.odt_level = pb_odt_level[request["odt_level"]]
         if request["forbidden_uris[]"]:

@@ -34,7 +34,7 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
 from navitiacommon.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
-#from exceptions import RegionNotFound
+import datetime
 
 
 class Coord(ResourceUri):
@@ -63,8 +63,10 @@ class Coord(ResourceUri):
             "type[]": ["address"],
             "depth": 1,
             "start_page": 0,
-            "filter": ""
+            "filter": "",
+            "_current_datetime": datetime.datetime.utcnow()
         }
+
         self._register_interpreted_parameters(args)
         result = OrderedDict()
 

@@ -45,5 +45,5 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const boost::optional<boost::posix_time::ptime>& since,
                              const boost::optional<boost::posix_time::ptime>& until,
                              const type::Data& data,
-                             const boost::posix_time::ptime& current_time);
+                             const boost::posix_time::ptime& current_datetime);
 }}
