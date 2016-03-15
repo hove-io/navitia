@@ -212,6 +212,10 @@ struct Dom {
     bool clockwise;
     typedef std::pair<size_t, StartingPointSndPhase> Arg;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
+        /*
+         * When multiple arrival with (same walking, same time, same number of sections)
+         * were possible we used to keep only the first discovered
+         */
         if (lhs.second.count == rhs.second.count
                 && lhs.second.end_dt == rhs.second.end_dt
                 && lhs.second.fallback_dur == rhs.second.fallback_dur) {
