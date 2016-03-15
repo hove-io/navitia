@@ -224,20 +224,6 @@ template<> NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointCo
     return resp.mutable_connections();
 }
 
-template<typename T> nt::Type_e get_type_e() {
-    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
-    return nt::Type_e::Unknown;
-}
-template<> nt::Type_e get_type_e<nt::PhysicalMode>() {
-    return nt::Type_e::PhysicalMode;
-}
-template<> nt::Type_e get_type_e<nt::CommercialMode>() {
-    return nt::Type_e::CommercialMode;
-}
-template<> nt::Type_e get_type_e<nt::Contributor>() {
-    return nt::Type_e::Contributor;
-}
-
 pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin*, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_administrative_region();
 }

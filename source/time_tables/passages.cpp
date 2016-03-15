@@ -173,18 +173,17 @@ void passages(PbCreator& pb_creator,
         }
         pb_creator.action_period = pt::time_period(navitia::to_posix_time(dt_stop_time.first, pb_creator.data),
                                                    pt::seconds(1));
-        auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
-        auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
-        passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
-        passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
+        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
+        passage->mutable_stop_date_time()->set_departure_date_time(passage_date);
+        passage->mutable_stop_date_time()->set_arrival_date_time(passage_date);
 
         //find base datetime
         auto base_st = get_base_stop_time(dt_stop_time.second);
         if (base_st != nullptr) {
             auto base_ptime = navitia::to_posix_time(dt_stop_time.first, pb_creator.data);
-            auto base_dep_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, true);
-            passage->mutable_stop_date_time()->set_base_departure_date_time(navitia::to_posix_timestamp(base_dep_dt));
-            passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_dep_dt));
+            auto base_passage_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, true);
+            passage->mutable_stop_date_time()->set_base_departure_date_time(navitia::to_posix_timestamp(base_passage_dt));
+            passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_passage_dt));
         }
         pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
 
