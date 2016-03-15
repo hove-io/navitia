@@ -45,7 +45,7 @@ namespace navitia { namespace timetables {
 static void
 render_v1(PbCreator& pb_creator,
           const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
-          const std::map<stop_point_line, vector_dt_st>& map_route_stop_point,
+          const std::map<stop_point_route, vector_dt_st>& map_route_stop_point,
           DateTime datetime,
           DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
@@ -57,18 +57,18 @@ render_v1(PbCreator& pb_creator,
     for(auto id_vec : map_route_stop_point) {
         auto schedule = pb_creator.add_stop_schedules();
         //Each schedule has a stop_point and a route
-        pb_creator.fill(pb_creator.data.pt_data->stop_points[id_vec.first.first],
+        pb_creator.fill(pb_creator.data.pt_data->stop_points[id_vec.first.first.val],
                 schedule->mutable_stop_point(), depth);
 
         auto m_route = schedule->mutable_route();
-        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second], m_route, depth);
-        if (pb_creator.data.pt_data->routes[id_vec.first.second]->line != nullptr){
+        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second.val], m_route, depth);
+        if (pb_creator.data.pt_data->routes[id_vec.first.second.val]->line != nullptr){
             auto m_line = m_route->mutable_line();
-            pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second]->line, m_line, 0);
+            pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second.val]->line, m_line, 0);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
 
-        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second], pt_display_information, 0);
+        pb_creator.fill(pb_creator.data.pt_data->routes[id_vec.first.second.val], pt_display_information, 0);
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
@@ -84,7 +84,7 @@ render_v1(PbCreator& pb_creator,
                 }
             }
         }
-        const auto& it = response_status.find(id_vec.first.second);
+        const auto& it = response_status.find(id_vec.first.second.val);
         if(it != response_status.end()){
             schedule->set_response_status(it->second);
         }
@@ -118,15 +118,15 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
 
 
-    std::map<stop_point_line, vector_dt_st> map_route_stop_point;
+    std::map<stop_point_route, vector_dt_st> map_route_stop_point;
 
     //Mapping route/stop_point
-    std::vector<stop_point_line> sps_routes;
+    std::vector<stop_point_route> sps_routes;
     for(auto jpp_idx : handler.journey_pattern_points) {
         const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
         const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
-        stop_point_line key = stop_point_line(jpp.sp_idx.val, jp.route_idx.val);
-        auto find_predicate = [&](stop_point_line spl) {
+        stop_point_route key = {jpp.sp_idx, jp.route_idx};
+        auto find_predicate = [&](stop_point_route spl) {
             return spl.first == key.first && spl.second == key.second;
         };
         auto it = std::find_if(sps_routes.begin(), sps_routes.end(), find_predicate);
@@ -146,16 +146,14 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     // (une route étant une vague direction commerciale
     for(auto sp_route : sps_routes) {
         std::vector<routing::datetime_stop_time> stop_times;
-        const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first];
-        const auto sp_idx = routing::SpIdx(*stop_point);
-        const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second];
-        const auto route_idx = routing::RouteIdx(*route);
-        const auto& jpps = pb_creator.data.dataRaptor->jpps_from_sp[sp_idx];
+        const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first.val];
+        const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second.val];
+        const auto& jpps = pb_creator.data.dataRaptor->jpps_from_sp[sp_route.first];
         for (const auto& jpp_from_sp: jpps) {
             const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
             const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
             const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
-            if (jp.route_idx != route_idx) { continue; }
+            if (jp.route_idx != sp_route.second) { continue; }
 
             std::vector<routing::datetime_stop_time> tmp;
             if (! calendar_id) {
@@ -169,7 +167,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             } else {
                 const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
-                if (sp_idx == last_jpp.sp_idx) {
+                if (sp_route.first == last_jpp.sp_idx) {
                     if (stop_point->stop_area == route->destination){
                         response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                     }else{
@@ -190,7 +188,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if(stop_times.empty() && (response_status.find(route->idx) == response_status.end())){
             response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
         }
-        auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
+        auto to_insert = std::pair<stop_point_route, vector_dt_st>(sp_route, stop_times);
         map_route_stop_point.insert(to_insert);
     }
 
