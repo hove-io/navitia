@@ -316,13 +316,14 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                                  rt_level, api, request.count(), request.start_page());
             break;
         case pbnavitia::DEPARTURE_BOARDS:
+
             timetables::departure_board(pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
                                              boost::optional<const std::string>(),
                     forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times,
-                    request.count(), request.start_page(), rt_level);
+                    request.count(), request.start_page(), rt_level, request.items_per_schedule());
             break;
         case pbnavitia::ROUTE_SCHEDULES:
             timetables::route_schedule(pb_creator, request.departure_filter(),

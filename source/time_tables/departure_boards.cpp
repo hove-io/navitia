@@ -53,7 +53,6 @@ render(PbCreator& pb_creator,
     pb_creator.action_period = pt::time_period(to_posix_time(datetime, pb_creator.data),
                                                to_posix_time(max_datetime, pb_creator.data));
 
-//    bool display_date = ! calendar_id;
     for(auto id_vec : map_route_stop_point) {
         auto schedule = pb_creator.add_stop_schedules();
         //Each schedule has a stop_point and a route
@@ -98,11 +97,11 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 const pt::ptime date,
                 uint32_t duration, uint32_t depth,
                 uint32_t max_date_times,
-                int count, int start_page, const type::RTLevel rt_level) {
+                int count, int start_page, const type::RTLevel rt_level, const size_t items_per_route_point) {
 
-    RequestHandle handler(pb_creator, request, forbidden_uris, date,  duration, calendar_id);
+    RequestHandle handler(pb_creator, request, forbidden_uris, date, duration, calendar_id);
 
-    if(pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)){
+    if (pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)) {
         return;
     }
 
@@ -115,7 +114,6 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     }
     //  <idx_route, status>
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
-
 
     std::map<stop_point_route, vector_dt_st> map_route_stop_point;
 
@@ -187,17 +185,15 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if(stop_times.empty() && (response_status.find(route->idx) == response_status.end())){
             response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
         }
-        auto to_insert = std::pair<stop_point_route, vector_dt_st>(sp_route, stop_times);
-        map_route_stop_point.insert(to_insert);
+
+        if (stop_times.size() > items_per_route_point) {
+            stop_times.resize(items_per_route_point);
+        }
+        map_route_stop_point[sp_route] = stop_times;
     }
 
-    if(interface_version == 1) {
-        render_v1(pb_creator, response_status, map_route_stop_point, handler.date_time, handler.max_datetime,
-                  calendar_id, depth);
-    } else {
-        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "invalid interface version");
-        return;
-    }
+    render(pb_creator, response_status, map_route_stop_point, handler.date_time, handler.max_datetime,
+              calendar_id, depth);
 
     pb_creator.make_paginate(total_result, start_page, count, std::max(pb_creator.departure_boards_size(),
                                                                        pb_creator.stop_schedules_size()));
