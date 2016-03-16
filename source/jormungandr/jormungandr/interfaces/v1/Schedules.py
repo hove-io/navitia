@@ -109,6 +109,8 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
+        parser_get.add_argument("items_per_schedule", type=natural, default=10000,
+                                description="maximum number of date_times per schedule")
 
         self.method_decorators.append(complete_links(self))
 
