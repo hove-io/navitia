@@ -45,7 +45,8 @@ void departure_board(PbCreator& pb_creator, const std::string &filter,
                      const boost::posix_time::ptime datetime,
                      uint32_t duration, uint32_t depth, uint32_t max_date_times,
                      int count, int start_page,
-                     const type::RTLevel rt_level);
+                     const type::RTLevel rt_level,
+                     const size_t items_per_route_point);
 }
 
 }
