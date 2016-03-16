@@ -156,6 +156,44 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
     }
+
+    // normal departure board with impact on stop_point
+    {
+    using btp = boost::posix_time::time_period;
+    b.impact(nt::RTLevel::Adapted, "Disruption 1")
+            .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+            .on(nt::Type_e::StopPoint, "stop1")
+            .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
+            .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
+            .msg("Disruption on stop_popint stop1");
+
+    navitia::PbCreator pb_creator(*(b.data), "20150616T080000"_dt, null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+
+    resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts(0).messages_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts(0).messages(0).text(),
+                        "Disruption on stop_popint stop1");
+
+    //current_datetime out of bounds
+    navitia::PbCreator pb_creator1(*(b.data), "20150626T110000"_dt, null_time_period);
+    pb_creator.now = "20150626T110000"_dt;
+    departure_board(pb_creator1, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+
+    resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts_size(),0);
+    }
 }
 
 

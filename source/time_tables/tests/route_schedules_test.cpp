@@ -641,6 +641,14 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
+    using btp = boost::posix_time::time_period;
+    b.impact(nt::RTLevel::Adapted, "Disruption 1")
+            .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+            .on(nt::Type_e::StopPoint, "st1")
+            .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
+            .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
+            .msg("Disruption on stop_popint st1");
+    // current_datetime out of bounds
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
@@ -659,4 +667,18 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "3:00"_t);
     BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "E");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
+
+    // current_datetime
+    navitia::PbCreator pb_creator1(*(b.data), "20120615T080000"_dt, null_time_period);
+    navitia::timetables::route_schedule(pb_creator1, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+                                        3, 10, 0, nt::RTLevel::Base);
+
+    resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    route_schedule = resp.route_schedules(0);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().uri(), "st1");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts_size(), 1);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts(0).messages_size(), 1);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts(0).messages(0).text(),
+                      "Disruption on stop_popint st1");
 }
