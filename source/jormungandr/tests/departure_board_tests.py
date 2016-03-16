@@ -417,7 +417,7 @@ def check_stop_schedule(response, reference):
                    if r.sp == get_not_null(get_not_null(resp, 'stop_point'), 'id')
                    and r.route == get_not_null(get_not_null(resp, 'route'), 'id'))
 
-        for (resp_dt, ref_st) in itertools.izip_longest(get_not_null(resp, 'date_times'), ref.date_times):
+        for (resp_dt, ref_st) in itertools.izip_longest(resp['date_times'], ref.date_times):
             eq_(get_not_null(resp_dt, 'date_time'), ref_st.dt)
             eq_(get_not_null(resp_dt, 'links')[0]['id'], ref_st.vj)
 
@@ -516,6 +516,36 @@ class TestSchedules(AbstractTestFixture):
         is_valid_stop_schedule(stop_sched, self.tester)
 
         self.check_stop_schedule_rt_sol(stop_sched)
+
+    def test_stop_schedule_realtime_limit_per_schedule(self):
+        """
+        same as test_stop_schedule_realtime, but we limit the number of item per schedule
+        """
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime&items_per_schedule=1")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[SchedDT(dt='20160101T090700',
+                                                              vj='A:vj1:modified:0:delay_vj1')]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
+
+        # and test with a limit at 0
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime&items_per_schedule=0")
+
+        stop_sched = response["stop_schedules"]
+        # is_valid_stop_schedule(stop_sched, self.tester)
+
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[])])
 
     def test_stop_schedule_no_dt(self):
         """

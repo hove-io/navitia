@@ -246,6 +246,8 @@ class MixedSchedule(object):
             st.start_page = request["start_page"]
         if request["max_date_times"]:
             st.max_date_times = request["max_date_times"]
+        if request["items_per_schedule"]:
+            st.items_per_schedule = request["items_per_schedule"]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 st.forbidden_uri.append(forbidden_uri)
