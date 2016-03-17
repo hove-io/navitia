@@ -214,22 +214,22 @@ accessible local mobility services:
         "id": "fr-idf"
     }],
     "links": [
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/coords"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/places"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/networks"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/companies"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/lines"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/routes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_points"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/line_groups"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/connections"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/poi_types"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/pois"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/"}
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/coords"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/places"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/networks"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/companies"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/lines"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/routes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_points"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/line_groups"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/connections"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/poi_types"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/pois"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/"}
     ]
 }
 ```
@@ -245,16 +245,16 @@ paginate results.
 
 #### Collections
 
--   networks
--   lines
--   routes
--   stop_points
--   stop_areas
--   commercial_modes
--   physical_modes
--   companies
--   vehicle_journeys
--   disruptions
+-   [networks](#network)
+-   [lines](#line)
+-   [routes](#route)
+-   [stop_points](#stop-point)
+-   [stop_areas](#stop-area)
+-   [commercial_modes](#commercial-mode)
+-   [physical_modes](#physical-mode)
+-   [companies](#company)
+-   [vehicle_journeys](#vehicle-journey)
+-   [disruptions](#disruption)
 
 
 #### Specific parameters
@@ -324,8 +324,8 @@ as headsign (on vehicle journey itself or at a stop time).
 
 Examples:
 
--   <http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
--   <http://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
+-   <https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
+-   <https://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
 
 
 <aside class="warning">
@@ -573,14 +573,14 @@ coordinates. It returns, in addition of classic objects, a collection of
 Filters can be added:
 
 -   request for the city of "Paris" on fr-idf
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places?q=paris>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places?q=paris>
 -   then pois nearby this city
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby>
 -   and then, let's catch every parking around
     -   "distance=10000" Paris is not so big
     -   "type[]=poi" to take pois only
     -   "filter=poi_type.id=poi_type:amenity:parking" to get parking
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
 
 #### Example
 
@@ -1136,7 +1136,7 @@ Networks are fed by agencies in GTFS format.
 
 As "direction" is a [place](#place) , it can be a poi in some data.
 
-#### Stop Point
+#### <a name="stop-point"></a>Stop Point
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1147,7 +1147,7 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |equipments|array of string|list of [equipment](#equipment) of the stop point|
 |stop_area|[stop_area](#stop-area)|Stop Area containing this stop point|
 
-#### Stop Area
+#### <a name="stop-area"></a>Stop Area
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1157,7 +1157,7 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |administrative_regions|array of [admin](#admin)|Administrative regions of the stop area in which is the stop area|
 |stop_points|array of [stop_point](#stop-point)|Stop points contained in this stop area|
 
-#### Commercial Mode
+#### <a name="commercial-mode"></a>Commercial Mode
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1165,7 +1165,7 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |name|string|Name of the commercial mode|
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of this commercial mode|
 
-#### Physical Mode
+#### <a name="physical-mode"></a>Physical Mode
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1198,7 +1198,7 @@ Here is the valid id list:
 You can use these ids in the forbidden_uris[] parameter from
 [journeys parameters](#journeys-parameters) for exemple.
 
-#### Company
+#### <a name="company"></a>Company
 
 |Field|Type|Description|
 |-----|----|-----------|
