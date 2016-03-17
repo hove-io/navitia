@@ -19,8 +19,8 @@ Overview
     We will add it to navitia.io
 </aside>
 
-Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get.
-and the more effort we will put to make the API durable.
+Let us know if you build something with our API, we will be happy to highlight it on this page.
+The more feedback we get, the more cities you will get and the more effort we will put to make the API durable.
 
 Our APIs are available at the following url: <http://api.navitia.io/v1> (the latest API version is ``v1``).
 
