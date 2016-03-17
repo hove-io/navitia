@@ -426,7 +426,7 @@ struct PoiHouseNumberVisitor {
     void fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat, OsmObjectType t);
     void fill_housenumber(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
     void insert_house_numbers();
-    void insertData();
+    void insert_data();
     void finish();
 
 
