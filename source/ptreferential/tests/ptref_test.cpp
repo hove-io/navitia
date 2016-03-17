@@ -387,6 +387,31 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
     BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
+BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
+    ed::builder b("201303011T1739");
+    b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->pt_data->build_uri();
+
+    using btp = boost::posix_time::time_period;
+    const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
+                     .severity(nt::disruption::Effect::NO_SERVICE)
+                     .on(nt::Type_e::StopPoint, "stop1")
+                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
+                     .get_disruption();
+
+    Filter filter;
+    filter.navitia_type = Type_e::StopPoint;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "stop1";
+
+    navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
+    auto indexes = get_indexes<nt::StopPoint>(filter, Type_e::Impact, *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
+}
 
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
