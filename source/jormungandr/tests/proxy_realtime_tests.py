@@ -76,7 +76,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
         return None
 
 
-DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'direction'])
+DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'direction', 'physical_mode'])
 
 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
@@ -149,16 +149,19 @@ class TestDepartures(AbstractTestFixture):
         response = self.query_region(query)
         departures = [DepartureCheck(route=d['route']['name'],
                                      dt=d['stop_date_time']['departure_date_time'],
-                                     direction=d['display_informations']['direction'])
+                                     direction=d['display_informations']['direction'],
+                                     physical_mode=d['display_informations']['physical_mode'])
                       for d in response['departures']]
         expected_departures = [
-            DepartureCheck(route="J", dt="20160102T100000", direction=''),
-            DepartureCheck(route="K", dt="20160102T100100", direction='bob'),  # rt we got the given direction
-            DepartureCheck(route="L", dt="20160102T100200", direction='S43'),
-            DepartureCheck(route="J", dt="20160102T100300", direction=''),
-            DepartureCheck(route="K", dt="20160102T100400", direction=''),  # rt but no direction
-            DepartureCheck(route="L", dt="20160102T100700", direction='S43'),
-            DepartureCheck(route="L", dt="20160102T101100", direction='S43'),
+            DepartureCheck(route="J", dt="20160102T100000", direction='', physical_mode='name physical_mode:0'),
+            # rt we got the given direction:
+            DepartureCheck(route="K", dt="20160102T100100", direction='bob', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="20160102T100200", direction='S43', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="J", dt="20160102T100300", direction='', physical_mode='name physical_mode:0'),
+            # rt but no direction:
+            DepartureCheck(route="K", dt="20160102T100400", direction='', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="20160102T100700", direction='S43', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="20160102T101100", direction='S43', physical_mode='name physical_mode:0'),
             ]
         eq_(departures, expected_departures)
 
@@ -171,16 +174,18 @@ class TestDepartures(AbstractTestFixture):
 
         departures = [DepartureCheck(route=d['route']['name'],
                                      dt=d['stop_date_time']['data_freshness'],
-                                     direction=d['display_informations']['direction'])
+                                     direction=d['display_informations']['direction'],
+                                     physical_mode=d['display_informations']['physical_mode'])
                       for d in response['departures']]
         expected_departures = [
-            DepartureCheck(route="J", dt="realtime", direction=''),
-            DepartureCheck(route="K", dt="realtime", direction='bob'),  # rt we got the given direction
-            DepartureCheck(route="L", dt="base_schedule", direction='S43'),
-            DepartureCheck(route="J", dt="realtime", direction=''),
-            DepartureCheck(route="K", dt="realtime", direction=''),
-            DepartureCheck(route="L", dt="base_schedule", direction='S43'),
-            DepartureCheck(route="L", dt="base_schedule", direction='S43'),
+            DepartureCheck(route="J", dt="realtime", direction='', physical_mode='name physical_mode:0'),
+            # rt we got the given direction:
+            DepartureCheck(route="K", dt="realtime", direction='bob', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="base_schedule", direction='S43', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="J", dt="realtime", direction='', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="K", dt="realtime", direction='', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="base_schedule", direction='S43', physical_mode='name physical_mode:0'),
+            DepartureCheck(route="L", dt="base_schedule", direction='S43', physical_mode='name physical_mode:0'),
             ]
         assert departures == expected_departures
 
@@ -193,7 +198,6 @@ class TestDepartures(AbstractTestFixture):
 
         #For realtime some attributs in display_informations are deleted
         disp_info = get_not_null(response["departures"][0], "display_informations")
-        assert len(disp_info["physical_mode"]) == 0
         assert len(disp_info["headsign"]) == 0
 
         #stop_time with data_freshness = base_schedule
