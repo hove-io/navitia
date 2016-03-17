@@ -150,6 +150,10 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         if rt_passage.direction:
             new_passage.pt_display_informations.direction = rt_passage.direction
 
+        # we add physical mode from route
+        if len(route_point.pb_route.physical_modes) > 0:
+            new_passage.pt_display_informations.physical_mode = route_point.pb_route.physical_modes[0].name
+
         passages.extend([new_passage])
 
 

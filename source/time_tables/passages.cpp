@@ -129,6 +129,8 @@ void fill_route_point(PbCreator& pb_creator,
     const type::Line* line = route->line;
     auto m_route = pb->mutable_route();
     pb_creator.fill(route, m_route, 0);
+    auto pm = navitia::ptref_indexes<nt::PhysicalMode, type::Route>(route, pb_creator.data);
+    pb_creator.fill(pm, m_route->mutable_physical_modes(), 0);
     pb_creator.fill(line, m_route->mutable_line(), 0);
 }
 }
