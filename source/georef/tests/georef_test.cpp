@@ -993,12 +993,34 @@ BOOST_AUTO_TEST_CASE(range_postal_codes) {
 
 }
 
+BOOST_AUTO_TEST_CASE(empty_postal_codes) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {};
+    BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "");
+}
+
+BOOST_AUTO_TEST_CASE(one_postal_code) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {"03430"};
+    BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "03430");
+}
+
+BOOST_AUTO_TEST_CASE(first_number_0) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {"04400", "04410", "04420", "04430"};
+    BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "04400-04430");
+}
+
+BOOST_AUTO_TEST_CASE(string_and_int_post_codes) {
+    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    admin->postal_codes = {"44000", "44100", "44200", "44300", "abcd"};
+    BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "44000;44100;44200;44300;abcd");
+}
 
 BOOST_AUTO_TEST_CASE(list_postal_codes) {
     navitia::georef::Admin* admin = new navitia::georef::Admin();
     admin->postal_codes = {"44000", "44100", "44200", "44300"};
     BOOST_CHECK_EQUAL(admin->postal_codes_to_string(), "44000;44100;44200;44300");
-
 }
 
 BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
