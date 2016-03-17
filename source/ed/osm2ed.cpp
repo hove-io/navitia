@@ -674,8 +674,7 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
     this->fill_housenumber(osm_id, tags, lon, lat);
     auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
-        persistor.insert_pois(data);
-        insert_house_numbers();
+        this->insertData();
         LOG4CPLUS_INFO(logger, "" << std::to_string(data.pois.size()) << " pois inserted and " << std::to_string(house_numbers.size()) << " house numbers");
         n_inserted_pois += data.pois.size();
         n_inserted_house_numbers += house_numbers.size();
@@ -722,8 +721,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
     }
     auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
-        persistor.insert_pois(data);
-        insert_house_numbers();
+        this->insertData();
         LOG4CPLUS_INFO(logger, "" << std::to_string(data.pois.size()) << " pois inserted and " << std::to_string(house_numbers.size()) << " house numbers");
         n_inserted_pois += data.pois.size();
         n_inserted_house_numbers += house_numbers.size();
@@ -732,10 +730,14 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
     }
 }
 
-void PoiHouseNumberVisitor::finish() {
+void PoiHouseNumberVisitor::insertData() {
     persistor.insert_pois(data);
     persistor.insert_poi_properties(data);
     insert_house_numbers();
+}
+
+void PoiHouseNumberVisitor::finish() {
+    this->insertData();
 }
 /*
  * Insertion of house numbers
