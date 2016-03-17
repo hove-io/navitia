@@ -539,7 +539,18 @@ class TestSchedules(AbstractTestFixture):
                                      "&data_freshness=realtime&items_per_schedule=0")
 
         stop_sched = response["stop_schedules"]
-        # is_valid_stop_schedule(stop_sched, self.tester)
+
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[])])
+
+        # test retrocompat'
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime&max_date_times=0")
+
+        stop_sched = response["stop_schedules"]
 
         check_stop_schedule(stop_sched,
                             [StopSchedule(sp='S1', route='A:0',

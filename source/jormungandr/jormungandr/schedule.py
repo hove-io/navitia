@@ -242,14 +242,11 @@ class MixedSchedule(object):
             st.nb_stoptimes = 0
         else:
             st.nb_stoptimes = request["nb_stoptimes"]
-        st.interface_version = 1
         st.count = request.get("count", 10)
         if "start_page" not in request:
             st.start_page = 0
         else:
             st.start_page = request["start_page"]
-        if request["max_date_times"]:
-            st.max_date_times = request["max_date_times"]
         if request["items_per_schedule"]:
             st.items_per_schedule = request["items_per_schedule"]
         if request["forbidden_uris[]"]:

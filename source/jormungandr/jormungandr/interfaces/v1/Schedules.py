@@ -78,9 +78,8 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("max_date_times", type=natural, default=10000,
-                                description="Maximum number of schedule per\
-                                stop_point/route")
+        parser_get.add_argument("max_date_times", type=natural,
+                                description="DEPRECATED, use items_per_schedule")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
                                 dest="__temporary_forbidden_id[]",
@@ -122,7 +121,10 @@ class Schedules(ResourceUri, ResourceUtc):
             args['forbidden_uris[]'].append(forbid_id)
 
         args["nb_stoptimes"] = args["count"]
-        args["interface_version"] = 1
+
+        # retrocompatibility
+        if args['max_date_times'] is not None:
+            args['items_per_schedule'] = args['max_date_times']
 
         if uri is None:
             if not args['filter']:
@@ -254,8 +256,6 @@ class StopSchedules(Schedules):
 
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
-        self.parsers["get"].add_argument("interface_version", type=int,
-                                         default=1, hidden=True)
 
     @marshal_with(stop_schedules)
     @ManageError()
