@@ -1,5 +1,5 @@
-A small introduction to public transportation data
-==================================================
+Lexicon
+=======
 
 Introduction
 ------------

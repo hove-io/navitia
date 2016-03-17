@@ -1,12 +1,12 @@
 Welcome to navitia.io
 =====================
 
-(pronounce [navi-sia])
+The API to build cool stuff with public transport
 
-An API to build cool stuff with public transport
--------------------------------------------------
+Overview
+--------
 
-We provide:
+*navitia* is a RESTful API which provide:
 
 * journeys computation
 * line schedules
@@ -19,50 +19,40 @@ We provide:
     We will add it to navitia.io
 </aside>
 
-
-Getting started
----------------
-
-The easiest is probably to jump to [Examples](#examples) below.
-
-At some point you will want to read:
-
-- [public_transport](#a-small-introduction-to-public-transportation-data)
-- [integration](#navitia-documentation-v1-interface)
-
-There are no restrictions in using our API. However, please don't make more than one request per second.
-
 Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
-
-### Using my token
-If you use a web browser, you only have to paste it in the user area,
-with no password. Or, in a simplier way, you can add your token in the
-address bar like :
-
-<aside class="success">
-https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage/fr-idf/networks
-</aside>
-
-See [authentication](#authentication) section to find out more details on **how to use your token**.
-
-### Overview
-
-*navitia* is a RESTful API that returns [JSON](http://en.wikipedia.org/wiki/Json) formated results.
 
 Our APIs are available at the following url: <http://api.navitia.io/v1> (the latest API version is ``v1``).
 
 The API has been built on the [HATEOAS model](http://en.wikipedia.org/wiki/HATEOAS) so the API should be quite self explanatory since the interactions are defined in hypermedia.
 
-The different possible actions on a given API level are given in the ``links`` section of the response.
+Have a look at the examples below to learn what services we provide and how to use them.
 
-To provide additional arguments to the API, add them at the end of the query with the following syntax:  ``?arg1=val1&arg2=val2``.
+Getting started
+---------------
 
-Have a look at the examples below to learn what API we provide and how to use them.
+#### First,
+get a token here <http://navitia.io/register/>
+
+#### Second,
+use the token : if you use a web browser, you only have to **paste it in the user area**,
+with **no password**. 
+Or, in a simplier way, you can add your token in the address bar like :
+
 
 <aside class="success">
-    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
+<b>https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage/fr-idf/networks</b>
 </aside>
+
+See [authentication](#authentication) section to find out more details on **how to use your token**.
+
+#### Then,
+use the API ! The easiest is probably to jump to [Examples](#examples) below.
+
+At some point you will want to read:
+
+- [transport public lexicon](#lexicon)
+- [integration](#v1 interface)
 
 
 Examples
@@ -157,7 +147,6 @@ Easy isn't it?
 
 We could push the exploration further and:
 
-- Geographical coverage of the service > <https://api.navitia.io/v1/coverage>
 - Where am I? (WGS 84 coordinates)
     - <https://api.navitia.io/v1/coord/2.377310;48.847002>
     - I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
@@ -230,29 +219,3 @@ Stay tuned on twitter @navitia.
 
 At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
 
-About…
-------
-
-
-### About the service
-
-If you plan to build something successful, contact us to get an access with more vitamins and even more support.
-And if you wanna build really hard stuff with it, don't be doubtful and take the source code <https://github.com/CanalTP/navitia>
-
-
-### About the data
-
-
-The street network is extracted from [OpenStreetMap](http://www.openstreetmap.org).
-
-The public transport data are provided by networks that provide their timetables as open data.
-
-Some data improvement are achieved by Kisio Digital.
-
-
-### About Kisio Digital
-
-[Kisio Digital](http://www.canaltp.fr) is the editor of *navitia*. We are a company based in Paris, leader in
-France for public transport information systems.
-
-If you speak French, visit our technical blog <http://labs.canaltp.fr> .

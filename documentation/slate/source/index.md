@@ -12,7 +12,7 @@ toc_footers:
 includes:
   - index
   - integration
-  - public_transport
+  - lexicon
   - errors
 
 search: true
