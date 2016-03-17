@@ -51,6 +51,18 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(response['places'])
         assert(response['places'][0]['name'] == "42 rue kb (Condom)")
 
+    def test_label_of_admin(self):
+        '''
+        test label of admin "Condom (03430)"
+        '''
+
+
+        response = self.query_region("places?q=Condom&type[]=administrative_region")
+
+        assert(len(response['places']) == 1)
+        is_valid_places(response['places'])
+        assert(response['places'][0]['name'] == "Condom (03430)")
+
     def test_places_invalid_encoding(self):
         _, status = self.query_no_assert(b'/v1/coverage/main_routing_test/places/?q=ch\xe2teau')
         assert(status != 500)

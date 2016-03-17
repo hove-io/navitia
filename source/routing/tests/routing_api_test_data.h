@@ -162,9 +162,9 @@ struct routing_api_data {
         auto admin = b.data->geo_ref->admins.back();
         admin->uri = "admin:74435";
         admin->name = "Condom";
-        admin->insee = "32107";
+        admin->insee = "03430";
         admin->level = 8;
-        admin->postal_codes.push_back("32100");
+        admin->postal_codes.push_back("03430");
         admin->coord = nt::GeographicalCoord(D.lon(), D.lat());
         admin->idx = 0;
 

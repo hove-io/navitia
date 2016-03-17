@@ -126,9 +126,9 @@ class MockWrapper:
 
         eq_(stat.journey_request.requested_date_time, 1339653600)
         eq_(stat.journey_request.clockwise, True)
-        eq_(stat.journey_request.departure_insee, '32107')
+        eq_(stat.journey_request.departure_insee, '03430')
         eq_(stat.journey_request.departure_admin, 'admin:74435')
-        eq_(stat.journey_request.arrival_insee, '32107')
+        eq_(stat.journey_request.arrival_insee, '03430')
         eq_(stat.journey_request.arrival_admin, 'admin:74435')
 
     def check_stat_places_to_publish(self, stat):
