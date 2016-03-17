@@ -672,15 +672,8 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
 void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags) {
     this->fill_poi(osm_id, tags, lon, lat, OsmObjectType::Node);
     this->fill_housenumber(osm_id, tags, lon, lat);
-    auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
-        persistor.insert_pois(data);
-        insert_house_numbers();
-        LOG4CPLUS_INFO(logger, "" << std::to_string(data.pois.size()) << " pois inserted and " << std::to_string(house_numbers.size()) << " house numbers");
-        n_inserted_pois += data.pois.size();
-        n_inserted_house_numbers += house_numbers.size();
-        house_numbers.clear();
-        data.pois.clear();
+        this->insert_data();
     }
 }
 
@@ -720,22 +713,26 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
         this->fill_housenumber(osm_id, tags, centre.get<0>(), centre.get<1>());
         this->fill_poi(osm_id, tags, centre.get<0>(), centre.get<1>(), OsmObjectType::Way);
     }
-    auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
-        persistor.insert_pois(data);
-        insert_house_numbers();
-        LOG4CPLUS_INFO(logger, "" << std::to_string(data.pois.size()) << " pois inserted and " << std::to_string(house_numbers.size()) << " house numbers");
-        n_inserted_pois += data.pois.size();
-        n_inserted_house_numbers += house_numbers.size();
-        house_numbers.clear();
-        data.pois.clear();
+        this->insert_data();
     }
 }
 
-void PoiHouseNumberVisitor::finish() {
+void PoiHouseNumberVisitor::insert_data() {
     persistor.insert_pois(data);
     persistor.insert_poi_properties(data);
     insert_house_numbers();
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, "" << std::to_string(data.pois.size()) << " pois inserted and "
+            << std::to_string(house_numbers.size()) << " house numbers");
+    n_inserted_pois += data.pois.size();
+    n_inserted_house_numbers += house_numbers.size();
+    house_numbers.clear();
+    data.pois.clear();
+}
+
+void PoiHouseNumberVisitor::finish() {
+    this->insert_data();
 }
 /*
  * Insertion of house numbers
