@@ -38,7 +38,7 @@ www.navitia.io
 #include <iostream>
 #include "utils/init.h"
 #include "kraken_zmq.h"
-#include "utils/zmq_compat.h"
+#include "utils/zmq.h"
 
 
 int main(int argn, char** argv){
@@ -72,13 +72,12 @@ int main(int argn, char** argv){
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);
-    zmq::socket_t clients(context, ZMQ_ROUTER);
-    std::string zmq_socket = conf.zmq_socket_path();
-    zmq::socket_t workers(context, ZMQ_DEALER);
     // Catch startup exceptions; without this, startup errors are on stdout
+    std::string zmq_socket = conf.zmq_socket_path();
+    //TODO: try/catch
+    LoadBalancer lb(context);
     try{
-        clients.bind(zmq_socket.c_str());
-        workers.bind("inproc://workers");
+        lb.bind(zmq_socket, "inproc://workers");
     }catch(zmq::error_t& e){
         LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
         return 1;
@@ -93,11 +92,11 @@ int main(int argn, char** argv){
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
     }
 
-    // Connect work threads to client threads via a queue
+    // Connect worker threads to client threads via a queue
     do{
         try{
-            zmq::device(ZMQ_QUEUE, clients, workers);
-        }catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
+            lb.run();
+        }catch(const zmq::error_t&){}//lors d'un SIGHUP on restore la queue
     }while(true);
 }
 

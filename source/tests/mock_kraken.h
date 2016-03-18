@@ -35,7 +35,7 @@ www.navitia.io
 
 #include "ed/build_helper.h"
 #include <zmq.hpp>
-#include "utils/zmq_compat.h"
+#include "utils/zmq.h"
 #include <boost/thread.hpp>
 #include "kraken/configuration.h"
 #include <boost/program_options.hpp>
@@ -56,11 +56,9 @@ struct mock_kraken {
         boost::thread_group threads;
         // Prepare our context and sockets
         zmq::context_t context(1);
-        zmq::socket_t clients(context, ZMQ_ROUTER);
         const std::string zmq_socket = "ipc:///tmp/" + name;
-        clients.bind(zmq_socket.c_str());
-        zmq::socket_t workers(context, ZMQ_DEALER);
-        workers.bind("inproc://workers");
+        LoadBalancer lb(context);
+        lb.bind(zmq_socket, "inproc://workers");
 
         //we load the conf to have the default values
         navitia::kraken::Configuration conf;
@@ -84,7 +82,7 @@ struct mock_kraken {
         // Connect work threads to client threads via a queue
         do {
             try {
-                zmq::device(ZMQ_QUEUE, clients, workers);
+                lb.run();
             } catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
         } while(true);
     }

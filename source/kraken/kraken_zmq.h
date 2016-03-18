@@ -33,7 +33,7 @@ www.navitia.io
 #include "maintenance_worker.h"
 #include "kraken/data_manager.h"
 #include "utils/logger.h"
-#include <zmq.hpp>
+#include <utils/zmq.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "kraken/configuration.h"
 #include "type/meta_data.h"
@@ -54,11 +54,17 @@ inline void doWork(zmq::context_t& context,
                    navitia::kraken::Configuration conf) {
     auto logger = log4cplus::Logger::getInstance("worker");
 
-    zmq::socket_t socket (context, ZMQ_REP);
-    socket.connect ("inproc://workers");
+    zmq::socket_t socket (context, ZMQ_REQ);
+    socket.connect("inproc://workers");
     bool run = true;
     navitia::Worker w(data_manager, conf);
+    z_send(socket, "READY");
     while(run) {
+        std::string address = z_recv(socket);
+        {
+            std::string empty = z_recv(socket);
+            assert(empty.size() == 0);
+        }
         zmq::message_t request;
         try{
             // Wait for next request from client
@@ -109,6 +115,8 @@ inline void doWork(zmq::context_t& context,
             result.SerializeToArray(reply.data(), result.ByteSize());
 
         }
+        z_send(socket, address, ZMQ_SNDMORE);
+        z_send(socket, "", ZMQ_SNDMORE);
         socket.send(reply);
 
         if(api != pbnavitia::METADATAS){
