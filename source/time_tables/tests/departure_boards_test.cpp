@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
 
     navitia::PbCreator pb_creator(*(b.data), "20150616T080000"_dt, null_time_period);
     departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
-                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     navitia::PbCreator pb_creator1(*(b.data), "20150626T110000"_dt, null_time_period);
     pb_creator.now = "20150626T110000"_dt;
     departure_board(pb_creator1, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
-                    std::numeric_limits<int>::max(), 1, 10, 0, nt::RTLevel::Base);
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     resp = pb_creator1.get_response();
     BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
