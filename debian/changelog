@@ -1,3 +1,33 @@
+navitia2 (2.4.0) unstable; urgency=low
+
+  * Jormungandr: add items_per_schedule param to /stop_schedules  <https://github.com/CanalTP/navitia/pull/1480>
+  * RT: physical mode for rt proxy  <https://github.com/CanalTP/navitia/pull/1484>
+  * Kraken: fix label of admin  <https://github.com/CanalTP/navitia/pull/1487>
+  * Ed: Most of POI properties are ignored on large files  <https://github.com/CanalTP/navitia/pull/1483>
+  * Kraken: fill impact on stop point from database  <https://github.com/CanalTP/navitia/pull/1481>
+  * Kraken: Manage current_datetime in jormungandr for all api  <https://github.com/CanalTP/navitia/pull/1478>
+  * kraken: Fix second pass overfilter  <https://github.com/CanalTP/navitia/pull/1464>
+  * Jormungandr: STIF scenario  <https://github.com/CanalTP/navitia/pull/1468>
+  * Jormungandr: wrap timeo in a circuit breaker  <https://github.com/CanalTP/navitia/pull/1477>
+  * Doc: New documentation format  <https://github.com/CanalTP/navitia/pull/1474>
+  * RT: enhance schedules API  <https://github.com/CanalTP/navitia/pull/1473>
+  * jormungandr: return the request_id in the response  <https://github.com/CanalTP/navitia/pull/1476>
+  * Jormungandr: add the timeo direction in the response  <https://github.com/CanalTP/navitia/pull/1471>
+  * Jormungandr: add cache on timeo  <https://github.com/CanalTP/navitia/pull/1472>
+  * routing: optimize memory of CachedNextStopTime  <https://github.com/CanalTP/navitia/pull/1470>
+  * jormungandr: manage empty route point in proxy rt for departures  <https://github.com/CanalTP/navitia/pull/1467>
+  * Jormungandr: manage wrongly formated datetime  <https://github.com/CanalTP/navitia/pull/1466>
+  * jormun: first batch of compat python 3 without breaking anything (hopefuly)!  <https://github.com/CanalTP/navitia/pull/1465>
+  * Jormungandr: make count limited in all api  <https://github.com/CanalTP/navitia/pull/1463>
+  * Kraken: better handle of invalid request  <https://github.com/CanalTP/navitia/pull/1458>
+  * Jormungandr: Fix /departures and /arrivals without filter  <https://github.com/CanalTP/navitia/pull/1459>
+  * All: Remove all show_codes  <https://github.com/CanalTP/navitia/pull/1460>
+  * Doc: Adds on how to contrib  <https://github.com/CanalTP/navitia/pull/1462>
+  * jormungandr: fix a bug in departures using proxy realtime informations  <https://github.com/CanalTP/navitia/pull/1461>
+  * kraken: in isochrone only geocode the origin one time  <https://github.com/CanalTP/navitia/pull/1455>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 18 Mar 2016 15:03:58 +0100
+
 navitia2 (2.3.2) unstable; urgency=low
 
   *  jormungandr: fix a bug in departures using proxy realtime informations <https://github.com/CanalTP/navitia/pull/1461>
