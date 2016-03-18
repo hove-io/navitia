@@ -132,13 +132,21 @@ def log_exception(sender, exception, **extra):
 
     if isinstance(exception, (HTTPException, RegionNotFound)):
         logger.debug(error)
+        if exception.code >= 500:
+            record_exception()
     else:
         logger.exception(error)
-        try:
-            import newrelic.agent
-            newrelic.agent.record_exception()#will record the exception currently handled
-        except ImportError:
-            pass
-        except:
-            logger = logging.getLogger(__name__)
-            logger.exception('failure while registering exception to newrelic')
+        record_exception()
+
+def record_exception():
+    """
+    record the exception currently handled to newrelic
+    """
+    try:
+        import newrelic.agent
+        newrelic.agent.record_exception()#will record the exception currently handled
+    except ImportError:
+        pass
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('failure while registering exception to newrelic')
