@@ -1952,7 +1952,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
 
     b.impact(nt::RTLevel::Adapted)
-            .uri("too_bad")
+            .uri("too_bad1")
             .publish(default_period)
             .application_periods(default_period)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
@@ -1960,7 +1960,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
             .msg("no luck");
 
     b.impact(nt::RTLevel::Adapted)
-            .uri("too_bad")
+            .uri("too_bad2")
             .publish(default_period)
             .application_periods(default_period)
             .severity(nt::disruption::Effect::DETOUR)

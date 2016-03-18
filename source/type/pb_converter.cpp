@@ -895,39 +895,47 @@ compute_disruption_status(const nt::disruption::Impact& impact,
 }
 
 template <typename P>
-void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, P pb_object){
-    auto pb_impact = pb_object->add_impacts();
+void PbCreator::Filler::fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact,
+                                     P pb_object){
+    *pb_object->add_impact_uris() = impact->uri;
+    pb_creator.impacts.insert(impact);
+}
+template void navitia::PbCreator::Filler::fill_message<pbnavitia::Network*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Network*);
+template void navitia::PbCreator::Filler::fill_message<pbnavitia::Line*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Line*);
+template void navitia::PbCreator::Filler::fill_message<pbnavitia::StopArea*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::StopArea*);
+template void navitia::PbCreator::Filler::fill_message<pbnavitia::VehicleJourney*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::VehicleJourney*);
 
-    pb_impact->set_disruption_uri(impact.disruption->uri);
+void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbnavitia::Impact* pb_impact) {
+    pb_impact->set_disruption_uri(impact->disruption->uri);
 
-    if (!impact.disruption->contributor.empty()) {
-        pb_impact->set_contributor(impact.disruption->contributor);
+    if (!impact->disruption->contributor.empty()) {
+        pb_impact->set_contributor(impact->disruption->contributor);
     }
 
-    pb_impact->set_uri(impact.uri);
-    for (const auto& app_period: impact.application_periods) {
+    pb_impact->set_uri(impact->uri);
+    for (const auto& app_period: impact->application_periods) {
         auto p = pb_impact->add_application_periods();
         p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
         p->set_end(navitia::to_posix_timestamp(app_period.last()));
     }
 
     //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
-    pb_impact->set_updated_at(navitia::to_posix_timestamp(impact.updated_at));
+    pb_impact->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
 
     auto pb_severity = pb_impact->mutable_severity();
-    pb_severity->set_name(impact.severity->wording);
-    pb_severity->set_color(impact.severity->color);
-    pb_severity->set_effect(to_string(impact.severity->effect));
-    pb_severity->set_priority(impact.severity->priority);
+    pb_severity->set_name(impact->severity->wording);
+    pb_severity->set_color(impact->severity->color);
+    pb_severity->set_effect(to_string(impact->severity->effect));
+    pb_severity->set_priority(impact->severity->priority);
 
-    for (const auto& t: impact.disruption->tags) {
+    for (const auto& t: impact->disruption->tags) {
         pb_impact->add_tags(t->name);
     }
-    if (impact.disruption->cause) {
-        pb_impact->set_cause(impact.disruption->cause->wording);
+    if (impact->disruption->cause) {
+        pb_impact->set_cause(impact->disruption->cause->wording);
     }
 
-    for (const auto& m: impact.messages) {
+    for (const auto& m: impact->messages) {
         auto pb_m = pb_impact->add_messages();
         pb_m->set_text(m.text);
         auto pb_channel = pb_m->mutable_channel();
@@ -965,16 +973,12 @@ void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, P pb_
     }
 
     //we need to compute the active status
-    pb_impact->set_status(compute_disruption_status(impact, pb_creator.action_period));
+    pb_impact->set_status(compute_disruption_status(*impact, pb_creator.action_period));
 
-    for (const auto& informed_entity: impact.informed_entities) {
-        fill_informed_entity(informed_entity, impact, pb_impact);
+    for (const auto& informed_entity: impact->informed_entities) {
+        fill_informed_entity(informed_entity, *impact, pb_impact);
     }
 }
-
-// Forcing an instantiation
-template
-void PbCreator::Filler::fill_message(const nt::disruption::Impact& impact, pbnavitia::Response* pb_object);
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayInfo* pt_display_info){
 
@@ -1332,6 +1336,13 @@ template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>& nav_list, in
 template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>& nav_list, int depth, const DumpMessage dump_message);
+
+const type::disruption::Impact* PbCreator::get_impact(const std::string& uri) const {
+    for (const auto& impact: impacts) {
+        if (impact->uri == uri) { return impact.get(); }
+    }
+    return nullptr;
+}
 
 const std::string& PbCreator::register_section(pbnavitia::Journey* j, size_t section_idx) {
     routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
@@ -1734,6 +1745,12 @@ void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id, const std::st
     error->set_message(message);
 }
 
+pbnavitia::Response PbCreator::get_response(){
+    Filler(0, DumpMessage::No, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+    Filler(0, DumpMessage::No, *this).fill_pb_object(impacts, response.mutable_impacts());
+    return std::move(response);
+}
+
 void PbCreator::fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
                                   const bool has_datetime_estimated,
                                   const bool has_odt,
@@ -1789,6 +1806,10 @@ pbnavitia::JourneyPatternPoint* PbCreator::add_journey_pattern_points(){
 
 pbnavitia::Trip* PbCreator::add_trips(){
     return response.add_trips();
+}
+
+pbnavitia::Impact* PbCreator::add_impacts(){
+    return response.add_impacts();
 }
 
 pbnavitia::RoutePoint* PbCreator::add_route_points(){

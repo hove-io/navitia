@@ -137,15 +137,16 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     pbnavitia::Line line = disruptions.lines(0);
     BOOST_REQUIRE_EQUAL(line.uri(), "line:A");
 
-    BOOST_REQUIRE_EQUAL(line.impacts_size(), 1);
-    auto impact = line.impacts(0);
-    BOOST_CHECK_EQUAL(impact.uri(), "mess1");
+    BOOST_REQUIRE_EQUAL(line.impact_uris_size(), 1);
+    const auto* impact = navitia::test::get_impact(line.impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_CHECK_EQUAL(impact->uri(), "mess1");
     //we are in the publication period of the disruption but the application_period of the impact is in the future
-    BOOST_CHECK_EQUAL(impact.status(), pbnavitia::ActiveStatus::future);
+    BOOST_CHECK_EQUAL(impact->status(), pbnavitia::ActiveStatus::future);
 
-    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
-    BOOST_CHECK_EQUAL(impact.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131220T123200"));
-    BOOST_CHECK_EQUAL(impact.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
+    BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131220T123200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
@@ -160,13 +161,14 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     BOOST_REQUIRE_EQUAL(disruptions.lines_size(), 0);
     BOOST_REQUIRE_EQUAL(disruptions.network().uri(), "network:K");
     pbnavitia::Network network = disruptions.network();
-    BOOST_REQUIRE_EQUAL(network.impacts_size(), 1);
-    auto impact = network.impacts(0);
-    BOOST_REQUIRE_EQUAL(impact.uri(), "mess2");
-    BOOST_CHECK_EQUAL(impact.status(), pbnavitia::ActiveStatus::active);
-    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
-    BOOST_CHECK_EQUAL(impact.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131223T123200"));
-    BOOST_CHECK_EQUAL(impact.application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123200"));
+    BOOST_REQUIRE_EQUAL(network.impact_uris_size(), 1);
+    const auto* impact = navitia::test::get_impact(network.impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->uri(), "mess2");
+    BOOST_CHECK_EQUAL(impact->status(), pbnavitia::ActiveStatus::active);
+    BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131223T123200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
@@ -184,14 +186,15 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     pbnavitia::Line line = disruptions.lines(0);
     BOOST_REQUIRE_EQUAL(line.uri(), "line:S");
 
-    BOOST_REQUIRE_EQUAL(line.impacts_size(), 1);
-    auto impact = line.impacts(0);
-    BOOST_REQUIRE_EQUAL(impact.uri(), "mess0");
-    BOOST_CHECK_EQUAL(impact.status(), pbnavitia::ActiveStatus::active);
+    BOOST_REQUIRE_EQUAL(line.impact_uris_size(), 1);
+    const auto* impact = navitia::test::get_impact(line.impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->uri(), "mess0");
+    BOOST_CHECK_EQUAL(impact->status(), pbnavitia::ActiveStatus::active);
 
-    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
-    BOOST_CHECK_EQUAL(impact.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131221T083200"));
-    BOOST_CHECK_EQUAL(impact.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
+    BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131221T083200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {
@@ -213,11 +216,12 @@ BOOST_FIXTURE_TEST_CASE(Test2, Params) {
     BOOST_REQUIRE_EQUAL(disruptions.lines_size(), 0);
     BOOST_REQUIRE_EQUAL(disruptions.network().uri(), "network:K");
 
-    BOOST_REQUIRE_EQUAL(disruptions.network().impacts_size(), 1);
+    BOOST_REQUIRE_EQUAL(disruptions.network().impact_uris_size(), 1);
 
-    auto impact = disruptions.network().impacts(0);
-    BOOST_REQUIRE_EQUAL(impact.uri(), "mess2");
-    BOOST_CHECK_EQUAL(impact.status(), pbnavitia::ActiveStatus::past);
+    const auto* impact = navitia::test::get_impact(disruptions.network().impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->uri(), "mess2");
+    BOOST_CHECK_EQUAL(impact->status(), pbnavitia::ActiveStatus::past);
 }
 
 BOOST_FIXTURE_TEST_CASE(Test4, Params) {

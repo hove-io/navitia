@@ -177,10 +177,11 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
-    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts_size(),1);
-    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts(0).messages_size(),1);
-    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts(0).messages(0).text(),
-                        "Disruption on stop_popint stop1");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),1);
+    const auto* impact = navitia::test::get_impact(resp.stop_schedules(1).stop_point().impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->messages_size(),1);
+    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_popint stop1");
 
     //current_datetime out of bounds
     navitia::PbCreator pb_creator1(*(b.data), "20150626T110000"_dt, null_time_period);
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
-    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impacts_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),0);
     }
 }
 

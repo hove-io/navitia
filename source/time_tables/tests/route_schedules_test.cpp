@@ -677,8 +677,9 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     route_schedule = resp.route_schedules(0);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().uri(), "st1");
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts_size(), 1);
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts(0).messages_size(), 1);
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impacts(0).messages(0).text(),
-                      "Disruption on stop_popint st1");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().impact_uris_size(), 1);
+    const auto* impact = navitia::test::get_impact(route_schedule.table().rows(0).stop_point().impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_CHECK_EQUAL(impact->messages_size(), 1);
+    BOOST_CHECK_EQUAL(impact->messages(0).text(), "Disruption on stop_popint st1");
 }

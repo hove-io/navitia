@@ -399,8 +399,8 @@ class DisruptionLinks(fields.Raw):
     Add link to disruptions on a pt object
     """
     def output(self, key, obj):
-        return [create_internal_link(_type="disruption", rel="disruptions", id=d.uri)
-                for d in obj.impacts]
+        return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
+                for uri in obj.impact_uris]
 
 
 class FieldDateTime(fields.Raw):
@@ -843,18 +843,4 @@ class DisruptionsField(fields.Raw):
     """
 
     def output(self, key, obj):
-        all_impacts = {}
-
-        def get_all_impacts(_, val):
-            if not hasattr(val, 'impacts'):
-                return
-            impacts = val.impacts
-            if not impacts or not hasattr(impacts[0], 'uri'):
-                return
-
-            for impact in impacts:
-                all_impacts[impact.uri] = impact
-
-        utils.walk_protobuf(obj, get_all_impacts)
-
-        return [marshal(d, disruption_marshaller, display_null=False) for d in all_impacts.values()]
+        return [marshal(d, disruption_marshaller, display_null=False) for d in obj.impacts]
