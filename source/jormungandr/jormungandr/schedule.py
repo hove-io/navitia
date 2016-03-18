@@ -28,6 +28,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function, unicode_literals, division
+import hashlib
+
 import logging
 import pytz
 from jormungandr import utils
@@ -38,6 +42,7 @@ import datetime
 from copy import deepcopy
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
+RT_PROXY_DATA_FRESHNESS = 'realtime'
 
 
 def get_realtime_system_code(route_point):
@@ -56,8 +61,9 @@ def get_realtime_system_code(route_point):
 
 
 class RealTimePassage(object):
-    def __init__(self, datetime):
+    def __init__(self, datetime, direction=None):
         self.datetime = datetime
+        self.direction = direction
 
 
 def _update_stop_schedule(stop_schedule, next_realtime_passages):
@@ -88,8 +94,16 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
 
         new_dt.realtime_level = type_pb2.REALTIME
 
+        # we also add the direction in the note
+        if passage.direction:
+            note = type_pb2.Note()
+            note.note = passage.direction
+            note_uri = hashlib.md5(note.note).hexdigest()
+            note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
+            new_dt.properties.notes.extend([note])
 
-def _create_template(passage):
+
+def _create_template_from_passage(passage):
     template = deepcopy(passage)
     template.pt_display_informations.ClearField("headsign")
     template.pt_display_informations.ClearField("direction")
@@ -106,7 +120,16 @@ def _create_template(passage):
     template.stop_date_time.ClearField("base_arrival_date_time")
     template.stop_date_time.ClearField("base_departure_date_time")
     template.stop_date_time.ClearField("properties")
+    template.stop_date_time.ClearField("data_freshness")
     return template
+
+
+def _create_template_from_pb_route_point(pb_route_point):
+    template = response_pb2.Passage()
+    template.pt_display_informations.CopyFrom(pb_route_point.pt_display_informations)
+    template.route.CopyFrom(pb_route_point.route)
+    template.stop_point.CopyFrom(pb_route_point.stop_point)
+    return _create_template_from_passage(template)
 
 
 def _update_passages(passages, route_point, template, next_realtime_passages):
@@ -114,18 +137,28 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         return
 
     # filter passages with entries of the asked route_point
-    pb_del_if(passages, lambda p: RoutePoint(p.stop_point, p.route) == route_point)
+    pb_del_if(passages, lambda p: RoutePoint(p.route, p.stop_point) == route_point)
 
     # append the realtime passages
     for rt_passage in next_realtime_passages:
         new_passage = deepcopy(template)
         new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
         new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
+        new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
+
+        # we also add the direction in the note
+        if rt_passage.direction:
+            new_passage.pt_display_informations.direction = rt_passage.direction
+
+        # we add physical mode from route
+        if len(route_point.pb_route.physical_modes) > 0:
+            new_passage.pt_display_informations.physical_mode = route_point.pb_route.physical_modes[0].name
+
         passages.extend([new_passage])
 
 
 class RoutePoint(object):
-    def __init__(self, stop_point, route):
+    def __init__(self, route, stop_point):
         self.pb_stop_point = stop_point
         self.pb_route = route
 
@@ -192,10 +225,10 @@ class MixedSchedule(object):
 
         return next_rt_passages
 
-
     def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
         req = request_pb2.Request()
         req.requested_api = api
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
         st = req.next_stop_times
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
@@ -205,26 +238,23 @@ class MixedSchedule(object):
             st.until_datetime = request["until_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
-        st.show_codes = request["show_codes"]
         if "nb_stoptimes" not in request:
             st.nb_stoptimes = 0
         else:
             st.nb_stoptimes = request["nb_stoptimes"]
-        st.interface_version = 1
         st.count = request.get("count", 10)
         if "start_page" not in request:
             st.start_page = 0
         else:
             st.start_page = request["start_page"]
-        if request["max_date_times"]:
-            st.max_date_times = request["max_date_times"]
+        if request["items_per_schedule"]:
+            st.items_per_schedule = request["items_per_schedule"]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 st.forbidden_uri.append(forbidden_uri)
         if request.get("calendar"):
             st.calendar = request["calendar"]
         st.realtime_level = utils.realtime_level_to_pbf(request['data_freshness'])
-        st._current_datetime = date_to_timestamp(request['_current_datetime'])
         resp = self.instance.send_and_receive(req)
 
         return resp
@@ -236,15 +266,16 @@ class MixedSchedule(object):
         return self.__stop_times(request, api=type_pb2.NEXT_ARRIVALS, arrival_filter=request["filter"])
 
     def next_departures(self, request):
-        log = logging.getLogger(__name__)
-
         resp = self.__stop_times(request, api=type_pb2.NEXT_DEPARTURES, departure_filter=request["filter"])
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route):
-                        _create_template(passage)
+                        _create_template_from_passage(passage)
                         for passage in resp.next_departures}
+        route_points.update((RoutePoint(rp.route, rp.stop_point),
+                             _create_template_from_pb_route_point(rp))
+                            for rp in resp.route_points)
 
         for route_point, template in route_points.items():
             next_rt_passages = self._get_next_realtime_passages(route_point)
@@ -271,7 +302,7 @@ class MixedSchedule(object):
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
 
-        if request['data_freshness'] != 'realtime':
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
         for stop_schedule in resp.stop_schedules:

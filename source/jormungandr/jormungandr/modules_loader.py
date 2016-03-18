@@ -28,6 +28,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Blueprint
 from jormungandr.module_resource import ModuleResourcesManager, ModuleResource
 
@@ -48,7 +50,7 @@ class ModulesLoader(object):
         """
             Init all modules
         """
-        for module_inst in self.modules.itervalues():
+        for module_inst in self.modules.values():
             if isinstance(module_inst, AModule):
                 module_inst.setup()
             elif isinstance(module_inst, ABlueprint):
@@ -107,7 +109,8 @@ class AModule(object):
         :type kwargs:
         """
         if 'endpoint' in kwargs:
-            kwargs['endpoint'] = self.name + '.' + kwargs['endpoint']
+            #on python2 we got a str ascii and in pytho 3 a str unicode, it's what we want!
+            kwargs['endpoint'] = str(self.name + '.' + kwargs['endpoint'])
 
         urls_list = list()
         for url in urls:
@@ -129,6 +132,6 @@ class AModule(object):
         :type options:
         """
         rule = '/' + self.name + rule
-        if endpoint and isinstance(endpoint, str):
+        if endpoint and (isinstance(endpoint, unicode) or isinstance(endpoint, str)):
             endpoint = self.name + '.' + endpoint
         self.api.app.add_url_rule(rule, endpoint, view_func, **options)

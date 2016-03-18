@@ -28,10 +28,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import json
 
 from shapely import geometry
-import ConfigParser
+import configparser
 import zmq
 from threading import Thread, Event
 from navitiacommon import type_pb2, request_pb2, models
@@ -118,7 +119,7 @@ class InstanceManager(object):
             if file_name.endswith('.ini'):
                 # Note: the ini configuration file is kept only temporarily, to migration all the
                 # production configuration slowly
-                conf = ConfigParser.ConfigParser()
+                conf = configparser.ConfigParser()
                 conf.read(file_name)
                 instance = Instance(self.context, conf.get('instance', 'key'), conf.get('instance', 'socket'))
             elif file_name.endswith('.json'):
@@ -177,7 +178,7 @@ class InstanceManager(object):
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
         purge_cache_needed = False
-        for instance in self.instances.itervalues():
+        for instance in self.instances.values():
             purge_cache_needed = instance.init() or purge_cache_needed
         if purge_cache_needed:
             self._clear_cache()
@@ -217,14 +218,14 @@ class InstanceManager(object):
             except:
                 raise InvalidArguments(object_id)
             return self._all_keys_of_coord(flon, flat)
-        instances = [i.name for i in self.instances.itervalues() if i.has_id(object_id)]
+        instances = [i.name for i in self.instances.values() if i.has_id(object_id)]
         if not instances:
             raise RegionNotFound(object_id=object_id)
         return instances
 
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
-        instances = [i.name for i in self.instances.itervalues() if i.has_point(p)]
+        instances = [i.name for i in self.instances.values() if i.has_point(p)]
         logging.getLogger(__name__).debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)

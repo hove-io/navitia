@@ -28,9 +28,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import logging
+import pybreaker
 import pytz
 import requests as requests
+from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
@@ -59,20 +62,46 @@ class Timeo(RealtimeProxy):
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
+                                                reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
+
+    def __repr__(self):
+        """
+         used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        return self.rt_system_id
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+    def _call_timeo(self, url):
+        """
+        http call to timeo
+
+        The call is handled by a circuit breaker not to continue calling timeo if the service is dead.
+
+        The call is also cached
+        """
+        try:
+            return self.breaker.call(requests.get, url, timeout=self.timeout)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('Timeo RT service dead, using base '
+                                              'schedule (error: {}'.format(e))
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('Timeo RT service timeout, using base '
+                                              'schedule (error: {}'.format(t))
+        except:
+            logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
+        return None
 
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
         if not url:
             return None
 
-        try:
-            r = requests.get(url, timeout=self.timeout)
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error('Timeo RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+        r = self._call_timeo(url)
+        if not r:
             return None
 
         if r.status_code != 200:
@@ -96,9 +125,10 @@ class Timeo(RealtimeProxy):
 
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
-            # for the moment we handle only the NextStop
+            # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            next_passage = RealTimePassage(dt)
+            direction = next_expected_st.get('Destination')
+            next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
         return next_passages
@@ -118,7 +148,7 @@ class Timeo(RealtimeProxy):
          requests
          """
 
-        base_params = '&'.join([k + '=' + v for k, v in self.service_args.iteritems()])
+        base_params = '&'.join([k + '=' + v for k, v in self.service_args.items()])
 
         stop = route_point.fetch_stop_id(self.rt_system_id)
         line = route_point.fetch_line_id(self.rt_system_id)

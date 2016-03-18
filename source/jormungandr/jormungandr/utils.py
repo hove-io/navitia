@@ -27,12 +27,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
 from collections import deque
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 from navitiacommon import response_pb2, type_pb2
-from itertools import izip
+from builtins import range, zip
 
 
 def str_to_time_stamp(str):
@@ -67,19 +68,19 @@ def walk_dict(tree, visitor):
     ... 'titi': [{'a':1}, {'b':1}]}
 
     >>> def my_visitor(name, val):
-    ...     print "{}={}".format(name, val)
+    ...     print("{}={}".format(name, val))
 
     >>> walk_dict(bob, my_visitor)
-    titi={'b': 1}
+    titi={u'b': 1}
     b=1
-    titi={'a': 1}
+    titi={u'a': 1}
     a=1
     tete=ltuple2
     tete=ltuple1
     tete=tuple1
     tutu=1
-    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
-    nested_bob={'bob': 3}
+    toto={u'bobette': 13, u'bob': 12, u'nested_bob': {u'bob': 3}}
+    nested_bob={u'bob': 3}
     bob=3
     bob=12
     bobette=13
@@ -87,14 +88,14 @@ def walk_dict(tree, visitor):
     tata=1
 
     >>> def my_stoper_visitor(name, val):
-    ...     print "{}={}".format(name, val)
+    ...     print("{}={}".format(name, val))
     ...     if name == 'tete':
     ...         return True
 
     >>> walk_dict(bob, my_stoper_visitor)
-    titi={'b': 1}
+    titi={u'b': 1}
     b=1
-    titi={'a': 1}
+    titi={u'a': 1}
     a=1
     tete=ltuple2
     """
@@ -104,8 +105,8 @@ def walk_dict(tree, visitor):
         if isinstance(elt, (list, tuple)):
             for val in elt:
                 queue.append((name, val))
-        elif hasattr(elt, 'iteritems'):
-            for k, v in elt.iteritems():
+        elif hasattr(elt, 'items'):
+            for k, v in elt.items():
                 queue.append((k, v))
         elif first:  # for the first elt, we add it even if it is no collection
             queue.append((name, elt))
@@ -193,7 +194,7 @@ def realtime_level_to_pbf(level):
 #we can't use reverse(enumerate(list)) without creating a temporary
 #list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return izip(xrange(len(l)-1, -1, -1), reversed(l))
+    return zip(range(len(l)-1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):

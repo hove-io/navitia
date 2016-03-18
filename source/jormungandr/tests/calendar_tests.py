@@ -26,9 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 def check_valid_calendar(cal):
@@ -72,9 +73,26 @@ class TestCalendar(AbstractTestFixture):
     def test_calendars_lines(self):
         json_response = self.query_region("calendars/monday/lines")
 
+        assert len(json_response['disruptions']) == 0
+
         lines = get_not_null(json_response, "lines")
 
         assert lines
+
+    def test_calendars_lines_with_current_datetime(self):
+        json_response = self.query_region("calendars/monday/lines?_current_datetime=20140115T160000")
+
+        lines = get_not_null(json_response, "lines")
+
+        assert lines
+
+        assert len(json_response['disruptions']) == 1
+
+        disruptions = get_not_null(json_response, 'disruptions')
+
+        messages = get_not_null(disruptions[0], 'messages')
+
+        assert(messages[0]['text']) == 'Disruption on Line line:A'
 
     def test_lines_calendars(self):
         json_response = self.query_region("calendars/monday/lines/line:A/calendars")

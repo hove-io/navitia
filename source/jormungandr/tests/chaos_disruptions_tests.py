@@ -26,12 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from tests import gtfs_realtime_pb2
-from tests_mechanism import dataset
-from check_utils import *
-import chaos_pb2
+from __future__ import absolute_import, print_function, unicode_literals, division
+from . import gtfs_realtime_pb2
+from .tests_mechanism import dataset
+from .check_utils import *
+from . import chaos_pb2
 from jormungandr import utils
-from rabbitmq_utils import RabbitMQCnxFixture, rt_topic
+from .rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 
 
 class ChaosDisruptionsFixture(RabbitMQCnxFixture):
@@ -72,7 +73,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         self.send_mock("bob_the_disruption", "stopB", "stop_area")
 
         #and we call again, we must have the disruption now
-        response = self.query_region('stop_areas/stopB')
+        response = self.query_region('stop_areas/stopB?_current_datetime=20160314T104600')
         stops = get_not_null(response, 'stop_areas')
         assert len(stops) == 1
         stop = stops[0]
@@ -103,6 +104,26 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(channel['types']) == 2
         eq_(channel['types'][0], 'web')
         eq_(channel['types'][1], 'email')
+
+    def test_current_datetime_out_of_bounds(self):
+        """
+        current_datetime out of bounds
+        publication date of disruption          20100412T165200                        20200412T165200
+        current_datetime    20080412T165200
+        """
+        response = self.query_region('stop_areas/stopB')
+
+        stops = get_not_null(response, 'stop_areas')
+        assert len(stops) == 1
+        stop = stops[0]
+        #at first no disruption
+        assert 'disruptions' not in stop
+
+        self.send_mock("bob_the_disruption", "stopB", "stop_area")
+
+        response = self.query_region('stop_areas/stopB?_current_datetime=20080412T165200')
+        assert len(response['disruptions']) == 0
+
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -164,11 +185,11 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         #we create a list with every 'to' section to the stop B (the one we added the disruption on)
         self.send_mock("bob_the_disruption", "stopB", "stop_area")
-
-        response = self.query_region(journey_basic_query)
+        query = journey_basic_query+'&_current_datetime=20160314T144100'
+        response = self.query_region(query)
 
         #the response must be still valid (this test the kraken data reloading)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        is_valid_journey_response(response, self.tester, query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
                       if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
@@ -182,6 +203,25 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert len(disruptions) == 1
 
             assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
+
+    def test_journey_with_current_datetime_out_of_bounds(self):
+        """
+        current_datetime out of bounds
+        publication date of disruption          20100412T165200                        20200412T165200
+        current_datetime    20090314T144100
+        """
+        query = journey_basic_query+'&_current_datetime=20090314T144100'
+        response = self.query_region(query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        is_valid_journey_response(response, self.tester, query)
+
+        stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
+                      if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
+
+        assert stops_b_to
+
+        assert len(response['disruptions']) == 0
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

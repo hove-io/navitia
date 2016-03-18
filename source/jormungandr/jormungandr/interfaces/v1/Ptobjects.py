@@ -29,19 +29,19 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import DisruptionsField
-from make_links import add_id_links
-from fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
-from ResourceUri import ResourceUri
-from make_links import add_id_links
+from jormungandr.interfaces.v1.make_links import add_id_links
+from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, option_value
+from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, date_time_format
 from copy import deepcopy
-
+import datetime
 
 pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
@@ -66,7 +66,7 @@ class Ptobjects(ResourceUri):
                                          action="append",default=pt_object_type_values,
                                          description="The type of data to\
                                          search")
-        self.parsers["get"].add_argument("count", type=int, default=10,
+        self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="The maximum number of\
                                          ptobjects returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
@@ -80,6 +80,12 @@ class Ptobjects(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          description="The depth of objects")
+        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                         description="The datetime used to consider the state of the pt object"
+                                                     " Default is the current date and it is used for debug."
+                                                     " Note: it will mainly change the disruptions that concern "
+                                                     "the object The timezone should be specified in the format,"
+                                                     " else we consider it as UTC")
 
     @marshal_with(pt_objects)
     def get(self, region=None, lon=None, lat=None):

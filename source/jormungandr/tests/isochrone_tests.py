@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 @dataset({"basic_routing_test": {}})
@@ -65,6 +66,8 @@ class TestIsochrone(AbstractTestFixture):
         assert response["journeys"][1]["duration"] == 25200
         assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
         assert response["journeys"][1]["from"]["id"] == "A"
+
+        assert len(response['disruptions']) == 0
 
     def test_stop_point_isochrone_coord_no_transfers(self):
         #same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
@@ -124,3 +127,13 @@ class TestIsochrone(AbstractTestFixture):
         response = self.query(query)
         assert len(response["journeys"]) == 1
         is_valid_isochrone_response(response, self.tester, query)
+
+    def test_invalid_count(self):
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        response = self.query(query)
+        assert len(response["journeys"]) == 2
+        # invalid count
+        query += "&count=toto"
+        response, code = self.query_no_assert(query)
+        assert code == 400
+        assert response['message'] == "invalid literal for int() with base 10: 'toto'"

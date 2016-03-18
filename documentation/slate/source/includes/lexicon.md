@@ -1,5 +1,5 @@
-A small introduction to public transportation data
-==================================================
+Lexicon
+=======
 
 Introduction
 ------------
@@ -8,6 +8,9 @@ The world of public transportation is really specific, you will see here a small
 introduction to it. A lot of people in the world of public transportation use
 different words to speak about the same thing. Here are the definitions of terms
 employed in www.navitia.io
+
+You can read a mobility lexicon at
+<https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md>
 
 Stop Point
 ----------

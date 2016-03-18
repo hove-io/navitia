@@ -61,10 +61,11 @@ EXCHANGE_NAME = 'stat_persistor_exchange'
 
 #Cache configuration, see https://pythonhosted.org/Flask-Cache/ for more information
 CACHE_CONFIGURATION = {
-    'CACHE_TYPE': 'simple',
+    'CACHE_TYPE': 'null',  # by default cache is not activated
     'TIMEOUT_PTOBJECTS': 600,
     'TIMEOUT_AUTHENTICATION': 600,
     'TIMEOUT_PARAMS': 600,
+    'TIMEOUT_TIMEO': 60,
 }
 
 # List of enabled modules
@@ -76,8 +77,11 @@ MODULES = {
 }
 
 # circuit breaker parameters.
-CIRCUIT_BREAKER_MAX_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_TIMEO_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 # Default region instance
 # DEFAULT_REGION = 'default'

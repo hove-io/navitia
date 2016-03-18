@@ -36,7 +36,7 @@ www.navitia.io
 namespace navitia { namespace disruption {
 
 pbnavitia::Response traffic_reports(const navitia::type::Data& d,
-                                    uint64_t now_dt,
+                                    const boost::posix_time::ptime& current_datetime,
                                     const size_t depth,
                                     size_t count,
                                     size_t start_page, const std::string& filter,

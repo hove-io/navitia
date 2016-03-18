@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import re
 from flask import Request
 import uuid
@@ -62,4 +63,4 @@ class NavitiaRequest(Request):
     """
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
-        self.id = str(uuid.uuid4())
+        self.id = unicode(uuid.uuid4())

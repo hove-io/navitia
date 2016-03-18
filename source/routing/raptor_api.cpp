@@ -489,7 +489,6 @@ static void add_pathes(PbCreator& pb_creator,
                        const std::vector<bt::ptime>& datetimes,
                        const bool clockwise) {
 
-    pb_creator.now = bt::second_clock::universal_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     for(const Path& path : paths) {
@@ -713,7 +712,6 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    DateTime init_dt,
                                    DateTime bound,
                                    int max_duration) {
-    pb_creator.now = bt::second_clock::universal_time();
     pbnavitia::PtObject pb_origin;
     pb_creator.fill(&origin, &pb_origin, 0);
     for(const type::StopPoint* sp : stop_points) {
@@ -927,20 +925,20 @@ parse_datetimes(RAPTOR& raptor,
 }
 
 pbnavitia::Response make_pt_response(RAPTOR &raptor,
-                                  const std::vector<type::EntryPoint> &origins,
-                                  const std::vector<type::EntryPoint> &destinations,
-                                  const uint64_t timestamp,
-                                  bool clockwise,
-                                  const type::AccessibiliteParams& accessibilite_params,
-                                  const std::vector<std::string>& forbidden,
-                                  const type::RTLevel rt_level,
-                                  const navitia::time_duration& transfer_penalty,
-                                  uint32_t max_duration,
-                                  uint32_t max_transfers,
-                                  bool show_codes,
-                                  uint32_t max_extra_second_pass){
+                                     const std::vector<type::EntryPoint> &origins,
+                                     const std::vector<type::EntryPoint> &destinations,
+                                     const uint64_t timestamp,
+                                     bool clockwise,
+                                     const type::AccessibiliteParams& accessibilite_params,
+                                     const std::vector<std::string>& forbidden,
+                                     const type::RTLevel rt_level,
+                                     const boost::posix_time::ptime& current_datetime,
+                                     const navitia::time_duration& transfer_penalty,
+                                     uint32_t max_duration,
+                                     uint32_t max_transfers,
+                                     uint32_t max_extra_second_pass){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1003,14 +1001,14 @@ make_response(RAPTOR &raptor,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               const type::RTLevel rt_level,
+              const boost::posix_time::ptime& current_datetime,
               const navitia::time_duration& transfer_penalty,
               uint32_t max_duration,
               uint32_t max_transfers,
-              bool show_codes,
               uint32_t max_extra_second_pass) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
@@ -1103,9 +1101,10 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    const type::RTLevel rt_level,
-                                   int max_duration, uint32_t max_transfers, bool show_codes) {
+                                   const boost::posix_time::ptime& current_datetime,
+                                   int max_duration, uint32_t max_transfers) {
 
-    PbCreator pb_creator(raptor.data, pt::not_a_date_time, null_time_period, show_codes);
+    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
 
     bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);

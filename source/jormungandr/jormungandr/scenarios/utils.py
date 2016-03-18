@@ -27,10 +27,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
-import itertools
+from future.moves.itertools import zip_longest
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -64,7 +65,7 @@ def compare(obj1, obj2, compare_generator):
     by setting it to object(), we ensure that it will be !=
     from any values returned by the other generator
     """
-    return all(a == b for a, b in itertools.izip_longest(compare_generator(obj1),
+    return all(a == b for a, b in zip_longest(compare_generator(obj1),
                                                          compare_generator(obj2),
                                                          fillvalue=object()))
 
@@ -190,7 +191,7 @@ def build_pagination(request, resp):
     pagination = resp.pagination
     if pagination.totalResult > 0:
         query_args = ""
-        for key, value in request.iteritems():
+        for key, value in request.items():
             if key != "startPage":
                 if isinstance(value, type([])):
                     for v in value:

@@ -32,7 +32,6 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "utils/paginate.h"
 #include "ptreferential/ptreferential.h"
-#include "type/pt_data.h"
 
 
 namespace navitia { namespace proximitylist {
@@ -90,8 +89,8 @@ void sort_cut(std::vector<T> &list, const uint32_t end_pagination,
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
                          const std::vector<nt::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data & data) {
-    navitia::PbCreator pb_creator(data, pt::not_a_date_time, null_time_period, false);
+                         const type::Data & data, const boost::posix_time::ptime& current_datetime) {
+    navitia::PbCreator pb_creator(data, current_datetime, null_time_period);
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;

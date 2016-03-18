@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import os
 # set default config file if not defined in other tests
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
@@ -34,7 +35,7 @@ if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
         + '/integration_tests_settings.py'
 
 import subprocess
-from check_utils import *
+from .check_utils import *
 from jormungandr import app, i_manager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
@@ -62,7 +63,7 @@ class AbstractTestFixture:
     """
     @classmethod
     def launch_all_krakens(cls):
-        for (kraken_name, conf) in cls.data_sets.iteritems():
+        for (kraken_name, conf) in cls.data_sets.items():
             additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
@@ -79,7 +80,7 @@ class AbstractTestFixture:
 
         # we want to wait for all data to be loaded
         all_good = True
-        for name, kraken_process in cls.krakens_pool.iteritems():
+        for name, kraken_process in cls.krakens_pool.items():
             if not check_loaded(name):
                 all_good = False
                 logging.error("error while loading the kraken {}, stoping".format(name))
@@ -94,7 +95,7 @@ class AbstractTestFixture:
 
     @classmethod
     def kill_all_krakens(cls):
-        for name, kraken_process in cls.krakens_pool.iteritems():
+        for name, kraken_process in cls.krakens_pool.items():
             logging.debug("killing " + name)
             kraken_process.kill()
 
@@ -191,7 +192,7 @@ class AbstractTestFixture:
         assert len(self.krakens_pool) == 1, "the helper can only work with one region"
         str_url = "/v1/coverage"
         str_url += "/{region}/{url}"
-        real_url = str_url.format(region=self.krakens_pool.iterkeys().next(), url=url)
+        real_url = str_url.format(region=list(self.krakens_pool)[0], url=url)
 
         if check:
             return self.query(real_url, display)

@@ -26,13 +26,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
 from navitiacommon import models
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 from nose.tools import eq_
-from overlapping_routing_tests import  MockKraken
+from .overlapping_routing_tests import  MockKraken
 from jormungandr import instance_manager
 
 
@@ -374,6 +376,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][0]['arrival_date_time'],  "20120614T160000")
         eq_(response['journeys'][0]['type'], "best")
 
+        assert len(response["disruptions"]) == 0
         feed_publishers = response["feed_publishers"]
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)
@@ -406,6 +409,25 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         eq_(response['journeys'][0]['type'], "")
         eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
         eq_(response['journeys'][1]['type'], "best")
+
+    def test_datetime_error(self):
+        """
+        datetime invalid, we got an error
+        """
+        datetimes = ["20120614T080000Z", "2012-06-14T08:00:00.222Z"]
+        for datetime in datetimes:
+            query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+                .format(from_sa="A", to_sa="D", datetime=datetime)
+
+            response, error_code = self.query_region(query, check=False)
+
+            assert error_code == 400
+
+            error = get_not_null(response, "error")
+
+            assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
+            assert error["id"] == "unable_to_parse"
+
 
     def test_journeys_without_show_codes(self):
         '''

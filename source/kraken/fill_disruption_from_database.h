@@ -231,6 +231,8 @@ namespace navitia {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_route);
                 } else if (type_ == "stop_area") {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                } else if (type_ == "stop_point") {
+                    ptobject->set_pt_object_type(chaos::PtObject_Type_stop_point);
                 } else if (type_ == "line_section") {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_line_section);
                     auto* ls = ptobject->mutable_pt_line_section();

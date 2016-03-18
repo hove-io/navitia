@@ -29,13 +29,16 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
-from ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from errors import ManageError
-from fields import fields, enum_type, NonNullList,\
+from jormungandr.interfaces.parsers import default_count_arg_type, date_time_format
+from jormungandr.interfaces.v1.errors import ManageError
+from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
     NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
+import datetime
 
 
 week_pattern = {
@@ -85,7 +88,7 @@ class Calendars(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
@@ -105,6 +108,13 @@ class Calendars(ResourceUri):
                                 action='append')
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
+
+        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                         description="The datetime used to consider the state of the pt object"
+                                                     " Default is the current date and it is used for debug."
+                                                     " Note: it will mainly change the disruptions that concern "
+                                                     "the object The timezone should be specified in the format,"
+                                                     " else we consider it as UTC")
 
     @marshal_with(calendars)
     @ManageError()

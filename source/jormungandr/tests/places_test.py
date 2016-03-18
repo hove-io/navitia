@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 @dataset({"main_routing_test": {}})
@@ -49,6 +50,18 @@ class TestPlaces(AbstractTestFixture):
         assert(len(response['places']) == 1)
         is_valid_places(response['places'])
         assert(response['places'][0]['name'] == "42 rue kb (Condom)")
+
+    def test_label_of_admin(self):
+        '''
+        test label of admin "Condom (03430)"
+        '''
+
+
+        response = self.query_region("places?q=Condom&type[]=administrative_region")
+
+        assert(len(response['places']) == 1)
+        is_valid_places(response['places'])
+        assert(response['places'][0]['name'] == "Condom (03430)")
 
     def test_places_invalid_encoding(self):
         _, status = self.query_no_assert(b'/v1/coverage/main_routing_test/places/?q=ch\xe2teau')
@@ -93,6 +106,27 @@ class TestPlaces(AbstractTestFixture):
 
         assert(len(response['places_nearby']) > 0)
         is_valid_places(response['places_nearby'])
+
+        assert len(response['disruptions']) == 0
+
+    def test_places_nearby_with_coords_current_datetime(self):
+        """places_nearby with _current_datetime"""
+
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("coords/{}/places_nearby?_current_datetime=20120815T160000".format(id))
+
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+
+        assert len(response['disruptions']) == 1
+
+        disruptions = get_not_null(response, 'disruptions')
+
+        assert disruptions[0]['disruption_id'] == 'disruption_on_stop_A'
+        messages = get_not_null(disruptions[0], 'messages')
+
+        assert(messages[0]['text']) == 'no luck'
+        assert(messages[1]['text']) == 'try again'
 
     def test_wrong_places_nearby(self):
         """test that a wrongly formated query do not work on places_neaby"""

@@ -29,16 +29,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import marshal_with, reqparse
 from flask.globals import g
 from jormungandr import i_manager, timezone
-from fields import PbField, error, network, line,\
+from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
-from VehicleJourney import vehicle_journey
-from ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import date_time_format
-from errors import ManageError
+from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
+from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta
@@ -67,7 +68,7 @@ class TrafficReport(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")

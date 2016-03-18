@@ -161,15 +161,13 @@ struct PbCreator {
     const nt::Data& data;
     pt::ptime now;
     pt::time_period action_period;
-    const bool show_codes;
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
     pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
-    PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period,
-              const bool show_codes = true):
-        data(data), now(now), action_period(action_period),show_codes(show_codes) {}
+    PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period):
+        data(data), now(now), action_period(action_period) {}
 
     PbCreator(const PbCreator&) = delete;
     PbCreator& operator=(const PbCreator&) = delete;
@@ -227,6 +225,7 @@ struct PbCreator {
     pbnavitia::JourneyPattern* add_journey_patterns();
     pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
     pbnavitia::Trip* add_trips();
+    pbnavitia::RoutePoint* add_route_points();
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);
@@ -318,7 +317,6 @@ private:
         template<typename NT, typename PB>
         void fill_codes(const NT* nt, PB* pb) {
             if (nt == nullptr) {return ;}
-            if(!pb_creator.show_codes){ return ;}
             for (const auto& code: pb_creator.data.pt_data->codes.get_codes(nt)) {
                 for (const auto& value: code.second) {
                     auto* pb_code = pb->add_codes();
@@ -408,9 +406,8 @@ template<typename N>
 pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Data& data, int depth = 0,
                                  const pt::ptime& now = pt::not_a_date_time,
                                  const pt::time_period& action_period = null_time_period,
-                                 const bool show_codes = true,
                                  const DumpMessage dump_message = DumpMessage::Yes){
-    PbCreator creator(data, now, action_period, show_codes);
+    PbCreator creator(data, now, action_period);
     creator.pb_fill(nt_objects, depth, dump_message);
     return creator.get_response();
 }

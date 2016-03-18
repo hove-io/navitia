@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from nose.tools import *
@@ -139,7 +140,7 @@ class TestMultiCoverage:
         regions = compute_regions(self.args)
 
         assert len(regions) == 2
-        print "regions ==> {}".format(regions)
+        print("regions ==> {}".format(regions))
 
         assert regions[0].name == self.regions['france'].name
         assert regions[1].name == self.regions['equador'].name
@@ -154,7 +155,7 @@ class TestMultiCoverage:
         regions = compute_regions(self.args)
 
         assert len(regions) == 4
-        print "regions ==> {}".format(regions)
+        print("regions ==> {}".format(regions))
 
         assert set([regions[0].name, regions[1].name]) == set([self.regions['france'].name, self.regions['peru'].name])
         assert set([regions[2].name, regions[3].name]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
@@ -169,7 +170,7 @@ class TestMultiCoverage:
         regions = compute_regions(self.args)
 
         assert len(regions) == 3
-        print "regions ==> {}".format(regions)
+        print("regions ==> {}".format(regions))
 
         assert regions[0].name == self.regions['germany'].name
         assert regions[1].name == self.regions['netherlands'].name
@@ -185,7 +186,7 @@ class TestMultiCoverage:
         regions = compute_regions(self.args)
 
         assert len(regions) == 4
-        print "regions ==> {}".format(regions)
+        print("regions ==> {}".format(regions))
 
         assert regions[0].name == self.regions['brazil'].name
         assert regions[1].name == self.regions['netherlands'].name

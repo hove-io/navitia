@@ -215,9 +215,10 @@ struct CachedNextStopTimeKey {
 
 struct CachedNextStopTime {
     using DtSt = std::pair<DateTime, const type::StopTime*>;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> departure;
-    IdxMap<JourneyPatternPoint, std::vector<DtSt>> arrival;
+    using vDtSt = std::vector<DtSt>;
+    using vDtStByJpp = IdxMap<JourneyPatternPoint, vDtSt>;
 
+    CachedNextStopTime(const vDtStByJpp& d, const vDtStByJpp& a): departure(d), arrival(a) {}
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
     // clockwise.
@@ -226,6 +227,43 @@ struct CachedNextStopTime {
                    const JppIdx jpp_idx,
                    const DateTime dt,
                    const bool clockwise) const;
+
+private:
+    // This structure provide the same interface as a vDtStByJpp, but
+    // in a condensed and read only view.
+    struct DtStFromJpp {
+        DtStFromJpp(const vDtStByJpp& map);
+
+        // Returns the range corresponding to map[jpp_idx], i.e. from
+        // dtsts[until[prev(jpp_idx)]] to dtsts[until[jpp_idx]]
+        // (excluded).
+        boost::iterator_range<vDtSt::const_iterator> operator[](const JppIdx& jpp_idx) const;
+
+    private:
+        // let map[JppIdx(40)] == []
+        //     map[JppIdx(41)] == [a, l]
+        //     map[JppIdx(42)] == [x, y, z]
+        //
+        // until: [..., JppIdx(39), JppIdx(40), JppIdx(41), JppIdx(42), ...]
+        //                  |           |            |        |
+        //                  ------------+------,     |        |
+        //                                     V     V        V
+        // dtsts: [...................... , o, a, l, x, y, z, p, q, ...]
+        //                                           ^^^^^^^
+        //                                      range of values
+        //                                      corresponding to
+        //                                      map[JppIdx(42)]
+        //
+        // Every vectors of map concatenated in order
+        // (flatten(map.values())).
+        vDtSt dtsts;
+
+        // dtsts[until[jpp_idx]] correspond to the end of
+        // map[jpp_idx], and to the begin of map[next(jpp_idx)]
+        IdxMap<JourneyPatternPoint, uint32_t> until;
+    };
+    DtStFromJpp departure;
+    DtStFromJpp arrival;
 };
 
 struct CachedNextStopTimeManager {

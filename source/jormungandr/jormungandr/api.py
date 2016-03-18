@@ -29,6 +29,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
 from flask import request, make_response
@@ -45,7 +47,7 @@ def output_jsonp(data, code, headers=None):
     resp = json.output_json(data, code, headers)
     callback = request.args.get('callback', False)
     if callback:
-        resp.data = str(callback) + '(' + resp.data + ')'
+        resp.data = unicode(callback) + '(' + resp.data + ')'
     return resp
 
 
@@ -64,11 +66,16 @@ def access_log(response, *args, **kwargs):
     logger.info(u'"%s %s?%s" %s', request.method, request.path, query_string, response.status_code)
     return response
 
+@app.after_request
+def add_request_id(response, *args, **kwargs):
+    response.headers['navitia-request-id'] = request.id
+    return response
+
 
 # If modules are configured, then load and run them
 if 'MODULES' in rest_api.app.config:
     rest_api.module_loader = ModulesLoader(rest_api)
-    for prefix, module_info in rest_api.app.config['MODULES'].iteritems():
+    for prefix, module_info in rest_api.app.config['MODULES'].items():
         module_file = importlib.import_module(module_info['import_path'])
         module = getattr(module_file, module_info['class_name'])
         rest_api.module_loader.load(module(rest_api, prefix))

@@ -38,6 +38,7 @@ true_false = parser_args_type.true_false
 
 option_value = parser_args_type.option_value
 
+default_count_arg_type = parser_args_type.default_count_arg_type
 
 
 def parse_input_date(date):

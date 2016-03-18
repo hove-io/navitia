@@ -60,7 +60,7 @@ add_custom_command (TARGET pb_lib
     chaos.proto gtfs-realtime.proto kirin.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM)
 
-add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp validity_pattern.cpp)
+add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp validity_pattern.cpp type_utils.h)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
 add_dependencies(types protobuf_files)
 

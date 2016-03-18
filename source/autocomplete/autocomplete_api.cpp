@@ -31,7 +31,6 @@ www.navitia.io
 #include "autocomplete_api.h"
 #include "type/pb_converter.h"
 #include "autocomplete/autocomplete.h"
-#include "type/pt_data.h"
 #include "utils/functions.h"
 
 namespace navitia { namespace autocomplete {
@@ -190,9 +189,11 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
                                  int search_type,
-                                 const navitia::type::Data &d) {
+                                 const navitia::type::Data &d,
+                                 const boost::posix_time::ptime& current_datetime) {
 
-    navitia::PbCreator pb_creator(d, pt::not_a_date_time, null_time_period, false);
+    navitia::PbCreator pb_creator(d, current_datetime,
+                                  boost::posix_time::time_period(current_datetime, boost::posix_time::seconds(1)));
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
         return pb_creator.get_response();

@@ -26,8 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+
+from __future__ import absolute_import, print_function, unicode_literals, division
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 from jormungandr import stat_manager
 from jormungandr.stat_manager import StatManager
 #from mock import patch
@@ -124,9 +126,9 @@ class MockWrapper:
 
         eq_(stat.journey_request.requested_date_time, 1339653600)
         eq_(stat.journey_request.clockwise, True)
-        eq_(stat.journey_request.departure_insee, '32107')
+        eq_(stat.journey_request.departure_insee, '03430')
         eq_(stat.journey_request.departure_admin, 'admin:74435')
-        eq_(stat.journey_request.arrival_insee, '32107')
+        eq_(stat.journey_request.arrival_insee, '03430')
         eq_(stat.journey_request.arrival_admin, 'admin:74435')
 
     def check_stat_places_to_publish(self, stat):

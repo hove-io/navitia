@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import request
 from werkzeug.exceptions import HTTPException
 import logging
@@ -106,6 +107,14 @@ class InvalidArguments(HTTPException):
         self.code = 400
 
 
+class UnableToParse(HTTPException):
+
+    def __init__(self, msg):
+        super(UnableToParse, self).__init__()
+        self.data = format_error("unable_to_parse", msg)
+        self.code = 400
+
+
 class TechnicalError(HTTPException):
 
     def __init__(self, msg):
@@ -123,13 +132,21 @@ def log_exception(sender, exception, **extra):
 
     if isinstance(exception, (HTTPException, RegionNotFound)):
         logger.debug(error)
+        if exception.code >= 500:
+            record_exception()
     else:
         logger.exception(error)
-        try:
-            import newrelic.agent
-            newrelic.agent.record_exception()#will record the exception currently handled
-        except ImportError:
-            pass
-        except:
-            logger = logging.getLogger(__name__)
-            logger.exception('failure while registering exception to newrelic')
+        record_exception()
+
+def record_exception():
+    """
+    record the exception currently handled to newrelic
+    """
+    try:
+        import newrelic.agent
+        newrelic.agent.record_exception()#will record the exception currently handled
+    except ImportError:
+        pass
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('failure while registering exception to newrelic')

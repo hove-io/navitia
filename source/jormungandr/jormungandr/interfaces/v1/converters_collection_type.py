@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 collections_to_resource_type = {
     "stop_points": "stop_point", "routes": "route",
     "networks": "network", "commercial_modes": "commercial_mode",
@@ -42,4 +43,4 @@ collections_to_resource_type = {
 
 resource_type_to_collection = dict((resource_type, collection)
                                    for (collection, resource_type)
-                                   in collections_to_resource_type.iteritems())
+                                   in collections_to_resource_type.items())

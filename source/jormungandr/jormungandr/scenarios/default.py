@@ -27,13 +27,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
+
 import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
-from jormungandr.renderers import render_from_protobuf
 from jormungandr.interfaces.common import pb_odt_level
-from qualifier import qualifier_one
+from jormungandr.scenarios.qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
 from flask import current_app
@@ -45,7 +46,7 @@ import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
 from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
 from jormungandr.scenarios.helpers import fallback_mode_comparator
-from jormungandr.utils import pb_del_if
+from jormungandr.utils import pb_del_if, date_to_timestamp
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -58,6 +59,7 @@ class Scenario(simple.Scenario):
         """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
         req.requested_api = requested_type
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if "origin" in request and request["origin"]:
             if requested_type != type_pb2.NMPLANNER:
                 origins = ([request["origin"]], [0])
@@ -115,7 +117,6 @@ class Scenario(simple.Scenario):
         else:
             req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
 
-        req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]
 

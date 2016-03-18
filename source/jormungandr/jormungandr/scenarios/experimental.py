@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import new_default
@@ -47,7 +48,7 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
-    section.id = str(uuid.uuid4())
+    section.id = unicode(uuid.uuid4())
     return section
 
 class SectionSorter(object):
@@ -97,7 +98,6 @@ def create_parameters(request):
     return JourneyParameters(max_duration=request['max_duration'],
                              max_transfers=request['max_transfers'],
                              wheelchair=request['wheelchair'] or False,
-                             show_codes=request['show_codes'],
                              realtime_level=request['data_freshness'],
                              max_extra_second_pass=request['max_extra_second_pass'],
                              walking_transfer_penalty=request['_walking_transfer_penalty'],

@@ -1,62 +1,39 @@
-Navitia documentation: v1 interface
-===================================
-
-Overview
---------
+v1 interface
+============
 
 This document describes how to call navitia via the v1 interface, and
-the returned resources. You can read our lexicon at
-<https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md>
+the returned resources. 
 
-### Endpoint
+Authentication
+--------------
+
+You must authenticate to use **navitia.io**. When you register we give
+you an authentication key to the API.
+
+You must use the [Basic HTTP authentication](http://tools.ietf.org/html/rfc2617#section-2), 
+where the username is the key, and without password.
+
+For example, in a [Curl](https://en.wikipedia.org/wiki/CURL) way, you can request either :
+
+`curl https://api.navitia.io/v1/coverage -u 01234567-89ab-cdef-0123-456789abcdef:`
+
+(don't forget ``:`` after the key)
+
+or
+
+`curl https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/Ressources`
+
+
+Ressources overview
+-------------------
 
 The only endpoint of this version of the api is :
 <https://api.navitia.io/v1/>
 
-See [authentication](#authentication) section to find out **how to use your token**.
-
-If you use a web browser, you only have to paste it in the user area,
-with no password. Or, in a simplier way, you can add your token in the
-address bar like :
-
-``` plaintext
-https://*my-token-is-mine-and-i-will-never-clearly-give-it*@api.navitia.io/v1/coverage/fr-idf/networks
-```
-
-### Some easy examples
-
-- Geographical coverage of the service > <https://api.navitia.io/v1/coverage>
-- Where am I? (WGS 84 coordinates)
-    - <https://api.navitia.io/v1/coord/2.377310;48.847002>
-    - I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-- Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
-    - <https://api.navitia.io/v1/coverage/fr-idf>
-- Networks available? (see what [network](#network) is)
-    - <https://api.navitia.io/v1/coverage/fr-idf/networks>
-    - pwooo, many networks on this coverage ;)
-- Is there any Metro lines or networks?
-    - there is an api for that. See [pt_objects](#pt-objects)
-    - <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro>
-    - Response contain one network, one mode, and many lines
-- Let's try some filtering (see [ptreferential](#ptreferential))
-    - filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
-    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/>
-    - physical modes managed by this network
-    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes>
-    - metro lines
-    - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines>
-- By the way, what stuff are close to me?
-    - <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby>
-    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines>
-    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules>
-    - or ...
-
-### Resources
-
 All the resources return a response containing a links object, a paging
 object, and the requested object.
 
--   **Coverage** : List of the region covered by navitia
+-   **[Coverage](#coverage)** : List of the region covered by navitia
 
 | url | Result |
 |----------------------------------------------|-------------------------------------|
@@ -64,7 +41,7 @@ object, and the requested object.
 | `get` /coverage/*region_id*                  | Information about a specific region |
 | `get` /coverage/*region_id*/coords/*lon;lat* | Information about a specific region |
 
--   **Public transportation objects** : List of the public transport
+-   **[Public transportation objects](#pt-ref)** : List of the public transport
     objects of a region
 
 | url | Result |
@@ -74,78 +51,64 @@ object, and the requested object.
 | `get` /coverage/*lon;lat*/*collection_name*             | Collection of objects of a region   |
 | `get` /coverage/*lon;lat*/*collection_name*/*object_id* | Information about a specific region |
 
--   **Journeys** : Compute journeys
+-   **[Journeys](#journeys)** : Compute journeys
 
 | url | Result |
 |------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/journeys | List of journeys                    |
-| `get` /journeys                          | List of journeys                    |
+| `get` /coverage/*resource_path*/journeys | List of journeys or isochrones      |
+| `get` /journeys                          | List of journeys or isochrones      |
 
--   **Route Schedules** : Compute route schedules for a given resource
 
-| url | Result |
-|-------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/route_schedules | List of the route schedules         |
-
--   **Stop Schedules** : Compute stop schedules for a given resource
+-   **[Route Schedules](#route-schedules)**, **[Stop Schedules](#stop-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)** : 
+Compute time tables for a given resource
 
 | url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/stop_schedules | List of the stop schedules          |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `get` /coverage/*resource_path*/route_schedules | List of the entire route schedules for a given resource                                                       |
+| `get` /coverage/*resource_path*/stop_schedules  | List of the stop schedules grouped by ``stop_point/route`` for a given resource                               |
+| `get` /coverage/*resource_path*/departures      | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `get` /coverage/*resource_path*/arrivals        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
 
--   **Departures** : List of the next departures for a given resource
 
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/departures     | List of the departures              |
-
--   **Arrivals** : List of the next departures for a given resource
+-   **[Places](#places)** and **[PT_objects](#pt-objects)** : Search in the datas
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/arrivals       |   List of the arrivals              |
+| `get` /coverage/places                         | List of geographical objects        |
+| `get` /coverage/pt_objects                     | List of public transport objects    |
 
--   **Places** : Search in the datas
 
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/places                         | List of objects                     |
-
--   **Places nearby** : List of objects near an object or a coord
+-   **[Places nearby](#places-nearby)** : List of objects near an object or a coord
 
 | url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/places_nearby  | List of objects near the resource   |
-| `get` /coverage/*lon;lat*/places_nearby        | List of objects near the resource   |
+|------------------------------------------------|-----------------------------------------------------------|
+| `get` /coord/*lon;lat*/places_nearby           | List of objects near the resource without any region id   |
+| `get` /coverage/*lon;lat*/places_nearby        | List of objects near the resource without any region id   |
+| `get` /coverage/*resource_path*/places_nearby  | List of objects near the resource                         |
 
-Authentication
---------------
-
-You must authenticate to use **navitia.io**. When you register we give
-you a authentication key to the API.
-
-You must use the [Basic HTTP
-authentication](http://tools.ietf.org/html/rfc2617#section-2), where the
-username is the key, and without password.
 
 Paging
 ------
 
+<aside class="success">
+    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
+</aside>
+
 All response contains a paging object
 
-|Key|Type|Description|
-|---|----|-----------|
-|items_per_page|int|Number of items per page|
-|items_on_page|int|Number of items on this page|
-|start_page|int|The page number|
-|total_result|int|Total number of items for this request|
+|Key           |Type|Description                           |
+|--------------|----|--------------------------------------|
+|items_per_page|int |Number of items per page              |
+|items_on_page |int |Number of items on this page          |
+|start_page    |int |The page number                       |
+|total_result  |int |Total number of items for this request|
 
 You can navigate through a request with 2 parameters
 
-|Parameter|Type|Description|
-|---------|----|-----------|
-|start_page|int|The page number|
-|count|int|Number of items per page|
+|Parameter |Type|Description              |
+|----------|----|-------------------------|
+|start_page|int |The page number          |
+|count     |int |Number of items per page |
 
 Interface
 ---------
@@ -173,7 +136,7 @@ For example, in response of
 }
 ```
 
-You have to put one line id instead of "{lines.id}". For example:
+You have to put one line id instead of *{lines.id}*. For example:
 <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:043043001:N1OIF658/stop_schedules>
 
 ### Inner references
@@ -191,20 +154,22 @@ Some link sections look like
 ```
 
 That means you will find inside the same stream ( *"internal": true* ) a
-"disruptions" section ( *"rel": "disruptions"* ) containing some
-disruptions objects ( *"type": "disruption"* ) where you can find the
+*disruptions* section ( *"rel": "disruptions"* ) containing some
+[disruptions](#disruption) objects ( *"type": "disruption"* ) where you can find the
 details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"*
 ).
 
 Apis
 ----
 
-### Coverage (/coverage)
+### <a name="coverage"></a>Coverage (/coverage)
 
 You can easily navigate through regions covered by navitia.io, with the
-coverage api. The only arguments are the ones of [paging](#paging).
+coverage api. The shape of the region is provided in GeoJSON.
 
-### Inverted geocoding (/coord)
+The only arguments are the ones of [paging](#paging).
+
+### <a name="coord"></a>Inverted geocoding (/coord)
 
 Very simple service: you give Navitia some coordinates, it answers you
 where you are:
@@ -246,27 +211,27 @@ accessible local mobility services:
         "id": "fr-idf"
     }],
     "links": [
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/coords"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/places"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/networks"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/companies"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/lines"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/routes"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/stop_points"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/line_groups"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/connections"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/poi_types"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/pois"},
-        {"href": "http://api.navitia.io/v1/coverage/fr-idf/"}
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/coords"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/places"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/networks"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/companies"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/lines"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/routes"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_points"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/line_groups"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/connections"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/poi_types"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/pois"},
+        {"href": "https://api.navitia.io/v1/coverage/fr-idf/"}
     ]
 }
 ```
 
-### Public transportation objects exploration (/networks or /lines or /routes...)
+### <a name="pt-ref"></a>Public transportation objects exploration (/networks or /lines or /routes...)
 
 Once you have selected a region, you can explore the public
 transportation objects easily with these apis. You just need to add at
@@ -277,15 +242,17 @@ paginate results.
 
 #### Collections
 
--   networks
--   lines
--   routes
--   stop_points
--   stop_areas
--   commercial_modes
--   physical_modes
--   companies
--   vehicle_journeys
+-   [networks](#network)
+-   [lines](#line)
+-   [routes](#route)
+-   [stop_points](#stop-point)
+-   [stop_areas](#stop-area)
+-   [commercial_modes](#commercial-mode)
+-   [physical_modes](#physical-mode)
+-   [companies](#company)
+-   [vehicle_journeys](#vehicle-journey)
+-   [disruptions](#disruption)
+
 
 #### Specific parameters
 
@@ -317,12 +284,10 @@ Here is some examples around "metro line 1" from the Parisian network:
 
 -   Type: String
 -   Default value: all
--   Warning: works ONLY with /lines collection...
+-   Warning: works ONLY with */[line](#line)s* collection...
 
 It allows you to request navitia for specific pickup lines. It refers to
 the [odt](#odt) section. "odt_level" can take one of these values:
-
-*NEW! after 1.18 versions, this parameter is more accurate*
 
 -   all (default value): no filter, provide all public transport lines,
     whatever its type
@@ -330,7 +295,7 @@ the [odt](#odt) section. "odt_level" can take one of these values:
 -   with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines.
     -   You can easily request route_schedule and stop_schedule with these kind of lines.
     -   Be aware of "estimated" stop times
--   zonal : to get "odt_with_zone" lines with non-detailed trips
+-   zonal : to get "odt_with_zone" lines with non-detailed journeys
 
 For example
 
@@ -356,19 +321,19 @@ as headsign (on vehicle journey itself or at a stop time).
 
 Examples:
 
--   <http://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
--   <http://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
+-   <https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
+-   <https://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
 
 
 <aside class="warning">
     This last request gives the stop areas used by the vehicle
-    journeys containing the headsign CANE, *not* the stop areas where it
+    journeys containing the headsign CANE, <b>not</b> the stop areas where it
     exists a stop time with the headsign CANE.
 </aside>
 
 ##### since / until
 
--   Type: datetime
+-   Type: [iso-date-time](#iso-date-time)
 
 To be used only on "vehicle_journeys" collection, to filter on a
 period. Both parameters "until" and "since" are optional.
@@ -438,7 +403,7 @@ Other examples
 -   Line list for one mode
     -   <https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines>
 
-### Public Transport objects autocomplete (/pt_objects)
+### <a name="pt-objects"></a>Public Transport objects autocomplete (/pt_objects)
 
 This api search in public transport objects via their names. It's a kind
 of magical autocomplete on public transport data. It returns, in
@@ -457,28 +422,40 @@ Differents kind of objects can be returned (sorted as):
 Here is a typical use case. A traveler has to find a line between the
 1500 lines around Paris. Without any filters:
 
--   traveler input: "bob"
-    -   network : "bobby network"
-    -   line : "bobby bus 1"
-    -   line : "bobby bus 2"
-    -   route : "bobby bus 1 to green"
-    -   route : "bobby bus 1 to rose"
-    -   route : "bobby bus 2 to yellow"
-    -   stop_area : "...
--   traveler input: "bobby met"
-    -   line : "bobby metro 1"
-    -   line : "bobby metro 11"
-    -   line : "bobby metro 2"
-    -   line : "bobby metro 3"
-    -   route : "bobby metro 1 to Martin"
-    -   route : "bobby metro 1 to Mahatma"
-    -   route : "bobby metro 11 to Marcus"
-    -   route : "bobby metro 11 to Steven"
-    -   route : "...
--   traveler input: "bobby met 11" or "bobby metro 11"
-    -   line : "bobby metro 11"
-    -   route : "bobby metro 11 to Marcus"
-    -   route : "bobby metro 11 to Steven"
+<div data-collapse>
+    <p>traveler input: "bob"</p>
+    <ul>
+        <li>network : "bobby network"</li>
+        <li>line : "bobby bus 1"</li>
+        <li>line : "bobby bus 2"</li>
+        <li>route : "bobby bus 1 to green"</li>
+        <li>route : "bobby bus 1 to rose"</li>
+        <li>route : "bobby bus 2 to yellow"</li>
+        <li>stop_area : "...</li>
+    </ul>
+</div>
+<div data-collapse>
+    <p>traveler input: "bobby met"</p>
+    <ul>
+        <li>line : "bobby metro 1"</li>
+        <li>line : "bobby metro 11"</li>
+        <li>line : "bobby metro 2"</li>
+        <li>line : "bobby metro 3"</li>
+        <li>route : "bobby metro 1 to Martin"</li>
+        <li>route : "bobby metro 1 to Mahatma"</li>
+        <li>route : "bobby metro 11 to Marcus"</li>
+        <li>route : "bobby metro 11 to Steven"</li>
+        <li>route : "...</li>
+    </ul>
+</div>
+<div data-collapse>
+    <p>traveler input: "bobby met 11" or "bobby metro 11"</p>
+    <ul>
+        <li>line : "bobby metro 11"</li>
+        <li>route : "bobby metro 11 to Marcus"</li>
+        <li>route : "bobby metro 11 to Steven"</li>
+    </ul>
+</div>
 
 #### Parameters
 
@@ -516,7 +493,7 @@ Response example for :
 }
 ```
 
-### Places autocomplete (/places)
+### <a name="places"></a>Places autocomplete (/places)
 
 This api search in all geographical objects via their names. It returns,
 in addition of classic objects, a collection of [places](#place) . This api is
@@ -571,7 +548,7 @@ Response example for :
 }
 ```
 
-### Places Nearby (/places_nearby)
+### <a name="places-nearby"></a>Places Nearby (/places_nearby)
 
 This api search for public transport object near another object, or near
 coordinates. It returns, in addition of classic objects, a collection of
@@ -593,14 +570,14 @@ coordinates. It returns, in addition of classic objects, a collection of
 Filters can be added:
 
 -   request for the city of "Paris" on fr-idf
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places?q=paris>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places?q=paris>
 -   then pois nearby this city
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby>
 -   and then, let's catch every parking around
     -   "distance=10000" Paris is not so big
     -   "type[]=poi" to take pois only
     -   "filter=poi_type.id=poi_type:amenity:parking" to get parking
-    -   <http://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
 
 #### Example
 
@@ -630,7 +607,7 @@ Response example for this request
 }
 ```
 
-### Journeys (/journeys)
+### <a name="journeys"></a>Journeys (/journeys)
 
 This api computes journeys.
 
@@ -643,7 +620,7 @@ The first one is: <https://api.navitia.io/v1/{a_path_to_resource}/journeys> it w
 retrieve all the journeys from the resource (*isochrones*).
 
 The other one, the most used, is to access the 'journey' api endpoint:
-<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}> .
+<<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <aside class="notice">
     Navitia.io handle lot's of different data sets (regions). Some of them
@@ -657,12 +634,21 @@ The other one, the most used, is to access the 'journey' api endpoint:
     For the moment it is not yet possible to compute journeys on different
     data sets, but it will one day be possible (with a cross-data-set
     system).
-    <br>
+</aside>
+
+In the [examples](#examples), positions are given by coordinates and no network is specified.
+However when no coordinates are provided, you need to provide on what region you want to request as
+<https://api.navitia.io/v1/coverage/us-ca/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>
+
+The list of regions covered by navitia is available through [coverage](#coverage).
+
+
+<aside class="notice">
     If you want to use a specific data set, use the journey api within the
     data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
 </aside>
 
-<aside class="notice">
+<aside class="success">
     Neither the 'from' nor the 'to' parameter of the journey are required,
     but obviously one of them has to be provided.
     <br>
@@ -670,17 +656,17 @@ The other one, the most used, is to access the 'journey' api endpoint:
     journeys from or to the point.
 </aside>
 
-#### Main parameters
+#### <a name="journeys-parameters"></a>Main parameters
 
-| Required  | Name                    | Type      | Description                                                                           | Default value |
-|-----------|-------------------------|-----------|---------------------------------------------------------------------------------------|---------------|
-| nop       | from                    | id        | The id of the departure of your journey If none are provided an isochrone is computed |               |
-| nop       | to                      | id        | The id of the arrival of your journey If none are provided an isochrone is computed   |               |
-| yep       | datetime                | datetime  | A datetime                                                                            |               |
-| nop       | datetime_represents     | string    | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime. | departure |
-| nop       | traveler_type           | enum      | Define speeds and accessibility values for different kind of people <ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li> Each profile also automatically determines appropriate first and last section modes to the covered area. You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically | standard      |
-| nop       | forbidden_uris[]        | id        | If you want to avoid lines, modes, networks, etc.                                     |               |
-| nop       | data_freshness          | enum      | Define the freshness of data to use to compute journeys <ul><li>real_time</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a real_time request to get a new undisrupted solution.                 | base_schedule |
+| Required  | Name                    | Type          | Description                                                                           | Default value |
+|-----------|-------------------------|---------------|---------------------------------------------------------------------------------------|---------------|
+| nop       | from                    | id            | The id of the departure of your journey If none are provided an isochrone is computed |               |
+| nop       | to                      | id            | The id of the arrival of your journey If none are provided an isochrone is computed   |               |
+| yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                                          |               |
+| nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime. | departure |
+| nop       | <a name="traveler-type"></a>traveler_type           | enum          | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li></ul></div>| standard      |
+| nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.                                     |               |
+| nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.                 | base_schedule |
 
 #### Other parameters
 
@@ -689,17 +675,17 @@ The other one, the most used, is to access the 'journey' api endpoint:
 | nop     | first_section_mode[] | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: walking, car, bike, bss.<br>bss stands for bike sharing system.<br>It's an array, you can give multiple modes.<br>Note: choosing bss implicitly allows the walking mode since you might have to walk to the bss station| walking     |
 | nop     | last_section_mode[]  | array of string   | Same as first_section_mode but for the last section  | walking     |
 | nop     | max_duration_to_pt   | int     | Maximum allowed duration to reach the public transport.<br>Use this to limit the walking/biking part.<br>Unit is seconds | 15*60 s    |
-| nop     | walking_speed        | float   | Walking speed for the fallback sections<br>Speed unit must be in meter/seconds         | 1.12 m/s<br>(4 km/h)   |
+| nop     | walking_speed        | float   | Walking speed for the fallback sections<br>Speed unit must be in meter/seconds         | 1.12 m/s<br>(4 km/h)<br>*Yes, man, they got the metric system* |
 | nop     | bike_speed           | float   | Biking speed for the fallback<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)   |
 | nop     | bss_speed            | float   | Speed while using a bike from a bike sharing system for the fallback sections<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)    |
 | nop     | car_speed            | float   | Driving speed for the fallback sections<br>Speed unit must be in meter/seconds         | 16.8 m/s<br>(60 km/h)   |
-| nop     | min_nb_journeys      | int     | Minimum number of different suggested trips<br>More in multiple_journeys  |             |
-| nop     | max_nb_journeys      | int     | Maximum number of different suggested trips<br>More in multiple_journeys  |             |
+| nop     | min_nb_journeys      | int     | Minimum number of different suggested journeys<br>More in multiple_journeys  |             |
+| nop     | max_nb_journeys      | int     | Maximum number of different suggested journeys<br>More in multiple_journeys  |             |
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
-| nop     | max_nb_tranfers      | int     | Maximum of number transfers   | 10          |
-| nop     | disruption_act       | boolean |  If true the algorithm take the disruptions into account, and thus avoid disrupted public transport         |  False     |
+| nop     | max_nb_tranfers      | int     | Maximum number of transfers in each journey  | 10          |
+| nop     | max_duration         | int     | Maximum duration of journeys in secondes. Really useful when computing an isochrone   | 10          |
+| nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
-| nop     | show_codes           | boolean | If true add internal id in the response    | False       |
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
 #### Objects
@@ -721,9 +707,9 @@ Here is a typical journey, all sections are detailed below
   --------------------|------------------------------|-----------------------------------
   duration            | int                          | Duration of the journey
   nb_transfers        | int                          | Number of transfers in the journey
-  departure_date_time | [date-time](#datetime)      | Departure date and time of the journey
-  requested_date_time | [date-time](#datetime)      | Requested date and time of the journey
-  arrival_date_time   | [date-time](#datetime)      | Arrival date and time of the journey
+  departure_date_time | [iso-date-time](#iso-date-time) | Departure date and time of the journey
+  requested_date_time | [iso-date-time](#iso-date-time) | Requested date and time of the journey
+  arrival_date_time   | [iso-date-time](#iso-date-time) | Arrival date and time of the journey
   sections            | array of [section](#section) |  All the sections of the journey
   from                | [places](#place)            | The place from where the journey starts
   to                  | [places](#place)            | The place from where the journey ends
@@ -731,7 +717,7 @@ Here is a typical journey, all sections are detailed below
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualif](#journey-qualif) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
-  status              | *enum*                       | Status from the whole journey taking into acount the most disturbing information retrieved on every object used. Can be: <ul><li>NO_SERVICE</li><li>REDUCED_SERVICE</li><li>SIGNIFICANT_DELAYS</li><li>DETOUR</li><li>ADDITIONAL_SERVICE</li><li>MODIFIED_SERVICE</li><li>OTHER_EFFECT</li><li>UNKNOWN_EFFECT</li><li>STOP_MOVED</li></ul> In order to get a undisrupted journey, you just have to add a "&data_freshness=real_time" parameter
+  status              | *enum*                       | Status from the whole journey taking into acount the most disturbing information retrieved on every object used. Can be: <ul><li>NO_SERVICE</li><li>REDUCED_SERVICE</li><li>SIGNIFICANT_DELAYS</li><li>DETOUR</li><li>ADDITIONAL_SERVICE</li><li>MODIFIED_SERVICE</li><li>OTHER_EFFECT</li><li>UNKNOWN_EFFECT</li><li>STOP_MOVED</li></ul> In order to get a undisrupted journey, you just have to add a *&data_freshness=realtime* parameter
 
 <aside class="notice">
     When used with just a "from" or a "to" parameter, it will not contain any sections.
@@ -754,8 +740,8 @@ geojson                  | [GeoJson](http://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
 transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `guaranteed`, `extension`
 stop_date_times          | Array of [stop_date_time](#stop_date_time)    | List of the stop times of this section
-departure_date_time      | [date-time](#datetime)                       | Date and time of departure
-arrival_date_time        | [date-time](#datetime)                       | Date and time of arrival
+departure_date_time      | [iso-date-time](#iso-date-time)               | Date and time of departure
+arrival_date_time        | [iso-date-time](#iso-date-time)               | Date and time of arrival
 
 ##### Path
 
@@ -796,7 +782,7 @@ direction       | int                    | Angle (in degree) between the previou
 |cost|[cost](#cost)|Cost of the ticket|
 |links|array of [link](#link)|Link to the [section](#section) using this ticket|
 
-### Route Schedules and time tables (/route_schedules)
+### <a name="route-schedules"></a>Route Schedules and time tables (/route_schedules)
 
 This api gives you access to schedules of routes. The response is made
 of an array of route_schedule, and another one of [note](#note). You can
@@ -804,12 +790,14 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 #### Parameters
 
-Required | Name             | Type      | Description                                                                              | Default Value
----------|------------------|-----------|------------------------------------------------------------------------------------------|--------------
-yep      | from_datetime    | date_time | The date_time from which you want the schedules                                          |
-nop      | duration         | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
-nop      | max_date_times   | int       | Maximum number of columns per schedule.                                                  |
-nop      | data_freshness   | enum      | Define the freshness of data to use<br><ul><li>real_time</li><li>base_schedule</li></ul> | base_schedule
+Required | Name               | Type      | Description                                                                              | Default Value
+---------|--------------------|-----------|------------------------------------------------------------------------------------------|--------------
+yep      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
+nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
+nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
+nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        | 
+nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
+
 
 #### Objects
 
@@ -839,10 +827,10 @@ links                    | Array of [link](#link)                        | Links
 
 Field      | Type                             | Description
 -----------|----------------------------------|--------------------------
-date_times | Array of [date-time](#datetime) | Array of date_time
-stop_point | [stop_point](#stop-point)        | The stop point of the row
+date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport formated date time
+stop_point | [stop_point](#stop-point)              | The stop point of the row
 
-### Stop Schedules and other kind of time tables (/stop_schedules)
+### <a name="stop-schedules"></a>Stop Schedules and other kind of time tables (/stop_schedules)
 
 This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
@@ -852,9 +840,12 @@ one of [note](#note). You can access it via that kind of url: <https://api.navit
 
 Required | Name           | Type                    | Description        | Default Value
 ---------|----------------|-------------------------|--------------------|--------------
-yep      | from_datetime  | [date-time](#datetime) | The date_time from which you want the schedules |
-nop      | duration       | int                     | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | data_freshness | enum                    | Define the freshness of data to use to compute journeys <ul><li>real_time</li><li>base_schedule</li></ul> | base_schedule
+yep      | from_datetime  | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
+nop      | duration         | int                            | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
+nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    | 
+nop      | items_per_schedule | int       | Maximum number of datetimes per schedule.                                                  |
+nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+
 
 #### Stop_schedule object
 
@@ -862,10 +853,10 @@ nop      | data_freshness | enum                    | Define the freshness of da
 |-----|----|-----------|
 |display_informations|[display_informations](#display-informations)|Usefull information about the route to display|
 |route|[route](#route)|The route of the schedule|
-|date_times|Array of [date-time](#datetime)|When does a bus stops at the stop point|
+|date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
-### Departures (/departures)
+### <a name="departures"></a>Departures (/departures)
 
 This api retrieves a list of departures from a datetime of a selected
 object. Departures are ordered chronologically in ascending order.
@@ -874,9 +865,11 @@ object. Departures are ordered chronologically in ascending order.
 
 Required | Name           | Type                    | Description        | Default Value
 ---------|----------------|-------------------------|--------------------|--------------
-yep      | from_datetime  | [date-time](#datetime) | The date_time from which you want the schedules |
-nop      | duration       | int                     | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | data_freshness | enum                    | Define the freshness of data to use to compute journeys <ul><li>real_time</li><li>base_schedule</li></ul> | real_time
+yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
+nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    | 
+nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
+
 
 #### Departure objects
 
@@ -886,12 +879,12 @@ nop      | data_freshness | enum                    | Define the freshness of da
 |stop_date_time|Array of [stop_date_time](#stop_date_time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
-### Arrivals (/arrivals)
+### <a name="arrivals"></a>Arrivals (/arrivals)
 
 This api retrieves a list of arrivals from a datetime of a selected
 object. Arrivals are ordered chronologically in ascending order.
 
-### Traffic reports and disruptions (/traffic_reports)
+### <a name="traffic-reports"></a>Traffic reports (/traffic_reports)
 
 This service provides the state of public transport traffic. It can be
 called for an overall coverage or for a specific object.
@@ -1057,6 +1050,7 @@ Here is a typical response
 "link": { ... },
 "pagination": { ... }
 }
+
 ```
 
 This typical response means:
@@ -1078,32 +1072,33 @@ This typical response means:
     -   disruption "yellow"
     -   Each disruption contains the messages to show.
 
-Here is the details of the disruption object:
-
-##### Disruption
-
-|Field|Type|Description|
-|-----|----|-----------|
-|status|between: "past", "active" or "future"|state of the disruption|
-|id|string|Id of the disruption|
-|disruption_id|string|for traceability: Id of original input disruption|
-|severity|[severity](#severity)|gives some categorization element|
-|application_periods|array of [period](#period)|dates where the current disruption is active|
-|messages|[message](#message)|text to provide to the traveler|
-|updated_at|[date-time](#datetime)|date_time of last modifications|
-|cause|string|why is there such a disruption?|
+Details for disruption objects : [disruptions](#disruptions)
 
 Objects
 -------
 
-### Geographical Objects
+### Standard Objects
 
 #### Coord
+
+Lots of object are geographically localized :
 
 |Field|Type|Description|
 |-----|----|-----------|
 |lon|float|Longitude|
 |lat|float|Latitude|
+
+#### Iso-date-time
+
+Navitia manages every date or time as a UTC date-time. The web-service 
+
+-   exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
+-   can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
+
+For example: <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
+
+There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down <https://youtu.be/-5wpm-gesOY>
+
 
 ### Public transport objects
 
@@ -1135,11 +1130,11 @@ Networks are fed by agencies in GTFS format.
 |name|string|Name of the route|
 |is_frequence|bool|Is the route has frequency or not|
 |line|[line](#line)|The line of this route|
-|direction|[places](#place)|The direction of this route|
+|direction|[place](#place)|The direction of this route|
 
-As "direction" is a [places](#place) , it can be a poi in some data.
+As "direction" is a [place](#place) , it can be a poi in some data.
 
-#### Stop Point
+#### <a name="stop-point"></a>Stop Point
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1150,7 +1145,7 @@ As "direction" is a [places](#place) , it can be a poi in some data.
 |equipments|array of string|list of [equipment](#equipment) of the stop point|
 |stop_area|[stop_area](#stop-area)|Stop Area containing this stop point|
 
-#### Stop Area
+#### <a name="stop-area"></a>Stop Area
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1160,7 +1155,7 @@ As "direction" is a [places](#place) , it can be a poi in some data.
 |administrative_regions|array of [admin](#admin)|Administrative regions of the stop area in which is the stop area|
 |stop_points|array of [stop_point](#stop-point)|Stop points contained in this stop area|
 
-#### Commercial Mode
+#### <a name="commercial-mode"></a>Commercial Mode
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1168,7 +1163,7 @@ As "direction" is a [places](#place) , it can be a poi in some data.
 |name|string|Name of the commercial mode|
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of this commercial mode|
 
-#### Physical Mode
+#### <a name="physical-mode"></a>Physical Mode
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1199,9 +1194,9 @@ Here is the valid id list:
 -   physical_mode:Tramway
 
 You can use these ids in the forbidden_uris[] parameter from
-[journeys_parameters](#journeys-parameters) for exemple.
+[journeys parameters](#journeys-parameters) for exemple.
 
-#### Company
+#### <a name="company"></a>Company
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1211,17 +1206,31 @@ You can use these ids in the forbidden_uris[] parameter from
 #### Place
 
 A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
-[stop_point](#stop-point), [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route)
+[stop_point](#stop-point)
 
 |Field|Type|Description|
 |-----|----|-----------|
 |name|string|The name of the embedded object|
 |id|string|The id of the embedded object|
-|embedded_type|[embedded_type_place](#embedded_type_place)|The type of the embedded object|
+|embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
 |administrative_region|*optional* [admin](#admin)|Embedded administrative region|
 |stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
 |poi|*optional* [poi](#poi)|Embedded poi|
 |address|*optional* [address](#address)|Embedded address|
+|stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
+
+
+#### Pt_object
+
+A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
+[stop_area](#stop_point), [stop_area](#stop_point)
+
+|Field|Type|Description|
+|-----|----|-----------|
+|name|string|The name of the embedded object|
+|id|string|The id of the embedded object|
+|embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
+|stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
 |stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
 |network|*optional* [network](#network)|Embedded network|
 |commercial_mode|*optional* [commercial_mode](#commercial-mode)|Embedded commercial_mode|
@@ -1229,23 +1238,55 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |line|*optional* [line](#line)|Embedded line|
 |route|*optional* [route](#route)|Embedded route|
 
-<aside class="notice">
-    Using /places API, navitia would returned objects among
-    administrative_region, stop_area, poi, address and stop_point types
-    <br>
-    Using /pt_objects API, navitia would returned objects among network,
-    commercial_mode, stop_area, line and route types
-</aside>
+### Real time and disruption objects
 
-##### Embedded type
+#### Disruption
 
-|Value|Description|
-|-----|-----------|
-|stop_point|a location where vehicles can pickup or drop off passengers|
-|stop_area|a nameable zone, where there are some stop points|
-|address|a point located in a street|
-|poi|a point of interest|
-|administrative_region|a city, a district, a neighborhood|
+|Field | Type | Description |
+|------|------|-------------|
+|status | between: "past", "active" or "future" |state of the disruption
+|id     | string                                |Id of the disruption
+|disruption_id | string                         |for traceability: Id of original input disruption
+|severity      | [severity](#severity)          |gives some categorization element
+|application_periods |array of [period](#period)       |dates where the current disruption is active
+|messages            |[message](#message)     |text to provide to the traveler
+|updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
+|impacted_objects    |array of [pt_object](#pt_object) |The list of public transport objects which are affected by the disruption
+cause                |string                   |why is there such a disruption?
+
+#### Message
+
+|Field|Type|Description|
+|-----|----|-----------|
+|text|string|a message to bring to a traveler|
+|channel|[channel](#channel)|destination media. Be careful, no normalized enum for now|
+
+#### Severity
+
+Severity object can be used to make visual grouping.
+
+| Field         | Type         | Description                                    |
+|---------------|--------------|------------------------------------------------|
+| color         | string     | HTML color for classification                  |
+| priority      | integer    | given by the agency : 0 is strongest priority. it can be null |
+| name          | string     | name of severity                               |
+| effect        | Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect> |
+
+#### Channel
+
+| Field         | Type       | Description
+|---------------|------------|---------------------------------------------
+| id            |string      |Identifier of the address
+| content_type  |string      |Like text/html, you know? Otherwise, take a look at <http://www.w3.org/Protocols/rfc1341/4_Content-Type.html>
+| name          |string      |name of the Channel
+
+#### Period
+
+|Field|Type|Description|
+|-----|----|-----------|
+|begin|[iso-date-time](#iso-date-time)|Beginning date and time of an activity period|
+|end|[iso-date-time](#iso-date-time)|Closing date and time of an activity period|
+
 
 ### Street network objects
 
@@ -1289,50 +1330,19 @@ Poi = Point Of Interest
 Cities are mainly on the 8 level, dependant on the country
 (<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
-### disruptions objects
-
-#### Message
-
-|Field|Type|Description|
-|-----|----|-----------|
-|text|string|a message to bring to a traveler|
-|channel|[channel](#channel)|destination media. Be careful, no normalized enum for now|
-
-#### Severity
-
-Severity object can be used to make visual grouping.
-
-| Field         | Type         | Description                                    |
-|---------------|--------------|------------------------------------------------|
-| color         | > string     | HTML color for classification                  |
-| priority      | > integer    | given by the agency : 0 is strongest priority. it can be null |
-| name          | > string     | name of severity                               |
-| effect        | > Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect> |
-
-#### Channel
-
-  Field         | Type       | Description
-  --------------|------------|---------------------------------------------
-  id            |string      |Identifier of the address
-  content_type  |string      |Like text/html, you know? Otherwise, take a look at <http://www.w3.org/Protocols/rfc1341/4_Content-Type.html>
-  name          |string      |name of the Channel
-
-#### Period
-
-|Field|Type|Description|
-|-----|----|-----------|
-|begin|[date-time](#datetime)|Beginning date and time of an activity period|
-|end|[date-time](#datetime)|Closing date and time of an activity period|
 
 ### Other objects
 
-#### date time
+#### pt-date-time
 
-  Field                    | Type               | Description
-  -------------------------|--------------------|-----------------------------
-  additionnal_informations | Array of String    | Other information: TODO enum
-  date_times               | Array of String    | Date time
-  links                    | Array of [link](#link) |internal links to notes
+pt-date-time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
+
+|Field                    | Type               | Description
+|-------------------------|--------------------|-----------------------------
+|additionnal_informations | Array of String    | Other information: TODO enum
+|departure_date_time      | [iso-date-time](#iso-date-time)    | A date time
+|arrival_date_time        | [iso-date-time](#iso-date-time)    | A date time
+|links                    | Array of [link](#link) |internal links to notes
 
 #### note
 
@@ -1345,8 +1355,35 @@ Severity object can be used to make visual grouping.
 
 |Field|Type|Description|
 |-----|----|-----------|
-|date_time|[date-time](#datetime)|A date time|
+|date_time|[pt-date-time](#pt-date-time)|A public transport date time|
 |stop_point|[stop_point](#stop-point)|A stop point|
+
+##### <a name="embedded-type"></a> Embedded type
+
+Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* services are managing.
+
+
+|Value|Description|
+|-----|-----------|
+|administrative_region|a city, a district, a neighborhood|
+|network|a public transport network|
+|commercial_mode|a public transport branded mode|
+|line|a public transport line|
+|route|a public transport route|
+|stop_area|a nameable zone, where there are some stop points|
+|stop_point|a location where vehicles can pickup or drop off passengers|
+|address|a point located in a street|
+|poi|a point of interest|
+
+<aside class="notice">
+    This enum is used by 3 services :<br>
+    <ul>
+    <li>Using <b>places</b> service, navitia would returned objects among administrative_region, stop_area, poi, address and stop_point types<br>
+    <li>Using <b>pt_objects</b> service, navitia would returned objects among network, commercial_mode, stop_area, line and route types<br>
+    <li>Using <b>disruptions</b> service, navitia would returned objects among network, commercial_mode, stop_area, line, route and trips types<br>
+    </ul>
+</aside>
+
 
 #### equipment
 
@@ -1378,7 +1415,7 @@ Enum from
 |color|String|The hexadecimal code of the line|
 |code|String|The code of the line|
 |description|String|A description|
-|equipments|Array of String||
+|equipments|Array of String|list of [equipment](#equipment) of the object|
 
 #### link
 
@@ -1395,14 +1432,14 @@ Misc mechanisms (and few boring stuff)
 
 ### Multiple journeys
 
-Navitia can compute several kind of trips within a journey query.
+Navitia can compute several kind of journeys with a journey query.
 
 The
 [RAPTOR](http://research.microsoft.com/apps/pubs/default.aspx?id=156567)
 algorithm used in Navitia is a multi-objective algorithm. Thus it might
 return multiple journeys if it cannot know that one is better than the
-other. For example it cannot decide that a one hour trip with no
-connection is better than a 45 minutes trip with one connection
+other. For example it cannot decide that a one hour journey with no
+connection is better than a 45 minutes journey with one connection
 (it is called the [pareto front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
 
 If the user asks for more journeys than the number of journeys given by
@@ -1421,18 +1458,17 @@ The different journey types are:
 
 |Type|Description|
 |----|-----------|
-|best|The best trip|
+|best|The best journey if you have to display only one.|
 |rapid|A good trade off between duration, changes and constraint respect|
-|no_train|Alternative trip without train|
-|comfort|A trip with less changes and walking|
-|car|A trip with car to get to the public transport|
-|less_fallback_walk|A trip with less walking|
-|less_fallback_bike|A trip with less biking|
-|less_fallback_bss|A trip with less bss|
-|fastest|A trip with minimum duration|
-|non_pt_walk|A trip without public transport, only walking|
-|non_pt_bike|A trip without public transport, only biking|
-|non_pt_bss|A trip without public transport, only bike sharing|
+|comfort|A journey with less changes and walking|
+|car|A journey with car to get to the public transport|
+|less_fallback_walk|A journey with less walking|
+|less_fallback_bike|A journey with less biking|
+|less_fallback_bss|A journey with less bss|
+|fastest|A journey with minimum duration|
+|non_pt_walk|A journey without public transport, only walking|
+|non_pt_bike|A journey without public transport, only biking|
+|non_pt_bss|A journey without public transport, only bike sharing|
 
 ### On demand transportation
 

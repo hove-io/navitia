@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
 
-    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period, false);
+    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period);
     pb_creator.fill(r, pt_display_info, 0);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "stop1");
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
-    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period, false);
+    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period);
     pb_creator.fill(route, pt_display_info, 0);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "");
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     boost::posix_time::time_period period(t1, t2);
     const nt::StopArea* sa= b.sas.find("stop1")->second;
 
-    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period, false);
+    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, period);
     pb_creator.fill(sa, stop_area, 2);
 
     BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 2);

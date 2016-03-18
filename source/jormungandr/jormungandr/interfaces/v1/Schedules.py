@@ -29,26 +29,28 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, marshal_with, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
-from fields import stop_point, route, pagination, PbField, stop_date_time, \
+from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum, feed_publisher
-from ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, date_time_format
-from errors import ManageError
+from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
+from jormungandr.interfaces.v1.errors import ManageError
 from flask.ext.restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import DisruptionsField
 from jormungandr.resources_utc import ResourceUtc
-from make_links import create_external_link
+from jormungandr.interfaces.v1.make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
+from jormungandr.exceptions import InvalidArguments
 
 
 class Schedules(ResourceUri, ResourceUtc):
@@ -72,13 +74,12 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Maximum duration between datetime\
                                 and the retrieved stop time")
         parser_get.add_argument("depth", type=int, default=2)
-        parser_get.add_argument("count", type=int, default=10,
+        parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("max_date_times", type=natural, default=10000,
-                                description="Maximum number of schedule per\
-                                stop_point/route")
+        parser_get.add_argument("max_date_times", type=natural,
+                                description="DEPRECATED, use items_per_schedule")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
                                 dest="__temporary_forbidden_id[]",
@@ -107,6 +108,8 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
+        parser_get.add_argument("items_per_schedule", type=natural, default=10000,
+                                description="maximum number of date_times per schedule")
 
         self.method_decorators.append(complete_links(self))
 
@@ -118,9 +121,14 @@ class Schedules(ResourceUri, ResourceUtc):
             args['forbidden_uris[]'].append(forbid_id)
 
         args["nb_stoptimes"] = args["count"]
-        args["interface_version"] = 1
+
+        # retrocompatibility
+        if args['max_date_times'] is not None:
+            args['items_per_schedule'] = args['max_date_times']
 
         if uri is None:
+            if not args['filter']:
+                raise InvalidArguments('filter')
             first_filter = args["filter"].lower().split("and")[0].strip()
             parts = first_filter.lower().split("=")
             if len(parts) != 2:
@@ -248,8 +256,6 @@ class StopSchedules(Schedules):
 
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
-        self.parsers["get"].add_argument("interface_version", type=int,
-                                         default=1, hidden=True)
 
     @marshal_with(stop_schedules)
     @ManageError()

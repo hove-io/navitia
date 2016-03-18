@@ -29,10 +29,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
 import logging
 import pytz
-from jormungandr.exceptions import RegionNotFound
+from jormungandr.exceptions import RegionNotFound, UnableToParse
 
 class ResourceUtc:
     def __init__(self):
@@ -73,8 +74,10 @@ class ResourceUtc:
 
         if self.tz() is None:
             return original_datetime
-
-        utctime = self.tz().normalize(self.tz().localize(original_datetime)).astimezone(pytz.utc)
+        try:
+            utctime = self.tz().normalize(self.tz().localize(original_datetime)).astimezone(pytz.utc)
+        except ValueError as e:
+            raise UnableToParse("Unable to parse datetime, " + e.message)
 
         return utctime
 

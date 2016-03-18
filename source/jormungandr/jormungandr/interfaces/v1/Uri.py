@@ -29,20 +29,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
+
 from flask.ext.restful import fields, marshal_with, reqparse, abort
 from jormungandr import i_manager, authentication
-from converters_collection_type import collections_to_resource_type
-from fields import stop_point, stop_area, route, line, line_group, \
+from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
+from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line, line_group, \
     physical_mode, commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
     journey_pattern, trip, connection, error, PbField, contributor, dataset
-from VehicleJourney import vehicle_journey
+from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from collections import OrderedDict
-from ResourceUri import ResourceUri, protect
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, date_time_format
-from errors import ManageError
-from Coord import Coord
+from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
+from jormungandr.interfaces.v1.errors import ManageError
+from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.interfaces.v1.fields import DisruptionsField, feed_publisher
 from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.inputs import boolean
@@ -65,7 +67,7 @@ class Uri(ResourceUri, ResourceUtc):
         parser = self.parsers["get"]
         parser.add_argument("start_page", type=int, default=0,
                             description="The page where you want to start")
-        parser.add_argument("count", type=int, default=25,
+        parser.add_argument("count", type=default_count_arg_type, default=25,
                             description="Number of objects you want on a page")
         parser.add_argument("depth", type=depth_argument,
                             default=1,
