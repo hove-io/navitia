@@ -274,7 +274,6 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                                             const boost::posix_time::ptime& current_datetime) {
 
     const auto data = data_manager.get_data();
-    int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
         forbidden_uri.push_back(request.forbidden_uri(i));
@@ -321,8 +320,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                                              boost::optional<const std::string>(),
                     forbidden_uri, from_datetime,
                     request.duration(),
-                    request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), rt_level);
+                    request.depth(),
+                    request.count(), request.start_page(), rt_level, request.items_per_schedule());
             break;
         case pbnavitia::ROUTE_SCHEDULES:
             timetables::route_schedule(pb_creator, request.departure_filter(),
@@ -330,7 +329,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     boost::optional<const std::string>(),
                     forbidden_uri,
                     from_datetime,
-                    request.duration(), max_date_times, request.depth(),
+                    request.duration(), request.items_per_schedule(), request.depth(),
                     request.count(), request.start_page(), rt_level);
             break;
         default:

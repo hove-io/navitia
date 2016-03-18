@@ -793,13 +793,13 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 #### Parameters
 
-Required | Name             | Type      | Description                                                                              | Default Value
----------|------------------|-----------|------------------------------------------------------------------------------------------|--------------
-yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
-nop      | duration         | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
-nop      | max_date_times   | int       | Maximum number of columns per schedule.                                                  |
-nop      | forbidden_uris[] | id        | If you want to avoid lines, modes, networks, etc.                                        | 
-nop      | data_freshness   | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
+Required | Name               | Type      | Description                                                                              | Default Value
+---------|--------------------|-----------|------------------------------------------------------------------------------------------|--------------
+yep      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
+nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
+nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
+nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        | 
+nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
 
 
 #### Objects
@@ -846,6 +846,7 @@ Required | Name           | Type                    | Description        | Defau
 yep      | from_datetime  | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
 nop      | duration         | int                            | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
 nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    | 
+nop      | items_per_schedule | int       | Maximum number of datetimes per schedule.                                                  |
 nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
 
 
