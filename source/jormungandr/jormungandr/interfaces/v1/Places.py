@@ -34,7 +34,7 @@ from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.v1.fields import DisruptionsField
+from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
@@ -61,7 +61,7 @@ class Lit(fields.Raw):
 places = {
     "places": NonNullList(NonNullNested(place)),
     "error": PbField(error, attribute='error'),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
@@ -288,7 +288,7 @@ places_nearby = {
     "places_nearby": NonNullList(NonNullNested(place_nearby)),
     "error": PbField(error, attribute='error'),
     "pagination": PbField(pagination),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
 }
 
 places_types = {'stop_areas', 'stop_points', 'pois',

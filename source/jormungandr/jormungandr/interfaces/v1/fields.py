@@ -835,12 +835,3 @@ disruption_marshaller = {
     "disruption_uri": fields.String(),
     "contributor": fields.String()
 }
-
-
-class DisruptionsField(fields.Raw):
-    """
-    Dump the real disruptions (and there will be link to them)
-    """
-
-    def output(self, key, obj):
-        return [marshal(d, disruption_marshaller, display_null=False) for d in obj.impacts]
