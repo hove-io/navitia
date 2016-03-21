@@ -11,9 +11,7 @@
 
 Presentation
 ============
-This is the Navitia repository.
-
-Navitia is a service providing:
+Welcome to the Navitia repository. Navitia is a service providing:
 
 #. multi-modal journeys computation
 
