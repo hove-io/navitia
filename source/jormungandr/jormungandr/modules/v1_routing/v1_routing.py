@@ -113,10 +113,10 @@ class V1Routing(AModule):
         self.add_resource(Index.TechnicalStatus,
                           '/status',
                           endpoint='technical_status')
-
+        lon_lat = '<lon:lon>;<lat:lat>/'
         coverage = '/coverage/'
         region = coverage + '<region:region>/'
-        coord = coverage + '<lon:lon>;<lat:lat>/'
+        coord = coverage + lon_lat
 
         self.add_resource(Coverage.Coverage,
                           coverage,
@@ -125,8 +125,8 @@ class V1Routing(AModule):
                           endpoint='coverage')
 
         self.add_resource(Coord.Coord,
-                          '/coord/<lon:lon>;<lat:lat>',
-                          '/coords/<lon:lon>;<lat:lat>',
+                          '/coord/' + lon_lat,
+                          '/coords/' + lon_lat,
                           endpoint='coord')
 
         collecs = converters_collection_type.collections_to_resource_type.keys()
@@ -155,7 +155,7 @@ class V1Routing(AModule):
         self.add_resource(Places.Places,
                           region + 'places',
                           coord + 'places',
-                           '/places',
+                          '/places',
                           endpoint='places')
         self.add_resource(Ptobjects.Ptobjects,
                           region + 'pt_objects',
@@ -172,6 +172,8 @@ class V1Routing(AModule):
                           coord + 'places_nearby',
                           region + '<uri:uri>/places_nearby',
                           coord + '<uri:uri>/places_nearby',
+                          '/coord/' + lon_lat + 'places_nearby',
+                          '/coords/' + lon_lat + 'places_nearby',
                           endpoint='places_nearby')
 
         self.add_resource(Journeys.Journeys,
