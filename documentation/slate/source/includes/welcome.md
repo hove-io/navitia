@@ -4,7 +4,7 @@ Welcome to navitia.io
 Overview
 --------
 
-*navitia.io* The open API for building cool stuff with transport data.
+*navitia.io* is the open API for building cool stuff with transport data.
 It provide the following services
 
 * journeys computation
@@ -39,12 +39,12 @@ Or, in a simplier way, you can add your token in the address bar like :
 See [authentication](#authentication) section to find out more details on **how to use your token**.
 
 #### Then,
-use the API ! The easiest is probably to jump to [Examples](#examples) below.
+use the API ! The easiest is probably to jump to [Examples](#some_examples) below.
 
 At some point you will want to read:
 
 - [transport public lexicon](#lexicon)
-- [integration](#v1 interface)
+- [Ressources overview](#ressources)
 
 About the data
 --------------

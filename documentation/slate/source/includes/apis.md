@@ -209,7 +209,7 @@ Examples :
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4>
 -   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code=\"métro\ 347\">
 
-### Examples
+### Few exploration examples
 
 Response example for this request
 <https://api.navitia.io/v1/coverage/fr-idf/physical_modes>

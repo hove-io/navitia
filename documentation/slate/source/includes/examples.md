@@ -1,5 +1,5 @@
-Some examples
-=============
+<a name="some_examples"></a>Some examples
+=========================================
 
 This chapter shows some usages with the minimal required arguments. However, this is not a reference and not all APIs nor arguments are shown.
 
