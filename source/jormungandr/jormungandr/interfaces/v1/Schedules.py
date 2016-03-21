@@ -44,7 +44,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from flask.ext.restful.inputs import natural, boolean
-from jormungandr.interfaces.v1.fields import DisruptionsField
+from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
 from jormungandr.resources_utc import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link
 from functools import wraps
@@ -217,7 +217,7 @@ route_schedules = {
     "error": PbField(error, attribute='error'),
     "route_schedules": fields.List(fields.Nested(route_schedule_fields)),
     "pagination": fields.Nested(pagination),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
@@ -247,7 +247,7 @@ stop_schedules = {
     "stop_schedules": fields.List(fields.Nested(stop_schedule)),
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
@@ -277,7 +277,7 @@ departures = {
                               attribute="next_departures"),
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 
@@ -285,7 +285,7 @@ arrivals = {
     "arrivals": fields.List(fields.Nested(passage), attribute="next_arrivals"),
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(fields.Nested(feed_publisher))
 }
 

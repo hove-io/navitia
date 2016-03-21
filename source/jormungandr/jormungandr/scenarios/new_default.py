@@ -580,6 +580,12 @@ def merge_responses(responses):
             initial_feed_publishers[fp.id] = fp
         merged_response.feed_publishers.extend([fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers])
 
+        # handle impacts
+        for i in r.impacts:
+            if any(other.uri == i.uri for other in merged_response.impacts):
+                continue
+            merged_response.impacts.extend([i])
+
     if not merged_response.journeys:
         # we aggregate the errors found
 

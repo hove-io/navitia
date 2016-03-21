@@ -45,7 +45,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
-from jormungandr.interfaces.v1.fields import DisruptionsField, feed_publisher
+from jormungandr.interfaces.v1.fields import disruption_marshaller, feed_publisher, NonNullList, NonNullNested
 from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.inputs import boolean
 from jormungandr.interfaces.parsers import option_value
@@ -194,7 +194,7 @@ def journey_pattern_points(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -217,7 +217,7 @@ def commercial_modes(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -240,7 +240,7 @@ def journey_patterns(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -263,7 +263,7 @@ def vehicle_journeys(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -286,7 +286,7 @@ def trips(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -309,7 +309,7 @@ def physical_modes(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -331,7 +331,7 @@ def stop_points(is_collection):
                  NonNullList(fields.Nested(stop_point, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -357,7 +357,7 @@ def stop_areas(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False))),
             ]
@@ -383,7 +383,7 @@ def connections(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -406,7 +406,7 @@ def companies(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -429,7 +429,7 @@ def poi_types(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -452,7 +452,7 @@ def routes(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -477,7 +477,7 @@ def line_groups(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
             ]
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
@@ -501,7 +501,7 @@ def lines(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -527,7 +527,7 @@ def pois(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -553,7 +553,7 @@ def networks(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -575,7 +575,7 @@ def disruptions(is_collection):
             self.collections = [
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -601,7 +601,7 @@ def contributors(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
@@ -624,7 +624,7 @@ def datasets(is_collection):
                                            display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
-                ("disruptions", DisruptionsField),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]

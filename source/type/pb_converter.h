@@ -158,6 +158,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 struct PbCreator {
     std::set<const nt::Contributor*> contributors;
+    std::set<boost::shared_ptr<type::disruption::Impact>> impacts;
     const nt::Data& data;
     pt::ptime now;
     pt::time_period action_period;
@@ -186,6 +187,13 @@ struct PbCreator {
     void pb_fill(const std::vector<N*>& nav_list, int depth,
                  const DumpMessage dump_message = DumpMessage::Yes);
 
+    template <typename P>
+    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object, int depth) {
+        Filler(depth, DumpMessage::Yes, *this).fill_message(impact, pb_object);
+    }
+
+    const type::disruption::Impact* get_impact(const std::string& uri) const;
+
     // Raptor api
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
@@ -212,10 +220,7 @@ struct PbCreator {
 
     void fill_pb_error(const pbnavitia::Error::error_id, const pbnavitia::ResponseType&, const std::string&);
     void fill_pb_error(const pbnavitia::Error::error_id, const std::string&);
-    pbnavitia::Response get_response(){
-        Filler(0, DumpMessage::No, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
-        return std::move(response);
-    }
+    pbnavitia::Response get_response();
 
     pbnavitia::PtObject* add_places_nearby();
     pbnavitia::Journey* add_journeys();
@@ -225,6 +230,7 @@ struct PbCreator {
     pbnavitia::JourneyPattern* add_journey_patterns();
     pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
     pbnavitia::Trip* add_trips();
+    pbnavitia::Impact* add_impacts();
     pbnavitia::RoutePoint* add_route_points();
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
@@ -297,14 +303,21 @@ private:
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
+        template<typename Nav, typename Pb>
+        void fill_pb_object(const std::set<boost::shared_ptr<Nav>>& nav_list,
+                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto& nav_obj: nav_list) {
+                fill_pb_object(nav_obj.get(), pb_list->Add());
+            }
+        }
 
-        template <typename NAV, typename P>
-        void fill_messages(const NAV* nav_obj, P* pb_obj){
+        template <typename P>
+        void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
             if (nav_obj == nullptr) {return ;}
             if (dump_message == DumpMessage::No) { return; }
             for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
                                                                         pb_creator.action_period)){
-                fill_message(*message, pb_obj);
+                fill_message(message, pb_obj);
             }
         }
 
@@ -337,9 +350,10 @@ private:
         }
 
         template <typename P>
-        void fill_message(const nt::disruption::Impact& impact, P pb_object);
+        void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object);
 
-        void fill_informed_entity(const nt::disruption::PtObj& ptobj,const nt::disruption::Impact& impact,
+        void fill_informed_entity(const nt::disruption::PtObj& ptobj,
+                                  const nt::disruption::Impact& impact,
                                   pbnavitia::Impact* pb_impact);
 
         void fill_pb_object(const nt::Contributor*, pbnavitia::FeedPublisher*);
@@ -371,15 +385,11 @@ private:
         void fill_pb_object(const jpp_pair*, pbnavitia::JourneyPatternPoint*);
         void fill_pb_object(const navitia::vptranslator::BlockPattern* ,pbnavitia::Calendar*);
         void fill_pb_object(const nt::Route*, pbnavitia::PtDisplayInfo*);
+        void fill_pb_object(const nt::disruption::Impact*, pbnavitia::Impact*);
 
         void fill_pb_object(const ng::POI*, pbnavitia::Poi*);
         void fill_pb_object(const ng::POI*, pbnavitia::Address*);
         void fill_pb_object(const ng::POIType*, pbnavitia::PoiType*);
-        // messages
-        template <typename PBOBJECT>
-        void fill_pb_object(const nt::disruption::Impact* impact, PBOBJECT* obj){
-            fill_message(*impact, obj);
-        }
 
         void fill_pb_object(const VjOrigDest*, pbnavitia::hasEquipments*);
         void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);

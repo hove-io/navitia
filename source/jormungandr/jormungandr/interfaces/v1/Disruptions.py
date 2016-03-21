@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import marshal_with, reqparse
+from flask.ext.restful import marshal_with, reqparse, fields
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
@@ -43,7 +43,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta
-from jormungandr.interfaces.v1.fields import DisruptionsField
+from jormungandr.interfaces.v1.fields import disruption_marshaller
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -56,7 +56,7 @@ traffic = {
     "traffic_reports": NonNullList(NonNullNested(disruption)),
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
-    "disruptions": DisruptionsField,
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
 }
 
 

@@ -112,7 +112,7 @@ def _create_template_from_passage(passage):
     template.pt_display_informations.ClearField("uris")
     template.pt_display_informations.ClearField("has_equipments")
     del template.pt_display_informations.messages[:]
-    del template.pt_display_informations.impacts[:]
+    del template.pt_display_informations.impact_uris[:]
     del template.pt_display_informations.notes[:]
     del template.pt_display_informations.headsigns[:]
     template.stop_date_time.ClearField("arrival_date_time")
