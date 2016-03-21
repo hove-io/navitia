@@ -41,7 +41,6 @@ class TestPlaces(AbstractTestFixture):
 
     def test_places_by_id(self):
         """can we get the complete address from coords"""
-
         # we transform x,y to lon,lat using N_M_TO_DEG constant
         lon = 10. / 111319.9
         lat = 100. / 111319.9
@@ -108,6 +107,19 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(response['places_nearby'])
 
         assert len(response['disruptions']) == 0
+
+    def test_places_nearby_with_coord_without_region(self):
+        """check places_nearby with /coord"""
+        response = self.query("/v1/coord/0.000001;0.000898311281954/places_nearby")
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+
+    def test_places_nearby_with_coords_without_region(self):
+        """check places_nearby with /coords"""
+
+        response = self.query("/v1/coords/0.000001;0.000898311281954/places_nearby")
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
 
     def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
