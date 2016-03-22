@@ -4,17 +4,17 @@ APIs
 <a name="coverage"></a>Coverage
 -------------------------------
 
-As known as `/coverage` service.
+Also known as `/coverage` service.
 
 You can easily navigate through regions covered by navitia.io, with the
 coverage api. The shape of the region is provided in GeoJSON.
 
 The only arguments are the ones of [paging](#paging).
 
-<a name="coord"></a>Inverted geocoding 
+<a name="coord"></a>Inverted geocoding
 --------------------------------------
 
-As known as `/coord` service.
+Also known as `/coord` service.
 
 Very simple service: you give Navitia some coordinates, it answers you
 where you are:
@@ -79,7 +79,7 @@ accessible local mobility services:
 <a name="pt-ref"></a>Public transportation objects exploration
 --------------------------------------------------------------
 
-As known as `/networks`, `/lines`, `/stop_areas`... services.
+Also known as `/networks`, `/lines`, `/stop_areas`... services.
 
 
 Once you have selected a region, you can explore the public
@@ -250,7 +250,7 @@ Other examples
 <a name="pt-objects"></a>Autocomplete on Public Transport objects 
 -----------------------------------------------------------------
 
-As known as `/pt_objects` service.
+Also known as `/pt_objects` service.
 
 This api search in public transport objects via their names. It's a kind
 of magical autocomplete on public transport data. It returns, in
@@ -344,7 +344,7 @@ Response example for :
 <a name="places"></a>Autocomplete on geographical objects
 ---------------------------------------------------------
 
-As known as `/places` service.
+Also known as `/places` service.
 
 This api search in all geographical objects via their names. It returns,
 in addition of classic objects, a collection of [places](#place) . This api is
@@ -402,7 +402,7 @@ Response example for :
 <a name="places-nearby"></a>Places Nearby
 -----------------------------------------
 
-As known as `/places_nearby` service.
+Also known as `/places_nearby` service.
 
 This api search for public transport object near another object, or near
 coordinates. It returns, in addition of classic objects, a collection of
@@ -464,7 +464,7 @@ Response example for this request
 <a name="journeys"></a>Journeys
 -------------------------------
 
-As known as `/journeys` service. This api computes journeys.
+Also known as `/journeys` service. This api computes journeys.
 
 If used within the coverage api, it will retrieve the next journeys from
 the selected public transport object or coordinates.
@@ -640,7 +640,7 @@ direction       | int                    | Angle (in degree) between the previou
 <a name="route-schedules"></a>Route Schedules and time tables
 -------------------------------------------------------------
 
-As known as `/route_schedules` service.
+Also known as `/route_schedules` service.
 
 This api gives you access to schedules of routes. The response is made
 of an array of route_schedule, and another one of [note](#note). You can
@@ -691,7 +691,7 @@ stop_point | [stop_point](#stop-point)              | The stop point of the row
 <a name="stop-schedules"></a>Stop Schedules and other kind of time tables
 -------------------------------------------------------------------------
 
-As known as `/stop_schedules` service.
+Also known as `/stop_schedules` service.
 
 This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
@@ -720,7 +720,7 @@ nop      | data_freshness   | enum                           | Define the freshn
 <a name="departures"></a>Departures
 -----------------------------------
 
-As known as `/departures` service.
+Also known as `/departures` service.
 
 This api retrieves a list of departures from a datetime of a selected
 object. Departures are ordered chronologically in ascending order.
@@ -746,7 +746,7 @@ nop      | data_freshness   | enum                            | Define the fresh
 <a name="arrivals"></a>Arrivals
 -------------------------------
 
-As known as `/arrivals` service.
+Also known as `/arrivals` service.
 
 This api retrieves a list of arrivals from a datetime of a selected
 object. Arrivals are ordered chronologically in ascending order.
@@ -754,7 +754,7 @@ object. Arrivals are ordered chronologically in ascending order.
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
 
-As known as `/traffic_reports` service.
+Also known as `/traffic_reports` service.
 
 This service provides the state of public transport traffic. It can be
 called for an overall coverage or for a specific object.
