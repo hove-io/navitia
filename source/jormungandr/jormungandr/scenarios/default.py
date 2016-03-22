@@ -283,7 +283,7 @@ class Scenario(simple.Scenario):
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
 
-        if len(resp.journeys) == 0 and at_least_one_journey_found and not resp.HasField("error"):
+        if len(resp.journeys) == 0 and at_least_one_journey_found and not resp.HasField(b"error"):
             error = resp.error
             error.id = response_pb2.Error.no_solution
             error.message = "No journey found, all were filtered"
@@ -339,8 +339,8 @@ class Scenario(simple.Scenario):
             return
 
         #if the initial response was an error we remove the error since we have result now
-        if initial_response.HasField('error'):
-            initial_response.ClearField('error')
+        if initial_response.HasField(b'error'):
+            initial_response.ClearField(b'error')
 
         #we don't want to add a journey already there
         tickets_to_add = set()
@@ -403,7 +403,7 @@ class Scenario(simple.Scenario):
                                    and len(request['origin']) > 1:
                 return #for n-m calculation we don't want to filter
 
-        if resp.HasField("error"):
+        if resp.HasField(b"error"):
             return #we don't filter anything if errors
 
         #filter on journey type (the qualifier)

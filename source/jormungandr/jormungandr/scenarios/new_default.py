@@ -561,7 +561,7 @@ def merge_responses(responses):
     merged_response = response_pb2.Response()
 
     for r in responses:
-        if r.HasField('error') or not r.journeys:
+        if r.HasField(b'error') or not r.journeys:
             # we do not take responses with error, but if all responses have errors, we'll aggregate them
             continue
 
@@ -589,7 +589,7 @@ def merge_responses(responses):
     if not merged_response.journeys:
         # we aggregate the errors found
 
-        errors = {r.error.id: r.error for r in responses if r.HasField('error')}
+        errors = {r.error.id: r.error for r in responses if r.HasField(b'error')}
         if len(errors) == 1:
             merged_response.error.id = errors.values()[0].id
             merged_response.error.message = errors.values()[0].message
