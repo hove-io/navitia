@@ -199,6 +199,44 @@ error is sent. If filter can not be parsed, an "unable_to_parse" error
 is sent. If object or attribute provided is not handled, the filter is
 ignored.
 
+#### {collection}.has_code
+
+Every object managed by Navitia comes with its own list of ids. 
+You will find some source ids, merge ids, etc. in "codes" list in json responses.
+Be careful, there are not unique. Navitia id is the only lonely unique id.
+
+``` json
+        codes :
+        [
+            0 :
+            {
+                type : "external_code",
+                value : "OBO5852"
+            },
+            1 :
+            {
+                type : "gtfs_stop_code",
+                value : "PLA40A"
+            },
+            2 :
+            {
+                type : "source",
+                value : "5852"
+            }
+        ]
+```
+
+You may have to request an object by one of these ids, in order to call an external service for example.
+
+The filter format is `filter={collection_name}.has_code({code_type},{code_value})`
+
+Examples :
+
+-   <https://api.navitia.io/v1/coverage/fr-sw/stop_points?filter=stop_point.has_code(source,5852)>
+-   <https://api.navitia.io/v1/coverage/fr-sw/stop_areas?filter=stop_area.has_code(gtfs_stop_code,1)>
+-   <http://vip-jormpre-ws.mutu.prod.canaltp.fr/v1/coverage/fr-sw/lines?filter=line.has_code(source,11821949021891615)>
+
+
 #### line.code
 
 It allows you to request navitia objects referencing a line whose code
@@ -246,6 +284,9 @@ Other examples
     -   <https://api.navitia.io/v1/coverage/fr-idf/lines>
 -   Line list for one mode
     -   <https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines>
+
+But you will find lots of more advanced example in [a quick exploration](#a-quick-exploration)
+chapter
 
 <a name="pt-objects"></a>Autocomplete on Public Transport objects 
 -----------------------------------------------------------------
