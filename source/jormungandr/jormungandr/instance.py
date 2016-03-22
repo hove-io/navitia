@@ -375,7 +375,7 @@ class Instance(object):
         """
         update the property of an instance from a response if the metadatas field if present
         """
-        if response.HasField("metadatas") and response.publication_date != self.publication_date:
+        if response.HasField(b"metadatas") and response.publication_date != self.publication_date:
             with self.lock as lock:
                 if response.metadatas.shape and response.metadatas.shape != "":
                     try:
@@ -398,7 +398,7 @@ class Instance(object):
             resp = self.send_and_receive(req, timeout=1000, quiet=True)
             self.update_property(resp)
             #the instance is automatically updated on a call
-            if resp.HasField('publication_date') and self.publication_date != resp.publication_date:
+            if resp.HasField(b'publication_date') and self.publication_date != resp.publication_date:
                 self.publication_date = resp.publication_date
                 return True
         except DeadSocketException:
