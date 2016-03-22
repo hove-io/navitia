@@ -294,11 +294,6 @@ def similar_journeys_vj_generator(journey):
 
 
 def similar_journeys_line_generator(journey):
-    is_park_section = lambda section: section.type in (response_pb2.PARK,
-                                                       response_pb2.LEAVE_PARKING,
-                                                       response_pb2.BSS_PUT_BACK,
-                                                       response_pb2.BSS_RENT)
-
     for idx, s in enumerate(journey.sections):
         # special case, we don't want to consider the walking section after/before parking a car
         # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
