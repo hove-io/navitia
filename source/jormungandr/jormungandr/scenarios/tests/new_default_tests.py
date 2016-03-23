@@ -262,8 +262,8 @@ def add_pt_sections(journey):
 
 
 def create_next_kraken_request_test():
-    request_clock = { 'datetime':100000, 'clockwise':True }
-    request_anticlock = { 'datetime':110000, 'clockwise':False }
+    request_clock = {'datetime': 100000, 'clockwise': True}
+    request_anticlock = {'datetime': 110000, 'clockwise': False}
     response = response_pb2.Response()
 
     # test with one walk and one pt
@@ -281,10 +281,10 @@ def create_next_kraken_request_test():
     add_pt_sections(journey_pt)
     # clockwise: we should have the next request one second after departure of pt journey
     next_request = create_next_kraken_request(request_clock, [response])
-    assert next_request == { 'datetime':100501, 'clockwise':True }
+    assert next_request == {'datetime': 100501, 'clockwise': True}
     # anticlockwise: we should have the next request one second before arrival of pt journey
     next_request = create_next_kraken_request(request_anticlock, [response])
-    assert next_request == { 'datetime':102999, 'clockwise':False }
+    assert next_request == {'datetime': 102999, 'clockwise': False}
 
     # test with one walk, 2 pt 1005->1030 and 1010->1025
     journey_pt = response.journeys.add()
@@ -294,10 +294,10 @@ def create_next_kraken_request_test():
     add_pt_sections(journey_pt)
     # clockwise: we should have the next request one second after departure of pt journey arriving at 1025
     next_request = create_next_kraken_request(request_clock, [response])
-    assert next_request == { 'datetime':101001, 'clockwise':True }
+    assert next_request == {'datetime': 101001, 'clockwise': True}
     # anticlockwise: we should have the next request one second before arrival of pt journey leaving at 1010
     next_request = create_next_kraken_request(request_anticlock, [response])
-    assert next_request == { 'datetime':102499, 'clockwise':False }
+    assert next_request == {'datetime': 102499, 'clockwise': False}
 
     # test with one walk, 3 pt 1005->1030, 1010->1025 and 1015->1025
     journey_pt = response.journeys.add()
@@ -307,7 +307,7 @@ def create_next_kraken_request_test():
     add_pt_sections(journey_pt)
     # clockwise: we should have the next request one second after departure of pt journey 1015->1025
     next_request = create_next_kraken_request(request_clock, [response])
-    assert next_request == { 'datetime':101501, 'clockwise':True }
+    assert next_request == {'datetime': 101501, 'clockwise': True}
 
     # test with one walk, 4 pt 1005->1030, 1010->1025, 1015->1025 and 1015->1020
     journey_pt = response.journeys.add()
@@ -317,4 +317,4 @@ def create_next_kraken_request_test():
     add_pt_sections(journey_pt)
     # anticlockwise: we should have the next request one second after departure of pt journey 1015->1020
     next_request = create_next_kraken_request(request_anticlock, [response])
-    assert next_request == { 'datetime':101999, 'clockwise':False }
+    assert next_request == {'datetime': 101999, 'clockwise': False}
