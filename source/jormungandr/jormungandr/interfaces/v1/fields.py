@@ -356,7 +356,7 @@ class SectionGeoJson(fields.Raw):
 
     def output(self, key, obj):
         coords = []
-        if not obj.HasField("type"):
+        if not obj.HasField(b"type"):
             logging.getLogger(__name__).warn("trying to output wrongly formated object as geojson, we skip")
             return
 
@@ -376,7 +376,7 @@ class SectionGeoJson(fields.Raw):
             "type": "LineString",
             "coordinates": [],
             "properties": [{
-                "length": 0 if not obj.HasField("length") else obj.length
+                "length": 0 if not obj.HasField(b"length") else obj.length
             }]
         }
         for coord in coords:
@@ -386,7 +386,7 @@ class SectionGeoJson(fields.Raw):
 
 class Co2Emission(fields.Raw):
     def output(self, key, obj):
-        if not obj.HasField("co2_emission"):
+        if not obj.HasField(b"co2_emission"):
             return
         return {
             'value': obj.co2_emission.value,
