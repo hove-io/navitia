@@ -42,9 +42,19 @@ class SynthesePassage(object):
 
 
 class SyntheseRoutePoint(object):
-    def __init__(self):
-        self.syn_route_id = None
-        self.syn_stop_point_id = None
+
+    def __init__(self, rt_id=None, sp_id=None):
+        self.syn_route_id = rt_id
+        self.syn_stop_point_id = sp_id
+
+    def __key(self):
+        return (self.syn_route_id, self.syn_stop_point_id)
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
 
 
 class SyntheseXmlReader(object):
@@ -70,23 +80,6 @@ class SyntheseXmlReader(object):
         passage.waiting_time = parse_time(xml_journey.get('waiting_time'))
         return passage
 
-    def find_route_point(self, route_id, stop_point_id, result):
-        for key, value in result.items():
-            if key.syn_stop_point_id == stop_point_id and key.syn_route_id == route_id:
-                return key
-        return None
-
-    def __get_or_create_route_point(self, xml_journey, result):
-        route_id = xml_journey.get('routeId')
-        stop_point_id = self.__get_value(xml_journey, 'stop', 'id')
-        route_point = self.find_route_point(route_id, stop_point_id, result)
-        if not route_point:
-            route_point = SyntheseRoutePoint()
-            route_point.syn_route_id = route_id
-            route_point.syn_stop_point_id = stop_point_id
-            result[route_point] = []
-        return route_point
-
     def __build(self, xml):
         try:
             root = et.fromstring(xml)
@@ -99,7 +92,9 @@ class SyntheseXmlReader(object):
     def get_synthese_passages(self, xml):
         result = {}
         for xml_journey in self.__build(xml):
-            route_point = self.__get_or_create_route_point(xml_journey, result)
+            route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self.__get_value(xml_journey, 'stop', 'id'))
+            if route_point not in result:
+                result[route_point] = []
             passage = self.__get_synthese_passage(xml_journey)
             result[route_point].append(passage)
         return result
