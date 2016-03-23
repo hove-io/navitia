@@ -203,7 +203,7 @@ ignored.
 
 Every object managed by Navitia comes with its own list of ids. 
 You will find some source ids, merge ids, etc. in "codes" list in json responses.
-Be careful, these codes may not be unique. The navitia id is the only lonely unique id.
+Be careful, these codes may not be unique. The navitia id is the only unique id.
 
 ``` json
         "codes" :
