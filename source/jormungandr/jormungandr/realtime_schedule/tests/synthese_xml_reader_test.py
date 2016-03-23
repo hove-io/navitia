@@ -58,7 +58,7 @@
 
 from datetime import datetime
 from nose.tools.nontrivial import raises
-from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader
+from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader, SyntheseRoutePoint
 from jormungandr.interfaces.parsers import date_time_format
 from aniso8601 import parse_time
 
@@ -83,30 +83,39 @@ def get_xml_parser():
            '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' \
            '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' \
            '</journey>' \
+           '<journey routeId="2533412229399934" dateTime="2016-Mar-22 12:15:00" blink="0" realTime="yes" waiting_time="00:10:22">' \
+           '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' \
+           '<line id="11821953316814878" creatorId="21" name="Ligne 21" shortName="21" longName="" color="(217,232,106)" xmlColor="#d9e86a" style="jaune" image="ligne-21.jpg" direction="Quartier Chambon" wayback="0">' \
+           '<network id="6192453782601729" name="T2C" image=""/>' \
+           '</line>' \
+           '<origin id="1970329131942531" name="Stade G. Montpied" cityName="Clermont-Ferrand"/>' \
+           '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' \
+           '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' \
+           '</journey>' \
            '</timeTable>'
 
 
 def xml_valid_test():
     builder = SyntheseXmlReader()
     result = builder.get_synthese_passages(get_xml_parser())
+    route_point = SyntheseRoutePoint('2533412229452279', '3377704015495922')
 
-    route_point = builder.find_route_point('2533412229452279', '3377704015495922', result)
-    assert route_point.syn_route_id == '2533412229452279'
-    assert route_point.syn_stop_point_id == '3377704015495922'
-
+    assert route_point in result
     assert len(result[route_point]) == 1
     assert result[route_point][0].real_time == True
     assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:07:37")
     assert result[route_point][0].waiting_time == parse_time("00:02:59")
 
-    route_point = builder.find_route_point('2533412229399934', '3377704015495922', result)
-    assert route_point.syn_route_id == '2533412229399934'
-    assert route_point.syn_stop_point_id == '3377704015495922'
-
-    assert len(result[route_point]) == 1
+    route_point = SyntheseRoutePoint('2533412229399934', '3377704015495922')
+    assert route_point in result
+    assert len(result[route_point]) == 2
     assert result[route_point][0].real_time == True
     assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:15:00")
     assert result[route_point][0].waiting_time == parse_time("00:10:22")
+
+    assert result[route_point][1].real_time == True
+    assert result[route_point][1].date_time == date_time_format("2016-Mar-22 12:15:00")
+    assert result[route_point][1].waiting_time == parse_time("00:10:22")
 
 @raises(ValueError)
 def xml_date_time_invalid_test():
