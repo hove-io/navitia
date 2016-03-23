@@ -12,6 +12,8 @@ employed in www.navitia.io
 You can read a mobility lexicon at
 <https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md>
 
+You will often read "PT" in this document. PT stands for public transport.
+
 Stop Point
 ----------
 

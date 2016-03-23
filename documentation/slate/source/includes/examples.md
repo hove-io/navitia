@@ -59,7 +59,7 @@ We could push the exploration further and:
     - there is an api for that. See [pt_objects](#pt-objects)
     - <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro>
     - Response contain one network, one mode, and many lines
-- Let's try some filtering (see [ptreferential](#ptreferential))
+- Let's try some filtering (see [PT objects exploration](#pt-ref))
     - filter on the specific metro network ("id": "network:OIF:439" extracted from last request)
     - <https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/>
     - physical modes managed by this network
@@ -146,6 +146,7 @@ This API has more options explained in the reference as:
 ### What stations can be reached in the next 20 minutes
 
 The API can computes *all* the reachable stop points from an origin within a given maximum travel duration.
+That's what we call an `isochron` (see [journeys section](#journeys) )
 
 All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request:
 <https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200>

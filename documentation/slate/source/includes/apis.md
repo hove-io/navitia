@@ -203,25 +203,22 @@ ignored.
 
 Every object managed by Navitia comes with its own list of ids. 
 You will find some source ids, merge ids, etc. in "codes" list in json responses.
-Be careful, there are not unique. Navitia id is the only lonely unique id.
+Be careful, these codes may not be unique. The navitia id is the only unique id.
 
 ``` json
-        codes :
+        "codes" :
         [
-            0 :
             {
-                type : "external_code",
-                value : "OBO5852"
+                "type" : "external_code",
+                "value" : "OBO5852"
             },
-            1 :
             {
-                type : "gtfs_stop_code",
-                value : "PLA40A"
+                "type" : "gtfs_stop_code",
+                "value" : "PLA40A"
             },
-            2 :
             {
-                type : "source",
-                value : "5852"
+                "type" : "source",
+                "value" : "5852"
             }
         ]
 ```
@@ -234,7 +231,7 @@ Examples :
 
 -   <https://api.navitia.io/v1/coverage/fr-sw/stop_points?filter=stop_point.has_code(source,5852)>
 -   <https://api.navitia.io/v1/coverage/fr-sw/stop_areas?filter=stop_area.has_code(gtfs_stop_code,1)>
--   <http://vip-jormpre-ws.mutu.prod.canaltp.fr/v1/coverage/fr-sw/lines?filter=line.has_code(source,11821949021891615)>
+-   <https://api.navitia.io/v1/coverage/fr-sw/lines?filter=line.has_code(source,11821949021891615)>
 
 
 #### line.code
@@ -757,6 +754,8 @@ nop      | data_freshness   | enum                           | Define the freshn
 |route|[route](#route)|The route of the schedule|
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
+|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures <div data-collapse><p>enum values:</p><ul><li>date_out_of_bound</li><li>terminus</li><li>active_disruption</li></ul></div>|
+
 
 <a name="departures"></a>Departures
 -----------------------------------
