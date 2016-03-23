@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from aniso8601.time import parse_time
 import xml.etree.ElementTree as et
 import logging
