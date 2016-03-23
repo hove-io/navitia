@@ -623,7 +623,6 @@ class Scenario(simple.Scenario):
         min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
         responses = []
-        last_nb_journeys = 0
         nb_try = 0
         while request is not None and \
                 ((nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys)
@@ -640,16 +639,6 @@ class Scenario(simple.Scenario):
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, api_request)
-
-            cur_nb_journeys = nb_journeys(responses)
-            if cur_nb_journeys == 0:
-                # all journeys are filtered, testing a next
-                pass
-            elif last_nb_journeys == cur_nb_journeys:
-                # we are stuck with the same number of journeys, we stops
-                break
-
-            last_nb_journeys = cur_nb_journeys
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
