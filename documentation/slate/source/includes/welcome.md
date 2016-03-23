@@ -49,7 +49,7 @@ At some point you will want to read:
 About the data
 --------------
 
-The street network is extracted from [OpenStreetMap](#http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvement are achieved by Kisio Digital.
+The street network is extracted from [OpenStreetMap](#http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there https://navitia.opendatasoft.com/
 
 <aside class="success">
     We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.

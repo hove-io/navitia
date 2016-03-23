@@ -206,22 +206,19 @@ You will find some source ids, merge ids, etc. in "codes" list in json responses
 Be careful, these codes may not be unique. The navitia id is the only lonely unique id.
 
 ``` json
-        codes :
+        "codes" :
         [
-            0 :
             {
-                type : "external_code",
-                value : "OBO5852"
+                "type" : "external_code",
+                "value" : "OBO5852"
             },
-            1 :
             {
-                type : "gtfs_stop_code",
-                value : "PLA40A"
+                "type" : "gtfs_stop_code",
+                "value" : "PLA40A"
             },
-            2 :
             {
-                type : "source",
-                value : "5852"
+                "type" : "source",
+                "value" : "5852"
             }
         ]
 ```
