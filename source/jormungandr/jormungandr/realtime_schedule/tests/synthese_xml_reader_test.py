@@ -58,6 +58,7 @@
 
 from datetime import datetime
 from nose.tools.nontrivial import raises
+import xml.etree.ElementTree as et
 from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader, SyntheseRoutePoint
 from jormungandr.interfaces.parsers import date_time_format
 from aniso8601 import parse_time
@@ -127,4 +128,11 @@ def xml_date_time_invalid_test():
 def xml_time_invalid_test():
     builder = SyntheseXmlReader()
     xml = get_xml_parser().replace("00:02:59", "00:81:59", 1)
+    builder.get_synthese_passages(xml)
+
+
+@raises(et.ParseError)
+def xml_invalid_test():
+    builder = SyntheseXmlReader()
+    xml = get_xml_parser().replace("</journey>", "", 1)
     builder.get_synthese_passages(xml)
