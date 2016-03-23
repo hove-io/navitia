@@ -754,6 +754,8 @@ nop      | data_freshness   | enum                           | Define the freshn
 |route|[route](#route)|The route of the schedule|
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
+|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures <div data-collapse><p>enum values:</p><ul><li>date_out_of_bound</li><li>terminus</li><li>active_disruption</li></ul></div>|
+
 
 <a name="departures"></a>Departures
 -----------------------------------
