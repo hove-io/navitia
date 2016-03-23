@@ -34,58 +34,72 @@ from jormungandr.interfaces.parsers import date_time_format
 from aniso8601 import parse_time
 
 
-class Property(object):
+class SynthesePassage(object):
     def __init__(self):
         self.date_time = None
         self.real_time = None
         self.waiting_time = None
 
 
-class Journey(object):
+class SyntheseRoutePoint(object):
     def __init__(self):
-        self.property = Property()
-        self.line_id = None
-        self.route_id = None
-        self.stop_point_id = None
-        self.stop_area_id = None
+        self.syn_route_id = None
+        self.syn_stop_point_id = None
 
 
-class XmlBuilder(object):
-    def __init__(self):
-        self.journeys = []
+class SyntheseXmlReader(object):
 
     def __get_value(self, item, xpath, val):
         value = item.find(xpath)
         if value == None:
-            logging.getLogger(__name__).Debug("Path not found: {path}".format(path=xpath))
+            logging.getLogger(__name__).debug("Path not found: {path}".format(path=xpath))
             return None
         return value.get(val)
 
-    def __make_property(self, property, xml_journey):
+    def __get_synthese_passage(self, xml_journey):
         '''
-        :param property: object property
+        :return passage: object property
         :param xml_journey: journey information
         exceptions :
             ValueError: String is not a valid ISO8601 time./
                         Unable to parse datetime, day is out of range for month (for example)
         '''
-        property.date_time = date_time_format(xml_journey.get('dateTime'))
-        property.real_time = (xml_journey.get('realTime') == 'yes')
-        property.waiting_time = parse_time(xml_journey.get('waiting_time'))
+        passage = SynthesePassage()
+        passage.date_time = date_time_format(xml_journey.get('dateTime'))
+        passage.real_time = (xml_journey.get('realTime') == 'yes')
+        passage.waiting_time = parse_time(xml_journey.get('waiting_time'))
+        return passage
 
-    def __make_journey(self, xml_journey):
-        journey = Journey()
-        journey.route_id = xml_journey.get('routeId')
-        journey.stop_point_id = self.__get_value(xml_journey, 'stop', 'id')
-        journey.line_id = self.__get_value(xml_journey, 'line', 'id')
-        journey.stop_area_id = self.__get_value(xml_journey, 'stopArea', 'id')
-        self.__make_property(journey.property, xml_journey)
-        return journey
+    def find_route_point(self, route_id, stop_point_id, result):
+        for key, value in result.items():
+            if key.syn_stop_point_id == stop_point_id and key.syn_route_id == route_id:
+                return key
+        return None
 
-    def build(self, xml):
+    def __get_or_create_route_point(self, xml_journey, result):
+        route_id = xml_journey.get('routeId')
+        stop_point_id = self.__get_value(xml_journey, 'stop', 'id')
+        route_point = self.find_route_point(route_id, stop_point_id, result)
+        if not route_point:
+            route_point = SyntheseRoutePoint()
+            route_point.syn_route_id = route_id
+            route_point.syn_stop_point_id = stop_point_id
+            result[route_point] = []
+        return route_point
+
+    def __build(self, xml):
         try:
             root = et.fromstring(xml)
         except et.ParseError as e:
             logging.getLogger(__name__).error("invalid xml: {}".format(e.message))
             raise
-        self.journeys = [self.__make_journey(xml_journey) for xml_journey in root.findall('journey')]
+        for xml_journey in root.findall('journey'):
+            yield xml_journey
+
+    def get_synthese_passages(self, xml):
+        result = {}
+        for xml_journey in self.__build(xml):
+            route_point = self.__get_or_create_route_point(xml_journey, result)
+            passage = self.__get_synthese_passage(xml_journey)
+            result[route_point].append(passage)
+        return result

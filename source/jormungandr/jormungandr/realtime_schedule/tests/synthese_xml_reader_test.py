@@ -58,7 +58,7 @@
 
 from datetime import datetime
 from nose.tools.nontrivial import raises
-from jormungandr.realtime_schedule.xml_parser import XmlBuilder
+from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader
 from jormungandr.interfaces.parsers import date_time_format
 from aniso8601 import parse_time
 
@@ -114,30 +114,33 @@ def get_xml_parser(xml):
 
 
 def xml_valid_test():
-    builder = XmlBuilder()
-    builder.build(get_xml_parser('valid'))
+    builder = SyntheseXmlReader()
+    result = builder.get_synthese_passages(get_xml_parser('valid'))
 
-    assert len(builder.journeys) == 2
-    assert builder.journeys[0].line_id == '11821953316814877'
-    assert builder.journeys[0].route_id == '2533412229452279'
-    assert builder.journeys[0].stop_point_id == '3377704015495922'
-    assert builder.journeys[0].property.real_time == True
-    assert builder.journeys[0].property.date_time == date_time_format("2016-Mar-21 12:07:37")
-    assert builder.journeys[0].property.waiting_time == parse_time("00:02:59")
+    route_point = builder.find_route_point('2533412229452279', '3377704015495922', result)
+    assert route_point.syn_route_id == '2533412229452279'
+    assert route_point.syn_stop_point_id == '3377704015495922'
 
-    assert builder.journeys[1].line_id == '11821953316814878'
-    assert builder.journeys[1].route_id == '2533412229399934'
-    assert builder.journeys[1].stop_point_id == '3377704015495922'
-    assert builder.journeys[1].property.real_time == True
-    assert builder.journeys[1].property.date_time == date_time_format("2016-Mar-21 12:15:00")
-    assert builder.journeys[1].property.waiting_time == parse_time("00:10:22")
+    assert len(result[route_point]) == 1
+    assert result[route_point][0].real_time == True
+    assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:07:37")
+    assert result[route_point][0].waiting_time == parse_time("00:02:59")
+
+    route_point = builder.find_route_point('2533412229399934', '3377704015495922', result)
+    assert route_point.syn_route_id == '2533412229399934'
+    assert route_point.syn_stop_point_id == '3377704015495922'
+
+    assert len(result[route_point]) == 1
+    assert result[route_point][0].real_time == True
+    assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:15:00")
+    assert result[route_point][0].waiting_time == parse_time("00:10:22")
 
 @raises(ValueError)
 def xml_date_time_invalid_test():
-    builder = XmlBuilder()
-    builder.build(get_xml_parser('date_time_invalid'))
+    builder = SyntheseXmlReader()
+    builder.get_synthese_passages(get_xml_parser('date_time_invalid'))
 
 @raises(ValueError)
 def xml_time_invalid_test():
-    builder = XmlBuilder()
-    builder.build(get_xml_parser('time_invalid'))
+    builder = SyntheseXmlReader()
+    builder.get_synthese_passages(get_xml_parser('time_invalid'))
