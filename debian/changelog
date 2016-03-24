@@ -1,3 +1,10 @@
+navitia2 (2.4.1) unstable; urgency=low
+
+  * Jormungandr: next = one second after best journey  <https://github.com/CanalTP/navitia/pull/1497> 
+  * Jormungandr: various fixes <https://github.com/CanalTP/navitia/pull/1495>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Thu, 24 Mar 2016 10:03:19 +0100
+
 navitia2 (2.4.0) unstable; urgency=low
 
   * Jormungandr: add items_per_schedule param to /stop_schedules  <https://github.com/CanalTP/navitia/pull/1480>
