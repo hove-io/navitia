@@ -27,10 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from aniso8601.time import parse_time
 import xml.etree.ElementTree as et
 import logging
 from jormungandr.interfaces.parsers import date_time_format
+from jormungandr.schedule import RealTimePassage
 
 
 class SyntheseRoutePoint(object):
@@ -58,10 +58,15 @@ class SyntheseXmlReader(object):
             return None
         return value.get(val)
 
+    def __get_real_time_passage(self, xml_journey):
         '''
+        :return RealTimePassage: object real time passage
         :param xml_journey: journey information
         exceptions :
+            ValueError: Unable to parse datetime, day is out of range for month (for example)
         '''
+        passage = RealTimePassage(date_time_format(xml_journey.get('dateTime')))
+        passage.is_real_time = (xml_journey.get('realTime') == 'yes')
         return passage
 
     def __build(self, xml):
@@ -79,5 +84,6 @@ class SyntheseXmlReader(object):
             route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self.__get_value(xml_journey, 'stop', 'id'))
             if route_point not in result:
                 result[route_point] = []
+            passage = self.__get_real_time_passage(xml_journey)
             result[route_point].append(passage)
         return result
