@@ -31,14 +31,6 @@ from aniso8601.time import parse_time
 import xml.etree.ElementTree as et
 import logging
 from jormungandr.interfaces.parsers import date_time_format
-from aniso8601 import parse_time
-
-
-class SynthesePassage(object):
-    def __init__(self):
-        self.date_time = None
-        self.real_time = None
-        self.waiting_time = None
 
 
 class SyntheseRoutePoint(object):
@@ -66,18 +58,10 @@ class SyntheseXmlReader(object):
             return None
         return value.get(val)
 
-    def __get_synthese_passage(self, xml_journey):
         '''
-        :return passage: object property
         :param xml_journey: journey information
         exceptions :
-            ValueError: String is not a valid ISO8601 time./
-                        Unable to parse datetime, day is out of range for month (for example)
         '''
-        passage = SynthesePassage()
-        passage.date_time = date_time_format(xml_journey.get('dateTime'))
-        passage.real_time = (xml_journey.get('realTime') == 'yes')
-        passage.waiting_time = parse_time(xml_journey.get('waiting_time'))
         return passage
 
     def __build(self, xml):
@@ -95,6 +79,5 @@ class SyntheseXmlReader(object):
             route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self.__get_value(xml_journey, 'stop', 'id'))
             if route_point not in result:
                 result[route_point] = []
-            passage = self.__get_synthese_passage(xml_journey)
             result[route_point].append(passage)
         return result
