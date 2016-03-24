@@ -56,12 +56,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from datetime import datetime
 from nose.tools.nontrivial import raises
 import xml.etree.ElementTree as et
 from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader, SyntheseRoutePoint
 from jormungandr.interfaces.parsers import date_time_format
-from aniso8601 import parse_time
 
 
 def get_xml_parser():
@@ -103,33 +101,23 @@ def xml_valid_test():
 
     assert route_point in result
     assert len(result[route_point]) == 1
-    assert result[route_point][0].real_time == True
-    assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:07:37")
-    assert result[route_point][0].waiting_time == parse_time("00:02:59")
+    assert result[route_point][0].is_real_time == True
+    assert result[route_point][0].datetime == date_time_format("2016-Mar-21 12:07:37")
 
     route_point = SyntheseRoutePoint('2533412229399934', '3377704015495922')
     assert route_point in result
     assert len(result[route_point]) == 2
-    assert result[route_point][0].real_time == True
-    assert result[route_point][0].date_time == date_time_format("2016-Mar-21 12:15:00")
-    assert result[route_point][0].waiting_time == parse_time("00:10:22")
+    assert result[route_point][0].is_real_time == True
+    assert result[route_point][0].datetime == date_time_format("2016-Mar-21 12:15:00")
 
-    assert result[route_point][1].real_time == True
-    assert result[route_point][1].date_time == date_time_format("2016-Mar-22 12:15:00")
-    assert result[route_point][1].waiting_time == parse_time("00:10:22")
+    assert result[route_point][1].is_real_time == True
+    assert result[route_point][1].datetime == date_time_format("2016-Mar-22 12:15:00")
 
 @raises(ValueError)
 def xml_date_time_invalid_test():
     builder = SyntheseXmlReader()
     xml = get_xml_parser().replace("2016-Mar-21 12:07:37", "2016-Mar-41 12:07:37", 1)
     builder.get_synthese_passages(xml)
-
-@raises(ValueError)
-def xml_time_invalid_test():
-    builder = SyntheseXmlReader()
-    xml = get_xml_parser().replace("00:02:59", "00:81:59", 1)
-    builder.get_synthese_passages(xml)
-
 
 @raises(et.ParseError)
 def xml_invalid_test():
