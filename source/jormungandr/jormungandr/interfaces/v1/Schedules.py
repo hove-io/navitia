@@ -210,7 +210,8 @@ route_schedule_fields = {
     "display_informations": PbField(display_informations_route,
                                     attribute='pt_display_informations'),
     "links": UrisToLinks(),
-    "geojson": MultiLineString()
+    "geojson": MultiLineString(),
+    "additional_informations": enum_type(attribute="response_status")
 }
 
 route_schedules = {
