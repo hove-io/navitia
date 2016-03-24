@@ -1,5 +1,5 @@
 ---
-title: Documentation Navitia.io
+title: Navitia.io documentation
 
 #language_tabs:
 #  - shell
