@@ -187,8 +187,20 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 }
             }
         }
+
         if (stop_times.empty() && (response_status.find(route->idx) == response_status.end())) {
-            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+            if (rt_level == navitia::type::RTLevel::Base) {
+                response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+            } else {
+                auto tmp_stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                                     handler.max_datetime, 1, pb_creator.data,
+                                                     navitia::type::RTLevel::Base);
+                if (!tmp_stop_times.empty()) {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::active_disruption;
+                } else {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+                }
+            }
         }
 
         map_route_stop_point[sp_route] = stop_times;

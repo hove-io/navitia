@@ -421,6 +421,18 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
             }
         }
         pb_creator.fill(&route->shape, schedule->mutable_geojson(), 0);
+
+        //Add additiona_informations in each route:
+        //schedule...
+        if (stop_times.empty() && (rt_level != type::RTLevel::Base)) {
+            auto tmp_stop_times = get_all_route_stop_times(route, handler.date_time,
+                                                           handler.max_datetime, max_stop_date_times,
+                                                           pb_creator.data, type::RTLevel::Base, calendar_id);
+            if (!tmp_stop_times.empty()) {
+                schedule->set_response_status(pbnavitia::ResponseStatus::active_disruption);
+            }
+        }
+
     }
     pb_creator.make_paginate(total_result, start_page, count, pb_creator.route_schedules_size());
 }

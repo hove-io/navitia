@@ -37,6 +37,9 @@ www.navitia.io
 #include "time_tables/route_schedules.h"
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/sort.hpp>
+#include "kraken/apply_disruption.h"
+#include "kraken/make_disruption_from_chaos.h"
+
 
 namespace ntt = navitia::timetables;
 
@@ -682,4 +685,86 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     BOOST_REQUIRE(impact);
     BOOST_CHECK_EQUAL(impact->messages_size(), 1);
     BOOST_CHECK_EQUAL(impact->messages(0).text(), "Disruption on stop_popint st1");
+}
+
+// We want: without impact
+//     A B C D E
+// st1   1 2 3 4
+// st2   2 3 4 5
+// st3 6 7
+// st4 7 8
+
+// We want: with impact on st1(NO_SERVICE)
+//     A B C D E
+// st1
+// st2
+// st3 6
+// st4 7
+
+BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
+    ed::builder b = {"20120614"};
+    b.vj("L", "1111111", "", true, "A", "A")
+        ("st3", "6:00"_t)
+        ("st4", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "B")
+        ("st1", "1:00"_t)
+        ("st2", "2:00"_t)
+        ("st3", "7:00"_t)
+        ("st4", "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "C")
+        ("st1", "2:00"_t)
+        ("st2", "3:00"_t);
+    b.vj("L", "1111111", "", true, "D", "D")
+        ("st1", "3:00"_t)
+        ("st2", "4:00"_t);
+    b.vj("L", "1111111", "", true, "E", "E")
+        ("st1", "4:00"_t)
+        ("st2", "5:00"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    using btp = boost::posix_time::time_period;
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "st1")
+                              .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
+                              .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
+                              .msg("Disruption on stop_popint st1").get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+                                        3, 10, 0, nt::RTLevel::Base);
+
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "1:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "2:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "D");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "E");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
+
+    //Call with RealTime:
+    navitia::PbCreator pb_creator1(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator1, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+                                        3, 10, 0, nt::RTLevel::RealTime);
+
+    resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), std::numeric_limits<size_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), std::numeric_limits<size_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "7:00"_t);
 }
