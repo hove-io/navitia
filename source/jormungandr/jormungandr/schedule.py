@@ -98,29 +98,29 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
         if passage.direction:
             note = type_pb2.Note()
             note.note = passage.direction
-            note_uri = hashlib.md5(note.note).hexdigest()
+            note_uri = hashlib.md5(note.note.encode('utf-8')).hexdigest()
             note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
             new_dt.properties.notes.extend([note])
 
 
 def _create_template_from_passage(passage):
     template = deepcopy(passage)
-    template.pt_display_informations.ClearField("headsign")
-    template.pt_display_informations.ClearField("direction")
-    template.pt_display_informations.ClearField("physical_mode")
-    template.pt_display_informations.ClearField("description")
-    template.pt_display_informations.ClearField("uris")
-    template.pt_display_informations.ClearField("has_equipments")
+    template.pt_display_informations.ClearField(b"headsign")
+    template.pt_display_informations.ClearField(b"direction")
+    template.pt_display_informations.ClearField(b"physical_mode")
+    template.pt_display_informations.ClearField(b"description")
+    template.pt_display_informations.ClearField(b"uris")
+    template.pt_display_informations.ClearField(b"has_equipments")
     del template.pt_display_informations.messages[:]
     del template.pt_display_informations.impacts[:]
     del template.pt_display_informations.notes[:]
     del template.pt_display_informations.headsigns[:]
-    template.stop_date_time.ClearField("arrival_date_time")
-    template.stop_date_time.ClearField("departure_date_time")
-    template.stop_date_time.ClearField("base_arrival_date_time")
-    template.stop_date_time.ClearField("base_departure_date_time")
-    template.stop_date_time.ClearField("properties")
-    template.stop_date_time.ClearField("data_freshness")
+    template.stop_date_time.ClearField(b"arrival_date_time")
+    template.stop_date_time.ClearField(b"departure_date_time")
+    template.stop_date_time.ClearField(b"base_arrival_date_time")
+    template.stop_date_time.ClearField(b"base_departure_date_time")
+    template.stop_date_time.ClearField(b"properties")
+    template.stop_date_time.ClearField(b"data_freshness")
     return template
 
 

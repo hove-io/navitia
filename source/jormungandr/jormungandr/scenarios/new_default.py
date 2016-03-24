@@ -159,24 +159,27 @@ def create_next_kraken_request(request, responses):
     """
     create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
 
-    to do that we find the soonest departure (resp tardiest arrival) we have in the responses
-    and add (resp remove) one minute
+    to do that we find the best journey (soonest arrival, then shortest journey) found in the responses
+    and add one second to it's departure.
+    (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
     """
-    one_minute = 60
-    if request['clockwise']:
-        try:
-            soonest_departure = min(j.departure_date_time for r in responses for j in r.journeys if _has_pt(j))
-        except ValueError:
-            return None
-        new_datetime = soonest_departure + one_minute
-    else:
-        try:
-            tardiest_arrival = max(j.arrival_date_time for r in responses for j in r.journeys if _has_pt(j))
-        except ValueError:
-            return None
-        new_datetime = tardiest_arrival - one_minute
+    def pt_journey_generator(responses):
+        for r in responses :
+            for j in r.journeys:
+                if has_pt(j):
+                    yield j
 
-    request['datetime'] = new_datetime
+    one_second = 1
+    best_crit = arrival_crit if request["clockwise"] else departure_crit
+    best = min_from_criteria(pt_journey_generator(responses),
+                             [best_crit, duration_crit, transfers_crit, nonTC_crit])
+    if best is None:
+        return None
+
+    if request['clockwise']:
+        request['datetime'] = best.departure_date_time + one_second
+    else:
+        request['datetime'] = best.arrival_date_time - one_second
 
     #TODO forbid ODTs
     return request
@@ -561,7 +564,7 @@ def merge_responses(responses):
     merged_response = response_pb2.Response()
 
     for r in responses:
-        if r.HasField('error') or not r.journeys:
+        if r.HasField(b'error') or not r.journeys:
             # we do not take responses with error, but if all responses have errors, we'll aggregate them
             continue
 
@@ -583,7 +586,7 @@ def merge_responses(responses):
     if not merged_response.journeys:
         # we aggregate the errors found
 
-        errors = {r.error.id: r.error for r in responses if r.HasField('error')}
+        errors = {r.error.id: r.error for r in responses if r.HasField(b'error')}
         if len(errors) == 1:
             merged_response.error.id = errors.values()[0].id
             merged_response.error.message = errors.values()[0].message
@@ -614,7 +617,6 @@ class Scenario(simple.Scenario):
         min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
         responses = []
-        last_nb_journeys = 0
         nb_try = 0
         while request is not None and \
                 ((nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys)
@@ -631,16 +633,6 @@ class Scenario(simple.Scenario):
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, api_request)
-
-            cur_nb_journeys = nb_journeys(responses)
-            if cur_nb_journeys == 0:
-                # all journeys are filtered, testing a next
-                pass
-            elif last_nb_journeys == cur_nb_journeys:
-                # we are stuck with the same number of journeys, we stops
-                break
-
-            last_nb_journeys = cur_nb_journeys
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
