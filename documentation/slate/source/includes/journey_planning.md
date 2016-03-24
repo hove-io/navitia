@@ -5,8 +5,8 @@
 
 | url | Result |
 |------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/journeys | List of journeys or isochrones      |
-| `get` /journeys                          | List of journeys or isochrones      |
+| `get` /coverage/*resource_path*/journeys | List of journeys                    |
+| `get` /journeys                          | List of journeys                    |
 
 -   **[Places](#places)** : autocomplete for geographical data
 
