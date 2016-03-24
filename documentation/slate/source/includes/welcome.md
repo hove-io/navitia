@@ -28,7 +28,9 @@ get a token here <http://navitia.io/register/>
 
 #### Second step,
 
-Go to the API. The simpliest way is to use a web browser. 
+Go to the API  <https://api.navitia.io>
+
+The simpliest way is to use a web browser. 
 Our humble opinion is that [firefox browser](#http://www.getfirefox.com) and a json viewer extension like [JSON-DataView](#https://addons.mozilla.org/en-us/firefox/addon/json-dataview) is a good setup.
 
 #### Third step,
