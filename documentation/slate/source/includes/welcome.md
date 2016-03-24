@@ -23,20 +23,26 @@ Have a look at the examples below to learn what services we provide and how to u
 Getting started
 ---------------
 
-#### First,
+#### First step,
 get a token here <http://navitia.io/register/>
 
-#### Second,
-use the token : if you use a web browser, you only have to **paste it in the user area**,
-with **no password**. 
-Or, in a simplier way, you can add your token in the address bar like :
+#### Second step,
+Go to the API. The simpliest way is to use [firefox browser](#http://www.getfirefox.com) 
+and a json viewer extension like [JSON-DataView](#https://addons.mozilla.org/en-us/firefox/addon/json-dataview)
 
+#### Third step,
+use the token : if you use a modern web browser, you only have to **paste it** in the **user name area**,
+with **no password**.
+
+![Put token in Firefox browser](/images/firefox_token.png)
+
+Or, in a simplier way, you can add your token in the address bar like :
 
 <aside class="success">
 <b>https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage/fr-idf/networks</b>
 </aside>
 
-See [authentication](#authentication) section to find out more details on **how to use your token**.
+See [authentication](#authentication) section to find out more details on **how to use your token** when coding.
 
 #### Then,
 use the API ! The easiest is probably to jump to [Examples](#some_examples) below.
