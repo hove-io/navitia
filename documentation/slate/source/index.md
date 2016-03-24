@@ -16,8 +16,8 @@ includes:
   - welcome
   - examples
   - authentication
-  - ressources
   - interface
+  - ressources
   - apis
   - objects
   - stuff
