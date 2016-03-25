@@ -164,7 +164,7 @@ def create_next_kraken_request(request, responses):
     (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
     """
     def pt_journey_generator(responses):
-        for r in responses :
+        for r in responses:
             for j in r.journeys:
                 if has_pt(j):
                     yield j

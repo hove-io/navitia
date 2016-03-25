@@ -144,7 +144,6 @@ class Scenario(simple.Scenario):
 
         return req
 
-
     def call_kraken(self, req, instance, tag=None):
         resp = None
 
@@ -240,25 +239,14 @@ class Scenario(simple.Scenario):
                     resp = tmp_resp
                 break
             at_least_one_journey_found = True
-            last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
 
-            new_datetime = None
-            one_minute = 60
             if request['clockwise']:
-                #since dates are now posix time stamp, we only have to add the additional seconds
-                if not last_best:
-                    last_best = min(tmp_resp.journeys, key=lambda j: j.departure_date_time)
-                    #In this case there is no journeys, so we stop
-                    if not last_best:
-                        break
-                new_datetime = last_best.departure_date_time + one_minute
+                new_datetime = self.next_journey_datetime(tmp_resp)
             else:
-                if not last_best:
-                    last_best = max(tmp_resp.journeys, key=lambda j: j.arrival_date_time)
-                    #In this case there is no journeys, so we stop
-                    if not last_best:
-                        break
-                new_datetime = last_best.arrival_date_time - one_minute
+                new_datetime = self.previous_journey_datetime(tmp_resp)
+
+            if new_datetime is None:
+                break
 
             next_request, forbidden_uris = self.change_request(pb_req, tmp_resp, forbidden_uris)
             next_request.journeys.datetimes[0] = new_datetime
@@ -305,6 +293,37 @@ class Scenario(simple.Scenario):
                 logger.debug('delete journey %s because it is longer than %s', journey.type, max_duration)
         self.erase_journeys(resp, to_delete)
 
+    @staticmethod
+    def next_journey_datetime(responses):
+        """
+        by default to get the next journey, we add one minute to:
+        the best if we have one, else to the journey that has the earliest departure
+        """
+        last_best = next((j for j in responses.journeys if j.type == 'rapid'), None) or \
+                    min(responses.journeys, key=lambda j: j.departure_date_time)
+
+        if not last_best:
+            return None
+
+        one_minute = 60
+        #since dates are now posix time stamp, we only have to add the additional seconds
+        return last_best.departure_date_time + one_minute
+
+    @staticmethod
+    def previous_journey_datetime(responses):
+        """
+        by default to get the previous journey, we substract one minute to:
+        the best if we have one, else to the journey that has the tardiest arrival
+        """
+        last_best = next((j for j in responses.journeys if j.type == 'rapid'), None) or \
+                    max(responses.journeys, key=lambda j: j.arrival_date_time)
+
+        if not last_best:
+            return None
+
+        one_minute = 60
+        #since dates are now posix time stamp, we only have to add the additional seconds
+        return last_best.arrival_date_time - one_minute
 
     def _find_max_duration(self, journeys, instance, clockwise):
         """
@@ -318,7 +337,6 @@ class Scenario(simple.Scenario):
         if not asap_journey:
             return None
         return (asap_journey.duration * instance.factor_too_long_journey) + instance.min_duration_too_long_journey
-
 
     def choose_best(self, resp):
         """
