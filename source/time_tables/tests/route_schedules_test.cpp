@@ -694,12 +694,12 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
 // st3 6 7
 // st4 7 8
 
-// We want: with impact on st1(NO_SERVICE)
+// We want: with impact on line(NO_SERVICE)
 //     A B C D E
 // st1
 // st2
-// st3 6
-// st4 7
+// st3
+// st4
 
 BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     ed::builder b = {"20120614"};
@@ -729,10 +729,10 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     using btp = boost::posix_time::time_period;
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on(nt::Type_e::StopPoint, "st1")
+                              .on(nt::Type_e::Line, "L")
                               .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
                               .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
-                              .msg("Disruption on stop_popint st1").get_disruption(),
+                              .msg("Disruption on line").get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
@@ -763,8 +763,5 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), std::numeric_limits<size_t>::max());
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), std::numeric_limits<size_t>::max());
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
-    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "7:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.response_status(), pbnavitia::ResponseStatus::active_disruption);
 }
