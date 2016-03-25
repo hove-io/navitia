@@ -32,6 +32,7 @@ from copy import deepcopy
 from nose.tools import eq_
 
 from jormungandr.scenarios import destineo
+from jormungandr.scenarios.tests.protobuf_builder import ResponseBuilder
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
 
@@ -116,44 +117,20 @@ def has_bike_and_tc_simple_test():
     assert not destineo.has_bike_and_tc(journey)
 
 def has_bike_and_tc_bss_test():
-    response = response_pb2.Response()
-    journey = response.journeys.add()
-
-    journey.type = "best"
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_RENT
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_PUT_BACK
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-
-    assert not destineo.has_bike_and_tc(journey)
-
+    resp_builder = ResponseBuilder().journey(sections=[
+        {'mode': 'Walking'}, {'type': 'BSS_RENT'}, {'mode': 'Bike'}, {'type': 'BSS_PUT_BACK'},
+        {'type': 'PT'},
+        {'mode': 'Walking'},
+    ])
+    assert not destineo.has_bike_and_tc(resp_builder.response.journeys[0])
 
 def has_bike_and_tc_crowfly_test():
-    response = response_pb2.Response()
-    journey = response.journeys.add()
-
-    journey.type = "best"
-    section = journey.sections.add()
-    section.type = response_pb2.CROW_FLY
-    section.street_network.mode = response_pb2.Bike
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-
-    assert destineo.has_bike_and_tc(journey)
+    resp_builder = ResponseBuilder().journey(sections=[
+        {'mode': 'Bike', 'type': 'CROW_FLY'},
+        {'type': 'PT'},
+        {'mode': 'Walking'},
+    ])
+    assert destineo.has_bike_and_tc(resp_builder.response.journeys[0])
 
 def has_bss_and_tc_simple_test():
     response = response_pb2.Response()
