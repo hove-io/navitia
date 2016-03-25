@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
             .on(nt::Type_e::StopPoint, "stop1")
             .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
             .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
-            .msg("Disruption on stop_popint stop1");
+            .msg("Disruption on stop_point stop1");
 
     navitia::PbCreator pb_creator(*(b.data), "20150616T080000"_dt, null_time_period);
     departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     const auto* impact = navitia::test::get_impact(resp.stop_schedules(1).stop_point().impact_uris(0), resp);
     BOOST_REQUIRE(impact);
     BOOST_REQUIRE_EQUAL(impact->messages_size(),1);
-    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_popint stop1");
+    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_point stop1");
 
     //current_datetime out of bounds
     navitia::PbCreator pb_creator1(*(b.data), "20150626T110000"_dt, null_time_period);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
                               .on(nt::Type_e::StopPoint, "stop1")
                               .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
                               .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
-                              .msg("Disruption on stop_popint stop1")
+                              .msg("Disruption on stop_point stop1")
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
     const auto* impact = navitia::test::get_impact(resp.stop_schedules(1).stop_point().impact_uris(0), resp);
     BOOST_REQUIRE(impact);
     BOOST_REQUIRE_EQUAL(impact->messages_size(),1);
-    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_popint stop1");
+    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_point stop1");
 
     // stop_schedules on stop1 with rtLevel = RealTime
     navitia::PbCreator pb_creator1(*(b.data), "20150616T080000"_dt, null_time_period);

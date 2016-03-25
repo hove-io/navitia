@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
             .on(nt::Type_e::StopPoint, "st1")
             .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
             .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
-            .msg("Disruption on stop_popint st1");
+            .msg("Disruption on stop_point st1");
     // current_datetime out of bounds
     navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     const auto* impact = navitia::test::get_impact(route_schedule.table().rows(0).stop_point().impact_uris(0), resp);
     BOOST_REQUIRE(impact);
     BOOST_CHECK_EQUAL(impact->messages_size(), 1);
-    BOOST_CHECK_EQUAL(impact->messages(0).text(), "Disruption on stop_popint st1");
+    BOOST_CHECK_EQUAL(impact->messages(0).text(), "Disruption on stop_point st1");
 }
 
 // We want: without impact
