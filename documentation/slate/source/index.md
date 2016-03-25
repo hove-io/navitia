@@ -16,13 +16,13 @@ includes:
   - welcome
   - examples
   - authentication
-  - interface
   - journey_planning
   - departures
   - timetables
   - nearby
   - explore
   - isochrones
+  - interface
   - apis
   - objects
   - stuff
