@@ -27,12 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-
+from datetime import datetime
 from nose.tools import eq_
-
 from jormungandr.scenarios import default
-import navitiacommon.response_pb2 as response_pb2
-from jormungandr.utils import str_to_time_stamp
+from jormungandr.scenarios.tests.protobuf_builder import ResponseBuilder
 
 
 class Instance(object):
@@ -42,158 +40,79 @@ class Instance(object):
         self.max_duration_criteria = 'time'
         self.max_duration_fallback_mode = 'walking'
 
+
 def find_max_duration_clockwise_test():
-    response = response_pb2.Response()
-    journey1 = response.journeys.add()
+    resp_builder = ResponseBuilder()\
+        .journey(sections=[
+            {'mode': 'Walking', 'duration': 240},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Walking', 'duration': 120},
+        ], type='best', arrival='T1501')\
+        .journey(uri='rapid', sections=[
+            {'mode': 'Walking', 'duration': 120},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Walking', 'duration': 120},
+        ], type='rapid', arrival='T1501')\
+        .journey(uri='non pt', sections=[
+            {'mode': 'Walking', 'duration': 130},
+        ], type='non_pt_walk', arrival='T1231')
 
-    journey1.type = "best"
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 240
-    section = journey1.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    journey1.duration = sum([section.duration for section in journey1.sections])
-    journey1.arrival_date_time = 1418222071
-    journey1.departure_date_time = journey1.arrival_date_time - journey1.duration
-
-    journey2 = response.journeys.add()
-    journey2.type = "rapid"
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    section = journey2.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    journey2.duration = sum([section.duration for section in journey2.sections])
-    journey2.arrival_date_time = 1418220071
-    journey2.departure_date_time = journey2.arrival_date_time - journey2.duration
-
-    journey3 = response.journeys.add()
-    journey3.type = "non_pt_walk"
-    section = journey3.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 130
-    journey3.duration = sum([section.duration for section in journey3.sections])
-    journey3.arrival_date_time = 1418211071
-    journey3.departure_date_time = journey3.arrival_date_time - journey3.duration
+    response = resp_builder.response
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), True), 580)
     scenario._delete_too_long_journey(response, Instance(), True)
     eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey2)
-    eq_(response.journeys[1], journey3)
+    eq_(response.journeys[0], resp_builder.get_journey('rapid'))
+    eq_(response.journeys[1], resp_builder.get_journey('non pt'))
+
 
 def find_max_duration__counterclockwise_test():
-    response = response_pb2.Response()
-    journey1 = response.journeys.add()
+    resp_builder = ResponseBuilder()\
+        .journey(sections=[
+            {'mode': 'Walking', 'duration': 240},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Walking', 'duration': 120},
+        ], type='best', arrival='T1231')\
+        .journey(uri='rapid', sections=[
+            {'mode': 'Walking', 'duration': 120},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Walking', 'duration': 120},
+        ], type='rapid', arrival='T1501')\
+        .journey(uri='non pt', sections=[
+            {'mode': 'Walking', 'duration': 130},
+        ], type='non_pt_walk', arrival='T1534')
 
-    journey1.type = "best"
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 240
-    section = journey1.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    journey1.duration = sum([section.duration for section in journey1.sections])
-    journey1.arrival_date_time = 1418211071
-    journey1.departure_date_time = journey1.arrival_date_time - journey1.duration
-
-    journey2 = response.journeys.add()
-    journey2.type = "rapid"
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    section = journey2.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    journey2.duration = sum([section.duration for section in journey2.sections])
-    journey2.arrival_date_time = 1418220071
-    journey2.departure_date_time = journey2.arrival_date_time - journey2.duration
-
-    journey3 = response.journeys.add()
-    journey3.type = "non_pt_walk"
-    section = journey3.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 130
-    journey3.duration = sum([section.duration for section in journey3.sections])
-    journey3.arrival_date_time = 1418222071
-    journey3.departure_date_time = journey3.arrival_date_time - journey3.duration
+    response = resp_builder.response
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), False), 580)
     scenario._delete_too_long_journey(response, Instance(), False)
     eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey2)
-    eq_(response.journeys[1], journey3)
+    eq_(response.journeys[0], resp_builder.get_journey('rapid'))
+    eq_(response.journeys[1], resp_builder.get_journey('non pt'))
 
 
 def find_max_duration_clockwise_test():
     """
     we don't have a journey with walking so max_duration is None, and we keep all journeys
     """
-    response = response_pb2.Response()
-    journey1 = response.journeys.add()
-
-    journey1.type = "best"
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 240
-    section = journey1.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey1.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    journey1.duration = sum([section.duration for section in journey1.sections])
-    journey1.arrival_date_time = 1418222071
-    journey1.departure_date_time = journey1.arrival_date_time - journey1.duration
-
-    journey2 = response.journeys.add()
-    journey2.type = "rapid"
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 120
-    section = journey2.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 300
-    section = journey2.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 120
-    journey2.duration = sum([section.duration for section in journey2.sections])
-    journey2.arrival_date_time = 1418220071
-    journey2.departure_date_time = journey2.arrival_date_time - journey2.duration
+    resp_builder = ResponseBuilder()\
+        .journey(uri='best', sections=[
+            {'mode': 'Bike', 'duration': 240},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Walking', 'duration': 120},
+        ], type='best', arrival='T1534')\
+        .journey(uri='rapid', sections=[
+            {'mode': 'Walking', 'duration': 120},
+            {'type': 'PT', 'duration': 300},
+            {'mode': 'Bike', 'duration': 120},
+        ], type='rapid', arrival='T1534')
+    response = resp_builder.response
 
     scenario = default.Scenario()
     eq_(scenario._find_max_duration(response.journeys, Instance(), True), None)
     scenario._delete_too_long_journey(response, Instance(), True)
     eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey1)
-    eq_(response.journeys[1], journey2)
+    eq_(response.journeys[0], resp_builder.get_journey('best'))
+    eq_(response.journeys[1], resp_builder.get_journey('rapid'))
