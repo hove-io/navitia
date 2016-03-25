@@ -737,6 +737,7 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 | url | Result |
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `coverage/{resource_path}/route_schedules` | List of the entire route schedules for a given resource                                                       |
+| `/coverage/{lon;lat}/route_schedules`        | List of the entire route schedules for coordinates                                                       |
 
 ### Parameters
 
@@ -789,7 +790,7 @@ This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
 one of [note](#note). You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
-### Access
+### Accesses
 
 | url | Result |
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
