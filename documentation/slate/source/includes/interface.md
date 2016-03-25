@@ -1,10 +1,14 @@
 interface
 =========
 
+The only endpoint of this version of the api is :
+<https://api.navitia.io/v1/>
+
 We aim to implement [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS)
 concept with Navitia.
 
-Each response contains a linkable object and lots of links. Links allow
+All the resources return a response containing a links object, a paging
+object, and the requested object. That's lots of links. Links allow
 you to know all accessible uris and services for a given point.
 
 Paging

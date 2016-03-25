@@ -16,8 +16,13 @@ includes:
   - welcome
   - examples
   - authentication
-  - ressources
   - interface
+  - journey_planning
+  - departures
+  - timetables
+  - nearby
+  - explore
+  - isochrones
   - apis
   - objects
   - stuff
