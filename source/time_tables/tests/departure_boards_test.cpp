@@ -36,6 +36,8 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "departure_board_test_data.h"
 #include "routing/raptor.h"
+#include "kraken/apply_disruption.h"
+#include "kraken/make_disruption_from_chaos.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -166,7 +168,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
             .on(nt::Type_e::StopPoint, "stop1")
             .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
             .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
-            .msg("Disruption on stop_popint stop1");
+            .msg("Disruption on stop_point stop1");
 
     navitia::PbCreator pb_creator(*(b.data), "20150616T080000"_dt, null_time_period);
     departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
@@ -181,7 +183,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     const auto* impact = navitia::test::get_impact(resp.stop_schedules(1).stop_point().impact_uris(0), resp);
     BOOST_REQUIRE(impact);
     BOOST_REQUIRE_EQUAL(impact->messages_size(),1);
-    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_popint stop1");
+    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_point stop1");
 
     //current_datetime out of bounds
     navitia::PbCreator pb_creator1(*(b.data), "20150626T110000"_dt, null_time_period);
@@ -195,6 +197,99 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
+    ed::builder b("20150615");
+    b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
+    b.vj("B", "110000001111", "", true, "vj2", "")("stop1", 10*3600 + 10*60, 10*3600 + 10*60)("stop2", 10*3600 + 40*60,10*3600 + 40*60)("stop3", 10*3600 + 50*60,10*3600 + 50*60);
+
+    const auto it1 = b.sas.find("stop2");
+    b.data->pt_data->routes.front()->destination= it1->second; // Route A
+    const auto it2 = b.sas.find("stop3");
+    b.data->pt_data->routes.back()->destination= it2->second; // Route B
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
+
+    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    pbnavitia::Response resp;
+
+    // no departure for all routes
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150619T094500"), 43200, 0,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),0);
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    }
+    // no departure for route "B"
+    {
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150621T094500"), 43200, 0,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).route().name(), "A");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).route().name(), "B");
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+    }
+
+    // normal departure board with severity = NO_SERVICE on stop_point
+    {
+    using btp = boost::posix_time::time_period;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop1")
+                              .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
+                              .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
+                              .msg("Disruption on stop_point stop1")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // stop_schedules with rtLevel = Base
+    navitia::PbCreator pb_creator(*(b.data), "20150616T080000"_dt, null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+    resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),1);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),1);
+    const auto* impact = navitia::test::get_impact(resp.stop_schedules(1).stop_point().impact_uris(0), resp);
+    BOOST_REQUIRE(impact);
+    BOOST_REQUIRE_EQUAL(impact->messages_size(),1);
+    BOOST_REQUIRE_EQUAL(impact->messages(0).text(), "Disruption on stop_point stop1");
+
+    // stop_schedules on stop1 with rtLevel = RealTime
+    navitia::PbCreator pb_creator1(*(b.data), "20150616T080000"_dt, null_time_period);
+    pb_creator.now = "20150626T110000"_dt;
+    departure_board(pb_creator1, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                    10, 0, nt::RTLevel::RealTime, std::numeric_limits<size_t>::max());
+
+    resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(),0);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).response_status(),pbnavitia::ResponseStatus::active_disruption);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).response_status(),pbnavitia::ResponseStatus::active_disruption);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),1);
     }
 }
 
@@ -676,4 +771,3 @@ BOOST_FIXTURE_TEST_CASE(base_stop_schedule_limit_per_schedule, departure_board_f
     BOOST_REQUIRE_EQUAL(sc2.date_times_size(), 1);
     BOOST_CHECK_EQUAL(sc2.date_times(0).time(), "11:30"_t);
 }
-
