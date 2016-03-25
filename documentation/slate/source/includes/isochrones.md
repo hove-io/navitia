@@ -1,4 +1,4 @@
-<a name="isochrones"></a>![Isochrones](/images/isochrones.png)Isochrones
+<a name="isochrones"></a>![Isochrones](/images/isochrons.png)Isochrones
 ===================================
 
 Whether using a specific set of coordinates or a general location, you can find places within 

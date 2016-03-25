@@ -14,22 +14,8 @@ In order to display departures, you may have to use these APIs (click on them fo
 
 -   **[Public transportation objects](#pt-ref)** : List of the public transport
     objects of a region
-
-| url | Result |
-|---------------------------------------------------------|-------------------------------------|
-| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
-| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
-| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
-| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
-
 -   **[Stop Schedules](#stop-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)** : 
 Compute time tables for a given resource
-
-| url | Result |
-|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{resource_path}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for a given resource                               |
-| `/coverage/{resource_path}/departures`      | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
-| `/coverage/{resource_path}/arrivals`        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
 
 
 
