@@ -96,7 +96,7 @@ def has_bss_and_tc_simple_test():
         {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
     ])
     assert not destineo.has_bss_and_tc(resp_builder.response.journeys[0])
-    
+
 
 def has_bss_and_tc_bss_test():
     response = response_pb2.Response()

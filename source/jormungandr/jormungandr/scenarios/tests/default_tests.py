@@ -27,10 +27,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from datetime import datetime
+import datetime
 from nose.tools import eq_
 from jormungandr.scenarios import default
 from jormungandr.scenarios.tests.protobuf_builder import ResponseBuilder
+from jormungandr.utils import str_to_time_stamp
 
 
 class Instance(object):
@@ -93,7 +94,7 @@ def find_max_duration__counterclockwise_test():
     eq_(response.journeys[1], resp_builder.get_journey('non pt'))
 
 
-def find_max_duration_clockwise_test():
+def find_max_duration_clockwise_test_no_walk():
     """
     we don't have a journey with walking so max_duration is None, and we keep all journeys
     """
@@ -116,3 +117,52 @@ def find_max_duration_clockwise_test():
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], resp_builder.get_journey('best'))
     eq_(response.journeys[1], resp_builder.get_journey('rapid'))
+
+
+def next_journey_test():
+    """ In the default scenario, the next journey is one minute after the first 'rapid' if we get one"""
+    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
+        .journey(type='rapid', departure='T1200', arrival='T1500')\
+        .journey(type='fastest', departure='T1100', arrival='T1700')\
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+        .journey(type='car', departure='T1300', arrival='T1534')
+
+    scenario = default.Scenario()
+    eq_(scenario.next_journey_datetime(builder.response), str_to_time_stamp('20161010T120100'))
+
+def next_journey_test_no_rapid():
+    """ In the default scenario, if we don't get a rapid,
+    the next journey is one minute after the earliest journey
+    """
+    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
+        .journey(type='fastest', departure='T1100', arrival='T1700')\
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+        .journey(type='car', departure='T2000', arrival='T1534')
+
+    scenario = default.Scenario()
+    eq_(scenario.next_journey_datetime(builder.response), str_to_time_stamp('20161010T100100'))
+
+
+def previous_journey_test():
+    """ In the default scenario, the previous journey is one minute before the first 'rapid' if we get one"""
+    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
+        .journey(type='rapid', departure='T1200', arrival='T1500')\
+        .journey(type='fastest', departure='T1100', arrival='T1700')\
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+        .journey(type='car', departure='T1300', arrival='T1534')
+
+    scenario = default.Scenario()
+    eq_(scenario.previous_journey_datetime(builder.response), str_to_time_stamp('20161010T145900'))
+
+
+def previous_journey_test_no_rapid():
+    """ In the default scenario, if we don't get a rapid,
+    the previous journey is one minute before the tardiest journey
+    """
+    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
+        .journey(type='fastest', departure='T1100', arrival='T1700')\
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+        .journey(type='car', departure='T2000', arrival='T1534')
+
+    scenario = default.Scenario()
+    eq_(scenario.previous_journey_datetime(builder.response), str_to_time_stamp('20161010T165900'))

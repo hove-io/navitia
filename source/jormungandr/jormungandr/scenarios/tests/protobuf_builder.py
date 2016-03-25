@@ -43,7 +43,7 @@ class ResponseBuilder(object):
 
     def __to_timestamp(self, str):
         try:  # first we try with only a time
-            time = datetime.datetime.strptime(str, "T%H%M%S")
+            time = datetime.datetime.strptime(str, "T%H%M")
             dt = datetime.datetime.combine(self._default_date, time.time())
         except ValueError:  # else we try with the date
             dt = datetime.datetime.strptime(str, "%Y%m%dT%H%M%S")
