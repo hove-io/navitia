@@ -49,7 +49,7 @@ class TestJourneys(AbstractTestFixture):
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query, display=True)
 
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
         feed_publishers = get_not_null(response, "feed_publishers")
         assert (len(feed_publishers) == 1)
@@ -91,7 +91,7 @@ class TestJourneys(AbstractTestFixture):
         query = "{query}&type=best".format(query=journey_basic_query)
         response = self.query_region(query)
 
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
 
         assert response['journeys'][0]["type"] == "best"
@@ -146,7 +146,7 @@ class TestJourneys(AbstractTestFixture):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
         response = self.query_region(query)
 
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         #Note: we need to mock the kraken instances to check that only one call has been made and not 2
         #(only one for bss because walking should not have been added since it duplicate bss)
 
@@ -186,7 +186,7 @@ class TestJourneys(AbstractTestFixture):
             .format(from_coord=s_coord, to_coord=r_coord, d="20120614T0800")
 
         response = self.query_region(query)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
         #and the second should be 0 initialized
         journeys = get_not_null(response, "journeys")
@@ -199,7 +199,7 @@ class TestJourneys(AbstractTestFixture):
             .format(from_coord=s_coord, to_coord=r_coord, d="20120614T08")
 
         response = self.query_region(query)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
         #and the second should be 0 initialized
         journeys = get_not_null(response, "journeys")
@@ -319,7 +319,7 @@ class TestJourneys(AbstractTestFixture):
                     _night_bus_filter_max_factor=2.8)
 
         response = self.query_region(query)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
 
         query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
                          "_night_bus_filter_max_factor={_night_bus_filter_max_factor}"\
@@ -327,7 +327,7 @@ class TestJourneys(AbstractTestFixture):
                     _night_bus_filter_max_factor=0)
 
         response = self.query_region(query)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
 
 
 @dataset({})

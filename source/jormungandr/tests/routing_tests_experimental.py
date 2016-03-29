@@ -68,7 +68,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         response = self.query_region(journey_basic_query, display=True)
 
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""

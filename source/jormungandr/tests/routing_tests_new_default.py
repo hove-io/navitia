@@ -68,7 +68,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
         response = self.query_region(journey_basic_query)
 
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
@@ -103,7 +103,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
 

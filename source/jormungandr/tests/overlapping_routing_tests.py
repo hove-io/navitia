@@ -74,7 +74,7 @@ class TestOverlappingCoverage(AbstractTestFixture):
         """
         response = self.query("/v1/{q}".format(q=journey_basic_query))
 
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
         assert len(response['feed_publishers']) == 1
         assert response['feed_publishers'][0]['name'] == u'routing api data'
@@ -83,7 +83,7 @@ class TestOverlappingCoverage(AbstractTestFixture):
         # has been called, so we call it back with debug and then we can check the region called field
         debug_query = "/v1/{q}&debug=true".format(q=journey_basic_query)
         response = self.query(debug_query)
-        is_valid_journey_response(response, self.tester, debug_query)
+        self.is_valid_journey_response(response, debug_query)
         assert set(response['debug']['regions_called']) == {"main_routing_test", "empty_routing_test"}
 
     def test_journeys_on_empty(self):

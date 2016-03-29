@@ -55,13 +55,12 @@ class TestJourneysDestineo(TestJourneys):
         from jormungandr import i_manager
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
-
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query)
 
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
         eq_(len(response['journeys']), 2)
         eq_(response['journeys'][0]['type'], 'best')
         eq_(response['journeys'][1]['type'], 'non_pt_walk')
@@ -73,7 +72,7 @@ class TestJourneysDestineo(TestJourneys):
                 "&last_section_mode=bss&last_section_mode=car"
         response = self.query_region(query)
 
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         logging.debug([j['type'] for j in response['journeys']])
         eq_(len(response['journeys']), 4)
         eq_(response['journeys'][0]['type'], 'best')
