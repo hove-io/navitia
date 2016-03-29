@@ -130,6 +130,7 @@ def next_journey_test():
     scenario = default.Scenario()
     eq_(scenario.next_journey_datetime(builder.response), str_to_time_stamp('20161010T120100'))
 
+
 def next_journey_test_no_rapid():
     """ In the default scenario, if we don't get a rapid,
     the next journey is one minute after the earliest journey
