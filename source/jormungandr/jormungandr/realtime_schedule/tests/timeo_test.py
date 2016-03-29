@@ -107,9 +107,9 @@ def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
     """
     small helper to ease the reading of the tests
     >>> _dt("8:15")
-    datetime.datetime(2016, 2, 7, 8, 15)
+    datetime.datetime(2016, 2, 7, 8, 15, tzinfo=<UTC>)
     >>> _dt("9:15", day=2)
-    datetime.datetime(2016, 2, 2, 9, 15)
+    datetime.datetime(2016, 2, 2, 9, 15, tzinfo=<UTC>)
     """
     d = parse(dt_to_parse)
     pytz.UTC.localize(d)
