@@ -108,7 +108,6 @@ def xml_valid_test():
     assert route_point in result
     assert len(result[route_point]) == 1
     assert result[route_point][0].is_real_time == True
-    print "{}, {}".format(result[route_point][0].datetime, make_dt("2016-Mar-21 12:07:37"))
     assert result[route_point][0].datetime == make_dt("2016-Mar-21 12:07:37")
 
     route_point = SyntheseRoutePoint('2533412229399934', '3377704015495922')

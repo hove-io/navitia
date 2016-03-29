@@ -34,23 +34,7 @@ import pytz
 from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
-
-
-class MockRoutePoint(object):
-    def __init__(self, *args, **kwars):
-        self._hardcoded_line_id = kwars['line_id']
-        self._hardcoded_stop_id = kwars['stop_id']
-        self._hardcoded_route_id = kwars['route_id']
-
-    # Cache this ?
-    def fetch_stop_id(self, rt_proxy_id):
-        return self._hardcoded_stop_id
-
-    def fetch_line_id(self, rt_proxy_id):
-        return self._hardcoded_line_id
-
-    def fetch_route_id(self, rt_proxy_id):
-        return self._hardcoded_route_id
+from jormungandr.realtime_schedule.tests.utils import MockRoutePoint
 
 
 def make_url_test():

@@ -112,9 +112,9 @@ class Synthese(RealtimeProxy):
             return None
 
         logging.getLogger(__name__).info("synthese response: {}".format(r.text))
-        stop_point = str(route_point.fetch_stop_id(self.rt_system_id))
-        route = str(route_point.fetch_route_id(self.rt_system_id))
-        route_point = SyntheseRoutePoint(route, stop_point)
+        stop_point_id = str(route_point.fetch_stop_id(self.rt_system_id))
+        route_id = str(route_point.fetch_route_id(self.rt_system_id))
+        route_point = SyntheseRoutePoint(route_id, stop_point_id)
         m = self._get_synthese_passages(r.content)
         return m.get(route_point)# if there is nothing from synthese, we keep the base
 
@@ -135,14 +135,14 @@ class Synthese(RealtimeProxy):
 
         return url
 
-    def __get_value(self, item, xpath, val):
+    def _get_value(self, item, xpath, val):
         value = item.find(xpath)
         if value == None:
             logging.getLogger(__name__).debug("Path not found: {path}".format(path=xpath))
             return None
         return value.get(val)
 
-    def __get_real_time_passage(self, xml_journey):
+    def _get_real_time_passage(self, xml_journey):
         '''
         :return RealTimePassage: object real time passage
         :param xml_journey: journey information
@@ -155,7 +155,8 @@ class Synthese(RealtimeProxy):
         passage.is_real_time = (xml_journey.get('realTime') == 'yes')
         return passage
 
-    def __build(self, xml):
+    @staticmethod
+    def _build(xml):
         try:
             root = et.fromstring(xml)
         except et.ParseError as e:
@@ -166,11 +167,11 @@ class Synthese(RealtimeProxy):
 
     def _get_synthese_passages(self, xml):
         result = {}
-        for xml_journey in self.__build(xml):
-            route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self.__get_value(xml_journey, 'stop', 'id'))
+        for xml_journey in self._build(xml):
+            route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self._get_value(xml_journey, 'stop', 'id'))
             if route_point not in result:
                 result[route_point] = []
-            passage = self.__get_real_time_passage(xml_journey)
+            passage = self._get_real_time_passage(xml_journey)
             result[route_point].append(passage)
         return result
     
