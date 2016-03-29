@@ -173,18 +173,18 @@ class RoutePoint(object):
         return hash(self.__key())
 
     @staticmethod
-    def _get_code(obj, rt_proxy_id):
-        return next((c.value for c in obj.codes if c.type == rt_proxy_id), None)
+    def _get_code(obj, source):
+        return next((c.value for c in obj.codes if c.type == source), None)
 
     # Cache this ?
-    def fetch_stop_id(self, rt_proxy_id):
-        return self._get_code(self.pb_stop_point, rt_proxy_id)
+    def fetch_stop_id(self, source):
+        return self._get_code(self.pb_stop_point, source)
 
-    def fetch_line_id(self, rt_proxy_id):
-        return self._get_code(self.pb_route.line, rt_proxy_id)
+    def fetch_line_id(self, source):
+        return self._get_code(self.pb_route.line, source)
 
-    def fetch_route_id(self, rt_proxy_id):
-        return self._get_code(self.pb_route, rt_proxy_id)
+    def fetch_route_id(self, source):
+        return self._get_code(self.pb_route, source)
 
 
 def _get_route_point_from_stop_schedule(stop_schedule):

@@ -57,11 +57,12 @@ class Timeo(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, service_args, timezone, timeout=10):
+    def __init__(self, id, code_source, service_url, service_args, timezone, timeout=10):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
+        self.code_source = code_source
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
 
@@ -150,9 +151,9 @@ class Timeo(RealtimeProxy):
 
         base_params = '&'.join([k + '=' + v for k, v in self.service_args.items()])
 
-        stop = route_point.fetch_stop_id(self.rt_system_id)
-        line = route_point.fetch_line_id(self.rt_system_id)
-        route = route_point.fetch_route_id(self.rt_system_id)
+        stop = route_point.fetch_stop_id(self.code_source)
+        line = route_point.fetch_line_id(self.code_source)
+        route = route_point.fetch_route_id(self.code_source)
 
         if not all((stop, line, route)):
             # one a the id is missing, we'll not find any realtime

@@ -71,6 +71,7 @@ struct departure_board_fixture {
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S0");
         sp_ptr = b.data->pt_data->stop_points_map["C:S1"];
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S1");
+        b.data->pt_data->codes.add(sp_ptr, "AnotherSource", "AnotherSource_C:S1");
 
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_delay_message("A:vj1", "20160101", {
