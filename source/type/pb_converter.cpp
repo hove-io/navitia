@@ -489,6 +489,15 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
     if(depth > 0){
         fill(sp->stop_area, stop_point);
     }
+
+    if (depth > 1) {
+        std::vector<nt::CommercialMode*> cm = ptref_indexes<nt::CommercialMode>(sp);
+        fill(cm, stop_point->mutable_commercial_modes());
+
+        std::vector<nt::PhysicalMode*> pm = ptref_indexes<nt::PhysicalMode>(sp);
+        fill(pm, stop_point->mutable_physical_modes());
+    }
+
     fill_messages(sp, stop_point);
     fill_codes(sp, stop_point);
 }
