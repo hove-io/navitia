@@ -231,7 +231,7 @@ class TestJourneys(AbstractTestFixture):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, unknown string format"
+        eq_(response['message'].lower(), "unable to parse datetime, unknown string format")
 
     def test_journeys_date_invalid(self):
         """giving the date with mmsshh (56 45 12) should be a problem"""
