@@ -44,6 +44,10 @@ from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 
 from jormungandr.modules.v1_routing.resources import Index
+from importlib import import_module
+from jormungandr import autocomplete
+
+
 
 
 class RegionConverter(BaseConverter):
@@ -152,11 +156,15 @@ class V1Routing(AModule):
                               '/' + collection,
                               endpoint=collection + '.external_codes')
 
-        self.add_resource(Places.Places,
+        # Places/Elasticsearch
+        module_path, name = autocomplete["class"].rsplit('.', 1)
+        module = import_module(module_path)
+        self.add_resource(getattr(module, name),
                           region + 'places',
                           coord + 'places',
                           '/places',
                           endpoint='places')
+
         self.add_resource(Ptobjects.Ptobjects,
                           region + 'pt_objects',
                           coord + 'pt_objects',
