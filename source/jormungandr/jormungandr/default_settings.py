@@ -66,6 +66,7 @@ CACHE_CONFIGURATION = {
     'TIMEOUT_AUTHENTICATION': 600,
     'TIMEOUT_PARAMS': 600,
     'TIMEOUT_TIMEO': 60,
+    'TIMEOUT_SYNTHESE': 30,
 }
 
 # List of enabled modules
@@ -82,6 +83,9 @@ CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 60  # the circuit breaker retries after thi
 
 CIRCUIT_BREAKER_MAX_TIMEO_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 # Default region instance
 # DEFAULT_REGION = 'default'

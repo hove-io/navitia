@@ -58,8 +58,9 @@
 
 from nose.tools.nontrivial import raises
 import xml.etree.ElementTree as et
-from jormungandr.realtime_schedule.synthese_xml_reader import SyntheseXmlReader, SyntheseRoutePoint
+from jormungandr.realtime_schedule.synthese import Synthese, SyntheseRoutePoint
 from jormungandr.interfaces.parsers import date_time_format
+import pytz
 
 
 def get_xml_parser():
@@ -93,34 +94,39 @@ def get_xml_parser():
            '</journey>' \
            '</timeTable>'
 
+def make_dt(str):
+    tz = pytz.timezone("Europe/Paris")
+    dt = date_time_format(str)
+    return tz.normalize(tz.localize(dt)).astimezone(pytz.utc)
+
 
 def xml_valid_test():
-    builder = SyntheseXmlReader()
-    result = builder.get_synthese_passages(get_xml_parser())
+    builder = Synthese("id_synthese", "http://fake.url/", "Europe/Paris")
+    result = builder._get_synthese_passages(get_xml_parser())
     route_point = SyntheseRoutePoint('2533412229452279', '3377704015495922')
 
     assert route_point in result
     assert len(result[route_point]) == 1
     assert result[route_point][0].is_real_time == True
-    assert result[route_point][0].datetime == date_time_format("2016-Mar-21 12:07:37")
+    assert result[route_point][0].datetime == make_dt("2016-Mar-21 12:07:37")
 
     route_point = SyntheseRoutePoint('2533412229399934', '3377704015495922')
     assert route_point in result
     assert len(result[route_point]) == 2
     assert result[route_point][0].is_real_time == True
-    assert result[route_point][0].datetime == date_time_format("2016-Mar-21 12:15:00")
+    assert result[route_point][0].datetime == make_dt("2016-Mar-21 12:15:00")
 
     assert result[route_point][1].is_real_time == True
-    assert result[route_point][1].datetime == date_time_format("2016-Mar-22 12:15:00")
+    assert result[route_point][1].datetime == make_dt("2016-Mar-22 12:15:00")
 
 @raises(ValueError)
 def xml_date_time_invalid_test():
-    builder = SyntheseXmlReader()
+    builder = Synthese("id_synthese", "http://fake.url/", "Europe/Paris")
     xml = get_xml_parser().replace("2016-Mar-21 12:07:37", "2016-Mar-41 12:07:37", 1)
-    builder.get_synthese_passages(xml)
+    builder._get_synthese_passages(xml)
 
 @raises(et.ParseError)
 def xml_invalid_test():
-    builder = SyntheseXmlReader()
+    builder = Synthese("id_synthese", "http://fake.url/", "Europe/Paris")
     xml = get_xml_parser().replace("</journey>", "", 1)
-    builder.get_synthese_passages(xml)
+    builder._get_synthese_passages(xml)
