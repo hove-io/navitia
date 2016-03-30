@@ -65,10 +65,11 @@ class Synthese(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, timezone, timeout=10):
+    def __init__(self, id, service_url, timezone, object_id_tag=None, timeout=10):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
+        self.object_id_tag = object_id_tag if object_id_tag else id
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'])
         self.timezone = pytz.timezone(timezone)
@@ -123,15 +124,15 @@ class Synthese(RealtimeProxy):
         The url returns something like a departure on a stop point
         """
 
-        stop = route_point.fetch_stop_id(self.rt_system_id)
+        stop_id = route_point.fetch_stop_id(self.object_id_tag)
 
-        if not stop:
+        if not stop_id:
             # one a the id is missing, we'll not find any realtime
             logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
-                                              format(obj=route_point, s=stop))
+                                              format(obj=route_point, s=stop_id))
             return None
 
-        url = "{base_url}?SERVICE=tdg&roid={stop_id}".format(base_url=self.service_url, stop_id=stop)
+        url = "{base_url}?SERVICE=tdg&roid={stop_id}".format(base_url=self.service_url, stop_id=stop_id)
 
         return url
 
