@@ -68,6 +68,20 @@ CACHE_CONFIGURATION = {
     'TIMEOUT_TIMEO': 60,
 }
 
+# Places configuration
+AUTOCOMPLETE = {
+    # Kraken API
+    "class": "jormungandr.interfaces.v1.Places.Places"
+    # Elasticsearch API
+    #"class": "jormungandr.interfaces.v1.Places.WorldWidePlaces",
+    #'args': {
+    #    "hosts": ["http://127.0.0.1:9200"],
+    #    "user": "",
+    #    "password": "",
+    #    "use_ssl": False
+    #}
+}
+
 # List of enabled modules
 MODULES = {
     'v1': {  # API v1 of Navitia
