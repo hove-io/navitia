@@ -55,7 +55,7 @@ class RealtimeProxyManager(object):
             except KeyError:
                 log.warn('impossible to build a realtime proxy, missing mandatory field in configuration')
                 continue
-            object_id_tag = configuration.get('object_id_tag')
+            object_id_tag = configuration.get('object_id_tag', proxy_id)
             args = configuration.get('args', {})
 
             try:
