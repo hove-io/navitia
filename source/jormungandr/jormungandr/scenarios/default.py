@@ -276,6 +276,8 @@ class Scenario(simple.Scenario):
             error.id = response_pb2.Error.no_solution
             error.message = "No journey found, all were filtered"
 
+        self.compute_pagination_links(resp, instance)
+
         return resp
 
     def _delete_too_long_journey(self, resp, instance, clockwise):
@@ -297,10 +299,10 @@ class Scenario(simple.Scenario):
     def next_journey_datetime(responses):
         """
         by default to get the next journey, we add one minute to:
-        the best if we have one, else to the journey that has the earliest departure
+        the best if we have one, else to the journey that has the tardiest departure
         """
-        last_best = next((j for j in responses.journeys if j.type == 'rapid'), None) or \
-                    min(responses.journeys, key=lambda j: j.departure_date_time)
+        last_best = next((j for j in responses.journeys if j.type in ('best', 'rapid')), None) or \
+                    max(responses.journeys, key=lambda j: j.departure_date_time)
 
         if not last_best:
             return None
@@ -313,10 +315,10 @@ class Scenario(simple.Scenario):
     def previous_journey_datetime(responses):
         """
         by default to get the previous journey, we substract one minute to:
-        the best if we have one, else to the journey that has the tardiest arrival
+        the best if we have one, else to the journey that has the earliest arrival
         """
-        last_best = next((j for j in responses.journeys if j.type == 'rapid'), None) or \
-                    max(responses.journeys, key=lambda j: j.arrival_date_time)
+        last_best = next((j for j in responses.journeys if j.type in ('best', 'rapid')), None) or \
+                    min(responses.journeys, key=lambda j: j.arrival_date_time)
 
         if not last_best:
             return None

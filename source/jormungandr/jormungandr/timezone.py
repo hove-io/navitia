@@ -33,10 +33,10 @@ import logging
 import pytz
 from flask import g
 from jormungandr.exceptions import TechnicalError, RegionNotFound
-from jormungandr import i_manager
 
 
 def set_request_timezone(region):
+    from jormungandr import i_manager
     logger = logging.getLogger(__name__)
     instance = i_manager.instances.get(region, None)
 

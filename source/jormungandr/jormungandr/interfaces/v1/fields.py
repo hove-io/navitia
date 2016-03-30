@@ -30,14 +30,15 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from functools import wraps
 from flask.ext.restful import fields, marshal
 from copy import deepcopy
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import datetime
 import logging
 from flask.globals import g
 import pytz
 from jormungandr import utils
-from jormungandr.interfaces.v1.make_links import create_internal_link
+from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.timezone import get_timezone
+from jormungandr.utils import timestamp_to_str
 from navitiacommon import response_pb2, type_pb2
 
 
@@ -95,8 +96,6 @@ class DateTime(fields.Raw):
         super(DateTime, self).__init__(*args, **kwargs)
 
     def output(self, key, obj):
-        tz = get_timezone()
-
         attribute = self.attribute or key
         if not obj.HasField(attribute):
             return self.default
@@ -106,16 +105,32 @@ class DateTime(fields.Raw):
         if value is None:
             return self.default
 
-        return self.format(value, tz)
+        return self.format(value)
 
-    def format(self, value, timezone):
-        dt = datetime.datetime.utcfromtimestamp(value)
+    def format(self, value):
+        return timestamp_to_str(value)
 
-        if timezone:
-            dt = pytz.utc.localize(dt)
-            dt = dt.astimezone(timezone)
-            return dt.strftime("%Y%m%dT%H%M%S")
-        return None  # for the moment I prefer not to display anything instead of something wrong
+
+class Links(fields.Raw):
+    def __init__(self, *args, **kwargs):
+        super(Links, self).__init__(*args, **kwargs)
+
+    def format(self, value):
+        # note: some request args can be there several times,
+        # but when there is only one elt, flask does not want lists
+        args = {}
+        for e in value.kwargs:
+            if len(e.values) > 1:
+                args[e.key] = [v for v in e.values]
+            else:
+                 args[e.key] = e.values[0]
+
+        return create_external_link('v1.{}'.format(value.ressource_name),
+                                    rel=value.rel,
+                                    _type=value.type,
+                                    templated=value.is_templated,
+                                    description=value.description,
+                                    **args)
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -154,8 +169,7 @@ class SplitDateTime(DateTime):
             return self.format_time(time)
 
         date_time = date + time
-        tz = get_timezone()
-        return self.format(date_time, timezone=tz)
+        return self.format(date_time)
 
     @staticmethod
     def format_time(time):
