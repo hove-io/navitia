@@ -283,6 +283,8 @@ class Places(ResourceUri):
 
         if any([region, lon, lat]):
             return self._search_region(args, region, lon, lat)
+        else:
+            abort(404, message='Invalid arguments')
 
     @marshal_with(places)
     def _search_region(self, args, region=None, lon=None, lat=None):
