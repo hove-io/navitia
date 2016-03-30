@@ -603,6 +603,8 @@ line["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 route["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 stop_area["commercial_modes"] = NonNullList(NonNullNested(commercial_mode))
 stop_area["physical_modes"] = NonNullList(NonNullNested(physical_mode))
+stop_point["commercial_modes"] = NonNullList(NonNullNested(commercial_mode))
+stop_point["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type_admin)
