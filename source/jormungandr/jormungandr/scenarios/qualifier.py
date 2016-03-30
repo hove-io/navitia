@@ -174,7 +174,6 @@ def best_standard(standard, journey, best_criteria):
     return standard if best_criteria(standard, journey) > 0 else journey
 
 
-
 def choose_standard(journeys, best_criteria):
     standard = None
     for journey in journeys:
@@ -190,6 +189,15 @@ def compare_minus(field_1, field_2):
         return 1
     else:
         return -1
+
+
+def compare_field(obj1, obj2, func):
+    return compare_minus(func(obj1), func(obj2))
+
+
+def reverse_compare_field(obj1, obj2, func):
+    return compare_minus(func(obj2), func(obj1))
+
 
 #criteria
 def transfers_crit(j_1, j_2):

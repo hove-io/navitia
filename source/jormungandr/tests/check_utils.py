@@ -29,9 +29,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from collections import deque, defaultdict, namedtuple
+from functools import partial
 from future.moves.itertools import zip_longest
 from nose.tools import *
 import json
+from jormungandr.scenarios.qualifier import compare_field, reverse_compare_field
 from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
@@ -1041,3 +1043,30 @@ def check_journey(journey, ref_journey):
             eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
             eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)
             eq_(stop_dt.get('base_arrival_date_time'), ref_stop_dt.base_arrival_date_time)
+
+
+def generate_pt_journeys(response):
+    """ generate all journeys with at least a public transport section """
+    for j in response.get('journeys', []):
+        if any(s for s in j.get('sections', []) if s['type'] == 'public_transport'):
+            yield j
+
+
+def new_default_pagination_journey_comparator(clockwise):
+    """same as new_default.__get_best_for_criteria but for python dict
+    compare first on departure (or arrival for non clockwise), then on:
+    - duration
+    - number of transfers
+    """
+    def make_crit(func, reverse=False):
+        if not reverse:
+            return partial(compare_field, func=func)
+        return partial(reverse_compare_field, func=func)
+
+    main_criteria = make_crit(lambda j: get_valid_datetime(j['departure_date_time'])) if clockwise \
+        else make_crit(lambda j: get_valid_datetime(j['arrival_date_time']), reverse=True)
+
+    return [main_criteria,
+            make_crit(lambda j: get_valid_int(j['duration'])),
+            make_crit(lambda j: len(j.get('sections', []))),
+    ]

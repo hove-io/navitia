@@ -53,6 +53,9 @@ class ResponseBuilder(object):
     def get_journey(self, uri):
         return self._journeys[uri]
 
+    def get_journeys(self):
+        return self.response.journeys
+
     @staticmethod
     def __init_section(pb_section, **kwargs):
         """

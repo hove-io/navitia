@@ -155,36 +155,6 @@ def _has_pt(j):
     return any(s.type == response_pb2.PUBLIC_TRANSPORT for s in j.sections)
 
 
-def create_next_kraken_request(request, responses):
-    """
-    create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
-
-    to do that we find the best journey (soonest arrival, then shortest journey) found in the responses
-    and add one second to it's departure.
-    (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
-    """
-    def pt_journey_generator(responses):
-        for r in responses:
-            for j in r.journeys:
-                if has_pt(j):
-                    yield j
-
-    one_second = 1
-    best_crit = arrival_crit if request["clockwise"] else departure_crit
-    best = min_from_criteria(pt_journey_generator(responses),
-                             [best_crit, duration_crit, transfers_crit, nonTC_crit])
-    if best is None:
-        return None
-
-    if request['clockwise']:
-        request['datetime'] = best.departure_date_time + one_second
-    else:
-        request['datetime'] = best.arrival_date_time - one_second
-
-    #TODO forbid ODTs
-    return request
-
-
 def sort_journeys(resp, journey_order, clockwise):
     if resp.journeys:
         resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
@@ -630,12 +600,12 @@ class Scenario(simple.Scenario):
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
-            responses.extend(tmp_resp)#we keep the error for building the response
+            responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
                 break
 
-            request = create_next_kraken_request(request, tmp_resp)
+            request = self.create_next_kraken_request(request, tmp_resp)
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, api_request)
@@ -702,18 +672,47 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    @staticmethod
-    def next_journey_datetime(responses):
+    def create_next_kraken_request(self, request, responses):
         """
-        by default to get the next journey, we add one minute to:
-        the best if we have one, else to the journey that has the earliest departure
-        """
-        return None
+        create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
 
-    @staticmethod
-    def previous_journey_datetime(responses):
+        to do that we find the best journey (soonest arrival, then shortest journey) found in the responses
+        and add one second to it's departure.
+        (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
         """
-        by default to get the previous journey, we substract one minute to:
-        the best if we have one, else to the journey that has the tardiest arrival
+        if request["clockwise"]:
+            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys])
+        else:
+            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys])
+
+        if request['datetime'] is None:
+            return None
+
+        #TODO forbid ODTs
+        return request
+
+    def __get_best_for_criteria(self, journeys, criteria):
+        return min_from_criteria(filter(has_pt, journeys),
+                                 [criteria, duration_crit, transfers_crit, nonTC_crit])
+
+    def next_journey_datetime(self, journeys):
         """
-        return None
+        to get the next journey, we add one second to the departure of the 'best found' journey
+        """
+        best = self.__get_best_for_criteria(journeys, arrival_crit)
+        if best is None:
+            return None
+
+        one_second = 1
+        return best.departure_date_time + one_second
+
+    def previous_journey_datetime(self, journeys):
+        """
+        to get the next journey, we add one second to the arrival of the 'best found' journey
+        """
+        best = self.__get_best_for_criteria(journeys, departure_crit)
+        if best is None:
+            return None
+
+        one_second = 1
+        return best.arrival_date_time - one_second

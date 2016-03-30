@@ -297,9 +297,6 @@ class AbstractTestFixture:
         if not response.get('journeys'):
             return
         """default next behaviour is 1 mn after the best or the soonest"""
-        # j_to_compare = max((j for j in response['journeys']
-        #                     if any(s for s in j['sections'] if s['type'] == "public_transport")),
-        #                    key=lambda x: get_valid_datetime(x['departure_date_time']))
         j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
              next((j for j in response.get('journeys', [])), None)
 
@@ -311,9 +308,6 @@ class AbstractTestFixture:
         if not response.get('journeys'):
             return
         """default previous behaviour is 1 mn before the best or the latest """
-        # j_to_compare = min((j for j in response['journeys']
-        #                     if any(s for s in j['sections'] if s['type'] == "public_transport")),
-        #                    key=lambda x: get_valid_datetime(x['arrival_date_time']))
         j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
              next((j for j in response.get('journeys', [])), None)
 
