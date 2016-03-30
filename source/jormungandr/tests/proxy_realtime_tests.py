@@ -45,9 +45,9 @@ MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
-    def __init__(self, id, code_source):
+    def __init__(self, id, object_id_tag):
         self.service_id = id
-        self.code_source = code_source
+        self.object_id_tag = object_id_tag if object_id_tag else id
 
     @staticmethod
     def _create_next_passages(passages):
@@ -62,13 +62,13 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
         return next_passages
 
     def next_passage_for_route_point(self, route_point):
-        if route_point.fetch_stop_id(self.code_source) == "KisioDigital_C:S1":
+        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 
-        if route_point.fetch_stop_id(self.code_source) == "AnotherSource_C:S1":
+        if route_point.fetch_stop_id(self.object_id_tag) == "AnotherSource_C:S1":
             return self._create_next_passages([("10:42:42", "l'infini"), ("11:42:42", "l'au dela")])
 
-        if route_point.fetch_stop_id(self.code_source) == "KisioDigital_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S0":
             return self._create_next_passages([("11:32:42", "l'infini"), ("11:42:42", "l'au dela")])
 
         if route_point.pb_stop_point.uri == "S42":
@@ -204,7 +204,7 @@ class TestDepartures(AbstractTestFixture):
 
 
 MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
-                     ' "code_source": "AnotherSource", \n'
+                     ' "object_id_tag": "AnotherSource", \n'
                      ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
                      ' "args": { } }]')
 
