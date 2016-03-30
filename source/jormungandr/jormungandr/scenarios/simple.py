@@ -265,7 +265,7 @@ class Scenario(object):
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
         def _add_link(resp, rel, **kwargs):
-            link = resp.links.add(rel=rel, type=rel, is_templated=False, ressource_name='journeys')
+            link = resp.links.add(rel=rel, is_templated=False, ressource_name='journeys')
             for k, v in kwargs.items():
                 if k is None or v is None:
                     continue
@@ -275,13 +275,13 @@ class Scenario(object):
                 else:
                     args.values.extend([v])
 
-        prev_dt = self.previous_journey_datetime(resp)
+        prev_dt = self.previous_journey_datetime([j for j in resp.journeys])
         if prev_dt is not None:
             cloned_params['datetime'] = timestamp_to_str(prev_dt)
             cloned_params['datetime_represents'] = 'arrival'
             _add_link(resp, rel='prev', **cloned_params)
 
-        next_dt = self.next_journey_datetime(resp)
+        next_dt = self.next_journey_datetime([j for j in resp.journeys])
         if next_dt is not None:
             cloned_params['datetime'] = timestamp_to_str(next_dt)
             cloned_params['datetime_represents'] = 'departure'

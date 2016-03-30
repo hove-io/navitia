@@ -128,7 +128,7 @@ def next_journey_test():
         .journey(type='car', departure='T1300', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.next_journey_datetime(builder.response), str_to_time_stamp('20161010T120100'))
+    eq_(scenario.next_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T120100'))
 
 
 def next_journey_test_no_rapid():
@@ -141,7 +141,7 @@ def next_journey_test_no_rapid():
         .journey(type='car', departure='T2000', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.next_journey_datetime(builder.response), str_to_time_stamp('20161010T100100'))
+    eq_(scenario.next_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T100100'))
 
 
 def previous_journey_test():
@@ -153,7 +153,7 @@ def previous_journey_test():
         .journey(type='car', departure='T1300', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.previous_journey_datetime(builder.response), str_to_time_stamp('20161010T145900'))
+    eq_(scenario.previous_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T145900'))
 
 
 def previous_journey_test_no_rapid():
@@ -166,4 +166,4 @@ def previous_journey_test_no_rapid():
         .journey(type='car', departure='T2000', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.previous_journey_datetime(builder.response), str_to_time_stamp('20161010T165900'))
+    eq_(scenario.previous_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T165900'))

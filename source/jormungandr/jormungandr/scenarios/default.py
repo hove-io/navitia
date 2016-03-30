@@ -241,9 +241,9 @@ class Scenario(simple.Scenario):
             at_least_one_journey_found = True
 
             if request['clockwise']:
-                new_datetime = self.next_journey_datetime(tmp_resp)
+                new_datetime = self.next_journey_datetime([j for j in tmp_resp.journeys])
             else:
-                new_datetime = self.previous_journey_datetime(tmp_resp)
+                new_datetime = self.previous_journey_datetime([j for j in tmp_resp.journeys])
 
             if new_datetime is None:
                 break
@@ -296,13 +296,15 @@ class Scenario(simple.Scenario):
         self.erase_journeys(resp, to_delete)
 
     @staticmethod
-    def next_journey_datetime(responses):
+    def next_journey_datetime(journeys):
         """
         by default to get the next journey, we add one minute to:
-        the best if we have one, else to the journey that has the tardiest departure
+        the best if we have one, else to the journey that has the earliest departure
         """
-        last_best = next((j for j in responses.journeys if j.type in ('best', 'rapid')), None) or \
-                    max(responses.journeys, key=lambda j: j.departure_date_time)
+        if not journeys:
+            return None
+        last_best = next((j for j in journeys if j.type in ('best', 'rapid')), None) or \
+                    min(journeys, key=lambda j: j.departure_date_time)
 
         if not last_best:
             return None
@@ -312,13 +314,15 @@ class Scenario(simple.Scenario):
         return last_best.departure_date_time + one_minute
 
     @staticmethod
-    def previous_journey_datetime(responses):
+    def previous_journey_datetime(journeys):
         """
         by default to get the previous journey, we substract one minute to:
-        the best if we have one, else to the journey that has the earliest arrival
+        the best if we have one, else to the journey that has the tardiest arrival
         """
-        last_best = next((j for j in responses.journeys if j.type in ('best', 'rapid')), None) or \
-                    min(responses.journeys, key=lambda j: j.arrival_date_time)
+        if not journeys:
+            return None
+        last_best = next((j for j in journeys if j.type in ('best', 'rapid')), None) or \
+                    max(journeys, key=lambda j: j.arrival_date_time)
 
         if not last_best:
             return None
@@ -333,6 +337,8 @@ class Scenario(simple.Scenario):
         We can search the earliest one (by default) or the shortest one.
         Restriction are put on the fallback mode used, by default only walking is allowed.
         """
+        if not journeys:
+            return None
         criteria = {'time': select_best_journey_by_time, 'duration': select_best_journey_by_duration}
         fallback_modes = max_duration_fallback_modes[instance.max_duration_fallback_mode]
         asap_journey = criteria[instance.max_duration_criteria](journeys, clockwise, fallback_modes)
