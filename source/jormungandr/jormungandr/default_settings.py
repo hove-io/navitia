@@ -54,6 +54,9 @@ LOGGER = {
     }
 }
 
+# Bike self-service configuration
+BSS_PROVIDER = []
+
 #Parameters for statistics
 SAVE_STAT = False
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'

@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Flask, request
-from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
+from flask.ext.restful import Resource, fields, reqparse, abort
 from flask.globals import g
 from jormungandr import i_manager, timezone, global_autocomplete
 from jormungandr.interfaces.v1.fields import disruption_marshaller
@@ -44,7 +44,8 @@ from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
-from flask_restful import marshal
+from flask_restful import marshal, marshal_with
+from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManager
 import datetime
 from jormungandr.autocomplete.elastic_search import Elasticsearch
 
@@ -145,7 +146,6 @@ class PlacesNearby(ResourceUri):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
-        parser_get = self.parsers["get"]
         self.parsers["get"].add_argument("type[]", type=unicode,
                                          action="append",
                                          default=["stop_area", "stop_point",
@@ -166,6 +166,8 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
+        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+                                         description="Show bss stands availability")
 
         self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
                                          description="The datetime used to consider the state of the pt object"
@@ -174,7 +176,6 @@ class PlacesNearby(ResourceUri):
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
 
-    @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
@@ -202,4 +203,8 @@ class PlacesNearby(ResourceUri):
         self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
+        response = marshal(response, places_nearby)
+        if args["bss_stands"]:
+            bss_manager = BssProviderManager()
+            response["places_nearby"] = bss_manager.handle_places(response["places_nearby"])
         return response, 200
