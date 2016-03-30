@@ -50,3 +50,17 @@ MODULES = {
         'class_name': 'V1Routing'
     }
 }
+
+# Places configuration
+AUTOCOMPLETE = {
+    # Kraken API
+    "class": "jormungandr.interfaces.v1.Places.Places"
+    # Elasticsearch API
+    #"class": "jormungandr.interfaces.v1.Places.WorldWidePlaces",
+    #'args': {
+    #    "hosts": ["http://127.0.0.1:9200"],
+    #    "user": "",
+    #    "password": "",
+    #    "use_ssl": False
+    #}
+}

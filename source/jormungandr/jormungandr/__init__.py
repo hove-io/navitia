@@ -77,6 +77,10 @@ i_manager = InstanceManager(instances_dir=app.config.get('INSTANCES_DIR', None),
                             start_ping=app.config.get('START_MONITORING_THREAD', True))
 i_manager.initialisation()
 
+autocomplete = app.config.get('AUTOCOMPLETE', None)
+if not autocomplete:
+    autocomplete = {"class": 'jormungandr.interfaces.v1.Places.Places'}
+
 from jormungandr.stat_manager import StatManager
 stat_manager = StatManager()
 
