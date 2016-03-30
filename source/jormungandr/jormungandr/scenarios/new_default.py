@@ -647,6 +647,9 @@ class Scenario(simple.Scenario):
         tag_journeys(pb_resp)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+
+        self.compute_pagination_links(pb_resp, instance)
+
         return pb_resp
 
     def call_kraken(self, request_type, request, instance, krakens_call):
@@ -698,3 +701,19 @@ class Scenario(simple.Scenario):
                 del resp.journeys[request["max_nb_journeys"]:]
 
         return resp
+
+    @staticmethod
+    def next_journey_datetime(responses):
+        """
+        by default to get the next journey, we add one minute to:
+        the best if we have one, else to the journey that has the earliest departure
+        """
+        return None
+
+    @staticmethod
+    def previous_journey_datetime(responses):
+        """
+        by default to get the previous journey, we substract one minute to:
+        the best if we have one, else to the journey that has the tardiest arrival
+        """
+        return None

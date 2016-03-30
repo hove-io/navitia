@@ -125,6 +125,6 @@ class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
     def test_strange_line_name(self):
         response = self.query("v1/coverage/main_ptref_test/journeys"
                               "?from=stop_area:stop2&to=stop_area:stop1"
-                              "&datetime=20140107T100000", display=True)
+                              "&datetime=20140107T100000")
         check_journeys(response)
         eq_(len(response['journeys']), 1)

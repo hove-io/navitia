@@ -37,7 +37,7 @@ from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
-from jormungandr.interfaces.v1.fields import disruption_marshaller
+from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, Co2Emission, PbEnum, feed_publisher
@@ -236,12 +236,14 @@ ticket = {
     "links": TicketLinks(attribute="section_id")
 }
 
+
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
     "tickets": fields.List(NonNullNested(ticket)),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
+    "links": fields.List(Links()),
 }
 
 
@@ -305,116 +307,6 @@ class add_journey_href(object):
                     journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
             return objects
         return wrapper
-
-
-class add_journey_pagination(object):
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if objects[1] != 200:
-                return objects
-            #self is the first parameter, so the resources
-            scenario = g.scenario
-            if scenario and hasattr(scenario, 'extremes') and callable(scenario.extremes):
-                datetime_before, datetime_after = scenario.extremes(objects[0])
-            else:
-                datetime_before, datetime_after = self.extremes(objects[0])
-            if datetime_before and datetime_after:
-                if not "links" in objects[0]:
-                    objects[0]["links"] = []
-
-                args = dict(deepcopy(request.args))
-                args["datetime"] = datetime_before.strftime(f_datetime)
-                args["datetime_represents"] = "arrival"
-                if "region" in kwargs:
-                    args["region"] = kwargs["region"]
-                # Note, it's not the right thing to do, the rel should be 'next' and
-                # the type 'journey' but for compatibility reason we cannot change before the v2
-                objects[0]["links"].append(create_external_link("v1.journeys",
-                                                       rel='prev',
-                                                       _type='prev',
-                                                       **args))
-                args["datetime"] = datetime_after.strftime(f_datetime)
-                args["datetime_represents"] = "departure"
-                objects[0]["links"].append(create_external_link("v1.journeys",
-                                                       rel='next',
-                                                       _type='next',
-                                                       **args))
-
-            datetime_first, datetime_last = self.first_and_last(objects[0])
-            if datetime_first and datetime_last:
-                if not "links" in objects[0]:
-                    objects[0]["links"] = []
-
-                args = dict(deepcopy(request.args))
-                args["datetime"] = datetime_first.strftime(f_datetime)
-                args["datetime_represents"] = "departure"
-                if "region" in kwargs:
-                    args["region"] = kwargs["region"]
-                objects[0]["links"].append(create_external_link("v1.journeys",
-                                                                rel='first',
-                                                                _type='first',
-                                                                **args))
-                args["datetime"] = datetime_last.strftime(f_datetime)
-                args["datetime_represents"] = "arrival"
-                objects[0]["links"].append(create_external_link("v1.journeys",
-                                                                rel='last',
-                                                                _type='last',
-                                                                **args))
-            return objects
-        return wrapper
-
-    def extremes(self, resp):
-        datetime_before = None
-        datetime_after = None
-        if 'journeys' not in resp:
-            return (None, None)
-        section_is_pt = lambda section: section['type'] == "public_transport"\
-                           or section['type'] == "on_demand_transport"
-        filter_journey = lambda journey: 'arrival_date_time' in journey and\
-                             journey['arrival_date_time'] != '' and\
-                             "sections" in journey and\
-                             any(section_is_pt(section) for section in journey['sections'])
-        list_journeys = filter(filter_journey, resp['journeys'])
-        if not list_journeys:
-            return (None, None)
-        prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
-        next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
-        f_datetime = "%Y%m%dT%H%M%S"
-        f_departure = datetime.strptime(next_journey['departure_date_time'], f_datetime)
-        f_arrival = datetime.strptime(prev_journey['arrival_date_time'], f_datetime)
-        datetime_after = f_departure + timedelta(minutes=1)
-        datetime_before = f_arrival - timedelta(minutes=1)
-
-        return (datetime_before, datetime_after)
-
-    def first_and_last(self, resp):
-        datetime_first = None
-        datetime_last = None
-        try:
-            list_journeys = [journey for journey in resp['journeys']
-                             if 'arrival_date_time' in journey and
-                             journey['arrival_date_time'] != '' and
-                             'departure_date_time' in journey and
-                             journey['departure_date_time'] != '']
-            asap_min = min(list_journeys,
-                           key=itemgetter('departure_date_time'))
-            asap_max = max(list_journeys,
-                           key=itemgetter('arrival_date_time'))
-        except:
-            return (None, None)
-        if asap_min['departure_date_time'] and asap_max['arrival_date_time']:
-            departure = asap_min['departure_date_time']
-            departure_date = datetime.strptime(departure, f_datetime)
-            midnight = datetime.strptime('0000', '%H%M').time()
-            datetime_first = datetime.combine(departure_date, midnight)
-            arrival = asap_max['arrival_date_time']
-            arrival_date = datetime.strptime(arrival, f_datetime)
-            almost_midnight = datetime.strptime('2359', '%H%M').time()
-            datetime_last = datetime.combine(arrival_date, almost_midnight)
-
-        return (datetime_first, datetime_last)
 
 
 #add the link between a section and the ticket needed for that section
@@ -597,7 +489,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
     @add_debug_info()
     @add_fare_links()
-    @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
     @ManageError()

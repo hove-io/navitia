@@ -27,8 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from copy import deepcopy
+from collections import defaultdict
+from flask import logging
 from flask.ext.restful import abort
-from jormungandr.utils import date_to_timestamp
+from flask.globals import request
+from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, timestamp_to_datetime
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
@@ -251,3 +255,51 @@ class Scenario(object):
 
     def isochrone(self, request, instance):
         raise NotImplementedError()
+
+    def compute_pagination_links(self, resp, instance):
+        if not resp.journeys:
+            return
+
+        # NOTE: we use request.args and not the parser parameters not to have the default values of the params
+        cloned_params = dict(request.args)
+        cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
+
+        def _add_link(resp, rel, **kwargs):
+            link = resp.links.add(rel=rel, type=rel, is_templated=False, ressource_name='journeys')
+            for k, v in kwargs.items():
+                if k is None or v is None:
+                    continue
+                args = link.kwargs.add(key=k)
+                if type(v) is list:
+                    args.values.extend(v)
+                else:
+                    args.values.extend([v])
+
+        prev_dt = self.previous_journey_datetime(resp)
+        if prev_dt is not None:
+            cloned_params['datetime'] = timestamp_to_str(prev_dt)
+            cloned_params['datetime_represents'] = 'arrival'
+            _add_link(resp, rel='prev', **cloned_params)
+
+        next_dt = self.next_journey_datetime(resp)
+        if next_dt is not None:
+            cloned_params['datetime'] = timestamp_to_str(next_dt)
+            cloned_params['datetime_represents'] = 'departure'
+            _add_link(resp, rel='next', **cloned_params)
+
+        # we also compute first/last journey link
+        soonest_departure_ts = min(j.departure_date_time for j in resp.journeys)
+        soonest_departure = timestamp_to_datetime(soonest_departure_ts)
+        if soonest_departure:
+            soonest_departure.replace(hour=0, minute=0)
+            cloned_params['datetime'] = dt_to_str(soonest_departure)
+            cloned_params['datetime_represents'] = 'departure'
+            _add_link(resp, rel='first', **cloned_params)
+
+        tardiest_arrival_ts = max(j.arrival_date_time for j in resp.journeys)
+        tardiest_arrival = timestamp_to_datetime(tardiest_arrival_ts)
+        if tardiest_arrival:
+            tardiest_arrival.replace(hour=23, minute=59)
+            cloned_params['datetime'] = dt_to_str(tardiest_arrival)
+            cloned_params['datetime_represents'] = 'arrival'
+            _add_link(resp, rel='last', **cloned_params)

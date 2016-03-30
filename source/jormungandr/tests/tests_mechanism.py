@@ -30,6 +30,10 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import os
 # set default config file if not defined in other tests
+from datetime import timedelta
+from operator import itemgetter
+from flask import logging
+
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
         + '/integration_tests_settings.py'
@@ -212,6 +216,35 @@ class AbstractTestFixture:
 
         return json_response, response.status_code
 
+    def check_journeys_links(self, response, query_dict):
+        journeys_links = get_links_dict(response)
+        for l in ["prev", "next", "first", "last"]:
+            assert l in journeys_links
+            url = journeys_links[l]['href']
+
+            additional_args = query_from_str(url)
+            for k, v in additional_args.items():
+                if k == 'datetime':
+                    if l == 'next':
+                        self.check_next_datetime_link(get_valid_datetime(v), response)
+                    elif l == 'prev':
+                        self.check_previous_datetime_link(get_valid_datetime(v), response)
+                    continue
+                if k == 'datetime_represents':
+                    query_dt_rep = query_dict.get('datetime_represents', 'departure')
+                    if l in ['prev', 'last']:
+                        # the datetime_represents is negated
+                        if query_dt_rep == 'departure':
+                            assert v == 'arrival'
+                        else:
+                            assert v == 'departure'
+                    else:
+                        assert query_dt_rep == v
+
+                    continue
+
+                eq_(query_dict[k], v)
+
     def is_valid_journey_response(self, response, query_str):
         """
         check that the journey's response is valid
@@ -248,31 +281,7 @@ class AbstractTestFixture:
 
         # more checks on links, we want the prev/next/first/last,
         # to have forwarded all params, (and the time must be right)
-        journeys_links = get_links_dict(response)
-
-        for l in ["prev", "next", "first", "last"]:
-            assert l in journeys_links
-            url = journeys_links[l]['href']
-
-            additional_args = query_from_str(url)
-            for k, v in additional_args.items():
-                if k == 'datetime':
-                    #TODO check datetime
-                    continue
-                if k == 'datetime_represents':
-                    query_dt_rep = query_dict.get('datetime_represents', 'departure')
-                    if l in ['prev', 'last']:
-                        #the datetime_represents is negated
-                        if query_dt_rep == 'departure':
-                            assert v == 'arrival'
-                        else:
-                            assert v == 'departure'
-                    else:
-                        assert query_dt_rep == v
-
-                    continue
-
-                eq_(query_dict[k], v)
+        self.check_journeys_links(response, query_dict)
 
         feed_publishers = get_not_null(response, "feed_publishers")
         for feed_publisher in feed_publishers:
@@ -282,6 +291,34 @@ class AbstractTestFixture:
             assert 'debug' in response
         else:
             assert 'debug' not in response
+
+    @staticmethod
+    def check_next_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default next behaviour is 1 mn after the best or the soonest"""
+        # j_to_compare = max((j for j in response['journeys']
+        #                     if any(s for s in j['sections'] if s['type'] == "public_transport")),
+        #                    key=lambda x: get_valid_datetime(x['departure_date_time']))
+        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
+             next((j for j in response.get('journeys', [])), None)
+
+        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
+        eq_(j_departure + timedelta(minutes=1), dt)
+
+    @staticmethod
+    def check_previous_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default previous behaviour is 1 mn before the best or the latest """
+        # j_to_compare = min((j for j in response['journeys']
+        #                     if any(s for s in j['sections'] if s['type'] == "public_transport")),
+        #                    key=lambda x: get_valid_datetime(x['arrival_date_time']))
+        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
+             next((j for j in response.get('journeys', [])), None)
+
+        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
+        eq_(j_departure - timedelta(minutes=1), dt)
 
 
 def dataset(datasets):
