@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
-from jormungandr import i_manager, timezone
+from jormungandr import i_manager, timezone, autocomplete
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
@@ -131,8 +131,7 @@ ww_places = {
 }
 
 
-class Places(ResourceUri):
-
+class WorldWidePlaces(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
         self.parsers = {}
@@ -140,51 +139,16 @@ class Places(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=unicode, action="append",
-                                         default=["stop_area", "address",
-                                                  "poi",
-                                                  "administrative_region"],
-                                         description="The type of data to\
-                                         search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="The maximum number of\
                                          places returned")
-        self.parsers["get"].add_argument("search_type", type=int, default=0,
-                                         description="Type of search:\
-                                         firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
-                                         action="append",
-                                         description="If filled, will\
-                                         restrained the search within the\
-                                         given admin uris")
-        self.parsers["get"].add_argument("depth", type=depth_argument,
-                                         default=1,
-                                         description="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
-                                         description="The datetime used to consider the state of the pt object"
-                                                     " Default is the current date and it is used for debug."
-                                                     " Note: it will mainly change the disruptions that concern "
-                                                     "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC")
 
-    def get(self, region=None, lon=None, lat=None):
+    def get(self):
         args = self.parsers["get"].parse_args()
         self._register_interpreted_parameters(args)
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-
-        # If a region or coords are asked, we do the search according
-        # to the region, else, we do a word wide search
-        if any([region, lon, lat]):
-            return self._search_region(args, region, lon, lat)
-        else:
-            return self._search_world_wide(args)
-
-    @marshal_with(places)
-    def _search_region(self, args, region=None, lon=None, lat=None):
-        self.region = i_manager.get_region(region, lon, lat)
-        response = i_manager.dispatch(args, "places", instance_name=self.region)
-        return response, 200
+        return self._search_world_wide(args)
 
     @marshal_with(ww_places)
     def _search_world_wide(self, args):
@@ -262,12 +226,69 @@ class Places(ResourceUri):
             }
         }
         try:
-            # TODO: get params?
-            es = Elasticsearch()
+            es = Elasticsearch(autocomplete["args"]["hosts"],
+                               http_auth=(autocomplete["args"]['user'],
+                                          autocomplete["args"]['password']),
+                               use_ssl=autocomplete["args"]['use_ssl'])
             res = es.search(index="munin", size=args['count'], body=query)
             return res['hits'], 200
         except ConnectionError:
             raise TechnicalError("world wide autocompletion service not available")
+
+
+class Places(ResourceUri):
+
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, authentication=False, *args, **kwargs)
+        self.parsers = {}
+        self.parsers["get"] = reqparse.RequestParser(
+            argument_class=ArgumentDoc)
+        self.parsers["get"].add_argument("q", type=unicode, required=True,
+                                         description="The data to search")
+        self.parsers["get"].add_argument("type[]", type=unicode, action="append",
+                                         default=["stop_area", "address",
+                                                  "poi",
+                                                  "administrative_region"],
+                                         description="The type of data to\
+                                         search")
+        self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
+                                         description="The maximum number of\
+                                         places returned")
+        self.parsers["get"].add_argument("search_type", type=int, default=0,
+                                         description="Type of search:\
+                                         firstletter or type error")
+        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
+                                         action="append",
+                                         description="If filled, will\
+                                         restrained the search within the\
+                                         given admin uris")
+        self.parsers["get"].add_argument("depth", type=depth_argument,
+                                         default=1,
+                                         description="The depth of objects")
+        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+                                         description="The datetime used to consider the state of the pt object"
+                                                     " Default is the current date and it is used for debug."
+                                                     " Note: it will mainly change the disruptions that concern "
+                                                     "the object The timezone should be specified in the format,"
+                                                     " else we consider it as UTC")
+
+    def get(self, region=None, lon=None, lat=None):
+        args = self.parsers["get"].parse_args()
+        self._register_interpreted_parameters(args)
+        if len(args['q']) == 0:
+            abort(400, message="Search word absent")
+
+        # If a region or coords are asked, we do the search according
+        # to the region, else, we do a word wide search
+
+        if any([region, lon, lat]):
+            return self._search_region(args, region, lon, lat)
+
+    @marshal_with(places)
+    def _search_region(self, args, region=None, lon=None, lat=None):
+        self.region = i_manager.get_region(region, lon, lat)
+        response = i_manager.dispatch(args, "places", instance_name=self.region)
+        return response, 200
 
 
 class PlaceUri(ResourceUri):
