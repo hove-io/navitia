@@ -173,18 +173,18 @@ class RoutePoint(object):
         return hash(self.__key())
 
     @staticmethod
-    def _get_code(obj, realtime_system_id):
-        return next((c.value for c in obj.codes if c.type == realtime_system_id), None)
+    def _get_code(obj, object_id_tag):
+        return next((c.value for c in obj.codes if c.type == object_id_tag), None)
 
     # Cache this ?
-    def fetch_stop_id(self, realtime_system_id):
-        return self._get_code(self.pb_stop_point, realtime_system_id)
+    def fetch_stop_id(self, object_id_tag):
+        return self._get_code(self.pb_stop_point, object_id_tag)
 
-    def fetch_line_id(self, realtime_system_id):
-        return self._get_code(self.pb_route.line, realtime_system_id)
+    def fetch_line_id(self, object_id_tag):
+        return self._get_code(self.pb_route.line, object_id_tag)
 
-    def fetch_route_id(self, realtime_system_id):
-        return self._get_code(self.pb_route, realtime_system_id)
+    def fetch_route_id(self, object_id_tag):
+        return self._get_code(self.pb_route, object_id_tag)
 
 
 def _get_route_point_from_stop_schedule(stop_schedule):
