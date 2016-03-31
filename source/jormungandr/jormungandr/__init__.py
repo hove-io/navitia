@@ -71,6 +71,8 @@ from navitiacommon.models import db
 db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
+AUTOCOMPLETE = 'kraken'
+
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(instances_dir=app.config.get('INSTANCES_DIR', None),
