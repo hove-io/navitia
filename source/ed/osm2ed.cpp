@@ -152,11 +152,16 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
     }
 }
 
+ReadWaysVisitor::~ReadWaysVisitor() {
+    LOG4CPLUS_INFO(logger, filtered_private_way << " way filtered because they were nameless and private");
+}
+
 /*
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & nodes_refs) {
+void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
+                                   const std::vector<uint64_t> & nodes_refs) {
     const auto properties = parse_way_tags(tags);
     const auto name_it = tags.find("name");
     const bool is_street = properties.any();
@@ -170,6 +175,15 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
     }
 
     const auto name = name_it != tags.end() ? name_it->second : "";
+
+    // we usually don't want to import private way, but we import those with a name, not to screw the autocomplete
+    std::string access = find_or_default("access", tags);
+    if (access == "private" && name.empty()) {
+        ++filtered_private_way;
+        LOG4CPLUS_TRACE(logger, "filtering a private access way " << osm_id);
+        return;
+    }
+
     if(is_used_by_relation) {
         it_way->set_properties(properties);
         if(!name.empty()){

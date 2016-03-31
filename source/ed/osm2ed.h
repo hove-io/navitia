@@ -320,10 +320,13 @@ struct ReadWaysVisitor {
     OSMCache& cache;
 
     ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
+    ~ReadWaysVisitor();
 
     void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
     void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
     void way_callback(uint64_t osm_id, const CanalTP::Tags& tags, const std::vector<uint64_t>& nodes);
+
+    size_t filtered_private_way = 0;
 };
 
 
