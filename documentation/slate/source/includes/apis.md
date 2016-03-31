@@ -314,12 +314,6 @@ This api search in public transport objects via their names. It's a kind
 of magical autocomplete on public transport data. It returns, in
 addition of classic objects, a collection of [places](#place).
 
-### Access
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `/coverage/pt_objects`                     | List of public transport objects    |
-
 ### How does it works
 
 Differents kind of objects can be returned (sorted as):
@@ -368,6 +362,13 @@ For example, he could key without any filters:
         <li>route : "bobby metro 11 to Steven"</li>
     </ul>
 </div>
+
+### Access
+
+| url | Result |
+|------------------------------------------------|-------------------------------------|
+| `/coverage/pt_objects`                     | List of public transport objects    |
+
 
 ### Parameters
 
@@ -440,8 +441,6 @@ Differents kind of objects can be returned (sorted as):
   yep      | q           | string    | The search term        |
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, will restrained the search within the given admin uris
-
-### How does it works
 
 ### Example
 
@@ -867,6 +866,10 @@ object. Arrivals are ordered chronologically in ascending order.
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `/coverage/{resource_path}/arrivals`        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
 | `/coverage/{lon;lat}/arrivals`              | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+
+### Parameters
+
+there are exactly the same as [departures](#departures)
 
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
