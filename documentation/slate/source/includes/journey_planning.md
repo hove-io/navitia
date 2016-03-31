@@ -1,17 +1,13 @@
-<a name="journey_planning"></a>Journey planning
+<a name="journey_planning"></a>![Journey planning](/images/journeys.png)Journey planning
 ===============================================
 
--   **[Journeys](#journeys)** : Compute journeys
+The multi-modal itinerary feature allows you to compute the best routes from point A to point B 
+using all available means of travel, including: bus, train, subway, bike, public bike, walking, car, etc.
+This function returns a roadmap with specific instructions for a route based on available information, 
+such as: time of departure and arrival, journey time, possible modes of transport, and walking distance.
 
-| url | Result |
-|------------------------------------------|-------------------------------------|
-| `get` /coverage/*resource_path*/journeys | List of journeys                    |
-| `get` /journeys                          | List of journeys                    |
+In order to compute a journey, you may have to use these APIs (click on them for details):
 
--   **[Places](#places)** : autocomplete for geographical data
-
-| url | Result |
-|------------------------------------------------|-------------------------------------|
-| `get` /coverage/places                         | List of geographical objects        |
-
+-   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.
+-   **[Journeys](#journeys)** : compute journeys from points or coordinates
 

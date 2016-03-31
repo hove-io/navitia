@@ -13,10 +13,7 @@ It provide the following services
 * exploration of public transport data / search places
 * and sexy things such as isochrones
 
-navitia is a RESTful API that returns JSON formated results.
-The API has been built on the [HATEOAS model](http://en.wikipedia.org/wiki/HATEOAS) so it should be quite self explanatory since the interactions are defined in hypermedia.
-
-Our APIs are available at the following url: <https://api.navitia.io/v1> (the latest API version is ``v1``).
+navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results, available at <https://api.navitia.io>
 
 Have a look at the examples below to learn what services we provide and how to use them.
 

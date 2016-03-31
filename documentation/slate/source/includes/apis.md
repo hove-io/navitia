@@ -1,5 +1,5 @@
-APIs
-====
+API catalog
+===========
 
 <a name="coverage"></a>Coverage
 -------------------------------
@@ -10,6 +10,15 @@ You can easily navigate through regions covered by navitia.io, with the
 coverage api. The shape of the region is provided in GeoJSON.
 
 The only arguments are the ones of [paging](#paging).
+
+### Accesses
+
+| url | Result |
+|----------------------------------------------|-------------------------------------|
+| `coverage`                              | List of the areas covered by navitia|
+| `coverage/{region_id}`                  | Information about a specific region |
+| `coverage/{region_id}/coords/{lon;lat}` | Information about a specific region |
+
 
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
@@ -89,6 +98,15 @@ particular collection. To see an object add the id of this object at the
 end of the collection's url. The [paging](#paging) arguments may be used to
 paginate results.
 
+### Accesses
+
+| url | Result |
+|---------------------------------------------------------|-------------------------------------|
+| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
+| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
+| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
+| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
+
 ### Collections
 
 -   [networks](#network)
@@ -101,6 +119,8 @@ paginate results.
 -   [companies](#company)
 -   [vehicle_journeys](#vehicle-journey)
 -   [disruptions](#disruption)
+
+### Parameters
 
 #### <a name="depth"></a>depth
 
@@ -294,6 +314,12 @@ This api search in public transport objects via their names. It's a kind
 of magical autocomplete on public transport data. It returns, in
 addition of classic objects, a collection of [places](#place).
 
+### Access
+
+| url | Result |
+|------------------------------------------------|-------------------------------------|
+| `/coverage/pt_objects`                     | List of public transport objects    |
+
 ### How does it works
 
 Differents kind of objects can be returned (sorted as):
@@ -401,6 +427,12 @@ Differents kind of objects can be returned (sorted as):
     There is no pagination for this api.
 </aside>
 
+### Access
+
+| url | Result |
+|------------------------------------------------|-------------------------------------|
+| `/coverage/places`                             | List of geographical objects        |
+
 ### Parameters
 
   Required | Name      | Type        | Description            | Default value
@@ -449,6 +481,15 @@ coordinates. It returns, in addition of classic objects, a collection of
 <aside class="warning">
     There is no pagination for this api.
 </aside>
+
+### Accesses
+
+| url | Result |
+|------------------------------------------------|-----------------------------------------------------------|
+| `/coord/{lon;lat}/places_nearby`           | List of objects near the resource without any region id   |
+| `/coverage/{lon;lat}/places_nearby`        | List of objects near the resource without any region id   |
+| `/coverage/{resource_path}/places_nearby`  | List of objects near the resource                         |
+
 
 ### Parameters
 
@@ -548,6 +589,13 @@ The list of regions covered by navitia is available through [coverage](#coverage
     If only one is defined an isochrone is computed with every possible
     journeys from or to the point.
 </aside>
+
+### Accesses
+
+| url | Result |
+|------------------------------------------|-------------------------------------|
+| `/journeys`                          | List of journeys from wherever land |
+| `/coverage/{region_id}/journeys` | List of journeys on a specific coverage |
 
 ### <a name="journeys-parameters"></a>Main parameters
 
@@ -684,6 +732,13 @@ This api gives you access to schedules of routes. The response is made
 of an array of route_schedule, and another one of [note](#note). You can
 access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>
 
+### Accesses
+
+| url | Result |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `coverage/{resource_path}/route_schedules` | List of the entire route schedules for a given resource                                                       |
+| `/coverage/{lon;lat}/route_schedules`        | List of the entire route schedules for coordinates                                                       |
+
 ### Parameters
 
 Required | Name               | Type      | Description                                                                              | Default Value
@@ -735,6 +790,14 @@ This api gives you access to schedules of stops going through a stop
 point. The response is made of an array of stop_schedule, and another
 one of [note](#note). You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
+### Accesses
+
+| url | Result |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `/coverage/{lon;lat}/stop_schedules`        | List of the stop schedules grouped by ``stop_point/route`` for coordinates                                    |
+| `/coverage/{resource_path}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for a given resource                               |
+
+
 ### Parameters
 
 Required | Name           | Type                    | Description        | Default Value
@@ -765,6 +828,13 @@ Also known as `/departures` service.
 This api retrieves a list of departures from a datetime of a selected
 object. Departures are ordered chronologically in ascending order.
 
+### Accesses
+
+| url | Result |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `/coverage/{resource_path}/departures`      | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `/coverage/{lon;lat}/departures`            | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+
 ### Parameters
 
 Required | Name           | Type                    | Description        | Default Value
@@ -790,6 +860,13 @@ Also known as `/arrivals` service.
 
 This api retrieves a list of arrivals from a datetime of a selected
 object. Arrivals are ordered chronologically in ascending order.
+
+### Accesses
+
+| url | Result |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `/coverage/{resource_path}/arrivals`        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+| `/coverage/{lon;lat}/arrivals`              | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
 
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
