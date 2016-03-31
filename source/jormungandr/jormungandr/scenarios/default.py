@@ -241,9 +241,9 @@ class Scenario(simple.Scenario):
             at_least_one_journey_found = True
 
             if request['clockwise']:
-                new_datetime = self.next_journey_datetime([j for j in tmp_resp.journeys])
+                new_datetime = self.next_journey_datetime(tmp_resp.journeys)
             else:
-                new_datetime = self.previous_journey_datetime([j for j in tmp_resp.journeys])
+                new_datetime = self.previous_journey_datetime(tmp_resp.journeys)
 
             if new_datetime is None:
                 break
@@ -276,7 +276,7 @@ class Scenario(simple.Scenario):
             error.id = response_pb2.Error.no_solution
             error.message = "No journey found, all were filtered"
 
-        self.compute_pagination_links(resp, instance)
+        self._compute_pagination_links(resp, instance)
 
         return resp
 

@@ -618,7 +618,7 @@ class Scenario(simple.Scenario):
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
-        self.compute_pagination_links(pb_resp, instance)
+        self._compute_pagination_links(pb_resp, instance)
 
         return pb_resp
 
@@ -674,11 +674,9 @@ class Scenario(simple.Scenario):
 
     def create_next_kraken_request(self, request, responses):
         """
-        create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
+        modify the request to call the next (resp previous for non clockwise search) journeys in kraken
 
-        to do that we find the best journey (soonest arrival, then shortest journey) found in the responses
-        and add one second to it's departure.
-        (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
+        to do that we find ask the next (resp previous) query datetime
         """
         if request["clockwise"]:
             request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys])
@@ -691,7 +689,8 @@ class Scenario(simple.Scenario):
         #TODO forbid ODTs
         return request
 
-    def __get_best_for_criteria(self, journeys, criteria):
+    @staticmethod
+    def __get_best_for_criteria(journeys, criteria):
         return min_from_criteria(filter(has_pt, journeys),
                                  [criteria, duration_crit, transfers_crit, nonTC_crit])
 
