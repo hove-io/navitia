@@ -45,8 +45,9 @@ MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
-    def __init__(self, id):
+    def __init__(self, id, object_id_tag):
         self.service_id = id
+        self.object_id_tag = object_id_tag if object_id_tag else id
 
     @staticmethod
     def _create_next_passages(passages):
@@ -61,10 +62,13 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
         return next_passages
 
     def next_passage_for_route_point(self, route_point):
-        if route_point.fetch_stop_id(self.service_id) == "KisioDigital_C:S1":
+        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 
-        if route_point.fetch_stop_id(self.service_id) == "KisioDigital_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "AnotherSource_C:S1":
+            return self._create_next_passages([("10:42:42", "l'infini"), ("11:42:42", "l'au dela")])
+
+        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S0":
             return self._create_next_passages([("11:32:42", "l'infini"), ("11:42:42", "l'au dela")])
 
         if route_point.pb_stop_point.uri == "S42":
@@ -197,3 +201,26 @@ class TestDepartures(AbstractTestFixture):
         d = get_not_null(response["departures"][2], "display_informations")
         get_not_null(d, "physical_mode")
         get_not_null(d, "headsign")
+
+
+MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
+                     ' "object_id_tag": "AnotherSource", \n'
+                     ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
+                     ' "args": { } }]')
+
+
+@dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
+class TestDeparturesWithAnotherSource(AbstractTestFixture):
+
+    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+
+    def test_departure_with_another_source(self):
+        query = self.query_template.format(sp='C:S1', dt='20160102T1000', data_freshness='')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+        next_passage_dts = [dt["date_time"] for dt in stop_schedules]
+        print(next_passage_dts)
+        assert ['20160102T104242', '20160102T114242'] == next_passage_dts
+
+        for dt in stop_schedules:
+            assert dt['data_freshness'] == 'realtime'
