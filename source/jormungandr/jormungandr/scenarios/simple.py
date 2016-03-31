@@ -90,31 +90,14 @@ class Scenario(object):
         return resp
 
     def places(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.places
-        req.places.q = request['q']
-        req.places.depth = request['depth']
-        req.places.count = request['count']
-        req.places.search_type = request['search_type']
-        req._current_datetime = date_to_timestamp(request['_current_datetime'])
-        if request["type[]"]:
-            for type in request["type[]"]:
-                if type not in pb_type:
-                    abort(422, message="{} is not an acceptable type".format(type))
-
-                req.places.types.append(pb_type[type])
-
-        if request["admin_uri[]"]:
-            for admin_uri in request["admin_uri[]"]:
-                req.places.admin_uris.append(admin_uri)
-
-        resp = instance.send_and_receive(req)
-        if len(resp.places) == 0 and request['search_type'] == 0:
+        from jormungandr.autocomplete.kraken import Kraken
+        kraken = Kraken()
+        response = kraken.get(request, instance)
+        if (not hasattr(response, 'places')) and request['search_type'] == 0:
             request["search_type"] = 1
-            return self.places(request, instance)
-        build_pagination(request, resp)
+            response = kraken.get(request, instance)
+        return response
 
-        return resp
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()
