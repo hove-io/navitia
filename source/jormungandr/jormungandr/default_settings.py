@@ -77,15 +77,7 @@ MODULES = {
     }
 }
 
-AUTOCOMPLETE = {
-    "class_path": "jormungandr.autocomplete.elastic_search.Elasticsearch",
-    'kwargs': {
-        "hosts": ["http://127.0.0.1:9200"],
-        "user": "",
-        "password": "",
-        "use_ssl": False
-    }
-}
+AUTOCOMPLETE = None
 
 # circuit breaker parameters.
 CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 4  # max instance call failures before stopping attempt
