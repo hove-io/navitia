@@ -15,5 +15,9 @@ For example, in a [Curl](https://en.wikipedia.org/wiki/CURL) way, you can reques
 
 or
 
-`curl https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/Ressources`
+`curl -H 'Authorization: 01234567-89ab-cdef-0123-456789abcdef' 'https://api.navitia.io/v1/coverage'`
+
+or
+
+`curl https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage`
 
