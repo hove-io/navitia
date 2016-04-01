@@ -29,6 +29,7 @@
 # www.navitia.io
 from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManager
 from jormungandr import app
+from nose.tools import raises
 
 CONFIG = [
     {
@@ -55,6 +56,7 @@ def realtime_place_creation_test():
     manager = BssProviderManager()
     assert len(manager.bss_providers) == 2
 
+@raises(Exception)
 def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
@@ -75,8 +77,7 @@ def realtime_place_bad_creation_test():
             }
         }
     ]
-    with self.assertRaises(ImportError):
-        manager = BssProviderManager()
+    manager = BssProviderManager()
 
 def realtime_place_handle_test():
     """
