@@ -338,3 +338,16 @@ def gen_all_combin(n, t):
             c[j] = j
             j += 1
         c[j] += 1
+
+
+def add_link(resp, rel, **kwargs):
+    """ create and add a protobuf link to a protobuff response"""
+    link = resp.links.add(rel=rel, is_templated=False, ressource_name='journeys')
+    for k, v in kwargs.items():
+        if k is None or v is None:
+            continue
+        args = link.kwargs.add(key=k)
+        if type(v) is list:
+            args.values.extend(v)
+        else:
+            args.values.extend([v])

@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+from datetime import timedelta
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .routing_tests import TestJourneys
@@ -36,8 +37,21 @@ from nose.tools import eq_
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance
 
+
+def filter_prev_next_journeys(journeys):
+    section_is_pt = lambda section: section['type'] in ("public_transport", "on_demand_transport")
+    filter_journey = lambda journey: any(section_is_pt(section) for section in journey.get('sections', []))
+    filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey['tags']
+
+    list_journeys = filter(filter_journey_pure_tc, journeys)
+    if not list_journeys:
+        #if there is no pure tc journeys, we consider all journeys with TC
+        list_journeys = filter(filter_journey, journeys)
+    return list_journeys
+
+
 @dataset({"main_routing_test": {}})
-class TestJourneysDestineo(TestJourneys):
+class TestJourneysDestineo(AbstractTestFixture):
     """
     Test the structure of the journeys response
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -55,13 +69,34 @@ class TestJourneysDestineo(TestJourneys):
         from jormungandr import i_manager
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
+    @staticmethod
+    def check_next_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """destineo prev/next link mechanism is different"""
+        j_to_compare = max(filter_prev_next_journeys(response.get('journeys', [])),
+                           key=lambda j: get_valid_datetime(j['departure_date_time']))
+
+        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
+        eq_(j_departure + timedelta(minutes=1), dt)
+
+    @staticmethod
+    def check_previous_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """destineo prev/next link mechanism is different"""
+        j_to_compare = min(filter_prev_next_journeys(response.get('journeys', [])),
+                           key=lambda j: get_valid_datetime(j['arrival_date_time']))
+
+        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
+        eq_(j_departure - timedelta(minutes=1), dt)
 
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
         response = self.query_region(journey_basic_query)
+        #not to use the jormungandr database
 
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
         eq_(len(response['journeys']), 2)
         eq_(response['journeys'][0]['type'], 'best')
         eq_(response['journeys'][1]['type'], 'non_pt_walk')
@@ -73,7 +108,7 @@ class TestJourneysDestineo(TestJourneys):
                 "&last_section_mode=bss&last_section_mode=car"
         response = self.query_region(query)
 
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         logging.debug([j['type'] for j in response['journeys']])
         eq_(len(response['journeys']), 4)
         eq_(response['journeys'][0]['type'], 'best')

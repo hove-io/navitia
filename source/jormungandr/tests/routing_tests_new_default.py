@@ -28,13 +28,13 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+from datetime import timedelta
 from .tests_mechanism import AbstractTestFixture
-
 from .tests_mechanism import dataset
 from .check_utils import *
 from nose.tools import eq_
 import jormungandr.scenarios.new_default
-from jormungandr.instance import Instance
+from jormungandr.scenarios.qualifier import min_from_criteria
 
 
 def check_journeys(resp):
@@ -62,13 +62,38 @@ class TestJourneysNewDefault(AbstractTestFixture):
         from jormungandr import i_manager
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
+    """
+    the new default scenario override the way the prev/next link are created
+    """
+    @staticmethod
+    def check_next_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default next behaviour is 1s after the best or the soonest"""
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=True))
+
+        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
+        eq_(j_departure + timedelta(seconds=1), dt)
+
+    @staticmethod
+    def check_previous_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default previous behaviour is 1s before the best or the latest """
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=False))
+
+        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
+        eq_(j_departure - timedelta(seconds=1), dt)
+
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query)
 
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
@@ -103,7 +128,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
 
@@ -125,6 +150,6 @@ class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
     def test_strange_line_name(self):
         response = self.query("v1/coverage/main_ptref_test/journeys"
                               "?from=stop_area:stop2&to=stop_area:stop1"
-                              "&datetime=20140107T100000", display=True)
+                              "&datetime=20140107T100000")
         check_journeys(response)
         eq_(len(response['journeys']), 1)

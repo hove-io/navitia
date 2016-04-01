@@ -29,9 +29,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from collections import deque, defaultdict, namedtuple
+from functools import partial
 from future.moves.itertools import zip_longest
 from nose.tools import *
 import json
+from jormungandr.scenarios.qualifier import compare_field, reverse_compare_field
 from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
@@ -452,73 +454,6 @@ def is_valid_isochrone(journey, tester, query):
     additional_args = query_from_str(journey_links['journeys']['href'])
     for k, v in query.items():
         eq_(additional_args[k], v)
-
-
-def is_valid_journey_response(response, tester, query_str):
-    if isinstance(query_str, basestring):
-        query_dict = query_from_str(query_str)
-    else:
-        query_dict = query_str
-
-    journeys = get_not_null(response, "journeys")
-
-    all_sections = unique_dict('id')
-    assert len(journeys) > 0, "we must at least have one journey"
-    for j in journeys:
-        is_valid_journey(j, tester, query_dict)
-
-        for s in j['sections']:
-            all_sections[s['id']] = s
-
-    # check the fare section
-    # the fares must be structurally valid and all link to sections must be ok
-    all_tickets = unique_dict('id')
-    fares = response['tickets']
-    for f in fares:
-        is_valid_ticket(f, tester)
-        all_tickets[f['id']] = f
-
-    check_internal_links(response, tester)
-
-    #check other links
-    check_links(response, tester)
-
-    # more checks on links, we want the prev/next/first/last,
-    # to have forwarded all params, (and the time must be right)
-    journeys_links = get_links_dict(response)
-
-    for l in ["prev", "next", "first", "last"]:
-        assert l in journeys_links
-        url = journeys_links[l]['href']
-
-        additional_args = query_from_str(url)
-        for k, v in additional_args.items():
-            if k == 'datetime':
-                #TODO check datetime
-                continue
-            if k == 'datetime_represents':
-                query_dt_rep = query_dict.get('datetime_represents', 'departure')
-                if l in ['prev', 'last']:
-                    #the datetime_represents is negated
-                    if query_dt_rep == 'departure':
-                        assert v == 'arrival'
-                    else:
-                        assert v == 'departure'
-                else:
-                    query_dt_rep == v
-
-                continue
-
-            eq_(query_dict[k], v)
-
-    feed_publishers = get_not_null(response, "feed_publishers")
-    for feed_publisher in feed_publishers:
-        is_valid_feed_publisher(feed_publisher)
-
-    if query_dict.get('debug', False):
-        assert 'debug' in response
-    else:
-        assert 'debug' not in response
 
 
 def is_valid_journey(journey, tester, query):
@@ -1112,3 +1047,30 @@ def check_journey(journey, ref_journey):
             eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
             eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)
             eq_(stop_dt.get('base_arrival_date_time'), ref_stop_dt.base_arrival_date_time)
+
+
+def generate_pt_journeys(response):
+    """ generate all journeys with at least a public transport section """
+    for j in response.get('journeys', []):
+        if any(s for s in j.get('sections', []) if s['type'] == 'public_transport'):
+            yield j
+
+
+def new_default_pagination_journey_comparator(clockwise):
+    """same as new_default.__get_best_for_criteria but for python dict
+    compare first on departure (or arrival for non clockwise), then on:
+    - duration
+    - number of transfers
+    """
+    def make_crit(func, reverse=False):
+        if not reverse:
+            return partial(compare_field, func=func)
+        return partial(reverse_compare_field, func=func)
+
+    main_criteria = make_crit(lambda j: get_valid_datetime(j['departure_date_time'])) if clockwise \
+        else make_crit(lambda j: get_valid_datetime(j['arrival_date_time']), reverse=True)
+
+    return [main_criteria,
+            make_crit(lambda j: get_valid_int(j['duration'])),
+            make_crit(lambda j: len(j.get('sections', []))),
+    ]

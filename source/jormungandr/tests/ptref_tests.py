@@ -406,7 +406,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region(journey_basic_query)
 
         #the response must be still valid (this test the kraken data reloading)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
     def test_forbidden_uris_on_line(self):
         """test forbidden uri for lines"""
@@ -478,7 +478,7 @@ class TestPtRef(AbstractTestFixture):
         query = 'journeys?from={}&to={}&datetime=20140105T070000'.format(urllib.quote_plus(b'stop_with name bob \" , é'), urllib.quote_plus(b'stop_area:stop1'))
         response = self.query_region(query, display=True)
 
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
 
     def test_vj_period_filter(self):
         """with just a since in the middle of the period, we find vj1"""

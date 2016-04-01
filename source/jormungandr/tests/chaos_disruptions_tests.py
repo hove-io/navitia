@@ -189,7 +189,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         response = self.query_region(query)
 
         #the response must be still valid (this test the kraken data reloading)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
                       if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
@@ -214,7 +214,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         response = self.query_region(query)
 
         #the response must be still valid (this test the kraken data reloading)
-        is_valid_journey_response(response, self.tester, query)
+        self.is_valid_journey_response(response, query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
                       if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
@@ -549,12 +549,12 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
 
         journey_query = journey_basic_query + "&data_freshness=base_schedule"
         response = self.query_region(journey_query)
-        is_valid_journey_response(response, self.tester, journey_query)
+        self.is_valid_journey_response(response, journey_query)
         assert len(response['journeys']) == 2
 
         journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
         response = self.query_region(journey_query)
-        is_valid_journey_response(response, self.tester, journey_query)
+        self.is_valid_journey_response(response, journey_query)
         assert len(response['journeys']) == 2
 
 
@@ -606,12 +606,12 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
         journey_query = journey_basic_query + "&data_freshness=base_schedule"
         response = self.query_region(journey_query)
-        is_valid_journey_response(response, self.tester, journey_query)
+        self.is_valid_journey_response(response, journey_query)
         assert len(response['journeys']) == 2
 
         journey_query = journey_basic_query + "&data_freshness=adapted_schedule"
         response = self.query_region(journey_query)
-        is_valid_journey_response(response, self.tester, journey_query)
+        self.is_valid_journey_response(response, journey_query)
         assert len(response['journeys']) == 2
 
 
