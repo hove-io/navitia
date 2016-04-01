@@ -2,6 +2,7 @@
 
 #include "type/datetime.h"
 #include "type/kirin.pb.h"
+#include "type/response.pb.h"
 #include "routing/raptor.h"
 #include "kraken/realtime.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -52,6 +53,14 @@ make_delay_message(const std::string& vj_uri,
     }
 
     return trip_update;
+}
+
+inline const pbnavitia::Impact*
+get_impact(const std::string& uri, const pbnavitia::Response& resp) {
+    for (const auto& impact: resp.impacts()) {
+        if (impact.uri() == uri) { return &impact; }
+    }
+    return nullptr;
 }
 
 }

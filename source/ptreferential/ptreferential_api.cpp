@@ -109,7 +109,8 @@ static pbnavitia::Response extract_data(const type::Data& data,
             navitia::PbCreator pb_creator(data, current_time, action_period);
             for(const auto& idx : rows){
                 auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-                pb_creator.fill(impact.get(), depth);
+                auto* pb_impact = pb_creator.add_impacts();
+                pb_creator.fill(impact.get(), pb_impact, depth);
 
             }
             return pb_creator.get_response();

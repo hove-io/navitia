@@ -187,8 +187,19 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 }
             }
         }
+
+        //If there is no departure for a request with "RealTime", Test existance of any departure with "base_schedule"
+        //If departure with base_schedule is not empty, additional_information = active_disruption
+        //Else additional_information = no_departure_this_day
         if (stop_times.empty() && (response_status.find(route->idx) == response_status.end())) {
-            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+            auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
+            if (rt_level != navitia::type::RTLevel::Base) {
+                auto tmp_stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                                              handler.max_datetime, 1, pb_creator.data,
+                                                              navitia::type::RTLevel::Base);
+                if (!tmp_stop_times.empty()) { resp_status = pbnavitia::ResponseStatus::active_disruption; }
+            }
+            response_status[route->idx] = resp_status;
         }
 
         map_route_stop_point[sp_route] = stop_times;

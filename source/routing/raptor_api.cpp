@@ -128,26 +128,31 @@ _update_max_severity(boost::optional<type::disruption::Effect>& worst_disruption
 }
 
 template <typename T>
-void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max, const T& pb_obj) {
-    for (const auto& impact: pb_obj.impacts()) {
-        _update_max_severity(max, type::disruption::from_string(impact.severity().effect()));
+void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max,
+                                 const T& pb_obj,
+                                 const PbCreator& pb_creator) {
+    for (const auto& impact_uri: pb_obj.impact_uris()) {
+        const auto* impact = pb_creator.get_impact(impact_uri);
+        if (! impact) { continue; }
+        _update_max_severity(max, impact->severity->effect);
     }
 }
 
-static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey) {
+static void
+compute_most_serious_disruption(pbnavitia::Journey* pb_journey, const PbCreator& pb_creator) {
     boost::optional<type::disruption::Effect> max_severity = boost::none;
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
             continue;
         }
-        _update_max_impact_severity(max_severity, section.pt_display_informations());
+        _update_max_impact_severity(max_severity, section.pt_display_informations(), pb_creator);
 
-        _update_max_impact_severity(max_severity, section.origin().stop_point());
-        _update_max_impact_severity(max_severity, section.origin().stop_point().stop_area());
+        _update_max_impact_severity(max_severity, section.origin().stop_point(), pb_creator);
+        _update_max_impact_severity(max_severity, section.origin().stop_point().stop_area(), pb_creator);
 
-        _update_max_impact_severity(max_severity, section.destination().stop_point());
-        _update_max_impact_severity(max_severity, section.destination().stop_point().stop_area());
+        _update_max_impact_severity(max_severity, section.destination().stop_point(), pb_creator);
+        _update_max_impact_severity(max_severity, section.destination().stop_point().stop_area(), pb_creator);
     }
 
     if (max_severity) {
@@ -467,7 +472,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
         pb_creator.fill(vect_p, pb_journey->mutable_calendars(), 0);
     }
 
-    compute_most_serious_disruption(pb_journey);
+    compute_most_serious_disruption(pb_journey, pb_creator);
 
     //fare computation, done at the end for the journey to be complete
     auto fare = pb_creator.data.fare->compute_fare(path);

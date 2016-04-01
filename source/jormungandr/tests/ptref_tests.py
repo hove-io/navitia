@@ -362,20 +362,25 @@ class TestPtRef(AbstractTestFixture):
         assert len(modes) == 1
 
     def test_stop_points(self):
-        """test stop_areas formating"""
-        response = self.query_region("v1/stop_points")
+        """test stop_points formating"""
+        response = self.query_region("v1/stop_points?depth=2")
 
         stops = get_not_null(response, 'stop_points')
 
         assert len(stops) == 3
 
-        s = next((s for s in stops if s['name'] == 'stop_area:stop2'))
-        is_valid_stop_area(s, depth_check=1)
+        s = next((s for s in stops if s['name'] == 'stop_area:stop2'))# yes, that's a stop_point
+        is_valid_stop_point(s, depth_check=2)
 
         com = get_not_null(s, 'comments')
         assert len(com) == 1
         assert com[0]['type'] == 'standard'
         assert com[0]['value'] == "hello bob"
+
+        modes = get_not_null(s, 'physical_modes')
+        assert len(modes) == 1
+        modes = get_not_null(s, 'commercial_modes')
+        assert len(modes) == 1
 
         self._test_links(response, 'stop_points')
 

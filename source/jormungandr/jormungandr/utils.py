@@ -34,7 +34,9 @@ from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 from navitiacommon import response_pb2, type_pb2
 from builtins import range, zip
-
+from importlib import import_module
+import logging
+from jormungandr.exceptions import ConfigException
 
 def str_to_time_stamp(str):
     """
@@ -208,3 +210,26 @@ def pb_del_if(l, pred):
             del l[i]
             nb += 1
     return nb
+
+
+def create_object(class_path, **kwargs):
+    log = logging.getLogger(__name__)
+    try:
+        if '.' not in class_path:
+            log.warn('impossible to build object {}, wrongly formated class'.format(class_path))
+            raise ConfigException(class_path)
+
+        module_path, name = class_path.rsplit('.', 1)
+        module = import_module(module_path)
+        attr = getattr(module, name)
+    except ImportError:
+        log.warn('impossible to build object {}, cannot find class'.format(class_path))
+        raise ConfigException(class_path)
+
+    try:
+        obj = attr(**kwargs)  # call to the contructor, with all the args
+    except TypeError as e:
+        log.warn('impossible to build object {}, wrong arguments: {}'.format(class_path, e.message))
+        raise ConfigException(class_path)
+
+    return obj

@@ -364,6 +364,12 @@ class Scenario(simple.Scenario):
             initial_feed_publishers[fp.id] = fp
         initial_response.feed_publishers.extend([fp for fp in new_response.feed_publishers if fp.id not in initial_feed_publishers])
 
+        # handle impacts
+        for i in new_response.impacts:
+            if any(other.uri == i.uri for other in initial_response.impacts):
+                continue
+            initial_response.impacts.extend([i])
+
     def erase_journeys(self, resp, to_delete):
         """
         remove a list of journeys from a response and delete all referenced objects like by example the tickets

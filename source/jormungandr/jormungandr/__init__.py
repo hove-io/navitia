@@ -40,7 +40,7 @@ from flask.ext.cors import CORS
 import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest
-from jormungandr import compat
+from jormungandr import compat, utils
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
@@ -70,6 +70,13 @@ rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 from navitiacommon.models import db
 db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
+
+if app.config['AUTOCOMPLETE'] is not None:
+    global_autocomplete = utils.create_object(app.config['AUTOCOMPLETE']['class_path'],
+                                              **app.config['AUTOCOMPLETE']['kwargs'])
+else:
+    global_autocomplete = None
+
 
 from jormungandr.instance_manager import InstanceManager
 
