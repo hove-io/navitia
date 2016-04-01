@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.scenarios.utils import build_pagination, pb_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
