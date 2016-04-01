@@ -869,7 +869,7 @@ object. Arrivals are ordered chronologically in ascending order.
 
 ### Parameters
 
-there are exactly the same as [departures](#departures)
+they are exactly the same as [departures](#departures)
 
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
