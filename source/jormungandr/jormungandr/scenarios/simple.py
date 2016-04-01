@@ -90,14 +90,7 @@ class Scenario(object):
         return resp
 
     def places(self, request, instance):
-        from jormungandr.autocomplete.kraken import Kraken
-        kraken = Kraken()
-        response = kraken.get(request, instance)
-        if (not hasattr(response, 'places')) and request['search_type'] == 0:
-            request["search_type"] = 1
-            response = kraken.get(request, instance)
-        return response
-
+        return instance.autocomplete.get(request, instance)
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()

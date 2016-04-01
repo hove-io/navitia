@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
-from jormungandr import i_manager, timezone
+from jormungandr import i_manager, timezone, global_autocomplete
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
@@ -47,7 +47,6 @@ from functools import wraps
 from flask_restful import marshal
 import datetime
 from jormungandr.autocomplete.elastic_search import Elasticsearch
-from jormungandr import AUTOCOMPLETE
 
 
 places = {
@@ -107,9 +106,7 @@ class Places(ResourceUri):
             instance = i_manager.get_region(region, lon, lat)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
-            if AUTOCOMPLETE == 'kraken':
-                abort('500', message="Not implemented yet")
-            response = Elasticsearch().get(args, None)
+            response = global_autocomplete.get(args, None)
         return response, 200
 
 

@@ -112,10 +112,11 @@ ww_places = {
 
 class Elasticsearch(AbstractAutocomplete):
 
-    def __init__(self):
-        self.hosts = None
-        self.user = None
-        self.password = None
+    def __init__(self, **kwargs):
+        self.es = elasticsearch.Elasticsearch(kwargs.get('hosts'),
+                                              http_auth=(kwargs.get('user'),
+                                              kwargs.get('password')),
+                                              use_ssl=kwargs.get('use_ssl'))
 
     @marshal_with(ww_places)
     def get(self, request, instance):
@@ -194,8 +195,7 @@ class Elasticsearch(AbstractAutocomplete):
         }
         try:
             # TODO: get params?
-            es = elasticsearch.Elasticsearch()
-            res = es.search(index="munin", size=request['count'], body=query)
+            res = self.es.search(index="munin", size=request['count'], body=query)
             return res['hits']
         except ConnectionError:
             raise TechnicalError("world wide autocompletion service not available")

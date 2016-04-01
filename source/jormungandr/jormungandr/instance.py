@@ -88,6 +88,8 @@ class Instance(object):
 
         self.schedule = schedule.MixedSchedule(self)
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration)
+        from jormungandr.autocomplete.kraken import Kraken
+        self.autocomplete = Kraken()
 
     def get_models(self):
         if self.name not in g.instances_model:
