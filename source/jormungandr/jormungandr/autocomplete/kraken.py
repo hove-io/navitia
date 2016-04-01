@@ -28,7 +28,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.scenarios.utils import build_pagination, pb_type
