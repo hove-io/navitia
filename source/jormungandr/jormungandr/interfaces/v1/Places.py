@@ -106,7 +106,10 @@ class Places(ResourceUri):
             instance = i_manager.get_region(region, lon, lat)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
-            response = global_autocomplete.get(args, None)
+            if global_autocomplete:
+                response = global_autocomplete.get(args, None)
+            else:
+                raise TechnicalError('world wide autocompletion service not available')
         return response, 200
 
 
