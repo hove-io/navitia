@@ -90,10 +90,15 @@ ww_street = {
 class WWPlace(fields.Raw):
     def format(self, place):
         source = place["_source"]
+        admin = source.get('administrative_region')
         if place["_type"] == "addr":
             source["id"] = "{lat};{lon}".format(**source["coord"])
+            if not isinstance(admin, list):
+                source['administrative_region'] = [admin] if admin else []
             return marshal(source, ww_address)
         if place["_type"] == "street":
+            if not isinstance(admin, list):
+                source['administrative_region'] = [admin] if admin else []
             return marshal(source, ww_street)
         if place["_type"] == "admin":
             return {
