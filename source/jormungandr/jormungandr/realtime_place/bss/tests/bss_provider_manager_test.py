@@ -31,7 +31,7 @@ from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManag
 from jormungandr import app
 from nose.tools import raises
 
-CONFIG = [
+CONFIG = (
     {
         'class': 'jormungandr.realtime_place.bss.AtosProvider',
         'args': {
@@ -46,7 +46,7 @@ CONFIG = [
             'network': 'Vlille'
         }
     }
-]
+)
 
 def realtime_place_creation_test():
     """
@@ -61,7 +61,7 @@ def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
-    app.config['BSS_PROVIDER'] = [
+    app.config['BSS_PROVIDER'] = (
         {
             'class': 'jormungandr.realtime_place.bss.AtosProvider',
             'args': {
@@ -76,7 +76,7 @@ def realtime_place_bad_creation_test():
                 'network': 'Vlille'
             }
         }
-    ]
+    )
     manager = BssProviderManager()
 
 def realtime_place_handle_test():
