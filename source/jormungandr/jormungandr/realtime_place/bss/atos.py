@@ -31,28 +31,19 @@ from bss_provider import BssProvider
 
 class AtosProvider(BssProvider):
 
-    WS_URL_TEMPLATE = "https://{}.velossimo.com/services/terminal"
-    OPERATOR = "Keolis"
+    WS_URL_TEMPLATE = 'https://{}.velossimo.com/services/terminal'
+    OPERATOR = 'Keolis'
 
-    def __init__(self, id_ao, network, subdomain = "admin"):
+    def __init__(self, id_ao, network, subdomain = 'admin'):
         self.id_ao = id_ao
         self.network = network
         self.WS_URL = self.WS_URL_TEMPLATE.format(subdomain)
 
-    def is_supported(self, poi):
-        if "properties" in poi:
-            operator = False
-            network = False
-            for type, value in poi["properties"].items():
-                if type == "operator":
-                    operator = value == self.OPERATOR
-                    continue
-                if type == "network":
-                    network = value.encode("utf-8") == self.network
-                    continue
-            return operator & network
+    def support_poi(self, poi):
+        properties = poi.get('properties', {})
+        return properties.get('operator', '') == self.OPERATOR and properties.get('network', '').encode('utf-8') == self.network
 
     def get_informations(self, poi):
         total = 10
         available = 4
-        return {"total": total, "available": available, "occupied": total - available}
+        return {'total': total, 'available': available, 'occupied': total - available}

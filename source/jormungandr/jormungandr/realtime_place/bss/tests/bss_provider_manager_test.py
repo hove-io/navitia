@@ -32,17 +32,17 @@ from jormungandr import app
 
 CONFIG = [
     {
-        "class": "jormungandr.realtime_place.bss.AtosProvider",
-        "args": {
-            "id_ao": "10",
-            "network": "Vélitul"
+        'class': 'jormungandr.realtime_place.bss.AtosProvider',
+        'args': {
+            'id_ao': '10',
+            'network': 'Vélitul'
         }
     },
     {
-        "class": "jormungandr.realtime_place.bss.AtosProvider",
-        "args": {
-            "id_ao": "38",
-            "network": "Vlille"
+        'class': 'jormungandr.realtime_place.bss.AtosProvider',
+        'args': {
+            'id_ao': '38',
+            'network': 'Vlille'
         }
     }
 ]
@@ -51,35 +51,32 @@ def realtime_place_creation_test():
     """
     simple bss provider creation
     """
-    app.config["BSS_PROVIDER"] = CONFIG
+    app.config['BSS_PROVIDER'] = CONFIG
     manager = BssProviderManager()
-    assert len(manager.instances) == 2
+    assert len(manager.bss_providers) == 2
 
 def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
-    app.config["BSS_PROVIDER"] = [
+    app.config['BSS_PROVIDER'] = [
         {
-            "class": "jormungandr.realtime_place.bss.AtosProvider",
-            "args": {
-                "id_ao": "10",
-                "network": "Vélitul"
+            'class': 'jormungandr.realtime_place.bss.AtosProvider',
+            'args': {
+                'id_ao': '10',
+                'network': 'Vélitul'
             }
         },
         {
-            "class": "jormungandr.realtime_place.bss.BadProvider",
-            "args": {
-                "id_ao": "38",
-                "network": "Vlille"
+            'class': 'jormungandr.realtime_place.bss.BadProvider',
+            'args': {
+                'id_ao': '38',
+                'network': 'Vlille'
             }
         }
     ]
-    try:
+    with self.assertRaises(ImportError):
         manager = BssProviderManager()
-        assert False
-    except:
-        assert True
 
 def realtime_place_handle_test():
     """
@@ -87,48 +84,48 @@ def realtime_place_handle_test():
     """
     places = [
         {
-            "embedded_type": "poi",
-            "distance": "0",
-            "name": "Cit\u00e9 Universitaire (Laval)",
-            "poi": {
-                "properties": {
-                    "network": u"Vélitul",
-                    "operator": "Keolis",
-                    "ref": "8"
+            'embedded_type': 'poi',
+            'distance': '0',
+            'name': 'Cit\u00e9 Universitaire (Laval)',
+            'poi': {
+                'properties': {
+                    'network': u'Vélitul',
+                    'operator': 'Keolis',
+                    'ref': '8'
                 },
-                "poi_type": {
-                    "name": "station vls",
-                    "id": "poi_type:amenity:bicycle_rental"
+                'poi_type': {
+                    'name': 'station vls',
+                    'id': 'poi_type:amenity:bicycle_rental'
                 }
             },
-            "quality": 0,
-            "id": "poi:n3762373698"
+            'quality': 0,
+            'id': 'poi:n3762373698'
         }
     ]
-    app.config["BSS_PROVIDER"] = CONFIG
+    app.config['BSS_PROVIDER'] = CONFIG
     manager = BssProviderManager()
     places_with_stands = manager.handle_places(places)
-    assert "stands" in places_with_stands[0]["poi"]
+    assert 'stands' in places_with_stands[0]['poi']
 
 def realtime_place_find_provider_test():
     """
     test correct handle include bss stands
     """
     poi = {
-        "properties": {
-            "network": u"Vélitul",
-            "operator": "Keolis",
-            "ref": "8"
+        'properties': {
+            'network': u'Vélitul',
+            'operator': 'Keolis',
+            'ref': '8'
         },
-        "poi_type": {
-            "name": "station vls",
-            "id": "poi_type:amenity:bicycle_rental"
+        'poi_type': {
+            'name': 'station vls',
+            'id': 'poi_type:amenity:bicycle_rental'
         }
     }
-    app.config["BSS_PROVIDER"] = CONFIG
+    app.config['BSS_PROVIDER'] = CONFIG
     manager = BssProviderManager()
     provider = manager.find_provider(poi)
-    assert provider == manager.instances[0]
-    poi["properties"]["operator"] = "Bad_operator"
+    assert provider == manager.bss_providers[0]
+    poi['properties']['operator'] = 'Bad_operator'
     provider = manager.find_provider(poi)
     assert provider is None

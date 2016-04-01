@@ -30,27 +30,27 @@
 from jormungandr.realtime_place.bss.atos import AtosProvider
 
 
-def realtime_place_atos_supported_test():
+def realtime_place_atos_support_poi_test():
     """
     Atos bss provider support
     """
-    provider = AtosProvider(10, "Vélitul")
+    provider = AtosProvider(10, 'Vélitul')
     poi = {
-        "properties": {
-            "network": u"Vélitul",
-            "operator": "Keolis",
-            "ref": "8"
+        'properties': {
+            'network': u'Vélitul',
+            'operator': 'Keolis',
+            'ref': '8'
         },
-        "poi_type": {
-            "name": "station vls",
-            "id": "poi_type:amenity:bicycle_rental"
+        'poi_type': {
+            'name': 'station vls',
+            'id': 'poi_type:amenity:bicycle_rental'
         }
     }
-    assert provider.is_supported(poi)
-    poi["properties"]["operator"] = "Bad_operator"
-    assert not provider.is_supported(poi)
-    poi["properties"]["operator"] = "Keolis"
-    poi["properties"]["network"] = "Bad_network"
-    assert not provider.is_supported(poi)
-    poi["properties"]["operator"] = "Bad_operator"
-    assert not provider.is_supported(poi)
+    assert provider.support_poi(poi)
+    poi['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi)
+    poi['properties']['operator'] = 'Keolis'
+    poi['properties']['network'] = 'Bad_network'
+    assert not provider.support_poi(poi)
+    poi['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi)

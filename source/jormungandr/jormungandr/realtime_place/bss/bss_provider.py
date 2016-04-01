@@ -31,12 +31,12 @@ from abc import abstractmethod, ABCMeta
 
 class BssProvider(object):
     """
-        abstract class managing calls to external service providing real-time next passages
-        """
+    abstract class managing calls to external service providing real-time next passages
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def is_supported(self, poi):
+    def support_poi(self, poi):
         pass
 
     @abstractmethod

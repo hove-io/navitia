@@ -34,24 +34,23 @@ import logging
 class BssProviderManager(object):
 
     def __init__(self):
-        self.instances = []
+        self.bss_providers = []
         self.log = logging.getLogger(__name__)
-        for configuration in app.config["BSS_PROVIDER"]:
+        for configuration in app.config['BSS_PROVIDER']:
             arguments = configuration.get('args', {})
-            self.instances.append(self.init_class(configuration["class"], arguments))
+            self.bss_providers.append(self.init_class(configuration['class'], arguments))
 
     def handle_places(self, places):
-        if places:
-            for place in places:
-                if (place["embedded_type"] == "poi") & (place["poi"]["poi_type"]["id"] == 'poi_type:amenity:bicycle_rental'):
-                    provider = self.find_provider(place["poi"])
-                    if provider:
-                        place["poi"]["stands"] = provider.get_informations(place["poi"])
+        for place in places or []:
+            if place['embedded_type'] == 'poi' and place['poi']['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
+                provider = self.find_provider(place['poi'])
+                if provider:
+                    place['poi']['stands'] = provider.get_informations(place['poi'])
         return places
 
     def find_provider(self, poi):
-        for instance in self.instances:
-            if instance.is_supported(poi):
+        for instance in self.bss_providers:
+            if instance.support_poi(poi):
                 return instance
 
     def init_class(self, cls, arguments):
