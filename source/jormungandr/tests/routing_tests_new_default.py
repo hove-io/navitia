@@ -69,7 +69,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
     def check_next_datetime_link(dt, response):
         if not response.get('journeys'):
             return
-        """default next behaviour is 1 mn after the best or the soonest"""
+        """default next behaviour is 1s after the best or the soonest"""
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
                                          new_default_pagination_journey_comparator(clockwise=True))
 
@@ -80,7 +80,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
     def check_previous_datetime_link(dt, response):
         if not response.get('journeys'):
             return
-        """default previous behaviour is 1 mn before the best or the latest """
+        """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
                                          new_default_pagination_journey_comparator(clockwise=False))
 

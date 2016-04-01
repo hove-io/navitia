@@ -296,7 +296,7 @@ class AbstractTestFixture:
     def check_next_datetime_link(dt, response):
         if not response.get('journeys'):
             return
-        """default next behaviour is 1 mn after the best or the soonest"""
+        """default next behaviour is 1 min after the best or the soonest"""
         j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
              next((j for j in response.get('journeys', [])), None)
 
@@ -307,7 +307,7 @@ class AbstractTestFixture:
     def check_previous_datetime_link(dt, response):
         if not response.get('journeys'):
             return
-        """default previous behaviour is 1 mn before the best or the latest """
+        """default previous behaviour is 1 min before the best or the latest """
         j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
              next((j for j in response.get('journeys', [])), None)
 
