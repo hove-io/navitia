@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from flask.globals import g
-from jormungandr import i_manager, timezone
+from jormungandr import i_manager, timezone, global_autocomplete
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
@@ -42,20 +42,11 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
-from elasticsearch import Elasticsearch
-from elasticsearch.connection.http_urllib3 import ConnectionError
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal
 import datetime
-
-
-class Lit(fields.Raw):
-    def __init__(self, val):
-        self.val = val
-
-    def output(self, key, obj):
-        return self.val
+from jormungandr.autocomplete.elastic_search import Elasticsearch
 
 
 places = {
@@ -63,71 +54,6 @@ places = {
     "error": PbField(error, attribute='error'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(NonNullNested(feed_publisher))
-}
-
-ww_admin = {
-    "id": fields.String,
-    #"insee": dict["id"][6:],
-    #"coord": ??
-    "level": fields.Integer,
-    "name": fields.String,
-    "label": fields.String(attribute="name"),
-    "zip_code": fields.String,
-}
-
-ww_address = {
-    "embeded_type": Lit("address"),
-    "id": fields.String,
-    "name": fields.String,
-    "address": {
-        "id": fields.String,
-        "coord": {
-            "lon": fields.Float(attribute="coord.lon"),
-            "lat": fields.Float(attribute="coord.lat"),
-        },
-        "house_number": fields.String,
-        "label": fields.String(attribute="name"),
-        "name": fields.String(attribute="street.street_name"),
-        "administrative_regions":
-            fields.List(fields.Nested(ww_admin), attribute="street.administrative_region")
-    }
-}
-
-ww_street = {
-    "embeded_type": Lit("address"),
-    #"id": id,
-    "name": fields.String,
-    "address": {
-        #"id": id,
-        #"coord": source["coord"],
-        #"house_number": 0,
-        "label": fields.String(attribute="name"),
-        "name": fields.String(attribute="street_name"),
-        "administrative_regions":
-            fields.List(fields.Nested(ww_admin), attribute="administrative_region")
-    }
-}
-
-class WWPlace(fields.Raw):
-    def format(self, place):
-        source = place["_source"]
-        if place["_type"] == "addr":
-            source["id"] = "{lat};{lon}".format(**source["coord"])
-            return marshal(source, ww_address)
-        if place["_type"] == "street":
-            return marshal(source, ww_street)
-        if place["_type"] == "admin":
-            return {
-                "embeded_type": "administrative_region",
-                "id": source["id"],
-                "name": source["name"],
-                "administrative_region": marshal(source, ww_admin)
-            }
-        return place
-
-
-ww_places = {
-    "places": fields.List(WWPlace, attribute='hits')
 }
 
 
@@ -175,99 +101,13 @@ class Places(ResourceUri):
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
+
         if any([region, lon, lat]):
-            return self._search_region(args, region, lon, lat)
+            instance = i_manager.get_region(region, lon, lat)
+            response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
-            return self._search_world_wide(args)
-
-    @marshal_with(places)
-    def _search_region(self, args, region=None, lon=None, lat=None):
-        self.region = i_manager.get_region(region, lon, lat)
-        response = i_manager.dispatch(args, "places", instance_name=self.region)
+            response = global_autocomplete.get(args, None)
         return response, 200
-
-    @marshal_with(ww_places)
-    def _search_world_wide(self, args):
-        q = args['q']
-        query = {
-            "query": {
-                "filtered": {
-                    "query": {
-                        "bool": {
-                            "should": [
-                                {
-                                    "term": {
-                                        "_type": {
-                                            "value": "addr",
-                                            "boost": 1000
-                                        }
-                                    }
-                                },
-                                {
-                                    "match": {
-                                        "name.prefix": {
-                                            "query": q,
-                                            "boost": 100
-                                        }
-                                    }
-                                },
-                                {
-                                    "match": {
-                                        "name.ngram": {
-                                            "query": q,
-                                            "boost": 1
-                                        }
-                                    }
-                                },
-                                {
-                                    "function_score": {
-                                        "query": { "match_all": { } },
-                                        "field_value_factor": {
-                                            "field": "weight",
-                                            "modifier": "log1p",
-                                            "factor": 1
-                                        },
-                                        "boost_mode": "multiply",
-                                        "boost": 30
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "filter": {
-                        "bool": {
-                            "should": [
-                                { "missing": { "field": "house_number" } },
-                                {
-                                    "query": {
-                                        "match": { "house_number": q }
-                                    }
-                                }
-                            ],
-                            "must": [
-                                {
-                                    "query": {
-                                        "match": {
-                                            "name.ngram": {
-                                                "query": q,
-                                                "minimum_should_match": "50%"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        }
-        try:
-            # TODO: get params?
-            es = Elasticsearch()
-            res = es.search(index="munin", size=args['count'], body=query)
-            return res['hits'], 200
-        except ConnectionError:
-            raise TechnicalError("world wide autocompletion service not available")
 
 
 class PlaceUri(ResourceUri):

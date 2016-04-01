@@ -77,6 +77,8 @@ MODULES = {
     }
 }
 
+AUTOCOMPLETE = None
+
 # circuit breaker parameters.
 CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)

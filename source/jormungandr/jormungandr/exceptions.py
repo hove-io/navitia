@@ -123,6 +123,13 @@ class TechnicalError(HTTPException):
         self.code = 500
 
 
+class ConfigException(Exception):
+    def __init__(self, arg):
+        super(ConfigException, self).__init__()
+        self.data = format_error("config_exception", "Invalid config " + arg)
+        self.code = 400
+
+
 def log_exception(sender, exception, **extra):
     logger = logging.getLogger(__name__)
     message = ""
