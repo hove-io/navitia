@@ -39,12 +39,8 @@ from jormungandr.instance import Instance
 
 
 def filter_prev_next_journeys(journeys):
-    section_is_pt = lambda section: section['type'] == "public_transport"\
-                       or section['type'] == "on_demand_transport"
-    filter_journey = lambda journey: 'arrival_date_time' in journey and\
-                         journey['arrival_date_time'] != '' and\
-                         "sections" in journey and\
-                         any(section_is_pt(section) for section in journey['sections'])
+    section_is_pt = lambda section: section['type'] in ("public_transport", "on_demand_transport")
+    filter_journey = lambda journey: any(section_is_pt(section) for section in journey.get('sections', []))
     filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey['tags']
 
     list_journeys = filter(filter_journey_pure_tc, journeys)
