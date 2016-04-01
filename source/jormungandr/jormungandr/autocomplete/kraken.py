@@ -72,5 +72,8 @@ class Kraken(AbstractAutocomplete):
                 req.places.admin_uris.append(admin_uri)
 
         resp = instance.send_and_receive(req)
+        if (not hasattr(resp, 'places')) and request['search_type'] == 0:
+            args["search_type"] = 1
+            resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp

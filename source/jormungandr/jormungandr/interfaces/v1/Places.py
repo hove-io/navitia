@@ -105,9 +105,6 @@ class Places(ResourceUri):
         if any([region, lon, lat]):
             instance = i_manager.get_region(region, lon, lat)
             response = i_manager.dispatch(args, "places", instance_name=instance)
-            if (not hasattr(response, 'places')) and args['search_type'] == 0:
-                args["search_type"] = 1
-                response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             response = global_autocomplete.get(args, None)
         return response, 200
