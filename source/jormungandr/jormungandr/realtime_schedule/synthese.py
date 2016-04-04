@@ -113,8 +113,8 @@ class Synthese(RealtimeProxy):
             return None
 
         logging.getLogger(__name__).info("synthese response: {}".format(r.text))
-        stop_point_id = str(route_point.fetch_stop_id(self.rt_system_id))
-        route_id = str(route_point.fetch_route_id(self.rt_system_id))
+        stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
+        route_id = str(route_point.fetch_route_id(self.object_id_tag))
         route_point = SyntheseRoutePoint(route_id, stop_point_id)
         m = self._get_synthese_passages(r.content)
         return m.get(route_point)# if there is nothing from synthese, we keep the base
