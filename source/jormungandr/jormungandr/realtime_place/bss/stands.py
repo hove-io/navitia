@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,4 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from bss_mock import BssMockProvider
+
+class Stands(object):
+
+    def __init__(self, available_places, available_bikes):
+        self.available_places = available_places
+        self.available_bikes = available_bikes
+        self.total_stands = available_places + available_bikes

@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,5 +26,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.realtime_place.bss.bss_provider import BssProvider
+from jormungandr.realtime_place.bss.stands import Stands
 
-from bss_mock import BssMockProvider
+
+class BssMockProvider(BssProvider):
+
+    def support_poi(self, poi):
+        return True
+
+    def get_informations(self, poi):
+        return Stands(5, 9)

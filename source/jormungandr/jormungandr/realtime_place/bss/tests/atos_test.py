@@ -28,24 +28,27 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.realtime_place.bss.atos import AtosProvider
+from jormungandr.realtime_place.bss.stands import Stands
+from mock import MagicMock
+from nose.tools import raises
 
+poi = {
+    'properties': {
+        'network': u'Vélitul',
+        'operator': 'Keolis',
+        'ref': '2'
+    },
+    'poi_type': {
+        'name': 'station vls',
+        'id': 'poi_type:amenity:bicycle_rental'
+    }
+}
 
 def realtime_place_atos_support_poi_test():
     """
     Atos bss provider support
     """
     provider = AtosProvider(10, 'Vélitul')
-    poi = {
-        'properties': {
-            'network': u'Vélitul',
-            'operator': 'Keolis',
-            'ref': '8'
-        },
-        'poi_type': {
-            'name': 'station vls',
-            'id': 'poi_type:amenity:bicycle_rental'
-        }
-    }
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
@@ -54,3 +57,52 @@ def realtime_place_atos_support_poi_test():
     assert not provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
+
+def realtime_place_atos_get_informations_test():
+    """
+    Atos validate return good stands informations or None if an error occured
+    """
+    stands = Stands(5, 9)
+    all_stands = {
+        '1': Stands(4, 8),
+        '2': stands
+    }
+    provider = AtosProvider(10, 'Vélitul')
+    provider.get_all_stands = MagicMock(return_value=all_stands)
+    assert provider.get_informations(poi) == stands
+    provider.get_all_stands = MagicMock(side_effect=Exception())
+    assert provider.get_informations(poi) is None
+
+def realtime_place_atos_get_all_stands_test():
+    """
+    Atos validate transformation of webservice result
+    """
+    stands = lambda: None
+    all_stands_list = []
+    stands.libelle = '1'
+    stands.nbPlacesDispo = 4
+    stands.nbVelosDispo = 8
+    all_stands_list.append(stands)
+    stands2 = lambda: None
+    stands2.libelle = '2'
+    stands2.nbPlacesDispo = 5
+    stands2.nbVelosDispo = 9
+    all_stands_list.append(stands2)
+
+    provider = AtosProvider(10, 'Vélitul')
+    client = lambda: None
+    client.service = lambda: None
+    client.service.getSummaryInformationTerminals = MagicMock(return_value=all_stands_list)
+    provider.get_client = MagicMock(return_value=client)
+    all_stands = provider.get_all_stands()
+    assert len(all_stands) == 2
+    assert isinstance(all_stands.get('2'), Stands)
+
+@raises(Exception)
+def realtime_place_atos_get_all_stands_error_test():
+    """
+    Atos webservice error should raise an Exception
+    """
+    provider = AtosProvider(10, 'Vélitul')
+    provider.WS_URL = 'https://error.fake.com/services/terminal'
+    provider.get_all_stands()

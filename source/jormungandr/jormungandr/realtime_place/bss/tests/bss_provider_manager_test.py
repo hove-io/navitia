@@ -31,22 +31,11 @@ from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManag
 from jormungandr import app
 from nose.tools import raises
 
-CONFIG = (
+CONFIG = ([
     {
-        'class': 'jormungandr.realtime_place.bss.AtosProvider',
-        'args': {
-            'id_ao': '10',
-            'network': 'Vélitul'
-        }
-    },
-    {
-        'class': 'jormungandr.realtime_place.bss.AtosProvider',
-        'args': {
-            'id_ao': '38',
-            'network': 'Vlille'
-        }
+        'class': 'jormungandr.realtime_place.bss.tests.BssMockProvider'
     }
-)
+])
 
 def realtime_place_creation_test():
     """
@@ -54,7 +43,7 @@ def realtime_place_creation_test():
     """
     app.config['BSS_PROVIDER'] = CONFIG
     manager = BssProviderManager()
-    assert len(manager.bss_providers) == 2
+    assert len(manager.bss_providers) == 1
 
 @raises(Exception)
 def realtime_place_bad_creation_test():
@@ -63,18 +52,10 @@ def realtime_place_bad_creation_test():
     """
     app.config['BSS_PROVIDER'] = (
         {
-            'class': 'jormungandr.realtime_place.bss.AtosProvider',
-            'args': {
-                'id_ao': '10',
-                'network': 'Vélitul'
-            }
+            'class': 'jormungandr.realtime_place.bss.tests.BssMockProvider'
         },
         {
-            'class': 'jormungandr.realtime_place.bss.BadProvider',
-            'args': {
-                'id_ao': '38',
-                'network': 'Vlille'
-            }
+            'class': 'jormungandr.realtime_place.bss.BadProvider'
         }
     )
     manager = BssProviderManager()
@@ -89,11 +70,6 @@ def realtime_place_handle_test():
             'distance': '0',
             'name': 'Cit\u00e9 Universitaire (Laval)',
             'poi': {
-                'properties': {
-                    'network': u'Vélitul',
-                    'operator': 'Keolis',
-                    'ref': '8'
-                },
                 'poi_type': {
                     'name': 'station vls',
                     'id': 'poi_type:amenity:bicycle_rental'
@@ -110,14 +86,9 @@ def realtime_place_handle_test():
 
 def realtime_place_find_provider_test():
     """
-    test correct handle include bss stands
+    test manager return provider
     """
     poi = {
-        'properties': {
-            'network': u'Vélitul',
-            'operator': 'Keolis',
-            'ref': '8'
-        },
         'poi_type': {
             'name': 'station vls',
             'id': 'poi_type:amenity:bicycle_rental'
@@ -127,6 +98,3 @@ def realtime_place_find_provider_test():
     manager = BssProviderManager()
     provider = manager.find_provider(poi)
     assert provider == manager.bss_providers[0]
-    poi['properties']['operator'] = 'Bad_operator'
-    provider = manager.find_provider(poi)
-    assert provider is None

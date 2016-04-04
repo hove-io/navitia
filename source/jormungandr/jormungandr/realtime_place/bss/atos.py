@@ -27,23 +27,43 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from bss_provider import BssProvider
+from stands import Stands
+import suds
 
 
 class AtosProvider(BssProvider):
 
-    WS_URL_TEMPLATE = 'https://{}.velossimo.com/services/terminal'
+    WS_URL_TEMPLATE = 'https://{}.velossimo.com/services/terminal?wsdl'
     OPERATOR = 'Keolis'
 
-    def __init__(self, id_ao, network, subdomain = 'admin'):
+    def __init__(self, id_ao, network, subdomain='admin'):
         self.id_ao = id_ao
         self.network = network
         self.WS_URL = self.WS_URL_TEMPLATE.format(subdomain)
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '') == self.OPERATOR and properties.get('network', '').encode('utf-8') == self.network
+        return properties.get('operator', '') == self.OPERATOR and \
+               properties.get('network', '').encode('utf-8') == self.network
 
     def get_informations(self, poi):
-        total = 10
-        available = 4
-        return {'total': total, 'available': available, 'occupied': total - available}
+        try:
+            all_stands = self.get_all_stands()
+            ref = poi.get('properties', {}).get('ref', '')
+            stands = all_stands.get(ref)
+            if stands:
+                return stands
+        except Exception:
+            pass
+        return None
+
+    def get_all_stands(self):
+        client = self.get_client()
+        all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
+        result = {}
+        for stands in all_stands:
+            result[stands.libelle] = Stands(stands.nbPlacesDispo, stands.nbVelosDispo)
+        return result
+
+    def get_client(self):
+        return suds.client.Client(self.WS_URL, cache=None)
