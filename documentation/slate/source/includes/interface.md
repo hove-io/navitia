@@ -34,6 +34,12 @@ You can navigate through a request with 2 parameters
 |start_page|int |The page number          |
 |count     |int |Number of items per page |
 
+<aside class="notice">
+    The number of objects returned for a request can <b>not be superior than 1000</b>. 
+    If you request for more, Navitia will return the first 1000, and you will have to paginate to get next 1000.
+</aside>
+
+
 Templated url
 -------------
 
