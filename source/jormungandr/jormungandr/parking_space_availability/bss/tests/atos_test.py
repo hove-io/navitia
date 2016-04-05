@@ -28,8 +28,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.realtime_place.bss.atos import AtosProvider
-from jormungandr.realtime_place.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.atos import AtosProvider
+from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
 from nose.tools import raises
 from urllib2 import URLError
@@ -47,7 +47,7 @@ poi = {
     }
 }
 
-def realtime_place_atos_support_poi_test():
+def parking_space_availability_atos_support_poi_test():
     """
     Atos bss provider support
     """
@@ -61,7 +61,7 @@ def realtime_place_atos_support_poi_test():
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
 
-def realtime_place_atos_get_informations_test():
+def parking_space_availability_atos_get_informations_test():
     """
     Atos validate return good stands informations or None if an error occured
     """
@@ -76,7 +76,7 @@ def realtime_place_atos_get_informations_test():
     provider.get_all_stands = MagicMock(side_effect=WebFault('fake fault', 'mock'))
     assert provider.get_informations(poi) is None
 
-def realtime_place_atos_get_all_stands_test():
+def parking_space_availability_atos_get_all_stands_test():
     """
     Atos validate transformation of webservice result
     """
@@ -102,7 +102,7 @@ def realtime_place_atos_get_all_stands_test():
     assert isinstance(all_stands.get('2'), Stands)
 
 @raises(URLError)
-def realtime_place_atos_get_all_stands_urlerror_test():
+def parking_space_availability_atos_get_all_stands_urlerror_test():
     """
     Atos webservice error should raise an URLError exception
     """

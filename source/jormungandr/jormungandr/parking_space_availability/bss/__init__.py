@@ -27,5 +27,5 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.realtime_place.bss.atos import AtosProvider
-from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManager
+from jormungandr.parking_space_availability.bss.atos import AtosProvider
+from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager

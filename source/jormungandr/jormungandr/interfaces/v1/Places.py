@@ -45,7 +45,7 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal, marshal_with
-from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManager
+from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 import datetime
 from jormungandr.autocomplete.elastic_search import Elasticsearch
 

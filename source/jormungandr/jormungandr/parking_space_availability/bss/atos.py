@@ -27,8 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.realtime_place.bss.bss_provider import BssProvider
-from jormungandr.realtime_place.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
+from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr import cache, app
 from urllib2 import URLError
 import suds
@@ -50,21 +50,19 @@ class AtosProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '') == self.OPERATOR and \
-               properties.get('network', '') == self.network
+        return properties.get('operator') == self.OPERATOR and \
+               properties.get('network') == self.network
 
     def get_informations(self, poi):
         try:
             all_stands = self.get_all_stands()
-            ref = poi.get('properties', {}).get('ref', '')
+            ref = poi.get('properties', {}).get('ref')
             stands = all_stands.get(ref)
-            if stands:
-                return stands
+            return stands
         except URLError as e:
             logging.getLogger(__name__).info(str(e))
         except suds.WebFault as e:
             logging.getLogger(__name__).info('{} in document {}'.format(e.fault, e.document))
-        return None
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def get_all_stands(self):
