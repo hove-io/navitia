@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, reqparse, abort
 from flask.globals import g
-from jormungandr import i_manager, timezone, global_autocomplete
+from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord, feed_publisher
@@ -45,7 +45,6 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal, marshal_with
-from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 import datetime
 from jormungandr.autocomplete.elastic_search import Elasticsearch
 
@@ -205,6 +204,5 @@ class PlacesNearby(ResourceUri):
                                       instance_name=self.region)
         response = marshal(response, places_nearby)
         if args["bss_stands"]:
-            bss_manager = BssProviderManager()
-            response["places_nearby"] = bss_manager.handle_places(response["places_nearby"])
+            response["places_nearby"] = bss_provider_manager.handle_places(response["places_nearby"])
         return response, 200
