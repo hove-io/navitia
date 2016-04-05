@@ -24,7 +24,7 @@ Dependencies
 
    To install the dependencies for a module use `pip` (you can also wrap that in a virtualenv):
 
-   ``pip install -r {path_to_navitia_source}/jormungandr/requirement.txt``
+   ``pip install -r {path_to_navitia_source}/jormungandr/requirements.txt``
 
 
 #. Other
