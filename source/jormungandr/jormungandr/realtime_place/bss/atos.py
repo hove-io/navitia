@@ -26,9 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from bss_provider import BssProvider
-from stands import Stands
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.realtime_place.bss.bss_provider import BssProvider
+from jormungandr.realtime_place.bss.stands import Stands
+from jormungandr import cache, app
+from urllib2 import URLError
 import suds
+import logging
 
 
 class AtosProvider(BssProvider):
@@ -41,10 +45,13 @@ class AtosProvider(BssProvider):
         self.network = network
         self.WS_URL = self.WS_URL_TEMPLATE.format(subdomain)
 
+    def __repr__(self):
+        return self.WS_URL + str(self.id_ao)
+
     def support_poi(self, poi):
         properties = poi.get('properties', {})
         return properties.get('operator', '') == self.OPERATOR and \
-               properties.get('network', '').encode('utf-8') == self.network
+               properties.get('network', '') == self.network
 
     def get_informations(self, poi):
         try:
@@ -53,17 +60,17 @@ class AtosProvider(BssProvider):
             stands = all_stands.get(ref)
             if stands:
                 return stands
-        except Exception:
-            pass
+        except URLError as e:
+            logging.getLogger(__name__).info(str(e))
+        except suds.WebFault as e:
+            logging.getLogger(__name__).info('{} in document {}'.format(e.fault, e.document))
         return None
 
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def get_all_stands(self):
         client = self.get_client()
         all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
-        result = {}
-        for stands in all_stands:
-            result[stands.libelle] = Stands(stands.nbPlacesDispo, stands.nbVelosDispo)
-        return result
+        return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
 
     def get_client(self):
         return suds.client.Client(self.WS_URL, cache=None)

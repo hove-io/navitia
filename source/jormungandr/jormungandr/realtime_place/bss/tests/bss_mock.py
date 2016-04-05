@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.realtime_place.bss.bss_provider import BssProvider
 from jormungandr.realtime_place.bss.stands import Stands
 

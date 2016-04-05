@@ -26,5 +26,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from atos import AtosProvider
-from bss_provider_manager import BssProviderManager
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.realtime_place.bss.atos import AtosProvider
+from jormungandr.realtime_place.bss.bss_provider_manager import BssProviderManager

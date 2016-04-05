@@ -27,10 +27,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.realtime_place.bss.atos import AtosProvider
 from jormungandr.realtime_place.bss.stands import Stands
 from mock import MagicMock
 from nose.tools import raises
+from urllib2 import URLError
+from suds import WebFault
 
 poi = {
     'properties': {
@@ -48,7 +51,7 @@ def realtime_place_atos_support_poi_test():
     """
     Atos bss provider support
     """
-    provider = AtosProvider(10, 'Vélitul')
+    provider = AtosProvider(u'10', u'Vélitul')
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
@@ -67,10 +70,10 @@ def realtime_place_atos_get_informations_test():
         '1': Stands(4, 8),
         '2': stands
     }
-    provider = AtosProvider(10, 'Vélitul')
+    provider = AtosProvider(u'10', u'Vélitul')
     provider.get_all_stands = MagicMock(return_value=all_stands)
     assert provider.get_informations(poi) == stands
-    provider.get_all_stands = MagicMock(side_effect=Exception())
+    provider.get_all_stands = MagicMock(side_effect=WebFault('fake fault', 'mock'))
     assert provider.get_informations(poi) is None
 
 def realtime_place_atos_get_all_stands_test():
@@ -89,7 +92,7 @@ def realtime_place_atos_get_all_stands_test():
     stands2.nbVelosDispo = 9
     all_stands_list.append(stands2)
 
-    provider = AtosProvider(10, 'Vélitul')
+    provider = AtosProvider(u'10', u'Vélitul')
     client = lambda: None
     client.service = lambda: None
     client.service.getSummaryInformationTerminals = MagicMock(return_value=all_stands_list)
@@ -98,11 +101,11 @@ def realtime_place_atos_get_all_stands_test():
     assert len(all_stands) == 2
     assert isinstance(all_stands.get('2'), Stands)
 
-@raises(Exception)
-def realtime_place_atos_get_all_stands_error_test():
+@raises(URLError)
+def realtime_place_atos_get_all_stands_urlerror_test():
     """
-    Atos webservice error should raise an Exception
+    Atos webservice error should raise an URLError exception
     """
-    provider = AtosProvider(10, 'Vélitul')
+    provider = AtosProvider(u'10', u'Vélitul')
     provider.WS_URL = 'https://error.fake.com/services/terminal'
     provider.get_all_stands()
