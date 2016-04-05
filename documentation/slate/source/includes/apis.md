@@ -211,7 +211,7 @@ Example:
     vehicle journey, "since" is included and "until" is excluded.
 </aside>
 
-### Filter
+### <a name="filter"></a>Filter
 
 It is possible to apply a filter to the returned collection, using
 "filter" parameter. If no object matches the filter, a "bad_filter"
