@@ -87,8 +87,10 @@ i_manager.initialisation()
 from jormungandr.stat_manager import StatManager
 stat_manager = StatManager()
 
-from jormungandr import api
+from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
+bss_provider_manager = BssProviderManager()
 
+from jormungandr import api
 
 def setup_package():
     i_manager.stop()
