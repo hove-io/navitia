@@ -96,7 +96,8 @@ instance_fields = {
     'walking_transfer_penalty': fields.Raw,
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,
-    'priority': fields.Raw
+    'priority': fields.Raw,
+    'bss_provider': fields.Boolean
 }
 
 api_fields = {
@@ -366,6 +367,8 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.night_bus_filter_base_factor)
         parser.add_argument('priority', type=int, help='instance priority',
                             location=('json', 'values'), default=instance.priority)
+        parser.add_argument('bss_provider', type=bool, help='bss provider activation',
+                            location=('json', 'values'), default=True)
         args = parser.parse_args()
 
         try:
@@ -397,7 +400,8 @@ class Instance(flask_restful.Resource):
                                        'walking_transfer_penalty',
                                        'night_bus_filter_max_factor',
                                        'night_bus_filter_base_factor',
-                                       'priority'])
+                                       'priority',
+                                       'bss_provider'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

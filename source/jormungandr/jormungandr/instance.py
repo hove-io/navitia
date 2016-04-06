@@ -240,6 +240,14 @@ class Instance(object):
         return get_value_or_default('priority', instance_db, self.name)
 
     @property
+    def bss_provider(self):
+        instance_db = self.get_models()
+        if not instance_db:
+            return True
+        else:
+            return instance_db.bss_provider
+    
+    @property
     def is_free(self):
         instance_db = self.get_models()
         if not instance_db:

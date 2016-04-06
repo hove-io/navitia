@@ -204,6 +204,6 @@ class PlacesNearby(ResourceUri):
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
         response = marshal(response, places_nearby)
-        if args["bss_stands"]:
+        if self.region.bss_provider and args["bss_stands"]:
             response["places_nearby"] = bss_provider_manager.handle_places(response["places_nearby"])
         return response, 200
