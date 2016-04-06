@@ -48,4 +48,7 @@ class Status(Resource):
         response['status']["is_open_data"] = instance.is_free
         response['status']['parameters'] = instance
         response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region)
+        response['status']['realtime_proxies'] = []
+        for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
+            response['status']['realtime_proxies'].append(realtime_proxy.status())
         return response, 200
