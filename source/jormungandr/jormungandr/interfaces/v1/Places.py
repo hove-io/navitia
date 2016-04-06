@@ -104,6 +104,7 @@ class Places(ResourceUri):
 
         if any([region, lon, lat]):
             instance = i_manager.get_region(region, lon, lat)
+            timezone.set_request_timezone(region)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             if global_autocomplete:

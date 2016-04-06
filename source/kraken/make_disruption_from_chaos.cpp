@@ -232,7 +232,8 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     auto impact = boost::make_shared<nt::disruption::Impact>();
     impact->uri = chaos_impact.id();
     impact->created_at = from_posix(chaos_impact.created_at());
-    impact->updated_at = from_posix(chaos_impact.updated_at());
+    auto updated_at = chaos_impact.created_at();
+    impact->updated_at = updated_at ? from_posix(updated_at) : impact->created_at;
     for (const auto& chaos_ap: chaos_impact.application_periods()) {
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
     }

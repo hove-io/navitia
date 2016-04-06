@@ -125,6 +125,24 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(response['disruptions']) == 0
 
 
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestPlacesWithDisruptions(ChaosDisruptionsFixture):
+    def test_places_with_disruptions(self):
+        """
+        /places?q=stopB
+        """
+        response = self.query_region('places?q=stopB')
+        assert len(response['disruptions']) == 0
+
+        self.send_mock("bob_the_disruption", "stopB", "stop_area")
+
+        response = self.query_region('places?q=stopB')
+        assert len(response['places']) == 1
+        assert response['places'][0]['id'] == 'stopB'
+
+        assert len(response['disruptions']) == 1
+        assert response['disruptions'][0]['updated_at'] == u'20160405T150623'
+
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
@@ -653,6 +671,7 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     impact = disruption.impacts.add()
     impact.id = "impact_" + disruption_name + "_1"
     enums_impact = gtfs_realtime_pb2.Alert.DESCRIPTOR.enum_values_by_name
+    impact.created_at = 1459868783 # u'20160405T150623' 
     if blocking:
         impact.severity.effect = enums_impact["NO_SERVICE"].number
         impact.severity.id = 'blocking'
