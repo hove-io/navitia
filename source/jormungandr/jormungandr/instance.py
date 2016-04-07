@@ -242,10 +242,7 @@ class Instance(object):
     @property
     def bss_provider(self):
         instance_db = self.get_models()
-        if not instance_db:
-            return True
-        else:
-            return instance_db.bss_provider
+        return get_value_or_default('bss_provider', instance_db, self.name)
     
     @property
     def is_free(self):

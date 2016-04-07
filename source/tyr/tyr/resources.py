@@ -368,7 +368,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument('priority', type=int, help='instance priority',
                             location=('json', 'values'), default=instance.priority)
         parser.add_argument('bss_provider', type=bool, help='bss provider activation',
-                            location=('json', 'values'), default=True)
+                            location=('json', 'values'), default=instance.bss_provider)
         args = parser.parse_args()
 
         try:

@@ -96,6 +96,9 @@ night_bus_filter_base_factor = 60*60  # seconds
 # will be chosen.
 priority = 0
 
+# activate / desactivate call to bss provider
+bss_provider = True
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)
