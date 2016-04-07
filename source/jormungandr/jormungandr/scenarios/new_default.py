@@ -341,7 +341,7 @@ def culling_journeys(resp, request):
         # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
 
         def _inverse_selection(d, indexes):
-            select = np.in1d(range(d.shape[0]), indexes)
+            select = np.in1d(range(d.shape[0]), list(indexes))
             return d[~select]
 
         # Here we mark all journeys as dead that are not must-have
