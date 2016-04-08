@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('bss_provider', existing_type=sa.BOOLEAN(), server_default=sa.true()))
+    op.add_column('instance', sa.Column('bss_provider', sa.BOOLEAN(), server_default=sa.true()))
 
 
 def downgrade():
