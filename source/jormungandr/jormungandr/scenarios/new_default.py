@@ -178,11 +178,11 @@ def _get_section_id(section):
 def _build_candidate_pool_and_sections_set(resp):
     sections_set = set()
     candidates_pool = list()
-    idx_of_jrny_must_keep = set()
+    idx_of_jrny_must_keep = list()
 
     for (i, jrny) in enumerate(resp.journeys):
         if jrny.type in JOURNEY_TYPES_TO_RETAIN:
-            idx_of_jrny_must_keep.add(i)
+            idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
         candidates_pool.append(jrny)
 
@@ -334,19 +334,20 @@ def culling_journeys(resp, request):
 
     nb_journeys_must_have = len(idx_of_jrnys_must_keep)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
-    if request["max_nb_journeys"] == nb_journeys_must_have:
-        logger.debug('max_nb_journeys equals to nb_journeys_must_have, no need to cull')
-        return
-    if (request["max_nb_journeys"] - nb_journeys_must_have) < 0:
+    if (request["max_nb_journeys"] - nb_journeys_must_have) <= 0:
         # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
 
         def _inverse_selection(d, indexes):
-            select = np.in1d(range(d.shape[0]), list(indexes))
+            select = np.in1d(range(d.shape[0]), indexes)
             return d[~select]
 
         # Here we mark all journeys as dead that are not must-have
         for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
              journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+
+        if request["max_nb_journeys"] == nb_journeys_must_have:
+            logger.debug('max_nb_journeys equals to nb_journeys_must_have')
+            return
 
         logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
                      .format(request["max_nb_journeys"], nb_journeys_must_have))
