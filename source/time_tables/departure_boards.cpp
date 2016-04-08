@@ -33,10 +33,12 @@ www.navitia.io
 #include "routing/get_stop_times.h"
 #include "type/pb_converter.h"
 #include "routing/dataraptor.h"
-#include "boost/lexical_cast.hpp"
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "utils/paginate.h"
 #include "routing/dataraptor.h"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/container/flat_set.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -117,18 +119,12 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     std::map<stop_point_route, vector_dt_st> map_route_stop_point;
 
     //Mapping route/stop_point
-    std::vector<stop_point_route> sps_routes;
+    boost::container::flat_set<stop_point_route> sps_routes;
     for(auto jpp_idx : handler.journey_pattern_points) {
         const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
         const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
         stop_point_route key = {jpp.sp_idx, jp.route_idx};
-        auto find_predicate = [&](stop_point_route spl) {
-            return spl.first == key.first && spl.second == key.second;
-        };
-        auto it = std::find_if(sps_routes.begin(), sps_routes.end(), find_predicate);
-        if(it == sps_routes.end()){
-            sps_routes.push_back(key);
-        }
+        sps_routes.insert(key);
     }
     size_t total_result = sps_routes.size();
     sps_routes = paginate(sps_routes, count, start_page);
@@ -140,7 +136,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     // au meme couple (stop_point, route)
     // On veut en effet afficher les départs regroupés par route
     // (une route étant une vague direction commerciale
-    for(auto sp_route : sps_routes) {
+    for (const auto& sp_route: sps_routes) {
         std::vector<routing::datetime_stop_time> stop_times;
         const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first.val];
         const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second.val];
