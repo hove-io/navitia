@@ -272,7 +272,11 @@ class Instance(flask_restful.Resource):
         parser.add_argument('is_free', type=inputs.boolean, required=False,
                 case_sensitive=False, help='boolean for returning only free or private instances')
         args = parser.parse_args()
-        if args['is_free'] != None:
+        if args['is_free'] is None:
+            del args['is_free']
+        if id: args['id'] = id
+        if name: args['name'] = name
+        if len(args):
             return models.Instance.query.filter_by(**args).all()
         else:
             return models.Instance.query.all()
