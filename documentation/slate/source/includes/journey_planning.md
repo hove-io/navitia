@@ -9,5 +9,5 @@ such as: time of departure and arrival, journey time, possible modes of transpor
 In order to compute a journey, you may have to use these APIs (click on them for details):
 
 -   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.
--   **[Journeys](#journeys)** : compute journeys from points or coordinates
+-   **[Journeys](#journeys)** : compute journeys from and to coordinates, stops, stations or administrative region
 

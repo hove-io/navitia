@@ -9,5 +9,5 @@ You can use these APIs (click on them for details):
 -   **[Coverage](#coverage)** : List of the region covered by navitia
 -   **[Public transportation objects](#pt-ref)** : List of the public transport
     objects of a region
--   **[Places](#places)** and **[PT_objects](#pt-objects)** : Search in the datas using autocomplete input.
+-   **[Places](#places)** and **[PT_objects](#pt-objects)** : Search for data using autocomplete input.
 

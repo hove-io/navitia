@@ -1,7 +1,7 @@
 #Errors
 
 <aside class="notice">When there's an error you'll receive a response with a error object
-containing an id
+containing a unique error id
 </aside>
 
 

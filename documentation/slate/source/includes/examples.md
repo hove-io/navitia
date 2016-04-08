@@ -50,8 +50,9 @@ We could push the exploration further and:
 - Where am I? (WGS 84 coordinates)
     - <https://api.navitia.io/v1/coord/2.377310;48.847002>
     - I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
-- Which services are available on this coverage? Let's take a look at the links at the bottom of this stream
+- Services available on this coverage
     - <https://api.navitia.io/v1/coverage/fr-idf>
+    - Let's take a look at the links at the bottom of the previous stream
 - Networks available? (see what [network](#network) is)
     - <https://api.navitia.io/v1/coverage/fr-idf/networks>
     - pwooo, many networks on this coverage ;)
