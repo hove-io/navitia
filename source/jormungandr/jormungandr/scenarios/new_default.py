@@ -343,6 +343,7 @@ def culling_journeys(resp, request):
         nb_jrny_to_keep = len([j for j in resp.journeys if 'to_delete' not in j.tags])
         if nb_jrny_to_keep == request["max_nb_journeys"]:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
+            journey_filter.delete_journeys((resp,), request)
             return
 
         logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
