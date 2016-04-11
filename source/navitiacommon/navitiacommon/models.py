@@ -510,6 +510,6 @@ class AutocompleteParameter(db.Model, TimestampMixin):
         self.admin = admin
 
     def __repr__(self):
-        return '<Autocomplete %r>' % self.name
+        return '<AutocompleteParameter %r>' % self.name
 
 
