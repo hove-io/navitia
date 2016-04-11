@@ -31,6 +31,11 @@ import zipfile
 import os
 import glob
 
+street_source_types = ['BANO', 'OSM']
+address_source_types = ['BANO', 'OSM', 'OpenAddresses']
+stop_area_source_types = ['FUSIO', 'BANO']
+poi_source_types = ['FUSIO', 'OSM', 'PagesJaunes']
+admin_source_types = ['OSM', 'FUSIO']
 
 def type_of_data(filename):
     """

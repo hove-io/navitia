@@ -40,7 +40,7 @@ import logging
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
-from navitiacommon import models
+from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
 from validations import datetime_format
@@ -183,9 +183,9 @@ traveler_profile = {
     'error': fields.String,
 }
 
-autocomplete_fields = {
+autocomplete_parameter_fields = {
     'id': fields.Raw,
-    'shape': fields.Raw,
+    'name': fields.Raw,
     'created_at': FieldDate,
     'updated_at': FieldDate,
     'street': fields.Raw,
@@ -956,104 +956,104 @@ class BillingPlan(flask_restful.Resource):
             raise
         return ({}, 204)
 
-class Autocomplete(flask_restful.Resource):
-    def get(self, shape=None):
-        if shape:
-            autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
-            return marshal(autocomplete, autocomplete_fields)
+class AutocompleteParameter(flask_restful.Resource):
+    def get(self, name=None):
+        if name:
+            autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+            return marshal(autocomplete_param, autocomplete_parameter_fields)
         else:
-            autocompletes = models.Autocomplete.query.all()
-            return marshal  (autocompletes, autocomplete_fields)
+            autocomplete_params = models.AutocompleteParameter.query.all()
+            return marshal  (autocomplete_params, autocomplete_parameter_fields)
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('shape', type=unicode, required=True,
-                            case_sensitive=False, help='shape is required',
+        parser.add_argument('name', type=unicode, required=True,
+                            case_sensitive=False, help='name is required',
                             location=('json', 'values'))
         parser.add_argument('street', type=str, required=False, default='BANO',
                             help='source for street: [BANO, OSM]',
                             location=('json', 'values'),
-                            choices=['BANO', 'OSM'])
+                            choices=utils.street_source_types)
         parser.add_argument('address', type=str, required=False, default='BANO',
                             help='source for address: [BANO, OpenAddresses]',
                             location=('json', 'values'),
-                            choices=['BANO', 'OpenAddresses'])
+                            choices=utils.address_source_types)
         parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
                             help='source for stop_area: [FUSIO, BANO]',
                             location=('json', 'values'),
-                            choices=['FUSIO', 'BANO'])
+                            choices=utils.stop_area_source_types)
         parser.add_argument('poi', type=str, required=False, default='FUSIO',
                             help='source for poi: [FUSIO, OSM]',
                             location=('json', 'values'),
-                            choices=['FUSIO', 'OSM'])
+                            choices=utils.poi_source_types)
         parser.add_argument('admin', type=str, required=False, default='OSM',
                             help='source for admin: [FUSIO, OSM]',
                             location=('json', 'values'),
-                            choices=['OSM', 'FUSIO'])
+                            choices=utils.admin_source_types)
 
         args = parser.parse_args()
 
         try:
-            autocomplete = models.Autocomplete()
-            autocomplete.shape = args['shape']
-            autocomplete.street = args['street']
-            autocomplete.address = args['address']
-            autocomplete.stop_area = args['stop_area']
-            autocomplete.poi = args['poi']
-            autocomplete.admin = args['admin']
-            db.session.add(autocomplete)
+            autocomplete_parameter = models.AutocompleteParameter()
+            autocomplete_parameter.name = args['name']
+            autocomplete_parameter.street = args['street']
+            autocomplete_parameter.address = args['address']
+            autocomplete_parameter.stop_area = args['stop_area']
+            autocomplete_parameter.poi = args['poi']
+            autocomplete_parameter.admin = args['admin']
+            db.session.add(autocomplete_parameter)
             db.session.commit()
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate shape'}, 409)
+            return ({'error': 'duplicate name'}, 409)
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete, autocomplete_fields)
+        return marshal(autocomplete_parameter, autocomplete_parameter_fields)
 
-    def put(self, shape=None):
-        autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
+    def put(self, name=None):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument('street', type=str, required=False, default='BANO',
                             help='source for street: [BANO, OSM]',
                             location=('json', 'values'),
-                            choices=['BANO', 'OSM'])
+                            choices= utils.street_source_types)
         parser.add_argument('address', type=str, required=False, default='BANO',
                             help='source for address: [BANO, OpenAddresses]',
                             location=('json', 'values'),
-                            choices=['BANO', 'OpenAddresses'])
+                            choices=utils.address_source_types)
         parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
                             help='source for stop_area: [FUSIO, BANO]',
                             location=('json', 'values'),
-                            choices=['FUSIO', 'BANO'])
+                            choices=utils.stop_area_source_types)
         parser.add_argument('poi', type=str, required=False, default='FUSIO',
                             help='source for poi: [FUSIO, OSM, PagesJaunes]',
                             location=('json', 'values'),
-                            choices=['FUSIO', 'OSM', 'PagesJaunes'])
+                            choices=utils.poi_source_types)
         parser.add_argument('admin', type=str, required=False, default='OSM',
                             help='source for admin: [FUSIO, OSM]',
                             location=('json', 'values'),
-                            choices=['OSM', 'FUSIO'])
+                            choices=utils.admin_source_types)
 
         args = parser.parse_args()
 
         try:
-            autocomplete.street = args['street']
-            autocomplete.address = args['address']
-            autocomplete.stop_area = args['stop_area']
-            autocomplete.poi = args['poi']
-            autocomplete.admin = args['admin']
+            autocomplete_param.street = args['street']
+            autocomplete_param.address = args['address']
+            autocomplete_param.stop_area = args['stop_area']
+            autocomplete_param.poi = args['poi']
+            autocomplete_param.admin = args['admin']
             db.session.commit()
 
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete, autocomplete_fields)
+        return marshal(autocomplete_param, autocomplete_parameter_fields)
 
-    def delete(self, shape=None):
-        autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
+    def delete(self, name=None):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         try:
-            db.session.delete(autocomplete)
+            db.session.delete(autocomplete_param)
             db.session.commit()
         except Exception:
             logging.exception("fail")

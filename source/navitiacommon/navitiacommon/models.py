@@ -38,6 +38,8 @@ from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
+from navitiacommon.utils import street_source_types, address_source_types, stop_area_source_types, \
+    poi_source_types, admin_source_types
 
 from navitiacommon import default_values
 
@@ -489,18 +491,18 @@ class BillingPlan(db.Model):
         return cls.query.filter_by(default=True, end_point=end_point).first()
 
 
-class Autocomplete(db.Model, TimestampMixin):
+class AutocompleteParameter(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
-    shape = db.Column(db.Text, nullable=False, unique=True)
-    street = db.Column(db.Enum('BANO', 'OSM', name='source_street'), nullable=True)
-    address = db.Column(db.Enum('BANO', 'OpenAddresses', name='source_address'), nullable=True)
-    stop_area = db.Column(db.Enum('FUSIO', 'BANO', name='source_stop_area'), nullable=True)
-    poi = db.Column(db.Enum('FUSIO', 'OSM', 'PagesJaunes', name='source_poi'), nullable=True)
-    admin = db.Column(db.Enum('OSM', 'FUSIO', name='source_admin'), nullable=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    street = db.Column(db.Enum(",".join(street_source_types), name='source_street'), nullable=True)
+    address = db.Column(db.Enum(",".join(address_source_types), name='source_address'), nullable=True)
+    stop_area = db.Column(db.Enum(",".join(stop_area_source_types), name='source_stop_area'), nullable=True)
+    poi = db.Column(db.Enum(",".join(poi_source_types), name='source_poi'), nullable=True)
+    admin = db.Column(db.Enum(",".join(admin_source_types), name='source_admin'), nullable=True)
 
-    def __init__(self, shape=None, street=None, address=None,
+    def __init__(self, name=None, street=None, address=None,
                  stop_area=None, poi=None, admin=None):
-        self.shape = shape
+        self.name = name
         self.street = street
         self.address = address
         self.stop_area = stop_area
