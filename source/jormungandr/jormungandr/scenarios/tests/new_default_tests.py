@@ -168,7 +168,7 @@ def build_candidate_pool_and_sections_set_test():
         new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
 
-    # selected_sections_matrix should have 17 lines(17 journeys) and 11 columns(11 sections)
+    # selected_sections_matrix should have 19 lines(19 journeys) and 11 columns(11 sections)
     assert selected_sections_matrix.shape == (19, 11)
 
     # it's too verbose to check the entire matrix... we check only two lines
