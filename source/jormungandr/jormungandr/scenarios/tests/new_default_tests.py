@@ -155,7 +155,7 @@ def create_candidate_pool_and_sections_set_test():
     candidates_pool, sections_set, idx_jrny_must_keep = \
         new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
 
-    # We got 17 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
+    # We got 19 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
     assert candidates_pool.shape[0] == 19
     assert len(idx_jrny_must_keep) == 4
 
