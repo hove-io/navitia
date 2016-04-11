@@ -183,6 +183,18 @@ traveler_profile = {
     'error': fields.String,
 }
 
+autocomplete_fields = {
+    'id': fields.Raw,
+    'shape': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'street': fields.Raw,
+    'address': fields.Raw,
+    'stop_area': fields.Raw,
+    'poi': fields.Raw,
+    'admin': fields.Raw
+}
+
 
 class Api(flask_restful.Resource):
     def __init__(self):
@@ -943,3 +955,108 @@ class BillingPlan(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
+
+class Autocomplete(flask_restful.Resource):
+    def get(self, shape=None):
+        if shape:
+            autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
+            return marshal(autocomplete, autocomplete_fields)
+        else:
+            autocompletes = models.Autocomplete.query.all()
+            return marshal  (autocompletes, autocomplete_fields)
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('shape', type=unicode, required=True,
+                            case_sensitive=False, help='shape is required',
+                            location=('json', 'values'))
+        parser.add_argument('street', type=str, required=False, default='BANO',
+                            help='source for street: [BANO, OSM]',
+                            location=('json', 'values'),
+                            choices=['BANO', 'OSM'])
+        parser.add_argument('address', type=str, required=False, default='BANO',
+                            help='source for address: [BANO, OpenAddresses]',
+                            location=('json', 'values'),
+                            choices=['BANO', 'OpenAddresses'])
+        parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
+                            help='source for stop_area: [FUSIO, BANO]',
+                            location=('json', 'values'),
+                            choices=['FUSIO', 'BANO'])
+        parser.add_argument('poi', type=str, required=False, default='FUSIO',
+                            help='source for poi: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=['FUSIO', 'OSM'])
+        parser.add_argument('admin', type=str, required=False, default='OSM',
+                            help='source for admin: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=['OSM', 'FUSIO'])
+
+        args = parser.parse_args()
+
+        try:
+            autocomplete = models.Autocomplete()
+            autocomplete.shape = args['shape']
+            autocomplete.street = args['street']
+            autocomplete.address = args['address']
+            autocomplete.stop_area = args['stop_area']
+            autocomplete.poi = args['poi']
+            autocomplete.admin = args['admin']
+            db.session.add(autocomplete)
+            db.session.commit()
+
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
+            return ({'error': 'duplicate shape'}, 409)
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(autocomplete, autocomplete_fields)
+
+    def put(self, shape=None):
+        autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('street', type=str, required=False, default='BANO',
+                            help='source for street: [BANO, OSM]',
+                            location=('json', 'values'),
+                            choices=['BANO', 'OSM'])
+        parser.add_argument('address', type=str, required=False, default='BANO',
+                            help='source for address: [BANO, OpenAddresses]',
+                            location=('json', 'values'),
+                            choices=['BANO', 'OpenAddresses'])
+        parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
+                            help='source for stop_area: [FUSIO, BANO]',
+                            location=('json', 'values'),
+                            choices=['FUSIO', 'BANO'])
+        parser.add_argument('poi', type=str, required=False, default='FUSIO',
+                            help='source for poi: [FUSIO, OSM, PagesJaunes]',
+                            location=('json', 'values'),
+                            choices=['FUSIO', 'OSM', 'PagesJaunes'])
+        parser.add_argument('admin', type=str, required=False, default='OSM',
+                            help='source for admin: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=['OSM', 'FUSIO'])
+
+        args = parser.parse_args()
+
+        try:
+            autocomplete.street = args['street']
+            autocomplete.address = args['address']
+            autocomplete.stop_area = args['stop_area']
+            autocomplete.poi = args['poi']
+            autocomplete.admin = args['admin']
+            db.session.commit()
+
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(autocomplete, autocomplete_fields)
+
+    def delete(self, shape=None):
+        autocomplete = models.Autocomplete.query.filter_by(shape=shape).first_or_404()
+        try:
+            db.session.delete(autocomplete)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return ({}, 204)
+

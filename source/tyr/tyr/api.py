@@ -66,6 +66,11 @@ api.add_resource(resources.PoiType,
             '/v0/instances/<string:instance_name>/poi_types',
             '/v0/instances/<string:instance_name>/poi_types/<string:uri>')
 
+api.add_resource(resources.Autocomplete,
+                 '/v0/autocompletes/',
+                 '/v0/autocompletes/<string:shape>')
+
+
 @app.errorhandler(Exception)
 def error_handler(exception):
     """
