@@ -175,4 +175,12 @@ class Synthese(RealtimeProxy):
             passage = self._get_real_time_passage(xml_journey)
             result[route_point].append(passage)
         return result
-    
+
+    def status(self):
+        return {'id': self.rt_system_id,
+                'timeout': self.timeout,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+                }
+

@@ -79,6 +79,9 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
 
         return None
 
+    def status(self):
+        return None
+
 
 DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'data_freshness', 'direction', 'physical_mode'])
 

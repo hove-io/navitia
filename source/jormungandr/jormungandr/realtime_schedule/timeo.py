@@ -188,3 +188,11 @@ class Timeo(RealtimeProxy):
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
 
         return utc_dt
+
+    def status(self):
+        return {'id': self.rt_system_id,
+                'timeout': self.timeout,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+                }

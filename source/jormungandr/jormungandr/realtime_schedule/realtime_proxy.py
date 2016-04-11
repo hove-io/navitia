@@ -41,3 +41,10 @@ class RealtimeProxy(object):
     @abstractmethod
     def next_passage_for_route_point(self, route_point):
         pass
+
+    @abstractmethod
+    def status(self):
+        """
+        return a status for the API
+        """
+        pass
