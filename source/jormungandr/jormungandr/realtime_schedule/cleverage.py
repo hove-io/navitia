@@ -34,6 +34,8 @@ import pybreaker
 import pytz
 import requests as requests
 from jormungandr import cache, app
+from jormungandr.schedule import RealTimePassage
+from datetime import datetime
 
 
 class Cleverage(RealtimeProxy):
@@ -93,11 +95,32 @@ class Cleverage(RealtimeProxy):
 
         return url
 
+    def _get_dt(self, datetime_str):
+        #"2016-04-11 14:37:15"
+        dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+
+        utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
+
+        return utc_dt
+
     def _get_passages(self, route_point, cleverage_resp):
         logging.getLogger(__name__).debug('cleverage response: {}'.format(cleverage_resp))
-        line = route_point.pb_route.line
-        print line.code
-        #st_responses = cleverage_resp.get('StopTimesResponse')
+
+        line_code = route_point.pb_route.line.code
+
+        chedules = [line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()]
+
+        next_passages = []
+        for next_expected_st in chedules[0]:
+            # for the moment we handle only the NextStop and the direction
+            dt = self._get_dt(next_expected_st['departure'])
+            direction = next_expected_st.get('destination_name')
+            next_passage = RealTimePassage(dt, direction)
+            next_passages.append(next_passage)
+
+        return next_passages
+
+
 
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
