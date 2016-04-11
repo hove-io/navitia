@@ -37,13 +37,12 @@ import logging
 
 class AtosProvider(BssProvider):
 
-    WS_URL_TEMPLATE = 'https://{}.velossimo.com/services/terminal?wsdl'
     OPERATOR = 'Keolis'
 
-    def __init__(self, id_ao, network, subdomain='admin'):
+    def __init__(self, id_ao, network, url):
         self.id_ao = id_ao
         self.network = network
-        self.WS_URL = self.WS_URL_TEMPLATE.format(subdomain)
+        self.WS_URL = url
 
     def __repr__(self):
         return self.WS_URL + str(self.id_ao)
