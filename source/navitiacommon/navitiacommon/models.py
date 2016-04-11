@@ -487,3 +487,27 @@ class BillingPlan(db.Model):
     @classmethod
     def get_default(cls, end_point):
         return cls.query.filter_by(default=True, end_point=end_point).first()
+
+
+class Autocomplete(db.Model, TimestampMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    shape = db.Column(db.Text, nullable=False, unique=True)
+    street = db.Column(db.Enum('BANO', 'OSM', name='source_street'), nullable=True)
+    address = db.Column(db.Enum('BANO', 'OpenAddresses', name='source_address'), nullable=True)
+    stop_area = db.Column(db.Enum('FUSIO', 'BANO', name='source_stop_area'), nullable=True)
+    poi = db.Column(db.Enum('FUSIO', 'OSM', 'PagesJaunes', name='source_poi'), nullable=True)
+    admin = db.Column(db.Enum('OSM', 'FUSIO', name='source_admin'), nullable=True)
+
+    def __init__(self, shape=None, street=None, address=None,
+                 stop_area=None, poi=None, admin=None):
+        self.shape = shape
+        self.street = street
+        self.address = address
+        self.stop_area = stop_area
+        self.poi = poi
+        self.admin = admin
+
+    def __repr__(self):
+        return '<Autocomplete %r>' % self.name
+
+
