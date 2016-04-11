@@ -93,11 +93,16 @@ class Cleverage(RealtimeProxy):
 
         return url
 
+    def _get_passages(self, route_point, cleverage_resp):
+        logging.getLogger(__name__).debug('cleverage response: {}'.format(cleverage_resp))
+        line = route_point.pb_route.line
+        print line.code
+        #st_responses = cleverage_resp.get('StopTimesResponse')
+
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
         if not url:
             return None
-
         r = self._call_cleverage(url)
         if not r:
             return None
@@ -108,3 +113,4 @@ class Cleverage(RealtimeProxy):
                                               .format(r.url))
             return None
 
+        return self._get_passages(route_point, r.json())
