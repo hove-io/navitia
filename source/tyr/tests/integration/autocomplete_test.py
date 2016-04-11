@@ -94,7 +94,3 @@ def test_delete_autocomplete():
 
     _, status = api_get('/v0/autocomplete_parameters/france', check=False)
     assert status == 404
-
-
-
-
