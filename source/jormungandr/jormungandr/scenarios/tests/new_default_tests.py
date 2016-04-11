@@ -197,6 +197,17 @@ def culling_jounreys_2_test():
     assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN
                 for j in mocked_pb_response.journeys])
 
+def culling_jounreys_2_bis_test():
+    """
+    max_nb_journeys equals to nb of must-keep journeys ('comfort', 'best', 'non_pt_bike', 'non_pt_walk')
+    Here we test the case where max_nb_journeys equals to nb_journeys_must_have
+    """
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'max_nb_journeys': 4, 'debug': False}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+    assert len(mocked_pb_response.journeys) == 4
+    assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN
+                for j in mocked_pb_response.journeys])
 
 def culling_jounreys_3_test():
     mocked_pb_response = build_mocked_response()
