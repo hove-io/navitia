@@ -40,7 +40,7 @@ import logging
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
-from navitiacommon import models
+from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
 from validations import datetime_format
@@ -181,6 +181,17 @@ traveler_profile = {
     'first_section_mode': fields.List(fields.String),
     'last_section_mode': fields.List(fields.String),
     'error': fields.String,
+}
+
+autocomplete_parameter_fields = {
+    'id': fields.Raw,
+    'name': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'street': fields.Raw,
+    'address': fields.Raw,
+    'poi': fields.Raw,
+    'admin': fields.Raw
 }
 
 
@@ -944,3 +955,98 @@ class BillingPlan(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
+
+class AutocompleteParameter(flask_restful.Resource):
+    def get(self, name=None):
+        if name:
+            autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+            return marshal(autocomplete_param, autocomplete_parameter_fields)
+        else:
+            autocomplete_params = models.AutocompleteParameter.query.all()
+            return marshal(autocomplete_params, autocomplete_parameter_fields)
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=unicode, required=True,
+                            case_sensitive=False, help='name is required',
+                            location=('json', 'values'))
+        parser.add_argument('street', type=str, required=False, default='BANO',
+                            help='source for street: [BANO, OSM]',
+                            location=('json', 'values'),
+                            choices=utils.street_source_types)
+        parser.add_argument('address', type=str, required=False, default='BANO',
+                            help='source for address: [BANO, OpenAddresses]',
+                            location=('json', 'values'),
+                            choices=utils.address_source_types)
+        parser.add_argument('poi', type=str, required=False, default='FUSIO',
+                            help='source for poi: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=utils.poi_source_types)
+        parser.add_argument('admin', type=str, required=False, default='OSM',
+                            help='source for admin: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=utils.admin_source_types)
+
+        args = parser.parse_args()
+
+        try:
+            autocomplete_parameter = models.AutocompleteParameter()
+            autocomplete_parameter.name = args['name']
+            autocomplete_parameter.street = args['street']
+            autocomplete_parameter.address = args['address']
+            autocomplete_parameter.poi = args['poi']
+            autocomplete_parameter.admin = args['admin']
+            db.session.add(autocomplete_parameter)
+            db.session.commit()
+
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
+            return ({'error': 'duplicate name'}, 409)
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(autocomplete_parameter, autocomplete_parameter_fields)
+
+    def put(self, name=None):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        parser = reqparse.RequestParser()
+        parser.add_argument('street', type=str, required=False, default='BANO',
+                            help='source for street: [BANO, OSM]',
+                            location=('json', 'values'),
+                            choices= utils.street_source_types)
+        parser.add_argument('address', type=str, required=False, default='BANO',
+                            help='source for address: [BANO, OpenAddresses]',
+                            location=('json', 'values'),
+                            choices=utils.address_source_types)
+        parser.add_argument('poi', type=str, required=False, default='FUSIO',
+                            help='source for poi: [FUSIO, OSM, PagesJaunes]',
+                            location=('json', 'values'),
+                            choices=utils.poi_source_types)
+        parser.add_argument('admin', type=str, required=False, default='OSM',
+                            help='source for admin: [FUSIO, OSM]',
+                            location=('json', 'values'),
+                            choices=utils.admin_source_types)
+
+        args = parser.parse_args()
+
+        try:
+            autocomplete_param.street = args['street']
+            autocomplete_param.address = args['address']
+            autocomplete_param.poi = args['poi']
+            autocomplete_param.admin = args['admin']
+            db.session.commit()
+
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(autocomplete_param, autocomplete_parameter_fields)
+
+    def delete(self, name=None):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        try:
+            db.session.delete(autocomplete_param)
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return ({}, 204)
+
