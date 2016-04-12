@@ -40,6 +40,15 @@ import pybreaker
 import requests as requests
 from jormungandr import cache, app
 from datetime import datetime, time
+from navitiacommon.ratelimit import RateLimiter
+import redis
+
+class FakeRateLimiter(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def acquire(self, *args, **kwargs):
+        return True
 
 class SyntheseRoutePoint(object):
 
@@ -65,7 +74,9 @@ class Synthese(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, timezone, object_id_tag=None, timeout=10):
+    def __init__(self, id, service_url, timezone, object_id_tag=None, timeout=10, redis_host=None, redis_db=0,
+                 redis_port=6379, redis_password=None, max_requests_by_second=15,
+                 redis_namespace='jormungandr.rate_limiter'):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
@@ -73,6 +84,12 @@ class Synthese(RealtimeProxy):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'])
         self.timezone = pytz.timezone(timezone)
+        if not redis_host:
+            self.rate_limiter = FakeRateLimiter()
+        else:
+            self.rate_limiter = RateLimiter(conditions=[{'requests': max_requests_by_second, 'seconds': 1}],
+                                            redis_host=redis_host, redis_port=redis_port, redis_db=redis_db,
+                                            redis_password=redis_password, redis_namespace=redis_namespace)
 
     def __repr__(self):
         """
@@ -86,6 +103,8 @@ class Synthese(RealtimeProxy):
         http call to synthese
         """
         try:
+            if not self.rate_limiter.acquire(self.rt_system_id, block=False):
+                return None#this should not be cached :(
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Synthese RT service dead, using base '
@@ -93,6 +112,8 @@ class Synthese(RealtimeProxy):
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Synthese RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
+        except redis.ConnectionError:
+            logging.getLogger(__name__).exception('there is an error with Redis')
         except:
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
         return None
@@ -112,7 +133,7 @@ class Synthese(RealtimeProxy):
                                               .format(r.url))
             return None
 
-        logging.getLogger(__name__).info("synthese response: {}".format(r.text))
+        logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
         stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
         route_id = str(route_point.fetch_route_id(self.object_id_tag))
         route_point = SyntheseRoutePoint(route_id, stop_point_id)
