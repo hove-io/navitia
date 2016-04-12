@@ -190,7 +190,6 @@ autocomplete_parameter_fields = {
     'updated_at': FieldDate,
     'street': fields.Raw,
     'address': fields.Raw,
-    'stop_area': fields.Raw,
     'poi': fields.Raw,
     'admin': fields.Raw
 }
@@ -963,7 +962,7 @@ class AutocompleteParameter(flask_restful.Resource):
             return marshal(autocomplete_param, autocomplete_parameter_fields)
         else:
             autocomplete_params = models.AutocompleteParameter.query.all()
-            return marshal  (autocomplete_params, autocomplete_parameter_fields)
+            return marshal(autocomplete_params, autocomplete_parameter_fields)
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -978,10 +977,6 @@ class AutocompleteParameter(flask_restful.Resource):
                             help='source for address: [BANO, OpenAddresses]',
                             location=('json', 'values'),
                             choices=utils.address_source_types)
-        parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
-                            help='source for stop_area: [FUSIO, BANO]',
-                            location=('json', 'values'),
-                            choices=utils.stop_area_source_types)
         parser.add_argument('poi', type=str, required=False, default='FUSIO',
                             help='source for poi: [FUSIO, OSM]',
                             location=('json', 'values'),
@@ -998,7 +993,6 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.name = args['name']
             autocomplete_parameter.street = args['street']
             autocomplete_parameter.address = args['address']
-            autocomplete_parameter.stop_area = args['stop_area']
             autocomplete_parameter.poi = args['poi']
             autocomplete_parameter.admin = args['admin']
             db.session.add(autocomplete_parameter)
@@ -1022,10 +1016,6 @@ class AutocompleteParameter(flask_restful.Resource):
                             help='source for address: [BANO, OpenAddresses]',
                             location=('json', 'values'),
                             choices=utils.address_source_types)
-        parser.add_argument('stop_area', type=str, required=False, default='FUSIO',
-                            help='source for stop_area: [FUSIO, BANO]',
-                            location=('json', 'values'),
-                            choices=utils.stop_area_source_types)
         parser.add_argument('poi', type=str, required=False, default='FUSIO',
                             help='source for poi: [FUSIO, OSM, PagesJaunes]',
                             location=('json', 'values'),
@@ -1040,7 +1030,6 @@ class AutocompleteParameter(flask_restful.Resource):
         try:
             autocomplete_param.street = args['street']
             autocomplete_param.address = args['address']
-            autocomplete_param.stop_area = args['stop_area']
             autocomplete_param.poi = args['poi']
             autocomplete_param.admin = args['admin']
             db.session.commit()
