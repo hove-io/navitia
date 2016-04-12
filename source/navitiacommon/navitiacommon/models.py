@@ -36,7 +36,7 @@ from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
-from sqlalchemy import func, and_, UniqueConstraint, cast
+from sqlalchemy import func, and_, UniqueConstraint, cast, true
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from navitiacommon.utils import street_source_types, address_source_types, \
     poi_source_types, admin_source_types
@@ -291,6 +291,9 @@ class Instance(db.Model):
 
     priority = db.Column(db.Integer, default=default_values.priority,
                                   nullable=False, server_default='0')
+                                  
+    bss_provider = db.Column(db.Boolean, default=default_values.bss_provider,
+                                  nullable=False, server_default=true())
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
