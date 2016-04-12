@@ -276,3 +276,24 @@ def heartbeat():
             producer = connection.Producer(exchange=exchange)
             producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
 
+
+@celery.task()
+def create_autocomplete_depot(name):
+    autocomplete_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+
+    if os.path.exists(autocomplete_path):
+        name_path = os.path.join(autocomplete_path, name)
+        if not os.path.exists(name_path):
+            try:
+                os.mkdir(name_path)
+            except OSError:
+                logging.error('create directory {} failed'.fromat(name_path))
+
+
+@celery.task()
+def remove_autocomplete_depot(name):
+    autocomplete_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    if os.path.exists(autocomplete_path):
+        name_path = os.path.join(autocomplete_path, name)
+        if os.path.exists(name_path):
+            shutil.rmtree(name_path)

@@ -44,6 +44,7 @@ from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
 from validations import datetime_format
+from tasks import create_autocomplete_depot, remove_autocomplete_depot
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -998,6 +999,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.admin = args['admin']
             db.session.add(autocomplete_parameter)
             db.session.commit()
+            create_autocomplete_depot(autocomplete_parameter.name)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate name'}, 409)
@@ -1045,6 +1047,7 @@ class AutocompleteParameter(flask_restful.Resource):
         try:
             db.session.delete(autocomplete_param)
             db.session.commit()
+            remove_autocomplete_depot(name)
         except Exception:
             logging.exception("fail")
             raise
