@@ -110,15 +110,18 @@ class Cleverage(RealtimeProxy):
 
         schedules = [line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()]
 
-        next_passages = []
-        for next_expected_st in schedules[0]:
-            # for the moment we handle only the NextStop and the direction
-            dt = self._get_dt(next_expected_st['departure'])
-            direction = next_expected_st.get('destination_name')
-            next_passage = RealTimePassage(dt, direction)
-            next_passages.append(next_passage)
+        if schedules:
+            next_passages = []
+            for next_expected_st in schedules[0]:
+                # for the moment we handle only the NextStop and the direction
+                dt = self._get_dt(next_expected_st['departure'])
+                direction = next_expected_st.get('destination_name')
+                next_passage = RealTimePassage(dt, direction)
+                next_passages.append(next_passage)
 
-        return next_passages
+            return next_passages
+        else:
+            return None
 
 
 
