@@ -106,12 +106,12 @@ class Cleverage(RealtimeProxy):
     def _get_passages(self, route_point, cleverage_resp):
         logging.getLogger(__name__).debug('cleverage response: {}'.format(cleverage_resp))
 
-        line_code = route_point.pb_route.line.code
+        line_code = route_point.fetch_line_code()
 
-        chedules = [line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()]
+        schedules = [line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()]
 
         next_passages = []
-        for next_expected_st in chedules[0]:
+        for next_expected_st in schedules[0]:
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['departure'])
             direction = next_expected_st.get('destination_name')
