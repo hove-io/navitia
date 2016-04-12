@@ -64,10 +64,7 @@ class Cleverage(RealtimeProxy):
         http call to cleverage
         """
         try:
-            headers = {}
-            for k, v in self.service_args.items() :
-                headers[k] = v
-            return self.breaker.call(requests.get, url, timeout=self.timeout, headers=headers)
+            return self.breaker.call(requests.get, url, timeout=self.timeout, headers=self.service_args)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Cleverage RT service dead, using base '
                                               'schedule (error: {}'.format(e))
