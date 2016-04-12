@@ -35,3 +35,6 @@ class Stands(object):
         self.available_places = available_places
         self.available_bikes = available_bikes
         self.total_stands = available_places + available_bikes
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
