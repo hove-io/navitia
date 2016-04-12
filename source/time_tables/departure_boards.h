@@ -47,6 +47,22 @@ void departure_board(PbCreator& pb_creator, const std::string &filter,
                      int count, int start_page,
                      const type::RTLevel rt_level,
                      const size_t items_per_route_point);
+
+time_duration to_navitia (boost::posix_time::time_duration dur);
+
+bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing);
+
+time_duration length_of_time(const time_duration& duration_1,
+                       const time_duration& duration_2);
+
+bool line_closed (const time_duration& duration,
+                  const time_duration opening,
+                  const time_duration closing,
+                  const pt::ptime& date );
+
+bool line_closed (const time_duration& duration,
+                  const type::Route* route,
+                  const pt::ptime& date );
 }
 
 }

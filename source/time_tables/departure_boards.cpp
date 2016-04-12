@@ -92,6 +92,51 @@ render(PbCreator& pb_creator,
     }    
 }
 
+time_duration to_navitia (boost::posix_time::time_duration dur) {
+    return navitia::seconds(dur.total_seconds());
+}
+
+time_duration length_of_time(const time_duration& duration_1,
+                       const time_duration& duration_2) {
+    if (duration_1 <= duration_2) {
+        return duration_2 - duration_1;
+    } else {
+        return duration_2 + (hours(24) - duration_1);
+    }
+}
+
+bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing) {
+    if (opening < closing) {
+        return (opening <= me && me <= closing);
+    } else {
+        return (opening <= me || me <= closing);
+    }
+}
+
+bool line_closed (const time_duration& duration,
+                  const time_duration opening,
+                  const time_duration closing,
+                  const pt::ptime& date ) {
+    const auto begin = to_navitia(date.time_of_day());
+    if (!between_opening_and_closing(begin, opening, closing)
+            && !between_opening_and_closing((begin + duration), opening, closing)) {
+        if (duration < length_of_time(opening, closing) + length_of_time(begin, opening)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool line_closed (const time_duration& duration,
+                  const type::Route* route,
+                  const pt::ptime& date ) {
+    const auto opening = to_navitia(*route->line->opening_time);
+    const auto closing = to_navitia(*route->line->closing_time);
+    if (route->line->opening_time && route->line->closing_time) {
+        return line_closed(duration, opening, closing, date);
+    }
+    return false;
+}
 
 void departure_board(PbCreator& pb_creator, const std::string& request,
                 boost::optional<const std::string> calendar_id,
@@ -189,6 +234,9 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         //Else additional_information = no_departure_this_day
         if (stop_times.empty() && (response_status.find(route->idx) == response_status.end())) {
             auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
+            if (line_closed(navitia::seconds(duration), route, date)) {
+                  resp_status = pbnavitia::ResponseStatus::no_active_circulation_this_day;
+            }
             if (rt_level != navitia::type::RTLevel::Base) {
                 auto tmp_stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                                                               handler.max_datetime, 1, pb_creator.data,

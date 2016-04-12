@@ -771,3 +771,77 @@ BOOST_FIXTURE_TEST_CASE(base_stop_schedule_limit_per_schedule, departure_board_f
     BOOST_REQUIRE_EQUAL(sc2.date_times_size(), 1);
     BOOST_CHECK_EQUAL(sc2.date_times(0).time(), "11:30"_t);
 }
+
+BOOST_AUTO_TEST_CASE(length_of_time_test1) {
+    navitia::time_duration open(07,00,00);
+    navitia::time_duration close(23,00,00);
+    navitia::time_duration begin(00,00,00);
+    navitia::time_duration end(23,59,59);
+    BOOST_CHECK_EQUAL(length_of_time(open, close), navitia::time_duration(16,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(close, open), navitia::time_duration(8,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(close, close), navitia::time_duration(00,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(begin, end), navitia::time_duration(23,59,59));
+    BOOST_CHECK_EQUAL(length_of_time(end, begin), navitia::time_duration(00,00,01));
+}
+
+BOOST_AUTO_TEST_CASE(between_openin_and_closing_test1) {
+    navitia::time_duration open(07,00,00);
+    navitia::time_duration close(23,00,00);
+    navitia::time_duration begin(00,00,00);
+    navitia::time_duration end(23,59,59);
+    navitia::time_duration me(16,00,00);
+    BOOST_CHECK(between_opening_and_closing(me, open, close));
+    BOOST_CHECK(!between_opening_and_closing(me, close, open));
+    BOOST_CHECK(between_opening_and_closing(open, open, close));
+    BOOST_CHECK(between_opening_and_closing(close, open, close));
+    BOOST_CHECK(between_opening_and_closing(me, begin, end));
+    BOOST_CHECK(!between_opening_and_closing(me, end, begin));
+    BOOST_CHECK(!between_opening_and_closing(me, end, begin));
+}
+
+BOOST_AUTO_TEST_CASE(line_closed_test1) {
+    navitia::time_duration dur_1(00,05,00);
+    navitia::time_duration dur_2(02,00,00);
+    navitia::time_duration dur_3(01,00,00);
+    navitia::time_duration dur_4(18,00,00);
+
+    navitia::time_duration open_1(07,00,00);
+
+    navitia::time_duration close_1(23,00,00);
+
+    pt::ptime date_1 = boost::posix_time::time_from_string("2016-04-08 12:00:00");
+    pt::ptime date_2 = boost::posix_time::time_from_string("2016-04-08 06:00:00");
+    pt::ptime date_3 = boost::posix_time::time_from_string("2016-04-08 22:00:00");
+
+    BOOST_CHECK(!line_closed(dur_1, open_1, close_1,date_1));
+    BOOST_CHECK(line_closed(dur_1, open_1, close_1,date_2));
+    BOOST_CHECK(line_closed(dur_1, close_1, open_1,date_1));
+    BOOST_CHECK(!line_closed(dur_1, close_1, open_1,date_2));
+    BOOST_CHECK(!line_closed(dur_2, open_1, close_1,date_2));
+    BOOST_CHECK(!line_closed(dur_2, open_1, close_1,date_3));
+    BOOST_CHECK(!line_closed(dur_3, open_1, close_1,date_3));
+    BOOST_CHECK(!line_closed(dur_4, open_1, close_1,date_2));
+}
+
+BOOST_AUTO_TEST_CASE(departureboard_test_with_lines_closed) {
+    ed::builder b("20150615");
+    b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
+    b.vj("B", "110000001111", "", true, "vj2", "")("stop1", 00*3600 + 10*60, 00*3600 + 10*60)("stop2", 01*3600 + 40*60,01*3600 + 40*60)("stop3", 02*3600 + 50*60,02*3600 + 50*60);
+    b.lines["A"]->opening_time = boost::posix_time::time_duration(9,0,0);
+    b.lines["A"]->closing_time = boost::posix_time::time_duration(21,0,0);
+    b.lines["B"]->opening_time = boost::posix_time::time_duration(23,30,0);
+    b.lines["B"]->closing_time = boost::posix_time::time_duration(6,0,0);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    pbnavitia::Response resp;
+
+        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T063000"), 600, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+        resp = pb_creator.get_response();
+        BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::no_active_circulation_this_day);
+        BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), pbnavitia::ResponseStatus::no_active_circulation_this_day);
+}
