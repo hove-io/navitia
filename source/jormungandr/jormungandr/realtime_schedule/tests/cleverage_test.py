@@ -185,6 +185,61 @@ def mock_empty_response():
     mock_response = []
     return mock_response
 
+def mock_missing_line_response():
+    mock_response = [
+        {
+        "name" : "Lianes 4",
+        "code" : "04",
+        "type" : "Bus",
+        "schedules" : [
+            {
+                "vehicle_lattitude" : "44.792112483318",
+                "vehicle_longitude" : "-0.56718390706918",
+                "waittime_text" : "11 minutes",
+                "trip_id" : "268436451",
+                "schedule_id" : "268476273",
+                "destination_id" : "3341",
+                "destination_name" : "Piscine Chambéry",
+                "departure" : "2016-04-11 14:37:15",
+                "departure_commande" : "2016-04-11 14:40:17",
+                "departure_theorique" : "2016-04-11 14:40:17",
+                "arrival" : "2016-04-11 14:40:17",
+                "arrival_commande" : "2016-04-11 14:40:17",
+                "arrival_theorique" : "2016-04-11 14:40:17",
+                "comment" : "",
+                "realtime" : "1",
+                "waittime" : "00:10:53",
+                "updated_at" : "2016-04-11 14:26:21",
+                "vehicle_id" : "2662",
+                "vehicle_position_updated_at" : "2016-04-11 14:26:21",
+                "origin" : "bdsi"
+            },
+            {
+                "vehicle_lattitude" : "44.814043370749",
+                "vehicle_longitude" : "-0.57294492449656",
+                "waittime_text" : "19 minutes",
+                "trip_id" : "268436310",
+                "schedule_id" : "268468351",
+                "destination_id" : "3341",
+                "destination_name" : "Piscine Chambéry",
+                "departure" : "2016-04-11 14:49:35",
+                "departure_commande" : "2016-04-11 14:49:35",
+                "departure_theorique" : "2016-04-11 14:49:35",
+                "arrival" : "2016-04-11 14:49:35",
+                "arrival_commande" : "2016-04-11 14:49:35",
+                "arrival_theorique" : "2016-04-11 14:49:35",
+                "comment" : "",
+                "realtime" : "1",
+                "waittime" : "00:19:13",
+                "updated_at" : "2016-04-11 14:25:41",
+                "vehicle_id" : "2660",
+                "vehicle_position_updated_at" : "2016-04-11 14:26:21",
+                "origin" : "bdsi"
+            }
+        ]
+        }]
+    return mock_response
+
 class MockRoutePoint(object):
     def __init__(self, *args, **kwars):
         self._hardcoded_line_code = kwars['line_code']
@@ -231,6 +286,26 @@ def next_passage_for_empty_response_test():
     mock_requests = MockRequests({
         'http://bob.com/stop_tutu':
         (mock_empty_response(), 200)
+    })
+
+    route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
+
+    with mock.patch('requests.get', mock_requests.get):
+        passages = cleverage.next_passage_for_route_point(route_point)
+
+        assert passages is None
+
+def next_passage_for_missing_line_response_test():
+    """
+    test the whole next_passage_for_route_point
+    mock the http call to return a good response, we should get some next_passages
+    """
+    cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
+                          service_args={'a': 'bobette', 'b': '12'})
+
+    mock_requests = MockRequests({
+        'http://bob.com/stop_tutu':
+        (mock_missing_line_response(), 200)
     })
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
