@@ -46,7 +46,7 @@ namespace navitia { namespace timetables {
 
 static void
 render(PbCreator& pb_creator,
-          const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
+          const std::map<stop_point_route, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_route, vector_dt_st>& map_route_stop_point,
           DateTime datetime,
           DateTime max_datetime,
@@ -85,7 +85,7 @@ render(PbCreator& pb_creator,
                 }
             }
         }
-        const auto& it = response_status.find(id_vec.first.second.val);
+        const auto& it = response_status.find(id_vec.first);
         if(it != response_status.end()){
             schedule->set_response_status(it->second);
         }
@@ -158,8 +158,8 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             return;
         }
     }
-    //  <idx_route, status>
-    std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
+    //  <StopPoint, status>
+    std::map<stop_point_route, pbnavitia::ResponseStatus> response_status;
 
     std::map<stop_point_route, vector_dt_st> map_route_stop_point;
 
@@ -222,9 +222,9 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
             if (sp_route.first == last_jpp.sp_idx) {
                 if (stop_point->stop_area == route->destination) {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                    response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
                 } else {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
+                    response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
                 }
             }
         }
@@ -232,7 +232,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         //If there is no departure for a request with "RealTime", Test existance of any departure with "base_schedule"
         //If departure with base_schedule is not empty, additional_information = active_disruption
         //Else additional_information = no_departure_this_day
-        if (stop_times.empty() && (response_status.find(route->idx) == response_status.end())) {
+        if (stop_times.empty() && (response_status.find(sp_route) == response_status.end())) {
             auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
             if (line_closed(navitia::seconds(duration), route, date)) {
                   resp_status = pbnavitia::ResponseStatus::no_active_circulation_this_day;
@@ -243,7 +243,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                                                               navitia::type::RTLevel::Base);
                 if (!tmp_stop_times.empty()) { resp_status = pbnavitia::ResponseStatus::active_disruption; }
             }
-            response_status[route->idx] = resp_status;
+            response_status[sp_route] = resp_status;
         }
 
         map_route_stop_point[sp_route] = stop_times;
