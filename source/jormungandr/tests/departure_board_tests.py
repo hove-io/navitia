@@ -397,6 +397,21 @@ class TestDepartureBoard(AbstractTestFixture):
                 # assert that if it's the 'all' vj there is no note
                 assert(len(vj_link) == 0 or len(notes_link) == 0)
 
+    def test_line_closed(self):
+        """
+        Check the ResponseStatus when the line is closed
+        """
+        response_1 = self.query_region("lines/C/stop_schedules?from_datetime=20120614T0830&duration=600")
+        response_2 = self.query_region("lines/D/stop_schedules?from_datetime=20120614T0700&duration=600")
+        import json
+        print(json.dumps(response_2))
+        # Check that when the line is closed the additional_information is no_active_circulation_this_day for all
+        # the stop_schedules which are not partial_terminus
+        assert response_1['stop_schedules'][0]['additional_informations'] == 'no_active_circulation_this_day'
+        assert response_1['stop_schedules'][1]['additional_informations'] == 'partial_terminus'
+        assert response_2['stop_schedules'][0]['additional_informations'] == 'no_active_circulation_this_day'
+        assert response_2['stop_schedules'][1]['additional_informations'] == 'no_active_circulation_this_day'
+        assert response_2['stop_schedules'][2]['additional_informations'] == 'partial_terminus'
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])

@@ -156,7 +156,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             return;
         }
     }
-    //  <StopPoint, status>
+    //  <stop_point_route, status>
     std::map<stop_point_route, pbnavitia::ResponseStatus> response_status;
 
     std::map<stop_point_route, vector_dt_st> map_route_stop_point;
