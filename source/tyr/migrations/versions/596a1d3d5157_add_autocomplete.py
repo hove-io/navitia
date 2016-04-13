@@ -1,14 +1,14 @@
 """add table autocomplete which keeps tracks of data source for world wide autocomplete
 
 Revision ID: 596a1d3d5157
-Revises: 4d83f15e09b9
+Revises: 18862ea09b6d
 Create Date: 2016-04-08 09:56:45.535055
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '596a1d3d5157'
-down_revision = '4d83f15e09b9'
+down_revision = '18862ea09b6d'
 
 from alembic import op
 import sqlalchemy as sa
