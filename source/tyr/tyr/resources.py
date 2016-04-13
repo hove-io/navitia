@@ -999,7 +999,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.admin = args['admin']
             db.session.add(autocomplete_parameter)
             db.session.commit()
-            create_autocomplete_depot.delay(autocomplete_parameter.name)
+            create_autocomplete_depot.delay(autocomplete_parameter)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate name'}, 409)
@@ -1036,6 +1036,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_param.poi = args['poi']
             autocomplete_param.admin = args['admin']
             db.session.commit()
+            create_autocomplete_depot.delay(autocomplete_param)
 
         except Exception:
             logging.exception("fail")
@@ -1047,7 +1048,7 @@ class AutocompleteParameter(flask_restful.Resource):
         try:
             db.session.delete(autocomplete_param)
             db.session.commit()
-            remove_autocomplete_depot.delay(name)
+            remove_autocomplete_depot.delay(autocomplete_param)
         except Exception:
             logging.exception("fail")
             raise

@@ -507,6 +507,15 @@ class AutocompleteParameter(db.Model, TimestampMixin):
         self.poi = poi
         self.admin = admin
 
+    def main_dir(self, root_path):
+        return '{}/{}'.format(root_path, self.name)
+
+    def source_dir(self, root_path):
+        return '{}/{}/{}'.format(root_path, self.name, "source")
+
+    def backup_dir(self, root_path):
+        return '{}/{}/{}'.format(root_path, self.name, "backup")
+
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name
 
