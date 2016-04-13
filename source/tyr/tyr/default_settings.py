@@ -24,7 +24,7 @@ CITIES_DATABASE_URI = 'postgresql://navitia:navitia@localhost/cities'
 #Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = '.'
 
-#Path to the directory where the data sources for autocopmlete are stocked
+#Path to the directory where the data sources for autocomplete are stocked
 TYR_AUTOCOMPLETE_DIR = "/srv/ed/autocomplete"
 
 #Log Level available
@@ -107,6 +107,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(minutes=1),
         'options': {'expires': 50}
     },
+    'udpate-autocomplete-every-30-seconds': {
+        'task': 'tyr.tasks.update_autocomplete',
+        'schedule': timedelta(seconds=30),
+        'options': {'expires': 25}
+    },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
         'schedule': timedelta(minutes=30),
@@ -119,3 +124,5 @@ CELERY_TIMEZONE = 'UTC'
 CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
 
 CELERYD_HIJACK_ROOT_LOGGER = False
+
+MIMIR_URL = 'http://localhost:9200'

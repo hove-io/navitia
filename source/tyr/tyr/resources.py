@@ -975,8 +975,8 @@ class AutocompleteParameter(flask_restful.Resource):
         parser.add_argument('name', type=unicode, required=True,
                             case_sensitive=False, help='name is required',
                             location=('json', 'values'))
-        parser.add_argument('street', type=str, required=False, default='BANO',
-                            help='source for street: [BANO, OSM]',
+        parser.add_argument('street', type=str, required=False, default='OSM',
+                            help='source for street: [OSM]',
                             location=('json', 'values'),
                             choices=utils.street_source_types)
         parser.add_argument('address', type=str, required=False, default='BANO',
@@ -1053,7 +1053,6 @@ class AutocompleteParameter(flask_restful.Resource):
             remove_autocomplete_depot.delay(name)
             db.session.delete(autocomplete_param)
             db.session.commit()
-
         except Exception:
             logging.exception("fail")
             raise
