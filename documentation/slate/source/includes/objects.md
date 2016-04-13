@@ -146,7 +146,7 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
 
 
-### Pt_object
+### <a name="pt-object"></a>Pt_object
 
 A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
 [stop_area](#stop_point), [stop_area](#stop_point)
