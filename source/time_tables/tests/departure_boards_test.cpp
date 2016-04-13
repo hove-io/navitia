@@ -776,65 +776,51 @@ BOOST_FIXTURE_TEST_CASE(base_stop_schedule_limit_per_schedule, departure_board_f
  * Check if length_of_time return the correct duration
  */
 BOOST_AUTO_TEST_CASE(length_of_time_test1) {
-    auto dur_0h = 0_h;
-    auto dur_7h = 7_h;
-    auto dur_23h = 23_h;
-    auto dur_23h59min59s = 24_h-1_s;
+    auto almost_midnight = 24_h-1_s;
     // Check when the arguments are in the same day
-    BOOST_CHECK_EQUAL(length_of_time(dur_7h, dur_23h),  16_h);
-    BOOST_CHECK_EQUAL(length_of_time(dur_0h, dur_23h59min59s), navitia::time_duration(23,59,59));
+    BOOST_CHECK_EQUAL(length_of_time(7_h, 23_h),  16_h);
+    BOOST_CHECK_EQUAL(length_of_time(0_h, almost_midnight), navitia::time_duration(23,59,59));
     // Check when the arguments are in two different days
-    BOOST_CHECK_EQUAL(length_of_time(dur_23h, dur_7h), navitia::time_duration(8,00,00));
-    BOOST_CHECK_EQUAL(length_of_time(dur_23h59min59s, dur_0h), navitia::time_duration(00,00,01));
+    BOOST_CHECK_EQUAL(length_of_time(23_h, 7_h), navitia::time_duration(8,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(almost_midnight, 0_h), navitia::time_duration(00,00,01));
     // Check when the duration is null
-    BOOST_CHECK_EQUAL(length_of_time(dur_23h, dur_23h), navitia::time_duration(00,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(23_h, 23_h), navitia::time_duration(00,00,00));
 }
 
 /*
  * Asking if a date is between an opening and a closing time
  */
 BOOST_AUTO_TEST_CASE(between_openin_and_closing_test1) {
-    auto dur_0h = 0_h;
-    auto dur_7h = 7_h;
-    auto dur_16h = 16_h;
-    auto dur_23h = 23_h;
-    auto dur_23h59min59s = 24_h-1_s;
-    // When the date is between the opening and closing time
-    BOOST_CHECK(between_opening_and_closing(dur_16h, dur_7h, dur_23h));
-    BOOST_CHECK(between_opening_and_closing(dur_7h, dur_7h, dur_23h));
-    BOOST_CHECK(between_opening_and_closing(dur_23h, dur_7h, dur_23h));
-    BOOST_CHECK(between_opening_and_closing(dur_16h, dur_0h, dur_23h59min59s));
-    BOOST_CHECK(!between_opening_and_closing(dur_16h, dur_23h, dur_7h));
-    // When the date is between the opening and closing time
-    BOOST_CHECK(!between_opening_and_closing(dur_16h, dur_23h59min59s, dur_0h));
-    BOOST_CHECK(!between_opening_and_closing(dur_16h, dur_23h59min59s, dur_0h));
+    auto almost_midnight = 24_h-1_s;
+    // When the line is open
+    BOOST_CHECK(between_opening_and_closing(16_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(7_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(23_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(16_h, 0_h, almost_midnight));
+    // When the line is closed
+    BOOST_CHECK(!between_opening_and_closing(16_h, 23_h, 7_h));
+    BOOST_CHECK(!between_opening_and_closing(16_h, almost_midnight, 0_h));
 }
 
 /*
  * Check if a line is closed for a given date and a given duration from this date
  */
 BOOST_AUTO_TEST_CASE(line_closed_test1) {
-    auto dur_5min = 5_min;
-    auto dur_1h = 1_h;
-    auto dur_2h = 2_h;
-    auto dur_7h = 7_h;
-    auto dur_18h = 18_h;
-    auto dur_23h = 23_h;
-    pt::ptime pt_12h = boost::posix_time::time_from_string("2016-04-08 12:00:00");
-    pt::ptime pt_6h = boost::posix_time::time_from_string("2016-04-08 06:00:00");
-    pt::ptime pt_22h = boost::posix_time::time_from_string("2016-04-08 22:00:00");
+    pt::ptime pt_12h = "20140101T120000"_dt;
+    pt::ptime pt_6h = "20140101T060000"_dt;
+    pt::ptime pt_22h = "20140101T220000"_dt;
     //When the line is not closed
-    BOOST_CHECK(!line_closed(dur_5min, dur_7h, dur_23h,pt_12h));
-    BOOST_CHECK(!line_closed(dur_2h, dur_7h, dur_23h,pt_6h));
-    BOOST_CHECK(!line_closed(dur_2h, dur_7h, dur_23h,pt_22h));
-    BOOST_CHECK(!line_closed(dur_1h, dur_7h, dur_23h,pt_22h));
+    BOOST_CHECK(!line_closed(5_min, 7_h, 23_h,pt_12h));
+    BOOST_CHECK(!line_closed(2_h, 7_h, 23_h,pt_6h));
+    BOOST_CHECK(!line_closed(2_h, 7_h, 23_h,pt_22h));
+    BOOST_CHECK(!line_closed(1_h, 7_h, 23_h,pt_22h));
     //When the line is not closed and the duration is bigger than the time between the opening and the closing
-    BOOST_CHECK(!line_closed(dur_18h, dur_7h, dur_23h,pt_6h));
+    BOOST_CHECK(!line_closed(18_h, 7_h, 23_h,pt_6h));
     //When the line is not closed and the opening is not the same date of the closing
-    BOOST_CHECK(!line_closed(dur_2h, dur_23h, dur_7h,pt_22h));
+    BOOST_CHECK(!line_closed(2_h, 23_h, 7_h,pt_22h));
     // When the line is closed
-    BOOST_CHECK(line_closed(dur_5min, dur_7h, dur_23h,pt_6h));
-    BOOST_CHECK(line_closed(dur_5min, dur_23h, dur_7h,pt_12h));
+    BOOST_CHECK(line_closed(5_min, 7_h, 23_h,pt_6h));
+    BOOST_CHECK(line_closed(5_min, 23_h, 7_h,pt_12h));
 
 }
 

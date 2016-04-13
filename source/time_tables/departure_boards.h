@@ -61,9 +61,4 @@ bool line_closed (const time_duration& duration,
                   const time_duration& closing,
                   const pt::ptime& date );
 
-bool line_closed (const time_duration& duration,
-                  const type::Route* route,
-                  const pt::ptime& date );
-}
-
-}
+}}

@@ -403,15 +403,17 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response_1 = self.query_region("lines/C/stop_schedules?from_datetime=20120614T0830&duration=600")
         response_2 = self.query_region("lines/D/stop_schedules?from_datetime=20120614T0700&duration=600")
-        import json
-        print(json.dumps(response_2))
         # Check that when the line is closed the additional_information is no_active_circulation_this_day for all
         # the stop_schedules which are not partial_terminus
-        assert response_1['stop_schedules'][0]['additional_informations'] == 'no_active_circulation_this_day'
-        assert response_1['stop_schedules'][1]['additional_informations'] == 'partial_terminus'
-        assert response_2['stop_schedules'][0]['additional_informations'] == 'no_active_circulation_this_day'
-        assert response_2['stop_schedules'][1]['additional_informations'] == 'no_active_circulation_this_day'
-        assert response_2['stop_schedules'][2]['additional_informations'] == 'partial_terminus'
+        ss1_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop1_C')
+        ss2_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop2_C')
+        ss1_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop1_D' or
+                                                                   ss['stop_point']['id'] == 'stop2_D'))
+        ss3_d = next(ss for ss in response_2['stop_schedules'] if ss['stop_point']['id'] == 'stop3_D')
+        assert ss1_c['additional_informations'] == 'no_active_circulation_this_day'
+        assert ss2_c['additional_informations'] == 'partial_terminus'
+        assert ss1_d['additional_informations'] == 'no_active_circulation_this_day'
+        assert ss3_d['additional_informations'] == 'partial_terminus'
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])

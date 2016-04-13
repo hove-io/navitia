@@ -92,7 +92,7 @@ render(PbCreator& pb_creator,
     }    
 }
 
-static time_duration to_navitia (const boost::posix_time::time_duration& dur) {
+static time_duration to_navitia(const boost::posix_time::time_duration& dur) {
     return navitia::seconds(dur.total_seconds());
 }
 
@@ -116,18 +116,18 @@ bool between_opening_and_closing(const time_duration& me,
 }
 
 bool line_closed (const time_duration& duration,
-                  const time_duration& opening,
-                  const time_duration& closing,
-                  const pt::ptime& date ) {
+             const time_duration& opening,
+             const time_duration& closing,
+             const pt::ptime& date) {
     const auto begin = to_navitia(date.time_of_day());
     return !between_opening_and_closing(begin, opening, closing)
             && !between_opening_and_closing((begin + duration), opening, closing)
-            && duration < length_of_time(opening, closing) + length_of_time(begin, opening);
+            && duration < (length_of_time(opening, closing) + length_of_time(begin, opening));
 }
 
-bool line_closed (const time_duration& duration,
+static bool line_closed (const time_duration& duration,
                   const type::Route* route,
-                  const pt::ptime& date ) {
+                  const pt::ptime& date) {
     if (route->line->opening_time && route->line->closing_time) {
         const auto opening = to_navitia(*route->line->opening_time);
         const auto closing = to_navitia(*route->line->closing_time);
