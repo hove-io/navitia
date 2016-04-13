@@ -151,8 +151,8 @@ struct calendar_fixture {
             ("ODTstop2", 11*3600 + 30*60, 11*3600 + 30*60);
 
         // Check line opening in stop schedules
-        b.vj("C", "110011000001", "", true, "vj1", "")("stop1", 11*3600, 11*3600)("stop2", 11*3600 + 30*60,11 *3600 + 30*60);
-        b.vj("D", "110000001111", "", true, "vj2", "")("stop1", 00*3600 + 10*60, 00*3600 + 10*60)("stop2", 01*3600 + 40*60,01*3600 + 40*60)("stop3", 02*3600 + 50*60,02*3600 + 50*60);
+        b.vj("C", "110011000001", "", true, "vj_C", "")("stop1_C", 11*3600, 11*3600)("stop2_C", 11*3600 + 30*60,11 *3600 + 30*60);
+        b.vj("D", "110000001111", "", true, "vj_D", "")("stop1_D", 00*3600 + 10*60, 00*3600 + 10*60)("stop2_D", 01*3600 + 40*60,01*3600 + 40*60)("stop3_D", 02*3600 + 50*60,02*3600 + 50*60);
         b.lines["C"]->opening_time = boost::posix_time::time_duration(9,0,0);
         b.lines["C"]->closing_time = boost::posix_time::time_duration(21,0,0);
         b.lines["D"]->opening_time = boost::posix_time::time_duration(23,30,0);
