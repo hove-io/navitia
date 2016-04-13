@@ -298,6 +298,7 @@ def create_autocomplete_depot(name):
 def remove_autocomplete_depot(name):
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
     if os.path.exists(autocomplete_dir):
-        main_dir = os.path.join(autocomplete_dir, name)
+        autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        main_dir = autocomplete.main_dir(autocomplete_dir)
         if os.path.exists(main_dir):
             shutil.rmtree(main_dir)

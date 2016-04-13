@@ -1050,9 +1050,10 @@ class AutocompleteParameter(flask_restful.Resource):
     def delete(self, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         try:
+            remove_autocomplete_depot.delay(name)
             db.session.delete(autocomplete_param)
             db.session.commit()
-            remove_autocomplete_depot.delay(name)
+
         except Exception:
             logging.exception("fail")
             raise
