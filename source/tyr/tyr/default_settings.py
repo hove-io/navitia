@@ -24,6 +24,9 @@ CITIES_DATABASE_URI = 'postgresql://navitia:navitia@localhost/cities'
 #Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = '.'
 
+#Path to the directory where the data sources for autocopmlete are stocked
+TYR_AUTOCOMPLETE_DIR = "/srv/ed/autocomplete"
+
 #Log Level available
 # - DEBUG
 # - INFO
