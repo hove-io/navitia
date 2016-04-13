@@ -287,9 +287,9 @@ def create_autocomplete_depot(name):
             try:
                 os.mkdir(name_path)
             except OSError:
-                logging.error('create directory {} failed'.fromat(name_path))
+                logging.error('create directory {} failed'.format(name_path))
     else:
-        logging.error('directory {} does not exist.'.fromat(autocomplete_path))
+        logging.error('directory {} does not exist'.format(autocomplete_path))
 
 
 @celery.task()
