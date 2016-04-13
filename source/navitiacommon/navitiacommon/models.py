@@ -42,6 +42,7 @@ from navitiacommon.utils import street_source_types, address_source_types, \
     poi_source_types, admin_source_types
 
 from navitiacommon import default_values
+import os
 
 db = SQLAlchemy()
 
@@ -508,13 +509,13 @@ class AutocompleteParameter(db.Model, TimestampMixin):
         self.admin = admin
 
     def main_dir(self, root_path):
-        return '{}/{}'.format(root_path, self.name)
+        return os.path.join(root_path, self.name)
 
     def source_dir(self, root_path):
-        return '{}/{}/{}'.format(root_path, self.name, "source")
+        return os.path.join(self.main_dir(root_path), "source")
 
     def backup_dir(self, root_path):
-        return '{}/{}/{}'.format(root_path, self.name, "backup")
+        return os.path.join(self.main_dir(root_path), "backup")
 
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name
