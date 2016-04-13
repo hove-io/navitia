@@ -92,7 +92,7 @@ render(PbCreator& pb_creator,
     }    
 }
 
-time_duration to_navitia (boost::posix_time::time_duration dur) {
+static time_duration to_navitia (const boost::posix_time::time_duration& dur) {
     return navitia::seconds(dur.total_seconds());
 }
 
@@ -105,7 +105,9 @@ time_duration length_of_time(const time_duration& duration_1,
     }
 }
 
-bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing) {
+bool between_opening_and_closing(const time_duration& me,
+                                 const time_duration& opening,
+                                 const time_duration& closing) {
     if (opening < closing) {
         return (opening <= me && me <= closing);
     } else {
@@ -114,25 +116,21 @@ bool between_opening_and_closing(const time_duration& me, const time_duration& o
 }
 
 bool line_closed (const time_duration& duration,
-                  const time_duration opening,
-                  const time_duration closing,
+                  const time_duration& opening,
+                  const time_duration& closing,
                   const pt::ptime& date ) {
     const auto begin = to_navitia(date.time_of_day());
-    if (!between_opening_and_closing(begin, opening, closing)
-            && !between_opening_and_closing((begin + duration), opening, closing)) {
-        if (duration < length_of_time(opening, closing) + length_of_time(begin, opening)) {
-            return true;
-        }
-    }
-    return false;
+    return !between_opening_and_closing(begin, opening, closing)
+            && !between_opening_and_closing((begin + duration), opening, closing)
+            && duration < length_of_time(opening, closing) + length_of_time(begin, opening);
 }
 
 bool line_closed (const time_duration& duration,
                   const type::Route* route,
                   const pt::ptime& date ) {
-    const auto opening = to_navitia(*route->line->opening_time);
-    const auto closing = to_navitia(*route->line->closing_time);
     if (route->line->opening_time && route->line->closing_time) {
+        const auto opening = to_navitia(*route->line->opening_time);
+        const auto closing = to_navitia(*route->line->closing_time);
         return line_closed(duration, opening, closing, date);
     }
     return false;
