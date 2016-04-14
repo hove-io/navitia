@@ -30,9 +30,9 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr import cache, app
-from urllib2 import URLError, HTTPError, urlopen
+import pybreaker
+import requests as requests
 import logging
-import json
 
 
 class JcdecauxProvider(BssProvider):
@@ -40,24 +40,32 @@ class JcdecauxProvider(BssProvider):
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
     OPERATOR = 'JCDecaux'
 
-    def __init__(self, network, contract, api_key):
+    def __init__(self, network, contract, api_key, timeout=10):
         self.network = network
         self.contract = contract
         self.api_key = api_key
+        self.timeout = timeout
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'],
+                                                reset_timeout=app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
         return properties.get('operator') == self.OPERATOR and \
                properties.get('network') == self.network
 
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 5))
     def _call_webservice(self, station_id):
         try:
-            response = urlopen(self.WS_URL_TEMPLATE.format(station_id, self.contract, self.api_key))
-            return json.load(response)
-        except (URLError, HTTPError, ValueError, KeyError, TypeError) as e:
-            logging.getLogger(__name__).info(str(e))
+            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(station_id, self.contract, self.api_key), timeout=self.timeout)
+            return data.json()
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('JCDecaux service dead (error: {})'.format(e))
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('JCDecaux service timeout (error: {})'.format(t))
+        except:
+            logging.getLogger(__name__).exception('JCDecaux error')
+        return None
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 5))
     def get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')
         data = self._call_webservice(ref)
