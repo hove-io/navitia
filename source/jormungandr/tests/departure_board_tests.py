@@ -407,12 +407,13 @@ class TestDepartureBoard(AbstractTestFixture):
         # the stop_schedules which are not partial_terminus
         ss1_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop1_C')
         ss2_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop2_C')
-        ss1_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop1_D' or
-                                                                   ss['stop_point']['id'] == 'stop2_D'))
+        ss1_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop1_D'))
+        ss2_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop2_D'))
         ss3_d = next(ss for ss in response_2['stop_schedules'] if ss['stop_point']['id'] == 'stop3_D')
         assert ss1_c['additional_informations'] == 'no_active_circulation_this_day'
         assert ss2_c['additional_informations'] == 'partial_terminus'
         assert ss1_d['additional_informations'] == 'no_active_circulation_this_day'
+        assert ss2_d['additional_informations'] == 'no_active_circulation_this_day'
         assert ss3_d['additional_informations'] == 'partial_terminus'
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
