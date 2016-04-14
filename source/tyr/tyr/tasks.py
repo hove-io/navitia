@@ -148,7 +148,7 @@ def update_data():
         import_data(files, instance, backup_file=True)
 
 
-BANO_REGEXP = re.compile('.*bano.*\.csv')
+BANO_REGEXP = re.compile('.*bano.*')
 
 
 def type_of_autocomplete_data(filename):
@@ -210,7 +210,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
                                                  filename=filename, dataset_uid=dataset.uid))
         else:
             #unknown type, we skip it
-            current_app.logger.debug("unknwn file type: {} for file {}"
+            current_app.logger.debug("unknown file type: {} for file {}"
                                      .format(dataset.type, _file))
             continue
 
