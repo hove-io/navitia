@@ -41,6 +41,7 @@ from flask import current_app
 import kombu
 from shapely.geometry import MultiPolygon
 from shapely import wkt
+from zipfile import BadZipfile
 import sqlalchemy
 
 from navitiacommon.launch_exec import launch_exec
@@ -56,8 +57,11 @@ def unzip_if_needed(filename):
     if not os.path.isdir(filename):
         # if it's not a directory, we consider it's a zip, and we unzip it
         working_directory = os.path.dirname(filename)
-        zip_file = zipfile.ZipFile(filename)
-        zip_file.extractall(path=working_directory)
+        try:
+            zip_file = zipfile.ZipFile(filename)
+            zip_file.extractall(path=working_directory)
+        except BadZipfile:
+            return filename  # the file is not a zip, we don't do anything
     else:
         working_directory = filename
     return working_directory
@@ -486,6 +490,51 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         if res != 0:
             #@TODO: exception
             raise ValueError('fare2ed failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+
+
+MIMIR_INDEX = 'munin'  # TODO better handle this index
+
+@celery.task(bind=True)
+def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
+    """ launch bano2mimir """
+    logger = logging.getLogger("autocomplete")
+    job = models.Job.query.get(job_id)
+    cnx_string = current_app.config['MIMIR_URL'] + '/' + MIMIR_INDEX
+    working_directory = unzip_if_needed(filename)
+    try:
+        res = launch_exec("bano2mimir",
+                          ['-i', working_directory, '--connection-string', cnx_string],
+                          logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('bano2mimir failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+
+
+@celery.task(bind=True)
+def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
+    """ launch osm2mimir """
+    logger = logging.getLogger("autocomplete")
+    logger.debug('running osm2mimir for {}'.format(job_id))
+    job = models.Job.query.get(job_id)
+    cnx_string = current_app.config['MIMIR_URL'] + '/' + MIMIR_INDEX
+    working_directory = unzip_if_needed(filename)
+    try:
+        res = launch_exec("osm2mimir",
+                          ['-i', working_directory, '--connection-string', cnx_string],
+                          logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('osm2mimir failed')
     except:
         logger.exception('')
         job.state = 'failed'
