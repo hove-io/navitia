@@ -247,7 +247,7 @@ struct Autocomplete
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant tous ces mots*/
-    std::vector<T> find(std::set<std::string> vecStr) const {
+    std::vector<T> find(const std::set<std::string>& vecStr) const {
         std::vector<T> result;
         auto vec = vecStr.begin();
         if(vec != vecStr.end()){
@@ -304,13 +304,12 @@ struct Autocomplete
         }
     };
 
-    std::vector<fl_quality> sort_and_truncate_by_score(std::vector<fl_quality> input, size_t nbmax) const {
-        sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.score > b.score;});
-        return input;
+    void sort_and_truncate_by_score(std::vector<fl_quality>& input, size_t nbmax) const {
+        sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.score > b.score;});
     }
 
-    std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality> input, size_t nbmax) const {
-        sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.quality > b.quality;});
+    std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality>& input, size_t nbmax) const {
+        sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.quality > b.quality;});
         return input;
     }
 
@@ -341,9 +340,22 @@ struct Autocomplete
                 vec_quality.push_back(quality);
             }
         }
-        return sort_and_truncate_by_score(vec_quality, nbmax);
+        sort_and_truncate_by_score(vec_quality, nbmax);
+        return vec_quality;
     }
 
+
+    std::vector<fl_quality> compute_vec_quality(const std::string& str,
+                                                const std::vector<T>& index_result,
+                                                const navitia::georef::GeoRef& geo_ref,
+                                                std::function<bool(T)> keep_element,
+                                                int word_length) const;
+
+    std::vector<fl_quality> find_complete_way(const std::string & str,
+                                              size_t nbmax,
+                                              std::function<bool(T)> keep_element,
+                                              const std::set<std::string>& ghostwords,
+                                              const navitia::georef::GeoRef& geo_ref) const;
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
@@ -525,5 +537,7 @@ struct Autocomplete
         return result;
     }
 };
+
+extern template class Autocomplete<navitia::type::idx_t>;
 
 }} // namespace navitia::autocomplete

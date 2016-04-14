@@ -477,7 +477,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
         int i = 0;
         for(auto token : tokens){
             if (i != 0){
-                search_str = search_str + " " + token;
+                search_str += token + " ";
             }
             ++i;
            }
@@ -485,7 +485,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
         search_str = str;
     }
     if (search_type == 0){
-        to_return = fl_way.find_complete(search_str, nbmax, keep_element, ghostwords);
+        to_return = fl_way.find_complete_way(search_str, nbmax, keep_element, ghostwords, *this);
     }else{
         to_return = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element, ghostwords);
     }
