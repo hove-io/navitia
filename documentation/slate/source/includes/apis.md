@@ -311,7 +311,8 @@ chapter
 Also known as `/pt_objects` service.
 
 This endpoint allows you to search in public transport objects using their names. It's a kind
-of magical [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) on public transport data. It returns a collection of [pt_object](#pt-object).
+of magical [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) on public transport data. 
+It returns a collection of [pt_object](#pt-object).
 
 ### How does it works
 
@@ -413,7 +414,8 @@ Also known as `/places` service.
 This endpoint allows you to search in all geographical objects using their names, returning
 a [place](#place) collection.
 
-It is very useful to make some [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) stuff, even if the user has mittens.
+It is very useful to make some [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) stuff ie 
+to understand the user input even if he has mittens.
 
 Differents kind of objects can be returned (sorted as):
 
