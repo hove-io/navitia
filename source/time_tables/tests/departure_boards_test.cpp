@@ -771,3 +771,88 @@ BOOST_FIXTURE_TEST_CASE(base_stop_schedule_limit_per_schedule, departure_board_f
     BOOST_REQUIRE_EQUAL(sc2.date_times_size(), 1);
     BOOST_CHECK_EQUAL(sc2.date_times(0).time(), "11:30"_t);
 }
+
+/*
+ * Check if length_of_time return the correct duration
+ */
+BOOST_AUTO_TEST_CASE(length_of_time_test1) {
+    auto almost_midnight = 24_h-1_s;
+    // Check when the arguments are in the same day
+    BOOST_CHECK_EQUAL(length_of_time(7_h, 23_h),  16_h);
+    BOOST_CHECK_EQUAL(length_of_time(0_h, almost_midnight), navitia::time_duration(23,59,59));
+    // Check when the arguments are in two different days
+    BOOST_CHECK_EQUAL(length_of_time(23_h, 7_h), navitia::time_duration(8,00,00));
+    BOOST_CHECK_EQUAL(length_of_time(almost_midnight, 0_h), navitia::time_duration(00,00,01));
+    // Check when the duration is null
+    BOOST_CHECK_EQUAL(length_of_time(23_h, 23_h), navitia::time_duration(00,00,00));
+}
+
+/*
+ * Asking if a date is between an opening and a closing time
+ */
+BOOST_AUTO_TEST_CASE(between_openin_and_closing_test1) {
+    auto almost_midnight = 24_h-1_s;
+    // When the line is open
+    BOOST_CHECK(between_opening_and_closing(16_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(7_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(23_h, 7_h, 23_h));
+    BOOST_CHECK(between_opening_and_closing(16_h, 0_h, almost_midnight));
+    // When the line is closed
+    BOOST_CHECK(!between_opening_and_closing(16_h, 23_h, 7_h));
+    BOOST_CHECK(!between_opening_and_closing(16_h, almost_midnight, 0_h));
+}
+
+/*
+ * Check if a line is closed for a given date and a given duration from this date
+ */
+BOOST_AUTO_TEST_CASE(line_closed_test1) {
+    pt::ptime pt_12h = "20140101T120000"_dt;
+    pt::ptime pt_6h = "20140101T060000"_dt;
+    pt::ptime pt_22h = "20140101T220000"_dt;
+    //When the line is not closed
+    BOOST_CHECK(!line_closed(5_min, 7_h, 23_h,pt_12h));
+    BOOST_CHECK(!line_closed(2_h, 7_h, 23_h,pt_6h));
+    BOOST_CHECK(!line_closed(2_h, 7_h, 23_h,pt_22h));
+    BOOST_CHECK(!line_closed(1_h, 7_h, 23_h,pt_22h));
+    //When the line is not closed and the duration is bigger than the time between the opening and the closing
+    BOOST_CHECK(!line_closed(18_h, 7_h, 23_h,pt_6h));
+    //When the line is not closed and the opening is not the same date of the closing
+    BOOST_CHECK(!line_closed(2_h, 23_h, 7_h,pt_22h));
+    // When the line is closed
+    BOOST_CHECK(line_closed(5_min, 7_h, 23_h,pt_6h));
+    BOOST_CHECK(line_closed(5_min, 23_h, 7_h,pt_12h));
+
+}
+
+/**
+ * test that when asked for a schedule from a given *period* in a day,
+ * if the line is closed the ResponseStatus is no_active_circulation_this_day
+ */
+BOOST_AUTO_TEST_CASE(departureboard_test_with_lines_closed) {
+    using pbnavitia::ResponseStatus;
+    ed::builder b("20150615");
+    b.vj("A", "110011000001", "", true, "vj1", "")
+            ("stop1", "10:00"_t, "10:00"_t)
+            ("stop2", "10:30"_t, "10:30"_t);
+    b.vj("B", "110000001111", "", true, "vj2", "")
+            ("stop1", "00:10"_t, "00:10"_t)
+            ("stop2", "01:40"_t, "01:40"_t)
+            ("stop3", "02:50"_t, "02:50"_t);
+    // Add opening and closing time A is opened on one day and B on two days
+    b.lines["A"]->opening_time = boost::posix_time::time_duration(9,0,0);
+    b.lines["A"]->closing_time = boost::posix_time::time_duration(21,0,0);
+    b.lines["B"]->opening_time = boost::posix_time::time_duration(23,30,0);
+    b.lines["B"]->closing_time = boost::posix_time::time_duration(6,0,0);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    pbnavitia::Response resp;
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    // Request when the line is closed
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T063000"), 600, 0,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator.get_response();
+    BOOST_CHECK_EQUAL(resp.stop_schedules(0).response_status(), ResponseStatus::no_active_circulation_this_day);
+    BOOST_CHECK_EQUAL(resp.stop_schedules(1).response_status(), ResponseStatus::no_active_circulation_this_day);
+}

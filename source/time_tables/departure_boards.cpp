@@ -46,7 +46,7 @@ namespace navitia { namespace timetables {
 
 static void
 render(PbCreator& pb_creator,
-          const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
+          const std::map<stop_point_route, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_route, vector_dt_st>& map_route_stop_point,
           DateTime datetime,
           DateTime max_datetime,
@@ -85,13 +85,56 @@ render(PbCreator& pb_creator,
                 }
             }
         }
-        const auto& it = response_status.find(id_vec.first.second.val);
+        const auto& it = response_status.find(id_vec.first);
         if(it != response_status.end()){
             schedule->set_response_status(it->second);
         }
     }    
 }
 
+static time_duration to_navitia(const boost::posix_time::time_duration& dur) {
+    return navitia::seconds(dur.total_seconds());
+}
+
+time_duration length_of_time(const time_duration& duration_1,
+                       const time_duration& duration_2) {
+    if (duration_1 <= duration_2) {
+        return duration_2 - duration_1;
+    } else {
+        return duration_2 + (hours(24) - duration_1);
+    }
+}
+
+bool between_opening_and_closing(const time_duration& me,
+                                 const time_duration& opening,
+                                 const time_duration& closing) {
+    if (opening < closing) {
+        return (opening <= me && me <= closing);
+    } else {
+        return (opening <= me || me <= closing);
+    }
+}
+
+bool line_closed (const time_duration& duration,
+             const time_duration& opening,
+             const time_duration& closing,
+             const pt::ptime& date) {
+    const auto begin = to_navitia(date.time_of_day());
+    return !between_opening_and_closing(begin, opening, closing)
+            && !between_opening_and_closing((begin + duration), opening, closing)
+            && duration < (length_of_time(opening, closing) + length_of_time(begin, opening));
+}
+
+static bool line_closed (const time_duration& duration,
+                  const type::Route* route,
+                  const pt::ptime& date) {
+    if (route->line->opening_time && route->line->closing_time) {
+        const auto opening = to_navitia(*route->line->opening_time);
+        const auto closing = to_navitia(*route->line->closing_time);
+        return line_closed(duration, opening, closing, date);
+    }
+    return false;
+}
 
 void departure_board(PbCreator& pb_creator, const std::string& request,
                 boost::optional<const std::string> calendar_id,
@@ -113,8 +156,8 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             return;
         }
     }
-    //  <idx_route, status>
-    std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
+    //  <stop_point_route, status>
+    std::map<stop_point_route, pbnavitia::ResponseStatus> response_status;
 
     std::map<stop_point_route, vector_dt_st> map_route_stop_point;
 
@@ -177,9 +220,9 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
             if (sp_route.first == last_jpp.sp_idx) {
                 if (stop_point->stop_area == route->destination) {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                    response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
                 } else {
-                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
+                    response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
                 }
             }
         }
@@ -187,15 +230,18 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         //If there is no departure for a request with "RealTime", Test existance of any departure with "base_schedule"
         //If departure with base_schedule is not empty, additional_information = active_disruption
         //Else additional_information = no_departure_this_day
-        if (stop_times.empty() && (response_status.find(route->idx) == response_status.end())) {
+        if (stop_times.empty() && (response_status.find(sp_route) == response_status.end())) {
             auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
+            if (line_closed(navitia::seconds(duration), route, date)) {
+                  resp_status = pbnavitia::ResponseStatus::no_active_circulation_this_day;
+            }
             if (rt_level != navitia::type::RTLevel::Base) {
                 auto tmp_stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                                                               handler.max_datetime, 1, pb_creator.data,
                                                               navitia::type::RTLevel::Base);
                 if (!tmp_stop_times.empty()) { resp_status = pbnavitia::ResponseStatus::active_disruption; }
             }
-            response_status[route->idx] = resp_status;
+            response_status[sp_route] = resp_status;
         }
 
         map_route_stop_point[sp_route] = stop_times;
