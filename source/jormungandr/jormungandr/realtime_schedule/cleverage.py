@@ -93,7 +93,6 @@ class Cleverage(RealtimeProxy):
         return url
 
     def _get_dt(self, datetime_str):
-        #"2016-04-11 14:37:15"
         dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
 
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
@@ -119,8 +118,6 @@ class Cleverage(RealtimeProxy):
             return next_passages
         else:
             return None
-
-
 
     def next_passage_for_route_point(self, route_point):
         url = self._make_url(route_point)
