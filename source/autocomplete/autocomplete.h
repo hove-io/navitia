@@ -351,14 +351,14 @@ struct Autocomplete
                                                 std::function<bool(T)> keep_element,
                                                 int word_length) const;
 
-    std::vector<fl_quality> find_complete_way(const std::string & str,
+    std::vector<fl_quality> find_complete_way(const std::string& str,
                                               size_t nbmax,
                                               std::function<bool(T)> keep_element,
                                               const std::set<std::string>& ghostwords,
                                               const navitia::georef::GeoRef& geo_ref) const;
 
     /** Recherche des patterns les plus proche : faute de frappe */
-    std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
+    std::vector<fl_quality> find_partial_with_pattern(const std::string & str,
                                                       const int word_weight,
                                                       size_t nbmax,
                                                       std::function<bool(T)> keep_element,
