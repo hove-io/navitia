@@ -308,7 +308,7 @@ struct Autocomplete
         sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.score > b.score;});
     }
 
-    std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality>& input, size_t nbmax) const {
+    std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality> input, size_t nbmax) const {
         sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.quality > b.quality;});
         return input;
     }

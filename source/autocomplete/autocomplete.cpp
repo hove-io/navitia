@@ -28,7 +28,6 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-
 #include "autocomplete.h"
 #include "type/pt_data.h"
 namespace navitia { namespace autocomplete {
@@ -158,19 +157,19 @@ void Autocomplete<T>::compute_score(type::PT_Data &pt_data, georef::GeoRef &geor
 
 template<class T>
 std::vector<typename Autocomplete<T>::fl_quality>
-Autocomplete<T>::compute_vec_quality(const std::string& str ,
+Autocomplete<T>::compute_vec_quality(const std::string& str,
                                      const std::vector<T>& index_result,
                                      const navitia::georef::GeoRef& geo_ref,
                                      std::function<bool(T)> keep_element,
-                                     int wordLength) const{
+                                     int wordLength) const {
     std::vector<fl_quality> vec_quality;
     std::vector<std::string> tokens_req;
     {
         auto tmp_str = strip_accents_and_lower(str);
         boost::split(tokens_req, tmp_str, boost::is_any_of(" "));
     }
-    for(auto i : index_result){
-        if(keep_element(i)) {
+    for ( auto i : index_result ) {
+        if ( keep_element(i) ) {
             fl_quality quality;
 
             quality.idx = i;
@@ -179,7 +178,7 @@ Autocomplete<T>::compute_vec_quality(const std::string& str ,
             quality.score = word_quality_list.at(quality.idx).score;
             quality.quality = 100;
 
-            // whole_way_name = road name + city name
+            // whole_way_name = road name + "(" +  city name + ")"
             auto whole_way_name = geo_ref.ways[i]->name;
             for (const auto* admin: geo_ref.ways[i]->admin_list) {
                 if(admin && admin->level == 8) {
@@ -192,7 +191,7 @@ Autocomplete<T>::compute_vec_quality(const std::string& str ,
             boost::tokenizer<> tokens_candidate(whole_way_name);
             auto it_req = std::begin(tokens_req);
             auto it_can = std::begin(tokens_candidate);
-            for(; it_req != std::end(tokens_req) && it_can != std::end(tokens_candidate); ++it_req, ++it_can) {
+            for (; it_req != std::end(tokens_req) && it_can != std::end(tokens_candidate); ++it_req, ++it_can ) {
                 quality.score += (*it_can).find(*it_req) != std::string::npos;
             }
             vec_quality.emplace_back(std::move(quality));
@@ -203,7 +202,7 @@ Autocomplete<T>::compute_vec_quality(const std::string& str ,
 
 template<class T>
 std::vector<typename Autocomplete<T>::fl_quality>
-Autocomplete<T>::find_complete_way(const std::string & str,
+Autocomplete<T>::find_complete_way(const std::string& str,
                                    size_t nbmax,
                                    std::function<bool(T)> keep_element,
                                    const std::set<std::string>& ghostwords,
