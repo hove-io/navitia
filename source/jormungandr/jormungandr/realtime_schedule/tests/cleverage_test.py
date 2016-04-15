@@ -42,7 +42,7 @@ def make_url_test():
     # it should be a valid url
     assert validators.url(url)
 
-    assert url.startswith('http://bob.com/stop_tutu')
+    assert url == 'http://bob.com/stop_tutu'
 
 def make_url_invalid_code_test():
     """
