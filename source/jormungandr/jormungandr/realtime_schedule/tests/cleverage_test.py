@@ -42,7 +42,7 @@ def make_url_test():
     # it should be a valid url
     assert validators.url(url)
 
-    assert url.startswith('http://bob.com/')
+    assert url.startswith('http://bob.com/stop_tutu')
 
 def make_url_invalid_code_test():
     """
@@ -275,10 +275,33 @@ def next_passage_for_route_point_test():
         assert passages[0].datetime == datetime.datetime(2016, 4, 11, 14, 37, 15, tzinfo=pytz.UTC)
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 14, 45, 35, tzinfo=pytz.UTC)
 
-def next_passage_for_empty_response_test():
+def next_passage_for_route_point_local_timezone_test():
     """
     test the whole next_passage_for_route_point
     mock the http call to return a good response, we should get some next_passages
+    """
+    cleverage = Cleverage(id='tata', timezone='Europe/Paris', service_url='http://bob.com/',
+                          service_args={'a': 'bobette', 'b': '12'})
+
+    mock_requests = MockRequests({
+        'http://bob.com/stop_tutu':
+        (mock_good_response(), 200)
+    })
+
+    route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
+
+    with mock.patch('requests.get', mock_requests.get):
+        passages = cleverage.next_passage_for_route_point(route_point)
+
+        assert len(passages) == 2
+
+        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 12, 37, 15, tzinfo=pytz.UTC)
+        assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
+
+def next_passage_for_empty_response_test():
+    """
+    test the whole next_passage_for_route_point
+    mock the http call to return a empty response, we should get no departure
     """
     cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
                           service_args={'a': 'bobette', 'b': '12'})
@@ -298,7 +321,7 @@ def next_passage_for_empty_response_test():
 def next_passage_for_missing_line_response_test():
     """
     test the whole next_passage_for_route_point
-    mock the http call to return a good response, we should get some next_passages
+    mock the http call to return a response without wanted line  we should get no departure
     """
     cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
                           service_args={'a': 'bobette', 'b': '12'})
