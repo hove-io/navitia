@@ -181,7 +181,7 @@ Autocomplete<T>::compute_vec_quality(const std::string& str,
             // whole_way_name = road name + "(" +  city name + ")"
             auto whole_way_name = geo_ref.ways[i]->name;
             for (const auto* admin: geo_ref.ways[i]->admin_list) {
-                if(admin && admin->level == 8) {
+                if (admin && admin->level == 8) {
                     whole_way_name += (" " + admin->name);
                 }
             }
