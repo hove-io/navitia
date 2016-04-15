@@ -1,3 +1,26 @@
+navitia2 (2.6.0) unstable; urgency=low
+
+  * kraken: fix autocompletion for rue de la loire  <https://github.com/CanalTP/navitia/pull/1542>
+  * jormungandr: clever age realtime proxy connector   <https://github.com/CanalTP/navitia/pull/1534>
+  * Tyr: handle autocomplete auto update  <https://github.com/CanalTP/navitia/pull/1541>
+  * Add Jcdecaux webservice for bss  <https://github.com/CanalTP/navitia/pull/1536>
+  * time tables: Add test to check if the line is closed in stop_schedules  <https://github.com/CanalTP/navitia/pull/1537>
+  * Tyr: manage directories in autocomplete_parameters  <https://github.com/CanalTP/navitia/pull/1538>
+  * Tyr: Manage use of BSS Provider by Tyr  <https://github.com/CanalTP/navitia/pull/1525>
+  * Tyr: apis to industrialize autocomplete data feed  <https://github.com/CanalTP/navitia/pull/1532>
+  * Tyr: Fix Instance resource filters  <https://github.com/CanalTP/navitia/pull/1530>
+  * jormungandr: add a ratelimiter on synthese proxy  <https://github.com/CanalTP/navitia/pull/1535>
+  * Jormungandr: fix new default  <https://github.com/CanalTP/navitia/pull/1526>
+  * jormungandr: fix new_default when max_nb_journeys equals to nb_journeys_mas_have  <https://github.com/CanalTP/navitia/pull/1533>
+  * jormungandr: add informations on realtime_proxies in /status  <https://github.com/CanalTP/navitia/pull/1524>
+  * timetables: code cleanup  <https://github.com/CanalTP/navitia/pull/1527>
+  * jormungandr: fix empty timezone in /places when disruptions are presents  <https://github.com/CanalTP/navitia/pull/1522>
+  * jormungandr: BSS web service call  <https://github.com/CanalTP/navitia/pull/1513>
+  * jormungandr: fix synthese when using custom id  <https://github.com/CanalTP/navitia/pull/1518>
+  * Jormungandr: refactor journeys links  <https://github.com/CanalTP/navitia/pull/1509>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 15 Apr 2016 15:04:28 +0100
+
 navitia2 (2.5.0) unstable; urgency=low
 
   * Autocomplete: admin becomes list with ES <https://github.com/CanalTP/navitia/pull/1514>
