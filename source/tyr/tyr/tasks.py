@@ -31,14 +31,17 @@ import glob
 import logging
 import os
 import shutil
+import re
+import zipfile
 
 from celery import chain
 from celery.signals import task_postrun
 from flask import current_app
 import kombu
 
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, shape2ed, \
-    load_bounding_shape
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, \
+    shape2ed, \
+    load_bounding_shape, bano2mimir, osm2mimir
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
@@ -144,6 +147,103 @@ def update_data():
         files = glob.glob(instance_config.source_directory + "/*")
         import_data(files, instance, backup_file=True)
 
+
+BANO_REGEXP = re.compile('.*bano.*')
+
+
+def type_of_autocomplete_data(filename):
+    """
+    return the type of autocomplete data of the files
+    filename can be either a directory, a file or a list of files
+
+    return can be:
+        - 'bano'
+        - 'osm'
+
+    """
+    def files_type(files):
+        #first we try fusio, because it can load fares too
+        if any(f for f in files if BANO_REGEXP.match(f)):
+            return 'bano'
+        if len(files) == 1 and files[0].endswith('.pbf'):
+            return 'osm'
+        return None
+
+    if not isinstance(filename, list):
+        if filename.endswith('.zip'):
+            zipf = zipfile.ZipFile(filename)
+            files = zipf.namelist()
+        elif os.path.isdir(filename):
+            files = glob.glob(filename + "/*")
+        else:
+            files = [filename]
+    else:
+        files = filename
+
+    return files_type(files)
+
+
+@celery.task()
+def import_autocomplete(files, autocomplete_instance, async=True, backup_file=True):
+    """
+    Import the autocomplete'instance data files
+    """
+    job = models.Job()
+    actions = []
+
+    task = {
+        'bano': bano2mimir,
+        'osm': osm2mimir,
+    }
+    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+
+    for _file in files:
+        dataset = models.DataSet()
+        dataset.type = type_of_autocomplete_data(_file)
+        dataset.family_type = 'autocomplete'
+        if dataset.type in task:
+            if backup_file:
+                filename = move_to_backupdirectory(_file, autocomplete_instance.backup_dir(autocomplete_dir))
+            else:
+                filename = _file
+            actions.append(task[dataset.type].si(autocomplete_instance,
+                                                 filename=filename, dataset_uid=dataset.uid))
+        else:
+            #unknown type, we skip it
+            current_app.logger.debug("unknown file type: {} for file {}"
+                                     .format(dataset.type, _file))
+            continue
+
+        #currently the name of a dataset is the path to it
+        dataset.name = filename
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
+
+    if not actions:
+        return
+
+    models.db.session.add(job)
+    models.db.session.commit()
+    for action in actions:
+        action.kwargs['job_id'] = job.id
+    actions.append(finish_job.si(job.id))
+    if async:
+        chain(*actions).delay()
+    else:
+        # all job are run in sequence and import_data will only return when all the jobs are finish
+        chain(*actions).apply()
+
+
+@celery.task()
+def update_autocomplete():
+    current_app.logger.debug("Update autocomplete data")
+    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    for autocomplete_instance in models.AutocompleteParameter.query.all():
+        files = glob.glob(autocomplete_instance.source_dir(autocomplete_dir) + "/*")
+        if files:
+            import_autocomplete(files, autocomplete_instance, backup_file=True)
+
+
 @celery.task()
 def purge_instance(instance_id, nb_to_keep):
     instance = models.Instance.query.get(instance_id)
@@ -167,8 +267,6 @@ def purge_instance(instance_id, nb_to_keep):
     logger.info('we remove: %s', to_remove)
     for path in to_remove:
         shutil.rmtree(path)
-
-
 
 
 @celery.task()
@@ -214,7 +312,7 @@ def build_data(instance):
     models.db.session.add(job)
     models.db.session.commit()
     chain(ed2nav.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
-    current_app.logger.info("Job build data of : %s queued"%instance.name)
+    current_app.logger.info("Job build data of : %s queued" % instance.name)
 
 
 @celery.task()
@@ -230,10 +328,10 @@ def cities(osm_path):
     res = -1
     try:
         res = launch_exec("cities", ['-i', osm_path,
-                                      '--connection-string',
-                                      current_app.config['CITIES_DATABASE_URI']],
+                                     '--connection-string',
+                                     current_app.config['CITIES_DATABASE_URI']],
                           logging)
-        if res!=0:
+        if res != 0:
             logging.error('cities failed')
     except:
         logging.exception('')
@@ -276,3 +374,34 @@ def heartbeat():
             producer = connection.Producer(exchange=exchange)
             producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
 
+
+@celery.task()
+def create_autocomplete_depot(name):
+    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    if os.path.exists(autocomplete_dir):
+        autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        main_dir = autocomplete.main_dir(autocomplete_dir)
+        if not os.path.exists(main_dir):
+            try:
+                os.mkdir(main_dir)
+                os.mkdir(autocomplete.source_dir(autocomplete_dir))
+                os.mkdir(autocomplete.backup_dir(autocomplete_dir))
+            except OSError:
+                logging.error('create directory {} failed'.format(main_dir))
+    else:
+        logging.error('directory {} does not exist'.format(autocomplete_dir))
+
+
+@celery.task()
+def remove_autocomplete_depot(name):
+    logging.info('removing instance dir for {}'.format(name))
+    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    if os.path.exists(autocomplete_dir):
+        autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        main_dir = autocomplete.main_dir(autocomplete_dir)
+        if os.path.exists(main_dir):
+            shutil.rmtree(main_dir)
+        else:
+            logging.warn('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
+    else:
+        logging.warn('no main autocomplete directory, removing nothing')

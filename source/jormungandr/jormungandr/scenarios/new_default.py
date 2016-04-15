@@ -155,36 +155,6 @@ def _has_pt(j):
     return any(s.type == response_pb2.PUBLIC_TRANSPORT for s in j.sections)
 
 
-def create_next_kraken_request(request, responses):
-    """
-    create a new request dict to call the next (resp previous for non clockwise search) journeys in kraken
-
-    to do that we find the best journey (soonest arrival, then shortest journey) found in the responses
-    and add one second to it's departure.
-    (if anticlockwise, remove one second to the arrival of the journey with latest departure, then shortest)
-    """
-    def pt_journey_generator(responses):
-        for r in responses :
-            for j in r.journeys:
-                if has_pt(j):
-                    yield j
-
-    one_second = 1
-    best_crit = arrival_crit if request["clockwise"] else departure_crit
-    best = min_from_criteria(pt_journey_generator(responses),
-                             [best_crit, duration_crit, transfers_crit, nonTC_crit])
-    if best is None:
-        return None
-
-    if request['clockwise']:
-        request['datetime'] = best.departure_date_time + one_second
-    else:
-        request['datetime'] = best.arrival_date_time - one_second
-
-    #TODO forbid ODTs
-    return request
-
-
 def sort_journeys(resp, journey_order, clockwise):
     if resp.journeys:
         resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
@@ -207,24 +177,16 @@ def _get_section_id(section):
 
 def _build_candidate_pool_and_sections_set(resp):
     sections_set = set()
-    sections_set_must_keep = set()
     candidates_pool = list()
+    idx_of_jrny_must_keep = list()
 
-    for j in resp.journeys:
-        # journeys that we want to keep absolutely
-        if j.type in JOURNEY_TYPES_TO_RETAIN:
-            for s in j.sections:
-                sections_set_must_keep.add(_get_section_id(s))
-            continue
-        candidates_pool.append(j)
+    for (i, jrny) in enumerate(resp.journeys):
+        if jrny.type in JOURNEY_TYPES_TO_RETAIN:
+            idx_of_jrny_must_keep.append(i)
+        sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
+        candidates_pool.append(jrny)
 
-    for j in candidates_pool:
-        for s in j.sections:
-            if s.type in SECTION_TYPES_TO_RETAIN:
-                section_id = _get_section_id(s)
-                if section_id not in sections_set_must_keep:
-                    sections_set.add(section_id)
-    return np.array(candidates_pool), sections_set
+    return np.array(candidates_pool), sections_set, idx_of_jrny_must_keep
 
 
 def _build_selected_sections_matrix(sections_set, candidates_pool):
@@ -248,7 +210,7 @@ def _build_selected_sections_matrix(sections_set, candidates_pool):
     return np.array(selected_sections_matrix)
 
 
-def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find):
+def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find, idx_of_jrny_must_keep):
     """
     The entry is a 2D array where its lines are journeys, its columns are (non) chosen sections
     """
@@ -266,6 +228,14 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
      [1,2]]
     """
     selected_journeys_matrix = np.array(list(gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+
+    """
+    We should cut out those combinations that don't contain must-keep journeys
+    """
+    def _contains(idx_selected_jrny):
+        return set(idx_selected_jrny).issuperset(idx_of_jrny_must_keep)
+
+    selected_journeys_matrix = selected_journeys_matrix[np.apply_along_axis(_contains, 1, selected_journeys_matrix)]
 
     selection_matrix = np.zeros((selected_journeys_matrix.shape[0], selected_sections_matrix.shape[0]))
 
@@ -360,19 +330,24 @@ def culling_journeys(resp, request):
     The candidate pool will be like [Journey_2, Journey_3]
     The sections set will be like set([Line 14, Line 6, Line 8, Bus 165])
     """
-    candidates_pool, sections_set = _build_candidate_pool_and_sections_set(resp)
+    candidates_pool, sections_set, idx_of_jrnys_must_keep = _build_candidate_pool_and_sections_set(resp)
 
-    nb_journeys_must_have = len(resp.journeys) - len(candidates_pool)
+    nb_journeys_must_have = len(idx_of_jrnys_must_keep)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
-    nb_journeys_to_find = request["max_nb_journeys"] - nb_journeys_must_have
-    if nb_journeys_to_find <= 0:
-        # In this case, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices...
-        for jrny in candidates_pool:
+    if (request["max_nb_journeys"] - nb_journeys_must_have) <= 0:
+        # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
+
+        def _inverse_selection(d, indexes):
+            select = np.in1d(range(d.shape[0]), indexes)
+            return d[~select]
+
+        # Here we mark all journeys as dead that are not must-have
+        for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
              journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
 
-        nb_jrny_to_keep = len([j for j in resp.journeys if 'to_delete' not in j.tags])
-        if nb_jrny_to_keep == request["max_nb_journeys"]:
+        if request["max_nb_journeys"] == nb_journeys_must_have:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
+            journey_filter.delete_journeys((resp,), request)
             return
 
         logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
@@ -394,6 +369,7 @@ def culling_journeys(resp, request):
         journey_filter.delete_journeys((resp,), request)
         return
 
+    nb_journeys_to_find = request["max_nb_journeys"]
     logger.debug('Trying to find {0} journeys from {1}'.format(nb_journeys_to_find,
                                                                candidates_pool.shape[0]))
 
@@ -412,7 +388,10 @@ def culling_journeys(resp, request):
     """
     selected_sections_matrix = _build_selected_sections_matrix(sections_set, candidates_pool)
 
-    best_indexes, selection_matrix = _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find)
+    best_indexes, selection_matrix = _get_sorted_solutions_indexes(selected_sections_matrix,
+                                                                   nb_journeys_to_find,
+                                                                   idx_of_jrnys_must_keep)
+
     logger.debug("Nb best solutions: {0}".format(best_indexes.shape[0]))
 
     the_best_index = best_indexes[0]
@@ -429,7 +408,7 @@ def culling_journeys(resp, request):
         def combinations_sorter(v):
             # Hoping to find We sort the solution by the sum of journeys' pseudo duration
             return np.sum((get_pseudo_duration(jrny, requested_dt, is_clockwise)
-                           for jrny in np.array(candidates_pool)[np.where(selection_matrix[v, :] == 0)]))
+                           for jrny in np.array(candidates_pool)[np.where(selection_matrix[v, :])]))
         the_best_index = min(best_indexes, key=combinations_sorter)
 
     logger.debug('Removing non selected journeys')
@@ -630,12 +609,12 @@ class Scenario(simple.Scenario):
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
-            responses.extend(tmp_resp)#we keep the error for building the response
+            responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
                 break
 
-            request = create_next_kraken_request(request, tmp_resp)
+            request = self.create_next_kraken_request(request, tmp_resp)
 
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, api_request)
@@ -647,6 +626,9 @@ class Scenario(simple.Scenario):
         tag_journeys(pb_resp)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+
+        self._compute_pagination_links(pb_resp, instance)
+
         return pb_resp
 
     def call_kraken(self, request_type, request, instance, krakens_call):
@@ -698,3 +680,47 @@ class Scenario(simple.Scenario):
                 del resp.journeys[request["max_nb_journeys"]:]
 
         return resp
+
+    def create_next_kraken_request(self, request, responses):
+        """
+        modify the request to call the next (resp previous for non clockwise search) journeys in kraken
+
+        to do that we find ask the next (resp previous) query datetime
+        """
+        if request["clockwise"]:
+            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys])
+        else:
+            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys])
+
+        if request['datetime'] is None:
+            return None
+
+        #TODO forbid ODTs
+        return request
+
+    @staticmethod
+    def __get_best_for_criteria(journeys, criteria):
+        return min_from_criteria(filter(has_pt, journeys),
+                                 [criteria, duration_crit, transfers_crit, nonTC_crit])
+
+    def next_journey_datetime(self, journeys):
+        """
+        to get the next journey, we add one second to the departure of the 'best found' journey
+        """
+        best = self.__get_best_for_criteria(journeys, arrival_crit)
+        if best is None:
+            return None
+
+        one_second = 1
+        return best.departure_date_time + one_second
+
+    def previous_journey_datetime(self, journeys):
+        """
+        to get the next journey, we add one second to the arrival of the 'best found' journey
+        """
+        best = self.__get_best_for_criteria(journeys, departure_crit)
+        if best is None:
+            return None
+
+        one_second = 1
+        return best.arrival_date_time - one_second

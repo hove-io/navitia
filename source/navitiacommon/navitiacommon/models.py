@@ -36,10 +36,13 @@ from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
-from sqlalchemy import func, and_, UniqueConstraint, cast
+from sqlalchemy import func, and_, UniqueConstraint, cast, true
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
+from navitiacommon.utils import street_source_types, address_source_types, \
+    poi_source_types, admin_source_types
 
 from navitiacommon import default_values
+import os
 
 db = SQLAlchemy()
 
@@ -289,6 +292,9 @@ class Instance(db.Model):
 
     priority = db.Column(db.Integer, default=default_values.priority,
                                   nullable=False, server_default='0')
+                                  
+    bss_provider = db.Column(db.Boolean, default=default_values.bss_provider,
+                                  nullable=False, server_default=true())
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
@@ -487,3 +493,34 @@ class BillingPlan(db.Model):
     @classmethod
     def get_default(cls, end_point):
         return cls.query.filter_by(default=True, end_point=end_point).first()
+
+
+class AutocompleteParameter(db.Model, TimestampMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    street = db.Column(db.Enum(*street_source_types, name='source_street'), nullable=True)
+    address = db.Column(db.Enum(address_source_types, name='source_address'), nullable=True)
+    poi = db.Column(db.Enum(*poi_source_types, name='source_poi'), nullable=True)
+    admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
+
+    def __init__(self, name=None, street=None, address=None,
+                 poi=None, admin=None):
+        self.name = name
+        self.street = street
+        self.address = address
+        self.poi = poi
+        self.admin = admin
+
+    def main_dir(self, root_path):
+        return os.path.join(root_path, self.name)
+
+    def source_dir(self, root_path):
+        return os.path.join(self.main_dir(root_path), "source")
+
+    def backup_dir(self, root_path):
+        return os.path.join(self.main_dir(root_path), "backup")
+
+    def __repr__(self):
+        return '<AutocompleteParameter %r>' % self.name
+
+

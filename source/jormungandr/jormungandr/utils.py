@@ -32,11 +32,14 @@ import calendar
 from collections import deque
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
+import pytz
+from jormungandr.timezone import get_timezone
 from navitiacommon import response_pb2, type_pb2
 from builtins import range, zip
 from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException
+DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
 def str_to_time_stamp(str):
     """
@@ -44,7 +47,7 @@ def str_to_time_stamp(str):
     the string must be in the YYYYMMDDTHHMMSS format
     like 20170534T124500
     """
-    date = datetime.strptime(str, "%Y%m%dT%H%M%S")
+    date = datetime.strptime(str, DATETIME_FORMAT)
 
     return date_to_timestamp(date)
 
@@ -54,6 +57,27 @@ def date_to_timestamp(date):
     convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
     """
     return int(calendar.timegm(date.utctimetuple()))
+
+
+def timestamp_to_datetime(timestamp):
+    dt = datetime.utcfromtimestamp(timestamp)
+
+    timezone = get_timezone()
+    if timezone:
+        dt = pytz.utc.localize(dt)
+        return dt.astimezone(timezone)
+    return None
+
+
+def dt_to_str(dt):
+    return dt.strftime(DATETIME_FORMAT)
+
+
+def timestamp_to_str(timestamp):
+    dt = timestamp_to_datetime(timestamp)
+    if dt:
+        return dt_to_str(dt)
+    return None
 
 
 def walk_dict(tree, visitor):

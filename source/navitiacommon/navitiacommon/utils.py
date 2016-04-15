@@ -31,6 +31,10 @@ import zipfile
 import os
 import glob
 
+street_source_types = ['OSM']
+address_source_types = ['BANO', 'OSM']
+poi_source_types = ['FUSIO', 'OSM']
+admin_source_types = ['OSM']
 
 def type_of_data(filename):
     """
@@ -74,7 +78,7 @@ def type_of_data(filename):
     else:
         files = filename
 
-    # we test if we regognize a ptfile in the list of files
+    # we test if we recognize a ptfile in the list of files
     t = files_type(files)
     if t:  # the path to load the data is the directory since there are several files
         return t, os.path.dirname(files[0])

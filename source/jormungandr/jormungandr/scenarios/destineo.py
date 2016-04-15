@@ -32,7 +32,7 @@ from jormungandr.scenarios import default, helpers
 from jormungandr.scenarios.default import is_admin
 import copy
 import logging
-from jormungandr.scenarios.utils import JourneySorter, are_equals, compare
+from jormungandr.scenarios.utils import JourneySorter, are_equals, compare, add_link
 from navitiacommon import response_pb2
 from operator import itemgetter, indexOf, attrgetter
 from datetime import datetime, timedelta
@@ -42,7 +42,7 @@ from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_wa
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
         is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
 import itertools
-from jormungandr.utils import pb_del_if
+from jormungandr.utils import pb_del_if, timestamp_to_str
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -261,6 +261,10 @@ class Scenario(default.Scenario):
                 #we need this for the pagination
                 journey.tags.append('is_pure_tc')
 
+        # for destineo, we use a custom pagination
+        response_tc.ClearField(b'links')
+        self._compute_pagination_links(response_tc, instance)
+
         return response_tc
 
     def _get_alternatives(self, args, instance, tc_journeys):
@@ -392,14 +396,11 @@ class Scenario(default.Scenario):
         if len(response.journeys) > 1:
             response.journeys.sort(DestineoJourneySorter(clockwise, timezone))
 
-    def filter_journeys(self, journeys):
-        section_is_pt = lambda section: section['type'] == "public_transport"\
-                           or section['type'] == "on_demand_transport"
-        filter_journey = lambda journey: 'arrival_date_time' in journey and\
-                             journey['arrival_date_time'] != '' and\
-                             "sections" in journey and\
-                             any(section_is_pt(section) for section in journey['sections'])
-        filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey['tags']
+    @staticmethod
+    def filter_journeys(journeys):
+        section_is_pt = lambda section: section.stop_date_times
+        filter_journey = lambda journey: any(section_is_pt(section) for section in journey.sections)
+        filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey.tags
 
         list_journeys = filter(filter_journey_pure_tc, journeys)
         if not list_journeys:
@@ -407,22 +408,21 @@ class Scenario(default.Scenario):
             list_journeys = filter(filter_journey, journeys)
         return list_journeys
 
+    def _add_next_link(self, resp, params):
+        journeys = self.filter_journeys(resp.journeys)
+        if not journeys:
+            return None
+        next_journey = max(journeys, key=lambda j: j.departure_date_time)
+        params['datetime'] = timestamp_to_str(next_journey.departure_date_time + 60)
+        params['datetime_represents'] = 'departure'
+        add_link(resp, rel='next', **params)
 
-    def extremes(self, resp):
-        logger = logging.getLogger(__name__)
-        logger.debug('calling extremes for destineo')
-        if 'journeys' not in resp:
-            return None, None
-        list_journeys = self.filter_journeys(resp['journeys'])
-        if not list_journeys:
-            return None, None
-        prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
-        next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
-        f_datetime = "%Y%m%dT%H%M%S"
-        f_departure = datetime.strptime(next_journey['departure_date_time'], f_datetime)
-        f_arrival = datetime.strptime(prev_journey['arrival_date_time'], f_datetime)
-        datetime_after = f_departure + timedelta(minutes=1)
-        datetime_before = f_arrival - timedelta(minutes=1)
-
-        return datetime_before, datetime_after
+    def _add_prev_link(self, resp, params):
+        journeys = self.filter_journeys(resp.journeys)
+        if not journeys:
+            return None
+        next_journey = max(journeys, key=lambda j: j.arrival_date_time)
+        params['datetime'] = timestamp_to_str(next_journey.arrival_date_time - 60)
+        params['datetime_represents'] = 'arrival'
+        add_link(resp, rel='prev', **params)
 

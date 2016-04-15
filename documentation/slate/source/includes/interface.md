@@ -1,15 +1,15 @@
 interface
 =========
 
-The only endpoint of this version of the api is :
+The base URL for **navitia.io** is :
 <https://api.navitia.io/v1/>
 
 We aim to implement [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS)
 concept with Navitia.
 
-All the resources return a response containing a links object, a paging
-object, and the requested objects. That's lots of links. Links allow
-you to know all accessible uris and services for a given point.
+Every resource returns a response containing a links object, a paging
+object, and the requested objects, following hypermedia principles.
+That's lots of links. Links allow you to know all accessible uris and services for a given point.
 
 Paging
 ------
@@ -18,7 +18,7 @@ Paging
     The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
 </aside>
 
-All response contains a paging object
+Every Navitia response contains a paging object
 
 |Key           |Type|Description                           |
 |--------------|----|--------------------------------------|
@@ -27,18 +27,24 @@ All response contains a paging object
 |start_page    |int |The page number                       |
 |total_result  |int |Total number of items for this request|
 
-You can navigate through a request with 2 parameters
+You can navigate through a response using 2 parameters
 
 |Parameter |Type|Description              |
 |----------|----|-------------------------|
 |start_page|int |The page number          |
 |count     |int |Number of items per page |
 
-Templated url
+<aside class="notice">
+    The number of objects returned for a request can <b>not be superior than 1000</b>. 
+    If you request for more, Navitia will return the first 1000, and you will have to paginate to get next 1000.
+</aside>
+
+
+Templated URL
 -------------
 
 Under some link sections, you will find a "templated" property. If
-"templated" is true, then you will have to format the link with one id.
+"templated" is true, then you will have to format the link with your right id.
 
 For example, in response of
 <https://api.navitia.io/v1/coverage/fr-idf/lines> you will find a

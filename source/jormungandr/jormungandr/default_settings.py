@@ -54,6 +54,9 @@ LOGGER = {
     }
 }
 
+# Bike self-service configuration
+BSS_PROVIDER = ()
+
 #Parameters for statistics
 SAVE_STAT = False
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
@@ -88,6 +91,12 @@ CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = 60  # the circuit breaker retries after this t
 
 CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 # Default region instance
 # DEFAULT_REGION = 'default'

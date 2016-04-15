@@ -150,3 +150,8 @@ def next_passage_for_route_point_failure_test():
         passages = synthese.next_passage_for_route_point(route_point)
 
         assert passages is None
+
+def status_test():
+    synthese = Synthese(id='tata', timezone='UTC', service_url='http://bob.com/')
+    status = synthese.status()
+    assert status['id'] == 'tata'

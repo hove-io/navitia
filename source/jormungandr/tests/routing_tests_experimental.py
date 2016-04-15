@@ -27,14 +27,15 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
 from .tests_mechanism import AbstractTestFixture
-
+import logging
+from datetime import timedelta
 from .tests_mechanism import dataset
 from .check_utils import *
 from nose.tools import eq_
 import jormungandr.scenarios.experimental
 from jormungandr.instance import Instance
+from jormungandr.scenarios.qualifier import min_from_criteria
 
 
 def check_journeys(resp):
@@ -62,13 +63,35 @@ class TestJourneysExperimental(AbstractTestFixture):
         from jormungandr import i_manager
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
+    @staticmethod
+    def check_next_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default next behaviour is 1s after the best or the soonest"""
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=True))
+
+        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
+        eq_(j_departure + timedelta(seconds=1), dt)
+
+    @staticmethod
+    def check_previous_datetime_link(dt, response):
+        if not response.get('journeys'):
+            return
+        """default previous behaviour is 1s before the best or the latest """
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=False))
+
+        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
+        eq_(j_departure - timedelta(seconds=1), dt)
+
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        response = self.query_region(journey_basic_query, display=True)
+        response = self.query_region(journey_basic_query)
 
         check_journeys(response)
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        self.is_valid_journey_response(response, journey_basic_query)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""

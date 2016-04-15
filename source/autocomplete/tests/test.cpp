@@ -1714,3 +1714,40 @@ BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "BobVille");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "bob");
 }
+
+BOOST_AUTO_TEST_CASE(test_ways){
+    int nbmax = 10;
+    std::set<std::string> ghostwords{"de", "la"};
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("rue CERNAVODA (Saint-Sébastien-sur-Loire)", 0, ghostwords, {});
+    ac.add_string("rue D'USSE (Saint-Sébastien-sur-Loire)", 1, ghostwords, {});
+    ac.add_string("rue DE LA LOIRE (Saint-Sébastien-sur-Loire)", 2, ghostwords, {});
+    ac.build();
+
+    navitia::georef::GeoRef geo_ref;
+    navitia::georef::Way way;
+    way.name = "rue CERNAVODA (Saint-Sébastien-sur-Loire)";
+    way.idx = 0;
+    way.uri = "0";
+    geo_ref.add_way(way);
+    way.name = "rue De LA BOURDAILLERIE (Saint-Sébastien-sur-Loire)";
+    way.idx = 1;
+    way.uri = "1";
+    geo_ref.add_way(way);
+    way.name = "rue DE LA LOIRE (Saint-Sébastien-sur-Loire)";
+    way.idx = 2;
+    way.uri = "2";
+    geo_ref.add_way(way);
+
+    auto res = ac.find_complete_way("rue de la loire saint seb", nbmax, [](int){return true;}, ghostwords, geo_ref);
+    BOOST_REQUIRE_EQUAL(res.size(), 3);
+
+    BOOST_REQUIRE_EQUAL(res[0].idx, 2); // The first one is "rue de la Loire"
+    BOOST_REQUIRE_EQUAL(res[0].score, 6);
+    BOOST_REQUIRE_EQUAL(res[1].idx, 1); // The second one is "rue De BOURDAILLERIE"
+    BOOST_REQUIRE_EQUAL(res[1].score, 5);
+    BOOST_REQUIRE_EQUAL(res[2].idx, 0); // The second one is "rue De BOURDAILLERIE"
+    BOOST_REQUIRE_EQUAL(res[2].score, 1);
+
+}

@@ -5,7 +5,7 @@ Overview
 --------
 
 *navitia.io* is the open API for building cool stuff with transport data.
-It provide the following services
+It provides the following services
 
 * journeys computation
 * line schedules
