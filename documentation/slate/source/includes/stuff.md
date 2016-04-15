@@ -25,7 +25,7 @@ Journey qualification process
 -----------------------------
 
 Since Navitia can return several journeys, it tags them to help the user
-choose the best one for his needs.
+choose the best one that matches their needs.
 
 The different journey types are:
 

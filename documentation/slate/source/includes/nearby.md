@@ -9,9 +9,8 @@ Using OpenStreetMap data, this function also provides information about bicycle 
 You can use these APIs (click on them for details):
 
 -   **[Coverage](#coverage)** : List of the region covered by navitia
--   **[Public transportation objects](#pt-ref)** : List of the public transport
-    objects of a region
--   **[Places nearby](#places-nearby)** : List of objects near an object or a coord
+-   **[Public transportation objects](#pt-ref)** : Seek and search within the public transport objects of a region
+-   **[Places nearby](#places-nearby)** :  List of objects near an object or using longitude and latitude
 -   **[Stop Schedules](#stop-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)** : 
 Compute time tables for a given resource
 

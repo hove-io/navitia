@@ -85,17 +85,17 @@ accessible local mobility services:
 }
 ```
 
-<a name="pt-ref"></a>Public transportation objects exploration
+<a name="pt-ref"></a>Public Transportation Objects exploration
 --------------------------------------------------------------
 
 Also known as `/networks`, `/lines`, `/stop_areas`... services.
 
 
 Once you have selected a region, you can explore the public
-transportation objects easily with these apis. You just need to add at
-the end of your url a collection name to see all the objects of a
-particular collection. To see an object add the id of this object at the
-end of the collection's url. The [paging](#paging) arguments may be used to
+transportation objects easily with these APIs. You just need to add at
+the end of your URL a collection name to see every objects within a
+particular collection. To see an object detail, add the id of this object at the
+end of the collection's URL. The [paging](#paging) arguments may be used to
 paginate results.
 
 ### Accesses
@@ -310,9 +310,9 @@ chapter
 
 Also known as `/pt_objects` service.
 
-This api search in public transport objects via their names. It's a kind
-of magical autocomplete on public transport data. It returns, in
-addition of classic objects, a collection of [places](#place).
+This endpoint allows you to search in public transport objects using their names. It's a kind
+of magical [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) on public transport data. 
+It returns a collection of [pt_object](#pt-object).
 
 ### How does it works
 
@@ -411,9 +411,11 @@ Response example for :
 
 Also known as `/places` service.
 
-This api search in all geographical objects via their names. It returns,
-in addition of classic objects, a collection of [places](#place) . This api is
-very useful to make some autocomplete stuff.
+This endpoint allows you to search in all geographical objects using their names, returning
+a [place](#place) collection.
+
+It is very useful to make some [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) stuff ie 
+to understand the user input even if he has mittens.
 
 Differents kind of objects can be returned (sorted as):
 
@@ -440,7 +442,7 @@ Differents kind of objects can be returned (sorted as):
   ---------|-----------|-------------|------------------------|-------------------
   yep      | q           | string    | The search term        |
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
-  nop      | admin_uri[] | array of string | If filled, will restrained the search within the given admin uris
+  nop      | admin_uri[] | array of string | If filled, it will filter the search within the given admin uris
 
 ### Example
 
@@ -473,9 +475,8 @@ Response example for :
 
 Also known as `/places_nearby` service.
 
-This api search for public transport object near another object, or near
-coordinates. It returns, in addition of classic objects, a collection of
-[places](#place).
+This endpoint allowe you to search for public transport objects that are near another object, or nearby
+coordinates, returning a [places](#place) collection.
 
 <aside class="warning">
     There is no pagination for this api.
@@ -496,8 +497,8 @@ coordinates. It returns, in addition of classic objects, a collection of
   ---------|-------------|-----------------|-----------------------------------|---------------------------------------------------------------
   nop      | distance    | int             | Distance range in meters          | 500
   nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`, `administrative_region`]
-  nop      | admin_uri[] | array of string | If filled, will restrained the search within the given admin uris      |
-  nop      | filter      | string          |  Use to restrain returned objects. for example: places_type.id=theater |
+  nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
+  nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
 
 Filters can be added:
 
@@ -544,16 +545,13 @@ Response example for this request
 
 Also known as `/journeys` service. This api computes journeys.
 
-If used within the coverage api, it will retrieve the next journeys from
-the selected public transport object or coordinates.
-
 There are two ways to access this api.
 
 The first one is: <https://api.navitia.io/v1/{a_path_to_resource}/journeys> it will
-retrieve all the journeys from the resource (*isochrones*).
+retrieve all the journeys from the resource (in order to make *[isochrone maps](https://en.wikipedia.org/wiki/Isochrone_map)*).
 
 The other one, the most used, is to access the 'journey' api endpoint:
-<<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
+<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <aside class="notice">
     Navitia.io handle lot's of different data sets (regions). Some of them
@@ -727,8 +725,8 @@ direction       | int                    | Angle (in degree) between the previou
 
 Also known as `/route_schedules` service.
 
-This api gives you access to schedules of routes. The response is made
-of an array of route_schedule, and another one of [note](#note). You can
+This endpoint gives you access to schedules of routes, with a response made
+of an array of [route_schedule](#route-schedule), and another one of [note](#note). You can
 access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>
 
 ### Accesses
@@ -751,7 +749,7 @@ nop      | data_freshness     | enum      | Define the freshness of data to use<
 
 ### Objects
 
-#### route_schedule object
+#### <a name="route-schedule">route_schedule object
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -785,9 +783,13 @@ stop_point | [stop_point](#stop-point)              | The stop point of the row
 
 Also known as `/stop_schedules` service.
 
-This api gives you access to schedules of stops going through a stop
-point. The response is made of an array of stop_schedule, and another
-one of [note](#note). You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
+This endpoint gives you access to time tables going through a stop
+point as:
+![stop_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
+
+The response is made of an array of [stop_schedule](#stop-schedule), and another
+one of [note](#note). 
+You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 ### Accesses
 
@@ -808,7 +810,7 @@ nop      | items_per_schedule | int       | Maximum number of datetimes per sche
 nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
 
 
-### Stop_schedule object
+### <a name="stop-schedule"></a>Stop_schedule object
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -824,8 +826,11 @@ nop      | data_freshness   | enum                           | Define the freshn
 
 Also known as `/departures` service.
 
-This api retrieves a list of departures from a datetime of a selected
-object. Departures are ordered chronologically in ascending order.
+This endpoint retrieves a list of departures from a specific datetime of a selected
+object. 
+Departures are ordered chronologically in ascending order as:
+![departures](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG)
+
 
 ### Accesses
 
@@ -849,7 +854,7 @@ nop      | data_freshness   | enum                            | Define the fresh
 |Field|Type|Description|
 |-----|----|-----------|
 |route|[route](#route)|The route of the schedule|
-|stop_date_time|Array of [stop_date_time](#stop_date_time)|When does a bus stops at the stop point|
+|stop_date_time|Array of [stop_date_time](#stop_date_time)|Occurs when a bus does a stopover at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
 <a name="arrivals"></a>Arrivals
@@ -857,7 +862,7 @@ nop      | data_freshness   | enum                            | Define the fresh
 
 Also known as `/arrivals` service.
 
-This api retrieves a list of arrivals from a datetime of a selected
+This endpoint retrieves a list of arrivals from a specific datetime of a selected
 object. Arrivals are ordered chronologically in ascending order.
 
 ### Accesses
