@@ -168,8 +168,8 @@ Autocomplete<T>::compute_vec_quality(const std::string& str,
         auto tmp_str = strip_accents_and_lower(str);
         boost::split(tokens_req, tmp_str, boost::is_any_of(" "));
     }
-    for ( auto i : index_result ) {
-        if ( keep_element(i) ) {
+    for (auto i : index_result) {
+        if (keep_element(i)) {
             fl_quality quality;
 
             quality.idx = i;
