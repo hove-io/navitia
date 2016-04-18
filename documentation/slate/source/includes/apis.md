@@ -204,7 +204,7 @@ period. Both parameters "until" and "since" are optional.
 
 Example:
 
--   <https://api.navitia.io/v1/coverage/fr_idf/vehicle_journeys?since=20150912T120000&until=20150913T110000>
+-   <https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?since=20150912T120000&until=20150913T110000>
 
 <aside class="warning">
     This filter is applied using only the first stop time of a
