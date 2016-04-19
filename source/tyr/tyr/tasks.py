@@ -380,13 +380,17 @@ def create_autocomplete_depot(name):
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
     autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
     main_dir = autocomplete.main_dir(autocomplete_dir)
-    if not os.path.exists(main_dir):
-        try:
+    try:
+        if not os.path.exists(main_dir):
             os.makedirs(main_dir)
-            os.makedirs(autocomplete.source_dir(autocomplete_dir))
-            os.makedirs(autocomplete.backup_dir(autocomplete_dir))
-        except OSError:
-            logging.error('create directory {} failed'.format(main_dir))
+        source = autocomplete.source_dir(autocomplete_dir)
+        if not os.path.exists(source):
+            os.makedirs(source)
+        backup = autocomplete.backup_dir(autocomplete_dir)
+        if not os.path.exists(backup):
+            os.makedirs(backup)
+    except OSError:
+        logging.error('create directory {} failed'.format(main_dir))
 
 
 @celery.task()
