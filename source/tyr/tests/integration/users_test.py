@@ -261,8 +261,7 @@ def test_update_user(create_multiple_users):
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
-    #login can't be updated, we keep the original value
-    assert resp['login'] == 'foo'
+    assert resp['login'] == user['login']
     assert resp['email'] == user['email']
 
 def test_update_block_until(create_multiple_users):
