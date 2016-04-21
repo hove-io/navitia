@@ -1,0 +1,64 @@
+body {
+  font-family: Helvetica, Sans, Arial;
+}
+
+p:first-child {
+  margin: 20px;
+}
+
+table {
+    font-size: 16px;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    margin: 20px;
+}
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    border-color: inherit;
+}
+
+td, th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align:center;
+}
+
+th {
+    padding-top: 11px;
+    padding-bottom: 11px;
+    background-color: #4CAF50;
+    color: white;
+}
+
+.raw-result {
+  margin: 20px;
+}
+
+pre {
+  background-color: ghostwhite;
+  border: 1px solid silver;
+  padding: 10px 20px;
+  margin: 20px;
+}
+
+.json-key {
+  color: brown;
+}
+
+.json-value {
+  color: navy;
+}
+
+.json-string {
+  color: olive;
+}

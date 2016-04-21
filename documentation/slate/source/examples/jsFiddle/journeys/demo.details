@@ -1,0 +1,11 @@
+---
+name: Journeys API - jsFiddle/Github
+description: |
+    The following example aims at illustrating Navitia’s journey feature.
+    It requests an itinerary from a cool spot (our headquarter in Paris) to another cool spot (the Eiffel Tower, Paris).
+    Please note that the transportation data that is used for this sandbox is only an example for demo purposes an does not reflect the actual transportation supply on the Parisian area.
+authors:
+   - Julien Maulny
+   - Ludovic Roche
+normalize_css: no
+...
