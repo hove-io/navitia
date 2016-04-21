@@ -144,7 +144,30 @@ make_line_section(const chaos::PtObject& chaos_section,
                        << pb_section.end_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
-    if (impact) line->add_impact(impact);
+    if(pb_section.routes().size()) {
+        for(auto pb_route: pb_section.routes()) {
+            if (auto* route = find_or_default(pb_route.uri(), pt_data.routes_map)) {
+                line_section.routes.push_back(route);
+            } else {
+                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                               "fill_disruption_from_chaos: route id "
+                               << pb_route.uri() << " in LineSection invalid!");
+                return boost::none;
+            }
+        }
+    } else {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("trace"),
+                        "Empty routes for line_section on line" << line_section.line->uri <<
+                        ". Applying disruptions on all routes");
+        line_section.routes = line_section.line->route_list;
+    }
+
+    if(impact) {
+        for(auto* route: line_section.routes) {
+            route->add_impact(impact);
+        }
+    }
+
     return line_section;
 }
 

@@ -40,6 +40,7 @@ www.navitia.io
 #include <boost/serialization/bitset.hpp>
 #include "utils/serialization_vector.h"
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>
 
@@ -160,9 +161,11 @@ struct LineSection {
     Line* line = nullptr;
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
+    std::vector<Route*> routes;
+    std::map<std::string, std::set<const StopPoint*>> impacted_stop_points_by_route;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & start_point & end_point;
+        ar & line & start_point & end_point & routes & impacted_stop_points_by_route;
     }
 };
 typedef boost::variant<

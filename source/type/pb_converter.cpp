@@ -71,8 +71,19 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         add_pt_object(bo);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
-        //TODO: for the moment a line section is only a line, but later we might want to output more stuff
-        add_pt_object(line_section.line);
+        for(const nt::Route* route: line_section.routes) {
+            auto* pobj = add_pt_object(route);
+
+            auto stop_points = line_section.impacted_stop_points_by_route.find(route->uri);
+            if(stop_points != line_section.impacted_stop_points_by_route.end()) {
+                for(const auto* stop_point: (*stop_points).second) {
+                    auto* impacted_stop = pobj->add_impacted_stops();
+                    impacted_stop->set_effect(pbnavitia::DELETED);
+
+                    filler.copy(0, DumpMessage::No).fill_pb_object(stop_point, impacted_stop->mutable_stop_point());
+                }
+            }
+        }
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
