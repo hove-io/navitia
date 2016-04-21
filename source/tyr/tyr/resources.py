@@ -193,7 +193,8 @@ autocomplete_parameter_fields = {
     'street': fields.Raw,
     'address': fields.Raw,
     'poi': fields.Raw,
-    'admin': fields.Raw
+    'admin': fields.Raw,
+    'admin_level': fields.List(fields.Integer),
 }
 
 
@@ -991,6 +992,8 @@ class AutocompleteParameter(flask_restful.Resource):
                             help='source for admin: [FUSIO, OSM]',
                             location=('json', 'values'),
                             choices=utils.admin_source_types)
+        parser.add_argument('admin_level', type=int, action='append', required=True)
+
 
         args = parser.parse_args()
 
@@ -1001,6 +1004,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.address = args['address']
             autocomplete_parameter.poi = args['poi']
             autocomplete_parameter.admin = args['admin']
+            autocomplete_parameter.admin_level = args['admin_level']
             db.session.add(autocomplete_parameter)
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_parameter.name)
@@ -1015,7 +1019,7 @@ class AutocompleteParameter(flask_restful.Resource):
     def put(self, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
-        parser.add_argument('street', type=str, required=False, default='BANO',
+        parser.add_argument('street', type=str, required=False, default='OSM',
                             help='source for street: [BANO, OSM]',
                             location=('json', 'values'),
                             choices= utils.street_source_types)
@@ -1031,6 +1035,7 @@ class AutocompleteParameter(flask_restful.Resource):
                             help='source for admin: [FUSIO, OSM]',
                             location=('json', 'values'),
                             choices=utils.admin_source_types)
+        parser.add_argument('admin_level', type=int, action='append', required=True)
 
         args = parser.parse_args()
 
@@ -1039,6 +1044,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_param.address = args['address']
             autocomplete_param.poi = args['poi']
             autocomplete_param.admin = args['admin']
+            autocomplete_param.admin_level = args['admin_level']
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_param.name)
 
