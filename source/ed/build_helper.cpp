@@ -402,6 +402,16 @@ Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
     return *this;
 }
 
+Impacter& Impacter::on_line_section(const std::string& line_uri,
+                                    const std::string& start_stop_uri,
+                                    const std::string& end_stop_uri,
+                                    const std::vector<std::string>& route_uris) {
+    impact->informed_entities.push_back(
+        dis::make_line_section(line_uri, start_stop_uri, end_stop_uri, route_uris, *b.data->pt_data, impact)
+    );
+    return *this;
+}
+
 Impacter& Impacter::msg(dis::Message m) {
     impact->messages.push_back(std::move(m));
     return *this;

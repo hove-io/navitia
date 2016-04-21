@@ -124,6 +124,29 @@ PtObj make_pt_obj(Type_e type,
     }
 }
 
+PtObj make_line_section(const std::string& line_uri,
+                        const std::string& start_stop_uri,
+                        const std::string& end_stop_uri,
+                        const std::vector<std::string>& route_uris,
+                        PT_Data& pt_data,
+                        const boost::shared_ptr<Impact>& impact) {
+    LineSection line_section;
+    line_section.line = find_or_default(line_uri, pt_data.lines_map);
+    line_section.start_point = find_or_default(start_stop_uri, pt_data.stop_areas_map);
+    line_section.end_point = find_or_default(end_stop_uri, pt_data.stop_areas_map);
+    for(auto& uri: route_uris) {
+        auto* route = find_or_default(uri, pt_data.routes_map);
+        if(route) {
+            if(impact) {
+                route->add_impact(impact);
+            }
+            line_section.routes.push_back(route);
+        }
+    }
+
+    return line_section;
+}
+
 bool Impact::operator<(const Impact& other){
     if(this->severity->priority != other.severity->priority){
         return this->severity->priority < other.severity->priority;

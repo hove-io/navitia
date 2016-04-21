@@ -184,6 +184,13 @@ PtObj make_pt_obj(Type_e type,
                   PT_Data& pt_data,
                   const boost::shared_ptr<Impact> &impact = {});
 
+PtObj make_line_section(const std::string& line_uri,
+                        const std::string& start_stop_uri,
+                        const std::string& end_stop_uri,
+                        const std::vector<std::string>& route_uris,
+                        PT_Data& pt_data,
+                        const boost::shared_ptr<Impact>& impact = {});
+
 struct Disruption;
 
 struct Message {

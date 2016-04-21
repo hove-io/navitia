@@ -153,6 +153,10 @@ struct Impacter {
 
     Impacter& severity(const std::string& uri); // link to existing severity
     Impacter& on(nt::Type_e type, const std::string& uri); // add elt in informed_entities
+    Impacter& on_line_section(const std::string& line_uri,
+                              const std::string& start_stop_uri,
+                              const std::string& end_stop_uri,
+                              const std::vector<std::string>& route_uris); // add section in informed_entities
     Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p) {

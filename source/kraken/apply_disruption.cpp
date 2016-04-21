@@ -253,6 +253,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                             vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
                         }
                     }
+                    return true;
                 });
 
                 // The route isn't really impacted since no vj pass by the section

@@ -350,13 +350,13 @@ BOOST_AUTO_TEST_CASE(pt_object) {
     Const_it const_it;
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader.impact = new chaos::Impact();
-    reader.fill_pt_object(const_it);
+    auto* ptobject = reader.impact->add_informed_entities();
+    reader.fill_pt_object(const_it, ptobject);
     BOOST_REQUIRE_EQUAL(reader.impact->informed_entities_size(), 1);
-    auto ptobject = reader.impact->informed_entities(0);
-    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
-    BOOST_CHECK_EQUAL(ptobject.pt_object_type(), chaos::PtObject_Type_line);
-    BOOST_CHECK_EQUAL(ptobject.created_at(), 1);
-    BOOST_CHECK_EQUAL(ptobject.updated_at(), 2);
+    BOOST_CHECK_EQUAL(ptobject->uri(), "uri");
+    BOOST_CHECK_EQUAL(ptobject->pt_object_type(), chaos::PtObject_Type_line);
+    BOOST_CHECK_EQUAL(ptobject->created_at(), 1);
+    BOOST_CHECK_EQUAL(ptobject->updated_at(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(one_of_each) {
