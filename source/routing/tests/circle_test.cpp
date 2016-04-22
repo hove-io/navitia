@@ -48,34 +48,34 @@ BOOST_AUTO_TEST_CASE(project_in_direction_test) {
     navitia::type::GeographicalCoord coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177,48.856614);
     navitia::type::GeographicalCoord coord_North = navitia::type::GeographicalCoord(90,0);
     navitia::type::GeographicalCoord coord_Equator = navitia::type::GeographicalCoord(0,48.856614);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 80,10).distance_to(coord_Paris), 10,0.1);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 115,42).distance_to(coord_Paris), 42,0.1);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 195,115).distance_to(coord_Paris), 115,0.1);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 314,29).distance_to(coord_Paris), 29,0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 80, 10).distance_to(coord_Paris), 10, 0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 115, 42).distance_to(coord_Paris), 42, 0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 195, 115).distance_to(coord_Paris), 115, 0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 314, 29).distance_to(coord_Paris), 29, 0.5);
     // Check for the angle with exceptions
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 90,42).distance_to(coord_Paris), 42,0.1);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 180,12).distance_to(coord_Paris), 12,0.5);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 270,89).distance_to(coord_Paris), 89,0.1);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 360,1415).distance_to(coord_Paris), 1415,0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 90, 42).distance_to(coord_Paris), 42, 0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 180, 12).distance_to(coord_Paris), 12, 0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 270, 89).distance_to(coord_Paris), 89, 0.1);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 360, 1415).distance_to(coord_Paris), 1415, 0.1);
     // Check when the direction is not in [0,360]
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 400,568).distance_to(coord_Paris), 568,0.5);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, -36,1000).distance_to(coord_Paris), 1000,0.5);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, -667,87).distance_to(coord_Paris), 87,0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, 400, 568).distance_to(coord_Paris), 568, 0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, -36,1000).distance_to(coord_Paris), 1000, 0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Paris, -667, 87).distance_to(coord_Paris), 87, 0.5);
     //Check on the pole and on the equator
-    BOOST_CHECK_CLOSE (project_in_direction(coord_North, 30,2016).distance_to(coord_North), 2016,0.5);
-    BOOST_CHECK_CLOSE (project_in_direction(coord_Equator, 70,1993).distance_to(coord_Equator), 1993,0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_North, 30, 2016).distance_to(coord_North), 2016, 0.5);
+    BOOST_CHECK_CLOSE (project_in_direction(coord_Equator, 70, 1993).distance_to(coord_Equator), 1993, 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(circle_test) {
-    navitia::type::GeographicalCoord coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177,48.856614);
-    navitia::type::GeographicalCoord coord_Pekin = navitia::type::GeographicalCoord(-89.61,40.5545);
-    navitia::type::GeographicalCoord coord_Almost_North = navitia::type::GeographicalCoord(180,0.5);
-    navitia::type::GeographicalCoord coord_North = navitia::type::GeographicalCoord(268,0);
-    navitia::type::Polygon c_Paris_42=circle(coord_Paris,42);
-    navitia::type::Polygon c_Paris_30=circle(coord_Paris,30);
-    navitia::type::Polygon c_Pekin_459=circle(coord_Pekin,459);
+    navitia::type::GeographicalCoord coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177, 48.856614);
+    navitia::type::GeographicalCoord coord_Pekin = navitia::type::GeographicalCoord(-89.61, 40.5545);
+    navitia::type::GeographicalCoord coord_Almost_North = navitia::type::GeographicalCoord(180, 0.5);
+    navitia::type::GeographicalCoord coord_North = navitia::type::GeographicalCoord(268, 0);
+    navitia::type::Polygon c_Paris_42=circle(coord_Paris, 42);
+    navitia::type::Polygon c_Paris_30=circle(coord_Paris, 30);
+    navitia::type::Polygon c_Pekin_459=circle(coord_Pekin, 459);
     double d_almost_North_to_North = coord_North.distance_to(coord_Almost_North);
-    navitia::type::Polygon c_Almost_North = circle(coord_Almost_North,d_almost_North_to_North + 20);
+    navitia::type::Polygon c_Almost_North = circle(coord_Almost_North, d_almost_North_to_North + 20);
     //Check circle is in a bigger when they have the same center
     bool coord_Paris_in_c_Paris_42=boost::geometry::within(coord_Paris, c_Paris_42);
     bool coord_Paris_in_c_Paris_30=boost::geometry::within(coord_Paris, c_Paris_30);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(circle_test) {
     double r_42 = c_Paris_42.outer()[i].distance_to(coord_Paris);
     double r_30 = c_Paris_30.outer()[j].distance_to(coord_Paris);
     double r_459 = c_Pekin_459.outer()[k].distance_to(coord_Pekin);
-    BOOST_CHECK_CLOSE (r_42, 42,0.5);
-    BOOST_CHECK_CLOSE (r_30, 30,0.5);
-    BOOST_CHECK_CLOSE (r_459, 459,0.5);
+    BOOST_CHECK_CLOSE (r_42, 42, 0.5);
+    BOOST_CHECK_CLOSE (r_30, 30, 0.5);
+    BOOST_CHECK_CLOSE (r_459, 459, 0.5);
 }

@@ -1,7 +1,4 @@
-#ifndef CIRCLE
-#define CIRCLE
-
-#endif // CIRCLE
+#pragma once
 
 #include "type/geographical_coord.h"
 #include <set>
@@ -12,14 +9,14 @@ constexpr static double N_RAD_TO_DEG = 57.295779513;
 constexpr static double PI = 3.14159265359;
 
 /**
-  On construit un point dans une direction donnée comprise entre 0° et 360°
-  radius : la distance entre ce point et le centre est donnée en mètres
+  Build a point in a given direction wic is between 0° and 360°
+  radius : the distance between center and the point in meter
 
-  On utilise l'équation d'un petit cercle sur la sphère
+  We use the equation of small circle on sphere
   http://step.ipgp.fr/images/8/81/Cours1_L3_Greff.pdf
 
-  Ainsi que les triangles rectangles sphériques
-  https://fr.wikipedia.org/wiki/Trigonométrie_sphérique
+  We use spherical trigonometry too
+  https://en.wikipedia.org/wiki/Spherical_trigonometry
 
  * @brief project_in_direction
  * @param center
