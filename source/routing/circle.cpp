@@ -45,7 +45,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
                                              const double& direction,
                                              const double& radius){
     assert(radius > 0);
-    double alpha=radius/navitia::type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
+    double alpha=radius / navitia::type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
     double direction_rad = fmod(direction, 360) * navitia::type::GeographicalCoord::N_DEG_TO_RAD;
     if (direction < 0) {
         direction_rad = 360 - direction_rad;
@@ -56,24 +56,19 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     double delta_lon;
     double lat;
     double lon;
-    //If the center is a pole
-    if(fmod(center.lat(),90)==0 && fmod(center.lat(),180)!=0){
-        lat = alpha;
-        lon = direction_rad;
-    }
     if (fmod(direction, 180) == 0) {
-        delta_lat = pow(-1, fmod(direction / 180, 2))*alpha;
+        delta_lat = pow(-1, fmod(direction / 180, 2)) * alpha;
         lat = center_lat_rad + delta_lat;
         lon = center_lon_rad;
     } else {
-        double projection=asin(sin(alpha) * sin(direction_rad));
+        double projection = asin(sin(alpha) * sin(direction_rad));
         delta_lat = acos(cos(alpha) / cos(projection));
-        if (direction_rad > PI/2 && direction_rad < 3*PI/2) {
+        if (direction_rad > PI / 2 && direction_rad < 3 * PI / 2) {
             delta_lat = -1 * delta_lat;
         }
         lat = center_lat_rad + delta_lat;
         delta_lon = acos((cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad)));
-        if (direction_rad > PI){
+        if (direction_rad > PI) {
             delta_lon = -1 * delta_lon;
         }
         lon = center_lon_rad + delta_lon;
@@ -82,10 +77,10 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     double lat_deg = lat * N_RAD_TO_DEG;
     //If latitude is not in  [-90,90] or longitude is not in [-180,180]
     if (lat_deg < -90 || lat_deg > 90) {
-        lat_deg = (lat_deg/abs(lat_deg)) * 90 + fmod(lat_deg, 90);
+        lat_deg = (lat_deg / abs(lat_deg)) * 90 + fmod(lat_deg, 90);
     }
     if (lon_deg < -180 || lon_deg > 180) {
-        lon_deg = (lon_deg/abs(lon_deg)) * 180 + fmod(lon_deg, 180);
+        lon_deg = (lon_deg / abs(lon_deg)) * 180 + fmod(lon_deg, 180);
     }
     return type::GeographicalCoord(lon_deg, lat_deg);
 }
@@ -93,7 +88,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius) {
     type::Polygon points;
-    for (double i = 0; i < 360; i++){
+    for (double i = 0; i < 360; i++) {
         points.outer().push_back(project_in_direction(center, i, radius));
     }
     points.outer().push_back(project_in_direction(center, 0, radius));
