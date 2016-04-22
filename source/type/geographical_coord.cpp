@@ -33,7 +33,6 @@ www.navitia.io
 namespace navitia { namespace type {
 
 double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
     double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
     double latitudeArc  = (this->lat() - other.lat()) * N_DEG_TO_RAD;
     double latitudeH = sin(latitudeArc * 0.5);

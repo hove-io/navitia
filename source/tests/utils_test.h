@@ -14,8 +14,7 @@
 /*
  * Utilities for tests
  */
-namespace navitia {
-namespace test {
+namespace navitia { namespace test {
 
 inline void handle_realtime_test(const std::string& id,
                                  const boost::posix_time::ptime& timestamp,
@@ -63,9 +62,7 @@ get_impact(const std::string& uri, const pbnavitia::Response& resp) {
     return nullptr;
 }
 
-}
-
-}
+}}// namespace navitia::test
 
 inline u_int32_t operator"" _t(const char* str, size_t s) {
     return boost::posix_time::duration_from_string(std::string(str, s)).total_seconds();
@@ -107,7 +104,7 @@ std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
     for (; it != end; ++it) { os << ", " << *it; }
     return os << "}";
 }
-}
+}// namespace std
 
 // small helper especially usefull for ptref tests
 // get list of pointers from indexes
@@ -143,3 +140,15 @@ std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data)
         const auto& r2 = range2; \
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
+
+
+namespace boost { namespace geometry { namespace model {
+inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
+    os <<"{\"type\":\"Polygon\",\"coordinates\":[[";
+    os<<std::setprecision(16) <<"["<<points.outer()[0].lon()<<", "<< points.outer()[0].lat() <<"],";
+    for(int i =1; i<=360; i++){
+        os<<std::setprecision(16) <<",["<<points.outer()[i].lon()<<", "<< points.outer()[i].lat() <<"]";
+    }
+    return os <<"]]}";
+}
+}}}//namespace boost::geometry::model

@@ -36,8 +36,7 @@ www.navitia.io
 #include <vector>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-
-#define PI 3.14159265
+#include <cmath>
 
 namespace navitia { namespace routing {
 
@@ -45,26 +44,50 @@ namespace navitia { namespace routing {
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
                                              const double& radius){
-    assert(direction >= 0);
-    assert(direction <= 360);
     assert(radius>0);
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double alpha=radius/EARTH_RADIUS_IN_METERS;
-    double direction_rad = direction*N_DEG_TO_RAD;
-    double center_lat_rad = center.lat()*N_DEG_TO_RAD;
-    double center_lon_rad = center.lon()*N_DEG_TO_RAD;
-    double projection=asin(sin(alpha)*sin(direction_rad));
-    double delta_lat = acos(cos(alpha)/cos(projection));
-    if (direction_rad > PI/2 && direction_rad < 3*PI/2){
-        delta_lat = -1*delta_lat;
+    double alpha=radius/navitia::type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
+    double direction_rad = fmod(direction,360)* navitia::type::GeographicalCoord::N_DEG_TO_RAD;
+    if(direction < 0){
+        direction_rad = 360 - direction_rad;
     }
-    double lat = center_lat_rad + delta_lat;
-    double delta_lon = acos((cos(alpha)-sin(lat)*sin(center_lat_rad))/(cos(lat)*cos(center_lat_rad)));
-    if(direction_rad > PI){
-        delta_lon = -1*delta_lon;
+    double center_lat_rad = center.lat()* navitia::type::GeographicalCoord::N_DEG_TO_RAD;
+    double center_lon_rad = center.lon()* navitia::type::GeographicalCoord::N_DEG_TO_RAD;
+    double delta_lat;
+    double delta_lon;
+    double lat;
+    double lon;
+    //If the center is a pole
+    if(fmod(center.lat(),90)==0 && fmod(center.lat(),180)!=0){
+        lat = alpha;
+        lon = direction_rad;
     }
-    double lon = center_lon_rad + delta_lon;
-    return type::GeographicalCoord(lon*N_RAD_TO_DEG,lat*N_RAD_TO_DEG);
+    if(fmod(direction,180)==0){
+        delta_lat = pow(-1,fmod(direction/180,2))*alpha;
+        lat = center_lat_rad + delta_lat;
+        lon = center_lon_rad;
+    }else{
+        double projection=asin(sin(alpha)*sin(direction_rad));
+        delta_lat = acos(cos(alpha)/cos(projection));
+        if (direction_rad > PI/2 && direction_rad < 3*PI/2){
+            delta_lat = -1*delta_lat;
+        }
+        lat = center_lat_rad + delta_lat;
+        delta_lon = acos((cos(alpha)-sin(lat)*sin(center_lat_rad))/(cos(lat)*cos(center_lat_rad)));
+        if(direction_rad > PI){
+            delta_lon = -1*delta_lon;
+        }
+        lon = center_lon_rad + delta_lon;
+    }
+    double lon_deg = lon*N_RAD_TO_DEG;
+    double lat_deg = lat*N_RAD_TO_DEG;
+    //If latitude is not in  [-90,90] or longitude is not in [-180,180]
+    if (lat_deg < -90 || lat_deg > 90){
+        lat_deg = (lat_deg/abs(lat_deg))*90 + fmod(lat_deg,90);
+    }
+    if (lon_deg < -180 || lon_deg > 180){
+        lon_deg = (lon_deg/abs(lon_deg))*180 + fmod(lon_deg,180);
+    }
+    return type::GeographicalCoord(lon_deg,lat_deg);
 }
 
 type::Polygon circle(const type::GeographicalCoord& center,

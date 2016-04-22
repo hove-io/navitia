@@ -76,6 +76,8 @@ struct GeographicalCoord{
 
     constexpr static double N_DEG_TO_RAD = 0.01745329238;
     constexpr static double N_M_TO_DEG = 1.0/111319.9;
+    constexpr static double EARTH_RADIUS_IN_METERS = 6372797.560856;
+
     /** Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine

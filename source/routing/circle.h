@@ -8,7 +8,6 @@
 
 namespace navitia { namespace routing {
 
-constexpr static double N_DEG_TO_RAD = 0.01745329238;
 constexpr static double N_RAD_TO_DEG = 57.295779513;
 constexpr static double PI = 3.14159265359;
 
