@@ -300,8 +300,6 @@ def similar_journeys_line_generator(journey):
         if is_walk_after_parking(journey, idx):
             continue
 
-        yield "orig:" + s.origin.uri
-        yield "dest:" + s.destination.uri
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:" + s.pt_display_informations.uris.line
         elif s.type == response_pb2.STREET_NETWORK:
