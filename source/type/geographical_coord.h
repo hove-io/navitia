@@ -78,12 +78,12 @@ struct GeographicalCoord{
     constexpr static double N_M_TO_DEG = 1.0/111319.9;
     constexpr static double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
-    /** Calcule la distance Grand Arc entre deux nœuds
+    /** Calculate the distance between two points
       *
-      * On utilise la formule de Haversine
+      * We use the Haversine frmula
       * http://en.wikipedia.org/wiki/Law_of_haversines
       *
-      * Si c'est des coordonnées non degrés, alors on utilise la distance euclidienne
+      * If the coordinate ara not in degree, thus we use euclidean distance
       */
     double distance_to(const GeographicalCoord & other) const;
 

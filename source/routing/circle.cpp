@@ -50,7 +50,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     double alpha = radius / GeographicalCoord::EARTH_RADIUS_IN_METERS;
     double direction_rad = fmod(direction, 360) * GeographicalCoord::N_DEG_TO_RAD;
     if (direction < 0) {
-        direction_rad = 360 - direction_rad;
+        direction_rad = 2 * PI - direction_rad;
     }
     double center_lat_rad = center.lat() * GeographicalCoord::N_DEG_TO_RAD;
     double center_lon_rad = center.lon() * GeographicalCoord::N_DEG_TO_RAD;
