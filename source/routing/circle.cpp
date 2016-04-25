@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "type/geographical_coord.h"
 #include "circle.h"
+#include "raptor.h"
 
 #include <set>
 #include <assert.h>
@@ -44,14 +45,15 @@ namespace navitia { namespace routing {
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
                                              const double& radius){
+    using navitia::type::GeographicalCoord;
     assert(radius > 0);
-    double alpha=radius / navitia::type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
-    double direction_rad = fmod(direction, 360) * navitia::type::GeographicalCoord::N_DEG_TO_RAD;
+    double alpha = radius / GeographicalCoord::EARTH_RADIUS_IN_METERS;
+    double direction_rad = fmod(direction, 360) * GeographicalCoord::N_DEG_TO_RAD;
     if (direction < 0) {
         direction_rad = 360 - direction_rad;
     }
-    double center_lat_rad = center.lat() * navitia::type::GeographicalCoord::N_DEG_TO_RAD;
-    double center_lon_rad = center.lon() * navitia::type::GeographicalCoord::N_DEG_TO_RAD;
+    double center_lat_rad = center.lat() * GeographicalCoord::N_DEG_TO_RAD;
+    double center_lon_rad = center.lon() * GeographicalCoord::N_DEG_TO_RAD;
     double delta_lat;
     double delta_lon;
     double lat;
@@ -84,6 +86,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     }
     return type::GeographicalCoord(lon_deg, lat_deg);
 }
+
 
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius) {

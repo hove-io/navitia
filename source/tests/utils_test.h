@@ -144,11 +144,12 @@ std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data)
 
 namespace boost { namespace geometry { namespace model {
 inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
-    os <<"{\"type\":\"Polygon\",\"coordinates\":[[";
-    os<<std::setprecision(16) <<"["<<points.outer()[0].lon()<<", "<< points.outer()[0].lat() <<"],";
-    for(int i =1; i<=360; i++){
-        os<<std::setprecision(16) <<",["<<points.outer()[i].lon()<<", "<< points.outer()[i].lat() <<"]";
+    os << "{\"type\":\"Polygon\",\"coordinates\":[[";
+    os << std::setprecision(16) << "["<<points.outer()[0].lon()<< ", " << points.outer()[0].lat() << "],";
+    for(int i = 1; i <= 360; i++) {
+        os << std::setprecision(16) << ",[" << points.outer()[i].lon() << ", " << points.outer()[i].lat() << "]";
     }
-    return os <<"]]}";
+    return os << "]]}";
+}
 }
 }}}//namespace boost::geometry::model
