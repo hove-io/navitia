@@ -151,5 +151,4 @@ inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& 
     }
     return os << "]]}";
 }
-}
 }}}//namespace boost::geometry::model
