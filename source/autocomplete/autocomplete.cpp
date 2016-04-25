@@ -218,6 +218,6 @@ Autocomplete<T>::find_complete_way(const std::string& str,
 
 // https://isocpp.org/wiki/faq/templates#separate-template-class-defn-from-decl
 // http://stackoverflow.com/a/32593884/1614576
-template class Autocomplete<nt::idx_t>;
+template struct Autocomplete<nt::idx_t>;
 
 }}
