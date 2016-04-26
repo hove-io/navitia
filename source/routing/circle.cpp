@@ -50,7 +50,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     double alpha = radius / GeographicalCoord::EARTH_RADIUS_IN_METERS;
     double direction_rad = fmod(direction, 360) * GeographicalCoord::N_DEG_TO_RAD;
     if (direction < 0) {
-        direction_rad = 2 * PI - direction_rad;
+        direction_rad = 2 * M_PI - direction_rad;
     }
     double center_lat_rad = center.lat() * GeographicalCoord::N_DEG_TO_RAD;
     double center_lon_rad = center.lon() * GeographicalCoord::N_DEG_TO_RAD;
@@ -65,12 +65,12 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     } else {
         double projection = asin(sin(alpha) * sin(direction_rad));
         delta_lat = acos(cos(alpha) / cos(projection));
-        if (direction_rad > PI / 2 && direction_rad < 3 * PI / 2) {
+        if (direction_rad > M_PI_2 && direction_rad < 3 * M_PI_2) {
             delta_lat = -1 * delta_lat;
         }
         lat = center_lat_rad + delta_lat;
         delta_lon = acos((cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad)));
-        if (direction_rad > PI) {
+        if (direction_rad > M_PI) {
             delta_lon = -1 * delta_lon;
         }
         lon = center_lon_rad + delta_lon;

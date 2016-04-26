@@ -45,7 +45,6 @@ www.navitia.io
 #include <boost/geometry/geometries/polygon.hpp>
 #include <iostream>
 
-
 using namespace navitia::routing;
 
 BOOST_AUTO_TEST_CASE(project_in_direction_test) {
@@ -66,21 +65,30 @@ BOOST_AUTO_TEST_CASE(project_in_direction_test) {
 }
 
 BOOST_AUTO_TEST_CASE(circle_test) {
-    auto coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177, 48.856614);
-    auto coord_Pekin = navitia::type::GeographicalCoord(-89.61, 40.5545);
-    auto coord_Almost_North = navitia::type::GeographicalCoord(180, 0.5);
-    auto coord_North = navitia::type::GeographicalCoord(268, 0);
+    using coord = navitia::type::GeographicalCoord;
+    using poly = boost::geometry::model::polygon<coord>;
+    coord coord_Paris {2.3522219000000177, 48.856614};
+    coord coord_Pekin = {-89.61, 40.5545};
+    coord coord_Almost_North = {180, 0.5};
+    coord coord_North = {268, 0};
     auto c_Paris_42 = circle(coord_Paris, 42);
     auto c_Paris_30 = circle(coord_Paris, 30);
     auto c_Pekin_459 = circle(coord_Pekin, 459);
     double d_almost_North_to_North = coord_North.distance_to(coord_Almost_North);
     auto c_Almost_North = circle(coord_Almost_North, d_almost_North_to_North + 20);
-    BOOST_CHECK(boost::geometry::within(coord_Paris, c_Paris_42));
-    BOOST_CHECK(boost::geometry::within(coord_Paris, c_Paris_30));
+    //Boost 1.49 needs <coord, poly> to work
+    auto within_coord_poly = [](const coord& c, const poly& p) {
+        return boost::geometry::within<coord, poly>(c, p);
+    };
+    BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_42));
+    BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_30));
+    BOOST_CHECK(within_coord_poly(coord_North, c_Almost_North));
+    // within is not defined for two polygons in boost 1.49
+#if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(c_Paris_30, c_Paris_42));
-    BOOST_CHECK(boost::geometry::within(coord_North, c_Almost_North));
     BOOST_CHECK(!boost::geometry::within(c_Paris_42, c_Paris_30));
     BOOST_CHECK(!boost::geometry::within(c_Paris_30, c_Pekin_459));
+#endif
     double r_42 = c_Paris_42.outer()[53].distance_to(coord_Paris);
     double r_30 = c_Paris_30.outer()[12].distance_to(coord_Paris);
     double r_459 = c_Pekin_459.outer()[324].distance_to(coord_Pekin);
