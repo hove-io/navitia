@@ -26,6 +26,13 @@ Journey qualification process
 
 Since Navitia can return several journeys, it tags them to help the user
 choose the best one that matches their needs.
+Here are some tagging rules:
+-    there is only one "Best" itinerary. It is the ASAP one, on best time
+-    the other kinds of itineraries are displayed only if the are relevant
+-    and for a specific tag, you may find many relevant itinerary
+
+For example, for a specific request, you can find the "best" itinerary, 2 "less_fallback_walk" ones 
+(with less walking, but taking more time) and no "comfort" (the "best" one is the same as the "comfort" one for example).
 
 The different journey types are:
 
