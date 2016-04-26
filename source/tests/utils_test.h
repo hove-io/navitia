@@ -151,4 +151,19 @@ inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& 
     }
     return os << "]]}";
 }
+
+inline std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
+    os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
+    for (int unsigned i = 0; i < polygons.size(); i++) {
+        os << std::setprecision(16) << "[[["<< polygons[i].outer()[0].lon() << "," << polygons[i].outer()[0].lat() << "]";
+        //for (int j = 0)
+        for(int unsigned j =1; j < polygons[i].outer().size(); j++){
+            os << std::setprecision(16) << ",["<<polygons[i].outer()[j].lon() << "," << polygons[i].outer()[j].lat() << "]";
+        }
+        os << "]]";
+        if ( i == (polygons.size() - 1) ) continue;
+        os << ",";
+    }
+    return os << "]}";
+}
 }}}//namespace boost::geometry::model
