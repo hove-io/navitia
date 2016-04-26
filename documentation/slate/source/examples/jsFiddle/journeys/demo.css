@@ -3,16 +3,16 @@ body {
 }
 
 p:first-child {
-  margin: 20px;
+  margin: 1.25em;
 }
 
 table {
-    font-size: 16px;
+    font-size: 1em;
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
     border-spacing: 0;
     width: 100%;
-    margin: 20px;
+    margin: 1.25em;
 }
 
 tbody {
@@ -29,26 +29,26 @@ tr {
 
 td, th {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 0.5em;
     text-align:center;
 }
 
 th {
-    padding-top: 11px;
-    padding-bottom: 11px;
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
     background-color: #4CAF50;
     color: white;
 }
 
 .raw-result {
-  margin: 20px;
+  margin: 1.25em;
 }
 
 pre {
   background-color: ghostwhite;
   border: 1px solid silver;
-  padding: 10px 20px;
-  margin: 20px;
+  padding: 0.75em 1.25em;
+  margin: 1.25em;
 }
 
 .json-key {
