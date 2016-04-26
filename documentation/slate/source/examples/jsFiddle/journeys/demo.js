@@ -9,10 +9,10 @@
 
 $.ajax({
   type: 'GET',
-  url: 'https://api.navitia.io/v1/journeys?from=2.3749036;48.8467927&to=2.2922926;48.8583736',
+  url: 'https://api.navitia.io/v1/coverage/sandbox/journeys?from=2.3749036;48.8467927&to=2.2922926;48.8583736',
   dataType: 'json',
   headers: {
-    'Authorization': 'Basic ' + btoa('a61f4cd8-3007-4557-9f4c-214969369cca')
+    Authorization: 'Basic ' + btoa('a61f4cd8-3007-4557-9f4c-214969369cca')
   },
   success: function(result) {
     displayJourney(result.journeys[0]);
