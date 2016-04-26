@@ -91,10 +91,12 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius) {
     type::Polygon points;
+    auto& points_out = points.outer();
+    points_out.reserve(360);
     for (double i = 0; i < 360; i++) {
-        points.outer().push_back(project_in_direction(center, i, radius));
+        points_out.push_back(project_in_direction(center, i, radius));
     }
-    points.outer().push_back(project_in_direction(center, 0, radius));
+    points_out.push_back(project_in_direction(center, 0, radius));
     return points;
 }
 

@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(project_in_direction_test) {
     center.push_back(coord_North);
     center.push_back(coord_Equator);
     for (int i = 0; i < 3; i++) {
-        for (double angle = 0; angle < 400; angle++) {
+        for (double angle = - 100; angle < 400; angle++) {
             for (double radius = 10; radius < 100; radius++) {
                 BOOST_CHECK_CLOSE (project_in_direction(center[i], angle, radius).distance_to(center[i]), radius, 1);
             }
