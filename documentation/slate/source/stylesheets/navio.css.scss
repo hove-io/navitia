@@ -23,3 +23,28 @@
         margin-top: -2em;
     }
 }
+
+.button {
+    background-color: #fff;
+    border: 0;
+    border-radius: 0.25em;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0;
+    min-width: 2.25em;
+    outline: 0;
+    overflow: hidden;
+    padding: 0.5em;
+    text-align: center;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    transition: background-color .2s,box-shadow .2s;
+    vertical-align: middle;
+    white-space: nowrap;
+    box-shadow: 0 0.125em 0.5em 0 rgba(0, 0, 0, 0.26);
+}
+
+.button-blue {
+    color: #039be5;
+}

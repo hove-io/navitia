@@ -587,6 +587,13 @@ The list of regions covered by navitia is available through [coverage](#coverage
     journeys from or to the point.
 </aside>
 
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/journeys/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
+
 ### Accesses
 
 | url | Result |
