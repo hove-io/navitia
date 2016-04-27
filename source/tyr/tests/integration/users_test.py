@@ -268,7 +268,7 @@ def test_update_block_until(create_multiple_users):
     """
     we update a user
     """
-    user = {'login': 'user1', 'block_until': '20160128T111200Z'}
+    user = {'block_until': '20160128T111200Z'}
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
