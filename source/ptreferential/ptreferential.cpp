@@ -251,7 +251,7 @@ get_indexes_from_code(const Data&, const std::string&, const std::string&) {
 typedef std::pair<type::Type_e, Indexes> pair_indexes;
 struct VariantVisitor: boost::static_visitor<pair_indexes>{
     const Data& d;
-    variant_visitor(const Data & d): d(d){}
+    VariantVisitor(const Data & d): d(d){}
     pair_indexes operator()(const type::disruption::UnknownPtObj){
         return {type::Type_e::Unknown, Indexes{}};
     }
