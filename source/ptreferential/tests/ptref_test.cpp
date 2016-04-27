@@ -187,6 +187,14 @@ BOOST_AUTO_TEST_CASE(parser_method) {
     BOOST_CHECK_EQUAL(filters[0].args, std::vector<std::string>{"john"});
 }
 
+BOOST_AUTO_TEST_CASE(parser_method_has_disruption) {
+    std::vector<Filter> filters = parse(R"(vehicle_journey.has_disruption())");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
+    BOOST_CHECK_EQUAL(filters[0].method, "has_disruption");
+    BOOST_CHECK_EQUAL(filters[0].args.size(), 0);
+}
+
 struct Moo {
     int bli;
 };
