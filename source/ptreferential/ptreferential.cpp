@@ -39,6 +39,7 @@ www.navitia.io
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
+#include <boost/spirit/include/qi_optional.hpp>
 #include <boost/spirit/include/phoenix1.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
@@ -106,7 +107,7 @@ struct select_r: qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
         args_clause = (word|escaped_string|bracket_string)[boost::phoenix::push_back(qi::_val, qi::_1)] % ',';
-        method_clause = (word >> "." >> word >> "(" >> args_clause >> ")")
+        method_clause = (word >> "." >> word >> "("  >> -(args_clause) >> ")" )
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         filter %= (single_clause | having_clause | after_clause | method_clause)
             % (qi::lexeme["and"] | qi::lexeme["AND"]);
