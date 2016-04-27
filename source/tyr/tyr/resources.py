@@ -513,7 +513,7 @@ class User(flask_restful.Resource):
     def put(self, user_id):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('login', type=unicode, required=False,
+        parser.add_argument('login', type=unicode, required=False, default=user.login,
                 case_sensitive=False, help='user identifier', location=('json', 'values'))
         parser.add_argument('email', type=unicode, required=False, default=user.email,
                 case_sensitive=False, help='email is required', location=('json', 'values'))
