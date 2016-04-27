@@ -185,7 +185,7 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
             vehicle_journeys =
                 ptref::make_query(type::Type_e::VehicleJourney, new_filter, forbidden_uris, d);
         } catch (const ptref::parsing_error& parse_error) {
-            LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : Unable to parse filter "
+            LOG4CPLUS_WARN(logger, "Disruption::add_vehicle_journeys : Unable to parse filter "
                            << parse_error.more);
         } catch (const ptref::ptref_error&) {
         }
