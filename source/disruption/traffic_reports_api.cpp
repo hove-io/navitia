@@ -175,15 +175,14 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
 
     for (const auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
-        std::string new_filter = "network.uri=" + network->uri;
+        std::string new_filter = "network.uri=" + network->uri + " and vehicle_journey.has_disruption()";
         if (!filter.empty()) {
             new_filter += " and " + filter;
         }
         type::Indexes vehicle_journeys;
-
         try {
             vehicle_journeys =
-                ptref::make_query(type::Type_e::VehicleJourney, new_filter, forbidden_uris, d);
+                    ptref::make_query(type::Type_e::VehicleJourney, new_filter, forbidden_uris, d);
         } catch (const ptref::parsing_error& parse_error) {
             LOG4CPLUS_WARN(logger, "Disruption::add_vehicle_journeys : Unable to parse filter "
                            << parse_error.more);
