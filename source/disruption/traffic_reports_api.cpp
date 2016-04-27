@@ -292,6 +292,10 @@ void TrafficReport::disruptions_list(const std::string& filter,
                         const type::Data& d,
                         const boost::posix_time::ptime now){
 
+    if (d.pt_data->disruption_holder.get_weak_impacts().empty()){
+        return;
+    }
+
     type::Indexes network_idx = ptref::make_query(type::Type_e::Network, filter,
                                                              forbidden_uris, d);
     add_networks(network_idx, d, now);
