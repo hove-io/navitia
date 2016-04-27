@@ -248,6 +248,58 @@ get_indexes_from_code(const Data&, const std::string&, const std::string&) {
     return Indexes{};
 }
 
+typedef std::pair<type::Type_e, Indexes> pair_indexes;
+struct VariantVisitor: boost::static_visitor<pair_indexes>{
+    const Data& d;
+    variant_visitor(const Data & d): d(d){}
+    pair_indexes operator()(const type::disruption::UnknownPtObj){
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Network*){
+        return {type::Type_e::Network, Indexes{}};
+    }
+    pair_indexes operator()(const type::StopArea*){
+        return {type::Type_e::StopArea, Indexes{}};
+    }
+    pair_indexes operator()(const type::StopPoint*){
+        return {type::Type_e::StopPoint, Indexes{}};
+    }
+    pair_indexes operator()(const type::disruption::LineSection){
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Line*){
+        return {type::Type_e::Line, Indexes{}};
+    }
+    pair_indexes operator()(const type::Route*){
+        return {type::Type_e::Route, Indexes{}};
+    }
+    pair_indexes operator()(const type::MetaVehicleJourney* meta_vj){
+        return {type::Type_e::VehicleJourney, meta_vj->get(type::Type_e::VehicleJourney, *d.pt_data)};
+    }
+};
+
+static Indexes get_indexes_by_impacts(const Data & d, const type::Type_e& type_e){
+    Indexes result;
+    VariantVisitor visit(d);
+    const auto& impacts = d.get_assoc_data<navitia::type::disruption::Impact>();
+    for(const auto& impact: impacts){
+        const auto imp = impact.lock();
+        if (!imp) {
+            continue;
+        }
+        if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
+            continue;
+        }
+        for(const auto& entitie: imp->informed_entities){
+            auto pair_type_indexes = boost::apply_visitor(visit, entitie);
+            if(type_e == pair_type_indexes.first){
+                result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
+            }
+        }
+    }
+    return result;
+}
+
 template<typename T>
 Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     Indexes indexes;
