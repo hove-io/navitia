@@ -355,6 +355,10 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
             for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.args.at(0))) {
                 indexes.insert(vj->idx); //TODO bulk insert ?
             }
+        } else if ((filter.object == "vehicle_journey")
+                   && (filter.method == "has_disruption")
+                   && (filter.args.size() == 0)) {
+                indexes = get_indexes_by_impacts(d, type::Type_e::VehicleJourney);
         } else if (filter.method == "has_code" && filter.args.size() == 2) {
             indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
         } else {
