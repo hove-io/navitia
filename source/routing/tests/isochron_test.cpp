@@ -71,25 +71,29 @@ BOOST_AUTO_TEST_CASE(project_in_direction_test) {
 }
 
 BOOST_AUTO_TEST_CASE(circle_test) {
-    // Warning : it doesn't work if a pole is in the circle
     using coord = navitia::type::GeographicalCoord;
     using poly = boost::geometry::model::polygon<coord>;
     coord coord_Paris {2.3522219000000177, 48.856614};
     coord coord_Pekin = {-89.61, 40.5545};
-    coord coord_center = {0, 50};
-    coord coord_edge = {0, 10};
+    coord coord_almost_North = {0, 89};
+    coord coord_North = {0, 90};
+    coord coord_Equator = {0, 180};
+    coord coord_change_day = {16, 180};
+    //coord coord_Niger = {10, 12};
     auto c_Paris_42 = circle(coord_Paris, 42);
     auto c_Paris_30 = circle(coord_Paris, 30);
     auto c_Pekin_459 = circle(coord_Pekin, 459);
-    double d_center_to_edge = coord_edge.distance_to(coord_center);
-    auto c_center_to_edge = circle(coord_center, d_center_to_edge);
-    //Boost 1.49 needs <coord, poly> to work
+    double d_North_to_almost_North = coord_North.distance_to(coord_almost_North);
+    auto c_almost_North_to_North = circle(coord_almost_North, d_North_to_almost_North + 2000000);
+    double d_Equator_to_change_day = coord_Equator.distance_to(coord_change_day);
+    auto c_change_day_to_Equator = circle(coord_change_day, d_Equator_to_change_day + 2000000);
     auto within_coord_poly = [](const coord& c, const poly& p) {
         return boost::geometry::within<coord, poly>(c, p);
     };
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_42));
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_30));
-    BOOST_CHECK(within_coord_poly(coord_edge, c_center_to_edge));
+    BOOST_CHECK(within_coord_poly(coord_North, c_almost_North_to_North));
+    BOOST_CHECK(within_coord_poly(coord_Equator, c_change_day_to_Equator));
     // within is not defined for two polygons in boost 1.49
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(c_Paris_30, c_Paris_42));

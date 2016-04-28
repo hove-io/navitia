@@ -41,30 +41,7 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-static type::GeographicalCoord in_the_right_interval(double& lon, double& lat) {
-    if (fabs(lat) > 90) {
-        lat = fmod(lat, 360);
-        if (fabs(lat) > 90) {
-            if (fabs(lat) > 270) {
-                lat = (std::signbit(lat) ? 1 : -1) * (90 - fabs(fmod(lat, 90)));
-            } else {
-                lon = - lon;
-                if (fabs(lat) > 180) {
-                    lat = (std::signbit(lat) ? 1 : -1) * fabs(fmod(lat, 90));
-                } else {
-                    lat = (std::signbit(lat) ? - 1 : 1) * (90 - fabs(fmod(lat, 90)));
-                }
-            }
-        }
-    }
-    if (fabs(lon > 180)) {
-        lon = fmod(lon, 360);
-        if (fabs(lon) > 180) {
-            lon = (std::signbit(lon) ? 1 : -1) * (180 - fabs(fmod(lon, 180)));
-        }
-    }
-    return type::GeographicalCoord(lon, lat);
-}
+
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
@@ -78,7 +55,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     }
     double center_lat_deg = center.lat();
     double center_lon_deg = center.lon();
-    type::GeographicalCoord center_right_interval = in_the_right_interval(center_lon_deg, center_lat_deg);
+    type::GeographicalCoord center_right_interval = type::GeographicalCoord(center_lon_deg, center_lat_deg);
     double center_lat_rad = center_right_interval.lat() * GeographicalCoord::N_DEG_TO_RAD;
     double center_lon_rad = center_right_interval.lon() * GeographicalCoord::N_DEG_TO_RAD;
     double lat;
@@ -117,7 +94,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     }
     double lon_deg = lon * N_RAD_TO_DEG;
     double lat_deg = lat * N_RAD_TO_DEG;
-    return in_the_right_interval(lon_deg, lat_deg);
+    return type::GeographicalCoord(lon_deg, lat_deg);
 }
 
 

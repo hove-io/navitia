@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "geographical_coord.h"
+#include <iomanip>
 
 namespace navitia { namespace type {
 
@@ -122,3 +123,56 @@ GeographicalCoord project(const MultiLineString& multiline, const GeographicalCo
 }
 
 }}// namespace navitia::type
+
+navitia::type::GeographicalCoord in_the_right_interval(double& lon, double& lat) {
+    if (fabs(lat) > 90) {
+        lat = fmod(lat, 360);
+        if (fabs(lat) > 90) {
+            if (fabs(lat) > 270) {
+                lat = (std::signbit(lat) ? 1 : -1) * (90 - fabs(fmod(lat, 90)));
+            } else {
+                lon = - lon;
+                if (fabs(lat) > 180) {
+                    lat = (std::signbit(lat) ? 1 : -1) * fabs(fmod(lat, 90));
+                } else {
+                    lat = (std::signbit(lat) ? - 1 : 1) * (90 - fabs(fmod(lat, 90)));
+                }
+            }
+        }
+    }
+    if (fabs(lon > 180)) {
+        lon = fmod(lon, 360);
+        if (fabs(lon) > 180) {
+            lon = (std::signbit(lon) ? 1 : -1) * (180 - fabs(fmod(lon, 180)));
+        }
+    }
+    return navitia::type::GeographicalCoord(lon, lat);
+}
+
+namespace boost { namespace geometry { namespace model {
+inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
+    os << "{\"type\":\"Polygon\",\"coordinates\":[[";
+    os << std::setprecision(16) << "[" << points.outer()[0].lon() << ", " << points.outer()[0].lat() << "]";
+    for(size_t i = 1; i <= points.outer().size() - 1; i++) {
+        os << std::setprecision(16) << ",[" << points.outer()[i].lon() << ", " << points.outer()[i].lat() << "]";
+    }
+    return os << "]]}";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
+    os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
+    for (int unsigned i = 0; i < polygons.size() - 1; i++) {
+        os << std::setprecision(16) << "[[["<< polygons[i].outer()[0].lon();
+        os << std::setprecision(16) << "," << polygons[i].outer()[0].lat() << "]";
+        //for (int j = 0)
+        for(int unsigned j =1; j < polygons[i].outer().size(); j++){
+            os << std::setprecision(16) << ",[" <<polygons[i].outer()[j].lon();
+            os << std::setprecision(16) << "," << polygons[i].outer()[j].lat() << "]";
+        }
+        os << "]]";
+        if ( i == (polygons.size() - 1) ) continue;
+        os << ",";
+    }
+    return os << "]}";
+}
+}}}//namespace boost::geometry::model
