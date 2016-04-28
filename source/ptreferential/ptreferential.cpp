@@ -107,6 +107,9 @@ struct select_r: qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
         args_clause = (word|escaped_string|bracket_string)[boost::phoenix::push_back(qi::_val, qi::_1)] % ',';
+        // args_clause is optional.
+        // Example          : R"(vehicle_journey.has_headsign("john"))", args_clause = john
+        //                  : R"(vehicle_journey.has_disruption())", args_clause = ""
         method_clause = (word >> "." >> word >> "("  >> -(args_clause) >> ")" )
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         filter %= (single_clause | having_clause | after_clause | method_clause)
@@ -358,6 +361,7 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
         } else if ((filter.object == "vehicle_journey")
                    && (filter.method == "has_disruption")
                    && (filter.args.size() == 0)) {
+                // For traffic_report api, get indexes of VehicleJourney impacted only.
                 indexes = get_indexes_by_impacts(d, type::Type_e::VehicleJourney);
         } else if (filter.method == "has_code" && filter.args.size() == 2) {
             indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
