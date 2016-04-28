@@ -56,39 +56,40 @@ using namespace navitia::routing;
 BOOST_AUTO_TEST_CASE(project_in_direction_test) {
     std::vector<navitia::type::GeographicalCoord> center;
     auto coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177,48.856614);
-    auto coord_North = navitia::type::GeographicalCoord(90,0);
-    auto coord_Equator = navitia::type::GeographicalCoord(0,48.856614);
+    auto coord_North = navitia::type::GeographicalCoord(0,90);
+    auto coord_Equator = navitia::type::GeographicalCoord(0,179,9999);
     center.push_back(coord_Paris);
     center.push_back(coord_North);
     center.push_back(coord_Equator);
     for (int i = 0; i < 3; i++) {
         for (double angle = - 100; angle < 400; angle++) {
             for (double radius = 10; radius < 100; radius++) {
-                BOOST_CHECK_CLOSE (project_in_direction(center[i], angle, radius).distance_to(center[i]), radius, 1);
+                BOOST_CHECK_CLOSE (project_in_direction(center[i], angle, radius).distance_to(center[i]), radius, 2);
             }
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(circle_test) {
+    // Warning : it doesn't work if a pole is in the circle
     using coord = navitia::type::GeographicalCoord;
     using poly = boost::geometry::model::polygon<coord>;
     coord coord_Paris {2.3522219000000177, 48.856614};
     coord coord_Pekin = {-89.61, 40.5545};
-    coord coord_Almost_North = {180, 0.5};
-    coord coord_North = {268, 0};
+    coord coord_center = {0, 50};
+    coord coord_edge = {0, 10};
     auto c_Paris_42 = circle(coord_Paris, 42);
     auto c_Paris_30 = circle(coord_Paris, 30);
     auto c_Pekin_459 = circle(coord_Pekin, 459);
-    double d_almost_North_to_North = coord_North.distance_to(coord_Almost_North);
-    auto c_Almost_North = circle(coord_Almost_North, d_almost_North_to_North + 20);
+    double d_center_to_edge = coord_edge.distance_to(coord_center);
+    auto c_center_to_edge = circle(coord_center, d_center_to_edge);
     //Boost 1.49 needs <coord, poly> to work
     auto within_coord_poly = [](const coord& c, const poly& p) {
         return boost::geometry::within<coord, poly>(c, p);
     };
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_42));
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_30));
-    BOOST_CHECK(within_coord_poly(coord_North, c_Almost_North));
+    BOOST_CHECK(within_coord_poly(coord_edge, c_center_to_edge));
     // within is not defined for two polygons in boost 1.49
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(c_Paris_30, c_Paris_42));
@@ -135,8 +136,9 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     navitia::routing::map_stop_point_duration d;
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "08:02"_t));
-    navitia::type::MultiPolygon isochron = build_ischron(raptor, b.data->pt_data->stop_points, true, navitia::DateTimeUtils::set(0, "08:00"_t),
-                                                                 navitia::DateTimeUtils::set(0, "09:12"_t), d);
+    navitia::type::MultiPolygon isochron = build_ischron(raptor, b.data->pt_data->stop_points, true, 
+                                                         navitia::DateTimeUtils::set(0, "08:00"_t),
+                                                         navitia::DateTimeUtils::set(0, "09:12"_t), d);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron));

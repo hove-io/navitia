@@ -41,6 +41,30 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+static type::GeographicalCoord in_the_right_interval(double& lon, double& lat) {
+    if (fabs(lat) > 90) {
+        lat = fmod(lat, 360);
+        if (fabs(lat) > 90) {
+            if (fabs(lat) > 270) {
+                lat = (std::signbit(lat) ? 1 : -1) * (90 - fabs(fmod(lat, 90)));
+            } else {
+                lon = - lon;
+                if (fabs(lat) > 180) {
+                    lat = (std::signbit(lat) ? 1 : -1) * fabs(fmod(lat, 90));
+                } else {
+                    lat = (std::signbit(lat) ? - 1 : 1) * (90 - fabs(fmod(lat, 90)));
+                }
+            }
+        }
+    }
+    if (fabs(lon > 180)) {
+        lon = fmod(lon, 360);
+        if (fabs(lon) > 180) {
+            lon = (std::signbit(lon) ? 1 : -1) * (180 - fabs(fmod(lon, 180)));
+        }
+    }
+    return type::GeographicalCoord(lon, lat);
+}
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
@@ -52,50 +76,48 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     if (direction < 0) {
         direction_rad = 2 * M_PI - direction_rad;
     }
-    double center_lat_rad = center.lat() * GeographicalCoord::N_DEG_TO_RAD;
-    double center_lon_rad = center.lon() * GeographicalCoord::N_DEG_TO_RAD;
-    double delta_lat;
-    double delta_lon;
+    double center_lat_deg = center.lat();
+    double center_lon_deg = center.lon();
+    type::GeographicalCoord center_right_interval = in_the_right_interval(center_lon_deg, center_lat_deg);
+    double center_lat_rad = center_right_interval.lat() * GeographicalCoord::N_DEG_TO_RAD;
+    double center_lon_rad = center_right_interval.lon() * GeographicalCoord::N_DEG_TO_RAD;
     double lat;
     double lon;
-    if (fmod(direction, 180) == 0) {
-        delta_lat = pow(-1, fmod(direction / 180, 2)) * alpha;
-        lat = center_lat_rad + delta_lat;
-        lon = center_lon_rad;
+    if (fabs(center_right_interval.lat()) == 90) {
+        lon = direction_rad - M_PI;
+        lat = M_PI_2 - alpha;
     } else {
-        double projection = asin(sin(alpha) * sin(direction_rad));
-        delta_lat = acos(cos(alpha) / cos(projection));
-        if (direction_rad > M_PI_2 && direction_rad < 3 * M_PI_2) {
-            delta_lat = -1 * delta_lat;
+        double delta_lat;
+        double delta_lon;
+        if (fmod(direction, 180) == 0) {
+            delta_lat = pow(-1, fmod(direction / 180, 2)) * alpha;
+            lat = center_lat_rad + delta_lat;
+            lon = center_lon_rad;
+        } else {
+            double projection = asin(sin(alpha) * sin(direction_rad));
+            delta_lat = acos(cos(alpha) / cos(projection));
+            if (direction_rad > M_PI_2 && direction_rad < 3 * M_PI_2) {
+                delta_lat = -1 * delta_lat;
+            }
+            lat = center_lat_rad + delta_lat;
+            if (lat == M_PI_2) {
+                delta_lon = (direction == 90 ? 1 : - 1) * alpha;
+            } else {
+                double b = (cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad));
+                if (fabs(b) >= 1) {
+                    b = (std::signbit(b) ? fmod(b - 1, 2) + 1 : fmod(b + 1, 2) - 1);
+                }
+                delta_lon = acos(b);
+                if (direction_rad > M_PI) {
+                    delta_lon = -1 * delta_lon;
+                }
+            }
+            lon = center_lon_rad + delta_lon;
         }
-        lat = center_lat_rad + delta_lat;
-        delta_lon = acos((cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad)));
-        if (direction_rad > M_PI) {
-            delta_lon = -1 * delta_lon;
-        }
-        lon = center_lon_rad + delta_lon;
     }
     double lon_deg = lon * N_RAD_TO_DEG;
     double lat_deg = lat * N_RAD_TO_DEG;
-    //If latitude is not in  [-90,90] or longitude is not in [-180,180]
-    if (lat_deg < -90 || lat_deg > 90) {
-        lat_deg = fmod(lat_deg, 360);
-        if (lat_deg < -90 || lat_deg > 90) {
-            lon_deg =  - lon_deg;
-            if (fabs(lat_deg) > 180) {
-                lat_deg = (std::signbit(lat_deg) ? 1 : -1) * fabs(fmod(lat_deg, 90));
-            } else {
-                lat_deg = (std::signbit(lat_deg) ? - 1 : 1) * (90 - fabs(fmod(lat_deg, 90)));
-            }
-        }
-    }
-    if (fmod(lon_deg, 360) < -180 || fmod(lon_deg, 360) > 180) {
-        lon_deg = fmod(lon_deg, 360);
-        if (lon_deg < -180 || lon_deg > 180) {
-            lon_deg = (std::signbit(lon_deg) ? 1 : -1) * (180 - fabs(fmod(lon_deg, 180)));
-        }
-    }
-    return type::GeographicalCoord(lon_deg, lat_deg);
+    return in_the_right_interval(lon_deg, lat_deg);
 }
 
 
@@ -113,7 +135,7 @@ type::Polygon circle(const type::GeographicalCoord& center,
 
 type::MultiPolygon build_ischron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
-                                const bool& clockwise,
+                                const bool clockwise,
                                 const DateTime& init_dt,
                                 const DateTime& bound,
                                 const map_stop_point_duration& origin) {
@@ -121,8 +143,8 @@ type::MultiPolygon build_ischron(RAPTOR& raptor,
     double speed = 0.8; // About 3km/h
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        int duration_max = bound > init_dt ? bound - it->second.total_seconds() : it->second.total_seconds() - bound;
-        type::GeographicalCoord center = data_departure[it->first.val]->coord;
+        int duration_max = fabs(bound - it->second.total_seconds());
+        const auto& center = data_departure[it->first.val]->coord;
         circles.push_back(circle(center , duration_max * speed));
     }
     for(const type::StopPoint* sp: stop_points) {
@@ -135,7 +157,7 @@ type::MultiPolygon build_ischron(RAPTOR& raptor,
                     || ! raptor.labels[round].transfer_is_initialized(sp_idx)) {
                 continue;
             }
-            int duration = best_lbl > init_dt ? best_lbl - init_dt : init_dt - best_lbl;
+            int duration = fabs(best_lbl - init_dt);
             circles.push_back(circle(sp->coord, duration * speed));
         }
     }
