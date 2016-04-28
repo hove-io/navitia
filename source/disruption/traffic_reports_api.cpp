@@ -291,6 +291,7 @@ void TrafficReport::disruptions_list(const std::string& filter,
                         const type::Data& d,
                         const boost::posix_time::ptime now){
 
+    // if no disruptions, no need to make unnecessary treatment
     if (d.pt_data->disruption_holder.get_weak_impacts().empty()){
         return;
     }
