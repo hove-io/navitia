@@ -538,6 +538,6 @@ struct Autocomplete
     }
 };
 
-extern template class Autocomplete<navitia::type::idx_t>;
+extern template struct Autocomplete<navitia::type::idx_t>;
 
 }} // namespace navitia::autocomplete

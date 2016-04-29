@@ -528,9 +528,14 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL'] + '/' + MIMIR_INDEX
     working_directory = unzip_if_needed(filename)
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
     try:
+        params = ['-i', working_directory, '--connection-string', cnx_string]
+        for lvl in autocomplete_instance.admin_level:
+            params.append('--level')
+            params.append(str(lvl))
         res = launch_exec("osm2mimir",
-                          ['-i', working_directory, '--connection-string', cnx_string],
+                          params,
                           logger)
         if res != 0:
             #@TODO: exception

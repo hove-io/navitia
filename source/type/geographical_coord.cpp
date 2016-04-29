@@ -29,11 +29,11 @@ www.navitia.io
 */
 
 #include "geographical_coord.h"
+#include <iomanip>
 
 namespace navitia { namespace type {
 
 double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
     double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
     double latitudeArc  = (this->lat() - other.lat()) * N_DEG_TO_RAD;
     double latitudeH = sin(latitudeArc * 0.5);
@@ -123,3 +123,63 @@ GeographicalCoord project(const MultiLineString& multiline, const GeographicalCo
 }
 
 }}// namespace navitia::type
+
+navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat) {
+    if (fabs(lat) > 90) {
+        lat = fmod(lat, 360);
+        if (fabs(lat) > 90) {
+            if (fabs(lat) > 270) {
+                lat = (std::signbit(lat) ? 1 : -1) * (90 - fabs(fmod(lat, 90)));
+            } else {
+                lon = - lon;
+                if (fabs(lat) > 180) {
+                    lat = (std::signbit(lat) ? 1 : -1) * fabs(fmod(lat, 90));
+                } else {
+                    lat = (std::signbit(lat) ? - 1 : 1) * (90 - fabs(fmod(lat, 90)));
+                }
+            }
+        }
+    }
+    if (fabs(lon > 180)) {
+        lon = fmod(lon, 360);
+        if (fabs(lon) > 180) {
+            lon = (std::signbit(lon) ? 1 : -1) * (180 - fabs(fmod(lon, 180)));
+        }
+    }
+    return navitia::type::GeographicalCoord(lon, lat);
+}
+
+namespace boost { namespace geometry { namespace model {
+
+struct GeoCoord {
+    const navitia::type::GeographicalCoord& coord;
+    GeoCoord(const navitia::type::GeographicalCoord& coord): coord(coord) {}
+};
+
+std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
+    return os << std::setprecision(16) << "[" << coord.coord << "]";
+}
+
+std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
+    os << "{\"type\":\"Polygon\",\"coordinates\":[[";
+    os << GeoCoord(points.outer()[0]);
+    for(const auto& coord: points.outer()) {
+        os << "," << GeoCoord(coord);
+    }
+    return os << "]]}";
+}
+
+std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
+    os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
+    for (unsigned i = 0; i < polygons.size(); i++) {
+        os <<  "[["<< GeoCoord(polygons[0].outer()[0]);
+        for(const auto& coord: polygons[i].outer()) {
+             os << "," << GeoCoord(coord);
+        }
+        os << "]]";
+        if (i == polygons.size() - 1) { continue; }
+        os << ",";
+    }
+    return os << "]}";
+}
+}}}//namespace boost::geometry::model

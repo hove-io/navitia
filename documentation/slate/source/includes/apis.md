@@ -204,7 +204,7 @@ period. Both parameters "until" and "since" are optional.
 
 Example:
 
--   <https://api.navitia.io/v1/coverage/fr_idf/vehicle_journeys?since=20150912T120000&until=20150913T110000>
+-   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20160503T120000&until=20160503T120100>
 
 <aside class="warning">
     This filter is applied using only the first stop time of a
@@ -586,6 +586,13 @@ The list of regions covered by navitia is available through [coverage](#coverage
     If only one is defined an isochrone is computed with every possible
     journeys from or to the point.
 </aside>
+
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/journeys/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
 
 ### Accesses
 

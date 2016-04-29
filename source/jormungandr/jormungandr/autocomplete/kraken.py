@@ -33,7 +33,7 @@ from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.scenarios.utils import build_pagination, pb_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
-from flask.ext.restful import marshal_with, fields
+from flask.ext.restful import marshal_with, fields, abort
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.utils import date_to_timestamp
@@ -72,7 +72,7 @@ class Kraken(AbstractAutocomplete):
 
         resp = instance.send_and_receive(req)
         if (not hasattr(resp, 'places')) and request['search_type'] == 0:
-            args["search_type"] = 1
+            request['search_type'] = 1
             resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp

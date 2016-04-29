@@ -34,6 +34,9 @@ from jormungandr import stat_manager
 from jormungandr.stat_manager import StatManager
 #from mock import patch
 from jormungandr.utils import str_to_time_stamp
+from jormungandr import app
+import time
+import mock
 
 
 class MockWrapper:
@@ -214,3 +217,21 @@ class TestStatPlaces(AbstractTestFixture):
         StatManager.publish_request = mock.check_stat_places_to_publish
         response = self.query_region("places/stop_area:stop1", display=False)
         assert mock.called
+
+class TestError(object):
+        @mock.patch.object(stat_manager, 'publish_request')
+        def test_simple_error(self, mock):
+            response = ({"places_nearby": None, "error": None}, 200)
+            #should not raise any exception
+            with app.test_request_context('/v1/places'):
+                stat_manager._manage_stat(time.time(), response)
+            assert mock.called
+
+        @mock.patch.object(stat_manager, 'publish_request')
+        def test_pagination(self, mock):
+            response = ({"places_nearby": [], "pagination": None}, 200)
+            #should not raise any exception
+            with app.test_request_context('/v1/places'):
+                stat_manager._manage_stat(time.time(), response)
+            assert mock.called
+

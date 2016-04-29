@@ -39,6 +39,7 @@ www.navitia.io
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
+#include <boost/spirit/include/qi_optional.hpp>
 #include <boost/spirit/include/phoenix1.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
@@ -106,7 +107,10 @@ struct select_r: qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
         args_clause = (word|escaped_string|bracket_string)[boost::phoenix::push_back(qi::_val, qi::_1)] % ',';
-        method_clause = (word >> "." >> word >> "(" >> args_clause >> ")")
+        // args_clause is optional.
+        // Example          : R"(vehicle_journey.has_headsign("john"))", args_clause = john
+        //                  : R"(vehicle_journey.has_disruption())", args_clause = ""
+        method_clause = (word >> "." >> word >> "("  >> -(args_clause) >> ")" )
             [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         filter %= (single_clause | having_clause | after_clause | method_clause)
             % (qi::lexeme["and"] | qi::lexeme["AND"]);
@@ -247,6 +251,58 @@ get_indexes_from_code(const Data&, const std::string&, const std::string&) {
     return Indexes{};
 }
 
+typedef std::pair<type::Type_e, Indexes> pair_indexes;
+struct VariantVisitor: boost::static_visitor<pair_indexes>{
+    const Data& d;
+    VariantVisitor(const Data & d): d(d){}
+    pair_indexes operator()(const type::disruption::UnknownPtObj){
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Network*){
+        return {type::Type_e::Network, Indexes{}};
+    }
+    pair_indexes operator()(const type::StopArea*){
+        return {type::Type_e::StopArea, Indexes{}};
+    }
+    pair_indexes operator()(const type::StopPoint*){
+        return {type::Type_e::StopPoint, Indexes{}};
+    }
+    pair_indexes operator()(const type::disruption::LineSection){
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Line*){
+        return {type::Type_e::Line, Indexes{}};
+    }
+    pair_indexes operator()(const type::Route*){
+        return {type::Type_e::Route, Indexes{}};
+    }
+    pair_indexes operator()(const type::MetaVehicleJourney* meta_vj){
+        return {type::Type_e::VehicleJourney, meta_vj->get(type::Type_e::VehicleJourney, *d.pt_data)};
+    }
+};
+
+static Indexes get_indexes_by_impacts(const Data & d, const type::Type_e& type_e){
+    Indexes result;
+    VariantVisitor visit(d);
+    const auto& impacts = d.get_assoc_data<navitia::type::disruption::Impact>();
+    for(const auto& impact: impacts){
+        const auto imp = impact.lock();
+        if (!imp) {
+            continue;
+        }
+        if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
+            continue;
+        }
+        for(const auto& entitie: imp->informed_entities){
+            auto pair_type_indexes = boost::apply_visitor(visit, entitie);
+            if(type_e == pair_type_indexes.first){
+                result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
+            }
+        }
+    }
+    return result;
+}
+
 template<typename T>
 Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     Indexes indexes;
@@ -302,6 +358,11 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
             for (const VehicleJourney* vj: d.pt_data->headsign_handler.get_vj_from_headsign(filter.args.at(0))) {
                 indexes.insert(vj->idx); //TODO bulk insert ?
             }
+        } else if ((filter.object == "vehicle_journey")
+                   && (filter.method == "has_disruption")
+                   && (filter.args.size() == 0)) {
+                // For traffic_report api, get indexes of VehicleJourney impacted only.
+                indexes = get_indexes_by_impacts(d, type::Type_e::VehicleJourney);
         } else if (filter.method == "has_code" && filter.args.size() == 2) {
             indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
         } else {
