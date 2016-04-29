@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(project_in_direction_test) {
     std::vector<navitia::type::GeographicalCoord> center;
     auto coord_Paris = navitia::type::GeographicalCoord(2.3522219000000177,48.856614);
     auto coord_North = navitia::type::GeographicalCoord(0,90);
-    auto coord_Equator = navitia::type::GeographicalCoord(0,179,9999);
+    auto coord_Equator = navitia::type::GeographicalCoord(180,0);
     center.push_back(coord_Paris);
     center.push_back(coord_North);
     center.push_back(coord_Equator);
@@ -77,9 +77,8 @@ BOOST_AUTO_TEST_CASE(circle_test) {
     coord coord_Pekin = {-89.61, 40.5545};
     coord coord_almost_North = {0, 89};
     coord coord_North = {0, 90};
-    coord coord_Equator = {0, 180};
-    coord coord_change_day = {16, 180};
-    //coord coord_Niger = {10, 12};
+    coord coord_Equator = {180, 0};
+    coord coord_change_day = {180, 18};
     auto c_Paris_42 = circle(coord_Paris, 42);
     auto c_Paris_30 = circle(coord_Paris, 30);
     auto c_Pekin_459 = circle(coord_Pekin, 459);
@@ -117,7 +116,6 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     coord coord_Pantheon = {2.3461,48.8463};
     coord coord_Concorde = {2.32,48.87};
     coord coord_Luxembourg = {2.339981,48.845404};
-    double speed = 0.8;
     ed::builder b("20120614");
     b.vj("A")("stop1", "08:00"_t)("stop2", "08:10"_t)("stop3", "08:20"_t);
     b.vj("B")("stop4", "08:00"_t)("stop2", "08:30"_t)("stop5", "09:00"_t)("stop6", "23:59:40"_t);
@@ -150,6 +148,7 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron));
     BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron));
+    double speed = 0.8;
     BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 12 * 60 * speed - 1), isochron));
 #endif
 }

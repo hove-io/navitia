@@ -120,7 +120,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const DateTime& bound,
                                 const map_stop_point_duration& origin) {
     type::MultiPolygon circles;
-    double speed = 0.8; // About 3km/h
+    double speed = 0.8; // About 3km/h TODO pass it in param
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
         int duration_max = fabs(bound - it->second.total_seconds());
