@@ -227,3 +227,11 @@ class TestError(object):
                 stat_manager._manage_stat(time.time(), response)
             assert mock.called
 
+        @mock.patch.object(stat_manager, 'publish_request')
+        def test_pagination(self, mock):
+            response = ({"places_nearby": [], "pagination": None}, 200)
+            #should not raise any exception
+            with app.test_request_context('/v1/places'):
+                stat_manager._manage_stat(time.time(), response)
+            assert mock.called
+
