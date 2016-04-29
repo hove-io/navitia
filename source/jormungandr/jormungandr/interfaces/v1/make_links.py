@@ -193,6 +193,8 @@ class add_pagination_links(object):
 
 
 class add_coverage_link(generate_links):
+    def __init__(self):
+        self.links = ["places", "journeys", "coverage"]
 
     def __call__(self, f):
         @wraps(f)
@@ -207,7 +209,8 @@ class add_coverage_link(generate_links):
             if isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
-                data["links"].append(create_external_link("v1.coverage", rel='related', templated=True, **kwargs))
+                for link in self.links:
+                    data["links"].append(create_external_link("v1.{link}".format(link=link), rel='related', templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
