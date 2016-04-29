@@ -57,6 +57,9 @@ class Index(ModuleResource):
                 create_external_link(self.module_name + '.journeys',
                                      rel='journeys',
                                      description='Compute journeys'),
+                create_external_link(self.module_name + '.places',
+                                     rel='places',
+                                     description='Compute places'),
             ]
         }
         return response, 200
