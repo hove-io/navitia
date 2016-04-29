@@ -59,7 +59,7 @@ class Index(ModuleResource):
                                      description='Compute journeys'),
                 create_external_link(self.module_name + '.places',
                                      rel='places',
-                                     description='Compute places'),
+                                     description='Autocomplete api'),
             ]
         }
         return response, 200
