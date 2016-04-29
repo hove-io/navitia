@@ -150,26 +150,34 @@ navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat) {
 }
 
 namespace boost { namespace geometry { namespace model {
-inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
+
+struct GeoCoord {
+    const navitia::type::GeographicalCoord& coord;
+    GeoCoord(const navitia::type::GeographicalCoord& coord): coord(coord) {}
+};
+
+std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
+    return os << std::setprecision(16) << "[" << coord.coord << "]";
+}
+
+std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
     os << "{\"type\":\"Polygon\",\"coordinates\":[[";
-    os << std::setprecision(16) << "[" << points.outer()[0].lon() << ", " << points.outer()[0].lat() << "]";
-    for(const auto coord: points.outer()) {
-        os << std::setprecision(16) << ",[" << coord.lon() << ", " << coord.lat() << "]";
+    os << GeoCoord(points.outer()[0]);
+    for(const auto& coord: points.outer()) {
+        os << "," << GeoCoord(coord);
     }
     return os << "]]}";
 }
 
-inline std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
+std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
     os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
-    for (const auto& polygon: polygons) {
-        os << std::setprecision(16) << "[[["<< polygon.outer()[0].lon();
-        os << std::setprecision(16) << "," << polygon.outer()[0].lat() << "]";
-        for(const auto coord: polygon.outer()){
-            os << std::setprecision(16) << ",[" << coord.lon();
-            os << std::setprecision(16) << "," << coord.lat() << "]";
+    for (unsigned i = 0; i < polygons.size(); i++) {
+        os <<  "[["<< GeoCoord(polygons[0].outer()[0]);
+        for(const auto& coord: polygons[i].outer()) {
+             os << "," << GeoCoord(coord);
         }
         os << "]]";
-        if ( i == (polygons.size() - 1) ) continue;
+        if (i == polygons.size() - 1) { continue; }
         os << ",";
     }
     return os << "]}";
