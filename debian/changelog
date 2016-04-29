@@ -1,3 +1,24 @@
+navitia2 (2.7.0) unstable; urgency=low
+
+  * jormungandr: places added in /v1 and /v1/coverage/{id}  <https://github.com/CanalTP/navitia/pull/1560>
+  * isochron: add multicircles  <https://github.com/CanalTP/navitia/pull/1553>
+  * doc: explanations on qualification process  <https://github.com/CanalTP/navitia/pull/1552>
+  * kraken: Optimisation traffic_reports api  <https://github.com/CanalTP/navitia/pull/1557>
+  * jormun: prevent error in stat if pagination item is empty  <https://github.com/CanalTP/navitia/pull/1559>
+  * jormun: StatManager didn't handle response with error set to None  <https://github.com/CanalTP/navitia/pull/1556>
+  * doc: Journeys example implemented (jsFiddle)  <https://github.com/CanalTP/navitia/pull/1547>
+  * tyr: fix test 'test_update_block_until' (duplicate user)  <https://github.com/CanalTP/navitia/pull/1554>
+  * tyr: the previous migration fail if there is already autocomplete_parameters  <https://github.com/CanalTP/navitia/pull/1555>
+  * isochron: add graphical functions to draw circles  <https://github.com/CanalTP/navitia/pull/1549>
+  * tyr: update login (User model)  <https://github.com/CanalTP/navitia/pull/1546>
+  * jormungandr: correction autocomplete  <https://github.com/CanalTP/navitia/pull/1551>
+  * jormungandr: stif only filters on line  <https://github.com/CanalTP/navitia/pull/1550>
+  * tyr: handling of admin_lvl in tyr for osm2mimir  <https://github.com/CanalTP/navitia/pull/1548>
+  * tyr: automatic creation fo main directory for autocomplete  <https://github.com/CanalTP/navitia/pull/1545>
+  * doc: URL correction  <https://github.com/CanalTP/navitia/pull/1544>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Fri, 29 Apr 2016 17:04:32 +0100
+
 navitia2 (2.6.0) unstable; urgency=low
 
   * kraken: fix autocompletion for rue de la loire  <https://github.com/CanalTP/navitia/pull/1542>
