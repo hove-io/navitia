@@ -170,7 +170,7 @@ namespace boost { namespace serialization {
     }
 }}// namespace navitia::type
 
-navitia::type::GeographicalCoord in_the_right_interval(double& lon, double& lat);
+navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat);
 
 namespace boost { namespace geometry { namespace model {
 inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points);

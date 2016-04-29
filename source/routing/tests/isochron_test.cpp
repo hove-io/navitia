@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     navitia::routing::map_stop_point_duration d;
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "08:02"_t));
-    navitia::type::MultiPolygon isochron = build_ischron(raptor, b.data->pt_data->stop_points, true, 
+    navitia::type::MultiPolygon isochron = build_isochron(raptor, b.data->pt_data->stop_points, true,
                                                          navitia::DateTimeUtils::set(0, "08:00"_t),
                                                          navitia::DateTimeUtils::set(0, "09:12"_t), d);
 #if BOOST_VERSION >= 105600

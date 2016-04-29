@@ -48,7 +48,7 @@ type::Polygon circle(const type::GeographicalCoord& center,
 
 
 //Create a multi polygon with circles around all the stop points in the isochrone
-type::MultiPolygon build_ischron(RAPTOR& raptor,
+type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
                                 const bool clockwise,
                                 const DateTime& init_dt,

@@ -60,6 +60,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     double center_lon_rad = center_right_interval.lon() * GeographicalCoord::N_DEG_TO_RAD;
     double lat;
     double lon;
+    // To avoid rounding error we use ° instread of rad.
     if (fabs(center_right_interval.lat()) == 90) {
         lon = direction_rad - M_PI;
         lat = M_PI_2 - alpha;
@@ -71,6 +72,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
             lat = center_lat_rad + delta_lat;
             lon = center_lon_rad;
         } else {
+            // asin and acos give results in rad.
             double projection = asin(sin(alpha) * sin(direction_rad));
             delta_lat = acos(cos(alpha) / cos(projection));
             if (direction_rad > M_PI_2 && direction_rad < 3 * M_PI_2) {
@@ -92,6 +94,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
             lon = center_lon_rad + delta_lon;
         }
     }
+    // Lon and lat are in °
     double lon_deg = lon * N_RAD_TO_DEG;
     double lat_deg = lat * N_RAD_TO_DEG;
     return type::GeographicalCoord(lon_deg, lat_deg);
@@ -110,7 +113,7 @@ type::Polygon circle(const type::GeographicalCoord& center,
     return points;
 }
 
-type::MultiPolygon build_ischron(RAPTOR& raptor,
+type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
                                 const bool clockwise,
                                 const DateTime& init_dt,

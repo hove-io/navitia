@@ -124,7 +124,7 @@ GeographicalCoord project(const MultiLineString& multiline, const GeographicalCo
 
 }}// namespace navitia::type
 
-navitia::type::GeographicalCoord in_the_right_interval(double& lon, double& lat) {
+navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat) {
     if (fabs(lat) > 90) {
         lat = fmod(lat, 360);
         if (fabs(lat) > 90) {
