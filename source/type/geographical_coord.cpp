@@ -153,21 +153,20 @@ namespace boost { namespace geometry { namespace model {
 inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
     os << "{\"type\":\"Polygon\",\"coordinates\":[[";
     os << std::setprecision(16) << "[" << points.outer()[0].lon() << ", " << points.outer()[0].lat() << "]";
-    for(size_t i = 1; i <= points.outer().size() - 1; i++) {
-        os << std::setprecision(16) << ",[" << points.outer()[i].lon() << ", " << points.outer()[i].lat() << "]";
+    for(const auto coord: points.outer()) {
+        os << std::setprecision(16) << ",[" << coord.lon() << ", " << coord.lat() << "]";
     }
     return os << "]]}";
 }
 
 inline std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
     os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
-    for (int unsigned i = 0; i < polygons.size() - 1; i++) {
-        os << std::setprecision(16) << "[[["<< polygons[i].outer()[0].lon();
-        os << std::setprecision(16) << "," << polygons[i].outer()[0].lat() << "]";
-        //for (int j = 0)
-        for(int unsigned j =1; j < polygons[i].outer().size(); j++){
-            os << std::setprecision(16) << ",[" <<polygons[i].outer()[j].lon();
-            os << std::setprecision(16) << "," << polygons[i].outer()[j].lat() << "]";
+    for (const auto& polygon: polygons) {
+        os << std::setprecision(16) << "[[["<< polygon.outer()[0].lon();
+        os << std::setprecision(16) << "," << polygon.outer()[0].lat() << "]";
+        for(const auto coord: polygon.outer()){
+            os << std::setprecision(16) << ",[" << coord.lon();
+            os << std::setprecision(16) << "," << coord.lat() << "]";
         }
         os << "]]";
         if ( i == (polygons.size() - 1) ) continue;
