@@ -141,14 +141,3 @@ std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data)
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
 
-
-namespace boost { namespace geometry { namespace model {
-inline std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
-    os << "{\"type\":\"Polygon\",\"coordinates\":[[";
-    os << std::setprecision(16) << "[" << points.outer()[0].lon() << ", " << points.outer()[0].lat() << "],";
-    for(size_t i = 1; i <= points.outer().size(); i++) {
-        os << std::setprecision(16) << ",[" << points.outer()[i].lon() << ", " << points.outer()[i].lat() << "]";
-    }
-    return os << "]]}";
-}
-}}}//namespace boost::geometry::model

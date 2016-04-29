@@ -45,4 +45,13 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 //Create a circle
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius);
+
+
+//Create a multi polygon with circles around all the stop points in the isochrone
+type::MultiPolygon build_isochron(RAPTOR& raptor,
+                                const std::vector<type::StopPoint*>& stop_points,
+                                const bool clockwise,
+                                const DateTime& init_dt,
+                                const DateTime& bound,
+                                const map_stop_point_duration &origine);
 }}

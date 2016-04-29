@@ -168,4 +168,14 @@ namespace boost { namespace serialization {
         std::vector<navitia::type::GeographicalCoord>& impl = ring;
         ar & boost::serialization::make_nvp("ring", impl);
     }
-}}
+}}// namespace navitia::type
+
+navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat);
+
+namespace boost { namespace geometry { namespace model {
+
+std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points);
+
+std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons);
+
+}}}//namespace boost::geometry::model
