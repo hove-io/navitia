@@ -9,7 +9,7 @@ The Isochrone function provides information in the form of a table with all the 
 from a potential destination with their respective arrival times, travel times and number of matches.
 
 <a
-    href="http://jsfiddle.net/gh/get/library/pure/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle

@@ -24,7 +24,6 @@ description: |
 authors:
    - CanalTP
 resources:
-   - https://code.jquery.com/jquery-2.2.3.min.js
    - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js
    - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css
 wrap: I
