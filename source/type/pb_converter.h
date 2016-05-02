@@ -224,6 +224,7 @@ struct PbCreator {
 
     pbnavitia::PtObject* add_places_nearby();
     pbnavitia::Journey* add_journeys();
+    pbnavitia::GraphicalIsochron* add_graphical_isochrons();
     pbnavitia::PtObject* add_places();
     pbnavitia::TrafficReports* add_traffic_reports();
     pbnavitia::NearestStopPoint* add_nearest_stop_points();

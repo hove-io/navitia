@@ -41,7 +41,7 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace routing {
 
-static DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, const DateTime bound) {
+DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, const DateTime bound) {
     auto depart_clockwise = departure_datetime + DateTimeUtils::SECONDS_PER_DAY;
     auto depart_anticlockwise = departure_datetime > DateTimeUtils::SECONDS_PER_DAY ?
             departure_datetime - DateTimeUtils::SECONDS_PER_DAY : 0;

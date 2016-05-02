@@ -674,6 +674,97 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                     current_datetime);
 }
 
+pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochronRequest &request_iso,
+                                               const boost::posix_time::ptime& current_datetime) {
+
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    const auto request = request_iso.journeys_request();
+    const auto rt_level = get_realtime_level(request.realtime_level());
+
+    /// Accessibility params
+    type::AccessibiliteParams accessibilite_params;
+    accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
+    accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
+    std::vector<std::string> forbidden;
+
+    for(int i = 0; i < request.forbidden_uris_size(); ++i)
+        forbidden.push_back(request.forbidden_uris(i));
+    std::vector<type::EntryPoint> origins;
+
+    for(int i = 0; i < request.origin().size(); i++) {
+        Type_e origin_type = data->get_type_of_id(request.origin(i).place());
+        type::EntryPoint origin = type::EntryPoint(origin_type, request.origin(i).place(), request.origin(i).access_duration());
+
+        if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
+                || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
+                || origin.type == type::Type_e::POI) {
+            origin.coordinates = this->coord_of_entry_point(origin, data);
+        }
+        origins.push_back(origin);
+    }
+
+        std::vector<type::EntryPoint> destinations;
+        for (int i = 0; i < request.destination().size(); i++) {
+            Type_e destination_type = data->get_type_of_id(request.destination(i).place());
+            type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
+
+            if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
+                    || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
+                    || destination.type == type::Type_e::POI) {
+                destination.coordinates = this->coord_of_entry_point(destination, data);
+            }
+            destinations.push_back(destination);
+        }
+
+        for(size_t i = 0; i < origins.size(); i++) {
+            type::EntryPoint &origin = origins[i];
+            if ((origin.type == type::Type_e::Address)
+                    || (origin.type == type::Type_e::Coord) || (origin.type == type::Type_e::Admin)
+                    || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)) {
+                origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(
+                            request.streetnetwork_params(), data);
+            }
+        }
+
+        for(size_t i = 0; i < destinations.size(); i++) {
+            type::EntryPoint &destination = destinations[i];
+            if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
+                    || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI)
+                    || (destination.type == type::Type_e::StopArea)) {
+                destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(
+                            request.streetnetwork_params(), data, false);
+            }
+        }
+
+        type::EntryPoint ep;
+        if (! origins.empty()) {
+            if (! request.clockwise()) {
+                // isochrone works only on clockwise
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
+                              "isochrone works only for clockwise request");
+                return pb_creator.get_response();
+            }
+            ep = origins[0];
+        } else {
+            if (request.clockwise()) {
+                // isochrone works only on clockwise
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
+                                         "reverse isochrone works only for anti-clockwise request");
+                return pb_creator.get_response();
+            }
+            ep = destinations[0];
+        }
+
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0), request.max_duration(),
+                                                      request.max_transfers(), accessibilite_params, forbidden,
+                                                      request.clockwise(), rt_level,
+                                                      *street_network_worker);
+
+    }
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
@@ -692,32 +783,33 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     }
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
     switch(request.requested_api()){
-        case pbnavitia::places: response = autocomplete(request.places(), current_datetime); break;
-        case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_datetime); break;
-        case pbnavitia::place_uri: response = place_uri(request.place_uri(), current_datetime); break;
-        case pbnavitia::ROUTE_SCHEDULES:
-        case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
-        case pbnavitia::DEPARTURE_BOARDS:
-            response = next_stop_times(request.next_stop_times(), request.requested_api(), current_datetime); break;
-        case pbnavitia::ISOCHRONE:
-        case pbnavitia::NMPLANNER:
-        case pbnavitia::pt_planner:
-        case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
-                                                     current_datetime); break;
-        case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
-        case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
-        case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
-                                                                     current_datetime); break;
-        case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
-        case pbnavitia::place_code : response = place_code(request.place_code()); break;
-        case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-        default:
-            LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
-            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
-            break;
+    case pbnavitia::places: response = autocomplete(request.places(), current_datetime); break;
+    case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_datetime); break;
+    case pbnavitia::place_uri: response = place_uri(request.place_uri(), current_datetime); break;
+    case pbnavitia::ROUTE_SCHEDULES:
+    case pbnavitia::NEXT_DEPARTURES:
+    case pbnavitia::NEXT_ARRIVALS:
+    case pbnavitia::PREVIOUS_DEPARTURES:
+    case pbnavitia::PREVIOUS_ARRIVALS:
+    case pbnavitia::DEPARTURE_BOARDS:
+        response = next_stop_times(request.next_stop_times(), request.requested_api(), current_datetime); break;
+    case pbnavitia::ISOCHRONE:
+    case pbnavitia::NMPLANNER:
+    case pbnavitia::pt_planner:
+    case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
+                                                 current_datetime); break;
+    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
+    case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
+    case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
+                                                                 current_datetime); break;
+    case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
+    case pbnavitia::place_code : response = place_code(request.place_code()); break;
+    case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
+    case pbnavitia::GRaphicalIsochron : response = graphical_isochron(request.isochron(), current_datetime); break;
+    default:
+        LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
+        fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
+        break;
     }
     metadatas(response);//we add the metadatas for each response
     feed_publisher(response);

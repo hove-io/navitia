@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "type/meta_data.h"
 #include "fare/fare.h"
+#include "isochron.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -1144,5 +1145,65 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
+void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creator) {
+    auto pb_isochron = pb_creator.add_graphical_isochrons();
+    auto pb_polys = pb_isochron->mutable_geojson();
+    for (const auto& polygon: shape) {
+        auto p = pb_polys->add_polygons();
+        auto ml = p->mutable_multi_lines();
+        auto lo = ml->add_lines();
+        for (const auto coord: polygon.outer()) {
+            auto c = lo->add_coordinates();
+            c->set_lon(coord.lon());
+            c->set_lat(coord.lat());
+        }
+        for (const auto inner: polygon.inners()) {
+            auto li = ml->add_lines();
+            for (const auto coord: inner) {
+                auto c = li->add_coordinates();
+                c->set_lon(coord.lon());
+                c->set_lat(coord.lat());
+            }
+
+        }
+    }
+}
+
+pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
+                                             const boost::posix_time::ptime& current_datetime,
+                                             type::EntryPoint origin,
+                                             const uint64_t departure_datetime,
+                                             int max_duration,
+                                             uint32_t max_transfers,
+                                             const type::AccessibiliteParams& accessibilite_params,
+                                             const std::vector<std::string>& forbidden,
+                                             bool clockwise,
+                                             const nt::RTLevel rt_level,
+                                             georef::StreetNetwork & worker) {
+
+    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
+    bt::ptime datetime;
+    auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
+    if(pb_creator.has_error() || tmp_datetime.size() == 0 ||
+            pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
+        return pb_creator.get_response();
+    }
+    datetime = tmp_datetime.front();
+    worker.init(origin);
+    auto departures = get_stop_points(origin, raptor.data, worker);
+
+    if(departures.size() == 0){
+        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        return pb_creator.get_response();
+    }
+    int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
+    int time = datetime.time_of_day().total_seconds();
+    DateTime init_dt = DateTimeUtils::set(day, time);
+    DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
+    raptor.isochrone(departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
+    type::MultiPolygon isochron = build_isochron(raptor, raptor.data.pt_data->stop_points, clockwise, departure_datetime,bound, departures);
+    add_graphical_isochron(isochron, pb_creator);
+    return pb_creator.get_response();
+}
 
 }}

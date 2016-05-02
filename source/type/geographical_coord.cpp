@@ -172,7 +172,7 @@ std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points)
 std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
     os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
     for (unsigned i = 0; i < polygons.size(); i++) {
-        os <<  "[["<< GeoCoord(polygons[0].outer()[0]);
+        os <<  "[[" << GeoCoord(polygons[i].outer()[0]);
         for(const auto& coord: polygons[i].outer()) {
              os << "," << GeoCoord(coord);
         }

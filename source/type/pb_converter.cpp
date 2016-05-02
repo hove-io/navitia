@@ -744,7 +744,6 @@ void PbCreator::Filler::fill_pb_object(const nt::MultiLineString* shape,
     }
 }
 
-
 void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord,
                                          pbnavitia::Address* address){
 
@@ -1827,6 +1826,10 @@ pbnavitia::RoutePoint* PbCreator::add_route_points(){
 
 pbnavitia::Journey* PbCreator::add_journeys(){
     return response.add_journeys();
+}
+
+pbnavitia::GraphicalIsochron* PbCreator::add_graphical_isochrons() {
+    return response.add_graphical_isochrons();
 }
 
 bool PbCreator::has_error(){
