@@ -26,6 +26,6 @@ authors:
 resources:
    - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js
    - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css
-wrap: I
+wrap: b
 normalize_css: no
 ...
