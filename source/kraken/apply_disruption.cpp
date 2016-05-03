@@ -210,10 +210,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         // Computing a validity_pattern of impact used to pre-filter concerned vjs later
         type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
         for (const auto& period: impact->application_periods) {
-            auto one_day = boost::posix_time::time_duration{24, 0, 0};
-            for (time_iterator it(period.begin() - one_day, one_day); it < period.end(); ++it) {
-                if (! meta.production_date.contains((*it).date())) { continue; }
-                auto day = ((*it).date() - meta.production_date.begin()).days();
+            for (bg::day_iterator it(period.begin().date() - bg::days(1)) ; it <= period.end().date() ; ++it) {
+                if (! meta.production_date.contains(*it)) { continue; }
+                auto day = (*it - meta.production_date.begin()).days();
                 impact_vp.add(day);
             }
         }
