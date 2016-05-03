@@ -27,19 +27,19 @@ $.ajax({
  * Drawing isochron result on a map.
  *
  * Isochron result contains many points with their duration from starting point.
- * So here using Leaflet and OSM tiles, each point will be represented with a color
+ * So here using Leaflet, each point will be represented with a color
  * showing its duration from starting point.
  */
 
-var osm = {
-    url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+var tiles = {
+    url: 'http://www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
     attrib: 'Navitia Isochron example © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
 };
 
 // Create a drawable map using Leaflet
 var map = L.map('map')
     .setView(from, 13)
-    .addLayer(new L.TileLayer(osm.url, {minZoom: 0, maxZoom: 16, attribution: osm.attrib}))
+    .addLayer(new L.TileLayer(tiles.url, {minZoom: 0, maxZoom: 16, attribution: tiles.attrib}))
 ;
 
 // Add marker to show isochron starting point
