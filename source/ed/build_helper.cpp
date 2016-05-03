@@ -77,26 +77,40 @@ nt::VehicleJourney* VJ::make() {
     if (vj) { return vj; }
 
     auto it = b.lines.find(line_name);
+    nt::Line* line = nullptr;
     nt::Route* route = nullptr;
     nt::PT_Data& pt_data = *(b.data->pt_data);
     if (it == b.lines.end()) {
-        navitia::type::Line* line = new navitia::type::Line();
+        line = new navitia::type::Line();
         line->idx = pt_data.lines.size();
         line->uri = line_name;
         b.lines[line_name] = line;
         line->name = line_name;
         pt_data.lines.push_back(line);
-
-        route = new navitia::type::Route();
-        route->idx = pt_data.routes.size();
-        route->name = line->name;
-        route->uri = line_name + ":" + std::to_string(pt_data.routes.size());
-        pt_data.routes.push_back(route);
-        line->route_list.push_back(route);
-        route->line = line;
-        pt_data.routes_map[route->uri] = route;
     } else {
-        route = it->second->route_list.front();
+        line = it->second;
+        // Empty route_name, we keep the same route
+        if(_route_name.empty()) {
+            route = line->route_list.front();
+        }
+    }
+
+    // Empty route_name, set one based on the name of the line
+    if(!route) {
+        auto search_route = b.routes_by_line[line->uri].find(_route_name);
+        if (search_route == b.routes_by_line[line->uri].end()) {
+            route = new navitia::type::Route();
+            route->idx = pt_data.routes.size();
+            route->name = _route_name.empty() ? line_name : _route_name;
+            route->uri = route->name + ":" + std::to_string(pt_data.routes.size());;
+            route->line = line;
+            line->route_list.push_back(route);
+            b.routes_by_line[line->uri][_route_name] = route;
+            pt_data.routes.push_back(route);
+            pt_data.routes_map[route->uri] = route;
+        } else {
+            route = search_route->second;
+        }
     }
 
     const auto search_nt = b.nts.find(network_name);
