@@ -1150,15 +1150,14 @@ void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creat
     auto pb_polys = pb_isochron->mutable_geojson();
     for (const auto& polygon: shape) {
         auto p = pb_polys->add_polygons();
-        auto ml = p->mutable_multi_lines();
-        auto lo = ml->add_lines();
+        auto lo = p->mutable_outer();
         for (const auto coord: polygon.outer()) {
             auto c = lo->add_coordinates();
             c->set_lon(coord.lon());
             c->set_lat(coord.lat());
         }
         for (const auto inner: polygon.inners()) {
-            auto li = ml->add_lines();
+            auto li = p->add_inners();
             for (const auto coord: inner) {
                 auto c = li->add_coordinates();
                 c->set_lon(coord.lon());

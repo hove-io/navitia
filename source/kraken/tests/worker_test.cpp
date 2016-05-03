@@ -75,7 +75,7 @@ static pbnavitia::Request create_request(bool wheelchair, std::string destinatio
 
 static pbnavitia::Request create_isochron_request(int max_duration, std::string origine) {
     pbnavitia::Request req;
-    req.set_requested_api(pbnavitia::GRaphicalIsochron);
+    req.set_requested_api(pbnavitia::graphical_isochron);
     pbnavitia::GraphicalIsochronRequest* g = req.mutable_isochron();
     pbnavitia::JourneysRequest* j = g->mutable_journeys_request();
     j->set_clockwise(true);

@@ -805,7 +805,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
     case pbnavitia::place_code : response = place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-    case pbnavitia::GRaphicalIsochron : response = graphical_isochron(request.isochron(), current_datetime); break;
+    case pbnavitia::graphical_isochron : response = graphical_isochron(request.isochron(), current_datetime); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
