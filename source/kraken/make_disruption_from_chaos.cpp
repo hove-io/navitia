@@ -144,8 +144,8 @@ make_line_section(const chaos::PtObject& chaos_section,
                        << pb_section.end_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
-    if(pb_section.routes().size()) {
-        for(auto pb_route: pb_section.routes()) {
+    if(!pb_section.routes().empty()) {
+        for(const auto& pb_route: pb_section.routes()) {
             if (auto* route = find_or_default(pb_route.uri(), pt_data.routes_map)) {
                 line_section.routes.push_back(route);
             } else {
