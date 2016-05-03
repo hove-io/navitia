@@ -199,141 +199,142 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         std::string uri =
             "line section (" +  ls.line->uri  + " : " + ls.start_point->uri + "/" + ls.end_point->uri + ")";
         this->log_start_action(uri);
-        if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-            LOG4CPLUS_TRACE(log, "canceling " << uri);
 
-            // Get all impacted VJs and compute the corresponding base_canceled vp
-            using SectionBounds = const std::pair<const nt::StopTime*, const nt::StopTime*>;
-            std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>> vj_vp_pairs;
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
+            LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
+            this->log_end_action(uri);
+            return;
+        }
 
-            // Computing a validity_pattern of impact used to pre-filter concerned vjs later
-            // Loop on every (even partial) days of the period
-            type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
-            for (const auto& period: impact->application_periods) {
-                for (bg::day_iterator it(period.begin().date()); it <= period.end().date() ; ++it) {
-                    if (! meta.production_date.contains(*it)) { continue; }
-                    auto day = (*it - meta.production_date.begin()).days();
-                    impact_vp.add(day);
-                }
+        LOG4CPLUS_TRACE(log, "canceling " << uri);
+
+        // Get all impacted VJs and compute the corresponding base_canceled vp
+        using SectionBounds = const std::pair<const nt::StopTime*, const nt::StopTime*>;
+        std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>> vj_vp_pairs;
+
+        // Computing a validity_pattern of impact used to pre-filter concerned vjs later
+        // Loop on every (even partial) days of the period
+        type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
+        for (const auto& period: impact->application_periods) {
+            for (bg::day_iterator it(period.begin().date() - bg::days(1)); it <= period.end().date() ; ++it) {
+                if (! meta.production_date.contains(*it)) { continue; }
+                auto day = (*it - meta.production_date.begin()).days();
+                impact_vp.add(day);
             }
+        }
 
-            // Loop on impacted routes of the line section
-            for(auto* route: ls.routes) {
-                // Loop on each vj
-                bool has_affected_vj(false);
-                route->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
-                    /*
-                     * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
-                     *
-                     * Since the validity pattern runs only by day not by hour, we'll compute in detail to
-                     * check if the vj is really impacted or not.
-                     *
-                     * */
-                    if ((vj.validity_patterns[rt_level]->days & impact_vp.days).none()) {
-                        return true;
-                    }
-
-                    // Filtering each journey to see if it's impacted by the section.
-                    SectionBounds bounds_st = vj.get_bounds_stop_times_for_section(ls.start_point, ls.end_point);
-                    // If the vj pass by both stops both elements will be different than nullptr, otherwise
-                    // it's not passing by both stops and should not be impacted
-                    if(bounds_st.first && bounds_st.second) {
-                        // Once we know the line section is part of the vj we compute the vp for the adapted_vj
-                        LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " pass by both stops, might be affected.");
-                        nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
-                        for(const auto& period : impact->application_periods) {
-                            // get the vp of the section
-                            new_vp.days |= vj.get_vp_for_section(bounds_st, rt_level, period).days;
-                        }
-                        // If there is effective days for the adapted vp we're keeping it
-                        if(!new_vp.days.none()){
-                            LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " is affected, keeping it.");
-                            new_vp.days >>= vj.shift;
-                            has_affected_vj = true;
-                            vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
-                        }
-                    }
+        // Loop on impacted routes of the line section
+        for(auto* route: ls.routes) {
+            // Loop on each vj
+            bool has_affected_vj(false);
+            route->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
+                /*
+                 * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
+                 *
+                 * Since the validity pattern runs only by day not by hour, we'll compute in detail to
+                 * check if the vj is really impacted or not.
+                 *
+                 * */
+                if ((vj.validity_patterns[rt_level]->days & impact_vp.days).none()) {
                     return true;
-                });
-
-                // The route isn't really impacted since no vj pass by the section
-                if(!has_affected_vj) {
-                    LOG4CPLUS_DEBUG(log, "Route  "<< route->uri << " has no affected vj, removing impact.");
-                    route->remove_impact(impact);
                 }
+
+                // Filtering each journey to see if it's impacted by the section.
+                SectionBounds bounds_st = vj.get_bounds_stop_times_for_section(ls.start_point, ls.end_point);
+                // If the vj pass by both stops both elements will be different than nullptr, otherwise
+                // it's not passing by both stops and should not be impacted
+                if(bounds_st.first && bounds_st.second) {
+                    // Once we know the line section is part of the vj we compute the vp for the adapted_vj
+                    LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " pass by both stops, might be affected.");
+                    nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
+                    for(const auto& period : impact->application_periods) {
+                        // get the vp of the section
+                        new_vp.days |= vj.get_vp_for_section(bounds_st, rt_level, period).days;
+                    }
+                    // If there is effective days for the adapted vp we're keeping it
+                    if(!new_vp.days.none()){
+                        LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " is affected, keeping it.");
+                        new_vp.days >>= vj.shift;
+                        has_affected_vj = true;
+                        vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
+                    }
+                }
+                return true;
+            });
+
+            // The route isn't really impacted since no vj pass by the section
+            if(!has_affected_vj) {
+                LOG4CPLUS_DEBUG(log, "Route  "<< route->uri << " has no affected vj, removing impact.");
+                route->remove_impact(impact);
             }
+        }
 
-            // Loop on each affected vj
-            for (auto& vj_vp_section : vj_vp_pairs) {
-                std::vector<nt::StopTime> new_stop_times;
-                const auto* vj = std::get<0>(vj_vp_section);
-                auto& new_vp = std::get<1>(vj_vp_section);
-                auto& bounds_st = std::get<2>(vj_vp_section);
+        // Loop on each affected vj
+        for (auto& vj_vp_section : vj_vp_pairs) {
+            std::vector<nt::StopTime> new_stop_times;
+            const auto* vj = std::get<0>(vj_vp_section);
+            auto& new_vp = std::get<1>(vj_vp_section);
+            auto& bounds_st = std::get<2>(vj_vp_section);
 
-                bool ignore_stop(false);
-                for (const auto& st : vj->stop_time_list) {
-                    // Ignore stop if it's the range of impacted stop_times
-                    if (!ignore_stop && &st == bounds_st.first ){
-                        ignore_stop = true;
-                    }
-                    if(ignore_stop) {
-                        LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
-                        // Mandatory to output impacted stops in traffic_report
-                        ls.impacted_stop_points_by_route[vj->route->uri].insert(st.stop_point);
-                        // Reset ignore_stop if it's the end stop_time
-                        if(&st == bounds_st.second) {
-                            ignore_stop = false;
-                        }
-                        continue;
-                    }
-                    nt::StopTime new_st = st.clone();
-                    new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                    new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                    new_stop_times.push_back(std::move(new_st));
-                }
-
-                auto mvj = vj->meta_vj;
-                mvj->push_unique_impact(impact);
-
-                // If all stop times have been ignored
-                if(new_stop_times.empty()) {
-                    LOG4CPLUS_DEBUG(log, "All stop times has been ignored on "<< vj->uri << ". Cancelling it.");
-                    mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
+            bool ignore_stop(false);
+            for (const auto& st : vj->stop_time_list) {
+                // Ignore stop if it's the range of impacted stop_times
+                ignore_stop |= (&st == bounds_st.first);
+                if(ignore_stop) {
+                    LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
+                    // Mandatory to output impacted stops in traffic_report
+                    ls.impacted_stop_points_by_route[vj->route->uri].insert(st.stop_point);
+                    // Reset ignore_stop if it's the end stop_time
+                    ignore_stop = !(&st == bounds_st.second);
                     continue;
                 }
-                auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-                std::string new_vj_uri = vj->uri + ":" +
-                        type::get_string_from_rt_level(rt_level) + ":" +
-                        std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
-
-                new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
-
-                auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
-                        rt_level,
-                        new_vp,
-                        vj->route,
-                        std::move(new_stop_times),
-                        pt_data);
-
-                LOG4CPLUS_TRACE(log, "new_vj: "<< new_vj->uri << " is created");
-
-                if (! mvj->get_base_vj().empty()) {
-                    new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                    new_vj->name = mvj->get_base_vj().at(0)->name;
-                } else {
-                    // If we set nothing for physical_mode, it'll crash when building raptor
-                    new_vj->physical_mode = pt_data.physical_modes[0];
-                    new_vj->name = new_vj_uri;
-                }
-                /*
-                 * Properties manually added to guarantee the good behavior for raptor and consistency.
-                 * */
-                new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
-                new_vj->company = vj->company;
-                new_vj->vehicle_journey_type = vj->vehicle_journey_type;
-                new_vj->odt_message = vj->odt_message;
-                new_vj->_vehicle_properties = vj->_vehicle_properties;
+                nt::StopTime new_st = st.clone();
+                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_stop_times.push_back(std::move(new_st));
             }
+
+            auto mvj = vj->meta_vj;
+            mvj->push_unique_impact(impact);
+
+            // If all stop times have been ignored
+            if(new_stop_times.empty()) {
+                LOG4CPLUS_DEBUG(log, "All stop times has been ignored on "<< vj->uri << ". Cancelling it.");
+                mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
+                continue;
+            }
+            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
+            std::string new_vj_uri = vj->uri + ":" +
+                    type::get_string_from_rt_level(rt_level) + ":" +
+                    std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+
+            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+
+            auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+                    rt_level,
+                    new_vp,
+                    vj->route,
+                    std::move(new_stop_times),
+                    pt_data);
+
+            LOG4CPLUS_TRACE(log, "new_vj: "<< new_vj->uri << " is created");
+
+            if (! mvj->get_base_vj().empty()) {
+                new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                new_vj->name = mvj->get_base_vj().at(0)->name;
+            } else {
+                // If we set nothing for physical_mode, it'll crash when building raptor
+                new_vj->physical_mode = pt_data.physical_modes[0];
+                new_vj->name = new_vj_uri;
+            }
+            /*
+             * Properties manually added to guarantee the good behavior for raptor and consistency.
+             * */
+            new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
+            new_vj->company = vj->company;
+            new_vj->vehicle_journey_type = vj->vehicle_journey_type;
+            new_vj->odt_message = vj->odt_message;
+            new_vj->_vehicle_properties = vj->_vehicle_properties;
         }
         this->log_end_action(uri);
     }
