@@ -534,6 +534,9 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         for lvl in autocomplete_instance.admin_level:
             params.append('--level')
             params.append(str(lvl))
+        if autocomplete_instance.street:
+            params.append('--import-way')
+            params.append('true')
         res = launch_exec("osm2mimir",
                           params,
                           logger)
