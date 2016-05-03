@@ -45,6 +45,15 @@ To query for the public transport lines of New York we thus have to call: <https
 
 Easy isn't it?
 
+
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/lines/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
+
+
 We could push the exploration further and:
 
 - Where am I? (WGS 84 coordinates)
