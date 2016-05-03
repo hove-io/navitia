@@ -243,7 +243,7 @@ ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
 }
 
 ValidityPattern VehicleJourney::get_vp_for_section(
-    const std::pair<const StopTime*, const StopTime*> bounds_st,
+    const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st,
     RTLevel rt_level,
     const boost::posix_time::time_period& period
 ) const {
@@ -251,7 +251,7 @@ ValidityPattern VehicleJourney::get_vp_for_section(
 
     auto pass_in_the_section = [&](const nt::StopTime& stop_time){
         // Return if not in the section
-        if (stop_time.order() < bounds_st.first->order() || stop_time.order() > bounds_st.second->order()) {
+        if (stop_time.order() < bounds_st.first || stop_time.order() > bounds_st.second) {
             return;
         }
         const auto& beginning_date = validity_patterns[rt_level]->beginning_date;
@@ -272,11 +272,11 @@ ValidityPattern VehicleJourney::get_vp_for_section(
     return vp_for_section;
 }
 
-const std::pair<const StopTime*, const StopTime*> VehicleJourney::get_bounds_stop_times_for_section(
+const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> VehicleJourney::get_bounds_orders_for_section(
        const StopArea* start_stop,
        const StopArea* end_stop
 ) const {
-    std::pair<const StopTime*, const StopTime*> bounds_st(nullptr, nullptr);
+     std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st;
         /*
      * We are checking if the journey pass first by the start_point of the line_section and
      * the end_point. We can have start_point == end_point.
@@ -302,11 +302,11 @@ const std::pair<const StopTime*, const StopTime*> VehicleJourney::get_bounds_sto
         // The line section is using stop_areas so we make sure we have one
         if(st.stop_point && st.stop_point->stop_area) {
             if(!bounds_st.first && st.stop_point->stop_area->uri == start_stop->uri) {
-                bounds_st.first = &st;
+                bounds_st.first = st.order();
             }
             // We can set the end stop_time multiple time since we want the last stop_time passing at end_stop
             if(bounds_st.first && st.stop_point->stop_area->uri == end_stop->uri) {
-                bounds_st.second = &st;
+                bounds_st.second = st.order();
             }
         }
     }

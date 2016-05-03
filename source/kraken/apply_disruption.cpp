@@ -209,7 +209,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 
         // Get all impacted VJs and compute the corresponding base_canceled vp
-        using SectionBounds = const std::pair<const nt::StopTime*, const nt::StopTime*>;
+        using SectionBounds = const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>>;
         std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>> vj_vp_pairs;
 
         // Computing a validity_pattern of impact used to pre-filter concerned vjs later
@@ -240,7 +240,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
 
                 // Filtering each journey to see if it's impacted by the section.
-                SectionBounds bounds_st = vj.get_bounds_stop_times_for_section(ls.start_point, ls.end_point);
+                SectionBounds bounds_st = vj.get_bounds_orders_for_section(ls.start_point, ls.end_point);
                 // If the vj pass by both stops both elements will be different than nullptr, otherwise
                 // it's not passing by both stops and should not be impacted
                 if(bounds_st.first && bounds_st.second) {
@@ -279,13 +279,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             bool ignore_stop(false);
             for (const auto& st : vj->stop_time_list) {
                 // Ignore stop if it's the range of impacted stop_times
-                ignore_stop |= (&st == bounds_st.first);
+                ignore_stop |= (st.order() == *(bounds_st.first));
                 if(ignore_stop) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     // Mandatory to output impacted stops in traffic_report
                     ls.impacted_stop_points_by_route[vj->route->uri].insert(st.stop_point);
                     // Reset ignore_stop if it's the end stop_time
-                    ignore_stop = !(&st == bounds_st.second);
+                    ignore_stop = !(st.order() == *(bounds_st.second));
                     continue;
                 }
                 nt::StopTime new_st = st.clone();
