@@ -1428,6 +1428,55 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 }
 
+BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
+    ed::builder b("20160404");
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+
+    b.vj("line:A", "111111", "", true, "vj:1")
+            ("stop_point:10", "13:00"_t, "13:01"_t)
+            ("stop_point:20", "14:00"_t, "14:01"_t)
+            ("stop_point:30", "15:00"_t, "15:01"_t)
+            ("stop_point:40", "16:00"_t, "16:01"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on_line_section("line:A", "stop_area:1", "stop_area:4", {"line:A:0"})
+                              .application_periods(btp("20160404T000000"_dt, "20160406T230000"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    // 1 vj, since all stop_times are impacted we should just cancel the base vj
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+
+    // Check the vj
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111000"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    // Deleting the disruption
+    navitia::delete_disruption("line_section_on_line:A_diverted", *b.data->pt_data, *b.data->meta);
+
+    vj = b.get<nt::VehicleJourney>("vj:1");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+}
+
 /*
  * In case we have a pretty complex line with repeated stops, since a line_section is only defined by
  * a line, two stop areas and an optional list of routes, we're impacting the longest section possible for each
