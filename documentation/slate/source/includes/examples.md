@@ -5,6 +5,20 @@ This chapter shows some usages with the minimal required arguments. However, thi
 
 A quick exploration
 -------------------
+``` shell
+$ curl 'https://api.navitia.io/v1/coverage' -H 'Authorization: 01234567-89ab-cdef-0123-456789abcdef'
+
+
+HTTP/1.1 200 OK
+
+{
+    "start_production_date": "20140105",
+    "status": "running",
+    "shape": "POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))",
+    "id": "us-ny",
+    "end_production_date": "20140406"
+}
+```
 
 *navitia* allows to dive into the public transport data.
 
@@ -15,7 +29,7 @@ The ``links`` section of the answer contains the different possible interactions
 As you can see there are several possibilities like for example [coverage](#coverage) to navigate through the covered regions data or [journeys](#journeys) to compute a journey.
 
 
-Now let's see what interactions are possible with ``coverage``: <https://api.navitia.io/v1/coverage>
+Now let's see what interactions are possible with ``coverage``:
 
 This request will give you:
 
@@ -28,17 +42,7 @@ In the ``links`` section there is for example this link: ``"href": "https://api.
 
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
 The parameters are identified with the ``{`` ``}`` syntax.
-In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region:
-
-``` json
-{
-    "start_production_date": "20140105",
-    "status": "running",
-    "shape": "POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))",
-    "id": "us-ny",
-    "end_production_date": "20140406"
-}
-```
+In this case it needs a region id. This id can the found in the ``regions`` section. 
 
 To query for the public transport lines of New York we thus have to call: <https://api.navitia.io/v1/coverage/us-ny/lines>
 

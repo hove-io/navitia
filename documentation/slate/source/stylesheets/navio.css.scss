@@ -1,29 +1,6 @@
 @import 'variables';
 @import 'collapse';
 
-.content pre {
-    float: none;
-    width: auto;
-    background-color: rgba(0, 0, 0, 0.05);
-    margin: 2em 0;
-    text-shadow: none;
-    margin-right: $examples-width;
-    box-sizing: border-box;
-    display: block;
-
-    span {
-        background: none !important;
-    }
-
-    &, span {
-        color: $main-text !important;
-    }
-
-    & + pre {
-        margin-top: -2em;
-    }
-}
-
 .button {
     background-color: #fff;
     border: 0;

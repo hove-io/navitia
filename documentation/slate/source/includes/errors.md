@@ -1,13 +1,17 @@
 #Errors
 
-<aside class="notice">When there's an error you'll receive a response with a error object
+Code 40x
+--------
+> When there's an error you'll receive a response with a error object
 containing a unique error id
-</aside>
 
+```shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/wrong-one' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
-### Example
+#response
+HTTP/1.1 404 OK
 
-```json
 {
     "error": {
         "id": "bad_filter",
@@ -15,11 +19,6 @@ containing a unique error id
     }
 }
 ```
-
-
-
-Code 40x
---------
 
 This errors appears when there is an error in the request
 

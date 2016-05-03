@@ -22,24 +22,15 @@ The only arguments are the ones of [paging](#paging).
 
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coord/2.376915;48.84675' -H 'Authorization: my-token'
 
-Also known as `/coord` service.
+#the request above will give you the right Navitia coverage, and a useful label
 
-Very simple service: you give Navitia some coordinates, it answers you
-where you are:
+#response
+HTTP/1.1 200 OK
 
--   your detailed postal address
--   the right Navitia "coverage" which allows you to access to all known
-    local mobility services
-
-For example, you can request navitia with a WGS84 coordinate as:
-
-<https://api.navitia.io/v1/coord/2.37691590563854;48.8467597481174>
-
-In response, you will get the coverage id, a very useful label and a
-ressource id:
-
-``` json
 {
     "regions": [
         "fr-idf"
@@ -52,12 +43,16 @@ ressource id:
 }
 ```
 
-The coverage id is *"regions": ["fr-idf"]* so you can ask Navitia on
-accessible local mobility services:
+> in this example, the coverage id is "regions": ["fr-idf"] 
+so you can ask Navitia on accessible local mobility services:
 
-<https://api.navitia.io/v1/coverage/fr-idf/>
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/fr-idf' -H 'Authorization: my-token'
 
-``` json
+#response
+HTTP/1.1 200 OK
+
 {
     "regions": [{
         "status": "running",
@@ -83,7 +78,16 @@ accessible local mobility services:
         {"href": "https://api.navitia.io/v1/coverage/fr-idf/"}
     ]
 }
+
 ```
+
+Also known as `/coord` service.
+
+Very simple service: you give Navitia some coordinates, it answers you
+
+-   your detailed postal address
+-   the right Navitia "coverage" which allows you to access to all known
+    local mobility services
 
 <a name="pt-ref"></a>Public Transportation Objects exploration
 --------------------------------------------------------------
@@ -221,27 +225,30 @@ ignored.
 
 #### {collection}.has_code
 
+``` shell
+
+#on every object, you can find codes, like:
+
+    "codes" :
+    [
+        {
+            "type": "external_code",
+            "value": "RATCAMPO"
+        },
+        {
+            "type" : "source",
+            "value" : "CAMPO"
+        }
+    ]
+
+#you can request for object with a specific code
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas?filter=stop_area.has_code(source,CAMPO)' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+```
+
 Every object managed by Navitia comes with its own list of ids. 
 You will find some source ids, merge ids, etc. in "codes" list in json responses.
 Be careful, these codes may not be unique. The navitia id is the only unique id.
-
-``` json
-        "codes" :
-        [
-            {
-                "type" : "external_code",
-                "value" : "OBO5852"
-            },
-            {
-                "type" : "gtfs_stop_code",
-                "value" : "PLA40A"
-            },
-            {
-                "type" : "source",
-                "value" : "5852"
-            }
-        ]
-```
 
 You may have to request an object by one of these ids, in order to call an external service for example.
 
@@ -266,10 +273,13 @@ Examples :
 
 ### Few exploration examples
 
-Response example for this request
-<https://api.navitia.io/v1/coverage/fr-idf/physical_modes>
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/physical_modes' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
-``` json
+#response
+HTTP/1.1 200 OK
+
 {
     "links": [
         "..."
@@ -279,12 +289,12 @@ Response example for this request
     },
     "physical_modes": [
         {
-            "id": "physical_mode:0x3",
+            "id": "physical_mode:Bus",
             "name": "Bus"
         },
         {
-            "id": "physical_mode:0x4",
-            "name": "Ferry"
+            "id": "physical_mode:Metro",
+            "name": "Métro"
         },
         "..."
     ]
@@ -307,6 +317,27 @@ chapter
 
 <a name="pt-objects"></a>Autocomplete on Public Transport objects 
 -----------------------------------------------------------------
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%204&type\[\]=line&type\[\]=route' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
+{
+"pt_objects": [
+        {
+            "embedded_type": "line",
+            "line": {...},
+            "id": "line:RAT:M4",
+            "name": "RATP Metro 4 (Porte de Clignancourt - Mairie de Montrouge)"
+        },
+     ],
+"links" : [...],
+}
+```
+
 
 Also known as `/pt_objects` service.
 
@@ -382,32 +413,29 @@ For example, he could key without any filters:
 There is no pagination for this api
 </aside>
 
-### Example
-
-Response example for :
-<https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=bus%20ratp%20%39&type[]=line&type[]=route>
-
-``` json
-{
-"pt_objects": [
-    {
-        {
-            "embedded_type": "line",
-            "line": {
-                ...
-            },
-            "id": "line:OIF:100100091:91OIF442",
-            "name": "RATP Bus 91 (MOBILIEN 91)"
-        },
-                },
-"links" : [
-    ...
- ],
-}
-```
 
 <a name="places"></a>Autocomplete on geographical objects
 ---------------------------------------------------------
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/places?q=rue' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
+{
+    "places": [
+        {
+        "embedded_type": "stop_area",
+        "stop_area": {...},
+        "id": "stop_area:RAT:SA:RDBAC",
+        "name": "Rue du Bac (Paris)"
+        },
+        ...
+    ],
+    "links" : [...],
+}
+```
 
 Also known as `/places` service.
 
@@ -444,34 +472,32 @@ Differents kind of objects can be returned (sorted as):
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, it will filter the search within the given admin uris
 
-### Example
 
-Response example for :
-<https://api.navitia.io/v1/coverage/fr-idf/places?q=rue>
 
-``` json
+<a name="places-nearby-api"></a>Places Nearby
+-----------------------------------------
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:CAMPO/places_nearby' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
 {
-"places": [
+"places_nearby": [
     {
-        {
-
-            "embedded_type": "stop_area",
-            "stop_area": {
-                ...
-            },
-            "id": "stop_area:TAN:SA:RUET",
-            "name": "Ruette"
-
-        },
-                },
-"links" : [
-    ...
- ],
+        "embedded_type": "stop_point",
+        "stop_point": {...},
+        "distance": "0",
+        "quality": 0,
+        "id": "stop_point:RAT:SP:CAMPO2",
+        "name": "Campo-Formio (Paris)"
+    },
+    ....
 }
 ```
 
-<a name="places-nearby"></a>Places Nearby
------------------------------------------
 
 Also known as `/places_nearby` service.
 
@@ -512,33 +538,6 @@ Filters can be added:
     -   "filter=poi_type.id=poi_type:amenity:parking" to get parking
     -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
 
-### Example
-
-Response example for this request
-<https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby>
-
-``` json
-{
-"places_nearby": [
-    {
-        "embedded_type": "stop_area",
-        "stop_area": {
-            "comment": "",
-            "name": "CHATEAUDUN",
-            "coord": {
-                "lat": "48.073402",
-                "lon": "1.338426"
-            },
-            "id": "stop_area:TRN:SA:DUA8754575"
-        },
-        "distance": "0.0",
-        "quality": 0,
-        "id": "stop_area:TRN:SA:DUA8754575",
-        "name": "CHATEAUDUN"
-    },
-    ....
-}
-```
 
 <a name="journeys"></a>Journeys
 -------------------------------
@@ -885,51 +884,42 @@ they are exactly the same as [departures](#departures)
 
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/fr-idf/traffic_reports' -H 'Authorization: my-token'
 
-Also known as `/traffic_reports` service.
+#response
+HTTP/1.1 200 OK
 
-This service provides the state of public transport traffic. It can be
-called for an overall coverage or for a specific object.
+{
+"traffic_reports": [
+        "network": {
+        #main object (network) and links within its own disruptions
+        },
+        "lines": [
+        #list of all disrupted lines from the network and disruptions links
+        ],
+        "stop_areas": [
+        #list of all disrupted stop_areas from the network and disruptions links
+        ],
+    ],
+    [
+        "network": {
+        #another network
+        },
+        "lines": [...],
+        "stop_areas": [...],
+    ],
+"disruptions": [...],
+"link": { ... },
+"pagination": { ... }
+}
 
-### Parameters
+```
+> the response above is composed from 2 main lists : "traffic_reports" and "disruptions"
 
-You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
-
-For example:
-
--   overall public transport traffic report on Ile de France coverage
-    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
--   Is there any perturbations on the RER network ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
--   Is there any perturbations on the "RER A" line ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports>
-
-The response is made of an array of [traffic_reports](#traffic-reports), and another one
-of [disruptions](#disruption). There are inner links between this 2 arrays: see the
-[inner-reference](#inner-reference) section to use them.
-
-### Objects
-
-#### Traffic report
-
-Traffic_reports is an array of some traffic_report object. One
-traffic_report object is a complex object, made of a network, an array
-of lines and an array of stop_areas. A typical traffic_report object
-will contain:
-
--   1 network which is the grouping object
-    -   it can contain links to its disruptions. These disruptions are globals and might not be applied on lines or stop_areas.
--   0..n lines
-    -   each line contains at least a link to its disruptions
--   0..n stop_areas
-    -   each stop_area contains at least a link to its disruptions
-
-It means that if a stop_area is used by many networks, it will appear
-many times.
-
-Here is a typical response
-
-``` json
+``` shell
+#response details and links between objects
 {
 "traffic_reports": [
     "network": {"name": "bob", "links": [], "id": "network:bob"},
@@ -1054,6 +1044,49 @@ Here is a typical response
 }
 
 ```
+
+
+Also known as `/traffic_reports` service.
+
+This service provides the state of public transport traffic. It can be
+called for an overall coverage or for a specific object.
+
+### Parameters
+
+You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
+
+For example:
+
+-   overall public transport traffic report on Ile de France coverage
+    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
+-   Is there any perturbations on the RER network ?
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
+-   Is there any perturbations on the "RER A" line ?
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports>
+
+The response is made of an array of [traffic_reports](#traffic-reports), and another one
+of [disruptions](#disruption). There are inner links between this 2 arrays: see the
+[inner-reference](#inner-reference) section to use them.
+
+### Objects
+
+#### Traffic report
+
+Traffic_reports is an array of some traffic_report object. One
+traffic_report object is a complex object, made of a network, an array
+of lines and an array of stop_areas. A typical traffic_report object
+will contain:
+
+-   1 network which is the grouping object
+    -   it can contain links to its disruptions. These disruptions are globals and might not be applied on lines or stop_areas.
+-   0..n lines
+    -   each line contains at least a link to its disruptions
+-   0..n stop_areas
+    -   each stop_area contains at least a link to its disruptions
+
+It means that if a stop_area is used by many networks, it will appear
+many times.
+
 
 This typical response means:
 
