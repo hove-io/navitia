@@ -493,6 +493,65 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 }
 
 /*
+ * This test make sure the filtering on the impact_vp handle correctly the last day in case there is an impact
+ * starting for example at 9am on the first day, but ending at 8:59 on the last.
+ */
+BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
+    ed::builder b("20160404");
+    b.vj("line:A", "111100", "", true, "vj:1")
+            ("stop_point:10", "08:10"_t, "08:11"_t)
+            ("stop_point:20", "08:20"_t, "08:21"_t)
+            ("stop_point:30", "08:30"_t, "08:31"_t)
+            ("stop_point:40", "08:40"_t, "08:41"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
+
+    // Close stop_point:20 from the 4h at 9am to the 6h at 8:59am
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point:20_closed")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop_point:20")
+                              .application_periods(btp("20160404T090000"_dt, "20160406T085900"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    // 2 vj, vj:1 needs to be impacted on the 6th
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111000"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111100"), base_vp);
+
+    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:stop_point:20_closed");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000100"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+
+    navitia::delete_disruption("stop_point:20_closed", *b.data->pt_data, *b.data->meta);
+
+    vj = b.get<nt::VehicleJourney>("vj:1");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111100"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111100"), base_vp);
+
+    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:stop_point:20_closed");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000000"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+}
+
+/*
  *
  *
  *  Day 14              15              16              17              18              19              20
