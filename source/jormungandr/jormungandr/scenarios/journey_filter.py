@@ -69,6 +69,8 @@ def filter_journeys(response_list, instance, request):
 
     _filter_too_long_waiting(journeys, request)
 
+    _filter_max_successive_buses(journeys, request)
+
     delete_journeys(response_list, request)
 
     return response_list
@@ -200,6 +202,30 @@ def _filter_too_long_waiting(journeys, request):
             logger.debug("the journey {} has a too long waiting, we delete it".format(j.internal_id))
             mark_as_dead(j, "too_long_waiting")
             break
+
+
+def _filter_max_successive_buses(journeys, request):
+    """
+    eliminates journeys with public_transport.bus more than _max_successive_buses
+    """
+    logger = logging.getLogger(__name__)
+    min_successive_buses = get_or_default(request, '_max_successive_buses', 0)
+    if (min_successive_buses == 0):
+        return
+    for j in journeys:
+        if _to_be_deleted(j):
+            continue
+        bus_count = 0
+        for s in j.sections:
+            if s.type != response_pb2.PUBLIC_TRANSPORT:
+                continue
+            if s.pt_display_informations.physical_mode == 'Bus':
+                bus_count = bus_count + 1
+
+        if bus_count > min_successive_buses:
+            logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
+            mark_as_dead(j, "too_much_successive_buses")
+
 
 def way_later(request, journey, asap_journey):
     """
