@@ -34,7 +34,7 @@ import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.inputs import boolean
-from jormungandr import i_manager
+from jormungandr import i_manager, app
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
@@ -546,6 +546,16 @@ class Journeys(ResourceUri, ResourceUtc):
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
 
+        if args['destination'] and args['origin']:
+            api = 'journeys'
+        else:
+            api = 'isochrone'
+
+        if api == 'isochrone':
+            # we have custom default values for isochrone because they are very resource expensive
+            if args.get('max_duration') is None:
+                args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
+
         def _set_specific_params(mod):
             if args.get('max_duration') is None:
                 args['max_duration'] = mod.max_duration
@@ -582,11 +592,6 @@ class Journeys(ResourceUri, ResourceUtc):
             possible_regions = compute_regions(args)
         else:
             possible_regions = [region]
-
-        if args['destination'] and args['origin']:
-            api = 'journeys'
-        else:
-            api = 'isochrone'
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['datetime']
