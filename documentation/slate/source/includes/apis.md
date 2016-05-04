@@ -23,12 +23,10 @@ The only arguments are the ones of [paging](#paging).
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
 ``` shell
-#request
+#request 
 $ curl 'https://api.navitia.io/v1/coord/2.37705;48.84675' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
-#the request above will give you the right Navitia coverage, and a useful label
-
-#response
+#response where you can find the right Navitia coverage, and a useful label
 HTTP/1.1 200 OK
 
 {
