@@ -47,6 +47,7 @@ import sqlalchemy
 from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
+from navitiacommon import models, utils
 from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg
 from contextlib import contextmanager
@@ -534,9 +535,9 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         for lvl in autocomplete_instance.admin_level:
             params.append('--level')
             params.append(str(lvl))
-        if autocomplete_instance.admin:
+        if autocomplete_instance.admin in utils.admin_source_types:
             params.append('--import-admin')
-        if autocomplete_instance.street:
+        if autocomplete_instance.street in utils.street_source_types:
             params.append('--import-way')
         res = launch_exec("osm2mimir",
                           params,
