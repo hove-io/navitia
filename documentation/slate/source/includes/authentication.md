@@ -5,10 +5,13 @@ Authentication
 
 ``` shell
 
+#using "headers"
 $ curl 'https://api.navitia.io/v1/coverage' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0' 
 
+#using "users": don't forget ":" at the end of line !
 $ curl https://api.navitia.io/v1/coverage -u 3b036afe-0110-4202-b9ed-99718476c2e0:
 
+#using "straight URL"
 $ curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage
 
 ```

@@ -24,7 +24,7 @@ The only arguments are the ones of [paging](#paging).
 --------------------------------------
 ``` shell
 #request
-$ curl 'https://api.navitia.io/v1/coord/2.376915;48.84675' -H 'Authorization: my-token'
+$ curl 'https://api.navitia.io/v1/coord/2.37705;48.84675' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #the request above will give you the right Navitia coverage, and a useful label
 
@@ -33,22 +33,22 @@ HTTP/1.1 200 OK
 
 {
     "regions": [
-        "fr-idf"
+        "sandbox"
     ],
     "address": {
-        "id": "2.37691590564;48.8467597481",
+        "id": "2.37705;48.84675",
         "label": "20 Rue Hector Malot (Paris)",
         "...": "..."
     }
 }
 ```
 
-> in this example, the coverage id is "regions": ["fr-idf"] 
+> in this example, the coverage id is "regions": ["sandbox"] 
 so you can ask Navitia on accessible local mobility services:
 
 ``` shell
 #request
-$ curl 'https://api.navitia.io/v1/coverage/fr-idf' -H 'Authorization: my-token'
+$ curl 'https://api.navitia.io/v1/coverage/sandbox' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #response
 HTTP/1.1 200 OK
@@ -56,26 +56,30 @@ HTTP/1.1 200 OK
 {
     "regions": [{
         "status": "running",
-        "start_production_date": "20150804","end_production_date": "20160316",
-        "id": "fr-idf"
+        "start_production_date": "20160101","end_production_date": "20160831",
+        "id": "sandbox"
     }],
     "links": [
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/coords"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/places"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/networks"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/physical_modes"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/companies"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/commercial_modes"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/lines"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/routes"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_areas"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/stop_points"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/line_groups"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/connections"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/poi_types"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/pois"},
-        {"href": "https://api.navitia.io/v1/coverage/fr-idf/"}
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/coords"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/places"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/networks"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/physical_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/companies"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/commercial_modes"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/lines"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/routes"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/stop_areas"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/stop_points"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/line_groups"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/connections"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/vehicle_journeys"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/poi_types"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/pois"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/disruptions"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/datasets"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/line_groups"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/trips"},
+        {"href": "https://api.navitia.io/v1/coverage/sandbox/"}
     ]
 }
 
@@ -886,7 +890,7 @@ they are exactly the same as [departures](#departures)
 ---------------------------------------------
 ``` shell
 #request
-$ curl 'https://api.navitia.io/v1/coverage/fr-idf/traffic_reports' -H 'Authorization: my-token'
+$ curl 'http://api.navitia.io/v1/coverage/sandbox/traffic_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #response
 HTTP/1.1 200 OK

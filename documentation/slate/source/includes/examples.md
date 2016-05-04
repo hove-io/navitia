@@ -6,7 +6,7 @@ This chapter shows some usages with the minimal required arguments. However, thi
 A quick exploration
 -------------------
 ``` shell
-$ curl 'https://api.navitia.io/v1/coverage' -H 'Authorization: 01234567-89ab-cdef-0123-456789abcdef'
+$ curl 'https://api.navitia.io/v1/coverage' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 
 HTTP/1.1 200 OK
@@ -15,7 +15,7 @@ HTTP/1.1 200 OK
     "start_production_date": "20140105",
     "status": "running",
     "shape": "POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))",
-    "id": "us-ny",
+    "id": "sandbox",
     "end_production_date": "20140406"
 }
 ```

@@ -48,7 +48,7 @@ Templated URL
 ``` shell
 #request
 
-$ curl 'https://api.navitia.io/v1/coverage/fr-idf/lines' -H 'Authorization: my-token'
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #response
 HTTP/1.1 200 OK
@@ -57,13 +57,13 @@ HTTP/1.1 200 OK
 {
 "lines": [
     {
-        "code": "03",
-        "name": "03",
+        "code": "1",
+        "name": "Château de Vincennes - La Défense",
         "links": [ ],
         "physical_modes": [],
         "routes": [],
         "commercial_mode": {...},
-        "id": "line:OIF:003003003:03OIF345",
+        "id": "line:RAT:M1",
         "network": {...}
     },
     ...
@@ -72,8 +72,8 @@ HTTP/1.1 200 OK
 #and a templated link from the example above:
 "links": [
     {
-        "href": "https://api.navitia.io/v1/coverage/fr-idf/lines/{lines.id}/stop_schedules",
-        "rel": "route_schedules",
+        "href": "https://api.navitia.io/v1/coverage/sandbox/lines/{lines.id}/stop_schedules",
+        "rel": "stop_schedules",
         "templated": true
     },
     ...
@@ -83,8 +83,12 @@ HTTP/1.1 200 OK
 > You can then request for "stop_schedules" service using templating
 
 ``` shell
-#request
-$ curl 'https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:003003003:03OIF345/stop_schedules' -H 'Authorization: my-token'
+#request (be careful, without any filter, the response can be huge)
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#a smarter request for a line AND a stop_area
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/stop_area:RAT:SA:PLROY/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
 ```
 
 Under some link sections, you will find a "templated" property.
