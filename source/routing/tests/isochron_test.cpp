@@ -150,6 +150,5 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron));
     double speed = 0.8;
     BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron));
-    std::cout << isochron;
 #endif
 }

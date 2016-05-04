@@ -1163,7 +1163,6 @@ void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creat
                 c->set_lon(coord.lon());
                 c->set_lat(coord.lat());
             }
-
         }
     }
 }
