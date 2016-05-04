@@ -57,12 +57,10 @@ class Index(ModuleResource):
                 create_external_link(self.module_name + '.journeys',
                                      rel='journeys',
                                      description='Compute journeys'),
-                '''
-                TODO: Activate for national autocomplete
-                create_external_link(self.module_name + '.places',
-                                     rel='places',
-                                     description='Autocomplete api'),
-                '''
+                # TODO: Activate for national autocomplete
+                # create_external_link(self.module_name + '.places',
+                #                      rel='places',
+                #                     description='Autocomplete api'),
             ]
         }
         return response, 200
