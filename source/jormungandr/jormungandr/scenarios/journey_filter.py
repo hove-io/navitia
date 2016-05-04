@@ -219,7 +219,7 @@ def _filter_max_successive_buses(journeys, request):
         for s in j.sections:
             if s.type != response_pb2.PUBLIC_TRANSPORT:
                 continue
-            if s.pt_display_informations.physical_mode == 'Bus':
+            if s.pt_display_informations.uris.physical_mode == 'Bus':
                 bus_count = bus_count + 1
 
         if bus_count > min_successive_buses:
