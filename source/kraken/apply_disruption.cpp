@@ -213,15 +213,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>> vj_vp_pairs;
 
         // Computing a validity_pattern of impact used to pre-filter concerned vjs later
-        // Loop on every (even partial) days of the period
-        type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
-        for (const auto& period: impact->application_periods) {
-            for (bg::day_iterator it(period.begin().date() - bg::days(1)); it <= period.end().date() ; ++it) {
-                if (! meta.production_date.contains(*it)) { continue; }
-                auto day = (*it - meta.production_date.begin()).days();
-                impact_vp.add(day);
-            }
-        }
+        type::ValidityPattern impact_vp = impact->get_impact_vp(meta.production_date);
 
         // Loop on impacted routes of the line section
         for(auto* route: ls.routes) {
@@ -346,14 +338,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         using namespace boost::gregorian;
 
         // Computing a validity_pattern of impact used to pre-filter concerned vjs later
-        type::ValidityPattern impact_vp{meta.production_date.begin()}; // bitset are all initialised to 0
-        for (const auto& period: impact->application_periods) {
-            for (bg::day_iterator it(period.begin().date() - bg::days(1)) ; it <= period.end().date() ; ++it) {
-                if (! meta.production_date.contains(*it)) { continue; }
-                auto day = (*it - meta.production_date.begin()).days();
-                impact_vp.add(day);
-            }
-        }
+        type::ValidityPattern impact_vp = impact->get_impact_vp(meta.production_date);
 
         // Get all impacted VJs and compute the corresponding base_canceled vp
         std::vector<std::pair<const nt::VehicleJourney*, nt::ValidityPattern>> vj_vp_pairs;

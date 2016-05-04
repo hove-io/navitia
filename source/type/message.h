@@ -267,6 +267,8 @@ struct Impact {
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
 
+    const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
+
     bool operator<(const Impact& other);
 };
 

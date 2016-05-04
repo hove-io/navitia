@@ -64,6 +64,21 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
+const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
+    type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
+    for (const auto& period: this->application_periods) {
+        // For each period of the impact loop from the previous day (for pass midnight services) to the last day
+        // If the day is in the production_date add it to the vp
+        boost::gregorian::day_iterator it(period.begin().date() - boost::gregorian::days(1));
+        for (; it <= period.end().date() ; ++it) {
+            if (! production_date.contains(*it)) { continue; }
+            auto day = (*it - production_date.begin()).days();
+            impact_vp.add(day);
+        }
+    }
+    return impact_vp;
+}
+
 bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const{
     if(current_time.is_not_a_date_time()){
         return false;
