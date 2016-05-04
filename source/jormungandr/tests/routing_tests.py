@@ -564,7 +564,7 @@ class TestOneDeadRegion(AbstractTestFixture):
 @dataset({"basic_routing_test": {}})
 class TestIsochrone(AbstractTestFixture):
     def test_isochrone(self):
-        response = self.query_region("journeys?from=I1&datetime=20120615T070000")
+        response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
         assert(len(response['journeys']) == 2)
 
 
