@@ -51,6 +51,15 @@ int main(int argc, const char* const argv[]) {
     b.vj("C")("stopC", "10:30"_t)("stopB", "11:00"_t);
     b.connection("stopC", "stopC", 0);
 
+    b.vj("P", "11111111", "", true, "", "", "Bus")("stopP", "15:00"_t)("stopQ", "16:00"_t);
+    b.vj("Q", "11111111", "", true, "", "", "Bus")("stopQ", "16:05"_t)("stopR", "17:00"_t);
+    b.vj("R", "11111111", "", true, "", "", "Bus")("stopR", "17:05"_t)("stopS", "18:00"_t);
+    b.vj("S", "11111111", "", true, "", "", "Bus")("stopS", "18:05"_t)("stopT", "19:00"_t);
+    b.vj("T", "11111111", "", true, "", "", "Bus")("stopP", "15:00"_t)("stopT", "20:00"_t);
+    b.connection("stopQ", "stopQ", 0);
+    b.connection("stopR", "stopR", 0);
+    b.connection("stopS", "stopS", 0);
+
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
