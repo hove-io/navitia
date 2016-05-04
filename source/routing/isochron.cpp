@@ -79,8 +79,11 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
                 delta_lat = -1 * delta_lat;
             }
             lat = center_lat_rad + delta_lat;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
             if (lat == M_PI_2) {
                 delta_lon = (direction == 90 ? 1 : - 1) * alpha;
+#pragma GCC diagnostic pop
             } else {
                 double b = (cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad));
                 if (fabs(b) >= 1) {
@@ -123,7 +126,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
     double speed = 0.8; // About 3km/h TODO pass it in param
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        int duration_max = fabs(bound - it->second.total_seconds());
+        int duration_max = abs(int(bound) - it->second.total_seconds());
         const auto& center = data_departure[it->first.val]->coord;
         circles.push_back(circle(center , duration_max * speed));
     }
@@ -137,7 +140,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                     || ! raptor.labels[round].transfer_is_initialized(sp_idx)) {
                 continue;
             }
-            int duration = fabs(best_lbl - init_dt);
+            int duration = abs(int(best_lbl) - int(init_dt));
             circles.push_back(circle(sp->coord, duration * speed));
         }
     }

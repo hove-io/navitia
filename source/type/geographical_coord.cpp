@@ -140,7 +140,7 @@ navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat) {
             }
         }
     }
-    if (fabs(lon > 180)) {
+    if (fabs(lon) > 180) {
         lon = fmod(lon, 360);
         if (fabs(lon) > 180) {
             lon = (std::signbit(lon) ? 1 : -1) * (180 - fabs(fmod(lon, 180)));
@@ -156,7 +156,7 @@ struct GeoCoord {
     GeoCoord(const navitia::type::GeographicalCoord& coord): coord(coord) {}
 };
 
-std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
+static std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
     return os << std::setprecision(16) << "[" << coord.coord << "]";
 }
 
