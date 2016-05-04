@@ -46,7 +46,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 
-static pbnavitia::Request create_request(bool wheelchair, std::string destination) {
+static pbnavitia::Request create_request(bool wheelchair, const std::string& destination) {
     pbnavitia::Request req;
     req.set_requested_api(pbnavitia::PLANNER);
     pbnavitia::JourneysRequest* j = req.mutable_journeys();
@@ -73,7 +73,7 @@ static pbnavitia::Request create_request(bool wheelchair, std::string destinatio
     return req;
 }
 
-static pbnavitia::Request create_isochron_request(int max_duration, std::string origine) {
+static pbnavitia::Request create_isochron_request(int max_duration, const std::string& origine) {
     pbnavitia::Request req;
     req.set_requested_api(pbnavitia::graphical_isochron);
     pbnavitia::GraphicalIsochronRequest* g = req.mutable_isochron();
