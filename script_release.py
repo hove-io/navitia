@@ -287,7 +287,7 @@ class ReleaseManager:
             print "Note: you'll have to merge/tag/push manually after your fix:"
             print "  git checkout release"
             print "  git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
-            print "  git tag -a {}".format(get_tag_name(self.version))
+            print "  git tag -a {} #then add message on Version and mention concerned PRs \n".format(get_tag_name(self.version))
 
             print "  git checkout dev"
             print "  git merge release"
