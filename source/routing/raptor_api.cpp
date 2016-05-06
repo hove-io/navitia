@@ -1151,12 +1151,12 @@ void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creat
     for (const auto& polygon: shape) {
         auto p = pb_polys->add_polygons();
         auto lo = p->mutable_outer();
-        for (const auto coord: polygon.outer()) {
+        for (const auto& coord: polygon.outer()) {
             auto c = lo->add_coordinates();
             c->set_lon(coord.lon());
             c->set_lat(coord.lat());
         }
-        for (const auto inner: polygon.inners()) {
+        for (const auto& inner: polygon.inners()) {
             auto li = p->add_inners();
             for (const auto coord: inner) {
                 auto c = li->add_coordinates();
@@ -1190,7 +1190,7 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data, worker);
 
-    if(departures.size() == 0){
+    if (!departures.empty()) {
         pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return pb_creator.get_response();
     }

@@ -602,7 +602,7 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
 
-    type::RTLevel rt_level= get_realtime_level(request.realtime_level());
+    type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
     return JourneysArg(origins, accessibilite_params, forbidden, rt_level, destinations, datetimes);
 }
