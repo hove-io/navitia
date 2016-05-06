@@ -453,29 +453,23 @@ def check_departures(response, reference):
 @dataset({"basic_schedule_test": {}})
 class TestSchedules(AbstractTestFixture):
 
-    def test_classic_stop_schedule(self):
-        """default is Realtime stopschedule"""
+    def test_stop_schedule_with_dt(self):
+        """if a datetime is provided, default is base schedule stopschedule"""
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
 
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
-        self.check_stop_schedule_rt_sol(stop_sched)
+        self.check_stop_schedule_base_sol(stop_sched)
 
     def test_stop_schedule_base_schedule(self):
-        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
-        check_stop_schedule(stop_sched,
-                            [StopSchedule(sp='S1', route='A:0',
-                                          date_times=[SchedDT(dt='20160101T090000', vj='A:vj1'),
-                                                      SchedDT(dt='20160101T100000', vj='A:vj2'),
-                                                      SchedDT(dt='20160101T110000', vj='A:vj3')]),
-                             StopSchedule(sp='S1', route='B:1',
-                                          date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
+        self.check_stop_schedule_base_sol(stop_sched)
 
     def test_forbidden_uris_on_schedules(self):
         """test forbidden uri for schedules"""
@@ -510,6 +504,16 @@ class TestSchedules(AbstractTestFixture):
         assert len(schedules) == 2
 
     @staticmethod
+    def check_stop_schedule_base_sol(stop_sched):
+        check_stop_schedule(stop_sched,
+                            [StopSchedule(sp='S1', route='A:0',
+                                          date_times=[SchedDT(dt='20160101T090000', vj='A:vj1'),
+                                                      SchedDT(dt='20160101T100000', vj='A:vj2'),
+                                                      SchedDT(dt='20160101T110000', vj='A:vj3')]),
+                             StopSchedule(sp='S1', route='B:1',
+                                          date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
+
+    @staticmethod
     def check_stop_schedule_rt_sol(stop_sched):
         check_stop_schedule(stop_sched,
                             [StopSchedule(sp='S1', route='A:0',
@@ -524,10 +528,10 @@ class TestSchedules(AbstractTestFixture):
 
     def test_stop_schedule_realtime(self):
         """
-        we give a from_datetime and a data_freshness, we should get the schedule
-        from this datetime and with realtime data
+        we give no from_datetime and a data_freshness, we should get the schedule
+        from the current dt and with realtime data
         """
-        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000"
                                      "&data_freshness=realtime")
 
         stop_sched = response["stop_schedules"]
@@ -535,11 +539,24 @@ class TestSchedules(AbstractTestFixture):
 
         self.check_stop_schedule_rt_sol(stop_sched)
 
+    def test_stop_schedule_realtime_and_dt(self):
+        """
+        we give a from_datetime and a data_freshness, we should get the schedule
+        from this datetime and with base schedule data
+        """
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime")
+
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_stop_schedule_base_sol(stop_sched)
+
     def test_stop_schedule_realtime_limit_per_schedule(self):
         """
         same as test_stop_schedule_realtime, but we limit the number of item per schedule
         """
-        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000"
                                      "&data_freshness=realtime&items_per_schedule=1")
 
         stop_sched = response["stop_schedules"]
@@ -553,7 +570,7 @@ class TestSchedules(AbstractTestFixture):
                                           date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')])])
 
         # and test with a limit at 0
-        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000"
                                      "&data_freshness=realtime&items_per_schedule=0")
 
         stop_sched = response["stop_schedules"]
@@ -565,7 +582,7 @@ class TestSchedules(AbstractTestFixture):
                                           date_times=[])])
 
         # test retrocompat'
-        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000"
                                      "&data_freshness=realtime&max_date_times=0")
 
         stop_sched = response["stop_schedules"]
@@ -642,9 +659,21 @@ class TestSchedules(AbstractTestFixture):
         """
         test a departure, with a date time
 
-        we should have the wanted datetime used and the realtime activated
+        we should have the wanted datetime used and the base schedule activated
         """
         response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_base_schedule_sol(departures)
+
+    def test_departure_dt(self):
+        """
+        test a departure, with no date time
+
+        we should have the current datetime used and the realtime activated
+        """
+        response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000")
 
         departures = response["departures"]
         is_valid_departures(departures)
@@ -654,10 +683,23 @@ class TestSchedules(AbstractTestFixture):
         """
         test a departure, with a date time
 
-        we should have the wanted datetime used and the realtime activated
+        we should have the wanted datetime used and the base_schedule activated
         """
         response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
+
+        departures = response["departures"]
+        is_valid_departures(departures)
+        self.check_departure_base_schedule_sol(departures)
+
+    def test_departure_dt_realtime(self):
+        """
+        test a departure, with a date time and in realtime
+
+        we should have the wanted datetime used but no realtime
+        """
+        response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000"
+                                     "&data_freshness=realtime")
 
         departures = response["departures"]
         is_valid_departures(departures)

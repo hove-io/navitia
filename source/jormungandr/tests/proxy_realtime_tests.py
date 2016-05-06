@@ -89,7 +89,7 @@ DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'data_freshness', 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDepartures(AbstractTestFixture):
 
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template = 'stop_points/{sp}/stop_schedules?_current_datetime={dt}&show_codes=true{data_freshness}'
 
     def test_stop_schedule(self):
         query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
@@ -152,7 +152,7 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
-        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+        query = 'stop_areas/S42/departures?_current_datetime=20160102T1000&show_codes=true&count=7'
         response = self.query_region(query)
 
         assert "departures" in response
@@ -215,7 +215,7 @@ MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDeparturesWithAnotherSource(AbstractTestFixture):
 
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template = 'stop_points/{sp}/stop_schedules?_current_datetime={dt}&show_codes=true{data_freshness}'
 
     def test_departure_with_another_source(self):
         query = self.query_template.format(sp='C:S1', dt='20160102T1000', data_freshness='')
