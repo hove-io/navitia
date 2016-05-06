@@ -1190,7 +1190,7 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data, worker);
 
-    if (!departures.empty()) {
+    if (departures.empty()) {
         pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return pb_creator.get_response();
     }
