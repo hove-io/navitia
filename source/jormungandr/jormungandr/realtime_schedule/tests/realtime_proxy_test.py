@@ -45,7 +45,7 @@ class CustomProxy(RealtimeProxy):
     def status(self):
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, items_per_schedule=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
         return self.hard_coded_passages
 
 
@@ -65,7 +65,7 @@ def get_dt(p):
 def filter_items_test_under_the_limit():
     proxy = CustomProxy([passage("10:00"), passage("11:00")])
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=3, from_dt=None)
+    r = proxy.next_passage_for_route_point(None, count=3)
 
     assert map(get_dt, r) == [dt("10:00"), dt("11:00")]
 
@@ -73,7 +73,7 @@ def filter_items_test_under_the_limit():
 def filter_items_test():
     proxy = CustomProxy([passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")])
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=2, from_dt=None)
+    r = proxy.next_passage_for_route_point(None, count=2)
 
     assert map(get_dt, r) == [dt("10:00"), dt("11:00")]
 
@@ -82,7 +82,7 @@ def filter_no_filter():
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=None, from_dt=None)
+    r = proxy.next_passage_for_route_point(None)
     assert map(get_dt, r) == [dt("10:00"), dt("11:00"), dt("12:00"), dt("13:00")]
 
 
@@ -90,7 +90,7 @@ def filter_filter_dt():
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=None, from_dt=dt("12:00"))
+    r = proxy.next_passage_for_route_point(None, from_dt=dt("12:00"))
     assert map(get_dt, r) == [dt("12:00"), dt("13:00")]
 
 
@@ -98,7 +98,7 @@ def filter_filter_dt_over_all():
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=None, from_dt=dt("17:00"))
+    r = proxy.next_passage_for_route_point(None, from_dt=dt("17:00"))
     assert r == []
 
 
@@ -106,5 +106,5 @@ def filter_filter_dt_and_item():
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, items_per_schedule=1, from_dt=dt("11:59"))
+    r = proxy.next_passage_for_route_point(None, count=1, from_dt=dt("11:59"))
     assert map(get_dt, r) == [dt("12:00")]
