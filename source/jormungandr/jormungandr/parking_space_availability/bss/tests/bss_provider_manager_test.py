@@ -104,7 +104,7 @@ def realtime_pois_handle_test():
     ]
     app.config['BSS_PROVIDER'] = CONFIG
     manager = BssProviderManager()
-    pois_with_stands = manager.handle_pois(pois)
+    pois_with_stands = manager.handle_places(pois)
     assert 'stands' in pois_with_stands[0]
     stands = pois_with_stands[0]['stands']
     assert stands.available_places == 5

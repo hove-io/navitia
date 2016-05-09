@@ -42,6 +42,6 @@ class ManageStands(object):
         def wrapper(*args, **kwargs):
             response = f(*args, **kwargs)
             if response[1] == 200 and self.attribute in response[0] and i_manager.instances[self.resource.region].bss_provider:
-                response[0][self.attribute] = bss_provider_manager.handle_pois(response[0][self.attribute])
+                response[0][self.attribute] = bss_provider_manager.handle_places(response[0][self.attribute])
             return response
         return wrapper

@@ -47,6 +47,7 @@ from functools import wraps
 from flask_restful import marshal, marshal_with
 import datetime
 from jormungandr.autocomplete.elastic_search import Elasticsearch
+from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 
 
 places = {
@@ -116,12 +117,26 @@ class Places(ResourceUri):
 
 class PlaceUri(ResourceUri):
 
+    def __init__(self, *args, **kwargs):
+        self.parsers = {}
+        self.parsers["get"] = reqparse.RequestParser(
+            argument_class=ArgumentDoc)
+        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+                                         description="Show bss stands availability")
+        args = self.parsers["get"].parse_args()
+        if args["bss_stands"]:
+            self.method_decorators.insert(1, ManageStands(self, 'places'))
+
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         args = {
             "uri": transform_id(id),
             "_current_datetime": datetime.datetime.utcnow()}
+        args = self.parsers["get"].parse_args()
+        args.update({
+            "uri": transform_id(id),
+            "_current_datetime": datetime.datetime.utcnow()})
         response = i_manager.dispatch(args, "place_uri",
                                       instance_name=self.region)
         return response, 200
@@ -175,7 +190,11 @@ class PlacesNearby(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
+        args = self.parsers["get"].parse_args()
+        if args["bss_stands"]:
+            self.method_decorators.insert(1, ManageStands(self, 'places_nearby'))
 
+    @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
@@ -203,7 +222,4 @@ class PlacesNearby(ResourceUri):
         self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
-        response = marshal(response, places_nearby)
-        if i_manager.instances[self.region].bss_provider and args["bss_stands"]:
-            response["places_nearby"] = bss_provider_manager.handle_places(response["places_nearby"])
         return response, 200

@@ -43,14 +43,11 @@ class BssProviderManager(object):
 
     def handle_places(self, places):
         for place in places or []:
-            if place['embedded_type'] == 'poi':
+            if 'poi_type' in place:
+                place = self.handle_poi(place)
+            elif 'embedded_type' in place and place['embedded_type'] == 'poi':
                 place['poi'] = self.handle_poi(place['poi'])
         return places
-
-    def handle_pois(self, pois):
-        for poi in pois or []:
-            poi = self.handle_poi(poi)
-        return pois
 
     def handle_poi(self, item):
         if item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
