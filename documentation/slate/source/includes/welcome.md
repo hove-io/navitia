@@ -15,7 +15,11 @@ It provides the following services
 
 navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results, available at <https://api.navitia.io>
 
-Have a look at the examples below to learn what services we provide and how to use them.
+Have a look at the examples below to learn what services we provide and how to use them. 
+
+<aside class="notice">
+A fake token is used in examples below: be aware that this token is really limited. You should use yours to get better services on real data.
+</aside>
 
 Getting started
 ---------------
