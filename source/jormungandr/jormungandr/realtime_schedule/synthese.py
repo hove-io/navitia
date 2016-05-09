@@ -141,7 +141,7 @@ class Synthese(RealtimeProxy):
         m = self._get_synthese_passages(r.content)
         return m.get(route_point)# if there is nothing from synthese, we keep the base
 
-    def _make_url(self, route_point, count, from_dt):
+    def _make_url(self, route_point, count=None, from_dt=None):
         """
         The url returns something like a departure on a stop point
         """

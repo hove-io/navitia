@@ -167,8 +167,9 @@ class Timeo(RealtimeProxy):
         count = min(count, 5) or 5  # if no value defined we ask for 5 passages
 
         # if a custom datetime is provided we give it to timeo
-        dt_param = '&NextStopReferenceTime={dt}'.format(
-            dt=timestamp_to_datetime(from_dt).strftime('%Y-%m-%dT%H:%M:%S')) if from_dt else ''
+        dt_param = '&NextStopReferenceTime={dt}'\
+            .format(dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%dT%H:%M:%S')) \
+            if from_dt else ''
 
         stop_id_url = ("StopDescription=?"
                        "StopTimeoCode={stop}"
@@ -197,6 +198,11 @@ class Timeo(RealtimeProxy):
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
 
         return utc_dt
+
+    def _timestamp_to_date(self, timestamp):
+        dt = datetime.utcfromtimestamp(timestamp)
+        dt = pytz.utc.localize(dt)
+        return dt.astimezone(self.timezone)
 
     def status(self):
         return {'id': self.rt_system_id,

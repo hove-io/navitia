@@ -35,6 +35,7 @@ from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint
+from jormungandr.utils import date_to_timestamp
 
 
 def make_url_test():
@@ -62,11 +63,11 @@ def make_url_count_and_dt_test():
     """
     same as make_url_test but with a count and a from_dt
     """
-    timeo = Timeo(id='tata', timezone='Europe/Paris', service_url='http://bob.com/tata',
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
                   service_args={'a': 'bobette', 'b': '12'})
 
     url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
-                          count=2, from_dt=_dt("12:00"))
+                          count=2, from_dt=_timestamp("12:00"))
 
     # it should be a valid url
     assert validators.url(url)
@@ -127,6 +128,10 @@ def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
     pytz.UTC.localize(d)
 
     return d.replace(year=year, month=month, day=day, tzinfo=pytz.UTC)
+
+
+def _timestamp(str, **kwargs):
+    return date_to_timestamp(_dt(str, **kwargs))
 
 
 def mock_good_timeo_response():
