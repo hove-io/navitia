@@ -40,6 +40,7 @@ import pybreaker
 import requests as requests
 from jormungandr import cache, app
 from datetime import datetime, time
+from jormungandr.utils import timestamp_to_datetime
 from navitiacommon.ratelimit import RateLimiter
 import redis
 
@@ -119,7 +120,7 @@ class Synthese(RealtimeProxy):
         return None
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
-        url = self._make_url(route_point)
+        url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
 
@@ -140,7 +141,7 @@ class Synthese(RealtimeProxy):
         m = self._get_synthese_passages(r.content)
         return m.get(route_point)# if there is nothing from synthese, we keep the base
 
-    def _make_url(self, route_point):
+    def _make_url(self, route_point, count, from_dt):
         """
         The url returns something like a departure on a stop point
         """
@@ -153,7 +154,21 @@ class Synthese(RealtimeProxy):
                                               format(obj=route_point, s=stop_id))
             return None
 
-        url = "{base_url}?SERVICE=tdg&roid={stop_id}".format(base_url=self.service_url, stop_id=stop_id)
+
+        """
+        count_param = '&rn={c}'.format(c=count) if count else ''
+
+        # if a custom datetime is provided we give it to timeo
+        dt_param = '&date={dt}'.format(
+            dt=timestamp_to_datetime(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
+        """
+        # Note: for the moment I can't test anything in synthese, so I do not activate this
+        count_param = dt_param = ''
+
+        url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(base_url=self.service_url,
+                                                                    stop_id=stop_id,
+                                                                    count=count_param,
+                                                                    date=dt_param)
 
         return url
 
