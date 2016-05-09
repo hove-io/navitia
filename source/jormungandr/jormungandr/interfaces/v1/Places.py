@@ -118,6 +118,7 @@ class Places(ResourceUri):
 class PlaceUri(ResourceUri):
 
     def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, authentication=False, *args, **kwargs)
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
