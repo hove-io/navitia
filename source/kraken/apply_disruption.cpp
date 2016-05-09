@@ -274,8 +274,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 ignore_stop |= (st.order() == *(bounds_st.first));
                 if(ignore_stop) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
-                    // Mandatory to output impacted stops in traffic_report
-                    ls.impacted_stop_points_by_route[vj->route->uri].insert(st.stop_point);
                     // Reset ignore_stop if it's the end stop_time
                     ignore_stop = !(st.order() == *(bounds_st.second));
                     continue;
@@ -612,7 +610,6 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::disruption::LineSection& ls) {
-        ls.impacted_stop_points_by_route.clear();
         auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
             if (auto i = weak_ptr.lock()){
                 return i->uri == impact->uri;

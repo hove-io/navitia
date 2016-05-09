@@ -163,6 +163,7 @@ make_line_section(const chaos::PtObject& chaos_section,
     }
 
     if(impact) {
+        line->add_impact(impact);
         for(auto* route: line_section.routes) {
             route->add_impact(impact);
         }

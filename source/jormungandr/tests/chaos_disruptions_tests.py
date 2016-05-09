@@ -151,47 +151,34 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     """
     def test_disruption_on_line_section(self):
         """
-        when calling the pt objects routes of line:A, at first we have no disruptions,
+        when calling the pt object line:A, at first we have no disruptions,
 
-        Then we mock a line_section disruption sent from chaos:
-            - from stopA to stopB we whould have no impact, the stop are in the wrong order,
-            - then from stopB to stopA, both stops should be impacted
+        then we mock a disruption sent from chaos, and we call again the pt object line:A
+        we then must have one disruption
         """
-        response = self.query_region('lines/A/routes')
+        response = self.query_region('lines/A')
 
-        routes = get_not_null(response, 'routes')
-        assert len(routes) == 1
-        route = routes[0]
-        # at first no disruption
-        assert 'disruptions' not in route
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        line = lines[0]
+        #at first no disruption
+        assert 'disruptions' not in line
 
         self.send_mock("bobette_the_disruption", "A",
                        "line_section", start="stopA", end="stopB", blocking=True)
 
-        # and we call again, we should have no disruption again, since the line pass by stopB before stopA
-        response = self.query_region('lines/A/routes')
-        routes = get_not_null(response, 'routes')
-        assert len(routes) == 1
-        route = routes[0]
+        #and we call again, we must have the disruption now
+        response = self.query_region('lines/A')
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        line = lines[0]
 
-        # still no disruption
-        assert 'disruptions' not in route
+        disruptions = get_disruptions(line, response)
 
-        self.send_mock("bobette_the_disruption", "A",
-                       "line_section", start="stopB", end="stopA", blocking=True)
-
-        # and we call again, we must have the disruption now and both stop impacted
-        response = self.query_region('lines/A/routes')
-        routes = get_not_null(response, 'routes')
-        assert len(routes) == 1
-        route = routes[0]
-
-        disruptions = get_disruptions(route, response)
-
+        #at first we got only one disruption
+        print(disruptions)
         assert len(disruptions) == 1
-        assert disruptions[0]['disruption_id'] == 'bobette_the_disruption'
-        assert len(disruptions[0]['impacted_objects']) == 1
-        assert len(disruptions[0]['impacted_objects'][0]['impacted_stops']) == 2
+        assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

@@ -162,10 +162,9 @@ struct LineSection {
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
     std::vector<Route*> routes;
-    std::map<std::string, std::set<const StopPoint*>> impacted_stop_points_by_route;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & start_point & end_point & routes & impacted_stop_points_by_route;
+        ar & line & start_point & end_point & routes;
     }
 };
 typedef boost::variant<
