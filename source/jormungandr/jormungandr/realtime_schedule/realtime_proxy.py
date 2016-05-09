@@ -39,8 +39,39 @@ class RealtimeProxy(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def next_passage_for_route_point(self, route_point):
+    def _get_next_passage_for_route_point(self, route_point, items_per_schedule, from_dt):
+        """
+        method that actually calls the external service to get the next passage for a given route_point
+        """
         pass
+
+    def _filter_passages(self, passages, items_per_schedule, from_dt):
+        """
+        after getting the next passages from the proxy, we might want to filter some
+
+        by default we filter:
+        * we keep at most 'items_per_schedule' items
+        * we don't want to display datetime after from_dt
+        """
+        if from_dt:
+            passages = filter(lambda p: p.datetime < from_dt, passages)
+
+        if items_per_schedule:
+            del passages[items_per_schedule:]
+
+        return passages
+
+    def next_passage_for_route_point(self, route_point, items_per_schedule=None, from_dt=None):
+        """
+        Main method for the proxy
+
+        returns the next realtime passages
+        """
+        next_passages = self._get_next_passage_for_route_point(route_point, items_per_schedule, from_dt)
+
+        filtered_passage = self._filter_passages(next_passages, items_per_schedule, from_dt)
+
+        return filtered_passage
 
     @abstractmethod
     def status(self):

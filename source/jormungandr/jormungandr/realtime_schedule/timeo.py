@@ -96,7 +96,7 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
         return None
 
-    def next_passage_for_route_point(self, route_point):
+    def _get_next_passage_for_route_point(self, route_point, items_per_schedule=None, from_dt=None):
         url = self._make_url(route_point)
         if not url:
             return None

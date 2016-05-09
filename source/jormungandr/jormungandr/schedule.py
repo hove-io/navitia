@@ -67,7 +67,7 @@ class RealTimePassage(object):
         self.is_real_time = True
 
 
-def _update_stop_schedule(stop_schedule, next_realtime_passages, items_per_schedule):
+def _update_stop_schedule(stop_schedule, next_realtime_passages):
     """
     Update the stopschedule response with the new realtime passages
 
@@ -78,9 +78,6 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages, items_per_sched
     """
     if next_realtime_passages is None:
         return
-
-    # we want to limit to at most 'items_per_schedule' items
-    del next_realtime_passages[items_per_schedule:]
 
     logging.getLogger(__name__).debug('next passages: : {}'
                                      .format(["dt: {}".format(d.datetime) for d in next_realtime_passages]))
@@ -210,7 +207,7 @@ class MixedSchedule(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def _get_next_realtime_passages(self, route_point):
+    def _get_next_realtime_passages(self, route_point, request):
         log = logging.getLogger(__name__)
 
         if not route_point:
@@ -314,6 +311,6 @@ class MixedSchedule(object):
 
         for stop_schedule in resp.stop_schedules:
             route_point = _get_route_point_from_stop_schedule(stop_schedule)
-            next_rt_passages = self._get_next_realtime_passages(route_point)
-            _update_stop_schedule(stop_schedule, next_rt_passages, request['items_per_schedule'])
+            next_rt_passages = self._get_next_realtime_passages(route_point, request)
+            _update_stop_schedule(stop_schedule, next_rt_passages)
         return resp
