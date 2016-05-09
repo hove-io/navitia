@@ -65,12 +65,14 @@ namespace navitia {
         chaos::Tag* tag = nullptr;
         chaos::Message* message = nullptr;
         chaos::Channel* channel = nullptr;
+        chaos::PtObject* pt_object = nullptr;
 
         std::string last_period_id = "",
                     last_channel_type_id = "";
 
         std::set<std::string> message_ids;
         std::set<std::string> pt_object_ids;
+        std::set<std::string> associate_objects_ids;
         type::PT_Data& pt_data;
         const type::MetaData& meta;
 
@@ -97,6 +99,7 @@ namespace navitia {
                 last_channel_type_id = "";
                 message = nullptr;
                 channel = nullptr;
+                pt_object = nullptr;
                 pt_object_ids.clear();
                 message_ids.clear();
             }
@@ -105,8 +108,15 @@ namespace navitia {
                 fill_application_period(const_it);
             }
             if (impact && (!pt_object_ids.count(const_it["ptobject_id"].template as<std::string>()))) {
-                fill_pt_object(const_it);
+                pt_object = impact->add_informed_entities();
+                fill_pt_object(const_it, pt_object);
+                associate_objects_ids.clear();
                 pt_object_ids.insert(const_it["ptobject_id"].template as<std::string>());
+            }
+            if (impact && !const_it["ls_route_id"].is_null() &&
+                    (!associate_objects_ids.count(const_it["ls_route_id"].template as<std::string>()))) {
+                fill_associate_route(const_it, pt_object);
+                associate_objects_ids.insert(const_it["ls_route_id"].template as<std::string>());
             }
             if (impact && !const_it["message_id"].is_null() &&
                     (!message_ids.count(const_it["message_id"].template as<std::string>()))) {
@@ -216,8 +226,7 @@ namespace navitia {
         }
 
         template<typename T>
-        void fill_pt_object(T const_it) {
-            auto ptobject = impact->add_informed_entities();
+        void fill_pt_object(T const_it, chaos::PtObject* ptobject) {
             FILL_NULLABLE(ptobject, updated_at, uint64_t)
             FILL_REQUIRED(ptobject, created_at, uint64_t)
             FILL_NULLABLE(ptobject, uri, std::string)
@@ -253,6 +262,22 @@ namespace navitia {
                     FILL_NULLABLE(ls_end, uri, std::string)
                 } else {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
+                }
+            }
+        }
+
+        template<typename T>
+        void fill_associate_route(T const_it, chaos::PtObject* ptobject) {
+            if (!const_it["ptobject_type"].is_null()) {
+                const auto& type_ = const_it["ptobject_type"].template as<std::string>();
+                if (type_ == "line_section") {
+                    if (!const_it["ls_route_id"].is_null()) {
+                        auto* ls_route = ptobject->mutable_pt_line_section()->add_routes();
+                        ls_route->set_pt_object_type(chaos::PtObject_Type_route);
+                        FILL_NULLABLE(ls_route, updated_at, uint64_t)
+                        FILL_REQUIRED(ls_route, created_at, uint64_t)
+                        FILL_NULLABLE(ls_route, uri, std::string)
+                    }
                 }
             }
         }
