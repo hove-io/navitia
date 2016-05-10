@@ -1,3 +1,9 @@
+navitia2 (2.7.2) unstable; urgency=low
+
+  * revert https://github.com/CanalTP/navitia/pull/1557 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 10 May 2016 18:05:57 +0100
+
 navitia2 (2.7.1) unstable; urgency=low
 
   * Jormungandr: fix the /v1 response  <https://github.com/CanalTP/navitia/pull/1566>
