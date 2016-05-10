@@ -218,7 +218,33 @@ Severity object can be used to make visual grouping.
 Street network objects
 ----------------------
 
-### Poi
+### Poi Type
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+`/poi_types` lists groups of point of interest. You will find classifications as theater, offices or bicycle rental station for example.
+
+ 
+|Field|Type|Description|
+|-----|----|-----------|
+|id|string|Identifier of the poi type|
+|name|string|Name of the poi type|
+
+### <a name="poi"></a>Poi
+``` shell
+#useless request, with huge response
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#inverted geocoding request, more usable
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/coords/2.377310;48.847002/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#very smart request
+#combining filters to get some specific POIs, as bicycle rental stations, 
+#nearby a coordinate
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types/poi_type:amenity:bicycle_rental/coords/2.377310;48.847002/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
 
 Poi = Point Of Interest
 
@@ -227,13 +253,6 @@ Poi = Point Of Interest
 |id|string|Identifier of the poi|
 |name|string|Name of the poi|
 |poi_type|[poi_type](#poi-type)|Type of the poi|
-
-### Poi Type
-
-|Field|Type|Description|
-|-----|----|-----------|
-|id|string|Identifier of the poi type|
-|name|string|Name of the poi type|
 
 ### Address
 

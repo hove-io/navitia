@@ -46,7 +46,7 @@ Templated URL
 > From every object collection
 
 ``` shell
-#request
+#first request
 
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
@@ -54,39 +54,39 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b0
 HTTP/1.1 200 OK
 
 #first line is like:
+
 {
-"lines": [
-    {
-        "code": "1",
-        "name": "Château de Vincennes - La Défense",
-        "links": [ ],
-        "physical_modes": [],
-        "routes": [],
-        "commercial_mode": {...},
-        "id": "line:RAT:M1",
-        "network": {...}
-    },
-    ...
-]}
+    "lines": [
+        {
+            "id": "line:RAT:M1",
+            "code": "1",
+            "name": "Château de Vincennes - La Défense",
+            "...": "..."
+        },
+        {...}
+        ],
+    ...,
  
 #and a templated link from the example above:
-"links": [
-    {
-        "href": "https://api.navitia.io/v1/coverage/sandbox/lines/{lines.id}/stop_schedules",
-        "rel": "stop_schedules",
-        "templated": true
-    },
-    ...
-]
-```
 
-> You can then request for "stop_schedules" service using templating
+    "links": [
+        {
+            "href": "https://api.navitia.io/v1/coverage/sandbox/lines/{lines.id}/stop_schedules",
+            "rel": "stop_schedules",
+            "templated": true
+        },
+        {...}
+    ]
+}
 
-``` shell
-#request (be careful, without any filter, the response can be huge)
+#you can then request for "stop_schedules" service using templating
+#be careful, without any filter, the response can be huge
+
+#second request
+#{line.id} has to be replaced by "line:RAT:M1"
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
-#a smarter request for a line AND a stop_area
+#here is a smarter request for a line AND a stop_area
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/stop_area:RAT:SA:PLROY/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 ```

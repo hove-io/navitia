@@ -1,10 +1,10 @@
-Welcome to navitia.io
+Getting started
 =====================
 
 Overview
 --------
 
-*navitia.io* is the open API for building cool stuff with transport data.
+*navitia.io* is the open API for building cool stuff with mobility data.
 It provides the following services
 
 * journeys computation
@@ -17,30 +17,39 @@ navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JS
 
 Have a look at the examples below to learn what services we provide and how to use them. 
 
+
 <aside class="notice">
 A fake token is used in examples below: be aware that this token is really limited. You should use yours to get better services on real data.
 </aside>
 
-Getting started
+First step
 ---------------
-
 ``` shell
-$ curl 'https://api.navitia.io/v1/coverage/sandbox/' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+#your token is in your confirmation mail. It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 ```
 
+Get a token here <http://navitia.io/register/>. We need your mail to stay in touch when Navitia changes.
 
-#### First step,
-get a token here <http://navitia.io/register/>
-
-#### Second step,
+Second step
+---------------
+``` shell
+#you can use curl to request Navitia
+$ curl 'https://api.navitia.io/v1/'
+```
 
 Go to the API  <https://api.navitia.io>
 
 The simpliest way is to use a web browser. 
 Our humble opinion is that [firefox browser](http://www.getfirefox.com) and a json viewer extension like [JSONView](https://addons.mozilla.org/fr/firefox/addon/jsonview/) is a good setup.
 
-#### Third step,
-use the token : if you use a modern web browser, you only have to **paste it** in the **user name area**,
+Third step
+---------------
+``` shell
+#in a curl way, with our fake token
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+Use the token : if you use a modern web browser, you only have to **paste it** in the **user name area**,
 with **no password**.
 
 ![Put token in Firefox browser](/images/firefox_token.png)
