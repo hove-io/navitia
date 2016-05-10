@@ -34,7 +34,7 @@ Description: Navitia-Ed
 Package: navitia-cities
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: alembic, ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Section: devel
 Priority: optional
 Description: Navitia-cities
@@ -48,7 +48,7 @@ Build-Depends:
 X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-protobuf
+Depends: python-psycopg2, python-protobuf
 Section: devel
 Priority: optional
 Description: navitia-common
@@ -62,7 +62,7 @@ Build-Depends:
 X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, navitia-common (= ${binary:Version}), ${python:Depends}
+Depends: python-protobuf python-psycopg2, navitia-common (= ${binary:Version}), ${python:Depends}
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
@@ -95,7 +95,7 @@ Build-Depends:
 X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, navitia-common (= ${binary:Version})
+Depends: python-psycopg2, navitia-common (= ${binary:Version})
 Section: devel
 Priority: optional
 Description: Navitia-Tyr
@@ -110,7 +110,7 @@ Build-Depends:
 X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-flask, python-protobuf, python-zmq
+Depends: python-protobuf
 Section: devel
 Priority: optional
 Description: small api for monitor kraken instances
