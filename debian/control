@@ -62,7 +62,7 @@ Build-Depends:
 X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-protobuf python-psycopg2, navitia-common (= ${binary:Version}), ${python:Depends}
+Depends: python-protobuf, python-psycopg2, navitia-common (= ${binary:Version}), ${python:Depends}
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
