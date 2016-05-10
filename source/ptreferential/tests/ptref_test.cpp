@@ -187,14 +187,6 @@ BOOST_AUTO_TEST_CASE(parser_method) {
     BOOST_CHECK_EQUAL(filters[0].args, std::vector<std::string>{"john"});
 }
 
-BOOST_AUTO_TEST_CASE(parser_method_has_disruption) {
-    std::vector<Filter> filters = parse(R"(vehicle_journey.has_disruption())");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
-    BOOST_CHECK_EQUAL(filters[0].method, "has_disruption");
-    BOOST_CHECK_EQUAL(filters[0].args.size(), 0);
-}
-
 struct Moo {
     int bli;
 };
@@ -419,44 +411,6 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
     navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
     auto indexes = get_indexes<nt::StopPoint>(filter, Type_e::Impact, *(b.data));
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
-}
-
-BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted){
-    ed::builder b("201303011T1739");
-    b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.vj("A", "000001", "", true, "vj:A-2")("stop1", "08:20"_t)("stop2", "09:20"_t);
-    b.vj("A", "000001", "", true, "vj:A-3")("stop1", "08:30"_t)("stop2", "09:30"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->index();
-    b.data->pt_data->build_uri();
-
-    // no disruptions
-    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "vehicle_journey.has_disruption()", *b.data),
-                      ptref_error);
-    // disruption with Effect OTHER_EFFECT on vj:A-1
-    using btp = boost::posix_time::time_period;
-    const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
-                     .severity(nt::disruption::Effect::OTHER_EFFECT)
-                     .on(nt::Type_e::MetaVehicleJourney, "vj:A-1")
-                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
-                     .get_disruption();
-    navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
-
-    BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "vehicle_journey.has_disruption()", *b.data),
-                      ptref_error);
-    // disruption with Effect NO_SERVICE on vj:A-2
-    const auto& disrup_2 = b.impact(nt::RTLevel::RealTime, "Disruption 2")
-                     .severity(nt::disruption::Effect::NO_SERVICE)
-                     .on(nt::Type_e::MetaVehicleJourney, "vj:A-2")
-                     .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
-                     .get_disruption();
-    navitia::apply_disruption(disrup_2, *b.data->pt_data, *b.data->meta);
-    navitia::type::Indexes vj_idx = make_query(nt::Type_e::VehicleJourney, "vehicle_journey.has_disruption()",
-                                               *b.data);
-
-    BOOST_CHECK_EQUAL(vj_idx.size(), 1);
-    BOOST_CHECK_EQUAL(get_uris<nt::VehicleJourney>(vj_idx, *b.data), std::set<std::string>({"vj:A-2"}));
 }
 
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
