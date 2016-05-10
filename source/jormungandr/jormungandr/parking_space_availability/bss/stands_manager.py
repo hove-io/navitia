@@ -34,14 +34,20 @@ from functools import wraps
 class ManageStands(object):
 
     def __init__(self, resource, attribute):
+        """
+        resource: the element to apply the decorator
+        attribute: the attribute name containing the list (pois, places, places_nearby)
+        """
         self.resource = resource
         self.attribute = attribute
 
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            response = f(*args, **kwargs)
-            if response[1] == 200 and self.attribute in response[0] and i_manager.instances[self.resource.region].bss_provider:
-                response[0][self.attribute] = bss_provider_manager.handle_places(response[0][self.attribute])
-            return response
+            response, status, e = f(*args, **kwargs)
+            if status == 200 and self.attribute in response:
+                instance = i_manager.instances.get(self.resource.region)
+                if instance and instance.bss_provider:
+                    response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
+            return response, status, e
         return wrapper

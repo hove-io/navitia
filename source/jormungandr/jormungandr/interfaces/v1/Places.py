@@ -118,7 +118,7 @@ class Places(ResourceUri):
 class PlaceUri(ResourceUri):
 
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, authentication=False, *args, **kwargs)
+        ResourceUri.__init__(self, *args, **kwargs)
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -131,9 +131,6 @@ class PlaceUri(ResourceUri):
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
-        args = {
-            "uri": transform_id(id),
-            "_current_datetime": datetime.datetime.utcnow()}
         args = self.parsers["get"].parse_args()
         args.update({
             "uri": transform_id(id),
