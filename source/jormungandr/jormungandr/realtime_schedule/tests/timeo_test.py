@@ -28,14 +28,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import datetime
-from dateutil.parser import parse
 import mock
-import pytz
 from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
-from jormungandr.realtime_schedule.tests.utils import MockRoutePoint
-from jormungandr.utils import date_to_timestamp
+from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 
 
 def make_url_test():
@@ -114,24 +111,6 @@ class MockRequests(object):
 
     def get(self, url, *args, **kwargs):
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
-def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
-    """
-    small helper to ease the reading of the tests
-    >>> _dt("8:15")
-    datetime.datetime(2016, 2, 7, 8, 15, tzinfo=<UTC>)
-    >>> _dt("9:15", day=2)
-    datetime.datetime(2016, 2, 2, 9, 15, tzinfo=<UTC>)
-    """
-    d = parse(dt_to_parse)
-    pytz.UTC.localize(d)
-
-    return d.replace(year=year, month=month, day=day, tzinfo=pytz.UTC)
-
-
-def _timestamp(str, **kwargs):
-    return date_to_timestamp(_dt(str, **kwargs))
 
 
 def mock_good_timeo_response():
