@@ -43,30 +43,69 @@ You can navigate through a response using 2 parameters
 Templated URL
 -------------
 
-Under some link sections, you will find a "templated" property. If
-"templated" is true, then you will have to format the link with your right id.
+> From every object collection
 
-For example, in response of
-<https://api.navitia.io/v1/coverage/fr-idf/lines> you will find a
-*links* section:
+``` shell
+#first request
 
-``` json
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
+#first line is like:
+
 {
-    "href": "https://api.navitia.io/v1/coverage/fr-idf/lines/{lines.id}/stop_schedules",
-    "rel": "route_schedules",
-    "templated": true
+    "lines": [
+        {
+            "id": "line:RAT:M1",
+            "code": "1",
+            "name": "Château de Vincennes - La Défense",
+            "...": "..."
+        },
+        {...}
+        ],
+    ...,
+ 
+#and a templated link from the example above:
+
+    "links": [
+        {
+            "href": "https://api.navitia.io/v1/coverage/sandbox/lines/{lines.id}/stop_schedules",
+            "rel": "stop_schedules",
+            "templated": true
+        },
+        {...}
+    ]
 }
+
+#you can then request for "stop_schedules" service using templating
+#be careful, without any filter, the response can be huge
+
+#second request
+#{line.id} has to be replaced by "line:RAT:M1"
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#here is a smarter request for a line AND a stop_area
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/stop_area:RAT:SA:PLROY/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
 ```
 
-You have to put one line id instead of *{lines.id}*. For example:
-<https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:043043001:N1OIF658/stop_schedules>
+Under some link sections, you will find a "templated" property.
+
+If "templated" is true, then you will have to format the link with your right id as describe in the example.
+In order to do that, you will have to 
+
+* take the id from the object you want to get the linked service
+* replace {lines.id} in the url as the example
+
+
 
 Inner references
 ----------------
+``` shell
+#You may find "disruptions" link, as
 
-Some link sections look like
-
-``` json
 {
     "internal": true,
     "type": "disruption",
@@ -76,10 +115,14 @@ Some link sections look like
 }
 ```
 
-That means you will find inside the same stream ( *"internal": true* ) a
-*disruptions* section ( *"rel": "disruptions"* ) containing some
-[disruptions](#disruption) objects ( *"type": "disruption"* ) where you can find the
-details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"*
-).
+
+Some link sections holds disruption links. These links are templated.
+
+That means :
+
+* inside the self stream ( **"internal": true** ) 
+* you will find a **disruptions** section ( **"rel": "disruptions"** ) 
+* containing some [disruptions](#disruption) objects ( **"type": "disruption"** ) 
+* where you can find the details of your object ( **"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"** ).
 
 

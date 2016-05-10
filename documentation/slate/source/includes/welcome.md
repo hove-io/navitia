@@ -1,10 +1,10 @@
-Welcome to navitia.io
+Getting started
 =====================
 
 Overview
 --------
 
-*navitia.io* is the open API for building cool stuff with transport data.
+*navitia.io* is the open API for building cool stuff with mobility data.
 It provides the following services
 
 * journeys computation
@@ -15,23 +15,41 @@ It provides the following services
 
 navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results, available at <https://api.navitia.io>
 
-Have a look at the examples below to learn what services we provide and how to use them.
+Have a look at the examples below to learn what services we provide and how to use them. 
 
-Getting started
+
+<aside class="notice">
+A fake token is used in examples below: be aware that this token is really limited. You should use yours to get better services on real data.
+</aside>
+
+First step
 ---------------
+``` shell
+#your token is in your confirmation mail. It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
+```
 
-#### First step,
-get a token here <http://navitia.io/register/>
+Get a token here <http://navitia.io/register/>. We need your mail to stay in touch when Navitia changes.
 
-#### Second step,
+Second step
+---------------
+``` shell
+#you can use curl to request Navitia
+$ curl 'https://api.navitia.io/v1/'
+```
 
 Go to the API  <https://api.navitia.io>
 
 The simpliest way is to use a web browser. 
-Our humble opinion is that [firefox browser](#http://www.getfirefox.com) and a json viewer extension like [JSON-DataView](#https://addons.mozilla.org/en-us/firefox/addon/json-dataview) is a good setup.
+Our humble opinion is that [firefox browser](http://www.getfirefox.com) and a json viewer extension like [JSONView](https://addons.mozilla.org/fr/firefox/addon/jsonview/) is a good setup.
 
-#### Third step,
-use the token : if you use a modern web browser, you only have to **paste it** in the **user name area**,
+Third step
+---------------
+``` shell
+#in a curl way, with our fake token
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+Use the token : if you use a modern web browser, you only have to **paste it** in the **user name area**,
 with **no password**.
 
 ![Put token in Firefox browser](/images/firefox_token.png)
@@ -39,7 +57,7 @@ with **no password**.
 Or, in a simplier way, you can add your token in the address bar like :
 
 <aside class="success">
-<b>https://01234567-89ab-cdef-0123-456789abcdef@api.navitia.io/v1/coverage/fr-idf/networks</b>
+<a href="https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage/sandbox/lines">https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage/sandbox/lines</a>
 </aside>
 
 See [authentication](#authentication) section to find out more details on **how to use your token** when coding.
@@ -55,7 +73,7 @@ At some point you will want to read:
 About the data
 --------------
 
-The street network is extracted from [OpenStreetMap](#http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>
+The street network is extracted from [OpenStreetMap](http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>
 
 <aside class="success">
     We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
