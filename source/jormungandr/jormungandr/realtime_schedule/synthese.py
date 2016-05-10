@@ -154,16 +154,11 @@ class Synthese(RealtimeProxy):
                                               format(obj=route_point, s=stop_id))
             return None
 
-
-        """
         count_param = '&rn={c}'.format(c=count) if count else ''
 
         # if a custom datetime is provided we give it to timeo
         dt_param = '&date={dt}'.format(
-            dt=timestamp_to_datetime(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
-        """
-        # Note: for the moment I can't test anything in synthese, so I do not activate this
-        count_param = dt_param = ''
+            dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
 
         url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(base_url=self.service_url,
                                                                     stop_id=stop_id,
@@ -220,3 +215,7 @@ class Synthese(RealtimeProxy):
                                     'reset_timeout': self.breaker.reset_timeout},
                 }
 
+    def _timestamp_to_date(self, timestamp):
+        dt = datetime.utcfromtimestamp(timestamp)
+        dt = pytz.utc.localize(dt)
+        return dt.astimezone(self.timezone)

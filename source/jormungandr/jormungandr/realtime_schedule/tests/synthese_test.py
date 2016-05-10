@@ -33,7 +33,7 @@ import mock
 import pytz
 from jormungandr.realtime_schedule.synthese import Synthese
 import validators
-from jormungandr.realtime_schedule.tests.utils import MockRoutePoint
+from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 
 
 def make_url_test():
@@ -47,6 +47,25 @@ def make_url_test():
     assert url.startswith('http://bob.com/')
     assert 'SERVICE=tdg' in url
     assert 'roid=stop_tutu' in url
+    assert 'rn=' not in url  # we should not have any limit
+    assert 'date=' not in url  # we should not have any custom date
+
+
+def make_url_date_and_count_test():
+    synthese = Synthese(id='tata', timezone='UTC', service_url='http://bob.com/')
+
+    url = synthese._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+                             count=2, from_dt=_timestamp("12:00"))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com/')
+    assert 'SERVICE=tdg' in url
+    assert 'roid=stop_tutu' in url
+    # we should have the param we provided
+    assert 'rn=2' in url
+    assert 'date=2016-02-07 12:00' in url
 
 
 def make_url_invalid_code_test():
