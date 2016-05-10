@@ -528,11 +528,17 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_creator.get_response();
 }
 
-pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
-                                     const boost::posix_time::ptime& current_datetime) {
-    const auto data = data_manager.get_data();
-    this->init_worker_data(data);
+JourneysArg::JourneysArg(const std::vector<type::EntryPoint>& origins,
+             const type::AccessibiliteParams& accessibilite_params,
+             const std::vector<std::string>& forbidden,
+             const type::RTLevel& rt_level,
+             const std::vector<type::EntryPoint>& destinations,
+             const std::vector<uint64_t>& datetimes): origins(origins), accessibilite_params(accessibilite_params),
+    forbidden(forbidden), rt_level(rt_level),destinations(destinations),
+    datetimes(datetimes){}
 
+navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
+    const auto data = data_manager.get_data();
     std::vector<type::EntryPoint> origins;
     for(int i = 0; i < request.origin().size(); i++) {
         Type_e origin_type = data->get_type_of_id(request.origin(i).place());
@@ -559,22 +565,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         destinations.push_back(destination);
     }
 
-    if (origins.empty() && destinations.empty()) {
-        //should never happen, jormungandr filters that, but it never hurts to double check
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                                 "no origin point nor destination point given");
-        return pb_creator.get_response();
-    }
 
     std::vector<std::string> forbidden;
-    for(int i = 0; i < request.forbidden_uris_size(); ++i)
+    for(int i = 0; i < request.forbidden_uris_size(); ++i) {
         forbidden.push_back(request.forbidden_uris(i));
+    }
 
     std::vector<uint64_t> datetimes;
-    for(int i = 0; i < request.datetimes_size(); ++i)
+    for(int i = 0; i < request.datetimes_size(); ++i) {
         datetimes.push_back(request.datetimes(i));
+    }
 
     /// params for departure fallback
     for(size_t i = 0; i < origins.size(); i++) {
@@ -602,51 +602,68 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
 
-    const auto rt_level = get_realtime_level(request.realtime_level());
+    type::RTLevel rt_level = get_realtime_level(request.realtime_level());
+
+    return JourneysArg(origins, accessibilite_params, forbidden, rt_level, destinations, datetimes);
+}
+
+pbnavitia::Response Worker::err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator){
+    pb_creator.fill_pb_error(pbnavitia::Error::bad_format,
+                             pbnavitia::NO_SOLUTION,
+                             err_msg);
+    return pb_creator.get_response();
+}
+
+pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
+                                     const boost::posix_time::ptime& current_datetime) {
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    navitia::JourneysArg arg = fill_journeys(request);
+
+    if (arg.origins.empty() && arg.destinations.empty()) {
+        //should never happen, jormungandr filters that, but it never hurts to double check
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point given");
+        return pb_creator.get_response();
+    }
 
     switch(api) {
     case pbnavitia::ISOCHRONE: {
-        type::EntryPoint ep;
-        if (! origins.empty()) {
-            if (! request.clockwise()) {
-                // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
-                              "isochrone works only for clockwise request");
-                return pb_creator.get_response();
-            }
-            ep = origins[0];
-        } else {
-            if (request.clockwise()) {
-                // isochrone works only on clockwise
-                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-                pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION,
-                                         "reverse isochrone works only for anti-clockwise request");
-                return pb_creator.get_response();
-            }
-            ep = destinations[0];
+
+        if (! arg.origins.empty() && ! request.clockwise()) {
+            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+            return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
+        } else if(arg.origins.empty() && request.clockwise()){
+            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+            return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
         }
+        type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
         return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
-                                                request.clockwise(), accessibilite_params,
-                                                forbidden, *street_network_worker,
-                                                rt_level, current_datetime, request.max_duration(),
+                                                request.clockwise(), arg.accessibilite_params,
+                                                arg.forbidden, *street_network_worker,
+                                                arg.rt_level, current_datetime, request.max_duration(),
                                                 request.max_transfers());
     }
 
     case pbnavitia::pt_planner:
-        return routing::make_pt_response(*planner, origins, destinations, datetimes[0],
-                request.clockwise(), accessibilite_params,
-                forbidden, rt_level, current_datetime,
+        return routing::make_pt_response(*planner, arg.origins, arg.destinations, arg.datetimes[0],
+                request.clockwise(), arg.accessibilite_params,
+                arg.forbidden, arg.rt_level, current_datetime,
                 seconds{request.walking_transfer_penalty()}, request.max_duration(),
                 request.max_transfers(), request.max_extra_second_pass());
     default:
-        return routing::make_response(*planner, origins[0], destinations[0], datetimes,
-                request.clockwise(), accessibilite_params,
-                forbidden, *street_network_worker,
-                rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+        return routing::make_response(*planner, arg.origins[0], arg.destinations[0], arg.datetimes,
+                request.clockwise(), arg.accessibilite_params,
+                arg.forbidden, *street_network_worker,
+                arg.rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
                 request.max_transfers(), request.max_extra_second_pass());
     }
 }
+
+
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                    const boost::posix_time::ptime& current_datetime) {
@@ -674,6 +691,32 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                     current_datetime);
 }
 
+pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochronRequest &request_iso,
+                                               const boost::posix_time::ptime& current_datetime) {
+
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    const auto& request = request_iso.journeys_request();
+
+    navitia::JourneysArg arg = fill_journeys(request);
+
+    if (! arg.origins.empty() && ! request.clockwise()) {
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
+    } else if(arg.origins.empty() && request.clockwise()){
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+    }
+    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+
+
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0), request.max_duration(),
+                                                      request.max_transfers(), arg.accessibilite_params, arg.forbidden,
+                                                      request.clockwise(), arg.rt_level,
+                                                      *street_network_worker);
+
+}
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
@@ -692,32 +735,33 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     }
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
     switch(request.requested_api()){
-        case pbnavitia::places: response = autocomplete(request.places(), current_datetime); break;
-        case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_datetime); break;
-        case pbnavitia::place_uri: response = place_uri(request.place_uri(), current_datetime); break;
-        case pbnavitia::ROUTE_SCHEDULES:
-        case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
-        case pbnavitia::DEPARTURE_BOARDS:
-            response = next_stop_times(request.next_stop_times(), request.requested_api(), current_datetime); break;
-        case pbnavitia::ISOCHRONE:
-        case pbnavitia::NMPLANNER:
-        case pbnavitia::pt_planner:
-        case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
-                                                     current_datetime); break;
-        case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
-        case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
-        case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
-                                                                     current_datetime); break;
-        case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
-        case pbnavitia::place_code : response = place_code(request.place_code()); break;
-        case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-        default:
-            LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
-            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
-            break;
+    case pbnavitia::places: response = autocomplete(request.places(), current_datetime); break;
+    case pbnavitia::pt_objects: response = pt_object(request.pt_objects(), current_datetime); break;
+    case pbnavitia::place_uri: response = place_uri(request.place_uri(), current_datetime); break;
+    case pbnavitia::ROUTE_SCHEDULES:
+    case pbnavitia::NEXT_DEPARTURES:
+    case pbnavitia::NEXT_ARRIVALS:
+    case pbnavitia::PREVIOUS_DEPARTURES:
+    case pbnavitia::PREVIOUS_ARRIVALS:
+    case pbnavitia::DEPARTURE_BOARDS:
+        response = next_stop_times(request.next_stop_times(), request.requested_api(), current_datetime); break;
+    case pbnavitia::ISOCHRONE:
+    case pbnavitia::NMPLANNER:
+    case pbnavitia::pt_planner:
+    case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
+                                                 current_datetime); break;
+    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
+    case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
+    case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
+                                                                 current_datetime); break;
+    case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
+    case pbnavitia::place_code : response = place_code(request.place_code()); break;
+    case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
+    case pbnavitia::graphical_isochron : response = graphical_isochron(request.isochron(), current_datetime); break;
+    default:
+        LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
+        fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
+        break;
     }
     metadatas(response);//we add the metadatas for each response
     feed_publisher(response);

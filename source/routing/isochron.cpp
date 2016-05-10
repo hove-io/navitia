@@ -126,7 +126,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
     double speed = 0.8; // About 3km/h TODO pass it in param
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        int duration_max = abs(int(bound) - it->second.total_seconds());
+        int duration_max = abs(int(bound) - (abs(int(init_dt) - int(it->second.total_seconds()))));
         const auto& center = data_departure[it->first.val]->coord;
         circles.push_back(circle(center , duration_max * speed));
     }

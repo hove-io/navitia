@@ -44,11 +44,27 @@ namespace routing{
 #include "kraken/data_manager.h"
 #include "utils/logger.h"
 #include "kraken/configuration.h"
+#include "type/pb_converter.h"
 
 #include <memory>
 #include <limits>
 
 namespace navitia {
+
+struct JourneysArg {
+    const std::vector<type::EntryPoint> origins;
+    const type::AccessibiliteParams accessibilite_params;
+    const std::vector<std::string> forbidden;
+    const type::RTLevel rt_level;
+    const std::vector<type::EntryPoint> destinations;
+    const std::vector<uint64_t> datetimes;
+    JourneysArg(const std::vector<type::EntryPoint>& origins,
+                 const type::AccessibiliteParams& accessibilite_params,
+                 const std::vector<std::string>& forbidden,
+                 const type::RTLevel& rt_level,
+                 const std::vector<type::EntryPoint>& destinations,
+                 const std::vector<uint64_t>& datetimes);
+};
 
 class Worker {
     private:
@@ -87,6 +103,9 @@ class Worker {
                                             const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
                                            const boost::posix_time::ptime& current_datetime);
+
+        JourneysArg fill_journeys(const pbnavitia::JourneysRequest &request);
+        pbnavitia::Response err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator);
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
                                      const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request,
@@ -99,6 +118,8 @@ class Worker {
                                       const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
+        pbnavitia::Response graphical_isochron(const pbnavitia::GraphicalIsochronRequest &request,
+                                               const boost::posix_time::ptime& current_datetime);
 };
 
 }

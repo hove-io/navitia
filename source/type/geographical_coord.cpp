@@ -163,8 +163,8 @@ static std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
 std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
     os << "{\"type\":\"Polygon\",\"coordinates\":[[";
     os << GeoCoord(points.outer()[0]);
-    for(const auto& coord: points.outer()) {
-        os << "," << GeoCoord(coord);
+    for(unsigned j = 1; j < points.outer().size() - 1; j++) {
+        os << "," << GeoCoord(points.outer()[j]);
     }
     return os << "]]}";
 }
@@ -172,9 +172,9 @@ std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points)
 std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
     os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
     for (unsigned i = 0; i < polygons.size(); i++) {
-        os <<  "[["<< GeoCoord(polygons[0].outer()[0]);
-        for(const auto& coord: polygons[i].outer()) {
-             os << "," << GeoCoord(coord);
+        os <<  "[[" << GeoCoord(polygons[i].outer()[0]);
+        for(unsigned j = 1; j < polygons[i].outer().size() - 1; j++) {
+             os << "," << GeoCoord(polygons[i].outer()[j]);
         }
         os << "]]";
         if (i == polygons.size() - 1) { continue; }
