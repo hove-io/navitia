@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
+from jormungandr.utils import timestamp_to_datetime
 
 
 class RealtimeProxy(object):
@@ -39,8 +40,44 @@ class RealtimeProxy(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def next_passage_for_route_point(self, route_point):
+    def _get_next_passage_for_route_point(self, route_point, count, from_dt):
+        """
+        method that actually calls the external service to get the next passage for a given route_point
+        """
         pass
+
+    def _filter_passages(self, passages, count, from_dt):
+        """
+        after getting the next passages from the proxy, we might want to filter some
+
+        by default we filter:
+        * we keep at most 'count' items
+        * we don't want to display datetime after from_dt
+        """
+        if not passages:
+            return passages
+
+        if from_dt:
+            # we need to convert from_dt (which is a timestamp) to a datetime
+            from_dt = timestamp_to_datetime(from_dt)
+            passages = filter(lambda p: p.datetime >= from_dt, passages)
+
+        if count:
+            del passages[count:]
+
+        return passages
+
+    def next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+        """
+        Main method for the proxy
+
+        returns the next realtime passages
+        """
+        next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt)
+
+        filtered_passage = self._filter_passages(next_passages, count, from_dt)
+
+        return filtered_passage
 
     @abstractmethod
     def status(self):

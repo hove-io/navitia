@@ -37,6 +37,7 @@ from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
+from jormungandr.utils import timestamp_to_datetime
 
 
 def _to_duration(hour_str):
@@ -96,8 +97,8 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
         return None
 
-    def next_passage_for_route_point(self, route_point):
-        url = self._make_url(route_point)
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+        url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
 
@@ -134,7 +135,7 @@ class Timeo(RealtimeProxy):
 
         return next_passages
 
-    def _make_url(self, route_point):
+    def _make_url(self, route_point, count=None, from_dt=None):
         """
         the route point identifier is set with the StopDescription argument
          this argument is split in 3 arguments (given between '?' and ';' symbol....)
@@ -162,16 +163,25 @@ class Timeo(RealtimeProxy):
                                               format(obj=route_point, s=stop, l=line, r=route))
             return None
 
+        # timeo can only handle items_per_schedule if it's < 5
+        count = min(count, 5) or 5  # if no value defined we ask for 5 passages
+
+        # if a custom datetime is provided we give it to timeo
+        dt_param = '&NextStopReferenceTime={dt}'\
+            .format(dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%dT%H:%M:%S')) \
+            if from_dt else ''
+
         stop_id_url = ("StopDescription=?"
                        "StopTimeoCode={stop}"
                        "&LineTimeoCode={line}"
                        "&Way={route}"
                        "&NextStopTimeNumber={count}"
-                       "&StopTimeType={data_freshness};").format(stop=stop,
+                       "&StopTimeType={data_freshness}{dt};").format(stop=stop,
                                                                  line=line,
                                                                  route=route,
-                                                                 count='5',  # TODO better pagination
-                                                                 data_freshness='TR')
+                                                                 count=count,
+                                                                 data_freshness='TR',
+                                                                 dt=dt_param)
 
         url = "{base_url}?{base_params}&{stop_id}".format(base_url=self.service_url,
                                                           base_params=base_params,
@@ -188,6 +198,11 @@ class Timeo(RealtimeProxy):
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
 
         return utc_dt
+
+    def _timestamp_to_date(self, timestamp):
+        dt = datetime.utcfromtimestamp(timestamp)
+        dt = pytz.utc.localize(dt)
+        return dt.astimezone(self.timezone)
 
     def status(self):
         return {'id': self.rt_system_id,

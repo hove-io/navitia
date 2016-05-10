@@ -207,7 +207,7 @@ class MixedSchedule(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def _get_next_realtime_passages(self, route_point):
+    def _get_next_realtime_passages(self, route_point, request):
         log = logging.getLogger(__name__)
 
         if not route_point:
@@ -222,7 +222,9 @@ class MixedSchedule(object):
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
             return None
 
-        next_rt_passages = rt_system.next_passage_for_route_point(route_point)
+        next_rt_passages = rt_system.next_passage_for_route_point(route_point,
+                                                                  request['items_per_schedule'],
+                                                                  request['from_datetime'])
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')
             return None
@@ -282,7 +284,7 @@ class MixedSchedule(object):
                             for rp in resp.route_points)
 
         for route_point, template in route_points.items():
-            next_rt_passages = self._get_next_realtime_passages(route_point)
+            next_rt_passages = self._get_next_realtime_passages(route_point, request)
             _update_passages(resp.next_departures, route_point, template, next_rt_passages)
 
         # sort
@@ -311,6 +313,6 @@ class MixedSchedule(object):
 
         for stop_schedule in resp.stop_schedules:
             route_point = _get_route_point_from_stop_schedule(stop_schedule)
-            next_rt_passages = self._get_next_realtime_passages(route_point)
+            next_rt_passages = self._get_next_realtime_passages(route_point, request)
             _update_stop_schedule(stop_schedule, next_rt_passages)
         return resp

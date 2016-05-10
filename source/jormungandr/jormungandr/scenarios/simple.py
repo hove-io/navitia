@@ -147,7 +147,6 @@ class Scenario(object):
     def departure_boards(self, request, instance):
         return instance.schedule.departure_boards(request)
 
-
     def places_nearby(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby

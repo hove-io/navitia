@@ -61,7 +61,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             next_passages.append(next_passage)
         return next_passages
 
-    def next_passage_for_route_point(self, route_point):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
         if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 
@@ -204,6 +204,23 @@ class TestDepartures(AbstractTestFixture):
         d = get_not_null(response["departures"][2], "display_informations")
         get_not_null(d, "physical_mode")
         get_not_null(d, "headsign")
+
+    def test_stop_schedule_limit_per_items(self):
+        """
+        test the limit of item per stop_schedule with a realtime proxy
+        """
+        query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='') + \
+                '&items_per_schedule=1'
+        response = self.query_region(query)
+        for stop_sched in response['stop_schedules']:
+            assert len(stop_sched['date_times']) == 1
+
+        # same with a big limit, we get only 2 items (because there are only 2)
+        query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='') + \
+                '&items_per_schedule=42'
+        response = self.query_region(query)
+        for stop_sched in response['stop_schedules']:
+            assert len(stop_sched['date_times']) == 2
 
 
 MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
