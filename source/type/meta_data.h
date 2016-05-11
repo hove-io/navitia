@@ -53,6 +53,7 @@ struct MetaData{
     std::string publisher_url;
     std::string license;
     std::string instance_name;
+    boost::posix_time::ptime feed_creation_datetime;
 
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
