@@ -57,11 +57,13 @@ class BssProviderManager(object):
         return item
 
     def find_provider(self, poi):
-        for instance in self.bss_providers:
+        for instance in self._get_providers():
             if instance.support_poi(poi):
                 return instance
 
-    def init_class(self, cls, arguments):
+    def _get_providers(self):
+        return self.bss_providers
+
     def _init_class(self, cls, arguments):
         try:
             if '.' not in cls:
