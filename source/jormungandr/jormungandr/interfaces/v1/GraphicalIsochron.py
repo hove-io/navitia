@@ -53,6 +53,7 @@ graphical_isochron = {
     "geojson": MultiPolyGeoJson(),
 }
 
+
 graphical_isochrons = {
     "isochrons": NonNullList(NonNullNested(graphical_isochron), attribute="graphical_isochrons"),
     "error": PbField(error, attribute='error'),
