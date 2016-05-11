@@ -398,6 +398,29 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
+class MultiPolyGeoJson(fields.Raw):
+    def __init__(self, **kwargs):
+        super(MultiPolyGeoJson, self).__init__(**kwargs)
+
+    def format(self, value):
+
+        polys = []
+
+        for poly in value.polygons:
+            outer = []
+            outer.append([[c.lon, c.lat] for c in poly.outer.coordinates])
+            polys.append(outer)
+            for inners in poly.inners:
+                inner = []
+                inner.append([[c.lon, c.lat] for c in inners.coordinates])
+                polys.append(inner)
+        response = {
+            "type": "MultiPolygon",
+            "coordinates": polys,
+        }
+
+        return response
+
 class Co2Emission(fields.Raw):
     def output(self, key, obj):
         if not obj.HasField(b"co2_emission"):

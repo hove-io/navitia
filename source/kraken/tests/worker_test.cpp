@@ -201,4 +201,8 @@ BOOST_FIXTURE_TEST_CASE(graphical_isochrone_test, fixture) {
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.graphical_isochrons_size(), 1);
+    const auto& isochron = resp.graphical_isochrons(0).geojson();
+    BOOST_REQUIRE_EQUAL(isochron.polygons_size(), 1);
+    const auto& poly = isochron.polygons(0).outer();
+    BOOST_CHECK(poly.coordinates().size() > 1);
 }

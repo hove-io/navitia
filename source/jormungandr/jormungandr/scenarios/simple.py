@@ -40,6 +40,7 @@ import navitiacommon.response_pb2 as response_pb2
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import pb_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
+from jormungandr.scenarios.utils import  updated_request_with_default
 from datetime import datetime
 
 
@@ -190,6 +191,48 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp
+
+    def graphical_isochrons(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.graphical_isochron
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
+        journey_req = req.isochron.journeys_request
+
+        if "origin" in request and request["origin"]:
+            origin = journey_req.origin.add()
+            origin.place = request["origin"]
+            origin.access_duration = 0
+        if "destination" in request and request["destination"]:
+            destination = journey_req.destination.add()
+            destination.place = request["destination"]
+            destination.access_duration = 0
+        request["datetime"] = [request["datetime"]]
+        for dte in request["datetime"]:
+            journey_req.datetimes.append(dte)
+        journey_req.clockwise = request["clockwise"]
+        updated_request_with_default(request, instance)
+        sn_params = journey_req.streetnetwork_params
+        sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
+        sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
+        sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
+        sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
+        sn_params.walking_speed = request["walking_speed"]
+        sn_params.bike_speed = request["bike_speed"]
+        sn_params.car_speed = request["car_speed"]
+        sn_params.bss_speed = request["bss_speed"]
+
+        journey_req.max_duration = request["duration"]
+        journey_req.max_transfers = request["max_transfers"]
+        self.origin_modes = request["origin_mode"]
+        self.destination_modes = request["destination_mode"]
+        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.journeys.forbidden_uris.append(forbidden_uri)
+        journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
+        journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]
+        resp = instance.send_and_receive(req)
+        return resp
+
 
     def stop_areas(self, request, instance):
         return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,instance)

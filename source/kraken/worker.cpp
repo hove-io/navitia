@@ -705,6 +705,15 @@ pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochro
 
     navitia::JourneysArg arg = fill_journeys(request);
 
+    if (arg.origins.empty() && arg.destinations.empty()) {
+        //should never happen, jormungandr filters that, but it never hurts to double check
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point given");
+        return pb_creator.get_response();
+    }
+
     if (! arg.origins.empty() && ! request.clockwise()) {
         navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
         return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
