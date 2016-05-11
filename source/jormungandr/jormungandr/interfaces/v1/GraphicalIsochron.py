@@ -46,7 +46,7 @@ from jormungandr.resources_utc import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
-
+from jormungandr.interfaces.v1.Journeys import dt_represents
 
 
 graphical_isochron = {
@@ -58,16 +58,7 @@ graphical_isochrons = {
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
-
 }
-
-def dt_represents(value):
-    if value == "arrival":
-        return False
-    elif value == "departure":
-        return True
-    else:
-        raise ValueError("Unable to parse datetime_represents")
 
 
 class GraphicalIsochron(ResourceUri, ResourceUtc):
