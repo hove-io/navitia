@@ -215,12 +215,16 @@ def _filter_max_successive_buses(journeys, request):
     for j in journeys:
         if _to_be_deleted(j):
             continue
+
         bus_count = 0
         for s in j.sections:
             if s.type != response_pb2.PUBLIC_TRANSPORT:
                 continue
             if s.pt_display_informations.uris.physical_mode == 'Bus':
-                bus_count = bus_count + 1
+                bus_count += 1
+            else:
+                if bus_count <= min_successive_buses:
+                    bus_count = 0
 
         if bus_count > min_successive_buses:
             logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
