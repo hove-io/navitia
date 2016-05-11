@@ -42,8 +42,7 @@ def realtime_place_creation_test():
     """
     simple bss provider creation
     """
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     assert len(manager.bss_providers) == 1
 
 @raises(Exception)
@@ -51,15 +50,14 @@ def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
-    app.config['BSS_PROVIDER'] = (
+    manager = BssProviderManager((
         {
             'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
         },
         {
             'class': 'jormungandr.parking_space_availability.bss.BadProvider'
         }
-    )
-    manager = BssProviderManager()
+    ))
 
 def realtime_places_handle_test():
     """
@@ -80,8 +78,7 @@ def realtime_places_handle_test():
             'id': 'poi:n3762373698'
         }
     ]
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     places_with_stands = manager.handle_places(places)
     assert 'stands' in places_with_stands[0]['poi']
     stands = places_with_stands[0]['poi']['stands']
@@ -102,8 +99,7 @@ def realtime_pois_handle_test():
             }
         }
     ]
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     pois_with_stands = manager.handle_places(pois)
     assert 'stands' in pois_with_stands[0]
     stands = pois_with_stands[0]['stands']
@@ -122,8 +118,7 @@ def realtime_poi_handle_test():
             'id': 'poi_type:amenity:bicycle_rental'
         }
     }
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     poi_with_stands = manager.handle_poi(poi)
     assert 'stands' in poi_with_stands
     stands = poi_with_stands['stands']
@@ -142,7 +137,6 @@ def realtime_place_find_provider_test():
             'id': 'poi_type:amenity:bicycle_rental'
         }
     }
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     provider = manager.find_provider(poi)
     assert provider == manager.bss_providers[0]
