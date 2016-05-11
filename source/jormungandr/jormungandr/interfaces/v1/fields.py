@@ -796,7 +796,8 @@ instance_parameters = {
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,
     'priority': fields.Raw,
-    'bss_provider': fields.Boolean
+    'bss_provider': fields.Boolean,
+    'max_additional_changes': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)
