@@ -337,17 +337,20 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
     } else if(filter.op == AFTER) {
-        // Getting the jpps from the request
-        const auto& first_jpps = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+        //this does only work with jpp
+        if (filter.object == "journey_pattern_point") {
+            // Getting the jpps from the request
+            const auto& first_jpps = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
 
-        // We get the jpps after the ones of the request
-        for (const auto& first_jpp: first_jpps) {
-            const auto& jpp = d.dataRaptor->jp_container.get(routing::JppIdx(first_jpp));
-            const auto& jp = d.dataRaptor->jp_container.get(jpp.jp_idx);
-            for (const auto& other_jpp_idx : jp.jpps) {
-                const auto& other_jpp = d.dataRaptor->jp_container.get(other_jpp_idx);
-                if (other_jpp.order > jpp.order) {
-                    indexes.insert(other_jpp_idx.val); // TODO bulk insert ? (I don't think it's usefull)
+            // We get the jpps after the ones of the request
+            for (const auto& first_jpp: first_jpps) {
+                const auto& jpp = d.dataRaptor->jp_container.get(routing::JppIdx(first_jpp));
+                const auto& jp = d.dataRaptor->jp_container.get(jpp.jp_idx);
+                for (const auto& other_jpp_idx : jp.jpps) {
+                    const auto& other_jpp = d.dataRaptor->jp_container.get(other_jpp_idx);
+                    if (other_jpp.order > jpp.order) {
+                        indexes.insert(other_jpp_idx.val); // TODO bulk insert ? (I don't think it's usefull)
+                    }
                 }
             }
         }
