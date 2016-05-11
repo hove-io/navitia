@@ -99,6 +99,10 @@ priority = 0
 # activate / desactivate call to bss provider
 bss_provider = True
 
+#Maximum number of correspondences allowed in journeys is calculated as
+#max_additional_changes + the number of correspondences of best journey
+maw_additional_changes = 2
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)

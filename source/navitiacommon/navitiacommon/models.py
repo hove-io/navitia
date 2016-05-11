@@ -296,6 +296,9 @@ class Instance(db.Model):
     bss_provider = db.Column(db.Boolean, default=default_values.bss_provider,
                                   nullable=False, server_default=true())
 
+    max_additional_changes = db.Column(db.Integer, default=default_values.maw_additional_changes,
+                                  nullable=False, server_default='2')
+
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
         self.name = name
