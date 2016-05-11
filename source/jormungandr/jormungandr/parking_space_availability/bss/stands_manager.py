@@ -27,14 +27,27 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr import i_manager, bss_provider_manager
+from functools import wraps
 
 
-class BssMockProvider(BssProvider):
+class ManageStands(object):
 
-    def support_poi(self, poi):
-        return poi['id'] == 'station_1'
+    def __init__(self, resource, attribute):
+        """
+        resource: the element to apply the decorator
+        attribute: the attribute name containing the list (pois, places, places_nearby)
+        """
+        self.resource = resource
+        self.attribute = attribute
 
-    def get_informations(self, poi):
-        return Stands(5, 9)
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            response, status, e = f(*args, **kwargs)
+            if status == 200 and self.attribute in response:
+                instance = i_manager.instances.get(self.resource.region)
+                if instance and instance.bss_provider:
+                    response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
+            return response, status, e
+        return wrapper
