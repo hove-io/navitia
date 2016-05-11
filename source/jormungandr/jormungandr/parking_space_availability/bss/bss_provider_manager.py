@@ -34,12 +34,12 @@ import logging
 
 class BssProviderManager(object):
 
-    def __init__(self):
+    def __init__(self, bss_providers_configuration):
         self.bss_providers = []
         self.log = logging.getLogger(__name__)
-        for configuration in app.config['BSS_PROVIDER']:
+        for configuration in bss_providers_configuration:
             arguments = configuration.get('args', {})
-            self.bss_providers.append(self.init_class(configuration['class'], arguments))
+            self.bss_providers.append(self._init_class(configuration['class'], arguments))
 
     def handle_places(self, places):
         for place in places or []:
@@ -62,6 +62,7 @@ class BssProviderManager(object):
                 return instance
 
     def init_class(self, cls, arguments):
+    def _init_class(self, cls, arguments):
         try:
             if '.' not in cls:
                 self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
