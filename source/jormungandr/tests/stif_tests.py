@@ -70,6 +70,7 @@ class TestAutocomplete(AbstractTestFixture):
         eq_(response['journeys'][0]['arrival_date_time'], '20140614T100000')
 
 
+
     def test_stif_override_final_line_filter(self):
         """
         Test of simple request :
@@ -85,3 +86,61 @@ class TestAutocomplete(AbstractTestFixture):
         eq_(response['journeys'][0]['arrival_date_time'], '20140614T100000')
         eq_(response['journeys'][1]['arrival_date_time'], '20140614T110000')
         eq_(response['journeys'][2]['arrival_date_time'], '20140614T120000')
+
+    def test_stif_max_successive_buses(self):
+        """
+                BUS         Bus         Bus         Bus
+        stopP ----> stopQ ----> stopR ----> stopS ----> stopT
+        15:00       16:00       17:00       18:00       19:00
+
+                                Bus
+        stopP ----------------------------------------> stopT
+        15:00                                           20:00
+
+        Test of request with parameter "_max_successive_buses":
+        * we want to make at least 2 journey calls (not only the best journey, but also try next)
+        * we don't want the journey using more than 3 Buses
+        So here we want journey1
+        """
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif"\
+            .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+
+        #As we modifiy the value of _max_successive_buses to 5 we want two journeys
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif&_max_successive_buses=5"\
+            .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 2)
+
+
+    def test_stif_max_successive_buses_with_tram_in_between(self):
+        """
+                BUS         Bus         Bus         Bus         Tram        Bus         Bus
+        stopP ----> stopQ ----> stopR ----> stopS ----> stopT ----> stopU ----> stopV ----> stopW
+        15:00       16:00       17:00       18:00       19:00       19:30       20:00       20:30
+                                Bus
+        stopP ----------------------------------------------------------------------------> stopW
+        15:00                                                                               21:00
+        Test of request with parameter "_max_successive_buses":
+        * we want to make at least 2 journey calls (not only the best journey, but also try next)
+        * we don't want the journey using more than 3 Buses successive
+        * we have "Bus" and "Tram" as means of transport
+        """
+
+        #As there are 4 buses successive to be used from stopP to stopW and _max_successive_buses = 3
+        # we have 1 journey
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif"\
+            .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 1)
+
+        #As we modifiy the value of _max_successive_buses to 5 we want two journeys
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif&_max_successive_buses=5"\
+            .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 2)

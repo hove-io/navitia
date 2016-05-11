@@ -51,6 +51,24 @@ int main(int argc, const char* const argv[]) {
     b.vj("C")("stopC", "10:30"_t)("stopB", "11:00"_t);
     b.connection("stopC", "stopC", 0);
 
+    b.vj("P", "11111111", "", true, "", "", "Bus")("stopP", "15:00"_t)("stopQ", "16:00"_t);
+    b.vj("Q", "11111111", "", true, "", "", "Bus")("stopQ", "16:00"_t)("stopR", "17:00"_t);
+    b.vj("R", "11111111", "", true, "", "", "Bus")("stopR", "17:00"_t)("stopS", "18:00"_t);
+    b.vj("S", "11111111", "", true, "", "", "Bus")("stopS", "18:00"_t)("stopT", "19:00"_t);
+    b.vj("T", "11111111", "", true, "", "", "Bus")("stopP", "15:00"_t)("stopT", "20:00"_t);
+    b.connection("stopQ", "stopQ", 0);
+    b.connection("stopR", "stopR", 0);
+    b.connection("stopS", "stopS", 0);
+
+    b.connection("stopT", "stopT", 0);
+    b.vj("U", "11111111", "", true, "", "", "Tram")("stopT", "19:00"_t)("stopU", "19:30"_t); //Tram
+    b.vj("V", "11111111", "", true, "", "", "Bus")("stopU", "19:30"_t)("stopV", "20:00"_t); //Bus
+    b.vj("W", "11111111", "", true, "", "", "Bus")("stopV", "20:00"_t)("stopW", "20:30"_t); //Bus
+
+    b.connection("stopU", "stopU", 0);
+    b.connection("stopV", "stopV", 0);
+    b.vj("PW", "11111111", "", true, "", "", "Bus")("stopP", "15:00"_t)("stopW", "21:00"_t); //Bus
+
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
