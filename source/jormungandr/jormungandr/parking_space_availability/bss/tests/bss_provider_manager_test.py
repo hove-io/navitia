@@ -72,7 +72,8 @@ def realtime_places_handle_test():
                 'poi_type': {
                     'name': 'station vls',
                     'id': 'poi_type:amenity:bicycle_rental'
-                }
+                },
+                'id': 'station_1'
             },
             'quality': 0,
             'id': 'poi:n3762373698'
@@ -96,7 +97,8 @@ def realtime_pois_handle_test():
             'poi_type': {
                 'name': 'station vls',
                 'id': 'poi_type:amenity:bicycle_rental'
-            }
+            },
+            'id': 'station_1'
         }
     ]
     manager = BssProviderManager(CONFIG)
@@ -108,7 +110,7 @@ def realtime_pois_handle_test():
     assert stands.total_stands == 14
 
 
-def realtime_poi_handle_test():
+def realtime_poi_supported_handle_test():
     """
     test correct handle pois include bss stands
     """
@@ -116,7 +118,8 @@ def realtime_poi_handle_test():
         'poi_type': {
             'name': 'station vls',
             'id': 'poi_type:amenity:bicycle_rental'
-        }
+        },
+        'id': 'station_1'
     }
     manager = BssProviderManager(CONFIG)
     poi_with_stands = manager.handle_poi(poi)
@@ -127,6 +130,22 @@ def realtime_poi_handle_test():
     assert stands.total_stands == 14
 
 
+def realtime_poi_not_supported_handle_test():
+    """
+    test correct handle pois include bss stands
+    """
+    poi = {
+        'poi_type': {
+            'name': 'station vls',
+            'id': 'poi_type:amenity:bicycle_rental'
+        },
+        'id': 'station_2'
+    }
+    manager = BssProviderManager(CONFIG)
+    poi_with_stands = manager.handle_poi(poi)
+    assert not 'stands' in poi_with_stands
+
+
 def realtime_place_find_provider_test():
     """
     test manager return provider
@@ -135,7 +154,8 @@ def realtime_place_find_provider_test():
         'poi_type': {
             'name': 'station vls',
             'id': 'poi_type:amenity:bicycle_rental'
-        }
+        },
+        'id': 'station_1'
     }
     manager = BssProviderManager(CONFIG)
     provider = manager.find_provider(poi)
