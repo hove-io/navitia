@@ -209,8 +209,8 @@ def _filter_max_successive_buses(journeys, request):
     eliminates journeys with public_transport.bus more than _max_successive_buses
     """
     logger = logging.getLogger(__name__)
-    min_successive_buses = get_or_default(request, '_max_successive_buses', 0)
-    if (min_successive_buses == 0):
+    max_successive_buses = get_or_default(request, '_max_successive_buses', 0)
+    if max_successive_buses == 0:
         return
     for j in journeys:
         if _to_be_deleted(j):
@@ -223,10 +223,10 @@ def _filter_max_successive_buses(journeys, request):
             if s.pt_display_informations.uris.physical_mode == 'Bus':
                 bus_count += 1
             else:
-                if bus_count <= min_successive_buses:
+                if bus_count <= max_successive_buses:
                     bus_count = 0
 
-        if bus_count > min_successive_buses:
+        if bus_count > max_successive_buses:
             logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
             mark_as_dead(j, "too_much_successive_buses")
 
