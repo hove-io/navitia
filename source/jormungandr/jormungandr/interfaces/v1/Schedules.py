@@ -150,12 +150,19 @@ class Schedules(ResourceUri, ResourceUtc):
 
             if not args['data_freshness']:
                 args['data_freshness'] = 'realtime'
-        elif not args.get('calendar'):
-            #if a calendar is given all times will be given in local (because the calendar might span over dst)
-            if args['from_datetime']:
-                args['from_datetime'] = self.convert_to_utc(args['from_datetime'])
-            if args['until_datetime']:
-                args['until_datetime'] = self.convert_to_utc(args['until_datetime'])
+        else:
+            if not args.get('calendar'):
+                # if a calendar is given all times will be given in local (because the calendar might span
+                # over dst)
+                if args['from_datetime']:
+                    args['from_datetime'] = self.convert_to_utc(args['from_datetime'])
+                if args['until_datetime']:
+                    args['until_datetime'] = self.convert_to_utc(args['until_datetime'])
+
+            if args['data_freshness'] in (None, 'realtime'):
+                # If a data has been provided, we cannot give realtime results
+                # Note: if the user asked for adapted data, we can still give them
+                args['data_freshness'] = 'base_schedule'
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['from_datetime']
