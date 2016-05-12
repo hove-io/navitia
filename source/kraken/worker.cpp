@@ -151,6 +151,7 @@ pbnavitia::Response Worker::status() {
         status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
+        status->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
         for(auto data_sources: d->meta->data_sources){
             status->add_data_sources(data_sources);
         }
