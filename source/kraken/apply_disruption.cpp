@@ -609,7 +609,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         apply_impacts_visitor::operator()(route);
     }
 
-    void operator()(nt::disruption::LineSection& ls) {
+    void operator()(nt::disruption::LineSection&) {
         auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
             if (auto i = weak_ptr.lock()){
                 return i->uri == impact->uri;
