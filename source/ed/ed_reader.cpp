@@ -285,7 +285,7 @@ void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
         }
         if (const_it["key"].as<std::string>() == "feed_creation_datetime"){
             try {
-                data.meta->feed_creation_datetime = bt::from_iso_string(const_it["value"].as<std::string>());
+                data.meta->dataset_created_at = bt::from_iso_string(const_it["value"].as<std::string>());
             } catch(const boost::gregorian::bad_day_of_month&) {
                 LOG4CPLUS_INFO(log,"feed_creation_datetime is not valid");
             }

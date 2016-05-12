@@ -179,7 +179,7 @@ void check_ntfs(const nt::Data& data) {
 
     check_unsound_pickup_dropoff(data);
 
-    BOOST_CHECK_EQUAL(data.meta->feed_creation_datetime, boost::posix_time::from_iso_string("20150415T153234"));
+    BOOST_CHECK_EQUAL(data.meta->dataset_created_at, boost::posix_time::from_iso_string("20150415T153234"));
 }
 
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
