@@ -108,3 +108,12 @@ def filter_filter_dt_and_item():
 
     r = proxy.next_passage_for_route_point(None, count=1, from_dt=dt("11:59"))
     assert map(get_dt, r) == [dt("12:00")]
+
+
+def filter_filter_dt_all():
+    """the filter will filter all, so we should not get an empty list but None"""
+    passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
+    proxy = CustomProxy(passages)
+
+    r = proxy.next_passage_for_route_point(None, count=1, from_dt=dt("15:00"))
+    assert r is None

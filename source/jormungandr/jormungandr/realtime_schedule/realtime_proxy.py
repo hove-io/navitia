@@ -61,6 +61,10 @@ class RealtimeProxy(object):
             # we need to convert from_dt (which is a timestamp) to a datetime
             from_dt = timestamp_to_datetime(from_dt)
             passages = filter(lambda p: p.datetime >= from_dt, passages)
+            if not passages:
+                # if there was some passages and everything was filtered,
+                # we return None to keep the base schedule
+                return None
 
         if count:
             del passages[count:]
