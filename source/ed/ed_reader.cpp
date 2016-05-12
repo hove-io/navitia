@@ -283,10 +283,10 @@ void EdReader::fill_feed_infos(navitia::type::Data& data, pqxx::work& work){
         if (const_it["key"].as<std::string>() == "feed_license"){
             data.meta->license = const_it["value"].as<std::string>();
         }
-        if (const_it["key"].as<std::string>() == "feed_creation_datetime"){
+        if (const_it["key"].as<std::string>() == "feed_creation_datetime" && !const_it["value"].is_null()){
             try {
                 data.meta->dataset_created_at = bt::from_iso_string(const_it["value"].as<std::string>());
-            } catch(const boost::gregorian::bad_day_of_month&) {
+            } catch(const std::out_of_range&) {
                 LOG4CPLUS_INFO(log,"feed_creation_datetime is not valid");
             }
         }
