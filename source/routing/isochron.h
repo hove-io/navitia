@@ -53,5 +53,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const bool clockwise,
                                 const DateTime& init_dt,
                                 const DateTime& bound,
-                                const map_stop_point_duration &origine);
+                                const map_stop_point_duration &origine,
+                                const double& speed,
+                                int max_duration);
 }}

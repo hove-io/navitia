@@ -107,7 +107,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                              const std::vector<std::string>& forbidden,
                                              bool clockwise,
                                              const nt::RTLevel rt_level,
-                                             georef::StreetNetwork & worker) ;
+                                             georef::StreetNetwork & worker,
+                                             const double& speed) ;
 
 
 }}

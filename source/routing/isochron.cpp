@@ -121,14 +121,20 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const bool clockwise,
                                 const DateTime& init_dt,
                                 const DateTime& bound,
-                                const map_stop_point_duration& origin) {
+                                const map_stop_point_duration& origin,
+                                const double& speed,
+                                int max_duration) {
     type::MultiPolygon circles;
-    double speed = 0.8; // About 3km/h TODO pass it in param
+    std::cout << max_duration;
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        int duration_max = abs(int(bound) - (abs(int(init_dt) - int(it->second.total_seconds()))));
-        const auto& center = data_departure[it->first.val]->coord;
-        circles.push_back(circle(center , duration_max * speed));
+        if ((clockwise && it->second.total_seconds() < max_duration) ||
+                (!clockwise && it->second.total_seconds() > max_duration)) {
+            int duration_max = abs(max_duration - int(it->second.total_seconds()));
+            if (duration_max == 0) {continue;}
+            const auto& center = data_departure[it->first.val]->coord;
+            circles.push_back(circle(center , duration_max * speed));
+        }
     }
     for(const type::StopPoint* sp: stop_points) {
         SpIdx sp_idx(*sp);
@@ -141,6 +147,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                 continue;
             }
             int duration = abs(int(best_lbl) - int(init_dt));
+            if (duration == 0 ) {continue;}
             circles.push_back(circle(sp->coord, duration * speed));
         }
     }
