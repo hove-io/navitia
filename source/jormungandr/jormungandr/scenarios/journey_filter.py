@@ -89,6 +89,8 @@ def final_filter_journeys(response_list, instance, request):
     if final_line_filter:
         _filter_similar_line_journeys(journeys, request)
 
+    _filter_too_much_changes(journeys, instance, request)
+
     delete_journeys(response_list, request)
 
     return response_list
@@ -229,6 +231,49 @@ def _filter_max_successive_buses(journeys, request):
         if bus_count > max_successive_buses:
             logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
             mark_as_dead(j, "too_much_successive_buses")
+
+
+def _filter_too_much_changes(journeys, instance, request):
+    """
+    eliminates journeys with correspondences more then nb correspondence of best journey + _max_additional_changes
+    """
+    logger = logging.getLogger(__name__)
+    max_additional_changes = get_or_default(request, '_max_additional_changes',
+                                            instance.max_additional_changes)
+    max_correspondence_allowed = max_additional_changes + min_correspondence_count(journeys)
+    for j in journeys:
+        if _to_be_deleted(j):
+            continue
+
+        if get_correspondence_count(j) > max_correspondence_allowed:
+            logger.debug("the journey {} has a too much correspondences, we delete it".format(j.internal_id))
+            mark_as_dead(j, "too_much_correspondences")
+
+
+def min_correspondence_count(journeys):
+    """
+    Returns min correspondence count among journeys
+    """
+    nb_min_changes = 100
+    for j in journeys:
+        if _to_be_deleted(j):
+            continue
+        tmp_changes = get_correspondence_count(j)
+        if tmp_changes < nb_min_changes:
+            nb_min_changes = tmp_changes
+    return nb_min_changes
+
+
+def get_correspondence_count(journey):
+    """
+    Returns correspondence count in a journey
+    """
+    nb_correspondence = 0
+
+    for s in journey.sections:
+        if s.type in [response_pb2.WAITING, response_pb2.TRANSFER]:
+            nb_correspondence += 1
+    return nb_correspondence
 
 
 def way_later(request, journey, asap_journey):
