@@ -271,7 +271,7 @@ def get_correspondence_count(journey):
     nb_correspondence = 0
 
     for s in journey.sections:
-        if s.type in [response_pb2.WAITING, response_pb2.TRANSFER]:
+        if s.type == response_pb2.WAITING:
             nb_correspondence += 1
     return nb_correspondence
 
