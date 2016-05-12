@@ -139,7 +139,8 @@ public:
         {"feed_end_date",""},
         {"feed_publisher_name",""},
         {"feed_publisher_url",""},
-        {"feed_license",""}
+        {"feed_license",""},
+        {"feed_creation_datetime",""}
     };
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name

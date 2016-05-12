@@ -151,6 +151,7 @@ pbnavitia::Response Worker::status() {
         status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
+        status->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
         for(auto data_sources: d->meta->data_sources){
             status->add_data_sources(data_sources);
         }
@@ -158,6 +159,7 @@ pbnavitia::Response Worker::status() {
         status->set_publication_date("");
         status->set_start_production_date("");
         status->set_end_production_date("");
+        status->set_dataset_created_at("");
     }
     return result;
 }
@@ -181,11 +183,13 @@ void Worker::metadatas(pbnavitia::Response& response) {
             metadatas->set_name(d->meta->publisher_name);
         }
         metadatas->set_last_load_at(navitia::to_posix_timestamp(d->last_load_at));
+        metadatas->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
     } else {
         metadatas->set_start_production_date("");
         metadatas->set_end_production_date("");
         metadatas->set_shape("");
         metadatas->set_timezone("");
+        metadatas->set_dataset_created_at("");
     }
     metadatas->set_status(get_string_status(d));
 }

@@ -168,7 +168,8 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
         {"feed_end_date","20150826"},
         {"feed_publisher_name","Ile de France open data"},
         {"feed_publisher_url","http://www.canaltp.fr"},
-        {"feed_license","ODBL"}
+        {"feed_license","ODBL"},
+        {"feed_creation_datetime","20150415T153234"}
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
@@ -295,7 +296,8 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
         {"feed_end_date","20150826"},
         {"feed_publisher_name","Ile de France open data"},
         {"feed_publisher_url","http://www.canaltp.fr"},
-        {"feed_license","ODBL"}
+        {"feed_license","ODBL"},
+        {"feed_creation_datetime","20150415T153234"}
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());
@@ -303,6 +305,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
     BOOST_REQUIRE_EQUAL(data.meta.production_date,
                         boost::gregorian::date_period(boost::gregorian::date(2015, 3, 25),
                                                       boost::gregorian::date(2015, 8, 27)));
+
 }
 
 
@@ -330,7 +333,8 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
         {"feed_end_date","20150826"},
         {"feed_publisher_name","Ile de France open data"},
         {"feed_publisher_url","http://www.canaltp.fr"},
-        {"feed_license","ODBL"}
+        {"feed_license","ODBL"},
+        {"feed_creation_datetime","20150415T153234"}
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(),
                                   feed_info_test.begin(), feed_info_test.end());

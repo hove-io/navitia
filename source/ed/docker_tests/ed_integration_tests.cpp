@@ -178,6 +178,8 @@ void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(routes_map.at("route:route_3")->direction_type, "");
 
     check_unsound_pickup_dropoff(data);
+
+    BOOST_CHECK_EQUAL(data.meta->dataset_created_at, boost::posix_time::from_iso_string("20150415T153234"));
 }
 
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {

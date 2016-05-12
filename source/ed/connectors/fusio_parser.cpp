@@ -32,6 +32,7 @@ www.navitia.io
 
 #include <boost/geometry.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ed { namespace connectors {
 
@@ -106,7 +107,28 @@ void FeedInfoFusioHandler::init(Data&) {
 
 void FeedInfoFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(is_valid(feed_info_param_c, row) && has_col(feed_info_value_c, row)) {
-        data.add_feed_info(row[feed_info_param_c], row[feed_info_value_c]);
+        if (row[feed_info_param_c] == "feed_creation_date"){
+            try {
+                feed_creation_date = boost::make_optional(boost::gregorian::from_undelimited_string(row[feed_info_value_c]));
+            } catch(const std::out_of_range&) {
+                LOG4CPLUS_INFO(logger,"feed_creation_date is not valid");
+            }
+        } else if(row[feed_info_param_c] == "feed_creation_time"){
+            try {
+               feed_creation_time = boost::make_optional(boost::posix_time::duration_from_string(row[feed_info_value_c]));
+            } catch(const std::out_of_range&) {
+                LOG4CPLUS_INFO(logger,"feed_creation_time is not valid");
+            }
+        } else {
+            data.add_feed_info(row[feed_info_param_c], row[feed_info_value_c]);
+        }
+    }
+}
+
+void FeedInfoFusioHandler::finish(Data& data) {
+    if (feed_creation_date && feed_creation_time) {
+        boost::posix_time::ptime creation_datetime(*feed_creation_date, *feed_creation_time);
+        data.add_feed_info("feed_creation_datetime",boost::posix_time::to_iso_string(creation_datetime));
     }
 }
 
