@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(parse_with_feed_info) {
     ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_with_feed_info");
     parser.fill(data);
 
-    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 6);
     BOOST_CHECK_EQUAL(data.feed_infos["feed_publisher_name"], "ratp");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_publisher_url"], "http://ratp.fr");
 
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_1) {
                                       + gtfs_path + "_with_feed_start_end_date");
     parser.fill(data);
 
-    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 6);
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
 
@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_2) {
                                       + gtfs_path + "_with_feed_start_end_date");
     parser.fill(data, "20100113");
 
-    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 6);
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
 
@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(gtfs_with_feed_start_end_date_3) {
                                       + gtfs_path + "_with_feed_start_end_date");
     parser.fill(data, "20100117");
 
-    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 5);
+    BOOST_REQUIRE_EQUAL(data.feed_infos.size(), 6);
     BOOST_CHECK_EQUAL(data.feed_infos["feed_start_date"], "20100115");
     BOOST_CHECK_EQUAL(data.feed_infos["feed_end_date"], "20101226");
     BOOST_REQUIRE_EQUAL(data.meta.production_date,
