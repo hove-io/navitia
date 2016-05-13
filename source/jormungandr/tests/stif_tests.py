@@ -110,7 +110,7 @@ class TestAutocomplete(AbstractTestFixture):
 
         #As we modifiy the value of _max_successive_buses to 5 we want two journeys
         query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
-                "&_max_successive_buses=5&_max_additional_changes=10"\
+                "&_max_successive_buses=5&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
@@ -141,15 +141,16 @@ class TestAutocomplete(AbstractTestFixture):
 
         #As we modifiy the value of _max_successive_buses to 5 we want two journeys
         query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
-                "&_max_successive_buses=5&_max_additional_changes=10"\
+                "&_max_successive_buses=5&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 2)
 
-        # As we modifiy the value of _max_additional_changes to 2 we delete the second journey because
+        # As we modifiy the value of _max_additional_connections to 2 we delete the second journey because
         # it contains more then nb_correspondence + 2 ()
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif&_max_successive_buses=5"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
+                "&_max_successive_buses=5&_max_additional_connections=2"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)

@@ -235,45 +235,46 @@ def _filter_max_successive_buses(journeys, request):
 
 def _filter_too_much_changes(journeys, instance, request):
     """
-    eliminates journeys with correspondences more then nb correspondence of best journey + _max_additional_changes
+    eliminates journeys with number of connections more then minimum connections among journeys
+    in the result + _max_additional_connections
     """
     logger = logging.getLogger(__name__)
-    max_additional_changes = get_or_default(request, '_max_additional_changes',
-                                            instance.max_additional_changes)
-    max_correspondence_allowed = max_additional_changes + min_correspondence_count(journeys)
-    for j in journeys:
-        if _to_be_deleted(j):
-            continue
+    max_additional_connections = get_or_default(request, '_max_additional_connections',
+                                            instance.max_additional_connections)
 
-        if get_correspondence_count(j) > max_correspondence_allowed:
-            logger.debug("the journey {} has a too much correspondences, we delete it".format(j.internal_id))
-            mark_as_dead(j, "too_much_correspondences")
+    min_connections = get_min_connections(journeys)
+    if min_connections is not None:
+        max_connections_allowed = max_additional_connections + min_connections
+        for j in journeys:
+            if _to_be_deleted(j):
+                continue
+
+            if get_nb_connections(j) > max_connections_allowed:
+                logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
+                mark_as_dead(j, "too_much_connections")
 
 
-def min_correspondence_count(journeys):
+def get_min_connections(journeys):
     """
-    Returns min correspondence count among journeys
+    Returns min connection count among journeys
+    Returns None if journeys empty
     """
-    nb_min_changes = 100
-    for j in journeys:
-        if _to_be_deleted(j):
-            continue
-        tmp_changes = get_correspondence_count(j)
-        if tmp_changes < nb_min_changes:
-            nb_min_changes = tmp_changes
-    return nb_min_changes
+    if not journeys:
+        return None
+
+    return min(get_nb_connections(j) for j in journeys if not _to_be_deleted(j))
 
 
-def get_correspondence_count(journey):
+def get_nb_connections(journey):
     """
     Returns correspondence count in a journey
     """
-    nb_correspondence = 0
+    nb_connections = 0
 
     for s in journey.sections:
         if s.type == response_pb2.WAITING:
-            nb_correspondence += 1
-    return nb_correspondence
+            nb_connections += 1
+    return nb_connections
 
 
 def way_later(request, journey, asap_journey):

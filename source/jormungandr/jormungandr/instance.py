@@ -245,9 +245,9 @@ class Instance(object):
         return get_value_or_default('bss_provider', instance_db, self.name)
 
     @property
-    def max_additional_changes(self):
+    def max_additional_connections(self):
         instance_db = self.get_models()
-        return get_value_or_default('max_additional_changes', instance_db, self.name)
+        return get_value_or_default('max_additional_connections', instance_db, self.name)
 
     @property
     def is_free(self):
