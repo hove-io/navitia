@@ -46,8 +46,11 @@ namespace ed { namespace connectors {
 struct FeedInfoFusioHandler : public GenericHandler {
     FeedInfoFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int feed_info_param_c, feed_info_value_c;
+    boost::optional<boost::gregorian::date> feed_creation_date;
+    boost::optional<boost::posix_time::time_duration> feed_creation_time;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void finish(Data&);
 };
 
 struct AgencyFusioHandler : public AgencyGtfsHandler {

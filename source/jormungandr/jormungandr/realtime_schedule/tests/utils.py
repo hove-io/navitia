@@ -29,6 +29,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from dateutil.parser import parse
+import pytz
+from jormungandr.utils import date_to_timestamp
+
 
 class MockRoutePoint(object):
     def __init__(self, *args, **kwars):
@@ -44,3 +48,21 @@ class MockRoutePoint(object):
 
     def fetch_route_id(self, rt_proxy_id):
         return self._hardcoded_route_id
+
+
+def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
+    """
+    small helper to ease the reading of the tests
+    >>> _dt("8:15")
+    datetime.datetime(2016, 2, 7, 8, 15, tzinfo=<UTC>)
+    >>> _dt("9:15", day=2)
+    datetime.datetime(2016, 2, 2, 9, 15, tzinfo=<UTC>)
+    """
+    d = parse(dt_to_parse)
+    pytz.UTC.localize(d)
+
+    return d.replace(year=year, month=month, day=day, tzinfo=pytz.UTC)
+
+
+def _timestamp(str, **kwargs):
+    return date_to_timestamp(_dt(str, **kwargs))

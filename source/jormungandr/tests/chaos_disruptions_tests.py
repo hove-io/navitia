@@ -176,6 +176,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         disruptions = get_disruptions(line, response)
 
         #at first we got only one disruption
+        print(disruptions)
         assert len(disruptions) == 1
         assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
 

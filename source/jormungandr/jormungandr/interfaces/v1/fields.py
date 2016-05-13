@@ -767,6 +767,7 @@ instance_status = {
     "is_open_data": fields.Boolean(),
     "is_realtime_loaded": fields.Boolean(),
     "realtime_proxies": fields.Raw(),
+    "dataset_created_at": fields.String(),
 }
 
 instance_parameters = {

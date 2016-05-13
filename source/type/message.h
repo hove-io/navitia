@@ -40,6 +40,7 @@ www.navitia.io
 #include <boost/serialization/bitset.hpp>
 #include "utils/serialization_vector.h"
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>
 
@@ -160,9 +161,10 @@ struct LineSection {
     Line* line = nullptr;
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
+    std::vector<Route*> routes;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & start_point & end_point;
+        ar & line & start_point & end_point & routes;
     }
 };
 typedef boost::variant<
@@ -180,6 +182,13 @@ PtObj make_pt_obj(Type_e type,
                   const std::string &uri,
                   PT_Data& pt_data,
                   const boost::shared_ptr<Impact> &impact = {});
+
+PtObj make_line_section(const std::string& line_uri,
+                        const std::string& start_stop_uri,
+                        const std::string& end_stop_uri,
+                        const std::vector<std::string>& route_uris,
+                        PT_Data& pt_data,
+                        const boost::shared_ptr<Impact>& impact = {});
 
 struct Disruption;
 
@@ -256,6 +265,8 @@ struct Impact {
     }
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
+
+    const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
 };

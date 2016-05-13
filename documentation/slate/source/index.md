@@ -1,8 +1,8 @@
 ---
 title: Navitia.io documentation
 
-#language_tabs:
-#  - shell
+language_tabs:
+  - shell
 
 toc_footers:
   - <a href='http://navitia.io/register/'>Get an access</a>

@@ -50,7 +50,9 @@ region_fields = {
     "error": NonNullNested({
         "code": fields.String,
         "value": fields.String
-    })
+    }),
+    "dataset_created_at": fields.String(),
+
 }
 regions_fields = OrderedDict([
     ("regions", fields.List(fields.Nested(region_fields)))

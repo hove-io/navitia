@@ -97,5 +97,17 @@ routing::map_stop_point_duration
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false);
 
+pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
+                                             const boost::posix_time::ptime& current_datetime,
+                                             type::EntryPoint origin,
+                                             const uint64_t departure_datetime,
+                                             int max_duration,
+                                             uint32_t max_transfers,
+                                             const type::AccessibiliteParams& accessibilite_params,
+                                             const std::vector<std::string>& forbidden,
+                                             bool clockwise,
+                                             const nt::RTLevel rt_level,
+                                             georef::StreetNetwork & worker) ;
+
 
 }}

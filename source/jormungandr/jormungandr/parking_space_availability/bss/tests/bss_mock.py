@@ -34,7 +34,7 @@ from jormungandr.parking_space_availability.bss.stands import Stands
 class BssMockProvider(BssProvider):
 
     def support_poi(self, poi):
-        return True
+        return poi['id'] == 'station_1'
 
     def get_informations(self, poi):
         return Stands(5, 9)

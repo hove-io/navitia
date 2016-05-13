@@ -45,6 +45,8 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, const DateTime bound);
+
 struct StartingPointSndPhase {
     SpIdx sp_idx;
     unsigned count;

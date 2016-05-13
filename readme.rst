@@ -27,6 +27,7 @@ The API can be found at http://api.navitia.io/
 
 For more information see
 
+* documentation http://doc.navitia.io
 * main web site http://www.navitia.io
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia

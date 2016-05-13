@@ -71,8 +71,12 @@ struct Filter {
     Filter(std::string object, std::string value):
         object(std::move(object)), op(HAVING), value(std::move(value)) {}
     Filter(std::string value): object("journey_pattern_point"), op(AFTER), value(std::move(value)) {}
-    Filter(std::string object, std::string method, std::vector<std::string> args):
-        object(std::move(object)), method(std::move(method)), args(std::move(args)) {}
+    Filter(std::string object, std::string method, boost::optional<std::vector<std::string>> args):
+        object(std::move(object)), op(Operator_e::EQ), method(std::move(method)) {
+        if (args) {
+            this->args = *args;
+        }
+    }
 
     Filter() {}
 };

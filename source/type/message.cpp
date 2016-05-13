@@ -64,6 +64,21 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
+const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
+    type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
+    for (const auto& period: this->application_periods) {
+        // For each period of the impact loop from the previous day (for pass midnight services) to the last day
+        // If the day is in the production_date add it to the vp
+        boost::gregorian::day_iterator it(period.begin().date() - boost::gregorian::days(1));
+        for (; it <= period.end().date() ; ++it) {
+            if (! production_date.contains(*it)) { continue; }
+            auto day = (*it - production_date.begin()).days();
+            impact_vp.add(day);
+        }
+    }
+    return impact_vp;
+}
+
 bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const{
     if(current_time.is_not_a_date_time()){
         return false;
@@ -122,6 +137,29 @@ PtObj make_pt_obj(Type_e type,
     case Type_e::MetaVehicleJourney: return transform_pt_object(uri, pt_data.meta_vjs, impact);
     default: return UnknownPtObj();
     }
+}
+
+PtObj make_line_section(const std::string& line_uri,
+                        const std::string& start_stop_uri,
+                        const std::string& end_stop_uri,
+                        const std::vector<std::string>& route_uris,
+                        PT_Data& pt_data,
+                        const boost::shared_ptr<Impact>& impact) {
+    LineSection line_section;
+    line_section.line = find_or_default(line_uri, pt_data.lines_map);
+    line_section.start_point = find_or_default(start_stop_uri, pt_data.stop_areas_map);
+    line_section.end_point = find_or_default(end_stop_uri, pt_data.stop_areas_map);
+    for(auto& uri: route_uris) {
+        auto* route = find_or_default(uri, pt_data.routes_map);
+        if(route) {
+            if(impact) {
+                route->add_impact(impact);
+            }
+            line_section.routes.push_back(route);
+        }
+    }
+
+    return line_section;
 }
 
 bool Impact::operator<(const Impact& other){

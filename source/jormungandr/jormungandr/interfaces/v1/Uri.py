@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from flask.ext.restful import fields, marshal_with, reqparse, abort
+from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 from jormungandr import i_manager, authentication
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line, line_group, \
@@ -537,6 +538,12 @@ def pois(is_collection):
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
+            self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+                                             description="Show bss stands availability")
+            args = self.parsers["get"].parse_args()
+            if args["bss_stands"]:
+                self.method_decorators.insert(2, ManageStands(self, 'pois'))
+
     return Pois
 
 

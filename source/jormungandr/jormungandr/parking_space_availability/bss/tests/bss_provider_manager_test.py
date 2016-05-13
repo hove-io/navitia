@@ -42,8 +42,7 @@ def realtime_place_creation_test():
     """
     simple bss provider creation
     """
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     assert len(manager.bss_providers) == 1
 
 @raises(Exception)
@@ -51,19 +50,18 @@ def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
-    app.config['BSS_PROVIDER'] = (
+    manager = BssProviderManager((
         {
             'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
         },
         {
             'class': 'jormungandr.parking_space_availability.bss.BadProvider'
         }
-    )
-    manager = BssProviderManager()
+    ))
 
-def realtime_place_handle_test():
+def realtime_places_handle_test():
     """
-    test correct handle include bss stands
+    test correct handle places include bss stands
     """
     places = [
         {
@@ -74,16 +72,79 @@ def realtime_place_handle_test():
                 'poi_type': {
                     'name': 'station vls',
                     'id': 'poi_type:amenity:bicycle_rental'
-                }
+                },
+                'id': 'station_1'
             },
             'quality': 0,
             'id': 'poi:n3762373698'
         }
     ]
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     places_with_stands = manager.handle_places(places)
     assert 'stands' in places_with_stands[0]['poi']
+    stands = places_with_stands[0]['poi']['stands']
+    assert stands.available_places == 5
+    assert stands.available_bikes == 9
+    assert stands.total_stands == 14
+
+
+def realtime_pois_handle_test():
+    """
+    test correct handle pois include bss stands
+    """
+    pois = [
+        {
+            'poi_type': {
+                'name': 'station vls',
+                'id': 'poi_type:amenity:bicycle_rental'
+            },
+            'id': 'station_1'
+        }
+    ]
+    manager = BssProviderManager(CONFIG)
+    pois_with_stands = manager.handle_places(pois)
+    assert 'stands' in pois_with_stands[0]
+    stands = pois_with_stands[0]['stands']
+    assert stands.available_places == 5
+    assert stands.available_bikes == 9
+    assert stands.total_stands == 14
+
+
+def realtime_poi_supported_handle_test():
+    """
+    test correct handle pois include bss stands
+    """
+    poi = {
+        'poi_type': {
+            'name': 'station vls',
+            'id': 'poi_type:amenity:bicycle_rental'
+        },
+        'id': 'station_1'
+    }
+    manager = BssProviderManager(CONFIG)
+    poi_with_stands = manager.handle_poi(poi)
+    assert 'stands' in poi_with_stands
+    stands = poi_with_stands['stands']
+    assert stands.available_places == 5
+    assert stands.available_bikes == 9
+    assert stands.total_stands == 14
+
+
+def realtime_poi_not_supported_handle_test():
+    """
+    test correct handle pois include bss stands
+    """
+    poi = {
+        'poi_type': {
+            'name': 'station vls',
+            'id': 'poi_type:amenity:bicycle_rental'
+        },
+        'id': 'station_2'
+    }
+    manager = BssProviderManager(CONFIG)
+    poi_with_stands = manager.handle_poi(poi)
+    assert not 'stands' in poi_with_stands
+
 
 def realtime_place_find_provider_test():
     """
@@ -93,9 +154,9 @@ def realtime_place_find_provider_test():
         'poi_type': {
             'name': 'station vls',
             'id': 'poi_type:amenity:bicycle_rental'
-        }
+        },
+        'id': 'station_1'
     }
-    app.config['BSS_PROVIDER'] = CONFIG
-    manager = BssProviderManager()
+    manager = BssProviderManager(CONFIG)
     provider = manager.find_provider(poi)
     assert provider == manager.bss_providers[0]

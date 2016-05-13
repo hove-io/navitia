@@ -28,13 +28,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import datetime
-from dateutil.parser import parse
 import mock
-import pytz
 from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
-from jormungandr.realtime_schedule.tests.utils import MockRoutePoint
+from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 
 
 def make_url_test():
@@ -52,6 +50,34 @@ def make_url_test():
     assert 'StopTimeoCode=stop_tutu' in url
     assert 'LineTimeoCode=line_toto' in url
     assert 'Way=route_tata' in url
+    # we did not provide a datetime, we should not have it in the url
+    assert 'NextStopReferenceTime' not in url
+    # we did not provide a count, we should have the default value
+    assert 'NextStopTimeNumber=5' in url
+
+
+def make_url_count_and_dt_test():
+    """
+    same as make_url_test but with a count and a from_dt
+    """
+    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
+                  service_args={'a': 'bobette', 'b': '12'})
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+                          count=2, from_dt=_timestamp("12:00"))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com')
+    assert 'a=bobette' in url
+    assert 'b=12' in url
+    assert 'StopTimeoCode=stop_tutu' in url
+    assert 'LineTimeoCode=line_toto' in url
+    assert 'Way=route_tata' in url
+    # we should have the param we provided
+    assert 'NextStopTimeNumber=2' in url
+    assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
 
 
 def make_url_invalid_code_test():
@@ -85,20 +111,6 @@ class MockRequests(object):
 
     def get(self, url, *args, **kwargs):
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
-def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
-    """
-    small helper to ease the reading of the tests
-    >>> _dt("8:15")
-    datetime.datetime(2016, 2, 7, 8, 15, tzinfo=<UTC>)
-    >>> _dt("9:15", day=2)
-    datetime.datetime(2016, 2, 2, 9, 15, tzinfo=<UTC>)
-    """
-    d = parse(dt_to_parse)
-    pytz.UTC.localize(d)
-
-    return d.replace(year=year, month=month, day=day, tzinfo=pytz.UTC)
 
 
 def mock_good_timeo_response():

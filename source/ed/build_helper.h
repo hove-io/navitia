@@ -56,6 +56,7 @@ struct VJ {
     const std::string line_name;
     const std::string validity_pattern;
     std::string _block_id;
+    std::string _route_name;
     const bool is_frequency;
     const bool wheelchair_boarding;
     std::string _uri;
@@ -107,6 +108,8 @@ struct VJ {
 
     VJ& block_id(const std::string& b) { _block_id = b; return *this; }
 
+    VJ& route(const std::string& r) { _route_name = r; return *this; }
+
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
 
@@ -150,6 +153,10 @@ struct Impacter {
 
     Impacter& severity(const std::string& uri); // link to existing severity
     Impacter& on(nt::Type_e type, const std::string& uri); // add elt in informed_entities
+    Impacter& on_line_section(const std::string& line_uri,
+                              const std::string& start_stop_uri,
+                              const std::string& end_stop_uri,
+                              const std::vector<std::string>& route_uris); // add section in informed_entities
     Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p) {
@@ -180,6 +187,7 @@ struct DisruptionCreator {
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
+    std::map<std::string, std::map<std::string, navitia::type::Route *>> routes_by_line;
     std::map<std::string, navitia::type::StopArea *> sas;
     std::map<std::string, navitia::type::StopPoint *> sps;
     std::map<std::string, navitia::type::Network *> nts;

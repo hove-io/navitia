@@ -34,27 +34,37 @@ import logging
 
 class BssProviderManager(object):
 
-    def __init__(self):
+    def __init__(self, bss_providers_configuration):
         self.bss_providers = []
         self.log = logging.getLogger(__name__)
-        for configuration in app.config['BSS_PROVIDER']:
+        for configuration in bss_providers_configuration:
             arguments = configuration.get('args', {})
-            self.bss_providers.append(self.init_class(configuration['class'], arguments))
+            self.bss_providers.append(self._init_class(configuration['class'], arguments))
 
     def handle_places(self, places):
         for place in places or []:
-            if place['embedded_type'] == 'poi' and place['poi']['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
-                provider = self.find_provider(place['poi'])
-                if provider:
-                    place['poi']['stands'] = provider.get_informations(place['poi'])
+            if 'poi_type' in place:
+                place = self.handle_poi(place)
+            elif 'embedded_type' in place and place['embedded_type'] == 'poi':
+                place['poi'] = self.handle_poi(place['poi'])
         return places
 
+    def handle_poi(self, item):
+        if item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
+            provider = self.find_provider(item)
+            if provider:
+                item['stands'] = provider.get_informations(item)
+        return item
+
     def find_provider(self, poi):
-        for instance in self.bss_providers:
+        for instance in self._get_providers():
             if instance.support_poi(poi):
                 return instance
 
-    def init_class(self, cls, arguments):
+    def _get_providers(self):
+        return self.bss_providers
+
+    def _init_class(self, cls, arguments):
         try:
             if '.' not in cls:
                 self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
