@@ -122,7 +122,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const DateTime& bound,
                                 const map_stop_point_duration& origin,
                                 const double& speed,
-                                int max_duration) {
+                                const int& max_duration) {
     type::MultiPolygon circles;
     std::cout << max_duration;
     const auto& data_departure = raptor.data.pt_data->stop_points;
