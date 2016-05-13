@@ -50,3 +50,5 @@ MODULES = {
         'class_name': 'V1Routing'
     }
 }
+
+GRAPHICAL_ISOCHRON = True

@@ -102,3 +102,5 @@ CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after th
 
 # Default region instance
 # DEFAULT_REGION = 'default'
+
+GRAPHICAL_ISOCHRON = False

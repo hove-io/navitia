@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
+from jormungandr import app
 
 
 @dataset({"main_routing_test": {}})
