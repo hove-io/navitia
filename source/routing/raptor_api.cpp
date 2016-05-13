@@ -1200,7 +1200,7 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
     raptor.isochrone(departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
-    type::MultiPolygon isochron = build_isochron(raptor, raptor.data.pt_data->stop_points, clockwise, init_dt, bound, departures, speed, max_duration);
+    type::MultiPolygon isochron = build_isochron(raptor, raptor.data.pt_data->stop_points, clockwise, bound, departures, speed, max_duration);
     add_graphical_isochron(isochron, pb_creator);
     return pb_creator.get_response();
 }
