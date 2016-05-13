@@ -106,9 +106,6 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
         parser_get.add_argument("bike_speed", type=float_gt_0)
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
-        parser_get.add_argument("_min_car", type=int)
-        parser_get.add_argument("_min_bike", type=int)
-
     @marshal_with(graphical_isochrons)
     @ManageError()
     def get(self, region=None):
