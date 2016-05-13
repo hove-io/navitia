@@ -1,4 +1,4 @@
-"""Add max_additional_changes in the table instance
+"""Add max_additional_connections in the table instance
 
 Revision ID: 4fa7f3f529e
 Revises: 2d56e135cd38
@@ -15,9 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('max_additional_changes', sa.Integer(), server_default='2', nullable=False))
+    op.add_column('instance', sa.Column('max_additional_connections', sa.Integer(), server_default='2', nullable=False))
 
 
 def downgrade():
-    op.drop_column('instance', 'max_additional_changes')
+    op.drop_column('instance', 'max_additional_connections')
 
