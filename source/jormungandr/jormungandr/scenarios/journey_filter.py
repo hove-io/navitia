@@ -89,7 +89,7 @@ def final_filter_journeys(response_list, instance, request):
     if final_line_filter:
         _filter_similar_line_journeys(journeys, request)
 
-    _filter_too_much_changes(journeys, instance, request)
+    _filter_too_much_connections(journeys, instance, request)
 
     delete_journeys(response_list, request)
 
@@ -233,7 +233,7 @@ def _filter_max_successive_buses(journeys, request):
             mark_as_dead(j, "too_much_successive_buses")
 
 
-def _filter_too_much_changes(journeys, instance, request):
+def _filter_too_much_connections(journeys, instance, request):
     """
     eliminates journeys with number of connections more then minimum connections among journeys
     in the result + _max_additional_connections
