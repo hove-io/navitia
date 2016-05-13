@@ -1,3 +1,23 @@
+navitia2 (2.8.0) unstable; urgency=low
+
+  * All: add feed creation datetime  <https://github.com/CanalTP/navitia/pull/1587>
+  * Jormungandr: reactivate Optimisation traffic_reports api  <https://github.com/CanalTP/navitia/pull/1585>
+  * Jormungandr: return base schedule when bad proxy realtime  <https://github.com/CanalTP/navitia/pull/1580>
+  * Doc: Update readme.rst  <https://github.com/CanalTP/navitia/pull/1586>
+  * Jormungandr: BSS stands on POI uri  <https://github.com/CanalTP/navitia/pull/1572>
+  * jormungandr: not more than 3 successive buses allowed in secnario STIF  <https://github.com/CanalTP/navitia/pull/1582>
+  * Doc: add third column with examples \o/  <https://github.com/CanalTP/navitia/pull/1568>
+  * Jormungandr: activate date and pagination lookup to synthese  <https://github.com/CanalTP/navitia/pull/1577>
+  * Debian: Remove python dependencies from debian packages  <https://github.com/CanalTP/navitia/pull/1578>
+  * RT proxies: better datetimes filter  <https://github.com/CanalTP/navitia/pull/1574>
+  * Kraken: Handle disruptions from Chaos on line section  <https://github.com/CanalTP/navitia/pull/1558>
+  * tyr: add param --import-way in osm2mimir  <https://github.com/CanalTP/navitia/pull/1564>
+  * Doc: Add isochron and lines JsFiddle exemples  <https://github.com/CanalTP/navitia/pull/1562>
+  * Doc: Add note about `traveler_type` setting fallback modes even despite `forbidden_uris[]` set.  <https://github.com/CanalTP/navitia/pull/1561>
+  * Kraken: Fix pre-filter of vjs for impact on stop_points  <https://github.com/CanalTP/navitia/pull/1565>
+
+ -- Abderrahim Azime <abderrahim.azime@canaltp.fr>  Fri, 13 May 2016 16:05:17 +0100
+
 navitia2 (2.7.2) unstable; urgency=low
 
   * revert https://github.com/CanalTP/navitia/pull/1557 
