@@ -267,7 +267,7 @@ def get_min_connections(journeys):
 
 def get_nb_connections(journey):
     """
-    Returns correspondence count in a journey
+    Returns connections count in a journey
     """
     nb_connections = 0
 

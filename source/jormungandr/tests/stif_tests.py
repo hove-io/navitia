@@ -148,7 +148,7 @@ class TestAutocomplete(AbstractTestFixture):
         eq_(len(response['journeys']), 2)
 
         # As we modifiy the value of _max_additional_connections to 2 we delete the second journey because
-        # it contains more then nb_correspondence + 2 ()
+        # it contains more then nb_connections + 2 ()
         query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
                 "&_max_successive_buses=5&_max_additional_connections=2"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
