@@ -33,6 +33,7 @@ from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
+from jormungandr.tests.utils_test import MockRequests
 
 
 def make_url_test():
@@ -94,25 +95,6 @@ def make_url_invalid_code_test():
     assert url is None
 
 
-class MockResponse(object):
-    def __init__(self, data, status_code, url, *args, **kwargs):
-        self.data = data
-        self.status_code = status_code
-        self.url = url
-
-    def json(self):
-        return self.data
-
-
-class MockRequests(object):
-
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
 def mock_good_timeo_response():
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
@@ -152,6 +134,7 @@ def mock_good_timeo_response():
         ]
     }
     return mock_response
+
 
 def get_passages_test():
     """

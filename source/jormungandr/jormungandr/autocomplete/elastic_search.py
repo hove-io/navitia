@@ -30,11 +30,14 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import elasticsearch
 from elasticsearch.connection.http_urllib3 import ConnectionError
 from flask.ext.restful import fields, marshal_with
 from flask_restful import marshal
+import requests
+from jormungandr.exceptions import TechnicalError
 
 
 class Lit(fields.Raw):
@@ -204,3 +207,101 @@ class Elasticsearch(AbstractAutocomplete):
             return res['hits']
         except ConnectionError:
             raise TechnicalError("world wide autocompletion service not available")
+
+
+geocode_admin = {
+    # TODO patoche :)
+    "id": fields.String,
+    #"insee": dict["id"][6:],
+    #"coord": ??
+    "level": fields.Integer,
+    "name": fields.String,
+    "label": fields.String(attribute="name"),
+    "zip_code": fields.String,
+}
+
+geocode_addr = {
+    # TODO patoche :)
+    "embeded_type": Lit("address"),
+    "id": fields.String,
+    "name": fields.String,
+    "address": {
+        "id": fields.String,
+        "coord": {
+            "lon": fields.Float(attribute="coord.lon"),
+            "lat": fields.Float(attribute="coord.lat"),
+        },
+        "house_number": fields.String,
+        "label": fields.String(attribute="name"),
+        "name": fields.String(attribute="street.street_name"),
+        "administrative_regions":
+            fields.List(fields.Nested(ww_admin), attribute="street.administrative_region")
+    }
+}
+
+geocode_street = {
+    # TODO patoche :)
+    "embeded_type": Lit("address"),
+    "id": fields.String,
+    "name": fields.String,
+    "address": {
+        #"id": id,
+        #"coord": source["coord"],
+        #"house_number": 0,
+        "label": fields.String(attribute="name"),
+        "name": fields.String(attribute="street_name"),
+        "administrative_regions":
+            fields.List(fields.Nested(ww_admin), attribute="administrative_region")
+    }
+}
+
+
+class GeocodejsonFeature(fields.Raw):
+    def format(self, place):
+        properties = place.get('properties', {}).get('geocoding', {})
+        type_ = properties.get('type')
+
+        if type_ == 'city':
+            return marshal(properties, geocode_admin)
+        elif type_ == 'street':
+            return marshal(properties, geocode_street)
+        elif type_ == 'house':
+            return marshal(properties, geocode_addr)
+
+        return place
+
+
+geocodejson = {
+    "places": fields.List(GeocodejsonFeature, attribute='Autocomplete.features')
+}
+
+
+class GeocodeJson(AbstractAutocomplete):
+    """
+    Autocomplete with an external service returning geocodejson
+    (https://github.com/geocoders/geocodejson-spec/)
+
+    """
+    def __init__(self, **kwargs):
+        self.external_api = kwargs.get('host')
+        self.timeout = kwargs.get('timeout', 10)
+
+    @marshal_with(geocodejson)
+    def get(self, request, instance):
+        if not self.external_api:
+            raise TechnicalError('global autocomplete not configured')
+
+        q = request['q']
+        url = '{endpoint}?q={q}'.format(endpoint=self.external_api, q=q)
+        try:
+            raw_response = requests.get(url, timeout=self.timeout)
+        except requests.Timeout:
+            logging.getLogger(__name__).error('autocomplete request timeout')
+            raise TechnicalError('external autocomplete service timeout')
+        except:
+            logging.getLogger(__name__).exception('error in autocomplete request')
+            raise TechnicalError('impossible to access external autocomplete service')
+
+        return raw_response.json()
+
+
