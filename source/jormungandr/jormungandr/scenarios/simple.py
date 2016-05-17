@@ -36,7 +36,7 @@ import navitiacommon.request_pb2 as request_pb2
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import pb_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
-from jormungandr.scenarios.utils import  updated_grahical_isochron_request_with_default
+from jormungandr.scenarios.utils import updated_common_journey_request_with_default
 
 
 class Scenario(object):
@@ -205,7 +205,7 @@ class Scenario(object):
         for dte in request["datetime"]:
             journey_req.datetimes.append(dte)
         journey_req.clockwise = request["clockwise"]
-        updated_grahical_isochron_request_with_default(request, instance)
+        updated_common_journey_request_with_default(request, instance)
         sn_params = journey_req.streetnetwork_params
         sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
         sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]

@@ -117,19 +117,19 @@ type::Polygon circle(const type::GeographicalCoord& center,
     return points;
 }
 
-static type::MultiPolygon merge_circles(const type::MultiPolygon& multi_circles, type::Polygon circle) {
-    type::MultiPolygon multi_circles_merged;
-    for(type::Polygon poly: multi_circles) {
-        if (boost::geometry::intersects(poly, circle)) {
+static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type::Polygon poly) {
+    type::MultiPolygon multi_polys_merged;
+    for(const type::Polygon& p: multi_poly) {
+        if (boost::geometry::intersects(p, poly)) {
            type::MultiPolygon poly_union;
-           boost::geometry::union_(circle, poly, poly_union);
-           circle = poly_union[0];
+           boost::geometry::union_(poly, p, poly_union);
+           poly = poly_union[0];
         } else {
-            multi_circles_merged.push_back(poly);
+            multi_polys_merged.push_back(p);
         }
     }
-    multi_circles_merged.push_back(circle);
-    return multi_circles_merged;
+    multi_polys_merged.push_back(poly);
+    return multi_polys_merged;
 }
 
 template<typename T>
@@ -146,15 +146,16 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const double& speed,
                                 const int& max_duration) {
     type::MultiPolygon circles;
-    std::cout << max_duration;
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        if (in_bound(it->second.total_seconds(), max_duration, clockwise)) {
-            int duration_max = abs(max_duration - int(it->second.total_seconds()));
+        if (it->second.total_seconds() < max_duration) {
+            int duration_max = max_duration - int(it->second.total_seconds());
+            //Delete the circles too small to avoid rounding error
             if (duration_max * speed < 5) {continue;}
             const auto& center = data_departure[it->first.val]->coord;
             type::Polygon circle_to_add = circle(center , duration_max * speed);
-            circles = merge_circles(circles, circle_to_add);
+            circles.push_back(circle_to_add);
+            //circles = merge_poly(circles, circle_to_add);
         }
     }
     for(const type::StopPoint* sp: stop_points) {
@@ -167,9 +168,11 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                 continue;
             }
             int duration = abs(int(best_lbl) - int(bound));
+            //Delete the circles too small to avoid rounding error
             if (duration * speed < 5 ) {continue;}
             type::Polygon circle_to_add = circle(sp->coord, duration * speed);
-            circles = merge_circles(circles, circle_to_add);
+            circles.push_back(circle_to_add);
+            //circles = merge_poly(circles, circle_to_add);
         }
     }
     return circles;

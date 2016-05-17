@@ -106,6 +106,7 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
         parser_get.add_argument("bike_speed", type=float_gt_0)
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
+
     @marshal_with(graphical_isochrons)
     @ManageError()
     def get(self, region=None):
@@ -127,7 +128,6 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
         original_datetime = args['original_datetime']
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
-
 
         response = i_manager.dispatch(args, "graphical_isochrons", instance_name=region)
 

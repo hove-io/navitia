@@ -224,7 +224,7 @@ def get_or_default(request, val, default):
         return val
     return default
 
-def updated_grahical_isochron_request_with_default(request, instance):
+def updated_common_journey_request_with_default(request, instance):
     if request['max_walking_duration_to_pt'] is None:
         request['max_walking_duration_to_pt'] = instance.max_walking_duration_to_pt
 
@@ -254,7 +254,7 @@ def updated_grahical_isochron_request_with_default(request, instance):
 
 
 def updated_request_with_default(request, instance):
-    updated_grahical_isochron_request_with_default(request, instance)
+    updated_common_journey_request_with_default(request, instance)
 
     if request['_min_car'] is None:
         request['_min_car'] = instance.min_car

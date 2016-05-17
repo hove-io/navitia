@@ -41,22 +41,22 @@ class TestGraphicalIsochron(AbstractTestFixture):
     """
 
     def test_from_graphical_isochron_coord(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #NOTE: we query /v1/coverage/main_routing_test/isochrons and not directly /v1/isochrons
         #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
 
-        assert response["isochrons"][0]["geojson"]["type"] == "MultiPolygon"
+        is_valid_graphical_isochron(response, self.tester, query)
 
     def test_to_graphical_isochron_coord(self):
-        # NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        # NOTE: we query /v1/coverage/main_routing_test/isochrons and not directly /v1/isochrons
         # not to use the jormungandr database
         query = "v1/coverage/main_routing_test/isochrons?to={}&datetime={}&duration={}&datetime_represents=arrival"
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
 
-        assert response["isochrons"][0]["geojson"]["type"] == "MultiPolygon"
+        is_valid_graphical_isochron(response, self.tester, query)
 
     def test_reverse_graphical_isochrons_coord_clockwise(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime=20120614T080000&to=0.0000898312;0.0000898312&duration=3600"
