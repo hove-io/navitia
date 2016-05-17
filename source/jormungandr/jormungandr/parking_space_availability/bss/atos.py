@@ -39,10 +39,12 @@ class AtosProvider(BssProvider):
 
     OPERATOR = 'Keolis'
 
-    def __init__(self, id_ao, network, url):
+    def __init__(self, id_ao, network, url, timeout=5):
         self.id_ao = id_ao
         self.network = network
         self.WS_URL = url
+        self.timeout = timeout
+        self._client = None
 
     def __repr__(self):
         return self.WS_URL + str(self.id_ao)
@@ -53,21 +55,26 @@ class AtosProvider(BssProvider):
                properties.get('network') == self.network
 
     def get_informations(self, poi):
+        logging.debug('building stands')
         try:
             all_stands = self.get_all_stands()
-            ref = poi.get('properties', {}).get('ref')
+            ref = poi.get('properties', {}).get('ref').lstrip('0')
             stands = all_stands.get(ref)
             return stands
-        except URLError as e:
-            logging.getLogger(__name__).info(str(e))
-        except suds.WebFault as e:
-            logging.getLogger(__name__).info('{} in document {}'.format(e.fault, e.document))
+        except:
+            #suds raide a lot of crap... don't want to handle all of them
+            logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
+        return None
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def get_all_stands(self):
         client = self.get_client()
+        if not client:
+            return {}
         all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
         return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
 
     def get_client(self):
-        return suds.client.Client(self.WS_URL, cache=None)
+        if not self._client:
+            self._client = suds.client.Client(self.WS_URL, timeout=self.timeout, cache=None)
+        return self._client
