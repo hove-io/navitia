@@ -140,7 +140,8 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:12"_t));
     double speed = 0.8;
     navitia::type::MultiPolygon isochron = build_isochron(raptor, b.data->pt_data->stop_points, true,
-                                                         navitia::DateTimeUtils::set(0, "09:12"_t), d, speed, 3600 + 60*12);
+                                                         navitia::DateTimeUtils::set(0, "09:12"_t),
+                                                         d, speed, 3600 + 60*12);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron));

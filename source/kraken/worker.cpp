@@ -724,10 +724,12 @@ pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochro
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
 
 
-    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0), request.max_duration(),
-                                                      request.max_transfers(), arg.accessibilite_params, arg.forbidden,
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
+                                                      request.max_duration(), request.max_transfers(),
+                                                      arg.accessibilite_params, arg.forbidden,
                                                       request.clockwise(), arg.rt_level,
-                                                      *street_network_worker, request.streetnetwork_params().walking_speed());
+                                                      *street_network_worker,
+                                                      request.streetnetwork_params().walking_speed());
 
 }
 

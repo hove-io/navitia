@@ -59,14 +59,16 @@ class TestGraphicalIsochron(AbstractTestFixture):
         is_valid_graphical_isochron(response, self.tester, query)
 
     def test_reverse_graphical_isochrons_coord_clockwise(self):
-        q = "v1/coverage/main_routing_test/isochrons?datetime=20120614T080000&to=0.0000898312;0.0000898312&duration=3600"
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&to={}&duration={}"
+        q = q.format('20120614T080000', s_coord, '3600')
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
         assert normal_response['error']['message'] == 'reverse isochrone works only for anti-clockwise request'
 
     def test_graphical_isochrons_coord_clockwise(self):
-        q = "v1/coverage/main_routing_test/isochrons?datetime=20120614T080000&from=0.0000898312;0.0000898312&duration=3600&datetime_represents=arrival"
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}&datetime_represents=arrival"
+        q = q.format('20120614T080000', s_coord, '3600')
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
