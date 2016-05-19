@@ -63,6 +63,28 @@ class TestGraphicalIsochron(AbstractTestFixture):
         assert (multi_poly.contains(destination))
         is_valid_graphical_isochron(response, self.tester, query)
 
+    def test_graphical_isochrons_from_stop_point(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        q = q.format('20120614T080000', 'stopA', '3600')
+        response = self.query(q)
+        stopA = Point(0.000718649585564, 0.00107797437835)
+        d = response['isochrons'][0]['geojson']
+        multi_poly = asShape(d)
+
+        assert (multi_poly.contains(stopA))
+        is_valid_graphical_isochron(response, self.tester, q)
+
+    def test_graphical_isochrons_to_stop_point(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&to={}&duration={}&datetime_represents=arrival"
+        q = q.format('20120614T080000', 'stopA', '3600')
+        response = self.query(q)
+        stopA = Point(0.000718649585564, 0.00107797437835)
+        d = response['isochrons'][0]['geojson']
+        multi_poly = asShape(d)
+
+        assert (multi_poly.contains(stopA))
+        is_valid_graphical_isochron(response, self.tester, q)
+
     def test_reverse_graphical_isochrons_coord_clockwise(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime={}&to={}&duration={}"
         q = q.format('20120614T080000', s_coord, '3600')
@@ -82,18 +104,44 @@ class TestGraphicalIsochron(AbstractTestFixture):
     def test_graphical_isochrons_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrons"
         normal_response, error_code = self.query_no_assert(q)
+
         assert error_code == 400
         assert normal_response['message'] == 'you should provide a \'from\' or a \'to\' argument'
 
     def test_graphical_isochrons_no_region(self):
         q = "v1/coverage/isochrons"
         normal_response, error_code = self.query_no_assert(q)
+
         assert error_code == 404
         assert normal_response['error']['message'] == 'The region isochrons doesn\'t exists'
 
-    def testgrapical_isochrons_invald_duration(self):
+    def test_graphical_isochrons_invald_duration(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
         q = q.format('20120614T080000', s_coord, '-3600')
         normal_response, error_code = self.query_no_assert(q)
+
         assert error_code == 400
         assert normal_response['message'] == 'Unable to evaluate, invalid positive int'
+
+        p = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        p = p.format('20120614T080000', s_coord, '3j600')
+        normal_response, error_code = self.query_no_assert(p)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'Unable to evaluate, invalid literal for int() with base 10: \'3j600\''
+
+    def test_graphical_isochrons_null_speed(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}&walking_speed=0"
+        q = q.format('20120614T080000', s_coord, '3600')
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'The walking_speed argument has to be > 0, you gave : 0'
+
+    def test_graphical_isochrons_no_duration(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}"
+        q = q.format('20120614T080000', s_coord)
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'you should provide a \'duration\' argument'

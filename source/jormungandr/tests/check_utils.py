@@ -502,8 +502,7 @@ def is_valid_geojson_coord(coord):
 
 def is_valid_multipolygon_geojson(geojson):
     assert geojson['type'] == 'MultiPolygon'
-    assert geojson['coordinates']
-    for p in geojson['coordinates']:
+    for p in get_not_null(geojson, 'coordinates'):
         outer = p[0]
         for c in outer:
             is_valid_geojson_coord(c)
@@ -518,6 +517,9 @@ def is_valid_graphical_isochron(isochron, tester, query):
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
+
+    for feed_publisher in get_not_null(isochron, 'feed_publishers'):
+        is_valid_feed_publisher(feed_publisher)
 
 
 def is_valid_section(section, query):

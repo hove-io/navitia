@@ -66,9 +66,6 @@ def date_time_format(value):
 
 
 def unsigned_integer(value):
-    """
-    we want to valid the duration format
-    """
     try:
         d = int(value)
         if d <= 0:

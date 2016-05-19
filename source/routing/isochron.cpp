@@ -150,8 +150,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
     for (auto it = origin.begin(); it != origin.end(); ++it){
         if (it->second.total_seconds() < max_duration) {
             int duration_left = max_duration - int(it->second.total_seconds());
-            //Delete the circles too small to avoid rounding error
-            if (duration_left * speed < min_radius) {continue;}
+            if (duration_left * speed < MIN_RADIUS) {continue;}
             const auto& center = data_departure[it->first.val]->coord;
             type::Polygon circle_to_add = circle(center , duration_left * speed);
             circles = merge_poly(circles, circle_to_add);
@@ -167,8 +166,7 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
                 continue;
             }
             int duration = abs(int(best_lbl) - int(bound));
-            //Delete the circles too small to avoid rounding error
-            if (duration * speed < min_radius) {continue;}
+            if (duration * speed < MIN_RADIUS) {continue;}
             type::Polygon circle_to_add = circle(sp->coord, duration * speed);
             circles = merge_poly(circles, circle_to_add);
         }

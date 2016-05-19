@@ -188,11 +188,7 @@ class V1Routing(AModule):
 
         if app.config['GRAPHICAL_ISOCHRON']:
             self.add_resource(GraphicalIsochron.GraphicalIsochron,
-                            region + '<uri:uri>/isochrons',
-                            coord + '<uri:uri>/isochrons',
                             region + 'isochrons',
-                            coord + 'isochrons',
-                            'isochrons',
                             endpoint='isochrons')
 
         self.add_resource(Schedules.RouteSchedules,
