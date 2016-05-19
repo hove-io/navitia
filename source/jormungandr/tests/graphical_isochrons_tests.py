@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
+from shapely.geometry import asShape, Point
 
 
 @dataset({"main_routing_test": {}})
@@ -41,21 +42,25 @@ class TestGraphicalIsochron(AbstractTestFixture):
     """
 
     def test_from_graphical_isochron_coord(self):
-        #NOTE: we query /v1/coverage/main_routing_test/isochrons and not directly /v1/isochrons
-        #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
+        origin = Point(0.0000898312, 0.0000898312)
+        d = response['isochrons'][0]['geojson']
+        multi_poly = asShape(d)
 
+        assert (multi_poly.contains(origin))
         is_valid_graphical_isochron(response, self.tester, query)
 
     def test_to_graphical_isochron_coord(self):
-        # NOTE: we query /v1/coverage/main_routing_test/isochrons and not directly /v1/isochrons
-        # not to use the jormungandr database
         query = "v1/coverage/main_routing_test/isochrons?to={}&datetime={}&duration={}&datetime_represents=arrival"
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
+        destination = Point(0.0000898312, 0.0000898312)
+        d = response['isochrons'][0]['geojson']
+        multi_poly = asShape(d)
 
+        assert (multi_poly.contains(destination))
         is_valid_graphical_isochron(response, self.tester, query)
 
     def test_reverse_graphical_isochrons_coord_clockwise(self):

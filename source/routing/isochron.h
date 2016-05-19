@@ -37,6 +37,7 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 constexpr static double N_RAD_TO_DEG = 57.295779513;
+constexpr static double min_radius = 5;
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,

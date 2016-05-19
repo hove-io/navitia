@@ -407,11 +407,13 @@ class MultiPolyGeoJson(fields.Raw):
         polys = []
 
         for poly in value.polygons:
+            p = []
             outer = [[c.lon, c.lat] for c in poly.outer.coordinates]
-            polys.append([outer])
+            p.append(outer)
             for inners in poly.inners:
                 inner = [[c.lon, c.lat] for c in inners.coordinates]
-                polys.append([inner])
+                p.append(inner)
+            polys.append(p)
         response = {
             "type": "MultiPolygon",
             "coordinates": polys,

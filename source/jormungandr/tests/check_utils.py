@@ -500,28 +500,24 @@ def is_valid_geojson_coord(coord):
     is_valid_lat(coord[1])
 
 
-def is_valid_geojson(geojson):
+def is_valid_multipolygon_geojson(geojson):
     assert geojson['type'] == 'MultiPolygon'
     assert geojson['coordinates']
     for p in geojson['coordinates']:
         outer = p[0]
         for c in outer:
             is_valid_geojson_coord(c)
-        for inner in p:
-            if inner != p[0]:
-                for c in inner:
-                    is_valid_geojson_coord(c)
+        for inner in p[1:]:
+            for c in inner:
+                is_valid_geojson_coord(c)
 
 
 def is_valid_graphical_isochron(isochron, tester, query):
 
-    assert isochron['isochrons']
-    for g in isochron['isochrons']:
+    for g in get_not_null(isochron, 'isochrons'):
         geojson = g['geojson']
         assert geojson
-        is_valid_geojson(geojson)
-
-
+        is_valid_multipolygon_geojson(geojson)
 
 
 def is_valid_section(section, query):
