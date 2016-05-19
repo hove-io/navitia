@@ -47,6 +47,7 @@ import sqlalchemy
 from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
+from rabbit_mq_handler import RabbitMqHandler
 from navitiacommon import models, utils
 from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg
@@ -419,15 +420,10 @@ def reload_data(self, instance_config, job_id):
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
 
-        connection = kombu.Connection(current_app.config['CELERY_BROKER_URL'])
-        exchange = kombu.Exchange(instance_config.exchange, 'topic',
-                                  durable=True)
-        producer = connection.Producer(exchange=exchange)
+        rabbit_mq_handler = RabbitMqHandler(instance_config.exchange, "topic")
 
         logger.info("reload kraken")
-        producer.publish(task.SerializeToString(),
-                routing_key=instance.name + '.task.reload')
-        connection.release()
+        rabbit_mq_handler.publish(task.SerializeToString(), instance.name + '.task.reload')
     except:
         logger.exception('')
         job.state = 'failed'

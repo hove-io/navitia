@@ -36,6 +36,7 @@ import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
 from itertools import combinations, chain
+from tyr_user_event import TyrUserEvent
 import logging
 
 from navitiacommon import models, parser_args_type
@@ -503,6 +504,10 @@ class User(flask_restful.Resource):
             user.billing_plan = billing_plan
             db.session.add(user)
             db.session.commit()
+
+            tyr_user_event = TyrUserEvent()
+            tyr_user_event.request(user, "create_user")
+
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate user'}, 409)
@@ -550,6 +555,10 @@ class User(flask_restful.Resource):
             user.end_point = end_point
             user.billing_plan = billing_plan
             db.session.commit()
+
+            tyr_user_event = TyrUserEvent()
+            tyr_user_event.request(user, "update_user")
+
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate user'}, 409)  # Conflict
@@ -562,6 +571,10 @@ class User(flask_restful.Resource):
         try:
             db.session.delete(user)
             db.session.commit()
+
+            tyr_user_event = TyrUserEvent()
+            tyr_user_event.request(user, "delete_user")
+
         except Exception:
             logging.exception("fail")
             raise
