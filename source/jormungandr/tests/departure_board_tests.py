@@ -418,7 +418,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_display_informations_in_routes_schedule(self):
         """
-        departure board for a given date
+        verify some attributs in display_informations of a route_schedule
         """
         response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
 
