@@ -125,7 +125,7 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
             args['destination'] = transform_id(args['destination'])
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
-        if not (args['duration']):
+        if not args['duration']:
             abort(400, message="you should provide a 'duration' argument")
 
         set_request_timezone(self.region)
