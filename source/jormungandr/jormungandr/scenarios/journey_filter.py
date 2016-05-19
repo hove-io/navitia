@@ -269,12 +269,7 @@ def get_nb_connections(journey):
     """
     Returns connections count in a journey
     """
-    nb_connections = 0
-
-    for s in journey.sections:
-        if s.type == response_pb2.WAITING:
-            nb_connections += 1
-    return nb_connections
+    return journey.nb_transfers
 
 
 def way_later(request, journey, asap_journey):
