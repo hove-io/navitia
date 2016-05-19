@@ -78,3 +78,22 @@ class TestGraphicalIsochron(AbstractTestFixture):
 
         assert error_code == 404
         assert normal_response['error']['message'] == 'isochrone works only for clockwise request'
+
+    def test_graphical_isochrons_no_arguments(self):
+        q = "v1/coverage/main_routing_test/isochrons"
+        normal_response, error_code = self.query_no_assert(q)
+        assert error_code == 400
+        assert normal_response['message'] == 'you should provide a \'from\' or a \'to\' argument'
+
+    def test_graphical_isochrons_no_region(self):
+        q = "v1/coverage/isochrons"
+        normal_response, error_code = self.query_no_assert(q)
+        assert error_code == 404
+        assert normal_response['error']['message'] == 'The region isochrons doesn\'t exists'
+
+    def testgrapical_isochrons_invald_duration(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        q = q.format('20120614T080000', s_coord, '-3600')
+        normal_response, error_code = self.query_no_assert(q)
+        assert error_code == 400
+        assert normal_response['message'] == 'Unable to evaluate, invalid positive int'

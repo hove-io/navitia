@@ -47,6 +47,7 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
+from jormungandr.interfaces.parsers import unsigned_integer
 
 
 graphical_isochron = {
@@ -83,7 +84,7 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
                                 dest="destination_mode", action="append")
         parser_get.add_argument("to", type=unicode, dest="destination")
         parser_get.add_argument("datetime", type=date_time_format)
-        parser_get.add_argument("duration", type=int)
+        parser_get.add_argument("duration", type=unsigned_integer)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
@@ -122,6 +123,8 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
             args['origin'] = transform_id(args['origin'])
         if args['destination']:
             args['destination'] = transform_id(args['destination'])
+        if not (args['destination'] or args['origin']):
+            abort(400, message="you should provide a 'from' or a 'to' argument")
 
         set_request_timezone(self.region)
         args['original_datetime'] = args['datetime']

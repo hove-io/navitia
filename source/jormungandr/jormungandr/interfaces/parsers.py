@@ -63,3 +63,17 @@ def date_time_format(value):
         return d
     except ValueError as e:
         raise ValueError("Unable to parse datetime, {}".format(e.message))
+
+
+def unsigned_integer(value):
+    """
+    we want to valid the duration format
+    """
+    try:
+        d = int(value)
+        if d <= 0:
+            raise ValueError('invalid positive int')
+
+        return d
+    except ValueError as e:
+        raise ValueError("Unable to evaluate, {}".format(e.message))
