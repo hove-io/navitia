@@ -28,5 +28,4 @@ class RabbitMqHandler(object):
                 declare=[self._task_exchange],
                 routing_key=routing_key)
 
-        logging.info("Sent: %s" % payload)
         self._connection.release()

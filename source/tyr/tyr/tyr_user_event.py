@@ -16,6 +16,7 @@ class RabbitMqMessage:
         self._email = None
         self._block_until = None
         self._type = None
+        self._last_login = None
 
     def get_message(self):
         return {
@@ -29,6 +30,12 @@ class RabbitMqMessage:
             },
             'event': self._event_name
         }
+
+    def get_message_with_last_login(self):
+        message = self.get_message()
+        message['data']['last_username'] = self._last_login
+
+        return message
 
     def get_end_point(self):
         return {
@@ -46,6 +53,9 @@ class RabbitMqMessage:
 
     def set_event_name(self, event_name):
         self._event_name = event_name
+
+    def set_last_login(self, last_login):
+        self._last_login = last_login
 
     def set_user(self, user):
         self._email = user.email
@@ -66,7 +76,12 @@ class TyrUserEvent(object):
         self._rabbit_mq_handler = RabbitMqHandler("tyr_event_exchange")
         self._rabbit_mq_message = RabbitMqMessage()
 
-    def request(self, user, event_name):
+    def request(self, user, event_name, last_login=None):
         self._rabbit_mq_message.set_user(user)
         self._rabbit_mq_message.set_event_name(event_name)
-        self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message())
+
+        if last_login is not None:
+            self._rabbit_mq_message.set_last_login(last_login)
+            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message_with_last_login())
+        else:
+            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message())

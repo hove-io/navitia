@@ -548,6 +548,7 @@ class User(flask_restful.Resource):
             return ({'error': 'billing_plan doesn\'t exist'}, 400)
 
         try:
+            last_login = user.login
             user.email = args['email']
             user.login = args['login']
             user.type = args['type']
@@ -557,7 +558,7 @@ class User(flask_restful.Resource):
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()
-            tyr_user_event.request(user, "update_user")
+            tyr_user_event.request(user, "update_user", last_login)
 
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
