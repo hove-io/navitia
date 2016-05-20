@@ -127,6 +127,8 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['duration']:
             abort(400, message="you should provide a 'duration' argument")
+        if not args['datetime']:
+            args['datetime'] = args['_current_datetime']
 
         set_request_timezone(self.region)
         args['original_datetime'] = args['datetime']
