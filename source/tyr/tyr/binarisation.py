@@ -420,7 +420,7 @@ def reload_data(self, instance_config, job_id):
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
 
-        rabbit_mq_handler = RabbitMqHandler(instance_config.exchange, "topic")
+        rabbit_mq_handler = RabbitMqHandler(current_app.config['CELERY_BROKER_URL'], instance_config.exchange, "topic")
 
         logger.info("reload kraken")
         rabbit_mq_handler.publish(task.SerializeToString(), instance.name + '.task.reload')
