@@ -50,7 +50,8 @@ class RabbitMqMessage:
     def set_user(self, user):
         self._email = user.email
         self._login = user.login
-        self._block_until = user.block_until
+        if user.block_until:
+            self._block_until = user.block_until.isoformat()
         self._type = user.type
         self._billing_plan_name = user.billing_plan.name
         self._billing_plan_default = user.billing_plan.default
