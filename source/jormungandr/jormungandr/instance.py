@@ -37,6 +37,7 @@ from flask.ext.restful import abort
 import zmq
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
+from jormungandr.timezone import set_request_instance_timezone
 import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
@@ -393,6 +394,7 @@ class Instance(object):
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
+        set_request_instance_timezone(self)
 
     def init(self):
         """
