@@ -60,8 +60,7 @@ struct departure_board_fixture {
         b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
         b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
         b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
-
+        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";        
         b.finish();
         b.data->pt_data->index();
         b.data->pt_data->build_uri();
@@ -163,6 +162,9 @@ struct calendar_fixture {
         b.lines["C"]->closing_time = boost::posix_time::time_duration(21,0,0);
         b.lines["D"]->opening_time = boost::posix_time::time_duration(23,30,0);
         b.lines["D"]->closing_time = boost::posix_time::time_duration(6,0,0);
+        b.lines["line:A"]->color = "289728";
+        b.lines["line:A"]->text_color = "FFD700";
+
         b.finish();
         b.data->build_uri();
         beg = b.data->meta->production_date.begin();
