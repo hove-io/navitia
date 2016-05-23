@@ -705,6 +705,15 @@ pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochro
 
     navitia::JourneysArg arg = fill_journeys(request);
 
+    if (arg.origins.empty() && arg.destinations.empty()) {
+        //should never happen, jormungandr filters that, but it never hurts to double check
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point given");
+        return pb_creator.get_response();
+    }
+
     if (! arg.origins.empty() && ! request.clockwise()) {
         navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
         return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
@@ -715,10 +724,12 @@ pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochro
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
 
 
-    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0), request.max_duration(),
-                                                      request.max_transfers(), arg.accessibilite_params, arg.forbidden,
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
+                                                      request.max_duration(), request.max_transfers(),
+                                                      arg.accessibilite_params, arg.forbidden,
                                                       request.clockwise(), arg.rt_level,
-                                                      *street_network_worker);
+                                                      *street_network_worker,
+                                                      request.streetnetwork_params().walking_speed());
 
 }
 

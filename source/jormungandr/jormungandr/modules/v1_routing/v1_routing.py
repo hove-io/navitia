@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1 import Uri
 from jormungandr.interfaces.v1 import Coverage
 from jormungandr.interfaces.v1 import Journeys
+from jormungandr.interfaces.v1 import GraphicalIsochron
 from jormungandr.interfaces.v1 import Schedules
 from jormungandr.interfaces.v1 import Places
 from jormungandr.interfaces.v1 import Ptobjects
@@ -42,6 +43,7 @@ from jormungandr.interfaces.v1 import converters_collection_type
 from jormungandr.interfaces.v1 import Status
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
+from jormungandr import app
 
 from jormungandr.modules.v1_routing.resources import Index
 
@@ -183,6 +185,11 @@ class V1Routing(AModule):
                           coord + 'journeys',
                           '/journeys',
                           endpoint='journeys')
+
+        if app.config['GRAPHICAL_ISOCHRON']:
+            self.add_resource(GraphicalIsochron.GraphicalIsochron,
+                            region + 'isochrons',
+                            endpoint='isochrons')
 
         self.add_resource(Schedules.RouteSchedules,
                           region + '<uri:uri>/route_schedules',

@@ -38,6 +38,9 @@ namespace navitia { namespace routing {
 
 constexpr static double N_RAD_TO_DEG = 57.295779513;
 
+//Delete the circles too small to avoid rounding error in meter
+constexpr static double MIN_RADIUS = 5;
+
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
                                              const double& radius);
@@ -51,7 +54,8 @@ type::Polygon circle(const type::GeographicalCoord& center,
 type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
                                 const bool clockwise,
-                                const DateTime& init_dt,
                                 const DateTime& bound,
-                                const map_stop_point_duration &origine);
+                                const map_stop_point_duration &origine,
+                                const double& speed,
+                                const int& max_duration);
 }}

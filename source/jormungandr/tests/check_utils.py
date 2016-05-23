@@ -239,9 +239,9 @@ def is_valid_lat(str):
 
 
 def is_valid_lon(str):
-    lat = get_valid_float(str)
+    lon = get_valid_float(str)
 
-    assert 180.0 >= lat >= -180.0, "lon should be between -180 and 180"
+    assert 180.0 >= lon >= -180.0, "lon should be between -180 and 180"
 
 
 def is_valid_coord(coord):
@@ -493,6 +493,33 @@ def is_valid_journey(journey, tester, query):
         assert 'debug' in journey
     else:
         assert 'debug' not in journey
+
+
+def is_valid_geojson_coord(coord):
+    is_valid_lon(coord[0])
+    is_valid_lat(coord[1])
+
+
+def is_valid_multipolygon_geojson(geojson):
+    assert geojson['type'] == 'MultiPolygon'
+    for p in get_not_null(geojson, 'coordinates'):
+        outer = p[0]
+        for c in outer:
+            is_valid_geojson_coord(c)
+        for inner in p[1:]:
+            for c in inner:
+                is_valid_geojson_coord(c)
+
+
+def is_valid_graphical_isochron(isochron, tester, query):
+
+    for g in get_not_null(isochron, 'isochrons'):
+        geojson = g['geojson']
+        assert geojson
+        is_valid_multipolygon_geojson(geojson)
+
+    for feed_publisher in get_not_null(isochron, 'feed_publishers'):
+        is_valid_feed_publisher(feed_publisher)
 
 
 def is_valid_section(section, query):

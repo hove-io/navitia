@@ -138,9 +138,10 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     navitia::routing::map_stop_point_duration d;
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:12"_t));
+    double speed = 0.8;
     navitia::type::MultiPolygon isochron = build_isochron(raptor, b.data->pt_data->stop_points, true,
-                                                         navitia::DateTimeUtils::set(0, "08:00"_t),
-                                                         navitia::DateTimeUtils::set(0, "09:12"_t), d);
+                                                         navitia::DateTimeUtils::set(0, "09:12"_t),
+                                                         d, speed, 3600 + 60*12);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron));
@@ -148,7 +149,6 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron));
     BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron));
-    double speed = 0.8;
     BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron));
 #endif
 }

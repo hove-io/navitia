@@ -37,6 +37,7 @@ www.navitia.io
 #include <vector>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+ #include <boost/geometry/geometry.hpp>
 #include <cmath>
 
 namespace navitia { namespace routing {
@@ -116,32 +117,58 @@ type::Polygon circle(const type::GeographicalCoord& center,
     return points;
 }
 
+static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type::Polygon poly) {
+    type::MultiPolygon multi_polys_merged;
+    for(const type::Polygon& p: multi_poly) {
+        if (boost::geometry::intersects(p, poly)) {
+           type::MultiPolygon poly_union;
+           boost::geometry::union_(poly, p, poly_union);
+           poly = poly_union[0];
+        } else {
+            multi_polys_merged.push_back(p);
+        }
+    }
+    multi_polys_merged.push_back(poly);
+    return multi_polys_merged;
+}
+
+template<typename T>
+static bool in_bound(const T & begin, const T & end, bool clockwise) {
+    return (clockwise && begin < end) ||
+            (!clockwise && begin > end);
+}
+
 type::MultiPolygon build_isochron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
                                 const bool clockwise,
-                                const DateTime& init_dt,
                                 const DateTime& bound,
-                                const map_stop_point_duration& origin) {
+                                const map_stop_point_duration& origin,
+                                const double& speed,
+                                const int& max_duration) {
     type::MultiPolygon circles;
-    double speed = 0.8; // About 3km/h TODO pass it in param
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        int duration_max = abs(int(bound) - (abs(int(init_dt) - int(it->second.total_seconds()))));
-        const auto& center = data_departure[it->first.val]->coord;
-        circles.push_back(circle(center , duration_max * speed));
+        if (it->second.total_seconds() < max_duration) {
+            int duration_left = max_duration - int(it->second.total_seconds());
+            if (duration_left * speed < MIN_RADIUS) {continue;}
+            const auto& center = data_departure[it->first.val]->coord;
+            type::Polygon circle_to_add = circle(center , duration_left * speed);
+            circles = merge_poly(circles, circle_to_add);
+        }
     }
     for(const type::StopPoint* sp: stop_points) {
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
-        if ((clockwise && best_lbl < bound) ||
-           (!clockwise && best_lbl > bound)) {
+        if (in_bound(best_lbl, bound, clockwise)) {
             int round = raptor.best_round(sp_idx);
             if (round == -1 || ! raptor.labels[round].pt_is_initialized(sp_idx)
                     || ! raptor.labels[round].transfer_is_initialized(sp_idx)) {
                 continue;
             }
-            int duration = abs(int(best_lbl) - int(init_dt));
-            circles.push_back(circle(sp->coord, duration * speed));
+            int duration = abs(int(best_lbl) - int(bound));
+            if (duration * speed < MIN_RADIUS) {continue;}
+            type::Polygon circle_to_add = circle(sp->coord, duration * speed);
+            circles = merge_poly(circles, circle_to_add);
         }
     }
     return circles;
