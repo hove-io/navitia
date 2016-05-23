@@ -85,6 +85,56 @@ class TestGraphicalIsochron(AbstractTestFixture):
         assert (multi_poly.contains(stopA))
         is_valid_graphical_isochron(response, self.tester, q)
 
+    def test_graphical_isochrons_no_datetime(self):
+        q_no_dt = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&_current_datetime={}"
+        q_no_dt = q_no_dt.format(s_coord, '3600', '20120614T080000')
+        response_no_dt = self.query(q_no_dt)
+        q_dt = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_dt = q_dt.format(s_coord, '20120614T080000', '3600')
+        isochron = self.query(q_dt)
+
+        is_valid_graphical_isochron(response_no_dt, self.tester, q_no_dt)
+        assert len(response_no_dt['isochrons']) == len(isochron['isochrons'])
+
+        for isochron_no_dt, isochron in zip(response_no_dt['isochrons'], isochron['isochrons']):
+            multi_poly_no_datetime = asShape(isochron_no_dt['geojson'])
+            multi_poly = asShape(isochron['geojson'])
+
+            assert multi_poly_no_datetime.equals(multi_poly)
+
+    def test_graphical_isochrons_no_seconds_in_datetime(self):
+        q_no_s = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}"
+        q_no_s = q_no_s.format(s_coord, '3600', '20120614T0800')
+        response_no_s = self.query(q_no_s)
+        q_s = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_s = q_s.format(s_coord, '20120614T080000', '3600')
+        isochron= self.query(q_s)
+
+        is_valid_graphical_isochron(response_no_s, self.tester, q_no_s)
+        assert len(response_no_s['isochrons']) == len(isochron['isochrons'])
+
+        for isochron_no_s, isochron in zip(response_no_s['isochrons'], isochron['isochrons']):
+            multi_poly_no_s = asShape(isochron_no_s['geojson'])
+            multi_poly = asShape(isochron['geojson'])
+
+            assert multi_poly_no_s.equals(multi_poly)
+
+    def test_graphical_isochrons_speed_factor(self):
+        q_speed_2 = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}&walking_speed={}"
+        q_speed_2 = q_speed_2.format(s_coord, '3600', '20120614T0800', 2)
+        response_speed_2 = self.query(q_speed_2)
+        q_speed_1 = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_speed_1 = q_speed_1.format(s_coord, '20120614T080000', '3600')
+        isochron = self.query(q_speed_1)
+
+        is_valid_graphical_isochron(response_speed_2, self.tester, q_speed_2)
+
+        for isochron_speed_2, isochron in zip(response_speed_2['isochrons'], isochron['isochrons']):
+            multi_poly_speed_2 = asShape(isochron_speed_2['geojson'])
+            multi_poly = asShape(isochron['geojson'])
+
+            assert multi_poly_speed_2.contains(multi_poly)
+
     def test_reverse_graphical_isochrons_coord_clockwise(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime={}&to={}&duration={}"
         q = q.format('20120614T080000', s_coord, '3600')
@@ -124,11 +174,11 @@ class TestGraphicalIsochron(AbstractTestFixture):
         assert normal_response['message'] == 'Unable to evaluate, invalid positive int'
 
         p = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
-        p = p.format('20120614T080000', s_coord, '3j600')
+        p = p.format('20120614T080000', s_coord, 'toto')
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert normal_response['message'] == 'Unable to evaluate, invalid literal for int() with base 10: \'3j600\''
+        assert normal_response['message'] == 'Unable to evaluate, invalid literal for int() with base 10: \'toto\''
 
     def test_graphical_isochrons_null_speed(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}&walking_speed=0"
@@ -145,3 +195,34 @@ class TestGraphicalIsochron(AbstractTestFixture):
 
         assert error_code == 400
         assert normal_response['message'] == 'you should provide a \'duration\' argument'
+
+    def test_graphical_isochrons_date_out_of_bound(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        q = q.format('20050614T080000', s_coord, '3600')
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 404
+        assert normal_response['error']['id'] == 'date_out_of_bounds'
+        assert normal_response['error']['message'] == 'date is not in data production period'
+
+    def test_graphical_isochrons_invalid_datetime(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        q = q.format('2005061', s_coord, '3600')
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'Unable to parse datetime, year is out of range'
+
+        p = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        p = p.format('toto', s_coord, 3600)
+        normal_response, error_code = self.query_no_assert(p)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'Unable to parse datetime, unknown string format'
+
+    def test_graphical_isochros_no_isochrons(self):
+        q = "v1/coverage/main_routing_test/isochrons?datetime={}&from={}&duration={}"
+        q = q.format('20120614T080000', '90;0', '3600')
+        response = self.query(q)
+
+        assert 'isochrons' not in response
