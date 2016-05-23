@@ -1,7 +1,9 @@
 from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
 import json
 import pytest
+import mock
 from navitiacommon import models
+from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 import urllib
 
@@ -23,6 +25,11 @@ def create_instance():
         models.db.session.add(instance)
         models.db.session.commit()
         return instance.id
+
+@pytest.yield_fixture
+def mock_rabbit():
+    with mock.patch.object(RabbitMqHandler, 'publish') as m:
+        yield m
 
 @pytest.fixture
 def create_multiple_users(request):
@@ -66,7 +73,7 @@ def test_get_users_empty():
     resp = api_get('/v0/users/')
     assert resp == []
 
-def test_add_user():
+def test_add_user(mock_rabbit):
     """
     creation of a user passing arguments as a json
     """
@@ -83,8 +90,9 @@ def test_add_user():
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
+    assert mock_rabbit.called
 
-def test_add_user_with_plus():
+def test_add_user_with_plus(mock_rabbit):
     """
     creation of a user with a "+" in the email
     """
@@ -101,8 +109,9 @@ def test_add_user_with_plus():
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
+    assert mock_rabbit.called
 
-def test_add_user_with_plus_no_json():
+def test_add_user_with_plus_no_json(mock_rabbit):
     """
     creation of a user with a "+" in the email
     """
@@ -119,8 +128,9 @@ def test_add_user_with_plus_no_json():
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
+    assert mock_rabbit.called
 
-def test_add_user_with_plus_in_query():
+def test_add_user_with_plus_in_query(mock_rabbit):
     """
     creation of a user with a "+" in the email
     """
@@ -141,51 +151,58 @@ def test_add_user_with_plus_in_query():
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
+    assert mock_rabbit.called
 
-def test_add_duplicate_login_user(create_user):
+def test_add_duplicate_login_user(create_user, mock_rabbit):
     user = {'login': 'test', 'email': 'user1@example.com'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 409
+    assert mock_rabbit.call_count == 0
 
-def test_add_duplicate_email_user(create_user):
+def test_add_duplicate_email_user(create_user, mock_rabbit):
     user = {'login': 'user', 'email': 'test@example.com'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 409
+    assert mock_rabbit.call_count == 0
 
-def test_add_user_invalid_email():
+def test_add_user_invalid_email(mock_rabbit):
     """
     creation of a user with an invalid email
     """
     user = {'login': 'user1', 'email': 'user1'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert mock_rabbit.call_count == 0
 
-def test_add_user_invalid_endpoint():
+def test_add_user_invalid_endpoint(mock_rabbit):
     """
     creation of a user with an invalid endpoint
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'end_point_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert mock_rabbit.call_count == 0
 
-def test_add_user_invalid_billingplan():
+def test_add_user_invalid_billingplan(mock_rabbit):
     """
     creation of a user with an invalid endpoint
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'billing_plan_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert mock_rabbit.call_count == 0
 
-def test_add_user_invalid_type():
+def test_add_user_invalid_type(mock_rabbit):
     """
     creation of a user with an invalid endpoint
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'type': 'foo'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert mock_rabbit.call_count == 0
 
 
-def test_multiple_users(create_multiple_users):
+def test_multiple_users(create_multiple_users, mock_rabbit):
     """
     check the list
     """
@@ -210,9 +227,9 @@ def test_multiple_users(create_multiple_users):
 
     assert user1_found
     assert user2_found
+    assert mock_rabbit.call_count == 0
 
-
-def test_delete_user(create_multiple_users):
+def test_delete_user(create_multiple_users, mock_rabbit):
     """
     delete a user
     """
@@ -231,8 +248,9 @@ def test_delete_user(create_multiple_users):
     assert u['email'] == 'foo@example.com'
     assert u['end_point']['name'] == 'navitia.io'
     assert u['billing_plan']['name'] == 'nav_ctp'
+    assert mock_rabbit.call_count == 1
 
-def test_delete_invalid_user(create_multiple_users):
+def test_delete_invalid_user(create_multiple_users, mock_rabbit):
     """
     we try to delete an invalid users, this must fail and after that we check out users to be sure
     """
@@ -244,27 +262,31 @@ def test_delete_invalid_user(create_multiple_users):
 
     resp = api_get('/v0/users/')
     assert len(resp) == 2
+    assert mock_rabbit.call_count == 0
 
-def test_update_invalid_user():
+def test_update_invalid_user(mock_rabbit):
     """
     we try to update a user who dosn't exist
     """
     user = {'login': 'user1', 'email': 'user1@example.com'}
     resp, status = api_put('/v0/users/10', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 404
+    assert mock_rabbit.call_count == 0
 
-def test_update_user(create_multiple_users):
+def test_update_user(create_multiple_users, mock_rabbit):
     """
     we update a user
     """
     user = {'login': 'user1', 'email': 'user1@example.com'}
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
+
     assert resp['id'] == create_multiple_users['user1']
     assert resp['login'] == user['login']
     assert resp['email'] == user['email']
+    assert mock_rabbit.called
 
-def test_update_block_until(create_multiple_users):
+def test_update_block_until(create_multiple_users, mock_rabbit):
     """
     we update a user
     """
@@ -273,8 +295,9 @@ def test_update_block_until(create_multiple_users):
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
     assert resp['block_until'] == '2016-01-28T11:12:00'
+    assert mock_rabbit.called
 
-def test_full_registration_then_deletion(create_instance):
+def test_full_registration_then_deletion(create_instance, mock_rabbit):
     """
     we create a user, then a token for him, and finaly we give to him some authorization
     after that we delete him
@@ -298,11 +321,13 @@ def test_full_registration_then_deletion(create_instance):
 
     _, status = api_delete('/v0/users/{}'.format(resp_user['id']), check=False, no_json=True)
     assert status == 204
+    assert mock_rabbit.called
+
     _, status = api_get('/v0/users/{}'.format(resp_user['id']), check=False)
     assert status == 404
 
 
-def test_deletion_keys_and_auth(create_instance):
+def test_deletion_keys_and_auth(create_instance, mock_rabbit):
     """
     We start by creating the user, it's easier than using a fixture, then we delete the auth and the key
     """
@@ -321,3 +346,4 @@ def test_deletion_keys_and_auth(create_instance):
     resp_auth = api_delete('/v0/users/{}/authorizations/'.format(resp['id']), data=json.dumps(auth),
                            content_type='application/json')
     assert len(resp_auth['authorizations']) == 0
+    assert mock_rabbit.called
