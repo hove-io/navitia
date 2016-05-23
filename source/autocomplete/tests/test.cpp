@@ -1751,3 +1751,151 @@ BOOST_AUTO_TEST_CASE(test_ways){
     BOOST_REQUIRE_EQUAL(res[2].score, 1);
 
 }
+
+
+BOOST_AUTO_TEST_CASE(test_toknizer_with_delimitor_synonyms_tests){
+
+    autocomplete_map synonyms;
+    synonyms["cc"]="centre commercial";
+    synonyms["ld"]="Lieu-Dit";
+    synonyms["st"]="saint";
+    synonyms["av"]="avenue";
+    synonyms["r"]="rue";
+    synonyms["bvd"]="boulevard";
+
+    std::set<std::string> ghostwords{"les", "de", "l"};
+
+    Autocomplete<unsigned int> ac;
+    std::set<std::string> vec;
+
+    //synonyme : "cc" = "centre commercial" / synonym : de = ""
+    //"cc Carré de Soie" -> "centre commercial carré de soie"
+    vec = ac.tokenize("cc Carré de Soie", ghostwords, synonyms);
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
+
+    vec.clear();
+    // vec contient r rue jeanne d arc
+    vec = ac.tokenize("rue jeanne d'arc", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 5);
+
+    vec.clear();
+    // vec contient r rue jeanne d arc
+    vec = ac.tokenize("Garennes-sur-Eure", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 3);
+
+    vec.clear();
+    // vec contient r rue jeanne d arc
+    vec = ac.tokenize("Les Sorinières, Les Sorinières", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 1);
+
+    vec.clear();
+    // vec contient "r rue HOTEL DIEU vannes"
+    vec = ac.tokenize("rue DE L'HOTEL DIEU vannes", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 5);
+    BOOST_CHECK(vec.find("r") != vec.end());
+    BOOST_CHECK(vec.find("rue") != vec.end());
+    BOOST_CHECK(vec.find("hotel") != vec.end());
+    BOOST_CHECK(vec.find("dieu") != vec.end());
+    BOOST_CHECK(vec.find("vannes") != vec.end());
+
+    vec.clear();
+    // vec contient "r rue cernavoda st saint sebastien sur loire" -> 8 mots
+    vec = ac.tokenize("rue CERNAVODA (Saint-Sébastien-sur-Loire)", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 8);
+    BOOST_CHECK(vec.find("r") != vec.end());
+    BOOST_CHECK(vec.find("rue") != vec.end());
+    BOOST_CHECK(vec.find("sur") != vec.end());
+    BOOST_CHECK(vec.find("st") != vec.end());
+    BOOST_CHECK(vec.find("loire") != vec.end());
+
+    vec.clear();
+    // vec contient "porte d orleans " -> 3 mots
+    vec = ac.tokenize("Porte d’Orléans", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 3);
+    BOOST_CHECK(vec.find("porte") != vec.end());
+    BOOST_CHECK(vec.find("orleans") != vec.end());
+    BOOST_CHECK(vec.find("d") != vec.end());
+
+    vec.clear();
+    // vec contient "porte d'orleans " -> 3 mots
+    vec = ac.tokenize("Porte d'’'Orléans", ghostwords, synonyms);
+    BOOST_REQUIRE_EQUAL(vec.size(), 3);
+    BOOST_CHECK(vec.find("porte") != vec.end());
+    BOOST_CHECK(vec.find("orleans") != vec.end());
+    BOOST_CHECK(vec.find("d") != vec.end());
+
+}
+
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_piquet) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare SNCF", 0, 0);
+    b.sa("gare la motte picquet", 0, 0);
+    b.sa("Becharles", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    //Appel avec search type 0 -> match total
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("la motte piquet", type_filter , 1, 5, admins, 0,
+                                                                   *(b.data), boost::gregorian::not_a_date_time);
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 0);
+
+    //Appel avec search type 1 -> match n-gram
+    resp = navitia::autocomplete::autocomplete("la motte piquet", type_filter , 1, 5, admins, 1,
+                                                                       *(b.data), boost::gregorian::not_a_date_time);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "gare la motte picquet");
+}
+
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_orleans) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare SNCF", 0, 0);
+    b.sa("Porte d'Orléans", 0, 0);
+    b.sa("Becharles", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    //Appel avec search type 0 -> match total
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Porte d’Orléans", type_filter , 1, 5, admins, 0,
+                                                                   *(b.data), boost::gregorian::not_a_date_time);
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Porte d'Orléans");
+}
