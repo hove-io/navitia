@@ -86,54 +86,54 @@ class TestGraphicalIsochron(AbstractTestFixture):
         is_valid_graphical_isochron(response, self.tester, q)
 
     def test_graphical_isochrons_no_datetime(self):
-        q = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&_current_datetime={}"
-        q = q.format(s_coord, '3600', '20120614T080000')
-        response = self.query(q)
-        query = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
-        query = query.format(s_coord, '20120614T080000', '3600')
-        resp = self.query(query)
+        q_no_dt = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&_current_datetime={}"
+        q_no_dt = q_no_dt.format(s_coord, '3600', '20120614T080000')
+        response_no_dt = self.query(q_no_dt)
+        q_dt = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_dt = q_dt.format(s_coord, '20120614T080000', '3600')
+        isochron = self.query(q_dt)
 
-        is_valid_graphical_isochron(response, self.tester, q)
-        assert len(response['isochrons']) == len(resp['isochrons'])
+        is_valid_graphical_isochron(response_no_dt, self.tester, q_no_dt)
+        assert len(response_no_dt['isochrons']) == len(isochron['isochrons'])
 
-        for i in range(0, len(response['isochrons'])):
-            multi_poly_no_datetime = asShape(response['isochrons'][i]['geojson'])
-            multi_poly = asShape(resp['isochrons'][i]['geojson'])
+        for isochron_no_dt, isochron in zip(response_no_dt['isochrons'], isochron['isochrons']):
+            multi_poly_no_datetime = asShape(isochron_no_dt['geojson'])
+            multi_poly = asShape(isochron['geojson'])
 
             assert multi_poly_no_datetime.equals(multi_poly)
 
     def test_graphical_isochrons_no_seconds_in_datetime(self):
-        q = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}"
-        q = q.format(s_coord, '3600', '20120614T0800')
-        response = self.query(q)
-        query = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
-        query = query.format(s_coord, '20120614T080000', '3600')
-        resp = self.query(query)
+        q_no_s = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}"
+        q_no_s = q_no_s.format(s_coord, '3600', '20120614T0800')
+        response_no_s = self.query(q_no_s)
+        q_s = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_s = q_s.format(s_coord, '20120614T080000', '3600')
+        isochron= self.query(q_s)
 
-        is_valid_graphical_isochron(response, self.tester, q)
-        assert len(response['isochrons']) == len(resp['isochrons'])
+        is_valid_graphical_isochron(response_no_s, self.tester, q_no_s)
+        assert len(response_no_s['isochrons']) == len(isochron['isochrons'])
 
-        for i in range(0, len(response['isochrons'])):
-            multi_poly_no_seconds = asShape(response['isochrons'][i]['geojson'])
-            multi_poly = asShape(resp['isochrons'][i]['geojson'])
+        for isochron_no_s, isochron in zip(response_no_s['isochrons'], isochron['isochrons']):
+            multi_poly_no_s = asShape(isochron_no_s['geojson'])
+            multi_poly = asShape(isochron['geojson'])
 
-            assert multi_poly_no_seconds.equals(multi_poly)
+            assert multi_poly_no_s.equals(multi_poly)
 
-    def test_grapical_isochrons_speed_factor(self):
-        q = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}&walking_speed={}"
-        q = q.format(s_coord, '3600', '20120614T0800', 2)
-        response = self.query(q)
-        query = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
-        query = query.format(s_coord, '20120614T080000', '3600')
-        resp = self.query(query)
+    def test_graphical_isochrons_speed_factor(self):
+        q_speed_2 = "v1/coverage/main_routing_test/isochrons?from={}&duration={}&datetime={}&walking_speed={}"
+        q_speed_2 = q_speed_2.format(s_coord, '3600', '20120614T0800', 2)
+        response_speed_2 = self.query(q_speed_2)
+        q_speed_1 = "v1/coverage/main_routing_test/isochrons?from={}&datetime={}&duration={}"
+        q_speed_1 = q_speed_1.format(s_coord, '20120614T080000', '3600')
+        isochron = self.query(q_speed_1)
 
-        is_valid_graphical_isochron(response, self.tester, q)
+        is_valid_graphical_isochron(response_speed_2, self.tester, q_speed_2)
 
-        for i in range(0, len(response['isochrons'])):
-            multi_poly_speed = asShape(response['isochrons'][i]['geojson'])
-            multi_poly = asShape(resp['isochrons'][i]['geojson'])
+        for isochron_speed_2, isochron in zip(response_speed_2['isochrons'], isochron['isochrons']):
+            multi_poly_speed_2 = asShape(isochron_speed_2['geojson'])
+            multi_poly = asShape(isochron['geojson'])
 
-            assert multi_poly_speed.contains(multi_poly)
+            assert multi_poly_speed_2.contains(multi_poly)
 
     def test_reverse_graphical_isochrons_coord_clockwise(self):
         q = "v1/coverage/main_routing_test/isochrons?datetime={}&to={}&duration={}"
