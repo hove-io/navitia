@@ -89,6 +89,8 @@ def final_filter_journeys(response_list, instance, request):
     if final_line_filter:
         _filter_similar_line_journeys(journeys, request)
 
+    _filter_too_much_connections(journeys, instance, request)
+
     delete_journeys(response_list, request)
 
     return response_list
@@ -229,6 +231,45 @@ def _filter_max_successive_buses(journeys, request):
         if bus_count > max_successive_buses:
             logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
             mark_as_dead(j, "too_much_successive_buses")
+
+
+def _filter_too_much_connections(journeys, instance, request):
+    """
+    eliminates journeys with number of connections more then minimum connections among journeys
+    in the result + _max_additional_connections
+    """
+    logger = logging.getLogger(__name__)
+    max_additional_connections = get_or_default(request, '_max_additional_connections',
+                                            instance.max_additional_connections)
+
+    min_connections = get_min_connections(journeys)
+    if min_connections is not None:
+        max_connections_allowed = max_additional_connections + min_connections
+        for j in journeys:
+            if _to_be_deleted(j):
+                continue
+
+            if get_nb_connections(j) > max_connections_allowed:
+                logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
+                mark_as_dead(j, "too_much_connections")
+
+
+def get_min_connections(journeys):
+    """
+    Returns min connection count among journeys
+    Returns None if journeys empty
+    """
+    if not journeys:
+        return None
+
+    return min(get_nb_connections(j) for j in journeys if not _to_be_deleted(j))
+
+
+def get_nb_connections(journey):
+    """
+    Returns connections count in a journey
+    """
+    return journey.nb_transfers
 
 
 def way_later(request, journey, asap_journey):
