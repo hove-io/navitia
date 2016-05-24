@@ -58,12 +58,15 @@ class Timeo(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, service_args, timezone, object_id_tag=None, timeout=10):
+    def __init__(self, id, service_url, service_args, timezone,
+                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
+        self.destination_id_tag = destination_id_tag
+        self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
 
@@ -76,7 +79,7 @@ class Timeo(RealtimeProxy):
         """
         return self.rt_system_id
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+    #@cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
     def _call_timeo(self, url):
         """
         http call to timeo
@@ -129,7 +132,7 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            direction = next_expected_st.get('Destination')
+            direction = self.get_direction_name(next_expected_st.get('Terminus'), next_expected_st.get('Destination'))
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
@@ -211,3 +214,13 @@ class Timeo(RealtimeProxy):
                                     'fail_counter': self.breaker.fail_counter,
                                     'reset_timeout': self.breaker.reset_timeout},
                 }
+
+    #@cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
+    def get_direction_name(self, object_code, default_value):
+        resp = self.instance.ptref.get_stop_points(self.destination_id_tag, object_code)
+
+        if len(resp) > 0:
+            first_stop_point = resp[0]
+            if hasattr(first_stop_point, 'name') and first_stop_point.name != '':
+                return first_stop_point.name
+        return default_value

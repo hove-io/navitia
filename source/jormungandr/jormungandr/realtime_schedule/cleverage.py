@@ -42,12 +42,15 @@ class Cleverage(RealtimeProxy):
     """
     class managing calls to cleverage external service providing real-time next passages
     """
-    def __init__(self, id, service_url, service_args, timezone, object_id_tag=None, timeout=10):
+    def __init__(self, id, service_url, service_args, timezone, object_id_tag=None,
+                 destination_id_tag=None, instance=None, timeout=10):
         self.service_url = service_url if (service_url[-1] == u'/') else (service_url+'/')
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
+        self.destination_id_tag = destination_id_tag
+        self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S'])
         self.timezone = pytz.timezone(timezone)
