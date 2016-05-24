@@ -73,7 +73,7 @@ static pbnavitia::Request create_request(bool wheelchair, const std::string& des
     return req;
 }
 
-static pbnavitia::Request create_isochron_request(int max_duration, int min_duration, const std::string& origine) {
+static pbnavitia::Request create_isochron_request(int max_duration, int min_duration, const std::string& origin) {
     pbnavitia::Request req;
     req.set_requested_api(pbnavitia::graphical_isochron);
     pbnavitia::GraphicalIsochronRequest* g = req.mutable_isochron();
@@ -93,7 +93,7 @@ static pbnavitia::Request create_isochron_request(int max_duration, int min_dura
     sn_params->set_car_speed(1);
     sn_params->set_bss_speed(1);
     pbnavitia::LocationContext* from = j->add_origin();
-    from->set_place(origine);
+    from->set_place(origin);
     from->set_access_duration(0);
 
     return req;
