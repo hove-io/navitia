@@ -73,13 +73,14 @@ class Timeo(RealtimeProxy):
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
 
+
     def __repr__(self):
         """
          used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
         return self.rt_system_id
 
-    #@cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
     def _call_timeo(self, url):
         """
         http call to timeo
@@ -132,7 +133,7 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            direction = self.get_direction_name(next_expected_st.get('Terminus'), next_expected_st.get('Destination'))
+            direction = self._get_direction_name(next_expected_st.get('Terminus'), next_expected_st.get('Destination'))
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
@@ -215,12 +216,12 @@ class Timeo(RealtimeProxy):
                                     'reset_timeout': self.breaker.reset_timeout},
                 }
 
-    #@cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
-    def get_direction_name(self, object_code, default_value):
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
+    def _get_direction_name(self, object_code, default_value):
         resp = self.instance.ptref.get_stop_points(self.destination_id_tag, object_code)
 
         if len(resp) > 0:
             first_stop_point = resp[0]
-            if hasattr(first_stop_point, 'name') and first_stop_point.name != '':
+            if first_stop_point.HasField('name') and first_stop_point.name != '':
                 return first_stop_point.name
         return default_value
