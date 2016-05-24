@@ -35,22 +35,34 @@ from jormungandr.tests.utils_test import MockRequests
 
 
 def skojig_house_reading_test():
-    skojig_response = """
-{
+    skojig_response = {
     "Autocomplete": {
         "features": [
             {
-                "geometry": null,
+                "geometry": {
+                    "coordinates": [
+                        3.282103,
+                        49.847586
+                 ],
+                "type": "Point"
+                },
                 "properties": {
                     "geocoding": {
                         "city": "Saint-Quentin",
                         "housenumber": "20",
                         "id": "addr:49.847586;3.282103",
-                        "label": "20 Rue Jean Jaurès, 02100 Saint-Quentin",
-                        "name": "20 Rue Jean Jaurès, 02100 Saint-Quentin",
+                        "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                        "name": "20 Rue Jean Jaures, 02100 Saint-Quentin",
                         "postcode": "02100",
-                        "street": "Rue Jean Jaurès, 02100 Saint-Quentin",
-                        "type": "house"
+                        "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                        "type": "house",
+                        "admin": {
+                            "level2": "France",
+                            "level4": "Nord-Pas-de-Calais-Picardie",
+                            "level6": "Aisne",
+                            "level7": "Saint-Quentin",
+                            "level8": "Saint-Quentin"
+                          },
                     }
                 },
                 "type": "Feature"
@@ -58,12 +70,53 @@ def skojig_house_reading_test():
         ]
     }
 }
-     """
 
-    navitia_response = marshal(skojig_response, elastic_search.geocodejson)
 
-    assert False # TODO check the response :)
+    places_response = """
+{
+    "places":
+        [
+            {
+                "embedded_type":"address",
+                "quality":90,
+                "id":"3.282103;49.847586",
+                "name":"20 Rue Jean Jaures (Saint-Quentin)",
+                "address":{
+                    "name":"Rue Jean Jaures",
+                    "house_number":20,
+                    "coord":{
+                        "lat":"49.847586",
+                        "lon":"3.282103"
+                    },
+                    "label":"20 Rue Jean Jaures (Saint-Quentin)",
+                    "administrative_regions":[
+                        {
+                        "insee":"02691",
+                        "name":"Saint-Quentin",
+                        "level":8,
+                        "coord":{
+                            "lat":"48.97183",
+                            "lon":"2.202007"
+                        },
+                        "label":"Saint-Quentin (02100)",
+                        "id":"402367",
+                        "zip_code":"02100"
+                        }
+                    ],
+                    "id":"2.201313942397864;48.9780114067219"
+                }
+            }
+        ]
+}
+"""
 
+    navitia_response = marshal(skojig_response, elastic_search.geocodejson).get('places', {})
+
+    assert navitia_response[0].get('embedded_type') == "address"
+    assert navitia_response[0].get('id') == "addr:49.847586;3.282103"
+    assert navitia_response[0].get('name') == "20 Rue Jean Jaures, 02100 Saint-Quentin"
+    address = navitia_response[0].get('address', {})
+    print(address)
 
 def skojig_street_reading_test():
     skojig_response = """
@@ -77,11 +130,11 @@ def skojig_street_reading_test():
                         "city": "Mennessis",
                         "housenumber": null,
                         "id": "street:024740025K",
-                        "label": "Rue Jean Jaurès, 02700 Mennessis",
-                        "name": "Rue Jean Jaurès",
+                        "label": "Rue Jean Jaures, 02700 Mennessis",
+                        "name": "Rue Jean Jaures",
                         "postcode": "02700",
                         "street": null,
-                        "type": "street"
+                        "type": "street",
                     }
                 },
                 "type": "Feature"

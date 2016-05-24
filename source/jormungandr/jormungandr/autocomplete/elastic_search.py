@@ -54,11 +54,11 @@ ww_admin = {
     "level": fields.Integer,
     "name": fields.String,
     "label": fields.String(attribute="name"),
-    "zip_code": fields.String,
+    "zip_code": fields.String(attribute="postcode")
 }
 
 ww_address = {
-    "embeded_type": Lit("address"),
+    "embedded_type": Lit("address"),
     "id": fields.String,
     "name": fields.String,
     "address": {
@@ -76,7 +76,7 @@ ww_address = {
 }
 
 ww_street = {
-    "embeded_type": Lit("address"),
+    "embedded_type": Lit("address"),
     #"id": id,
     "name": fields.String,
     "address": {
@@ -105,7 +105,7 @@ class WWPlace(fields.Raw):
             return marshal(source, ww_street)
         if place["_type"] == "admin":
             return {
-                "embeded_type": "administrative_region",
+                "embedded_type": "administrative_region",
                 "id": source["id"],
                 "name": source["name"],
                 "administrative_region": marshal(source, ww_admin)
@@ -220,9 +220,27 @@ geocode_admin = {
     "zip_code": fields.String,
 }
 
+
+class AdminField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        return {
+                "insee":obj.get('TODO'),
+                "name":obj.get('city'),
+                "level":obj.get('TODO'),
+                "coord":{
+                    "lat":obj.get('TODO'),
+                    "lon":obj.get('TODO')
+                },
+                "label":obj.get('TODO'),
+                "id":obj.get('TODO'),
+                "zip_code":obj.get('postcode')
+        }
+
 geocode_addr = {
     # TODO patoche :)
-    "embeded_type": Lit("address"),
+    "embedded_type": Lit("address"),
     "id": fields.String,
     "name": fields.String,
     "address": {
@@ -231,18 +249,16 @@ geocode_addr = {
             "lon": fields.Float(attribute="coord.lon"),
             "lat": fields.Float(attribute="coord.lat"),
         },
-        "house_number": fields.String,
+        "house_number": fields.String(attribute="housenumber"),
         "label": fields.String(attribute="name"),
-        "name": fields.String(attribute="street.street_name"),
-        "administrative_regions":
-            fields.List(fields.Nested(ww_admin), attribute="street.administrative_region")
+        "name": fields.String,
+        "administrative_regions": AdminField(),
     }
 }
 
 geocode_street = {
     # TODO patoche :)
-    "embeded_type": Lit("address"),
-    "id": fields.String,
+    "embedded_type": Lit("address"),
     "name": fields.String,
     "address": {
         #"id": id,
@@ -250,11 +266,9 @@ geocode_street = {
         #"house_number": 0,
         "label": fields.String(attribute="name"),
         "name": fields.String(attribute="street_name"),
-        "administrative_regions":
-            fields.List(fields.Nested(ww_admin), attribute="administrative_region")
+        "administrative_regions": AdminField(),
     }
 }
-
 
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
@@ -269,7 +283,6 @@ class GeocodejsonFeature(fields.Raw):
             return marshal(properties, geocode_addr)
 
         return place
-
 
 geocodejson = {
     "places": fields.List(GeocodejsonFeature, attribute='Autocomplete.features')
