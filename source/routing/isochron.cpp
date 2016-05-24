@@ -137,19 +137,18 @@ static bool in_bound(const T & begin, const T & end, bool clockwise) {
     return (clockwise && begin < end) ||
             (!clockwise && begin > end);
 }
-
-type::MultiPolygon build_isochron(RAPTOR& raptor,
+type::MultiPolygon build_single_isochron(RAPTOR& raptor,
                                 const std::vector<type::StopPoint*>& stop_points,
                                 const bool clockwise,
                                 const DateTime& bound,
                                 const map_stop_point_duration& origin,
                                 const double& speed,
-                                const int& max_duration) {
+                                const int& duration) {
     type::MultiPolygon circles;
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
-        if (it->second.total_seconds() < max_duration) {
-            int duration_left = max_duration - int(it->second.total_seconds());
+        if (it->second.total_seconds() < duration) {
+            int duration_left = duration - int(it->second.total_seconds());
             if (duration_left * speed < MIN_RADIUS) {continue;}
             const auto& center = data_departure[it->first.val]->coord;
             type::Polygon circle_to_add = circle(center , duration_left * speed);
@@ -161,17 +160,36 @@ type::MultiPolygon build_isochron(RAPTOR& raptor,
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
         if (in_bound(best_lbl, bound, clockwise)) {
             int round = raptor.best_round(sp_idx);
-            if (round == -1 || ! raptor.labels[round].pt_is_initialized(sp_idx)
-                    || ! raptor.labels[round].transfer_is_initialized(sp_idx)) {
+            if (round == -1 || ! raptor.labels[round].pt_is_initialized(sp_idx)) {
                 continue;
             }
-            int duration = abs(int(best_lbl) - int(bound));
-            if (duration * speed < MIN_RADIUS) {continue;}
-            type::Polygon circle_to_add = circle(sp->coord, duration * speed);
+            uint duration_left = abs(int(best_lbl) - int(bound));
+            if (duration_left * speed < MIN_RADIUS) {continue;}
+            type::Polygon circle_to_add = circle(sp->coord, duration_left * speed);
             circles = merge_poly(circles, circle_to_add);
         }
     }
     return circles;
+}
+
+type::MultiPolygon build_isochrons(RAPTOR& raptor,
+                                   const bool clockwise,
+                                   const DateTime& bound_max,
+                                   const DateTime& bound_min,
+                                   const map_stop_point_duration& origin,
+                                   const double& speed,
+                                   const int& max_duration,
+                                   const int& min_duration) {
+    type::MultiPolygon isochron = build_single_isochron(raptor, raptor.data.pt_data->stop_points,
+                                                  clockwise, bound_max, origin, speed, max_duration);
+    if (min_duration > 0) {
+       type::MultiPolygon output;
+       type::MultiPolygon min_isochron = build_single_isochron(raptor, raptor.data.pt_data->stop_points,
+                                                      clockwise, bound_min, origin, speed, min_duration);
+       boost::geometry::difference(isochron, min_isochron, output);
+       isochron = output;
+    }
+    return isochron;
 }
 
 }}

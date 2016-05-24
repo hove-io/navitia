@@ -1167,18 +1167,19 @@ void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creat
     }
 }
 
-pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
-                                             const boost::posix_time::ptime& current_datetime,
-                                             type::EntryPoint origin,
-                                             const uint64_t departure_datetime,
-                                             int max_duration,
-                                             uint32_t max_transfers,
-                                             const type::AccessibiliteParams& accessibilite_params,
-                                             const std::vector<std::string>& forbidden,
-                                             bool clockwise,
-                                             const nt::RTLevel rt_level,
-                                             georef::StreetNetwork & worker,
-                                             const double& speed) {
+pbnavitia::Response make_graphical_isochron(RAPTOR &raptor,
+                                            const boost::posix_time::ptime& current_datetime,
+                                            type::EntryPoint origin,
+                                            const uint64_t departure_datetime,
+                                            const int& max_duration,
+                                            const int& min_duration,
+                                            uint32_t max_transfers,
+                                            const type::AccessibiliteParams& accessibilite_params,
+                                            const std::vector<std::string>& forbidden,
+                                            bool clockwise,
+                                            const nt::RTLevel rt_level,
+                                            georef::StreetNetwork & worker,
+                                            const double& speed) {
 
     PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     bt::ptime datetime;
@@ -1198,10 +1199,11 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
-    DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
-    raptor.isochrone(departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
-    type::MultiPolygon isochron = build_isochron(raptor, raptor.data.pt_data->stop_points,
-                                                 clockwise, bound, departures, speed, max_duration);
+    DateTime bound_max = clockwise ? init_dt + max_duration : init_dt - max_duration;
+    DateTime bound_min = clockwise ? init_dt + min_duration : init_dt - min_duration;
+    raptor.isochrone(departures, init_dt, bound_max, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
+    type::MultiPolygon isochron = build_isochrons(raptor, clockwise, bound_max, bound_min, departures,
+                                                  speed, max_duration, min_duration);
     add_graphical_isochron(isochron, pb_creator);
     return pb_creator.get_response();
 }

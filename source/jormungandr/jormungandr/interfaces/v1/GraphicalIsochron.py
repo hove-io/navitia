@@ -84,7 +84,8 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
                                 dest="destination_mode", action="append")
         parser_get.add_argument("to", type=unicode, dest="destination")
         parser_get.add_argument("datetime", type=date_time_format)
-        parser_get.add_argument("duration", type=unsigned_integer)
+        parser_get.add_argument("max_duration", type=unsigned_integer)
+        parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
@@ -125,8 +126,8 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
             args['destination'] = transform_id(args['destination'])
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
-        if not args['duration']:
-            abort(400, message="you should provide a 'duration' argument")
+        if not args['max_duration']:
+            abort(400, message="you should provide a 'max_duration' argument")
         if not args['datetime']:
             args['datetime'] = args['_current_datetime']
 
