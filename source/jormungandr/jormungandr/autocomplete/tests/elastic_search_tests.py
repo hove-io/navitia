@@ -34,148 +34,139 @@ from jormungandr.autocomplete import elastic_search
 from jormungandr.tests.utils_test import MockRequests
 
 
-def skojig_house_reading_test():
-    skojig_response = {
-    "Autocomplete": {
-        "features": [
-            {
-                "geometry": {
-                    "coordinates": [
-                        3.282103,
-                        49.847586
-                 ],
-                "type": "Point"
-                },
-                "properties": {
-                    "geocoding": {
-                        "city": "Saint-Quentin",
-                        "housenumber": "20",
-                        "id": "addr:49.847586;3.282103",
-                        "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
-                        "name": "20 Rue Jean Jaures, 02100 Saint-Quentin",
-                        "postcode": "02100",
-                        "street": "Rue Jean Jaures, 02100 Saint-Quentin",
-                        "type": "house",
-                        "admin": {
-                            "level2": "France",
-                            "level4": "Nord-Pas-de-Calais-Picardie",
-                            "level6": "Aisne",
-                            "level7": "Saint-Quentin",
-                            "level8": "Saint-Quentin"
-                          },
-                    }
-                },
-                "type": "Feature"
-            },
-        ]
-    }
-}
-
-
-    places_response = """
-{
-    "places":
-        [
-            {
-                "embedded_type":"address",
-                "quality":90,
-                "id":"3.282103;49.847586",
-                "name":"20 Rue Jean Jaures (Saint-Quentin)",
-                "address":{
-                    "name":"Rue Jean Jaures",
-                    "house_number":20,
-                    "coord":{
-                        "lat":"49.847586",
-                        "lon":"3.282103"
+def bragi_house_reading_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                {
+                    "geometry": {
+                        "coordinates": [
+                            3.282103,
+                            49.847586
+                        ],
+                        "type": "Point"
                     },
-                    "label":"20 Rue Jean Jaures (Saint-Quentin)",
-                    "administrative_regions":[
-                        {
-                        "insee":"02691",
-                        "name":"Saint-Quentin",
-                        "level":8,
-                        "coord":{
-                            "lat":"48.97183",
-                            "lon":"2.202007"
-                        },
-                        "label":"Saint-Quentin (02100)",
-                        "id":"402367",
-                        "zip_code":"02100"
+                    "properties": {
+                        "geocoding": {
+                            "city": "Saint-Quentin",
+                            "housenumber": "20",
+                            "id": "addr:49.847586;3.282103",
+                            "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                            "name": "Rue Jean Jaures",
+                            "postcode": "02100",
+                            "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                            "type": "house",
+                            "admin": {
+                                "level2": "France",
+                                "level4": "Nord-Pas-de-Calais-Picardie",
+                                "level6": "Aisne",
+                                "level7": "Saint-Quentin",
+                                "level8": "Saint-Quentin"
+                            },
                         }
-                    ],
-                    "id":"2.201313942397864;48.9780114067219"
-                }
-            }
-        ]
-}
-"""
+                    },
+                    "type": "Feature"
+                },
+            ]
+        }
+    }
 
-    navitia_response = marshal(skojig_response, elastic_search.geocodejson).get('places', {})
+    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
 
     assert navitia_response[0].get('embedded_type') == "address"
     assert navitia_response[0].get('id') == "addr:49.847586;3.282103"
-    assert navitia_response[0].get('name') == "20 Rue Jean Jaures, 02100 Saint-Quentin"
+    assert navitia_response[0].get('name') == "Rue Jean Jaures"
     address = navitia_response[0].get('address', {})
-    print(address)
+    assert address.get('name') == "Rue Jean Jaures"
+    assert address.get('house_number') == "20"
+    assert address.get('coord', {}).get('lat') == 49.847586
+    assert address.get('coord', {}).get('lon') == 3.282103
+    assert len(address.get('administrative_regions')) == 5
 
-def skojig_street_reading_test():
-    skojig_response = """
-{
-    "Autocomplete": {
-        "features": [
-            {
-                "geometry": null,
-                "properties": {
-                    "geocoding": {
-                        "city": "Mennessis",
-                        "housenumber": null,
-                        "id": "street:024740025K",
-                        "label": "Rue Jean Jaures, 02700 Mennessis",
-                        "name": "Rue Jean Jaures",
-                        "postcode": "02700",
-                        "street": null,
-                        "type": "street",
-                    }
+
+def bragi_street_reading_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                {
+                    "geometry": {
+                        "coordinates": [
+                            3.282103,
+                            49.847586
+                        ],
+                        "type": "Point"
+                    },
+                    "properties": {
+                        "geocoding": {
+                            "city": "Saint-Quentin",
+                            "id": "addr:49.847586;3.282103",
+                            "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                            "name": "Rue Jean Jaures",
+                            "postcode": "02100",
+                            "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                            "type": "street",
+                            "admin": {
+                                "level2": "France",
+                                "level4": "Nord-Pas-de-Calais-Picardie",
+                                "level6": "Aisne",
+                                "level7": "Saint-Quentin",
+                                "level8": "Saint-Quentin"
+                            },
+                        }
+                    },
+                    "type": "Feature"
                 },
-                "type": "Feature"
-            },
-        ]
+            ]
+        }
     }
-}
-     """
-    navitia_response = marshal(skojig_response, elastic_search.geocodejson)
 
-    assert False # TODO check the response :)
+    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
+
+    assert navitia_response[0].get('embedded_type') == "address"
+    assert navitia_response[0].get('id') == "addr:49.847586;3.282103"
+    assert navitia_response[0].get('name') == "Rue Jean Jaures"
+    address = navitia_response[0].get('address', {})
+    assert address.get('name') == "Rue Jean Jaures"
+    assert address.get('house_number') == "0"
+    assert address.get('coord', {}).get('lat') == 49.847586
+    assert address.get('coord', {}).get('lon') == 3.282103
+    assert len(address.get('administrative_regions')) == 5
 
 
-def skojig_admin_reading_test():
-    skojig_response = """
-{
-    "Autocomplete": {
-        "features": [
-            {
-                "geometry": null,
-                "properties": {
-                    "geocoding": {
-                        "city": null,
-                        "housenumber": null,
-                        "id": "admin:fr:2725",
-                        "label": "Sommeron",
-                        "name": "Sommeron",
-                        "postcode": "02260",
-                        "street": null,
-                        "type": "city"
-                    }
+def bragi_admin_reading_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                {
+                    "geometry": "",
+                    "properties": {
+                        "geocoding": {
+                            "city": "",
+                            "housenumber": "",
+                            "id": "admin:fr:2725",
+                            "label": "Sommeron",
+                            "name": "Sommeron",
+                            "postcode": "02260",
+                            "street": "",
+                            "type": "city",
+                            "admin": {
+                                "level8": "Sommeron"
+                            },
+                        }
+                    },
+                    "type": "Feature"
                 },
-                "type": "Feature"
-            },
-        ]
+            ]
+        }
     }
-}
-     """
-    navitia_response = marshal(skojig_response, elastic_search.geocodejson)
+    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
 
-    assert False # TODO check the response :)
+    assert navitia_response[0].get('embedded_type') == "administrative_region"
+    assert navitia_response[0].get('id') == "admin:fr:2725"
+    assert navitia_response[0].get('name') == "Sommeron"
+    assert len(navitia_response[0].get('administrative_region')) == 1
+    assert navitia_response[0].get('administrative_region')[0].get('level') == 8
+    assert navitia_response[0].get('administrative_region')[0].get('name') == "Sommeron"
 
 
 def mock_good_geocodejson_response():
@@ -187,7 +178,7 @@ def elastic_search_call_test():
     """
     test the whole autocomplete with a geocodejson service
     """
-    skojig = elastic_search.GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = elastic_search.GeocodeJson(host='http://bob.com/autocomplete')
 
     mock_requests = MockRequests({
         'http://bob.com/autocomplete?q=rue bobette':
@@ -196,8 +187,8 @@ def elastic_search_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-         response = skojig.get({'q': 'rue bobette'}, instance=None)
-         # TODO assert on response
-         assert False
+        response = bragi.get({'q': 'rue bobette'}, instance=None)
+        # TODO assert on response
+        assert False
 
-# TODO at least a test on a invalid call to skojig + an invalid skojig response + a py breaker test ?
+# TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?

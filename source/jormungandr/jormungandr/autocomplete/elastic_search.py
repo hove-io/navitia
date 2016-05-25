@@ -49,8 +49,8 @@ class Lit(fields.Raw):
 
 ww_admin = {
     "id": fields.String,
-    #"insee": dict["id"][6:],
-    #"coord": ??
+    # "insee": dict["id"][6:],
+    # "coord": ??
     "level": fields.Integer,
     "name": fields.String,
     "label": fields.String(attribute="name"),
@@ -77,18 +77,19 @@ ww_address = {
 
 ww_street = {
     "embedded_type": Lit("address"),
-    #"id": id,
+    # "id": id,
     "name": fields.String,
     "address": {
-        #"id": id,
-        #"coord": source["coord"],
-        #"house_number": 0,
+        # "id": id,
+        # "coord": source["coord"],
+        # "house_number": 0,
         "label": fields.String(attribute="name"),
         "name": fields.String(attribute="street_name"),
         "administrative_regions":
             fields.List(fields.Nested(ww_admin), attribute="administrative_region")
     }
 }
+
 
 class WWPlace(fields.Raw):
     def format(self, place):
@@ -161,7 +162,7 @@ class Elasticsearch(AbstractAutocomplete):
                                 },
                                 {
                                     "function_score": {
-                                        "query": { "match_all": { } },
+                                        "query": {"match_all": {}},
                                         "field_value_factor": {
                                             "field": "weight",
                                             "modifier": "log1p",
@@ -177,10 +178,10 @@ class Elasticsearch(AbstractAutocomplete):
                     "filter": {
                         "bool": {
                             "should": [
-                                { "missing": { "field": "house_number" } },
+                                {"missing": {"field": "house_number"}},
                                 {
                                     "query": {
-                                        "match": { "house_number": q }
+                                        "match": {"house_number": q}
                                     }
                                 }
                             ],
@@ -209,78 +210,88 @@ class Elasticsearch(AbstractAutocomplete):
             raise TechnicalError("world wide autocompletion service not available")
 
 
-geocode_admin = {
-    # TODO patoche :)
-    "id": fields.String,
-    #"insee": dict["id"][6:],
-    #"coord": ??
-    "level": fields.Integer,
-    "name": fields.String,
-    "label": fields.String(attribute="name"),
-    "zip_code": fields.String,
-}
+def create_admin_field(geocoding):
+        if not geocoding:
+            return None
+        admin_list = geocoding.get('admin', {})
+        response = []
+        for level, name in admin_list.iteritems():
+            response.append({
+                "insee": geocoding.get('TODO'),
+                "name": name,
+                "level": int(level.replace('level', '')),
+                "coord": {
+                    "lat": geocoding.get('TODO'),
+                    "lon": geocoding.get('TODO')
+                },
+                "label": name,
+                "id": geocoding.get('TODO'),
+                "zip_code": geocoding.get('TODO')
+            })
+        return response
 
 
 class AdminField(fields.Raw):
     def output(self, key, obj):
         if not obj:
             return None
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        return create_admin_field(geocoding)
+
+
+class AddressField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        coordinates = obj.get('geometry', {}).get('coordinates', [])
+        if len(coordinates) == 2:
+            lon = coordinates[0]
+            lat = coordinates[1]
+        else:
+            lon = None
+            lat = None
+
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        housenumber = geocoding.get('housenumber')
         return {
-                "insee":obj.get('TODO'),
-                "name":obj.get('city'),
-                "level":obj.get('TODO'),
-                "coord":{
-                    "lat":obj.get('TODO'),
-                    "lon":obj.get('TODO')
-                },
-                "label":obj.get('TODO'),
-                "id":obj.get('TODO'),
-                "zip_code":obj.get('postcode')
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "house_number": housenumber if ((housenumber is not None) & (housenumber != "")) else "0",
+            "label": geocoding.get('name'),
+            "name": geocoding.get('name'),
+            "administrative_regions": create_admin_field(geocoding),
         }
 
-geocode_addr = {
-    # TODO patoche :)
-    "embedded_type": Lit("address"),
-    "id": fields.String,
-    "name": fields.String,
-    "address": {
-        "id": fields.String,
-        "coord": {
-            "lon": fields.Float(attribute="coord.lon"),
-            "lat": fields.Float(attribute="coord.lat"),
-        },
-        "house_number": fields.String(attribute="housenumber"),
-        "label": fields.String(attribute="name"),
-        "name": fields.String,
-        "administrative_regions": AdminField(),
-    }
+geocode_admin = {
+    "embedded_type": Lit("administrative_region"),
+    "quality": Lit("0"),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.name'),
+    "administrative_region": AdminField()
 }
 
-geocode_street = {
-    # TODO patoche :)
+geocode_addr = {
     "embedded_type": Lit("address"),
-    "name": fields.String,
-    "address": {
-        #"id": id,
-        #"coord": source["coord"],
-        #"house_number": 0,
-        "label": fields.String(attribute="name"),
-        "name": fields.String(attribute="street_name"),
-        "administrative_regions": AdminField(),
-    }
+    "quality": Lit("0"),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.name'),
+    "address": AddressField()
 }
+
 
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
-        properties = place.get('properties', {}).get('geocoding', {})
-        type_ = properties.get('type')
+        type_ = place.get('properties', {}).get('geocoding', {}).get('type')
 
         if type_ == 'city':
-            return marshal(properties, geocode_admin)
-        elif type_ == 'street':
-            return marshal(properties, geocode_street)
-        elif type_ == 'house':
-            return marshal(properties, geocode_addr)
+            return marshal(place, geocode_admin)
+        elif (type_ == 'street') | (type_ == 'house'):
+            return marshal(place, geocode_addr)
 
         return place
 
