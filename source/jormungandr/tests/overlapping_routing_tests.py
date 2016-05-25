@@ -41,7 +41,7 @@ class MockKraken:
         self.priority = priority
 
 
-@dataset({"main_routing_test": {}, "empty_routing_test": {}})
+@dataset({"main_routing_test": {}, "empty_routing_test": {'priority': 5}})
 class TestOverlappingCoverage(AbstractTestFixture):
     """
     Test the answer if 2 coverages are overlapping
