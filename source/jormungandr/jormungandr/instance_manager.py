@@ -84,12 +84,14 @@ class InstanceManager(object):
     def __init__(self, instances_dir=None, start_ping=False):
         # if a configuration file is defined in the settings we take it
         # else we load all .ini/.json files found in the INSTANCES_DIR
-        if instances_dir is None:
-            raise ValueError("conf_files or instance_dir has to be set")
-
-        self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
-                                   glob.glob(instances_dir + '/*.json')
+        if instances_dir:
+            self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
+                                       glob.glob(instances_dir + '/*.json')
+        else:
+            self.configuration_files = []
         self.start_ping = start_ping
+        self.instances = {}
+        self.context = zmq.Context()
 
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
@@ -98,10 +100,7 @@ class InstanceManager(object):
             - la socket pour chaque identifiant navitia
         """
 
-        self.instances = {}
-        self.context = zmq.Context()
-        self.default_socket = None
-
+        self.instances.clear()
         for file_name in self.configuration_files:
             logging.getLogger(__name__).info("Initialisation, reading file : " + file_name)
             if file_name.endswith('.ini'):
@@ -218,12 +217,6 @@ class InstanceManager(object):
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)
         return instances
-
-    def region_exists(self, region_str):
-        if region_str in self.instances:
-            return True
-        else:
-            raise RegionNotFound(region=region_str)
 
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
