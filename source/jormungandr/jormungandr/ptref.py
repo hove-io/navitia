@@ -36,15 +36,18 @@ class PtRef(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def get_stop_points(self, key_code, key_value):
+    def get_stop_point(self, code_key, code_value):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
         req.ptref.requested_type = type_pb2.STOP_POINT
         req.ptref.count = 1
         req.ptref.start_page = 0
         req.ptref.depth = 0
-        req.ptref.filter = "stop_point.has_code({destination}, {code})".format(destination=key_code,
-                                                                               code=key_value)
+        req.ptref.filter = "stop_point.has_code({code_key}, {code_value})".\
+            format(code_key=code_key, code_value=code_value)
 
         result = self.instance.send_and_receive(req)
-        return result.stop_points
+        if len(result.stop_points) > 0:
+            return result.stop_points[0]
+        else:
+            return None

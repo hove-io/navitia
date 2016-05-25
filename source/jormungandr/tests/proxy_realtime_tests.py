@@ -45,10 +45,9 @@ MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
-    def __init__(self, id, object_id_tag, destination_id_tag, instance):
+    def __init__(self, id, object_id_tag, instance):
         self.service_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
-        self.destination_id_tag = destination_id_tag
         self.instance = instance
 
     @staticmethod

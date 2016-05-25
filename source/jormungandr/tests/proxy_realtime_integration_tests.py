@@ -41,11 +41,11 @@ from mock import MagicMock
 from navitiacommon import type_pb2
 
 
-MOCKED_PROXY_CONF = ('[{ "destination_code_type": "KisioDigital",'
-                     '"object_id_tag": "KisioDigital",'
+MOCKED_PROXY_CONF = ('[{ "object_id_tag": "KisioDigital",'
                      '"id": "KisioDigital",'
                      '"class": "jormungandr.realtime_schedule.timeo.Timeo",'
                      '"args": {'
+                     '"destination_id_tag": "KisioDigital",'
                      '"timezone": "Europe/Paris",'
                      '"service_url": "http://XXXX",'
                      '"timeout": 15,'
@@ -81,7 +81,7 @@ class TestDepartures(AbstractTestFixture):
         assert len(stop_times) == 1
         stop_time = stop_times[0]
         assert stop_time['data_freshness'] == 'base_schedule'
-        assert stop_time['date_time'] == '20160102T113000'
+        assert stop_time['date_time'][8:] == 'T113000'
 
     def test_stop_schedule_with_rt_and_without_destination(self):
         query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
@@ -124,7 +124,7 @@ class TestDepartures(AbstractTestFixture):
         resp.json = MagicMock(return_value=json)
         rt_system._call_timeo = MagicMock(return_value=resp)
         rt_system._make_url = MagicMock(return_value={"http://kisiodigital.com"})
-        rt_system.instance.ptref.get_stop_points = MagicMock(return_value=[])
+        rt_system.instance.ptref.get_stop_point = MagicMock(return_value=None)
 
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
@@ -132,13 +132,13 @@ class TestDepartures(AbstractTestFixture):
         stop_times = stop_schedules[0]['date_times']
         assert len(stop_times) == 2
         assert stop_times[0]['data_freshness'] == 'realtime'
-        assert stop_times[0]['date_time'] == '20160524T080052'
+        assert stop_times[0]['date_time'][8:] == 'T080052'
         links = stop_times[0]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
 
         assert stop_times[1]['data_freshness'] == 'realtime'
-        assert stop_times[1]['date_time'] == '20160524T081352'
+        assert stop_times[1]['date_time'][8:] == 'T081352'
         links = stop_times[1]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
@@ -198,7 +198,7 @@ class TestDepartures(AbstractTestFixture):
         stop_point.uri = "C:S0"
         stop_point.name = "TEST DESTINATION"
 
-        rt_system.instance.ptref.get_stop_points = MagicMock(return_value=[stop_point])
+        rt_system.instance.ptref.get_stop_point = MagicMock(return_value=stop_point)
 
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
@@ -206,13 +206,13 @@ class TestDepartures(AbstractTestFixture):
         stop_times = stop_schedules[0]['date_times']
         assert len(stop_times) == 2
         assert stop_times[0]['data_freshness'] == 'realtime'
-        assert stop_times[0]['date_time'] == '20160524T080052'
+        assert stop_times[0]['date_time'][8:] == 'T080052'
         links = stop_times[0]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:422037618fec94aa0a93d6126a48157e'
 
         assert stop_times[1]['data_freshness'] == 'realtime'
-        assert stop_times[1]['date_time'] == '20160524T081352'
+        assert stop_times[1]['date_time'][8:] == 'T081352'
         links = stop_times[1]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:422037618fec94aa0a93d6126a48157e'

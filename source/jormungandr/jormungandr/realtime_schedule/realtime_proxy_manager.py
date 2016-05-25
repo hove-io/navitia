@@ -57,7 +57,6 @@ class RealtimeProxyManager(object):
                 log.warn('impossible to build a realtime proxy, missing mandatory field in configuration')
                 continue
             object_id_tag = configuration.get('object_id_tag', proxy_id)
-            destination_id_tag = configuration.get('destination_code_type', None)
             args = configuration.get('args', {})
 
             try:
@@ -75,7 +74,6 @@ class RealtimeProxyManager(object):
 
             try:
                 rt_proxy = attr(id=proxy_id, object_id_tag=object_id_tag,
-                                destination_id_tag=destination_id_tag,
                                 instance=instance, **args)  # all services must have an ID
             except TypeError as e:
                 log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e.message))
