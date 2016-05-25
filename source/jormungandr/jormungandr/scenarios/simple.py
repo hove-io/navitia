@@ -191,6 +191,7 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.graphical_isochron
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
+        req.isochron.min_duration = request["min_duration"]
         journey_req = req.isochron.journeys_request
 
         if "origin" in request and request["origin"]:
@@ -216,7 +217,7 @@ class Scenario(object):
         sn_params.car_speed = request["car_speed"]
         sn_params.bss_speed = request["bss_speed"]
 
-        journey_req.max_duration = request["duration"]
+        journey_req.max_duration = request["max_duration"]
         journey_req.max_transfers = request["max_transfers"]
         self.origin_modes = request["origin_mode"]
         self.destination_modes = request["destination_mode"]

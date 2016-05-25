@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(circle_test) {
 }
 
 
-BOOST_AUTO_TEST_CASE(build_ischron_test) {
+BOOST_AUTO_TEST_CASE(build_single_ischron_test) {
     using coord = navitia::type::GeographicalCoord;
     coord coord_Paris = {2.3522219000000177, 48.856614};
     coord coord_Notre_Dame = {2.35, 48.853};
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:12"_t));
     double speed = 0.8;
-    navitia::type::MultiPolygon isochron = build_isochron(raptor, b.data->pt_data->stop_points, true,
-                                                         navitia::DateTimeUtils::set(0, "09:12"_t),
-                                                         d, speed, 3600 + 60*12);
+    navitia::type::MultiPolygon isochron = build_single_isochron(raptor, b.data->pt_data->stop_points, true,
+                                                           navitia::DateTimeUtils::set(0, "09:12"_t),
+                                                           d, speed, 3600 + 60*12);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochron));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron));
@@ -150,5 +150,64 @@ BOOST_AUTO_TEST_CASE(build_ischron_test) {
     BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron));
     BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron));
     BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron));
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(build_ischrons_test) {
+    using coord = navitia::type::GeographicalCoord;
+    coord coord_Paris = {2.3522219000000177, 48.856614};
+    coord coord_Notre_Dame = {2.35, 48.853};
+    coord coord_Rennes = {-1.68333,48.083328};
+    coord coord_Pantheon = {2.3461,48.8463};
+    coord coord_Concorde = {2.32,48.87};
+    coord coord_Luxembourg = {2.339981,48.845404};
+    ed::builder b("20120614");
+    b.vj("A")("stop1", "08:00"_t)("stop2", "08:10"_t)("stop3", "08:20"_t);
+    b.vj("B")("stop4", "08:00"_t)("stop2", "08:30"_t)("stop5", "09:00"_t)("stop6", "23:59:40"_t);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
+    b.connection("stop5", "stop5", 120);
+    b.connection("stop6", "stop6", 120);
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.sps["stop1"]->coord = coord_Paris;
+    b.sps["stop2"]->coord = coord_Notre_Dame;
+    b.sps["stop3"]->coord = coord_Pantheon;
+    b.sps["stop4"]->coord = coord_Concorde;
+    b.sps["stop5"]->coord = coord_Luxembourg;
+    b.sps["stop6"]->coord = coord_Rennes;
+    RAPTOR raptor(*b.data);
+    navitia::routing::map_stop_point_duration d;
+    d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
+    raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:00"_t));
+    double speed = 0.8;
+
+    navitia::type::MultiPolygon isochron_9h = build_isochrons(raptor, true,
+                                                                    navitia::DateTimeUtils::set(0, "09:00"_t),
+                                                                    navitia::DateTimeUtils::set(0, "08:00"_t),
+                                                                    d, speed, 3600, 0);
+    navitia::type::MultiPolygon isochron_8h30 = build_isochrons(raptor, true,
+                                                                    navitia::DateTimeUtils::set(0, "08:30"_t),
+                                                                    navitia::DateTimeUtils::set(0, "08:00"_t),
+                                                                    d, speed, 60 * 30, 0);
+    navitia::type::MultiPolygon isochron_8h30_9h = build_isochrons(raptor, true,
+                                                           navitia::DateTimeUtils::set(0, "09:00"_t),
+                                                           navitia::DateTimeUtils::set(0, "08:30"_t),
+                                                           d, speed, 3600, 60 * 30);
+#if BOOST_VERSION >= 105600
+    BOOST_CHECK(boost::geometry::within(coord_Paris, isochron_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Concorde, isochron_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochron_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron_9h));
+    BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron_9h));
+    BOOST_CHECK(!boost::geometry::within(isochron_8h30_9h, isochron_8h30));
+    BOOST_CHECK(!boost::geometry::within(isochron_8h30, isochron_8h30_9h));
+    BOOST_CHECK(!boost::geometry::within(isochron_9h, isochron_8h30_9h));
+    BOOST_CHECK(boost::geometry::within(isochron_8h30_9h, isochron_9h));;
+    BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron_9h));
 #endif
 }

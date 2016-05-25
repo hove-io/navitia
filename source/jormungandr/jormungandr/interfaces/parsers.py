@@ -68,7 +68,7 @@ def date_time_format(value):
 def unsigned_integer(value):
     try:
         d = int(value)
-        if d <= 0:
+        if d < 0:
             raise ValueError('invalid positive int')
 
         return d
