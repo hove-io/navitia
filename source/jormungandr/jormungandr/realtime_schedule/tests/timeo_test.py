@@ -167,7 +167,7 @@ def get_passages_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, code, value: None):
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
             passages = timeo._get_passages(mock_response)
 
             assert len(passages) == 3
@@ -209,7 +209,7 @@ def get_passages_test_no_passages():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, code, value: None):
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
             passages = timeo._get_passages(mock_response)
 
             assert len(passages) == 0
@@ -230,7 +230,7 @@ def get_passages_test_wrong_response():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, code, value: None):
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
             passages = timeo._get_passages(mock_response)
 
             assert passages is None
@@ -254,7 +254,7 @@ def next_passage_for_route_point_test():
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
         with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-            with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, code, value: None):
+            with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
                 passages = timeo.next_passage_for_route_point(route_point)
 
                 assert len(passages) == 3
