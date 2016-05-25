@@ -1145,7 +1145,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
-void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creator) {
+static void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creator) {
     auto pb_isochron = pb_creator.add_graphical_isochrons();
     auto pb_polys = pb_isochron->mutable_geojson();
     for (const auto& polygon: shape) {
