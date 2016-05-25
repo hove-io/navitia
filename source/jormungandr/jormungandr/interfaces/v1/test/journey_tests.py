@@ -42,8 +42,8 @@ class MockInstance:
 
 
 class TestMultiCoverage:
-    #TODO change that with real mock and change nose to py.test to be able to use test generator
-    def __init__(self):
+    #TODO change that with real mock
+    def setup_method(self, method):
         #we mock a query
         self.args = {
             'origin': 'paris',

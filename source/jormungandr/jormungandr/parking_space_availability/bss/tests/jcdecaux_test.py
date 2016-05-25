@@ -72,7 +72,7 @@ def parking_space_availability_jcdecaux_get_informations_test():
     provider._call_webservice = MagicMock(return_value=None)
     assert provider.get_informations(poi) is None
 
-def parking_space_availability_jcdecaux_get_informations_test_unauthorized():
+def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     """
     Jcdecaux validate return None if not authorized
     """

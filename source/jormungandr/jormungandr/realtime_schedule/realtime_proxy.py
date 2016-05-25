@@ -31,6 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 from jormungandr.utils import timestamp_to_datetime
+from pytest_mock import mocker
 
 
 class RealtimeProxy(object):

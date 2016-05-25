@@ -239,8 +239,9 @@ class InstanceManager(object):
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
         available_instances = []
-        if name and name in self.instances:
-            available_instances = [self.instances[name]]
+        if name:
+            if name in self.instances:
+                available_instances = [self.instances[name]]
         elif lon and lat:
             available_instances = [self.instances[k] for k in self._all_keys_of_coord(lon, lat)]
         elif object_id:

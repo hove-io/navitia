@@ -33,6 +33,7 @@ from nose.tools.trivial import eq_
 import pytz
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
+from jormungandr.utils import date_to_timestamp as d2t
 
 
 class CustomProxy(RealtimeProxy):
@@ -62,7 +63,7 @@ def get_dt(p):
     return p.datetime
 
 
-def filter_items_test_under_the_limit():
+def test_filter_items_under_the_limit():
     proxy = CustomProxy([passage("10:00"), passage("11:00")])
 
     r = proxy.next_passage_for_route_point(None, count=3)
@@ -78,7 +79,7 @@ def filter_items_test():
     assert map(get_dt, r) == [dt("10:00"), dt("11:00")]
 
 
-def filter_no_filter():
+def filter_no_filter_test():
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
@@ -86,34 +87,38 @@ def filter_no_filter():
     assert map(get_dt, r) == [dt("10:00"), dt("11:00"), dt("12:00"), dt("13:00")]
 
 
-def filter_filter_dt():
+def filter_filter_dt_test(mocker):
+    mocker.patch('jormungandr.utils.get_timezone', return_value=pytz.timezone('UTC'))
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, from_dt=dt("12:00"))
+    r = proxy.next_passage_for_route_point(None, from_dt=d2t(dt("12:00")))
     assert map(get_dt, r) == [dt("12:00"), dt("13:00")]
 
 
-def filter_filter_dt_over_all():
+def filter_filter_dt_over_all_test(mocker):
+    mocker.patch('jormungandr.utils.get_timezone', return_value=pytz.timezone('UTC'))
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, from_dt=dt("17:00"))
-    assert r == []
+    r = proxy.next_passage_for_route_point(None, from_dt=d2t(dt("17:00")))
+    assert r is None
 
 
-def filter_filter_dt_and_item():
+def filter_filter_dt_and_item_test(mocker):
+    mocker.patch('jormungandr.utils.get_timezone', return_value=pytz.timezone('UTC'))
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, count=1, from_dt=dt("11:59"))
+    r = proxy.next_passage_for_route_point(None, count=1, from_dt=d2t(dt("11:59")))
     assert map(get_dt, r) == [dt("12:00")]
 
 
-def filter_filter_dt_all():
+def filter_filter_dt_all_test(mocker):
+    mocker.patch('jormungandr.utils.get_timezone', return_value=pytz.timezone('UTC'))
     """the filter will filter all, so we should not get an empty list but None"""
     passages = [passage("10:00"), passage("11:00"), passage("12:00"), passage("13:00")]
     proxy = CustomProxy(passages)
 
-    r = proxy.next_passage_for_route_point(None, count=1, from_dt=dt("15:00"))
+    r = proxy.next_passage_for_route_point(None, count=1, from_dt=d2t(dt("15:00")))
     assert r is None
