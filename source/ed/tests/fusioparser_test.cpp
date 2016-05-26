@@ -156,6 +156,9 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->headsign, "N2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->headsign, "N2");
 
+    //vj_headsign
+    BOOST_REQUIRE_EQUAL(vj->name, "vehiclejourney1");
+
     for (const auto vj : data.vehicle_journeys) {
         for (size_t position = 0; position < vj->stop_time_list.size(); ++position) {
             BOOST_CHECK_EQUAL(vj->stop_time_list[position]->order, position);
@@ -212,6 +215,18 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_group_links[1].line_group->uri, "lg2");
     BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
 
+    // stop_headsign
+    const types::VehicleJourney* vj1 = data.vehicle_journeys.back();
+
+    // headsign of vj and stop_times
+    BOOST_REQUIRE_EQUAL(vj1->name.substr(0,6), "trip_4");
+
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[0]->headsign, "HS1");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[1]->headsign, "HS2");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[2]->headsign, "HS3");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[3]->headsign, "HS4");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[4]->headsign, "");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[5]->headsign, "");
 }
 /*
 complete production without beginning_date

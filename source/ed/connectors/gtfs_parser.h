@@ -140,7 +140,7 @@ inline bool is_active(int col_idx, const std::vector<std::string>& row) {
 }
 
 inline bool is_valid(int col_idx, const std::vector<std::string>& row) {
-    return (has_col(col_idx, row) && (!row[col_idx].empty()));
+    return (has_col(col_idx, row) && (!row[col_idx].empty()) && (!boost::iequals(row[col_idx],"null")));
 }
 
 std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj);
