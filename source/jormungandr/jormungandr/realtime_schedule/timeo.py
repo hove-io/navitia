@@ -112,7 +112,7 @@ class Timeo(RealtimeProxy):
         else:
             now = self._get_dt_local(current_dt)
         req_dt = self._timestamp_to_date(request_dt)
-        return now.date() > req_dt.date()
+        return now.date() < req_dt.date()
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         if self._is_tomorrow(from_dt, current_dt):
@@ -134,7 +134,7 @@ class Timeo(RealtimeProxy):
 
         return self._get_passages(r.json(), route_point.fetch_line_uri())
 
-    def _get_passages(self, timeo_resp, line_uri):
+    def _get_passages(self, timeo_resp, line_uri=None):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')

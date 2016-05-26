@@ -206,7 +206,7 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:539c0972470ff80a630a68e29d404c75"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
-        query = self.query_template.format(sp='S42', dt='20160102T1100', data_freshness='', c_dt='20160103T1100')
+        query = self.query_template.format(sp='S42', dt='20160102T1100', data_freshness='', c_dt='20160101T1100')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 3
