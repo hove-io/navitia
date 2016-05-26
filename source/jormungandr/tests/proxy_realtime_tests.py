@@ -45,9 +45,10 @@ MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
-    def __init__(self, id, object_id_tag):
+    def __init__(self, id, object_id_tag, instance):
         self.service_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
+        self.instance = instance
 
     @staticmethod
     def _create_next_passages(passages):
@@ -61,7 +62,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             next_passages.append(next_passage)
         return next_passages
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 
@@ -152,7 +153,8 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
-        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7' \
+                '&_current_datetime=20160102T1000'
         response = self.query_region(query)
 
         assert "departures" in response
@@ -171,16 +173,16 @@ class TestDepartures(AbstractTestFixture):
             DepartureCheck(route="K", dt="20160102T100100", data_freshness="realtime",
                            direction='bob', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100200", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
             DepartureCheck(route="J", dt="20160102T100300", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             # rt but no direction:
             DepartureCheck(route="K", dt="20160102T100400", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100700", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T101100", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
         ]
         eq_(departures, expected_departures)
 

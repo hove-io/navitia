@@ -45,7 +45,7 @@ class CustomProxy(RealtimeProxy):
     def status(self):
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         return self.hard_coded_passages
 
 

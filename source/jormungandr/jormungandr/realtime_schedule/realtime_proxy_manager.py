@@ -38,7 +38,7 @@ class RealtimeProxyManager(object):
     class managing real-time proxies
     """
 
-    def __init__(self, proxies_configuration):
+    def __init__(self, proxies_configuration, instance=None):
         """
         Read the dict configuration to build realtime proxies
         Each entry contains 3 values:
@@ -48,6 +48,7 @@ class RealtimeProxyManager(object):
         """
         self.realtime_proxies = {}
         log = logging.getLogger(__name__)
+
         for configuration in proxies_configuration:
             try:
                 cls = configuration['class']
@@ -72,7 +73,8 @@ class RealtimeProxyManager(object):
                 continue
 
             try:
-                rt_proxy = attr(id=proxy_id, object_id_tag=object_id_tag, **args)  # all services must have an ID
+                rt_proxy = attr(id=proxy_id, object_id_tag=object_id_tag,
+                                instance=instance, **args)  # all services must have an ID
             except TypeError as e:
                 log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e.message))
                 continue
