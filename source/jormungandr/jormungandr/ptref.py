@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, type_pb2
+from flask import logging
 
 
 class PtRef(object):
@@ -48,7 +49,12 @@ class PtRef(object):
             req.ptref.filter = req.ptref.filter + ' and line.uri={}'.format(line_uri)
 
         result = self.instance.send_and_receive(req)
+        if len(result.stop_points) == 0:
+            logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
+                                             format(req.ptref.filter))
+            return None
         if len(result.stop_points) == 1:
             return result.stop_points[0]
-        else:
-            return None
+
+        logging.getLogger(__name__).info('PtRef, Multiple stop_points found with filter {}'.format(req.ptref.filter))
+        return None
