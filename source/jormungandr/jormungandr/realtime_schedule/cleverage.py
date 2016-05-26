@@ -123,7 +123,7 @@ class Cleverage(RealtimeProxy):
         else:
             return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         url = self._make_url(route_point)
         if not url:
             return None

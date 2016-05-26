@@ -224,7 +224,8 @@ class MixedSchedule(object):
 
         next_rt_passages = rt_system.next_passage_for_route_point(route_point,
                                                                   request['items_per_schedule'],
-                                                                  request['from_datetime'])
+                                                                  request['from_datetime'],
+                                                                  request['_current_datetime'])
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')
             return None

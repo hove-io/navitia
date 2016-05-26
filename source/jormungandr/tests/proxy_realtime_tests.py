@@ -62,7 +62,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             next_passages.append(next_passage)
         return next_passages
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 

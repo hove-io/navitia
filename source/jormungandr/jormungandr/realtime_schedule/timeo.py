@@ -36,7 +36,7 @@ import requests as requests
 from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
-from datetime import datetime, time
+from datetime import datetime,  time
 from jormungandr.utils import timestamp_to_datetime
 
 
@@ -101,7 +101,23 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_dt_local(self, utc_dt):
+        return pytz.utc.localize(utc_dt).astimezone(self.timezone)
+
+    def _is_tomorrow(self, request_dt, current_dt):
+        if not request_dt:
+            return False
+        if not current_dt:
+            now = self._get_dt_local(datetime.utcnow())
+        else:
+            now = self._get_dt_local(current_dt)
+        req_dt = self._timestamp_to_date(request_dt)
+        return now.date() > req_dt.date()
+
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+        if self._is_tomorrow(from_dt, current_dt):
+            logging.getLogger(__name__).info('Timeo RT service , Can not call Timeo for tomorrow.')
+            return None
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
@@ -206,8 +222,7 @@ class Timeo(RealtimeProxy):
 
     def _timestamp_to_date(self, timestamp):
         dt = datetime.utcfromtimestamp(timestamp)
-        dt = pytz.utc.localize(dt)
-        return dt.astimezone(self.timezone)
+        return self._get_dt_local(dt)
 
     def status(self):
         return {'id': self.rt_system_id,
