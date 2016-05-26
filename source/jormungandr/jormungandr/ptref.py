@@ -32,11 +32,10 @@ from navitiacommon import request_pb2, type_pb2
 
 
 class PtRef(object):
-
     def __init__(self, instance):
         self.instance = instance
 
-    def get_stop_point(self, code_key, code_value):
+    def get_stop_point(self, line_uri, code_key, code_value):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
         req.ptref.requested_type = type_pb2.STOP_POINT
@@ -45,9 +44,11 @@ class PtRef(object):
         req.ptref.depth = 0
         req.ptref.filter = "stop_point.has_code({code_key}, {code_value})".\
             format(code_key=code_key, code_value=code_value)
+        if line_uri:
+            req.ptref.filter = req.ptref.filter + ' and line.uri={}'.format(line_uri)
 
         result = self.instance.send_and_receive(req)
-        if len(result.stop_points) > 0:
+        if len(result.stop_points) == 1:
             return result.stop_points[0]
         else:
             return None

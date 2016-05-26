@@ -153,7 +153,8 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
-        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7' \
+                '&_current_datetime=20160102T1000'
         response = self.query_region(query)
 
         assert "departures" in response
@@ -172,16 +173,16 @@ class TestDepartures(AbstractTestFixture):
             DepartureCheck(route="K", dt="20160102T100100", data_freshness="realtime",
                            direction='bob', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100200", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
             DepartureCheck(route="J", dt="20160102T100300", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             # rt but no direction:
             DepartureCheck(route="K", dt="20160102T100400", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100700", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T101100", data_freshness="base_schedule",
-                           direction='S43', physical_mode='name physical_mode:0'),
+                           direction='Terminus', physical_mode='name physical_mode:0'),
         ]
         eq_(departures, expected_departures)
 

@@ -75,7 +75,8 @@ class Synthese(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, timezone, object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, redis_host=None, redis_db=0,
+    def __init__(self, id, service_url, timezone, object_id_tag=None, destination_id_tag=None, instance=None,
+                 timeout=10, redis_host=None, redis_db=0,
                  redis_port=6379, redis_password=None, max_requests_by_second=15,
                  redis_namespace='jormungandr.rate_limiter'):
         self.service_url = service_url
@@ -92,7 +93,7 @@ class Synthese(RealtimeProxy):
         else:
             self.rate_limiter = RateLimiter(conditions=[{'requests': max_requests_by_second, 'seconds': 1}],
                                             redis_host=redis_host, redis_port=redis_port, redis_db=redis_db,
-                                           redis_password=redis_password, redis_namespace=redis_namespace)
+                                            redis_password=redis_password, redis_namespace=redis_namespace)
 
     def __repr__(self):
         """

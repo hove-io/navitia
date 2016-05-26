@@ -189,6 +189,9 @@ class RoutePoint(object):
     def fetch_line_code(self):
         return self.pb_route.line.code
 
+    def fetch_line_uri(self):
+        return self.pb_route.line.uri
+
 
 def _get_route_point_from_stop_schedule(stop_schedule):
     rp = RoutePoint(stop_point=stop_schedule.stop_point, route=stop_schedule.route)

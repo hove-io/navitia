@@ -132,9 +132,9 @@ class Timeo(RealtimeProxy):
                                               .format(r.url))
             return None
 
-        return self._get_passages(r.json())
+        return self._get_passages(r.json(), route_point.fetch_line_uri())
 
-    def _get_passages(self, timeo_resp):
+    def _get_passages(self, timeo_resp, line_uri):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')
@@ -149,7 +149,8 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            direction = self._get_direction_name(object_code=next_expected_st.get('Terminus'),
+            direction = self._get_direction_name(line_uri=line_uri,
+                                                 object_code=next_expected_st.get('Terminus'),
                                                  default_value=next_expected_st.get('Destination'))
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
@@ -233,8 +234,8 @@ class Timeo(RealtimeProxy):
                 }
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
-    def _get_direction_name(self, object_code, default_value):
-        stop_point = self.instance.ptref.get_stop_point(self.destination_id_tag, object_code)
+    def _get_direction_name(self, line_uri, object_code, default_value):
+        stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
 
         if stop_point:
             if stop_point.HasField('name') and stop_point.name != '':
