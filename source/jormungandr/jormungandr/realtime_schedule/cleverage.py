@@ -66,6 +66,7 @@ class Cleverage(RealtimeProxy):
         """
         http call to cleverage
         """
+        logging.getLogger(__name__).debug('Cleverage RT service , call url : {}'.format(url))
         try:
             return self.breaker.call(requests.get, url, timeout=self.timeout, headers=self.service_args)
         except pybreaker.CircuitBreakerError as e:

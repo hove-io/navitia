@@ -125,7 +125,7 @@ class Synthese(RealtimeProxy):
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
-
+        logging.getLogger(__name__).debug('Synthese RT service , call url : {}'.format(url))
         r = self._call_synthese(url)
         if not r:
             return None
