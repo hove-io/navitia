@@ -82,6 +82,12 @@ def bragi_house_reading_test():
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
     assert len(address.get('administrative_regions')) == 5
+    region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
+    assert region_list.get(2) == "France"
+    assert region_list.get(4) == "Nord-Pas-de-Calais-Picardie"
+    assert region_list.get(6) == "Aisne"
+    assert region_list.get(7) == "Saint-Quentin"
+    assert region_list.get(8) == "Saint-Quentin"
 
 
 def bragi_street_reading_test():
@@ -100,7 +106,7 @@ def bragi_street_reading_test():
                         "geocoding": {
                             "city": "Saint-Quentin",
                             "id": "addr:49.847586;3.282103",
-                            "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                            "label": "Rue Jean Jaures, 02100 Saint-Quentin",
                             "name": "Rue Jean Jaures",
                             "postcode": "02100",
                             "street": "Rue Jean Jaures, 02100 Saint-Quentin",
@@ -131,6 +137,10 @@ def bragi_street_reading_test():
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
     assert len(address.get('administrative_regions')) == 5
+    response = next(region for region in address.get('administrative_regions'))
+    print(response)
+    assert response.get('level') == 8
+    assert response.get('name') == "Saint-Quentin"
 
 
 def bragi_admin_reading_test():

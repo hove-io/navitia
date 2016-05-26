@@ -261,7 +261,7 @@ class AddressField(fields.Raw):
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": housenumber if ((housenumber is not None) & (housenumber != "")) else "0",
+            "house_number": geocoding.get('housenumber') or '0',
             "label": geocoding.get('name'),
             "name": geocoding.get('name'),
             "administrative_regions": create_admin_field(geocoding),
@@ -290,7 +290,7 @@ class GeocodejsonFeature(fields.Raw):
 
         if type_ == 'city':
             return marshal(place, geocode_admin)
-        elif (type_ == 'street') | (type_ == 'house'):
+        elif type_ in ('street', 'house'):
             return marshal(place, geocode_addr)
 
         return place
