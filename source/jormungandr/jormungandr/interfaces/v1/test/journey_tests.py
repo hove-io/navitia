@@ -42,8 +42,8 @@ class MockInstance:
 
 
 class TestMultiCoverage:
-    #TODO change that with real mock and change nose to py.test to be able to use test generator
-    def __init__(self):
+    #TODO change that with real mock
+    def setup_method(self, method):
         #we mock a query
         self.args = {
             'origin': 'paris',
@@ -66,8 +66,7 @@ class TestMultiCoverage:
         """
         small helper, mock i_manager.get_region
         """
-        def mock_get_regions(region_str=None, lon=None, lat=None,
-                object_id=None, api='ALL', only_one=True):
+        def mock_get_instances(region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=True):
             if object_id == 'paris':
                 if not paris_region:
                     raise RegionNotFound('paris')
@@ -77,7 +76,7 @@ class TestMultiCoverage:
                     raise RegionNotFound('lima')
                 return [self.regions[r] for r in lima_region]
 
-        i_manager.get_regions = mock_get_regions
+        i_manager.get_instances = mock_get_instances
         #we also need to mock the ptmodel cache
         class weNeedMock:
             @classmethod
@@ -93,7 +92,7 @@ class TestMultiCoverage:
 
         assert len(regions) == 1
 
-        assert regions[0].name == self.regions['france'].name
+        assert regions[0] == self.regions['france'].name
 
     @raises(RegionNotFound)
     def test_multi_coverage_diff_region(self):
@@ -131,7 +130,7 @@ class TestMultiCoverage:
 
         assert len(regions) == 1
 
-        assert regions[0].name == self.regions['peru'].name
+        assert regions[0] == self.regions['peru'].name
 
     def test_multi_coverage_overlap_chose_non_free(self):
         """orig as 2 possible region and destination 3, we want to have france first because equador is free"""
@@ -142,8 +141,8 @@ class TestMultiCoverage:
         assert len(regions) == 2
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['france'].name
-        assert regions[1].name == self.regions['equador'].name
+        assert regions[0] == self.regions['france'].name
+        assert regions[1] == self.regions['equador'].name
 
     def test_multi_coverage_overlap_chose_non_free2_with_priority_zero(self):
         """
@@ -157,8 +156,8 @@ class TestMultiCoverage:
         assert len(regions) == 4
         print("regions ==> {}".format(regions))
 
-        assert set([regions[0].name, regions[1].name]) == set([self.regions['france'].name, self.regions['peru'].name])
-        assert set([regions[2].name, regions[3].name]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
+        assert set([regions[0], regions[1]]) == set([self.regions['france'].name, self.regions['peru'].name])
+        assert set([regions[2], regions[3]]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
 
     def test_multi_coverage_overlap_chose_with_non_free_and_priority(self):
         """
@@ -172,9 +171,9 @@ class TestMultiCoverage:
         assert len(regions) == 3
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['germany'].name
-        assert regions[1].name == self.regions['netherlands'].name
-        assert regions[2].name == self.regions['france'].name
+        assert regions[0] == self.regions['germany'].name
+        assert regions[1] == self.regions['netherlands'].name
+        assert regions[2] == self.regions['france'].name
 
     def test_multi_coverage_overlap_chose_with_priority(self):
         """
@@ -188,7 +187,7 @@ class TestMultiCoverage:
         assert len(regions) == 4
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['brazil'].name
-        assert regions[1].name == self.regions['netherlands'].name
-        assert regions[2].name == self.regions['france'].name
-        assert regions[3].name == self.regions['bolivia'].name
+        assert regions[0] == self.regions['brazil'].name
+        assert regions[1] == self.regions['netherlands'].name
+        assert regions[2] == self.regions['france'].name
+        assert regions[3] == self.regions['bolivia'].name

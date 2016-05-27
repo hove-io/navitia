@@ -51,24 +51,12 @@ def instances_comparator(instance1, instance2):
 
     we want first the non free instances then the free ones following by priority
     """
-    jormun_bdd_instance1 = models.Instance.get_by_name(instance1)
-    jormun_bdd_instance2 = models.Instance.get_by_name(instance2)
-    #TODO the is_free should be in the instances, no need to fetch the bdd for this
-    if not jormun_bdd_instance1 and not jormun_bdd_instance2:
-        raise RegionNotFound(custom_msg="technical problem, impossible "
-                                        "to find region {i} and region{j} in jormungandr database".format(
-            i=jormun_bdd_instance1, j=jormun_bdd_instance2))
-    if not jormun_bdd_instance1:
-        return -1
-    if not jormun_bdd_instance2:
-        return 1
-
     #Here we choose the instance with greater priority.
-    if jormun_bdd_instance1.priority != jormun_bdd_instance2.priority:
-        return jormun_bdd_instance2.priority - jormun_bdd_instance1.priority
+    if instance1.priority != instance2.priority:
+        return instance2.priority - instance1.priority
 
-    if jormun_bdd_instance1.is_free != jormun_bdd_instance2.is_free:
-        return jormun_bdd_instance1.is_free - jormun_bdd_instance2.is_free
+    if instance1.is_free != instance2.is_free:
+        return instance1.is_free - instance2.is_free
 
     # TODO choose the smallest region ?
     # take the origin/destination coords into account and choose the region with the center nearest to those coords ?
@@ -96,12 +84,14 @@ class InstanceManager(object):
     def __init__(self, instances_dir=None, start_ping=False):
         # if a configuration file is defined in the settings we take it
         # else we load all .ini/.json files found in the INSTANCES_DIR
-        if instances_dir is None:
-            raise ValueError("conf_files or instance_dir has to be set")
-
-        self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
-                                   glob.glob(instances_dir + '/*.json')
+        if instances_dir:
+            self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
+                                       glob.glob(instances_dir + '/*.json')
+        else:
+            self.configuration_files = []
         self.start_ping = start_ping
+        self.instances = {}
+        self.context = zmq.Context()
 
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
@@ -110,10 +100,7 @@ class InstanceManager(object):
             - la socket pour chaque identifiant navitia
         """
 
-        self.instances = {}
-        self.context = zmq.Context()
-        self.default_socket = None
-
+        self.instances.clear()
         for file_name in self.configuration_files:
             logging.getLogger(__name__).info("Initialisation, reading file : " + file_name)
             if file_name.endswith('.ini'):
@@ -199,11 +186,11 @@ class InstanceManager(object):
         if not instances:
             return None
         user = authentication.get_user(token=authentication.get_token())
-        valid_regions = [i for i in instances if authentication.has_access(i,
-            abort=False, user=user, api=api)]
-        if not valid_regions:
+        valid_instances = [i for i in instances
+                           if authentication.has_access(i.name, abort=False, user=user, api=api)]
+        if not valid_instances:
             authentication.abort_request(user)
-        return valid_regions
+        return valid_instances
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', None))
     def _all_keys_of_id(self, object_id):
@@ -231,36 +218,37 @@ class InstanceManager(object):
             raise RegionNotFound(lon=lon, lat=lat)
         return instances
 
-    def region_exists(self, region_str):
-        if region_str in self.instances:
-            return True
+    def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
+        return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
+
+    def get_regions(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=False):
+        valid_instances = self.get_instances(region_str, lon, lat, object_id, api)
+        if not valid_instances:
+            raise RegionNotFound(region=region_str, lon=lon, lat=lat, object_id=object_id)
+        if only_one:
+            return choose_best_instance(valid_instances).name
         else:
-            raise RegionNotFound(region=region_str)
+            return [i.name for i in valid_instances]
 
-    def get_region(self, region_str=None, lon=None, lat=None, object_id=None,
-            api='ALL'):
-        return self.get_regions(region_str, lon, lat, object_id, api,
-                only_one=True)
-
-    def get_regions(self, region_str=None, lon=None, lat=None, object_id=None,
-            api='ALL', only_one=False):
-        available_regions = []
-        if region_str and self.region_exists(region_str):
-            available_regions = [region_str]
+    def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
+        available_instances = []
+        if name:
+            if name in self.instances:
+                available_instances = [self.instances[name]]
         elif lon and lat:
-            available_regions = self._all_keys_of_coord(lon, lat)
+            available_instances = [self.instances[k] for k in self._all_keys_of_coord(lon, lat)]
         elif object_id:
-            available_regions = self._all_keys_of_id(object_id)
+            available_instances = [self.instances[k] for k in self._all_keys_of_id(object_id)]
         else:
-            available_regions = self.instances.keys()
+            available_instances = self.instances.values()
 
-        valid_regions = self._filter_authorized_instances(available_regions, api)
-        if valid_regions:
-            return choose_best_instance(valid_regions) if only_one else valid_regions
-        elif available_regions:
+        valid_instances = self._filter_authorized_instances(available_instances, api)
+        if available_instances and not valid_instances:
+            #user doesn't have access to any of the instances
             authentication.abort_request(user=authentication.get_user())
-        raise RegionNotFound(region=region_str, lon=lon, lat=lat,
-                             object_id=object_id)
+        else:
+            return valid_instances
+
 
     def regions(self, region=None, lon=None, lat=None):
         response = {'regions': []}

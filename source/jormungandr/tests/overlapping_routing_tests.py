@@ -41,7 +41,7 @@ class MockKraken:
         self.priority = priority
 
 
-@dataset({"main_routing_test": {}, "empty_routing_test": {}})
+@dataset({"main_routing_test": {}, "empty_routing_test": {'priority': 5}})
 class TestOverlappingCoverage(AbstractTestFixture):
     """
     Test the answer if 2 coverages are overlapping
@@ -84,7 +84,7 @@ class TestOverlappingCoverage(AbstractTestFixture):
         debug_query = "/v1/{q}&debug=true".format(q=journey_basic_query)
         response = self.query(debug_query)
         self.is_valid_journey_response(response, debug_query)
-        assert set(response['debug']['regions_called']) == {"main_routing_test", "empty_routing_test"}
+        eq_(set(response['debug']['regions_called']), {"main_routing_test", "empty_routing_test"})
 
     def test_journeys_on_empty(self):
         """

@@ -4,7 +4,7 @@ configure_file("${CMAKE_SOURCE_DIR}/navitia_version.py.cmake" "${CMAKE_CURRENT_S
 
 #tests 
 set(JORMUN_PATH "${CMAKE_CURRENT_SOURCE_DIR}/jormungandr")
-add_test(jormungandr nosetests --with-doctest -v --with-xunit  --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr.xml "--where=${JORMUN_PATH}")
+add_test(jormungandr py.test --doctest-modules --junit-xml=${CMAKE_BINARY_DIR}/nosetest_jormungandr.xml ${JORMUN_PATH})
 SET_PROPERTY(TEST jormungandr PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 

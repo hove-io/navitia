@@ -177,7 +177,7 @@ def get_passages_test():
             assert passages[2].datetime == _dt('16:10:04')
 
 
-def get_passages_test_no_passages():
+def get_passages_no_passages_test():
     """
     test that if timeo returns 0 response, we return an empty list
     """
@@ -215,7 +215,7 @@ def get_passages_test_no_passages():
             assert len(passages) == 0
 
 
-def get_passages_test_wrong_response():
+def get_passages_wrong_response_test():
     """
     test that if timeo returns a not valid response, we get None (and not an empty list)
     """

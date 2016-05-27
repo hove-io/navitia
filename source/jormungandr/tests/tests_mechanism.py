@@ -33,6 +33,7 @@ import os
 from datetime import timedelta
 from operator import itemgetter
 from flask import logging
+import mock
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
@@ -48,6 +49,11 @@ from jormungandr.instance import Instance
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
+class FakeModel(object):
+    def __init__(self, priority, is_free):
+        self.priority = priority
+        self.is_free = is_free
+        self.scenario = 'default'
 
 def check_loaded(kraken):
     #TODO!
@@ -68,6 +74,8 @@ class AbstractTestFixture:
     @classmethod
     def launch_all_krakens(cls):
         for (kraken_name, conf) in cls.data_sets.items():
+            priority = conf.get('priority', 0)
+            is_free = conf.get('is_free', True)
             additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
@@ -126,13 +134,22 @@ class AbstractTestFixture:
     @classmethod
     def setup_class(cls):
         cls.krakens_pool = {}
-        logging.info("Initing the tests {}, let's pop the krakens"
-                     .format(cls.__name__))
+        logging.info("Initing the tests {}, let's pop the krakens".format(cls.__name__))
         cls.launch_all_krakens()
         instances_config_files = cls.create_dummy_json()
         i_manager.configuration_files = instances_config_files
         i_manager.initialisation()
+        cls.mocks = []
+        for name in cls.krakens_pool:
+            priority = cls.data_sets[name].get('priority', 0)
+            logging.info('instance %s has priority %s', name, priority)
+            is_free = cls.data_sets[name].get('is_free', False)
+            cls.mocks.append(mock.patch.object(i_manager.instances[name],
+                                               'get_models',
+                                               return_value=FakeModel(priority, is_free)))
 
+            for m in cls.mocks:
+                m.start()
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
             pass
@@ -163,6 +180,8 @@ class AbstractTestFixture:
         logging.info("Tearing down the tests {}, time to hunt the krakens down"
                      .format(cls.__name__))
         cls.kill_all_krakens()
+        for m in cls.mocks:
+            m.stop()
 
     def __init__(self, *args, **kwargs):
         self.tester = app.test_client()

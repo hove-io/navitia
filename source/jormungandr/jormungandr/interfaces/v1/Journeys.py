@@ -360,11 +360,11 @@ def compute_regions(args):
     from_regions = set()
     to_regions = set()
     if args['origin']:
-        from_regions = set(i_manager.get_regions(object_id=args['origin']))
+        from_regions = set(i_manager.get_instances(object_id=args['origin']))
         #Note: if get_regions does not find any region, it raises a RegionNotFoundException
 
     if args['destination']:
-        to_regions = set(i_manager.get_regions(object_id=args['destination']))
+        to_regions = set(i_manager.get_instances(object_id=args['destination']))
 
     if not from_regions:
         #we didn't get any origin, the region is in the destination's list
@@ -386,7 +386,7 @@ def compute_regions(args):
 
     regions = sorted(sorted_regions, key=cmp_to_key(instances_comparator))
 
-    return regions
+    return [r.name for r in regions]
 
 class Journeys(ResourceUri, ResourceUtc):
 

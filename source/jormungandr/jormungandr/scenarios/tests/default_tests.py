@@ -94,7 +94,7 @@ def find_max_duration__counterclockwise_test():
     eq_(response.journeys[1], resp_builder.get_journey('non pt'))
 
 
-def find_max_duration_clockwise_test_no_walk():
+def find_max_duration_clockwise_no_walk_test():
     """
     we don't have a journey with walking so max_duration is None, and we keep all journeys
     """
@@ -131,7 +131,7 @@ def next_journey_test():
     eq_(scenario.next_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T120100'))
 
 
-def next_journey_test_no_rapid():
+def next_journey_test_no_rapid_test():
     """ In the default scenario, if we don't get a rapid,
     the next journey is one minute after the earliest journey
     """
@@ -156,7 +156,7 @@ def previous_journey_test():
     eq_(scenario.previous_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T145900'))
 
 
-def previous_journey_test_no_rapid():
+def previous_journey_no_rapid_test():
     """ In the default scenario, if we don't get a rapid,
     the previous journey is one minute before the tardiest journey
     """
