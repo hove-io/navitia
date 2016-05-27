@@ -763,7 +763,6 @@ class EndPoint(flask_restful.Resource):
             raise
         return marshal(end_point, end_point_fields)
 
-    @marshal_with(user_fields_full)
     def delete(self, id):
         end_point = models.EndPoint.query.get_or_404(id)
         try:
