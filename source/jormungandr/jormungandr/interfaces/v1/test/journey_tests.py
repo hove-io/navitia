@@ -1,7 +1,7 @@
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -27,9 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import pytest
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from nose.tools import *
 from jormungandr.interfaces.v1.Journeys import compute_regions
 from navitiacommon import models
 
@@ -66,6 +66,7 @@ class TestMultiCoverage:
         """
         small helper, mock i_manager.get_region
         """
+
         def mock_get_instances(region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=True):
             if object_id == 'paris':
                 if not paris_region:
@@ -82,6 +83,7 @@ class TestMultiCoverage:
             @classmethod
             def get_by_name(cls, i):
                 return i
+
         models.Instance.get_by_name = weNeedMock.get_by_name
 
     def test_multi_coverage_simple(self):
@@ -94,33 +96,33 @@ class TestMultiCoverage:
 
         assert regions[0] == self.regions['france'].name
 
-    @raises(RegionNotFound)
     def test_multi_coverage_diff_region(self):
         """orig and dest are in different region"""
         self._mock_function(['france'], ['peru'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_no_region(self):
         """no orig """
         self._mock_function(None, ['peru'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_no_region(self):
         """no orig not dest"""
         self._mock_function(None, None)
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_diff_multiple_region(self):
         """orig and dest are in different multiple regions"""
         self._mock_function(['france', 'bolivia'], ['peru', 'equador'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
     def test_multi_coverage_overlap(self):
         """orig as 2 possible region and dest one"""
@@ -149,7 +151,8 @@ class TestMultiCoverage:
         all regions are overlaping,
         we have to have the non free first then the free (but we don't know which one)
         """
-        self._mock_function(['france', 'equador', 'peru', 'bolivia'], ['france', 'equador', 'peru', 'bolivia'])
+        self._mock_function(['france', 'equador', 'peru', 'bolivia'],
+                            ['france', 'equador', 'peru', 'bolivia'])
 
         regions = compute_regions(self.args)
 
@@ -157,7 +160,8 @@ class TestMultiCoverage:
         print("regions ==> {}".format(regions))
 
         assert set([regions[0], regions[1]]) == set([self.regions['france'].name, self.regions['peru'].name])
-        assert set([regions[2], regions[3]]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
+        assert set([regions[2], regions[3]]) == set(
+            [self.regions['equador'].name, self.regions['bolivia'].name])
 
     def test_multi_coverage_overlap_chose_with_non_free_and_priority(self):
         """
@@ -180,7 +184,8 @@ class TestMultiCoverage:
         4 regions are overlaping,
         regions are sorted by priority desc
         """
-        self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'], ['france', 'netherlands', 'brazil', 'bolivia'])
+        self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'],
+                            ['france', 'netherlands', 'brazil', 'bolivia'])
 
         regions = compute_regions(self.args)
 

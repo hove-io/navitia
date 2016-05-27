@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from nose.tools.nontrivial import raises
+import pytest
 import pytz
 from jormungandr.realtime_schedule.realtime_proxy_manager import RealtimeProxyManager
 
@@ -106,7 +106,6 @@ def wrong_argument_test():
     assert manager.get('proxy_id') is None
 
 
-@raises(pytz.UnknownTimeZoneError)
 def wrong_timezone_test():
     """
     test with a timeo proxy, but with a wrong timezone
@@ -126,7 +125,8 @@ def wrong_timezone_test():
                   }
               }]
 
-    RealtimeProxyManager(config)  # should raise an Exception
+    with pytest.raises(pytz.UnknownTimeZoneError):
+        RealtimeProxyManager(config)  # should raise an Exception
 
 
 def multi_proxy_creation_test():
