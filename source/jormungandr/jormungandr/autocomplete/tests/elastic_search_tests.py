@@ -266,35 +266,36 @@ def bragi_good_geocodejson_response_test():
     bragi_street_response_check(navitia_response[2])
     bragi_admin_response_check(navitia_response[3])
 
-#TODO reactivate and test mocking
-# def elastic_search_call_test():
-#     """
-#     test the whole autocomplete with a geocodejson service
-#     """
-#     bragi = elastic_search.GeocodeJson(host='http://bob.com/autocomplete')
-#
-#     bragi_response = {
-#         "Autocomplete": {
-#             "features": [
-#                 bragi_house_jaures_feature(),
-#                 bragi_house_lefebvre_feature(),
-#                 bragi_street_feature(),
-#                 bragi_admin_feature()
-#             ]
-#         }
-#     }
-#     mock_requests = MockRequests({
-#         'http://bob.com/autocomplete?q=rue bobette':
-#         (bragi_response, 200)
-#     })
-#
-#     # we mock the http call to return the hard coded mock_response
-#     with mock.patch('requests.get', mock_requests.get):
-#         response = bragi.get({'q': 'rue bobette'}, instance=None)
-#         assert len(response) == 4
-#         bragi_house_jaures_response_check(response[0])
-#         bragi_house_lefebvre_response_check(response[1])
-#         bragi_street_response_check(response[2])
-#         bragi_admin_response_check(response[3])
+
+def bragi_call_test():
+    """
+    test the whole autocomplete with a geocodejson service
+    """
+    bragi = elastic_search.GeocodeJson(host='http://bob.com/autocomplete')
+
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                bragi_house_jaures_feature(),
+                bragi_house_lefebvre_feature(),
+                bragi_street_feature(),
+                bragi_admin_feature()
+            ]
+        }
+    }
+    mock_requests = MockRequests({
+        'http://bob.com/autocomplete?q=rue bobette':
+        (bragi_response, 200)
+    })
+
+    # we mock the http call to return the hard coded mock_response
+    with mock.patch('requests.get', mock_requests.get):
+        response = bragi.get({'q': 'rue bobette'}, instance=None)
+        places = response.get('places')
+        assert len(places) == 4
+        bragi_house_jaures_response_check(places[0])
+        bragi_house_lefebvre_response_check(places[1])
+        bragi_street_response_check(places[2])
+        bragi_admin_response_check(places[3])
 
 # TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?
