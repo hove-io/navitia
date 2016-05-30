@@ -27,8 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-
-from nose.tools import eq_
 from jormungandr.scenarios import qualifier
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
@@ -137,12 +135,12 @@ def qualifier_two_test():
 
     qualifier.qualifier_one(journeys, "departure")
 
-    eq_(journey_standard.type, "fastest")  # the standard should be the fastest
-    eq_(journey_rapid.type, "rapid")
+    assert journey_standard.type ==  "fastest"  # the standard should be the fastest
+    assert journey_rapid.type ==  "rapid"
 
     #TODO! refacto this test with custom rules not to depends on changing business rules
-#    eq_(journey_confort.type, "comfort")
-#    eq_(journey_health.type, "healthy")
+#    assert journey_confort.type ==  "comfort"
+#    assert journey_health.type ==  "healthy"
 
 
 def has_car_test():
@@ -214,7 +212,7 @@ def standard_choice_test():
 
     print(qualifier.has_car(standard))
     print("standard ", standard.arrival_date_time)
-    eq_(standard, journey_1)
+    assert standard ==  journey_1
 
 def standard_choice_with_pt_test():
     journeys = []
@@ -260,7 +258,7 @@ def standard_choice_with_pt_test():
 
     print(qualifier.has_car(standard))
     print("standard ", standard.arrival_date_time)
-    eq_(standard, journey_1)
+    assert standard ==  journey_1
 
 def choose_standard_pt_car():
     journeys = []
@@ -290,8 +288,8 @@ def tranfers_cri_test():
 
     #the transfert criterion is first, and then if 2 journeys have
     #the same nb_transfers, we compare the dates
-    eq_(best.nb_transfers, 1)
-    eq_(best.arrival_date_time, str_to_time_stamp("20131107T100000"))
+    assert best.nb_transfers ==  1
+    assert best.arrival_date_time ==  str_to_time_stamp("20131107T100000")
 
 def qualifier_crowfly_test():
     journeys = []
@@ -328,8 +326,8 @@ def qualifier_crowfly_test():
 
     qualifier.qualifier_one(journeys, "departure")
 
-    eq_(journey_standard.type, "rapid")  # the standard should be the fastest
-    eq_(journey_health.type, "less_fallback_walk")
+    assert journey_standard.type ==  "rapid"  # the standard should be the fastest
+    assert journey_health.type ==  "less_fallback_walk"
 
 
 def qualifier_nontransport_duration_only_walk_test():
@@ -350,7 +348,7 @@ def qualifier_nontransport_duration_only_walk_test():
     journey.sections[-1].type = response_pb2.STREET_NETWORK
     journey.sections[-1].duration = 864
 
-    eq_(qualifier.get_nontransport_duration(journey), 1988)
+    assert qualifier.get_nontransport_duration(journey) ==  1988
 
 
 def qualifier_nontransport_duration_with_tc_test():
@@ -383,4 +381,4 @@ def qualifier_nontransport_duration_with_tc_test():
     journey.sections[-1].type = response_pb2.STREET_NETWORK
     journey.sections[-1].duration = 864
 
-    eq_(qualifier.get_nontransport_duration(journey), 2797)
+    assert qualifier.get_nontransport_duration(journey) ==  2797

@@ -398,6 +398,29 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
+class MultiPolyGeoJson(fields.Raw):
+    def __init__(self, **kwargs):
+        super(MultiPolyGeoJson, self).__init__(**kwargs)
+
+    def format(self, value):
+
+        polys = []
+
+        for poly in value.polygons:
+            p = []
+            outer = [[c.lon, c.lat] for c in poly.outer.coordinates]
+            p.append(outer)
+            for inners in poly.inners:
+                inner = [[c.lon, c.lat] for c in inners.coordinates]
+                p.append(inner)
+            polys.append(p)
+        response = {
+            "type": "MultiPolygon",
+            "coordinates": polys,
+        }
+
+        return response
+
 class Co2Emission(fields.Raw):
     def output(self, key, obj):
         if not obj.HasField(b"co2_emission"):
@@ -487,6 +510,7 @@ display_informations_route = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "links": DisruptionLinks(),
+    "text_color": fields.String(attribute="text_color"),
 }
 
 display_informations_vj = {
@@ -502,6 +526,7 @@ display_informations_vj = {
     "headsign": fields.String(attribute="headsign"),
     "headsigns": NonNullList(fields.String()),
     "links": DisruptionLinks(),
+    "text_color": fields.String(attribute="text_color"),
 }
 
 coord = {
@@ -797,7 +822,8 @@ instance_parameters = {
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,
     'priority': fields.Raw,
-    'bss_provider': fields.Boolean
+    'bss_provider': fields.Boolean,
+    'max_additional_connections': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)

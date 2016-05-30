@@ -34,26 +34,36 @@ import pytz
 from flask import g
 from jormungandr.exceptions import TechnicalError, RegionNotFound
 
-
 def set_request_timezone(region):
     from jormungandr import i_manager
-    logger = logging.getLogger(__name__)
     instance = i_manager.instances.get(region, None)
-
     if not instance:
         raise RegionNotFound(region)
+    set_request_instance_timezone(instance)
+
+def set_request_instance_timezone(instance):
+    logger = logging.getLogger(__name__)
+
+    if not instance:
+        raise RegionNotFound()
 
     if not instance.timezone:
-        logger.warn("region {} has no timezone".format(region))
-        g.timezone = None
+        logger.warn("region {} has no timezone".format(instance.name))
+        try:
+            g.timezone = None
+        except RuntimeError:
+            pass#working outside application context...
         return
 
     tz = pytz.timezone(instance.timezone)
 
     if not tz:
-        logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, region))
+        logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, instance.name))
 
-    g.timezone = tz
+    try:
+        g.timezone = tz
+    except RuntimeError:
+        pass#working outside of an application context...
 
 
 def get_timezone():

@@ -75,13 +75,16 @@ class Synthese(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, timezone, object_id_tag=None, timeout=10, redis_host=None, redis_db=0,
+    def __init__(self, id, service_url, timezone, object_id_tag=None, destination_id_tag=None, instance=None,
+                 timeout=10, redis_host=None, redis_db=0,
                  redis_port=6379, redis_password=None, max_requests_by_second=15,
                  redis_namespace='jormungandr.rate_limiter'):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
+        self.destination_id_tag = destination_id_tag
+        self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'])
         self.timezone = pytz.timezone(timezone)
@@ -119,11 +122,11 @@ class Synthese(RealtimeProxy):
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
-
+        logging.getLogger(__name__).debug('Synthese RT service , call url : {}'.format(url))
         r = self._call_synthese(url)
         if not r:
             return None

@@ -384,7 +384,8 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
             response, status = self.query_no_assert('/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'
                                                     .format(from_coord=s_coord, to_coord=r_coord, d='20120614T08'))
-            assert 'error' in response and response['error']['id'] == "no_origin_nor_destination"
+            assert 'error' in response
+            eq_(response['error']['id'], "no_origin_nor_destination")
             assert status == 404
 
     def test_places_for_bobitto(self):

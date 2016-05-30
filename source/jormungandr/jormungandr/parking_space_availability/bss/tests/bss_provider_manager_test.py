@@ -28,9 +28,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import pytest
 from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 from jormungandr import app
-from nose.tools import raises
 
 CONFIG = ([
     {
@@ -45,19 +45,20 @@ def realtime_place_creation_test():
     manager = BssProviderManager(CONFIG)
     assert len(manager.bss_providers) == 1
 
-@raises(Exception)
 def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
-    manager = BssProviderManager((
-        {
-            'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
-        },
-        {
-            'class': 'jormungandr.parking_space_availability.bss.BadProvider'
-        }
-    ))
+
+    with pytest.raises(Exception):
+        manager = BssProviderManager((
+            {
+                'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
+            },
+            {
+                'class': 'jormungandr.parking_space_availability.bss.BadProvider'
+            }
+        ))
 
 def realtime_places_handle_test():
     """

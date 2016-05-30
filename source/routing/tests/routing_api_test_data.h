@@ -413,6 +413,8 @@ struct routing_api_data {
             b.vj("A", "111111", "", false, "vjA")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
+            b.lines["A"]->color = "289728";
+            b.lines["A"]->text_color = "FFD700";
             b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
                                 b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 

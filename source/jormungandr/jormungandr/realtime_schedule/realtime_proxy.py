@@ -40,7 +40,7 @@ class RealtimeProxy(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def _get_next_passage_for_route_point(self, route_point, count, from_dt):
+    def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt):
         """
         method that actually calls the external service to get the next passage for a given route_point
         """
@@ -71,13 +71,13 @@ class RealtimeProxy(object):
 
         return passages
 
-    def next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         """
         Main method for the proxy
 
         returns the next realtime passages
         """
-        next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt)
+        next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt)
 
         filtered_passage = self._filter_passages(next_passages, count, from_dt)
 

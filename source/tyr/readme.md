@@ -83,7 +83,7 @@ With those 2 files, running the commande ```honcho start``` in the tyr directory
 
 You need to install the dependancies for developements:
 ```
-pip install -r requirement_dev.txt
+pip install -r requirements_dev.txt
 ```
 You will need docker on your machine, it will be used for spawning a database.
 

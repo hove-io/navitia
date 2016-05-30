@@ -33,6 +33,7 @@ from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
+from jormungandr.tests.utils_test import MockRequests
 
 
 def make_url_test():
@@ -94,25 +95,6 @@ def make_url_invalid_code_test():
     assert url is None
 
 
-class MockResponse(object):
-    def __init__(self, data, status_code, url, *args, **kwargs):
-        self.data = data
-        self.status_code = status_code
-        self.url = url
-
-    def json(self):
-        return self.data
-
-
-class MockRequests(object):
-
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
 def mock_good_timeo_response():
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
@@ -153,6 +135,7 @@ def mock_good_timeo_response():
     }
     return mock_response
 
+
 def get_passages_test():
     """
     test the next departures get from timeo's response
@@ -167,16 +150,17 @@ def get_passages_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        passages = timeo._get_passages(mock_response)
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+            passages = timeo._get_passages(mock_response)
 
-        assert len(passages) == 3
+            assert len(passages) == 3
 
-        assert passages[0].datetime == _dt('15:40:04')
-        assert passages[1].datetime == _dt('15:55:04')
-        assert passages[2].datetime == _dt('16:10:04')
+            assert passages[0].datetime == _dt('15:40:04')
+            assert passages[1].datetime == _dt('15:55:04')
+            assert passages[2].datetime == _dt('16:10:04')
 
 
-def get_passages_test_no_passages():
+def get_passages_no_passages_test():
     """
     test that if timeo returns 0 response, we return an empty list
     """
@@ -208,12 +192,13 @@ def get_passages_test_no_passages():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        passages = timeo._get_passages(mock_response)
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+            passages = timeo._get_passages(mock_response)
 
-        assert len(passages) == 0
+            assert len(passages) == 0
 
 
-def get_passages_test_wrong_response():
+def get_passages_wrong_response_test():
     """
     test that if timeo returns a not valid response, we get None (and not an empty list)
     """
@@ -228,9 +213,10 @@ def get_passages_test_wrong_response():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-        passages = timeo._get_passages(mock_response)
+        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+            passages = timeo._get_passages(mock_response)
 
-        assert passages is None
+            assert passages is None
 
 
 def next_passage_for_route_point_test():
@@ -251,13 +237,14 @@ def next_passage_for_route_point_test():
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
         with mock.patch('jormungandr.realtime_schedule.timeo._get_current_date', lambda: _dt("02:02")):
-            passages = timeo.next_passage_for_route_point(route_point)
+            with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+                passages = timeo.next_passage_for_route_point(route_point)
 
-            assert len(passages) == 3
+                assert len(passages) == 3
 
-            assert passages[0].datetime == _dt('15:40:04')
-            assert passages[1].datetime == _dt('15:55:04')
-            assert passages[2].datetime == _dt('16:10:04')
+                assert passages[0].datetime == _dt('15:40:04')
+                assert passages[1].datetime == _dt('15:55:04')
+                assert passages[2].datetime == _dt('16:10:04')
 
 
 def next_passage_for_route_point_timeo_failure_test():

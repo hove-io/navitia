@@ -37,6 +37,7 @@ from flask.ext.restful import abort
 import zmq
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
+from jormungandr.timezone import set_request_instance_timezone
 import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
@@ -48,7 +49,7 @@ from shapely import geometry
 from flask import g
 import flask
 import pybreaker
-from jormungandr import georef, planner, schedule, realtime_schedule
+from jormungandr import georef, planner, schedule, realtime_schedule, ptref
 
 type_to_pttype = {
       "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -85,9 +86,10 @@ class Instance(object):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
+        self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
-        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration)
+        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
         from jormungandr.autocomplete.kraken import Kraken
         self.autocomplete = Kraken()
 
@@ -243,7 +245,12 @@ class Instance(object):
     def bss_provider(self):
         instance_db = self.get_models()
         return get_value_or_default('bss_provider', instance_db, self.name)
-    
+
+    @property
+    def max_additional_connections(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_additional_connections', instance_db, self.name)
+
     @property
     def is_free(self):
         instance_db = self.get_models()
@@ -393,6 +400,7 @@ class Instance(object):
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
+        set_request_instance_timezone(self)
 
     def init(self):
         """

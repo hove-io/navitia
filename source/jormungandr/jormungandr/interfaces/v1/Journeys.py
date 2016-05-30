@@ -360,11 +360,11 @@ def compute_regions(args):
     from_regions = set()
     to_regions = set()
     if args['origin']:
-        from_regions = set(i_manager.get_regions(object_id=args['origin']))
+        from_regions = set(i_manager.get_instances(object_id=args['origin']))
         #Note: if get_regions does not find any region, it raises a RegionNotFoundException
 
     if args['destination']:
-        to_regions = set(i_manager.get_regions(object_id=args['destination']))
+        to_regions = set(i_manager.get_instances(object_id=args['destination']))
 
     if not from_regions:
         #we didn't get any origin, the region is in the destination's list
@@ -386,7 +386,7 @@ def compute_regions(args):
 
     regions = sorted(sorted_regions, key=cmp_to_key(instances_comparator))
 
-    return regions
+    return [r.name for r in regions]
 
 class Journeys(ResourceUri, ResourceUtc):
 
@@ -473,6 +473,7 @@ class Journeys(ResourceUri, ResourceUtc):
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_max_successive_buses", type=int)
+        parser_get.add_argument("_max_additional_connections", type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", type=int)
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
@@ -566,6 +567,8 @@ class Journeys(ResourceUri, ResourceUtc):
                 args['_night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
             if args.get('_night_bus_filter_max_factor') is None:
                 args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
+            if args.get('_max_additional_connections') is None:
+                args['_max_additional_connections'] = mod.max_additional_connections
 
         if region:
             _set_specific_params(i_manager.instances[region])

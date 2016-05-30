@@ -1,7 +1,7 @@
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -27,9 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import pytest
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from nose.tools import *
 from jormungandr.interfaces.v1.Journeys import compute_regions
 from navitiacommon import models
 
@@ -42,8 +42,8 @@ class MockInstance:
 
 
 class TestMultiCoverage:
-    #TODO change that with real mock and change nose to py.test to be able to use test generator
-    def __init__(self):
+    #TODO change that with real mock
+    def setup_method(self, method):
         #we mock a query
         self.args = {
             'origin': 'paris',
@@ -66,8 +66,8 @@ class TestMultiCoverage:
         """
         small helper, mock i_manager.get_region
         """
-        def mock_get_regions(region_str=None, lon=None, lat=None,
-                object_id=None, api='ALL', only_one=True):
+
+        def mock_get_instances(region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=True):
             if object_id == 'paris':
                 if not paris_region:
                     raise RegionNotFound('paris')
@@ -77,12 +77,13 @@ class TestMultiCoverage:
                     raise RegionNotFound('lima')
                 return [self.regions[r] for r in lima_region]
 
-        i_manager.get_regions = mock_get_regions
+        i_manager.get_instances = mock_get_instances
         #we also need to mock the ptmodel cache
         class weNeedMock:
             @classmethod
             def get_by_name(cls, i):
                 return i
+
         models.Instance.get_by_name = weNeedMock.get_by_name
 
     def test_multi_coverage_simple(self):
@@ -93,35 +94,35 @@ class TestMultiCoverage:
 
         assert len(regions) == 1
 
-        assert regions[0].name == self.regions['france'].name
+        assert regions[0] == self.regions['france'].name
 
-    @raises(RegionNotFound)
     def test_multi_coverage_diff_region(self):
         """orig and dest are in different region"""
         self._mock_function(['france'], ['peru'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_no_region(self):
         """no orig """
         self._mock_function(None, ['peru'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_no_region(self):
         """no orig not dest"""
         self._mock_function(None, None)
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
-    @raises(RegionNotFound)
     def test_multi_coverage_diff_multiple_region(self):
         """orig and dest are in different multiple regions"""
         self._mock_function(['france', 'bolivia'], ['peru', 'equador'])
 
-        compute_regions(self.args)
+        with pytest.raises(RegionNotFound):
+            compute_regions(self.args)
 
     def test_multi_coverage_overlap(self):
         """orig as 2 possible region and dest one"""
@@ -131,7 +132,7 @@ class TestMultiCoverage:
 
         assert len(regions) == 1
 
-        assert regions[0].name == self.regions['peru'].name
+        assert regions[0] == self.regions['peru'].name
 
     def test_multi_coverage_overlap_chose_non_free(self):
         """orig as 2 possible region and destination 3, we want to have france first because equador is free"""
@@ -142,23 +143,25 @@ class TestMultiCoverage:
         assert len(regions) == 2
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['france'].name
-        assert regions[1].name == self.regions['equador'].name
+        assert regions[0] == self.regions['france'].name
+        assert regions[1] == self.regions['equador'].name
 
     def test_multi_coverage_overlap_chose_non_free2_with_priority_zero(self):
         """
         all regions are overlaping,
         we have to have the non free first then the free (but we don't know which one)
         """
-        self._mock_function(['france', 'equador', 'peru', 'bolivia'], ['france', 'equador', 'peru', 'bolivia'])
+        self._mock_function(['france', 'equador', 'peru', 'bolivia'],
+                            ['france', 'equador', 'peru', 'bolivia'])
 
         regions = compute_regions(self.args)
 
         assert len(regions) == 4
         print("regions ==> {}".format(regions))
 
-        assert set([regions[0].name, regions[1].name]) == set([self.regions['france'].name, self.regions['peru'].name])
-        assert set([regions[2].name, regions[3].name]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
+        assert set([regions[0], regions[1]]) == set([self.regions['france'].name, self.regions['peru'].name])
+        assert set([regions[2], regions[3]]) == set(
+            [self.regions['equador'].name, self.regions['bolivia'].name])
 
     def test_multi_coverage_overlap_chose_with_non_free_and_priority(self):
         """
@@ -172,23 +175,24 @@ class TestMultiCoverage:
         assert len(regions) == 3
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['germany'].name
-        assert regions[1].name == self.regions['netherlands'].name
-        assert regions[2].name == self.regions['france'].name
+        assert regions[0] == self.regions['germany'].name
+        assert regions[1] == self.regions['netherlands'].name
+        assert regions[2] == self.regions['france'].name
 
     def test_multi_coverage_overlap_chose_with_priority(self):
         """
         4 regions are overlaping,
         regions are sorted by priority desc
         """
-        self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'], ['france', 'netherlands', 'brazil', 'bolivia'])
+        self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'],
+                            ['france', 'netherlands', 'brazil', 'bolivia'])
 
         regions = compute_regions(self.args)
 
         assert len(regions) == 4
         print("regions ==> {}".format(regions))
 
-        assert regions[0].name == self.regions['brazil'].name
-        assert regions[1].name == self.regions['netherlands'].name
-        assert regions[2].name == self.regions['france'].name
-        assert regions[3].name == self.regions['bolivia'].name
+        assert regions[0] == self.regions['brazil'].name
+        assert regions[1] == self.regions['netherlands'].name
+        assert regions[2] == self.regions['france'].name
+        assert regions[3] == self.regions['bolivia'].name

@@ -58,17 +58,21 @@ class Timeo(RealtimeProxy):
     class managing calls to timeo external service providing real-time next passages
     """
 
-    def __init__(self, id, service_url, service_args, timezone, object_id_tag=None, timeout=10):
+    def __init__(self, id, service_url, service_args, timezone,
+                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
+        self.destination_id_tag = destination_id_tag
+        self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
+
 
     def __repr__(self):
         """
@@ -97,11 +101,27 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None):
+    def _get_dt_local(self, utc_dt):
+        return pytz.utc.localize(utc_dt).astimezone(self.timezone)
+
+    def _is_tomorrow(self, request_dt, current_dt):
+        if not request_dt:
+            return False
+        if not current_dt:
+            now = self._get_dt_local(datetime.utcnow())
+        else:
+            now = self._get_dt_local(current_dt)
+        req_dt = self._timestamp_to_date(request_dt)
+        return now.date() < req_dt.date()
+
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+        if self._is_tomorrow(from_dt, current_dt):
+            logging.getLogger(__name__).info('Timeo RT service , Can not call Timeo for tomorrow.')
+            return None
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
-
+        logging.getLogger(__name__).debug('Timeo RT service , call url : {}'.format(url))
         r = self._call_timeo(url)
         if not r:
             return None
@@ -112,9 +132,9 @@ class Timeo(RealtimeProxy):
                                               .format(r.url))
             return None
 
-        return self._get_passages(r.json())
+        return self._get_passages(r.json(), route_point.fetch_line_uri())
 
-    def _get_passages(self, timeo_resp):
+    def _get_passages(self, timeo_resp, line_uri=None):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')
@@ -129,7 +149,9 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'])
-            direction = next_expected_st.get('Destination')
+            direction = self._get_direction_name(line_uri=line_uri,
+                                                 object_code=next_expected_st.get('Terminus'),
+                                                 default_value=next_expected_st.get('Destination'))
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
@@ -201,8 +223,7 @@ class Timeo(RealtimeProxy):
 
     def _timestamp_to_date(self, timestamp):
         dt = datetime.utcfromtimestamp(timestamp)
-        dt = pytz.utc.localize(dt)
-        return dt.astimezone(self.timezone)
+        return self._get_dt_local(dt)
 
     def status(self):
         return {'id': self.rt_system_id,
@@ -211,3 +232,12 @@ class Timeo(RealtimeProxy):
                                     'fail_counter': self.breaker.fail_counter,
                                     'reset_timeout': self.breaker.reset_timeout},
                 }
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
+    def _get_direction_name(self, line_uri, object_code, default_value):
+        stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
+
+        if stop_point:
+            if stop_point.HasField('name') and stop_point.name != '':
+                return stop_point.name
+        return default_value

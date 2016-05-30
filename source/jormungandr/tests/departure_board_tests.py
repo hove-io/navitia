@@ -416,6 +416,25 @@ class TestDepartureBoard(AbstractTestFixture):
         assert ss2_d['additional_informations'] == 'no_active_circulation_this_day'
         assert ss3_d['additional_informations'] == 'partial_terminus'
 
+    def test_display_informations_in_routes_schedule(self):
+        """
+        verify some attributs in display_informations of a route_schedule
+        """
+        response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
+
+        schedules = get_not_null(response, 'route_schedules')
+
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
+        is_valid_route_schedule(schedule)
+
+        display_information_route = get_not_null(schedule, 'display_informations')
+        assert display_information_route['direction'] == 'stop2'
+        assert display_information_route['label'] == 'line:A'
+        assert display_information_route['color'] == '289728'
+        assert display_information_route['text_color'] == 'FFD700'
+
+
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])
 

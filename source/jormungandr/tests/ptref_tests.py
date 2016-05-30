@@ -801,3 +801,14 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         trips = get_not_null(response, 'trips')
         assert len(trips) == 1
         assert get_not_null(trips[0], 'id') == "vjB"
+
+    def test_attributs_in_display_info_journeys(self):
+        """test some attributs in  display_information of a section for journeys"""
+        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000')
+        assert 'error' not in response
+        journeys = get_not_null(response, 'journeys')
+        eq_(len(journeys), 1)
+        eq_(len(journeys[0]['sections']), 1)
+        eq_(journeys[0]['sections'][0]['display_informations']['headsign'], "A00")
+        eq_(journeys[0]['sections'][0]['display_informations']['color'], "289728")
+        eq_(journeys[0]['sections'][0]['display_informations']['text_color'], "FFD700")
