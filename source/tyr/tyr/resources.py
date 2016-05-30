@@ -74,6 +74,7 @@ key_fields = {
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
+    'discarded': fields.Raw,
     'is_free': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
@@ -224,12 +225,12 @@ class Job(flask_restful.Resource):
 class PoiType(flask_restful.Resource):
     @marshal_with(poi_types_fields)
     def get(self, instance_name):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         return {'poi_types': instance.poi_types}
 
     @marshal_with(poi_types_fields)
     def post(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=unicode,  case_sensitive=False,
                 help='name displayed for this type of poi', location=('json', 'values'))
@@ -247,7 +248,7 @@ class PoiType(flask_restful.Resource):
 
     @marshal_with(poi_types_fields)
     def put(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
@@ -265,7 +266,7 @@ class PoiType(flask_restful.Resource):
 
     @marshal_with(poi_types_fields)
     def delete(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
         try:
             db.session.delete(poi_type)
@@ -289,18 +290,36 @@ class Instance(flask_restful.Resource):
         args = parser.parse_args()
         args.update({'id': id, 'name': name})
         if any(v is not None for v in args.values()):
-            return models.Instance.query.filter_by(**{k: v for k, v in args.items() if v is not None}).all()
+            return models.Instance.query_existing().filter_by(**{k: v for k, v in args.items() if v is not None}).all()
         else:
-            return models.Instance.query.all()
+            return models.Instance.query_existing().all()
 
-    def put(self, id=None, name=None):
+    def _get_from_id_or_name(self, id, name):
         if id:
-            instance = models.Instance.query.get_or_404(id)
+            return models.Instance.query_existing().get_or_404(id)
         elif name:
-            instance = models.Instance.query.filter_by(name=name).first_or_404()
+            return models.Instance.query_existing().filter_by(name=name).first_or_404()
         else:
             return ({'error': 'instance is required'}, 400)
 
+    def delete(self, id=None, name=None):
+        instance = self._get_from_id_or_name(id, name)
+        if isinstance(instance, tuple):
+            return instance
+
+        try:
+            instance.discarded = True
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return marshal(instance, instance_fields)
+
+    def put(self, id=None, name=None):
+        instance = self._get_from_id_or_name(id, name)
+        if isinstance(instance, tuple):
+            return instance
 
         parser = reqparse.RequestParser()
         parser.add_argument('scenario', type=str, case_sensitive=False,
@@ -683,7 +702,7 @@ class Authorization(flask_restful.Resource):
 
         user = models.User.query.get_or_404(user_id)
         api = models.Api.query.get_or_404(args['api_id'])
-        instance = models.Instance.query.get_or_404(args['instance_id'])
+        instance = models.Instance.query_existing().get_or_404(args['instance_id'])
 
         try:
             authorization = models.Authorization()
