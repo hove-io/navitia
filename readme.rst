@@ -84,6 +84,8 @@ How to contribute
 =================
 Fork the github repo, create a new branch from dev, and submit your pull request!
 
+Is there many people contributing? Yes: https://www.youtube.com/watch?v=GOLfMTMGVFI
+
 Alternatives?
 =============
 Navitia is written in python/c++, here are some alternatives:
