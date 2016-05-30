@@ -28,10 +28,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import pytest
 from jormungandr.parking_space_availability.bss.atos import AtosProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
-from nose.tools import raises
 from urllib2 import URLError
 from suds import WebFault
 
@@ -101,10 +101,11 @@ def parking_space_availability_atos_get_all_stands_test():
     assert len(all_stands) == 2
     assert isinstance(all_stands.get('2'), Stands)
 
-@raises(URLError)
 def parking_space_availability_atos_get_all_stands_urlerror_test():
     """
     Atos webservice error should raise an URLError exception
     """
     provider = AtosProvider(u'10', u'Vélitul', u'https://error.fake.com?wsdl')
-    provider.get_all_stands()
+
+    with pytest.raises(URLError):
+        provider.get_all_stands()

@@ -34,7 +34,6 @@ import navitiacommon.response_pb2 as response_pb2
 from navitiacommon import default_values
 from jormungandr.scenarios.default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
-from nose.tools import eq_
 import random
 
 
@@ -65,8 +64,8 @@ def different_arrival_times_test():
     journey2.sections[0].duration = 2 * 60
 
     scenario.sort_journeys(response, 'arrival_time')
-    eq_(response.journeys[0].arrival_date_time, str_to_time_stamp("20140422T0758"))
-    eq_(response.journeys[1].arrival_date_time, str_to_time_stamp("20140422T0800"))
+    assert response.journeys[0].arrival_date_time ==  str_to_time_stamp("20140422T0758")
+    assert response.journeys[1].arrival_date_time ==  str_to_time_stamp("20140422T0800")
 
 
 def different_departure_times_test():
@@ -89,8 +88,8 @@ def different_departure_times_test():
     journey2.sections[0].duration = 2 * 60
 
     scenario.sort_journeys(response, 'departure_time')
-    eq_(response.journeys[0].departure_date_time, str_to_time_stamp("20140422T0758"))
-    eq_(response.journeys[1].departure_date_time, str_to_time_stamp("20140422T0800"))
+    assert response.journeys[0].departure_date_time ==  str_to_time_stamp("20140422T0758")
+    assert response.journeys[1].departure_date_time ==  str_to_time_stamp("20140422T0800")
 
 
 def different_duration_test():
@@ -594,11 +593,11 @@ def test_departure_sort():
 
     compartor = DepartureJourneySorter(True)
     result.sort(compartor)
-    eq_(result[0], j1)
-    eq_(result[1], j2)
-    eq_(result[2], j5)
-    eq_(result[3], j4)
-    eq_(result[4], j3)
+    assert result[0] ==  j1
+    assert result[1] ==  j2
+    assert result[2] ==  j5
+    assert result[3] ==  j4
+    assert result[4] ==  j3
 
 def test_arrival_sort():
     """
@@ -639,11 +638,11 @@ def test_arrival_sort():
 
     compartor = ArrivalJourneySorter(True)
     result.sort(compartor)
-    eq_(result[0], j1)
-    eq_(result[1], j2)
-    eq_(result[2], j5)
-    eq_(result[3], j4)
-    eq_(result[4], j3)
+    assert result[0] ==  j1
+    assert result[1] ==  j2
+    assert result[2] ==  j5
+    assert result[3] ==  j4
+    assert result[4] ==  j3
 
 def test_heavy_journey_walking():
     """

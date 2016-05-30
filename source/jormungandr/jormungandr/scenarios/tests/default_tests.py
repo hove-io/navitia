@@ -28,7 +28,6 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import datetime
-from nose.tools import eq_
 from jormungandr.scenarios import default
 from jormungandr.scenarios.tests.protobuf_builder import ResponseBuilder
 from jormungandr.utils import str_to_time_stamp
@@ -61,11 +60,11 @@ def find_max_duration_clockwise_test():
     response = resp_builder.response
 
     scenario = default.Scenario()
-    eq_(scenario._find_max_duration(response.journeys, Instance(), True), 580)
+    assert scenario._find_max_duration(response.journeys, Instance(), True) == 580
     scenario._delete_too_long_journey(response, Instance(), True)
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], resp_builder.get_journey('rapid'))
-    eq_(response.journeys[1], resp_builder.get_journey('non pt'))
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == resp_builder.get_journey('rapid')
+    assert response.journeys[1] == resp_builder.get_journey('non pt')
 
 
 def find_max_duration__counterclockwise_test():
@@ -87,11 +86,11 @@ def find_max_duration__counterclockwise_test():
     response = resp_builder.response
 
     scenario = default.Scenario()
-    eq_(scenario._find_max_duration(response.journeys, Instance(), False), 580)
+    assert scenario._find_max_duration(response.journeys, Instance(), False) == 580
     scenario._delete_too_long_journey(response, Instance(), False)
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], resp_builder.get_journey('rapid'))
-    eq_(response.journeys[1], resp_builder.get_journey('non pt'))
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == resp_builder.get_journey('rapid')
+    assert response.journeys[1] == resp_builder.get_journey('non pt')
 
 
 def find_max_duration_clockwise_no_walk_test():
@@ -112,11 +111,11 @@ def find_max_duration_clockwise_no_walk_test():
     response = resp_builder.response
 
     scenario = default.Scenario()
-    eq_(scenario._find_max_duration(response.journeys, Instance(), True), None)
+    assert scenario._find_max_duration(response.journeys, Instance(), True) == None
     scenario._delete_too_long_journey(response, Instance(), True)
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], resp_builder.get_journey('best'))
-    eq_(response.journeys[1], resp_builder.get_journey('rapid'))
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == resp_builder.get_journey('best')
+    assert response.journeys[1] == resp_builder.get_journey('rapid')
 
 
 def next_journey_test():
@@ -128,7 +127,7 @@ def next_journey_test():
         .journey(type='car', departure='T1300', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.next_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T120100'))
+    assert scenario.next_journey_datetime(builder.get_journeys()) == str_to_time_stamp('20161010T120100')
 
 
 def next_journey_test_no_rapid_test():
@@ -141,7 +140,7 @@ def next_journey_test_no_rapid_test():
         .journey(type='car', departure='T2000', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.next_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T100100'))
+    assert scenario.next_journey_datetime(builder.get_journeys()) == str_to_time_stamp('20161010T100100')
 
 
 def previous_journey_test():
@@ -153,7 +152,7 @@ def previous_journey_test():
         .journey(type='car', departure='T1300', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.previous_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T145900'))
+    assert scenario.previous_journey_datetime(builder.get_journeys()) == str_to_time_stamp('20161010T145900')
 
 
 def previous_journey_no_rapid_test():
@@ -166,4 +165,4 @@ def previous_journey_no_rapid_test():
         .journey(type='car', departure='T2000', arrival='T1534')
 
     scenario = default.Scenario()
-    eq_(scenario.previous_journey_datetime(builder.get_journeys()), str_to_time_stamp('20161010T165900'))
+    assert scenario.previous_journey_datetime(builder.get_journeys()) == str_to_time_stamp('20161010T165900')

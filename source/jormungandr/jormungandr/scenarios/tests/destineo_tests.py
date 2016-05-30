@@ -28,9 +28,6 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from copy import deepcopy
-
-from nose.tools import eq_
-
 from jormungandr.scenarios import destineo
 from jormungandr.scenarios.tests.protobuf_builder import ResponseBuilder
 import navitiacommon.response_pb2 as response_pb2
@@ -267,15 +264,15 @@ def sort_destineo_test():
     response = resp_builder.response
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
-    eq_(response.journeys[0], resp_builder.get_journey('journey_tc1'))
-    eq_(response.journeys[1], resp_builder.get_journey('journey_tc2'))
-    eq_(response.journeys[2], resp_builder.get_journey('journey_tc3'))
-    eq_(response.journeys[3], resp_builder.get_journey('journey_bss'))
-    eq_(response.journeys[4], resp_builder.get_journey('journey_bss_and_tc'))
-    eq_(response.journeys[5], resp_builder.get_journey('journey_bike_and_tc'))
-    eq_(response.journeys[6], resp_builder.get_journey('journey_car_and_tc'))
-    eq_(response.journeys[7], resp_builder.get_journey('journey_walk'))
-    eq_(response.journeys[8], resp_builder.get_journey('journey_bike'))
+    assert response.journeys[0] ==  resp_builder.get_journey('journey_tc1')
+    assert response.journeys[1] ==  resp_builder.get_journey('journey_tc2')
+    assert response.journeys[2] ==  resp_builder.get_journey('journey_tc3')
+    assert response.journeys[3] ==  resp_builder.get_journey('journey_bss')
+    assert response.journeys[4] ==  resp_builder.get_journey('journey_bss_and_tc')
+    assert response.journeys[5] ==  resp_builder.get_journey('journey_bike_and_tc')
+    assert response.journeys[6] ==  resp_builder.get_journey('journey_car_and_tc')
+    assert response.journeys[7] ==  resp_builder.get_journey('journey_walk')
+    assert response.journeys[8] ==  resp_builder.get_journey('journey_bike')
 
 
 def sort_destineo_date_test():
@@ -331,9 +328,9 @@ def sort_destineo_date_test():
 
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
-    eq_(response.journeys[0], journey_bss_and_tc)
-    eq_(response.journeys[1], journey_tc1)
-    eq_(response.journeys[2], journey_tc3)
+    assert response.journeys[0] ==  journey_bss_and_tc
+    assert response.journeys[1] ==  journey_tc1
+    assert response.journeys[2] ==  journey_tc3
 
 
 def sort_destineo_date_timezone_test():
@@ -386,9 +383,9 @@ def sort_destineo_date_timezone_test():
 
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Europe/Paris')
-    eq_(response.journeys[0], journey_tc1)
-    eq_(response.journeys[1], journey_tc3)
-    eq_(response.journeys[2], journey_bss_and_tc)
+    assert response.journeys[0] ==  journey_tc1
+    assert response.journeys[1] ==  journey_tc3
+    assert response.journeys[2] ==  journey_bss_and_tc
 
 
 class Instance(object):
@@ -441,9 +438,9 @@ def remove_not_long_enough_no_removal_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    eq_(len(response.journeys), 2)
+    assert len(response.journeys) ==  2
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    eq_(len(response.journeys), 2)
+    assert len(response.journeys) ==  2
 
 def remove_not_long_enough_bss_test():
     response = response_pb2.Response()
@@ -532,14 +529,14 @@ def remove_not_long_enough_bss_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    eq_(len(response.journeys), 3)
-    eq_(response.journeys[0], journey1)
-    eq_(response.journeys[1], journey3)
-    eq_(response.journeys[2], journey4)
+    assert len(response.journeys) ==  3
+    assert response.journeys[0] ==  journey1
+    assert response.journeys[1] ==  journey3
+    assert response.journeys[2] ==  journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey1)
-    eq_(response.journeys[1], journey4)
+    assert len(response.journeys) ==  2
+    assert response.journeys[0] ==  journey1
+    assert response.journeys[1] ==  journey4
 
 
 def remove_not_long_enough_bike_test():
@@ -599,14 +596,14 @@ def remove_not_long_enough_bike_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    eq_(len(response.journeys), 3)
-    eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey3)
-    eq_(response.journeys[2], journey4)
+    assert len(response.journeys) ==  3
+    assert response.journeys[0] ==  journey
+    assert response.journeys[1] ==  journey3
+    assert response.journeys[2] ==  journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey4)
+    assert len(response.journeys) ==  2
+    assert response.journeys[0] ==  journey
+    assert response.journeys[1] ==  journey4
 
 
 def remove_not_long_enough_car_test():
@@ -666,14 +663,14 @@ def remove_not_long_enough_car_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    eq_(len(response.journeys), 3)
-    eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey3)
-    eq_(response.journeys[2], journey4)
+    assert len(response.journeys) ==  3
+    assert response.journeys[0] ==  journey
+    assert response.journeys[1] ==  journey3
+    assert response.journeys[2] ==  journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    eq_(len(response.journeys), 2)
-    eq_(response.journeys[0], journey)
-    eq_(response.journeys[1], journey4)
+    assert len(response.journeys) ==  2
+    assert response.journeys[0] ==  journey
+    assert response.journeys[1] ==  journey4
 
 
 def get_walking_walking_journey():
@@ -973,24 +970,24 @@ def choose_best_alternatives_simple_test():
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    eq_(len(journeys), 1)
-    eq_(journeys[0], saved_journeys[2])
+    assert len(journeys) ==  1
+    assert journeys[0] ==  saved_journeys[2]
 
 def choose_best_alternatives__bike_bss_test():
     journeys = [get_bike_bss_journey(), get_bike_car_journey()]
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    eq_(len(journeys), 1)
-    eq_(journeys[0], saved_journeys[0])
+    assert len(journeys) ==  1
+    assert journeys[0] ==  saved_journeys[0]
 
 def choose_best_alternatives__car_test():
     journeys = [get_bike_car_journey()]
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    eq_(len(journeys), 1)
-    eq_(journeys[0], saved_journeys[0])
+    assert len(journeys) ==  1
+    assert journeys[0] ==  saved_journeys[0]
 
 def choose_best_alternatives_non_pt_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
@@ -1006,24 +1003,24 @@ def choose_best_alternatives_non_pt_test():
 
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    eq_(len(journeys), 3)
-    eq_(journeys[0], saved_journeys[2])
-    eq_(journeys[1], j1)
-    eq_(journeys[2], j2)
+    assert len(journeys) ==  3
+    assert journeys[0] ==  saved_journeys[2]
+    assert journeys[1] ==  j1
+    assert journeys[2] ==  j2
 
 def remove_extra_journeys_less_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 3, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 2)
+    assert len(journeys) ==  2
 
 def remove_extra_journeys_enougth_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 2)
+    assert len(journeys) ==  2
 
 def remove_extra_journeys_more_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
@@ -1031,13 +1028,13 @@ def remove_extra_journeys_more_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 3)
+    assert len(journeys) ==  3
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    eq_(len(journeys), 2)
-    eq_(journeys[0], saved_journeys[0])
-    eq_(journeys[1], saved_journeys[1])
+    assert len(journeys) ==  2
+    assert journeys[0] ==  saved_journeys[0]
+    assert journeys[1] ==  saved_journeys[1]
 
 def remove_extra_journeys_more_with_walking_last_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
@@ -1048,14 +1045,14 @@ def remove_extra_journeys_more_with_walking_last_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 4)
+    assert len(journeys) ==  4
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    eq_(len(journeys), 3)
-    eq_(journeys[0], saved_journeys[0])
-    eq_(journeys[1], saved_journeys[1])
-    eq_(journeys[2], j1)
+    assert len(journeys) ==  3
+    assert journeys[0] ==  saved_journeys[0]
+    assert journeys[1] ==  saved_journeys[1]
+    assert journeys[2] ==  j1
 
 def remove_extra_journeys_more_with_walking_first_test():
     j1 = response_pb2.Journey()
@@ -1065,14 +1062,14 @@ def remove_extra_journeys_more_with_walking_first_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 4)
+    assert len(journeys) ==  4
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    eq_(len(journeys), 3)
-    eq_(journeys[0], j1)
-    eq_(journeys[1], saved_journeys[1])
-    eq_(journeys[2], saved_journeys[2])
+    assert len(journeys) ==  3
+    assert journeys[0] ==  j1
+    assert journeys[1] ==  saved_journeys[1]
+    assert journeys[2] ==  saved_journeys[2]
 
 
 def remove_extra_journeys_similar_journey_latest_dep():
@@ -1093,8 +1090,8 @@ def remove_extra_journeys_similar_journey_latest_dep():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 2)
-    eq_(journeys[1].type, 'bob')
+    assert len(journeys) ==  2
+    assert journeys[1].type ==  'bob'
 
 
 def remove_extra_journeys_not_similar_journeys():
@@ -1109,9 +1106,9 @@ def remove_extra_journeys_not_similar_journeys():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 2) #nothing filtered, they are not equivalent
-    eq_(journeys[0].type, 'bobitto')
-    eq_(journeys[1].type, 'babitta')
+    assert len(journeys) ==  2 #nothing filtered, they are not equivalent
+    assert journeys[0].type ==  'bobitto'
+    assert journeys[1].type ==  'babitta'
 
 
 def remove_extra_journeys_max_and_similar():
@@ -1140,6 +1137,6 @@ def remove_extra_journeys_max_and_similar():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 1, clockwise=True, timezone='UTC')
-    eq_(len(journeys), 2)
-    eq_(journeys[0].type, 'bobitto1')
-    eq_(journeys[1].type, 'non_pt_walk')
+    assert len(journeys) ==  2
+    assert journeys[0].type ==  'bobitto1'
+    assert journeys[1].type ==  'non_pt_walk'
