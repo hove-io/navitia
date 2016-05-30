@@ -137,11 +137,6 @@ class Instance(object):
         return self._scenario
 
     @property
-    def deleted(self):
-        instance_db = self.get_models()
-        return get_value_or_default('deleted', instance_db, self.name)
-
-    @property
     def journey_order(self):
         instance_db = self.get_models()
         return get_value_or_default('journey_order', instance_db, self.name)
