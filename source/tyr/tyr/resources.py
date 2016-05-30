@@ -74,7 +74,6 @@ key_fields = {
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
-    'discarded': fields.Raw,
     'is_free': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
