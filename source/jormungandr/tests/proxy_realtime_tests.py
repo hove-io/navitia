@@ -173,16 +173,16 @@ class TestDepartures(AbstractTestFixture):
             DepartureCheck(route="K", dt="20160102T100100", data_freshness="realtime",
                            direction='bob', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100200", data_freshness="base_schedule",
-                           direction='Terminus', physical_mode='name physical_mode:0'),
+                           direction='Terminus (Quimper)', physical_mode='name physical_mode:0'),
             DepartureCheck(route="J", dt="20160102T100300", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             # rt but no direction:
             DepartureCheck(route="K", dt="20160102T100400", data_freshness="realtime",
                            direction='', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T100700", data_freshness="base_schedule",
-                           direction='Terminus', physical_mode='name physical_mode:0'),
+                           direction='Terminus (Quimper)', physical_mode='name physical_mode:0'),
             DepartureCheck(route="L", dt="20160102T101100", data_freshness="base_schedule",
-                           direction='Terminus', physical_mode='name physical_mode:0'),
+                           direction='Terminus (Quimper)', physical_mode='name physical_mode:0'),
         ]
         eq_(departures, expected_departures)
 
