@@ -28,14 +28,9 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
-
-from navitiacommon import models
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from nose.tools import eq_
-from .overlapping_routing_tests import  MockKraken
-from jormungandr import instance_manager
 
 
 @dataset({"main_routing_test": {}})
@@ -568,19 +563,11 @@ class TestIsochrone(AbstractTestFixture):
         assert(len(response['journeys']) == 2)
 
 
-@dataset({"main_routing_without_pt_test": {}, "main_routing_test": {}})
+@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class TestWithoutPt(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead
     """
-
-    def setup(self):
-        from jormungandr import i_manager
-        self.instance_map = {
-            'main_routing_without_pt_test': MockKraken(i_manager.instances['main_routing_without_pt_test'], True, 5),
-            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True, 10),
-        }
-
     def test_one_region_wihout_pt(self):
         response = self.query("v1/"+journey_basic_query+"&debug=true",
                               display=False)
@@ -590,5 +577,3 @@ class TestWithoutPt(AbstractTestFixture):
         eq_(len(response['debug']['regions_called']), 2)
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
-
-

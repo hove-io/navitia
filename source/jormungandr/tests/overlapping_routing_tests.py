@@ -34,35 +34,11 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
 
-class MockKraken:
-    def __init__(self, kraken_instance, is_free, priority):
-        self.is_free = is_free
-        self.kraken_instance = kraken_instance
-        self.priority = priority
-
-
-@dataset({"main_routing_test": {}, "empty_routing_test": {'priority': 5}})
+@dataset({"main_routing_test": {'is_free': True}, "empty_routing_test": {'is_free': False}})
 class TestOverlappingCoverage(AbstractTestFixture):
     """
     Test the answer if 2 coverages are overlapping
     """
-    def setup(self):
-        from jormungandr import i_manager
-        self.instance_map = {
-            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True, 0),
-            #the bad one is the non free one, so it will be chosen first
-            'empty_routing_test': MockKraken(i_manager.instances['empty_routing_test'], False, 0),
-        }
-        self.real_method = models.Instance.get_by_name
-
-        models.Instance.get_by_name = self.mock_get_by_name
-
-    def mock_get_by_name(self, name):
-        return self.instance_map[name]
-
-    def teardown(self):
-        models.Instance.get_by_name = self.real_method
-
     def test_journeys(self):
         """
         journey query with 2 overlapping coverage.
