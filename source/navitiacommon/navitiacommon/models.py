@@ -339,7 +339,7 @@ class Instance(db.Model):
         return res
 
     @classmethod
-    def get_from_id_or_name(cls, id, name):
+    def get_from_id_or_name(cls, id=None, name=None):
         if id:
             return cls.query_existing().get_or_404(id)
         elif name:
