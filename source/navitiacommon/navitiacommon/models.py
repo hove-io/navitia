@@ -338,6 +338,15 @@ class Instance(db.Model):
         res = cls.query_existing.filter_by(name=name).first()
         return res
 
+    @classmethod
+    def get_from_id_or_name(cls, id, name):
+        if id:
+            return cls.query_existing().get_or_404(id)
+        elif name:
+            return cls.query_existing().filter_by(name=name).first_or_404()
+        else:
+            return {'error': 'instance is required'}, 400
+
     def __repr__(self):
         return '<Instance %r>' % self.name
 

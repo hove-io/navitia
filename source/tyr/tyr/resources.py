@@ -293,16 +293,8 @@ class Instance(flask_restful.Resource):
         else:
             return models.Instance.query_existing().all()
 
-    def _get_from_id_or_name(self, id, name):
-        if id:
-            return models.Instance.query_existing().get_or_404(id)
-        elif name:
-            return models.Instance.query_existing().filter_by(name=name).first_or_404()
-        else:
-            return ({'error': 'instance is required'}, 400)
-
     def delete(self, id=None, name=None):
-        instance = self._get_from_id_or_name(id, name)
+        instance = models.Instance.get_from_id_or_name(id, name)
         if isinstance(instance, tuple):
             return instance
 
@@ -316,7 +308,7 @@ class Instance(flask_restful.Resource):
         return marshal(instance, instance_fields)
 
     def put(self, id=None, name=None):
-        instance = self._get_from_id_or_name(id, name)
+        instance = models.Instance.get_from_id_or_name(id, name)
         if isinstance(instance, tuple):
             return instance
 
