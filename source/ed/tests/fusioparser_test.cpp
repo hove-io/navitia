@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     const types::VehicleJourney* vj1 = data.vehicle_journeys.back();
 
     // headsign of vj and stop_times
-    BOOST_REQUIRE_EQUAL(vj1->name.substr(0,6), "trip_4");
+    BOOST_REQUIRE_EQUAL(vj1->name.substr(0,6), "NULL");
 
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[0]->headsign, "HS1");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[1]->headsign, "HS2");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[2]->headsign, "HS3");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[3]->headsign, "HS4");
-    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[4]->headsign, "");
-    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[5]->headsign, "");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[4]->headsign, "NULL");
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list[5]->headsign, "NULL");
 }
 /*
 complete production without beginning_date
