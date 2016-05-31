@@ -74,8 +74,6 @@ class AbstractTestFixture:
     @classmethod
     def launch_all_krakens(cls):
         for (kraken_name, conf) in cls.data_sets.items():
-            priority = conf.get('priority', 0)
-            is_free = conf.get('is_free', True)
             additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
