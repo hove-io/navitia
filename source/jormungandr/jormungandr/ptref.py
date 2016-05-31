@@ -42,7 +42,7 @@ class PtRef(object):
         req.ptref.requested_type = type_pb2.STOP_POINT
         req.ptref.count = 1
         req.ptref.start_page = 0
-        req.ptref.depth = 0
+        req.ptref.depth = 1
         req.ptref.filter = "stop_point.has_code({code_key}, {code_value})".\
             format(code_key=code_key, code_value=code_value)
         if line_uri:
