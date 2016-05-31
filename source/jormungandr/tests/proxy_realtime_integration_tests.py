@@ -191,19 +191,19 @@ class TestDepartures(AbstractTestFixture):
         assert stop_times[0]['date_time'][8:] == 'T080052'
         links = stop_times[0]["links"]
         assert len(links) == 1
-        assert links[0]['id'] == 'note:539c0972470ff80a630a68e29d404c75'
+        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
 
         assert stop_times[1]['data_freshness'] == 'realtime'
         assert stop_times[1]['date_time'][8:] == 'T081352'
         links = stop_times[1]["links"]
         assert len(links) == 1
-        assert links[0]['id'] == 'note:539c0972470ff80a630a68e29d404c75'
+        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
 
         notes = response['notes']
         assert len(notes) == 1
         assert notes[0]["type"] == "notes"
-        assert notes[0]["value"] == "Terminus"
-        assert notes[0]["id"] == "note:539c0972470ff80a630a68e29d404c75"
+        assert notes[0]["value"] == "Terminus (Quimper)"
+        assert notes[0]["id"] == "note:b5b328cb593ae7b1d73228345fe634fc"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
         query = self.query_template.format(sp='S42', dt='20160102T1100', data_freshness='', c_dt='20160101T1100')

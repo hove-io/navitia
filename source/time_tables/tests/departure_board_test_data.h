@@ -5,6 +5,7 @@
 #include "tests/utils_test.h"
 #include "type/pt_data.h"
 #include "kraken/realtime.h"
+#include "georef/adminref.h"
 
 namespace ntest = navitia::test;
 
@@ -60,20 +61,34 @@ struct departure_board_fixture {
         b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
         b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
         b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";        
+        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
+
+        navitia::georef::Admin* ad = new navitia::georef::Admin();
+        ad->name = "Quimper";
+        ad->uri = "Quimper";
+        ad->level = 8;
+        ad->postal_codes.push_back("29000");
+        ad->idx = 0;
+        b.data->geo_ref->admins.push_back(ad);
+        auto* sp_ptr = b.sps.at("S43");
+        sp_ptr->name = "Terminus";
+        sp_ptr->stop_area->name = "Terminus";
+        sp_ptr->admin_list.push_back(ad);
+        sp_ptr->stop_area->admin_list.push_back(ad);
+
         b.finish();
         b.data->pt_data->index();
         b.data->pt_data->build_uri();
         b.data->complete();
+        b.data->compute_labels();
 
-        auto* sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
+        sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S0");
         sp_ptr = b.data->pt_data->stop_points_map["C:S1"];
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S1");
         b.data->pt_data->codes.add(sp_ptr, "AnotherSource", "AnotherSource_C:S1");
 
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
-        sp_ptr->name = "Terminus";
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S43");
 
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
