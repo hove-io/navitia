@@ -331,17 +331,17 @@ class Instance(db.Model):
 
     @classmethod
     def query_existing(cls):
-        return cls.query.fliter_by(discarded=False)
+        return cls.query.filter_by(discarded=False)
 
     @classmethod
     def get_by_name(cls, name):
-        res = cls.query_existing.filter_by(name=name).first()
+        res = cls.query_existing().filter_by(name=name).first()
         return res
 
     @classmethod
     def get_from_id_or_name(cls, id=None, name=None):
         if id:
-            return cls.query_existing().get_or_404(id)
+            return cls.query.get_or_404(id)
         elif name:
             return cls.query_existing().filter_by(name=name).first_or_404()
         else:
