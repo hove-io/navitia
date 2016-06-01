@@ -122,8 +122,15 @@ static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type:
     for(const type::Polygon& p: multi_poly) {
         if (boost::geometry::intersects(p, poly)) {
            type::MultiPolygon poly_union;
-           boost::geometry::union_(poly, p, poly_union);
-           poly = poly_union[0];
+           try {
+               boost::geometry::union_(poly, p, poly_union);
+               poly = poly_union[0];
+           } catch (const boost::geometry::exception& e) {
+               //We don't merge the polygons
+               multi_polys_merged.push_back(p);
+               log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
+               LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
+           }
         } else {
             multi_polys_merged.push_back(p);
         }
