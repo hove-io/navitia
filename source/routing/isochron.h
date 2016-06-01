@@ -31,10 +31,19 @@ www.navitia.io
 #pragma once
 
 #include "type/geographical_coord.h"
+#include "utils/exception.h"
 #include "raptor.h"
 #include <set>
 
 namespace navitia { namespace routing {
+
+struct IsochronException: public recoverable_exception {
+    IsochronException(const std::string& msg): recoverable_exception(msg) {}
+    IsochronException() = default;
+    IsochronException(const IsochronException&) = default;
+    IsochronException& operator=(const IsochronException&) = default;
+    virtual ~IsochronException() noexcept = default;
+};
 
 constexpr static double N_RAD_TO_DEG = 57.295779513;
 
