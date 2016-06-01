@@ -237,7 +237,8 @@ class Timeo(RealtimeProxy):
     def _get_direction_name(self, line_uri, object_code, default_value):
         stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
 
-        if stop_point:
-            if stop_point.HasField('name') and stop_point.name != '':
-                return stop_point.name
+        if stop_point and stop_point.HasField('stop_area') \
+                and stop_point.stop_area.HasField('label') \
+                and stop_point.stop_area.label != '':
+            return stop_point.stop_area.label
         return default_value
