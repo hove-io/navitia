@@ -1,9 +1,8 @@
 # encoding=utf-8
 
-from rabbit_mq_handler import RabbitMqHandler
-from flask import current_app
+from tyr import tyr_rabbit_mq_handler
 
-class RabbitMqMessage:
+class RabbitMqMessage(object):
 
     def __init__(self):
         self._event_name = None
@@ -74,7 +73,6 @@ class RabbitMqMessage:
 class TyrUserEvent(object):
 
     def __init__(self):
-        self._rabbit_mq_handler = RabbitMqHandler(current_app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
         self._rabbit_mq_message = RabbitMqMessage()
 
     def request(self, user, event_name, last_login=None):
@@ -83,6 +81,6 @@ class TyrUserEvent(object):
 
         if last_login is not None:
             self._rabbit_mq_message.set_last_login(last_login)
-            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message_with_last_login(), None, 'json')
+            tyr_rabbit_mq_handler.publish(self._rabbit_mq_message.get_message_with_last_login(), None, 'json')
         else:
-            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message(), None, 'json')
+            tyr_rabbit_mq_handler.publish(self._rabbit_mq_message.get_message(), None, 'json')

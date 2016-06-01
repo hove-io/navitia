@@ -37,6 +37,7 @@ from validate_email import validate_email
 from datetime import datetime
 from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
+from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 import logging
 
 from navitiacommon import models, parser_args_type
@@ -722,6 +723,11 @@ class EndPoint(flask_restful.Resource):
 
             db.session.add(end_point)
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.CREATE, end_point)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return ({'error': str(e)}, 409)
         except Exception:
@@ -737,6 +743,7 @@ class EndPoint(flask_restful.Resource):
         args = parser.parse_args()
 
         try:
+            old_name = end_point.name
             end_point.name = args['name']
             if 'hostnames' in request.json:
                 end_point.hosts = []
@@ -744,6 +751,11 @@ class EndPoint(flask_restful.Resource):
                     end_point.hosts.append(models.Host(host))
 
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.UPDATE, end_point, old_name)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return ({'error': str(e)}, 409)
         except Exception:
@@ -751,12 +763,16 @@ class EndPoint(flask_restful.Resource):
             raise
         return marshal(end_point, end_point_fields)
 
-    @marshal_with(user_fields_full)
     def delete(self, id):
         end_point = models.EndPoint.query.get_or_404(id)
         try:
             db.session.delete(end_point)
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.DELETE, end_point)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except Exception:
             logging.exception("fail")
             raise

@@ -35,6 +35,7 @@ from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
 from flask_script import Manager
+from rabbit_mq_handler import RabbitMqHandler
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')
@@ -69,5 +70,7 @@ celery = make_celery(app)
 redis = Redis(host=app.config['REDIS_HOST'],
         port=app.config['REDIS_PORT'], db=app.config['REDIS_DB'],
         password=app.config['REDIS_PASSWORD'])
+
+tyr_rabbit_mq_handler = RabbitMqHandler(app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
 
 import tyr.api
