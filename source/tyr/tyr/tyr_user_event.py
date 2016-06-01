@@ -1,7 +1,6 @@
 # encoding=utf-8
 
-from rabbit_mq_handler import RabbitMqHandler
-from flask import current_app
+from tyr_rabbit_mq_handler import TyrRabbitMqHandler
 
 class RabbitMqMessage(object):
 
@@ -74,7 +73,7 @@ class RabbitMqMessage(object):
 class TyrUserEvent(object):
 
     def __init__(self):
-        self._rabbit_mq_handler = RabbitMqHandler(current_app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
+        self._rabbit_mq_handler = TyrRabbitMqHandler()
         self._rabbit_mq_message = RabbitMqMessage()
 
     def request(self, user, event_name, last_login=None):

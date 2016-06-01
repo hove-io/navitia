@@ -1,6 +1,6 @@
 # encoding=utf-8
 
-from rabbit_mq_handler import RabbitMqHandler
+from tyr_rabbit_mq_handler import TyrRabbitMqHandler
 from flask import current_app
 
 class EndPointEventMessage(object):
@@ -33,7 +33,7 @@ class EndPointEventMessage(object):
 class TyrEventsRabbitMq(object):
 
     def __init__(self):
-        self._rabbit_mq_handler = RabbitMqHandler(current_app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
+        self._rabbit_mq_handler = TyrRabbitMqHandler()
 
     def request(self, end_point_event_message):
         self._rabbit_mq_handler.publish(end_point_event_message.get_message(), None, 'json')
