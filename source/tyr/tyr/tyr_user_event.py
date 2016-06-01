@@ -1,6 +1,6 @@
 # encoding=utf-8
 
-from tyr_rabbit_mq_handler import TyrRabbitMqHandler
+from tyr import tyr_rabbit_mq_handler
 
 class RabbitMqMessage(object):
 
@@ -73,7 +73,6 @@ class RabbitMqMessage(object):
 class TyrUserEvent(object):
 
     def __init__(self):
-        self._rabbit_mq_handler = TyrRabbitMqHandler()
         self._rabbit_mq_message = RabbitMqMessage()
 
     def request(self, user, event_name, last_login=None):
@@ -82,6 +81,6 @@ class TyrUserEvent(object):
 
         if last_login is not None:
             self._rabbit_mq_message.set_last_login(last_login)
-            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message_with_last_login(), None, 'json')
+            tyr_rabbit_mq_handler.publish(self._rabbit_mq_message.get_message_with_last_login(), None, 'json')
         else:
-            self._rabbit_mq_handler.publish(self._rabbit_mq_message.get_message(), None, 'json')
+            tyr_rabbit_mq_handler.publish(self._rabbit_mq_message.get_message(), None, 'json')

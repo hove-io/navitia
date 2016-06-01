@@ -1,7 +1,6 @@
 # encoding=utf-8
 
-from tyr_rabbit_mq_handler import TyrRabbitMqHandler
-from flask import current_app
+from tyr import tyr_rabbit_mq_handler
 
 class EndPointEventMessage(object):
 
@@ -32,8 +31,5 @@ class EndPointEventMessage(object):
 
 class TyrEventsRabbitMq(object):
 
-    def __init__(self):
-        self._rabbit_mq_handler = TyrRabbitMqHandler()
-
     def request(self, end_point_event_message):
-        self._rabbit_mq_handler.publish(end_point_event_message.get_message(), None, 'json')
+        tyr_rabbit_mq_handler.publish(end_point_event_message.get_message(), None, 'json')
