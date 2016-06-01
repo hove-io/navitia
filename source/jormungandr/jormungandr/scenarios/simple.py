@@ -187,12 +187,12 @@ class Scenario(object):
         build_pagination(request, resp)
         return resp
 
-    def graphical_isochrons(self, request, instance):
+    def graphical_isochrones(self, request, instance):
         req = request_pb2.Request()
-        req.requested_api = type_pb2.graphical_isochron
+        req.requested_api = type_pb2.graphical_isochrone
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
-        req.isochron.min_duration = request["min_duration"]
-        journey_req = req.isochron.journeys_request
+        req.isochrone.min_duration = request["min_duration"]
+        journey_req = req.isochrone.journeys_request
 
         if "origin" in request and request["origin"]:
             origin = journey_req.origin.add()

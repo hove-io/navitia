@@ -695,7 +695,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                     current_datetime);
 }
 
-pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochronRequest &request_iso,
+pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request_iso,
                                                const boost::posix_time::ptime& current_datetime) {
 
     const auto data = data_manager.get_data();
@@ -724,7 +724,7 @@ pbnavitia::Response Worker::graphical_isochron(const pbnavitia::GraphicalIsochro
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
 
 
-    return navitia::routing::make_graphical_isochron(*planner, current_datetime, ep, request.datetimes(0),
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
                                                       request.max_duration(), request_iso.min_duration(),
                                                       request.max_transfers(),
                                                       arg.accessibilite_params, arg.forbidden,
@@ -773,7 +773,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
     case pbnavitia::place_code : response = place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-    case pbnavitia::graphical_isochron : response = graphical_isochron(request.isochron(), current_datetime); break;
+    case pbnavitia::graphical_isochrone : response = graphical_isochrone(request.isochrone(), current_datetime); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());

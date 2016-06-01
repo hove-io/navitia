@@ -50,20 +50,20 @@ from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 
 
-graphical_isochron = {
+graphical_isochrone = {
     "geojson": MultiPolyGeoJson(),
 }
 
 
-graphical_isochrons = {
-    "isochrons": NonNullList(NonNullNested(graphical_isochron), attribute="graphical_isochrons"),
+graphical_isochrones = {
+    "isochrones": NonNullList(NonNullNested(graphical_isochrone), attribute="graphical_isochrones"),
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
 }
 
 
-class GraphicalIsochron(ResourceUri, ResourceUtc):
+class GraphicalIsochrone(ResourceUri, ResourceUtc):
 
     def __init__(self):
         ResourceUri.__init__(self, authentication=False)
@@ -109,7 +109,7 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
 
-    @marshal_with(graphical_isochrons)
+    @marshal_with(graphical_isochrones)
     @ManageError()
     def get(self, region=None):
         args = self.parsers['get'].parse_args()
@@ -137,6 +137,6 @@ class GraphicalIsochron(ResourceUri, ResourceUtc):
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
 
-        response = i_manager.dispatch(args, "graphical_isochrons", instance_name=region)
+        response = i_manager.dispatch(args, "graphical_isochrones", instance_name=region)
 
         return response
