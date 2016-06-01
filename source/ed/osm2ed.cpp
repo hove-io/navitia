@@ -754,7 +754,7 @@ void PoiHouseNumberVisitor::finish() {
 void PoiHouseNumberVisitor::insert_house_numbers() {
     persistor.lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side", "way_id"});
     for(const auto& hn : house_numbers) {
-        std::string way_id("NULL");
+        std::string way_id(persistor.lotus.null_value);
         if(hn.way != nullptr){
             way_id = hn.way->way_ref == nullptr ? std::to_string(hn.way->osm_id):
                                                   std::to_string(hn.way->way_ref->osm_id);
