@@ -494,18 +494,19 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         raise
 
 
-MIMIR_INDEX = 'munin'  # TODO better handle this index
-
 @celery.task(bind=True)
 def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch bano2mimir """
     logger = logging.getLogger("autocomplete")
     job = models.Job.query.get(job_id)
-    cnx_string = current_app.config['MIMIR_URL'] + '/' + MIMIR_INDEX
+    cnx_string = current_app.config['MIMIR_URL']
     working_directory = unzip_if_needed(filename)
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
     try:
         res = launch_exec("bano2mimir",
-                          ['-i', working_directory, '--connection-string', cnx_string],
+                          ['-i', working_directory,
+                              '--connection-string', cnx_string,
+                              '--dataset', autocomplete_instance.name],
                           logger)
         if res != 0:
             #@TODO: exception
@@ -523,7 +524,7 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     logger = logging.getLogger("autocomplete")
     logger.debug('running osm2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
-    cnx_string = current_app.config['MIMIR_URL'] + '/' + MIMIR_INDEX
+    cnx_string = current_app.config['MIMIR_URL']
     working_directory = unzip_if_needed(filename)
     autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
     try:
@@ -535,6 +536,8 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
             params.append('--import-admin')
         if autocomplete_instance.street in utils.street_source_types:
             params.append('--import-way')
+        params.append('--dataset')
+        params.append(autocomplete_instance.name)
         res = launch_exec("osm2mimir",
                           params,
                           logger)
