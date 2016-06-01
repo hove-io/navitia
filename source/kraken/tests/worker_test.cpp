@@ -73,10 +73,10 @@ static pbnavitia::Request create_request(bool wheelchair, const std::string& des
     return req;
 }
 
-static pbnavitia::Request create_isochron_request(int max_duration, int min_duration, const std::string& origin) {
+static pbnavitia::Request create_isochrone_request(int max_duration, int min_duration, const std::string& origin) {
     pbnavitia::Request req;
-    req.set_requested_api(pbnavitia::graphical_isochron);
-    pbnavitia::GraphicalIsochronRequest* g = req.mutable_isochron();
+    req.set_requested_api(pbnavitia::graphical_isochrone);
+    pbnavitia::GraphicalIsochroneRequest* g = req.mutable_isochrone();
     g->set_min_duration(min_duration);
     pbnavitia::JourneysRequest* j = g->mutable_journeys_request();
     j->set_clockwise(true);
@@ -197,34 +197,34 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(graphical_isochrone_test, fixture) {
-    const auto isochron_request = create_isochron_request(7200, 0, "A");
-    pbnavitia::Response resp = w.dispatch(isochron_request);
+    const auto isochrone_request = create_isochrone_request(7200, 0, "A");
+    pbnavitia::Response resp = w.dispatch(isochrone_request);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.graphical_isochrons_size(), 1);
-    const auto& isochron = resp.graphical_isochrons(0).geojson();
-    BOOST_REQUIRE_EQUAL(isochron.polygons_size(), 1);
-    const auto& poly = isochron.polygons(0).outer();
+    BOOST_REQUIRE_EQUAL(resp.graphical_isochrones_size(), 1);
+    const auto& isochrone = resp.graphical_isochrones(0).geojson();
+    BOOST_REQUIRE_EQUAL(isochrone.polygons_size(), 1);
+    const auto& poly = isochrone.polygons(0).outer();
     BOOST_CHECK(poly.coordinates().size() > 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(graphical_isochrone_test_with_min, fixture) {
-    const auto isochron_request = create_isochron_request(7200, 200, "A");
-    pbnavitia::Response resp = w.dispatch(isochron_request);
+    const auto isochrone_request = create_isochrone_request(7200, 200, "A");
+    pbnavitia::Response resp = w.dispatch(isochrone_request);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.graphical_isochrons_size(), 1);
-    const auto& isochron = resp.graphical_isochrons(0).geojson();
-    BOOST_CHECK(isochron.polygons_size() > 0);
+    BOOST_REQUIRE_EQUAL(resp.graphical_isochrones_size(), 1);
+    const auto& isochrone = resp.graphical_isochrones(0).geojson();
+    BOOST_CHECK(isochrone.polygons_size() > 0);
     int i = 0;
-    for (int j = 0; j < isochron.polygons_size(); j++) {
-        const auto& outer = isochron.polygons(j).outer();
+    for (int j = 0; j < isochrone.polygons_size(); j++) {
+        const auto& outer = isochrone.polygons(j).outer();
         // We check the outer is a round thus it has at least 3 points
         BOOST_CHECK(outer.coordinates().size() > 3);
-        if (isochron.polygons(j).inners_size() > 0)  {
+        if (isochrone.polygons(j).inners_size() > 0)  {
             i = i + 1;
-            for (int k = 0; k < isochron.polygons(j).inners_size(); k++) {
-                const auto& inner = isochron.polygons(j).inners(k);
+            for (int k = 0; k < isochrone.polygons(j).inners_size(); k++) {
+                const auto& inner = isochrone.polygons(j).inners(k);
                 BOOST_CHECK(inner.coordinates().size() > 3);
             }
         }
