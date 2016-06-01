@@ -3,7 +3,7 @@
 from rabbit_mq_handler import RabbitMqHandler
 from flask import current_app
 
-class RabbitMqMessage:
+class RabbitMqMessage(object):
 
     def __init__(self):
         self._event_name = None

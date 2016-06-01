@@ -3,7 +3,7 @@
 from rabbit_mq_handler import RabbitMqHandler
 from flask import current_app
 
-class EndPointEventMessage:
+class EndPointEventMessage(object):
 
     CREATE = 'create_end_point'
     UPDATE = 'update_end_point'
