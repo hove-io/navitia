@@ -118,7 +118,7 @@ class Worker {
                                       const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
-        pbnavitia::Response graphical_isochron(const pbnavitia::GraphicalIsochronRequest &request,
+        pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request,
                                                const boost::posix_time::ptime& current_datetime);
 };
 

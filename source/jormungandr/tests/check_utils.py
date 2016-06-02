@@ -511,14 +511,14 @@ def is_valid_multipolygon_geojson(geojson):
                 is_valid_geojson_coord(c)
 
 
-def is_valid_graphical_isochron(isochron, tester, query):
+def is_valid_graphical_isochrone(isochrone, tester, query):
 
-    for g in get_not_null(isochron, 'isochrons'):
+    for g in get_not_null(isochrone, 'isochrones'):
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
 
-    for feed_publisher in get_not_null(isochron, 'feed_publishers'):
+    for feed_publisher in get_not_null(isochrone, 'feed_publishers'):
         is_valid_feed_publisher(feed_publisher)
 
 

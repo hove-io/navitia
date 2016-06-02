@@ -157,26 +157,50 @@ struct GeoCoord {
 };
 
 static std::ostream& operator<<(std::ostream& os, const GeoCoord& coord){
-    return os << std::setprecision(16) << "[" << coord.coord << "]";
+    return os << std::setprecision(16) << "[" << coord.coord.lon() <<
+              "," << coord.coord.lat() << "]";
 }
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points){
     os << "{\"type\":\"Polygon\",\"coordinates\":[[";
-    os << GeoCoord(points.outer()[0]);
-    for(unsigned j = 1; j < points.outer().size() - 1; j++) {
-        os << "," << GeoCoord(points.outer()[j]);
+    os << GeoCoord(points.outer()[0]) << ",";
+    for(unsigned j = 1; j < points.outer().size(); j++) {
+        os << GeoCoord(points.outer()[j]);
+        if (j == points.outer().size() - 1) { continue; }
+        os << ",";
     }
-    return os << "]]}";
+    os << "]";
+    for(unsigned k = 0; k < points.inners().size(); k++) {
+        os << ",[";
+        for (unsigned l = 0; l < points.inners()[k].size(); l++) {
+            os << GeoCoord(points.inners()[k][l]);
+            if (l == points.inners()[k].size() - 1) { continue; }
+            os << ",";
+        }
+        os << "]";
+    }
+    return os << "]}";
 }
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons){
     os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
     for (unsigned i = 0; i < polygons.size(); i++) {
         os <<  "[[" << GeoCoord(polygons[i].outer()[0]);
-        for(unsigned j = 1; j < polygons[i].outer().size() - 1; j++) {
-             os << "," << GeoCoord(polygons[i].outer()[j]);
+        for(unsigned j = 1; j < polygons[i].outer().size(); j++) {
+            os << GeoCoord(polygons[i].outer()[j]);
+            if (j == polygons[i].outer().size() - 1) { continue; }
+            os << ",";
         }
-        os << "]]";
+        os << "]";
+        for(unsigned k = 0; k < polygons[i].inners().size(); k++) {
+            os << ",[";
+            for (unsigned l = 0; l < polygons[i].inners()[k].size(); l++) {
+                os << GeoCoord(polygons[i].inners()[k][l]);
+                if (l == polygons[i].inners()[k].size() - 1) { continue; }
+                os << ",";
+            }
+            os << "]";
+        }
         if (i == polygons.size() - 1) { continue; }
         os << ",";
     }
