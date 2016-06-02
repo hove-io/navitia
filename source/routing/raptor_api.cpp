@@ -35,7 +35,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "type/meta_data.h"
 #include "fare/fare.h"
-#include "isochron.h"
+#include "isochrone.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -1145,9 +1145,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
-static void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& pb_creator) {
-    auto pb_isochron = pb_creator.add_graphical_isochrons();
-    auto pb_polys = pb_isochron->mutable_geojson();
+static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& pb_creator) {
+    auto pb_isochrone = pb_creator.add_graphical_isochrones();
+    auto pb_polys = pb_isochrone->mutable_geojson();
     for (const auto& polygon: shape) {
         auto p = pb_polys->add_polygons();
         auto lo = p->mutable_outer();
@@ -1167,7 +1167,7 @@ static void add_graphical_isochron(const type::MultiPolygon& shape, PbCreator& p
     }
 }
 
-pbnavitia::Response make_graphical_isochron(RAPTOR &raptor,
+pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                             const boost::posix_time::ptime& current_datetime,
                                             type::EntryPoint origin,
                                             const uint64_t departure_datetime,
@@ -1202,9 +1202,9 @@ pbnavitia::Response make_graphical_isochron(RAPTOR &raptor,
     DateTime bound_max = clockwise ? init_dt + max_duration : init_dt - max_duration;
     DateTime bound_min = clockwise ? init_dt + min_duration : init_dt - min_duration;
     raptor.isochrone(departures, init_dt, bound_max, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
-    type::MultiPolygon isochron = build_isochrons(raptor, clockwise, bound_max, bound_min, departures,
+    type::MultiPolygon isochrone = build_isochrones(raptor, clockwise, bound_max, bound_min, departures,
                                                   speed, max_duration, min_duration);
-    add_graphical_isochron(isochron, pb_creator);
+    add_graphical_isochrone(isochrone, pb_creator);
     return pb_creator.get_response();
 }
 

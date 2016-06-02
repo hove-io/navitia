@@ -32,7 +32,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE circle_test
 
 #include "type/geographical_coord.h"
-#include "routing/isochron.h"
+#include "routing/isochrone.h"
 #include "ed/build_helper.h"
 #include "routing/raptor.h"
 #include "routing/routing.h"
@@ -139,17 +139,17 @@ BOOST_AUTO_TEST_CASE(build_single_ischron_test) {
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:12"_t));
     double speed = 0.8;
-    navitia::type::MultiPolygon isochron = build_single_isochron(raptor, b.data->pt_data->stop_points, true,
+    navitia::type::MultiPolygon isochrone = build_single_isochrone(raptor, b.data->pt_data->stop_points, true,
                                                            navitia::DateTimeUtils::set(0, "09:12"_t),
                                                            d, speed, 3600 + 60*12);
 #if BOOST_VERSION >= 105600
-    BOOST_CHECK(boost::geometry::within(coord_Paris, isochron));
-    BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron));
-    BOOST_CHECK(boost::geometry::within(coord_Concorde, isochron));
-    BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochron));
-    BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron));
-    BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron));
-    BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron));
+    BOOST_CHECK(boost::geometry::within(coord_Paris, isochrone));
+    BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochrone));
+    BOOST_CHECK(boost::geometry::within(coord_Concorde, isochrone));
+    BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochrone));
+    BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochrone));
+    BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochrone));
+    BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochrone));
 #endif
 }
 
@@ -185,29 +185,29 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:00"_t));
     double speed = 0.8;
 
-    navitia::type::MultiPolygon isochron_9h = build_isochrons(raptor, true,
+    navitia::type::MultiPolygon isochrone_9h = build_isochrones(raptor, true,
                                                                     navitia::DateTimeUtils::set(0, "09:00"_t),
                                                                     navitia::DateTimeUtils::set(0, "08:00"_t),
                                                                     d, speed, 3600, 0);
-    navitia::type::MultiPolygon isochron_8h30 = build_isochrons(raptor, true,
+    navitia::type::MultiPolygon isochrone_8h30 = build_isochrones(raptor, true,
                                                                     navitia::DateTimeUtils::set(0, "08:30"_t),
                                                                     navitia::DateTimeUtils::set(0, "08:00"_t),
                                                                     d, speed, 60 * 30, 0);
-    navitia::type::MultiPolygon isochron_8h30_9h = build_isochrons(raptor, true,
+    navitia::type::MultiPolygon isochrone_8h30_9h = build_isochrones(raptor, true,
                                                            navitia::DateTimeUtils::set(0, "09:00"_t),
                                                            navitia::DateTimeUtils::set(0, "08:30"_t),
                                                            d, speed, 3600, 60 * 30);
 #if BOOST_VERSION >= 105600
-    BOOST_CHECK(boost::geometry::within(coord_Paris, isochron_9h));
-    BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochron_9h));
-    BOOST_CHECK(boost::geometry::within(coord_Concorde, isochron_9h));
-    BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochron_9h));
-    BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochron_9h));
-    BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochron_9h));
-    BOOST_CHECK(!boost::geometry::within(isochron_8h30_9h, isochron_8h30));
-    BOOST_CHECK(!boost::geometry::within(isochron_8h30, isochron_8h30_9h));
-    BOOST_CHECK(!boost::geometry::within(isochron_9h, isochron_8h30_9h));
-    BOOST_CHECK(boost::geometry::within(isochron_8h30_9h, isochron_9h));;
-    BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochron_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Paris, isochrone_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochrone_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Concorde, isochrone_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Pantheon, isochrone_9h));
+    BOOST_CHECK(boost::geometry::within(coord_Luxembourg, isochrone_9h));
+    BOOST_CHECK(!boost::geometry::within(coord_Rennes,isochrone_9h));
+    BOOST_CHECK(!boost::geometry::within(isochrone_8h30_9h, isochrone_8h30));
+    BOOST_CHECK(!boost::geometry::within(isochrone_8h30, isochrone_8h30_9h));
+    BOOST_CHECK(!boost::geometry::within(isochrone_9h, isochrone_8h30_9h));
+    BOOST_CHECK(boost::geometry::within(isochrone_8h30_9h, isochrone_9h));;
+    BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochrone_9h));
 #endif
 }

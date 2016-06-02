@@ -1829,8 +1829,8 @@ pbnavitia::Journey* PbCreator::add_journeys(){
     return response.add_journeys();
 }
 
-pbnavitia::GraphicalIsochron* PbCreator::add_graphical_isochrons() {
-    return response.add_graphical_isochrons();
+pbnavitia::GraphicalIsochrone* PbCreator::add_graphical_isochrones() {
+    return response.add_graphical_isochrones();
 }
 
 bool PbCreator::has_error(){
