@@ -88,7 +88,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 #pragma GCC diagnostic pop
             } else {
                 double b = (cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad));
-                if (fabs(b) >= 1) {
+                if (fabs(b) > 1) {
                     b = (std::signbit(b) ? fmod(b - 1, 2) + 1 : fmod(b + 1, 2) - 1);
                 }
                 delta_lon = acos(b);
@@ -118,7 +118,7 @@ type::Polygon circle(const type::GeographicalCoord& center,
     return points;
 }
 
-type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type::Polygon poly) {
+static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type::Polygon poly) {
     type::MultiPolygon multi_polys_merged;
     for(const type::Polygon& p: multi_poly) {
         if (boost::geometry::intersects(p, poly)) {
