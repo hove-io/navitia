@@ -219,6 +219,7 @@ class PoiType(db.Model):
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
+    discarded = db.Column(db.Boolean, default=False, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
     authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
@@ -329,9 +330,22 @@ class Instance(db.Model):
         return result
 
     @classmethod
+    def query_existing(cls):
+        return cls.query.filter_by(discarded=False)
+
+    @classmethod
     def get_by_name(cls, name):
-        res = cls.query.filter_by(name=name).first()
+        res = cls.query_existing().filter_by(name=name).first()
         return res
+
+    @classmethod
+    def get_from_id_or_name(cls, id=None, name=None):
+        if id:
+            return cls.query.get_or_404(id)
+        elif name:
+            return cls.query_existing().filter_by(name=name).first_or_404()
+        else:
+            return {'error': 'instance is required'}, 400
 
     def __repr__(self):
         return '<Instance %r>' % self.name

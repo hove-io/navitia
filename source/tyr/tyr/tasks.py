@@ -141,7 +141,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
 
 @celery.task()
 def update_data():
-    for instance in models.Instance.query.all():
+    for instance in models.Instance.query_existing().all():
         current_app.logger.debug("Update data of : {}".format(instance.name))
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
@@ -246,7 +246,7 @@ def update_autocomplete():
 
 @celery.task()
 def purge_instance(instance_id, nb_to_keep):
-    instance = models.Instance.query.get(instance_id)
+    instance = models.Instance.query_existing().get(instance_id)
     logger = get_instance_logger(instance)
     logger.info('purge of backup directories for %s', instance.name)
     instance_config = load_instance_config(instance.name)
@@ -273,7 +273,7 @@ def purge_instance(instance_id, nb_to_keep):
 def scan_instances():
     for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
         instance_name = os.path.basename(instance_file).replace('.ini', '')
-        instance = models.Instance.query.filter_by(name=instance_name).first()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
         if not instance:
             current_app.logger.info('new instances detected: %s', instance_name)
             instance = models.Instance(name=instance_name)
@@ -286,7 +286,7 @@ def scan_instances():
 
 @celery.task()
 def reload_kraken(instance_id):
-    instance = models.Instance.query.get(instance_id)
+    instance = models.Instance.query_existing().get(instance_id)
     job = models.Job()
     job.instance = instance
     job.state = 'pending'
@@ -299,7 +299,7 @@ def reload_kraken(instance_id):
 
 @celery.task()
 def build_all_data():
-    for instance in models.Instance.query.all():
+    for instance in models.Instance.query_existing().all():
         build_data(instance)
 
 
@@ -317,7 +317,7 @@ def build_data(instance):
 
 @celery.task()
 def load_data(instance_id, data_dirs):
-    instance = models.Instance.query.get(instance_id)
+    instance = models.Instance.query_existing().get(instance_id)
 
     import_data(data_dirs, instance, backup_file=False, async=False)
 
@@ -364,7 +364,7 @@ def heartbeat():
     """
     logging.info('ping krakens!!')
     with kombu.Connection(current_app.config['CELERY_BROKER_URL']) as connection:
-        instances = models.Instance.query.all()
+        instances = models.Instance.query_existing().all()
         task = task_pb2.Task()
         task.action = task_pb2.HEARTBEAT
 

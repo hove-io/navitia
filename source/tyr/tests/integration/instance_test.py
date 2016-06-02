@@ -74,6 +74,20 @@ def test_update_instances(create_instance):
         assert resp[key] == param
 
 
+def test_delete_instance_by_id(create_instance):
+    resp = api_delete('/v0/instances/{}'.format(create_instance))
+    assert resp['id'] == create_instance
+    resp = api_get('/v0/instances/')
+    assert len(resp) == 0
+
+
+def test_delete_instance_by_name(create_instance):
+    resp = api_delete('/v0/instances/fr'.format(create_instance))
+    assert resp['id'] == create_instance
+    resp = api_get('/v0/instances/')
+    assert len(resp) == 0
+
+
 def test_update_invalid_scenario(create_instance):
     params = {"scenario": "foo"}
     resp, status = api_put('/v0/instances/fr', data=json.dumps(params), check=False,
