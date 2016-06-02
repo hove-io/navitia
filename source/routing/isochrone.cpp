@@ -43,6 +43,7 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+IsochroneException::~IsochroneException() noexcept = default;
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,

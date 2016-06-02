@@ -696,7 +696,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
 }
 
 pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request_iso,
-                                               const boost::posix_time::ptime& current_datetime) {
+                                                const boost::posix_time::ptime& current_datetime) {
 
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
