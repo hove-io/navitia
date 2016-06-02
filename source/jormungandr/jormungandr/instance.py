@@ -305,7 +305,6 @@ class Instance(object):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-
     def _send_and_receive(self,
                          request,
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),

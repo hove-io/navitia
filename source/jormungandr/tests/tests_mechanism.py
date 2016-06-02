@@ -49,11 +49,13 @@ from jormungandr.instance import Instance
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
+
 class FakeModel(object):
     def __init__(self, priority, is_free):
         self.priority = priority
         self.is_free = is_free
         self.scenario = 'default'
+
 
 def check_loaded(kraken):
     #TODO!
