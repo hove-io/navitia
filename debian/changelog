@@ -1,3 +1,13 @@
+navitia2 (2.9.1) unstable; urgency=low
+
+  * Isochrone : Add an e to isochron  <https://github.com/CanalTP/navitia/pull/1621>
+  * tyr: set dataset when calling osm2mimir and bano2mimir  <https://github.com/CanalTP/navitia/pull/1618>
+  * RT: Fix terminus timeo  <https://github.com/CanalTP/navitia/pull/1617>
+  * Isochrone: fix a bug  <https://github.com/CanalTP/navitia/pull/1623>
+  * Isochrone: catch boost exception  <https://github.com/CanalTP/navitia/pull/1619>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Thu, 02 Jun 2016 17:06:27 +0100
+
 navitia2 (2.9.0) unstable; urgency=low
 
   * Jormungandr: Bragi calls  <https://github.com/CanalTP/navitia/pull/1601>
