@@ -125,7 +125,8 @@ void check_ntfs(const nt::Data& data) {
     check_headsigns(data, "N2", 0, 1, 3, 4);
     // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4-7 are named vehiclejourney3
     check_headsigns(data, "vehiclejourney2", 2, 3);
-    check_headsigns(data, "vehiclejourney3", 4, 7);
+    check_headsigns(data, "vehiclejourney3", 4, 5);
+    check_headsigns(data, "NULL", 6, 7);
     // check vj from headsign
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
@@ -139,11 +140,11 @@ void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 4);
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[6]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[7]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[6]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[7]));
 
     BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 4);
     for (auto& mvj : data.pt_data->meta_vjs) {
