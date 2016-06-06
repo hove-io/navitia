@@ -316,7 +316,7 @@ class StatManager(object):
 
         first_pt_section = None
         last_pt_section = None
-        for section in resp_journey['sections']:
+        for section in resp_journey.get('sections', []):
             if 'type' in section and section['type'] == 'public_transport':
                 if not first_pt_section:
                     first_pt_section = section
@@ -344,7 +344,6 @@ class StatManager(object):
                 stat_journey.last_pt_admin_insee = admin[1]
             if admin[2]:
                 stat_journey.last_pt_admin_name = admin[2]
-
 
     def fill_journeys(self, stat_request, call_result):
         """
