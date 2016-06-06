@@ -249,7 +249,6 @@ class InstanceManager(object):
         else:
             return valid_instances
 
-
     def regions(self, region=None, lon=None, lat=None):
         response = {'regions': []}
         regions = []
