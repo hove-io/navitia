@@ -472,7 +472,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
-        parser_get.add_argument("_max_successive_buses", type=int)
+        parser_get.add_argument("_max_successive_physical_mode", type=int)
         parser_get.add_argument("_max_additional_connections", type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", type=int)
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)

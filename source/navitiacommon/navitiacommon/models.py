@@ -231,7 +231,7 @@ class Instance(db.Model):
     # ============================================================
     # params for jormungandr
     # ============================================================
-    #the scenario used by jormungandr, by default we use the default scenario (clever isn't it?)
+    #the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
     scenario = db.Column(db.Text, nullable=False, default='new_default')
 
     #order of the journey, this order is for clockwise request, else it is reversed
@@ -298,6 +298,11 @@ class Instance(db.Model):
 
     max_additional_connections = db.Column(db.Integer, default=default_values.max_additional_connections,
                                   nullable=False, server_default='2')
+
+    successive_physical_mode_to_limit_id = db.Column(db.Text,
+                                                     default=default_values.successive_physical_mode_to_limit_id,
+                                                     nullable=False,
+                                                     server_default=default_values.successive_physical_mode_to_limit_id)
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
