@@ -109,6 +109,11 @@ class AbstractTestFixture:
     def kill_all_krakens(cls):
         for name, kraken_process in cls.krakens_pool.items():
             logging.debug("killing " + name)
+            if cls.data_sets[name].get('check_killed', True):
+                kraken_process.poll()
+                if kraken_process.returncode is not None:
+                    logging.error('kraken is dead, check errors, return code = %s', kraken_process.returncode)
+                    assert False, 'kraken is dead, check errors, return code'
             kraken_process.kill()
 
     @classmethod
