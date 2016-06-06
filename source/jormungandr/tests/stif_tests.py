@@ -97,20 +97,21 @@ class TestAutocomplete(AbstractTestFixture):
         stopP ----------------------------------------> stopT
         15:00                                           20:00
 
-        Test of request with parameter "_max_successive_buses":
+        Test of request with parameter "_max_successive_physical_mode":
         * we want to make at least 2 journey calls (not only the best journey, but also try next)
         * we don't want the journey using more than 3 Buses
         So here we want journey1
         """
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&_max_successive_physical_mode=3&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 1)
 
-        #As we modifiy the value of _max_successive_buses to 5 we want two journeys
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
-                "&_max_successive_buses=5&_max_additional_connections=10"\
+        #As we modify the value of _max_successive_physical_mode to 5 we want two journeys
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&_max_successive_physical_mode=5&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
@@ -125,32 +126,33 @@ class TestAutocomplete(AbstractTestFixture):
                                 Bus
         stopP ----------------------------------------------------------------------------> stopW
         15:00                                                                               21:00
-        Test of request with parameter "_max_successive_buses":
+        Test of request with parameter "_max_successive_physical_mode":
         * we want to make at least 2 journey calls (not only the best journey, but also try next)
         * we don't want the journey using more than 3 Buses successive
         * we have "Bus" and "Tram" as means of transport
         """
 
-        #As there are 4 buses successive to be used from stopP to stopW and _max_successive_buses = 3
+        #As there are 4 buses successive to be used from stopP to stopW and _max_successive_physical_mode = 3
         # we have 1 journey
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"\
+                "&_max_successive_physical_mode=3&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 1)
 
-        #As we modifiy the value of _max_successive_buses to 5 we want two journeys
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
-                "&_max_successive_buses=5&_max_additional_connections=10"\
+        #As we modify the value of _max_successive_physical_mode to 5 we want two journeys
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&_max_successive_physical_mode=5&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 2)
 
-        # As we modifiy the value of _max_additional_connections to 2 we delete the second journey because
+        # As we modify the value of _max_additional_connections to 2 we delete the second journey because
         # it contains more then nb_connections + 2 ()
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif" \
-                "&_max_successive_buses=5&_max_additional_connections=2"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&_max_successive_physical_mode=5&_max_additional_connections=2"\
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query, display=False)

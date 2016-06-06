@@ -823,6 +823,7 @@ instance_parameters = {
     'night_bus_filter_base_factor': fields.Raw,
     'priority': fields.Raw,
     'bss_provider': fields.Boolean,
+    'successive_physical_mode_to_limit_id': fields.Raw,
     'max_additional_connections': fields.Raw
 }
 

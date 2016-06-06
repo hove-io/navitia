@@ -222,6 +222,11 @@ class Instance(object):
         return get_value_or_default('factor_too_long_journey', instance_db, self.name)
 
     @property
+    def successive_physical_mode_to_limit_id(self):
+        instance_db = self.get_models()
+        return get_value_or_default('successive_physical_mode_to_limit_id', instance_db, self.name)
+
+    @property
     def min_duration_too_long_journey(self):
         instance_db = self.get_models()
         return get_value_or_default('min_duration_too_long_journey', instance_db, self.name)

@@ -44,8 +44,8 @@ class Scenario(new_default.Scenario):
             original_request['_final_line_filter'] = True
         if original_request['min_nb_journeys'] is None:
             original_request['min_nb_journeys'] = 1
-        if original_request['_max_successive_buses'] is None:
-            original_request['_max_successive_buses'] = 3
+        if original_request['_max_successive_physical_mode'] is None:
+            original_request['_max_successive_physical_mode'] = 3
 
         original_response = super(Scenario, self).journeys(original_request, instance)
 
