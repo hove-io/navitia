@@ -362,6 +362,10 @@ class Instance(flask_restful.Resource):
                 help='all journeys with a duration fewer than this value will be kept no matter what even if they ' \
                         'are 20 times slower than the earliest one', location=('json', 'values'),
                 default=instance.min_duration_too_long_journey)
+        parser.add_argument('successive_physical_mode_to_limit_id', type=str,
+                help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
+                     ' used by _max_successive_physical_mode rule', location=('json', 'values'),
+                default=instance.successive_physical_mode_to_limit_id)
         parser.add_argument('max_duration_criteria', type=str, choices=['time', 'duration'],
                 help='', location=('json', 'values'),
                 default=instance.max_duration_criteria)
@@ -416,6 +420,7 @@ class Instance(flask_restful.Resource):
                                        'walking_transfer_penalty',
                                        'night_bus_filter_max_factor',
                                        'night_bus_filter_base_factor',
+                                       'successive_physical_mode_to_limit_id',
                                        'priority',
                                        'bss_provider'])
             db.session.commit()

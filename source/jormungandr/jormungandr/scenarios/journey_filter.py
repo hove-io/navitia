@@ -69,7 +69,7 @@ def filter_journeys(response_list, instance, request):
 
     _filter_too_long_waiting(journeys, request)
 
-    _filter_max_successive_buses(journeys, request)
+    _filter_max_successive_physical_mode(journeys, instance, request)
 
     delete_journeys(response_list, request)
 
@@ -206,13 +206,14 @@ def _filter_too_long_waiting(journeys, request):
             break
 
 
-def _filter_max_successive_buses(journeys, request):
+def _filter_max_successive_physical_mode(journeys, instance, request):
     """
-    eliminates journeys with public_transport.bus more than _max_successive_buses
+    eliminates journeys with specified public_transport.physical_mode more than
+    _max_successive_physical_mode (used for STIF buses)
     """
     logger = logging.getLogger(__name__)
-    max_successive_buses = get_or_default(request, '_max_successive_buses', 0)
-    if max_successive_buses == 0:
+    max_successive_physical_mode = get_or_default(request, '_max_successive_physical_mode', 0)
+    if max_successive_physical_mode == 0:
         return
     for j in journeys:
         if _to_be_deleted(j):
@@ -222,15 +223,16 @@ def _filter_max_successive_buses(journeys, request):
         for s in j.sections:
             if s.type != response_pb2.PUBLIC_TRANSPORT:
                 continue
-            if s.pt_display_informations.uris.physical_mode == 'Bus':
+            if s.pt_display_informations.uris.physical_mode == instance.successive_physical_mode_to_limit_id:
                 bus_count += 1
             else:
-                if bus_count <= max_successive_buses:
+                if bus_count <= max_successive_physical_mode:
                     bus_count = 0
 
-        if bus_count > max_successive_buses:
-            logger.debug("the journey {} has a too much successive buses, we delete it".format(j.internal_id))
-            mark_as_dead(j, "too_much_successive_buses")
+        if bus_count > max_successive_physical_mode:
+            logger.debug("the journey {} has a too much successive {}, we delete it".
+                format(j.internal_id, instance.successive_physical_mode_to_limit_id))
+            mark_as_dead(j, "too_much_successive_physical_mode")
 
 
 def _filter_too_much_connections(journeys, instance, request):
