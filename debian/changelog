@@ -1,3 +1,9 @@
+navitia2 (2.9.3) unstable; urgency=low
+
+  * ed: "NULL" value of optional attribut in ntfs files managed  <https://github.com/CanalTP/navitia/pull/1602>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 06 Jun 2016 18:06:57 +0100
+
 navitia2 (2.9.2) unstable; urgency=low
 
   * Jormun: fix max_successive_physical_mode  <https://github.com/CanalTP/navitia/pull/1628>
