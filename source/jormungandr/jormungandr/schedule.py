@@ -174,6 +174,10 @@ class RoutePoint(object):
 
     @staticmethod
     def _get_code(obj, object_id_tag):
+        if len([c.value for c in obj.codes if c.type == object_id_tag]) > 1:
+            # there is more than one RT id for the given object, which shouldn't happen
+            logging.getLogger(__name__).warning('Object {o} has multiple RealTime codes for tag {t}'.
+                                                format(o=obj.uri, t=object_id_tag))
         return next((c.value for c in obj.codes if c.type == object_id_tag), None)
 
     # Cache this ?

@@ -101,7 +101,7 @@ private:
     void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs);
-    void insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_codes);
+    void insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>>& object_codes);
 
     void insert_stop_times(const std::vector<types::StopTime*>& stop_times);
 
