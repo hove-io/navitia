@@ -50,8 +50,11 @@ class Lit(fields.Raw):
 
 ww_admin = {
     "id": fields.String,
-    # "insee": dict["id"][6:],
-    # "coord": ??
+    "insee": fields.String(attribute="insee"),
+    "coord": {
+        "lon": fields.Float(attribute="coord.lon"),
+        "lat": fields.Float(attribute="coord.lat"),
+    },
     "level": fields.Integer,
     "name": fields.String,
     "label": fields.String(attribute="name"),
