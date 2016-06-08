@@ -47,6 +47,6 @@ class BuildDataCommand(Command):
         if not instance_name:
             logging.info("Building all data")
             return build_all_data()
-        instance = models.Instance.query.filter_by(name=instance_name).first()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
         return build_data(instance)
 
