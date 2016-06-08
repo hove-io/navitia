@@ -300,7 +300,7 @@ class TestPtRef(AbstractTestFixture):
 
         codes = get_not_null(l, 'codes')
 
-        assert len(codes) == 3
+        assert len(codes) == 4
 
         is_valid_codes(codes)
 
@@ -507,6 +507,24 @@ class TestPtRef(AbstractTestFixture):
         lines = get_not_null(response, 'lines')
         assert len(lines) == 1
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
+
+        response = self.query_region("lines?filter=line.has_code(codeB, Bise)&show_codes=true")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
+
+        response = self.query_region("lines?filter=line.has_code(codeC, C)&show_codes=true")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
+
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines?filter=line.has_code(codeB, rien)&show_codes=true")
+        assert code == 400
+        assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
+
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines?filter=line.has_code(codeC, rien)&show_codes=true")
+        assert code == 400
+        assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})

@@ -454,6 +454,10 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         first_section = response['journeys'][0]['sections'][0]
         eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
         eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+        eq_(first_section['from']['stop_point']['codes'][1]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][1]['value'], 'Ain')
+        eq_(first_section['from']['stop_point']['codes'][2]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][2]['value'], 'Aisne')
 
     def test_journeys_with_show_codes(self):
         '''
@@ -469,6 +473,10 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         first_section = response['journeys'][0]['sections'][0]
         eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
         eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+        eq_(first_section['from']['stop_point']['codes'][1]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][1]['value'], 'Ain')
+        eq_(first_section['from']['stop_point']['codes'][2]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][2]['value'], 'Aisne')
 
     def test_remove_one_journey_from_batch(self):
         """
