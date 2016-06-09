@@ -163,22 +163,6 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             assert not multi_poly_min_1200.contains(multi_poly_max_3600)
             assert multi_poly_max_3600.contains(multi_poly_min_1200)
 
-    def test_reverse_graphical_isochrones_coord_clockwise(self):
-        q = "v1/coverage/main_routing_test/isochrones?datetime={}&to={}&max_duration={}"
-        q = q.format('20120614T080000', s_coord, '3600')
-        normal_response, error_code = self.query_no_assert(q)
-
-        assert error_code == 404
-        assert normal_response['error']['message'] == 'reverse isochrone works only for anti-clockwise request'
-
-    def test_graphical_isochrones_coord_clockwise(self):
-        q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}&datetime_represents=arrival"
-        q = q.format('20120614T080000', s_coord, '3600')
-        normal_response, error_code = self.query_no_assert(q)
-
-        assert error_code == 404
-        assert normal_response['error']['message'] == 'isochrone works only for clockwise request'
-
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"
         normal_response, error_code = self.query_no_assert(q)

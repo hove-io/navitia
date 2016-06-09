@@ -198,14 +198,15 @@ class Scenario(object):
             origin = journey_req.origin.add()
             origin.place = request["origin"]
             origin.access_duration = 0
+            journey_req.clockwise = True
         if "destination" in request and request["destination"]:
             destination = journey_req.destination.add()
             destination.place = request["destination"]
             destination.access_duration = 0
+            journey_req.clockwise = False
         request["datetime"] = [request["datetime"]]
         for dte in request["datetime"]:
             journey_req.datetimes.append(dte)
-        journey_req.clockwise = request["clockwise"]
         updated_common_journey_request_with_default(request, instance)
         sn_params = journey_req.streetnetwork_params
         sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
