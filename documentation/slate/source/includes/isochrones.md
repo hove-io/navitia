@@ -18,5 +18,6 @@ from a potential destination with their respective arrival times, travel times a
 You have to use these APIs (click on them for details):
 
 -   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.
--   **[Journeys](#journeys)** : Compute journeys
+-   **[Journeys](#journeys)** : Compute all journeys from a departure point to every reachable point
+-   **[isochrones](#isochrones)** : same as /journeys, but it returns a geoJson ready to be displayed on map ! This service is currently in beta.
 
