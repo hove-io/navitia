@@ -148,10 +148,10 @@ struct InfoCircle {
     double distance;
     int duration_left;
     InfoCircle(const type::GeographicalCoord& center,
-           const double& distance,
-           const int& duration_left): center(center),
-                                      distance(distance),
-                                      duration_left(duration_left) {}
+               const double& distance,
+               const int& duration_left): center(center),
+        distance(distance),
+        duration_left(duration_left) {}
 };
 
 template<typename T>
@@ -195,9 +195,9 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
             circles_classed.push_back(to_add);
         }
     }
-    boost::sort(circles_classed, [](const InfoCircle& a, const InfoCircle& b) {
-        return a.distance < b.distance;
-    });
+    boost::sort(circles_classed,
+                [](const InfoCircle& a, const InfoCircle& b) {return a.distance < b.distance;});
+
     for (const auto& c: circles_classed) {
         type::Polygon circle_to_add = circle(c.center, c.duration_left * speed);
         circles = merge_poly(circles, circle_to_add);

@@ -1149,8 +1149,18 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 static void coord_to_string(std::stringstream& ss,
                             const double& lon,
                             const double& lat) {
-    ss << std::setprecision(15) << "[" << lon << ","
-       << lat << "]";
+    ss << std::setprecision(15) << "[" << lon << "," << lat << "]";
+}
+
+static void ring_to_string(std::stringstream& ss,
+                           const std::vector<type::GeographicalCoord>& ring) {
+    auto it = ring.begin();
+    const auto end = ring.end();
+    if (it != end) { coord_to_string(ss, it->lon(), it->lat()); ++it; }
+    for (; it != end; ++it) {
+        ss << ",";
+        coord_to_string(ss, it->lon(), it->lat());
+    }
 }
 
 static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& pb_creator) {
@@ -1158,28 +1168,17 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& 
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
     for (unsigned i = 0; i < shape.size(); i++) {
         geojson << "[[";
-        auto it = shape[i].outer().begin();
-        const auto end = shape[i].outer().end();
-        if (it != end) { coord_to_string(geojson, it->lon(), it->lat()); ++it; }
-        for (; it != end; ++it) {
-            geojson << ",";
-            coord_to_string(geojson, it->lon(), it->lat());
-        }
+        ring_to_string(geojson, shape[i].outer());
         geojson << "]";
         for(unsigned j = 0; j < shape[i].inners().size(); j++) {
             geojson << ",[";
-            auto it = shape[i].inners()[j].begin();
-            const auto end = shape[i].inners()[j].end();
-            if (it != end) { coord_to_string(geojson, it->lon(), it->lat()); ++it; }
-            for (; it != end; ++it) {
-                geojson << ",";
-                coord_to_string(geojson, it->lon(), it->lat());
-            }
+            ring_to_string(geojson, shape[i].inners()[j]);
             geojson << "]";
         }
         geojson << "]";
-        if (i == shape.size() - 1) { continue; }
-        geojson << ",";
+        if (i < shape.size() - 1) {
+            geojson << ",";
+        }
     }
     geojson << "]}";
     auto pb_isochrone = pb_creator.add_graphical_isochrones();
@@ -1221,10 +1220,11 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound_max = clockwise ? init_dt + max_duration : init_dt - max_duration;
     DateTime bound_min = clockwise ? init_dt + min_duration : init_dt - min_duration;
-    raptor.isochrone(departures, init_dt, bound_max, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
+    raptor.isochrone(departures, init_dt, bound_max, max_transfers,
+                     accessibilite_params, forbidden, clockwise, rt_level);
     type::GeographicalCoord coord_origin = origin.coordinates;
     type::MultiPolygon isochrone = build_isochrones(raptor, clockwise, coord_origin, bound_max, bound_min, departures,
-                                                  speed, max_duration, min_duration);
+                                                    speed, max_duration, min_duration);
     add_graphical_isochrone(isochrone, pb_creator);
     return pb_creator.get_response();
 }
