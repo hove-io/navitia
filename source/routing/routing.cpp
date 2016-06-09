@@ -36,37 +36,31 @@ namespace navitia { namespace routing {
 std::string PathItem::print() const {
     std::stringstream ss;
 
-    if(stop_points.size() < 2) {
-        ss << "Section avec moins de 2 stop points, hrmmmm \n";
-        return ss.str();
-    }
-
     const navitia::type::StopArea* start = stop_points.front()->stop_area;
     const navitia::type::StopArea* dest = stop_points.back()->stop_area;
-    ss << "Section de type ";
-    if(type == ItemType::public_transport)
-        ss << "transport en commun";
-    else if(type == ItemType::walking)
-        ss << "marche";
-    else if(type == ItemType::stay_in)
-        ss << "prolongement de service";
-    ss << "\n";
-
+    switch (type) {
+    case ItemType::public_transport: ss << "public transport"; break;
+    case ItemType::walking: ss << "walking"; break;
+    case ItemType::stay_in: ss << "stay in"; break;
+    case ItemType::waiting: ss << "waiting"; break;
+    default: ss << "unknown"; break;
+    }
+    ss << " section\n";
 
     if(type == ItemType::public_transport && ! stop_times.empty()){
         const navitia::type::StopTime* st = stop_times.front();
         const navitia::type::VehicleJourney* vj = st->vehicle_journey;
         const navitia::type::Route* route = vj->route;
         const navitia::type::Line* line = route->line;
-        ss << "Ligne : " << line->name  << " (" << line->uri << " " << line->idx << "), "
+        ss << "Line : " << line->name  << " (" << line->uri << " " << line->idx << "), "
            << "Route : " << route->name  << " (" << route->uri << " " << route->idx << "), "
            << "Vehicle journey " << vj->idx << "\n";
     }
-    ss << "Départ de " << start->name << "(" << start->uri << " " << start->idx << ") à " << departure << "\n";
+    ss << "From " << start->name << "(" << start->uri << " " << start->idx << ") at " << departure << "\n";
     for(auto sp : stop_points){
         ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")" << "\n";
     }
-    ss << "Arrivée à " << dest->name << "(" << dest->uri << " " << dest->idx << ") à " << arrival << "\n";
+    ss << "To " << dest->name << "(" << dest->uri << " " << dest->idx << ") at " << arrival << "\n";
     return ss.str();
 }
 

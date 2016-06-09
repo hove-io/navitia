@@ -2889,3 +2889,46 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     BOOST_CHECK_EQUAL(resp_0.at(0).items.front().stop_points.back()->uri,
                       resp_1.at(0).items.front().stop_points.back()->uri);
 }
+
+// A: 1=============2xxxxx3==========4
+//                   \    |
+//                    \   |
+//                     \  |
+//                      \ |
+//                       \|
+//                  B:    5==========6
+//
+// The vj extention 2 3 is free (0s) and the connection 3-5 is shorter
+// than 2-5, but we prefere less stay in. So we want only
+// 1====2----5====6 without stay in.
+BOOST_AUTO_TEST_CASE(optimize_extention_before_min_wait) {
+    ed::builder b("20120614");
+
+    b.vj("A").block_id("A")("1", "08:00"_t, "08:00"_t)("2", "09:00"_t, "09:00"_t);
+    b.vj("A").block_id("A")("3", "09:00"_t, "09:00"_t)("4", "12:00"_t, "12:00"_t);
+    b.vj("B").block_id("B")("5", "10:00"_t, "10:00"_t)("6", "11:00"_t, "11:00"_t);
+
+    b.connection("2", "5", 120);
+    b.connection("3", "5", 60);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+
+    auto res = raptor.compute(b.data->pt_data->stop_areas_map.at("1"),
+                              b.data->pt_data->stop_areas_map.at("6"),
+                              "8:00"_t,
+                              0,
+                              DateTimeUtils::inf,
+                              type::RTLevel::Base,
+                              2_min);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    res[0].print();
+    BOOST_REQUIRE_EQUAL(res[0].items.size(), 4);
+    BOOST_CHECK_EQUAL(res[0].items[1].type, ItemType::walking);
+    BOOST_CHECK_EQUAL(res[0].items[1].stop_points.front()->uri, "2");
+    BOOST_CHECK_EQUAL(res[0].items[1].stop_points.back()->uri, "5");
+}
