@@ -1119,7 +1119,7 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
 
 }
 
-void EdPersistor::insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_codes){
+void EdPersistor::insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>>& object_codes){
     size_t count = 0;
     this->lotus.prepare_bulk_insert("navitia.object_code", {"object_id", "object_type_id", "key", "value"});
     for(const auto& object_code_map: object_codes){
@@ -1127,14 +1127,15 @@ void EdPersistor::insert_object_codes(const std::map<ed::types::pt_object_header
             if (object_code_map.first.pt_object->idx == nt::invalid_idx) {
                 ++count;
             } else {
-                std::vector<std::string> values {
-                    std::to_string(object_code_map.first.pt_object->idx),
-                    std::to_string(static_cast<int>(object_code_map.first.type)),
-                    object_code.first,
-                    object_code.second
-
-                };
-                this->lotus.insert(values);
+                for (const auto& object_code_value: object_code.second) {
+                    std::vector<std::string> values {
+                        std::to_string(object_code_map.first.pt_object->idx),
+                        std::to_string(static_cast<int>(object_code_map.first.type)),
+                        object_code.first,
+                        object_code_value
+                    };
+                    this->lotus.insert(values);
+                }
             }
         }
     }

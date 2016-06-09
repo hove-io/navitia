@@ -369,5 +369,12 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
     BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->dataset->uri, "d1");
 
+    BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->networks[0]),
+                      (nt::CodeContainer::Codes{{"external_code", {"FilvertTAD", "FilbleuTAD"}}}));
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points.size(), 8);
+    BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->stop_points_map["stop_point:SP:A"]),
+                      (nt::CodeContainer::Codes{{"external_code", {"A"}}, {"source", {"A", "Ahah", "Aïe"}}}));
+
     check_ntfs(data);
 }
