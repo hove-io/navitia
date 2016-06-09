@@ -43,5 +43,5 @@ class ReloadKrakenCommand(Command):
 
     def run(self, instance_name):
         logging.info("Run command reload kraken")
-        instance = models.Instance.query.filter_by(name=instance_name).first()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
         reload_kraken.delay(instance.id)

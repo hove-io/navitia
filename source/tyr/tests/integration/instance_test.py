@@ -31,6 +31,7 @@ def traveler_profile_params():
               "max_bike_duration_to_pt": 500,
     }
 
+
 def test_get_instances_empty():
     resp = api_get('/v0/instances/')
     assert resp == []
@@ -41,6 +42,18 @@ def test_get_instances(create_instance):
     assert len(resp) == 1
     assert resp[0]['name'] == 'fr'
     assert resp[0]['id'] == create_instance
+
+
+def test_get_instance(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert len(resp) == 1
+    assert resp[0]['name'] == 'fr'
+    assert resp[0]['id'] == create_instance
+    resp = api_get('/v0/instances/{}'.format(create_instance))
+    assert len(resp) == 1
+    assert resp[0]['name'] == 'fr'
+    assert resp[0]['id'] == create_instance
+
 
 def test_update_instances(create_instance):
     params = {"min_tc_with_bss": 5,
@@ -68,10 +81,44 @@ def test_update_instances(create_instance):
               "night_bus_filter_max_factor": 1.5,
               "max_car_duration_to_pt": 800,
               "bss_provider": False}
-    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
 
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.iteritems():
         assert resp[key] == param
+
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    for key, param in params.iteritems():
+        assert resp[key] == param
+
+
+def test_delete_instance_by_id(create_instance):
+    resp = api_delete('/v0/instances/{}'.format(create_instance))
+    assert resp['id'] == create_instance
+    assert resp['discarded'] == True
+
+    # check response to get with different use cases
+    resp = api_get('/v0/instances/')
+    assert resp == []
+    resp = api_get('/v0/instances/fr')
+    assert resp == []
+    resp = api_get('/v0/instances/{}'.format(create_instance))
+    assert resp == []
+
+    # delete by id is idempotent
+    resp, status = api_delete('/v0/instances/{}'.format(create_instance), check=False)
+    assert status == 200
+
+
+def test_delete_instance_by_name(create_instance):
+    resp = api_delete('/v0/instances/fr')
+    assert resp['id'] == create_instance
+    assert resp['discarded'] == True
+    resp = api_get('/v0/instances/')
+    assert resp == []
+
+    # delete by name is not idempotent
+    resp, status = api_delete('/v0/instances/fr', check=False)
+    assert status == 404
 
 
 def test_update_invalid_scenario(create_instance):
