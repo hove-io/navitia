@@ -42,6 +42,7 @@ www.navitia.io
 #include <cmath>
 #include <string>
 #include <algorithm>
+#include <boost/range/algorithm.hpp>
 
 namespace navitia { namespace routing {
 
@@ -153,13 +154,6 @@ struct InfoCircle {
                                       duration_left(duration_left) {}
 };
 
-struct {
-  bool operator()(const InfoCircle& a, const InfoCircle& b) const {
-    return a.distance < b.distance;
-  }
-} furtherthan;
-
-
 template<typename T>
 static bool in_bound(const T & begin, const T & end, bool clockwise) {
     return (clockwise && begin < end) ||
@@ -201,9 +195,11 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
             circles_classed.push_back(to_add);
         }
     }
-    std::sort(circles_classed.begin(), circles_classed.end(), furtherthan);
-    for (auto it = circles_classed.begin(); it != circles_classed.end(); ++it) {
-        type::Polygon circle_to_add = circle(it->center, it->duration_left * speed);
+    boost::sort(circles_classed, [](const InfoCircle& a, const InfoCircle& b) {
+        return a.distance < b.distance;
+    });
+    for (const auto& c: circles_classed) {
+        type::Polygon circle_to_add = circle(c.center, c.duration_left * speed);
         circles = merge_poly(circles, circle_to_add);
     }
     return circles;
@@ -233,4 +229,3 @@ type::MultiPolygon build_isochrones(RAPTOR& raptor,
 }
 
 }} //namespace navitia::routing
-

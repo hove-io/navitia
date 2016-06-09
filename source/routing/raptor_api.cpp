@@ -1149,8 +1149,8 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 static void coord_to_string(std::stringstream& ss,
                             const double& lon,
                             const double& lat) {
-    ss << "[" << boost::lexical_cast<std::string>(lon) << ","
-       << boost::lexical_cast<std::string>(lat) << "]";
+    ss << std::setprecision(15) << "[" << lon << ","
+       << lat << "]";
 }
 
 static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& pb_creator) {
@@ -1158,20 +1158,22 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& 
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
     for (unsigned i = 0; i < shape.size(); i++) {
         geojson << "[[";
-        for(unsigned j = 0; j < shape[i].outer().size(); j++) {
-            auto outer = shape[i].outer()[j];
-            coord_to_string(geojson, outer.lon(), outer.lat());
-            if (j == shape[i].outer().size() - 1) { continue; }
+        auto it = shape[i].outer().begin();
+        const auto end = shape[i].outer().end();
+        if (it != end) { coord_to_string(geojson, it->lon(), it->lat()); ++it; }
+        for (; it != end; ++it) {
             geojson << ",";
+            coord_to_string(geojson, it->lon(), it->lat());
         }
         geojson << "]";
-        for(unsigned k = 0; k < shape[i].inners().size(); k++) {
+        for(unsigned j = 0; j < shape[i].inners().size(); j++) {
             geojson << ",[";
-            for (unsigned l = 0; l < shape[i].inners()[k].size(); l++) {
-                auto inner = shape[i].inners()[k][l];
-                coord_to_string(geojson, inner.lon(), inner.lat());
-                if (l == shape[i].inners()[k].size() - 1) { continue; }
+            auto it = shape[i].inners()[j].begin();
+            const auto end = shape[i].inners()[j].end();
+            if (it != end) { coord_to_string(geojson, it->lon(), it->lat()); ++it; }
+            for (; it != end; ++it) {
                 geojson << ",";
+                coord_to_string(geojson, it->lon(), it->lat());
             }
             geojson << "]";
         }
