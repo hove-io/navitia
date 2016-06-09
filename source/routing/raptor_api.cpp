@@ -41,6 +41,7 @@ www.navitia.io
 #include <boost/range/algorithm/count.hpp>
 #include <unordered_set>
 #include <chrono>
+#include <string>
 
 
 namespace navitia { namespace routing {
@@ -1145,26 +1146,43 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
+static void coord_to_string(std::stringstream& ss,
+                            const double& lon,
+                            const double& lat) {
+    ss << "[" << boost::lexical_cast<std::string>(lon) << ","
+       << boost::lexical_cast<std::string>(lat) << "]";
+}
+
 static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& pb_creator) {
-    auto pb_isochrone = pb_creator.add_graphical_isochrones();
-    auto pb_polys = pb_isochrone->mutable_geojson();
-    for (const auto& polygon: shape) {
-        auto p = pb_polys->add_polygons();
-        auto lo = p->mutable_outer();
-        for (const auto& coord: polygon.outer()) {
-            auto c = lo->add_coordinates();
-            c->set_lon(coord.lon());
-            c->set_lat(coord.lat());
+    std::stringstream geojson;
+    geojson << R"({"type":"MultiPolygon","coordinates":[)";
+    for (unsigned i = 0; i < shape.size(); i++) {
+        geojson << "[[";
+        for(unsigned j = 0; j < shape[i].outer().size(); j++) {
+            auto outer = shape[i].outer()[j];
+            coord_to_string(geojson, outer.lon(), outer.lat());
+            if (j == shape[i].outer().size() - 1) { continue; }
+            geojson << ",";
         }
-        for (const auto& inner: polygon.inners()) {
-            auto li = p->add_inners();
-            for (const auto coord: inner) {
-                auto c = li->add_coordinates();
-                c->set_lon(coord.lon());
-                c->set_lat(coord.lat());
+        geojson << "]";
+        for(unsigned k = 0; k < shape[i].inners().size(); k++) {
+            geojson << ",[";
+            for (unsigned l = 0; l < shape[i].inners()[k].size(); l++) {
+                auto inner = shape[i].inners()[k][l];
+                coord_to_string(geojson, inner.lon(), inner.lat());
+                if (l == shape[i].inners()[k].size() - 1) { continue; }
+                geojson << ",";
             }
+            geojson << "]";
         }
+        geojson << "]";
+        if (i == shape.size() - 1) { continue; }
+        geojson << ",";
     }
+    geojson << "]}";
+    auto pb_isochrone = pb_creator.add_graphical_isochrones();
+    pb_isochrone->mutable_geojson();
+    pb_isochrone->set_geojson(geojson.str());
 }
 
 pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
@@ -1202,7 +1220,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     DateTime bound_max = clockwise ? init_dt + max_duration : init_dt - max_duration;
     DateTime bound_min = clockwise ? init_dt + min_duration : init_dt - min_duration;
     raptor.isochrone(departures, init_dt, bound_max, max_transfers, accessibilite_params, forbidden, clockwise, rt_level);
-    type::MultiPolygon isochrone = build_isochrones(raptor, clockwise, bound_max, bound_min, departures,
+    type::GeographicalCoord coord_origin = origin.coordinates;
+    type::MultiPolygon isochrone = build_isochrones(raptor, clockwise, coord_origin, bound_max, bound_min, departures,
                                                   speed, max_duration, min_duration);
     add_graphical_isochrone(isochrone, pb_creator);
     return pb_creator.get_response();
