@@ -296,7 +296,6 @@ geocode_addr = {
     "address": AddressField()
 }
 
-
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
@@ -318,9 +317,7 @@ class delete_attribute_autocomplete():
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if 'Autocomplete' in objects:
-                return objects["Autocomplete"]
-            return objects
+            return objects.get('Autocomplete') or objects
         return wrapper
 
 class GeocodeJson(AbstractAutocomplete):
