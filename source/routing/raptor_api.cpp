@@ -1146,40 +1146,38 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
-static void coord_to_string(std::stringstream& ss,
-                            const double& lon,
-                            const double& lat) {
-    ss << std::setprecision(15) << "[" << lon << "," << lat << "]";
+template<typename F, typename R>
+void separated_by_coma(std::stringstream& os, F f, const R& range) {
+    auto it = range.begin();
+    const auto end = range.end();
+    if (it != end) { f(os, *it); ++it; }
+    for (; it != end; ++it) {
+        os << ",";
+        f(os, *it);
+    }
 }
 
-static void ring_to_string(std::stringstream& ss,
-                           const std::vector<type::GeographicalCoord>& ring) {
-    auto it = ring.begin();
-    const auto end = ring.end();
-    if (it != end) { coord_to_string(ss, it->lon(), it->lat()); ++it; }
-    for (; it != end; ++it) {
-        ss << ",";
-        coord_to_string(ss, it->lon(), it->lat());
+static void print_coord(std::stringstream& ss,
+                        const type::GeographicalCoord coord) {
+    ss << std::setprecision(15) << "[" << coord.lon() << "," << coord.lat() << "]";
+}
+
+static void print_polygon(std::stringstream& os, const type::Polygon& polygon) {
+    os << "[[";
+    separated_by_coma(os, print_coord, polygon.outer());
+    os << "]";
+    for (const auto& inner: polygon.inners()) {
+        os << ",[";
+        separated_by_coma(os, print_coord, inner);
+        os << "]";
     }
+    os << "]";
 }
 
 static void add_graphical_isochrone(const type::MultiPolygon& shape, PbCreator& pb_creator) {
     std::stringstream geojson;
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
-    for (unsigned i = 0; i < shape.size(); i++) {
-        geojson << "[[";
-        ring_to_string(geojson, shape[i].outer());
-        geojson << "]";
-        for(unsigned j = 0; j < shape[i].inners().size(); j++) {
-            geojson << ",[";
-            ring_to_string(geojson, shape[i].inners()[j]);
-            geojson << "]";
-        }
-        geojson << "]";
-        if (i < shape.size() - 1) {
-            geojson << ",";
-        }
-    }
+    separated_by_coma(geojson, print_polygon, shape);
     geojson << "]}";
     auto pb_isochrone = pb_creator.add_graphical_isochrones();
     pb_isochrone->mutable_geojson();
