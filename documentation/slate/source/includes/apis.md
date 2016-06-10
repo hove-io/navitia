@@ -424,7 +424,7 @@ For example, he could key without any filters:
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|
-| `/coverage/pt_objects`                     | List of public transport objects    |
+| `/coverage/{resource_path}/pt_objects`         | List of public transport objects    |
 
 
 ### Parameters
@@ -487,8 +487,16 @@ Differents kind of objects can be returned (sorted as):
 ### Access
 
 | url | Result |
-|------------------------------------------------|-------------------------------------|
-| `/coverage/places`                             | List of geographical objects        |
+|------------------------------------------------|-------------------------------------------------|
+| `/coverage/{region_id}/places`                 | List of geographical objects within a coverage  |
+| `/places`                                      | *Beta*: List of geographical objects within Earth |
+
+<aside class="warning">
+    Until now, you have to specify the right coverage to get `/places`.<br>
+    If you like to play, you can test the "beta" `/places`, without any coverage: 
+    it will soon be able to request entire Earth on adresses, POIs, stop areas... with geographical sort.
+</aside>
+
 
 ### Parameters
 
@@ -823,7 +831,7 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 | url | Result |
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `coverage/{resource_path}/route_schedules` | List of the entire route schedules for a given resource                                                       |
+| `/coverage/{resource_path}/route_schedules`  | List of the entire route schedules for a given resource                                                       |
 | `/coverage/{lon;lat}/route_schedules`        | List of the entire route schedules for coordinates                                                       |
 
 ### Parameters
