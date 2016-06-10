@@ -567,14 +567,25 @@ Filters can be added:
 <a name="journeys"></a>Journeys
 -------------------------------
 
-Also known as `/journeys` service. This api computes journeys.
+Also known as `/journeys` service. This api computes journeys or isochrone tables.
 
-There are two ways to access this api.
+There are two ways to access to this service.
 
 The first one is: <https://api.navitia.io/v1/{a_path_to_resource}/journeys> it will
-retrieve all the journeys from the resource (in order to make *[isochrone maps](https://en.wikipedia.org/wiki/Isochrone_map)*).
+retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
 
-The other one, the most used, is to access the 'journey' api endpoint:
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
+
+The [isochrones](#isochrones) service exposes another response structure, which is simplier, for the same data.
+
+But obviously, the most used way to access to this service is to get the `/journeys` api endpoint.
+Here is the structure of a standard journey request:
+
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <aside class="notice">
@@ -621,28 +632,28 @@ The list of regions covered by navitia is available through [coverage](#coverage
 ### Accesses
 
 | url | Result |
-|------------------------------------------|-------------------------------------|
-| `/journeys`                          | List of journeys from wherever land |
-| `/coverage/{region_id}/journeys` | List of journeys on a specific coverage |
+|--------------------------------------|-----------------------------------------|
+| `/journeys`                          | List of journeys from wherever land     |
+| `/coverage/{region_id}/journeys`     | List of journeys on a specific coverage |
 
 ### <a name="journeys-parameters"></a>Main parameters
 
-| Required  | Name                    | Type          | Description                                                                           | Default value |
-|-----------|-------------------------|---------------|---------------------------------------------------------------------------------------|---------------|
-| nop       | from                    | id            | The id of the departure of your journey If none are provided an isochrone is computed |               |
-| nop       | to                      | id            | The id of the arrival of your journey If none are provided an isochrone is computed   |               |
-| yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                                          |               |
-| nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime. | departure |
-| nop       | <a name="traveler-type"></a>traveler_type           | enum          | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li></ul></div>| standard      |
-| nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`)                                                 |               |
-| nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.                 | base_schedule |
+| Required  | Name                    | Type          | Description                                                                            | Default value |
+|-----------|-------------------------|---------------|----------------------------------------------------------------------------------------|---------------|
+| nop       | from                    | id            | The id of the departure of your journey. If none are provided an isochrone is computed |               |
+| nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
+| yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                  |               |
+| nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
+| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li></ul></div>| standard      |
+| nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.   | base_schedule |
+| nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
+| nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: `walking`, `car`, `bike`, `bss`.<br>`bss` stands for bike sharing system.<br>It's an array, you can give multiple modes.<br><br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
+| nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
 
 ### Other parameters
 
 | Required | Name            | Type    | Description                   | Default value |
 |----------|-----------------|---------|-------------------------------|---------------|
-| nop     | first_section_mode[] | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: `walking`, `car`, `bike`, `bss`.<br>`bss` stands for bike sharing system.<br>It's an array, you can give multiple modes.<br><br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
-| nop     | last_section_mode[]  | array of string   | Same as first_section_mode but for the last section  | walking     |
 | nop     | max_duration_to_pt   | int     | Maximum allowed duration to reach the public transport.<br>Use this to limit the walking/biking part.<br>Unit is seconds | 15*60 s    |
 | nop     | walking_speed        | float   | Walking speed for the fallback sections<br>Speed unit must be in meter/seconds         | 1.12 m/s<br>(4 km/h)<br>*Yes, man, they got the metric system* |
 | nop     | bike_speed           | float   | Biking speed for the fallback<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)   |
@@ -750,6 +761,54 @@ direction       | int                    | Angle (in degree) between the previou
 |found|boolean|False if unknown ticket, True otherwise|
 |cost|[cost](#cost)|Cost of the ticket|
 |links|array of [link](#link)|Link to the [section](#section) using this ticket|
+
+<a name="isochrones_api"></a>Isochrones (currently in Beta)
+---------------------------------------
+
+Also known as `/isochrones` service.
+
+<aside class="warning">
+    This service is under development. So it is accessible as a <b>"Beta" service</b>. 
+    <br>
+    Every feed back is welcome on <a href="https://groups.google.com/forum/#!forum/navitia">https://groups.google.com/forum/#!forum/navitia</a> !
+</aside>
+
+
+This service gives you a multi-polygon response which 
+represent a same time travel zone: https://en.wikipedia.org/wiki/Isochrone_map
+
+As you can find isochrone tables using `/journeys`, this service is only another representation 
+of the same data, map oriented.
+
+It is also really usefull to make filters on geocoded objects to find which of 
+them are reachable beneath a specific time. You just have to verify that coordinates 
+of the geocoded object is inside the multi-polygon.
+
+### Accesses
+
+| url | Result |
+|------------------------------------------|-------------------------------------|
+| `/journeys`                          | List of journeys from wherever land |
+| `/coverage/{region_id}/journeys` | List of journeys on a specific coverage |
+
+### <a name="journeys-parameters"></a>Main parameters
+
+<aside class="success">
+    'from' and 'to' parameters works as exclusive parameters:
+    <li>When 'from' is provided, 'to' is ignore and Navitia computes a "departure after" isochrone.
+    <li>When 'from' is not provided, 'to' is required and Navitia computes a "arrival after" isochrone.
+</aside>
+
+
+
+| Required  | Name                    | Type          | Description                                                                               | Default value |
+|-----------|-------------------------|---------------|-------------------------------------------------------------------------------------------|---------------|
+| nop       | from                    | id            | The id of the departure of your journey. Required to compute isochrones "departure after" |               |
+| nop       | to                      | id            | The id of the arrival of your journey. Required to compute isochrones "arrival before"    |               |
+| yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                                          |               |
+| nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`)                                                 |               |
+
+Other parameters to come...
 
 <a name="route-schedules"></a>Route Schedules and time tables
 -------------------------------------------------------------
