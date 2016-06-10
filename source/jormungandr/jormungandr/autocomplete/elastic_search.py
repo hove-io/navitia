@@ -283,8 +283,9 @@ class AddressId(fields.Raw):
             return None
         geocoding = obj.get('properties', {}).get('geocoding', {})
         id = geocoding.get('id')
-        if id.startswith("addr:"):
-            return id[5:]
+        prefix = "addr:"
+        if id.startswith(prefix):
+            return id[len(prefix):]
         return id
 
 geocode_addr = {
