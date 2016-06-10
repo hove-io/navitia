@@ -28,14 +28,9 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
-
-from navitiacommon import models
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from nose.tools import eq_
-from .overlapping_routing_tests import  MockKraken
-from jormungandr import instance_manager
 
 
 @dataset({"main_routing_test": {}})
@@ -459,6 +454,10 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         first_section = response['journeys'][0]['sections'][0]
         eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
         eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+        eq_(first_section['from']['stop_point']['codes'][1]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][1]['value'], 'Ain')
+        eq_(first_section['from']['stop_point']['codes'][2]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][2]['value'], 'Aisne')
 
     def test_journeys_with_show_codes(self):
         '''
@@ -474,6 +473,10 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         first_section = response['journeys'][0]['sections'][0]
         eq_(first_section['from']['stop_point']['codes'][0]['type'], 'external_code')
         eq_(first_section['from']['stop_point']['codes'][0]['value'], 'stop_point:A')
+        eq_(first_section['from']['stop_point']['codes'][1]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][1]['value'], 'Ain')
+        eq_(first_section['from']['stop_point']['codes'][2]['type'], 'source')
+        eq_(first_section['from']['stop_point']['codes'][2]['value'], 'Aisne')
 
     def test_remove_one_journey_from_batch(self):
         """
@@ -542,7 +545,7 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
 
 
-@dataset({"main_routing_test": {}, "basic_routing_test": {}})
+@dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})
 class TestOneDeadRegion(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead
@@ -552,8 +555,7 @@ class TestOneDeadRegion(AbstractTestFixture):
         self.krakens_pool["basic_routing_test"].kill()
 
         response = self.query("v1/journeys?from=stop_point:stopA&"
-            "to=stop_point:stopB&datetime=20120614T080000&debug=true",
-                              display=False)
+            "to=stop_point:stopB&datetime=20120614T080000&debug=true")
         eq_(len(response['journeys']), 1)
         eq_(len(response['journeys'][0]['sections']), 1)
         eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
@@ -568,19 +570,11 @@ class TestIsochrone(AbstractTestFixture):
         assert(len(response['journeys']) == 2)
 
 
-@dataset({"main_routing_without_pt_test": {}, "main_routing_test": {}})
+@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class TestWithoutPt(AbstractTestFixture):
     """
     Test if we still responds when one kraken is dead
     """
-
-    def setup(self):
-        from jormungandr import i_manager
-        self.instance_map = {
-            'main_routing_without_pt_test': MockKraken(i_manager.instances['main_routing_without_pt_test'], True, 5),
-            'main_routing_test': MockKraken(i_manager.instances['main_routing_test'], True, 10),
-        }
-
     def test_one_region_wihout_pt(self):
         response = self.query("v1/"+journey_basic_query+"&debug=true",
                               display=False)
@@ -590,5 +584,3 @@ class TestWithoutPt(AbstractTestFixture):
         eq_(len(response['debug']['regions_called']), 2)
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
-
-

@@ -42,7 +42,7 @@ def import_last_dataset(instance_name, background=False, reload_kraken=False, cu
     the custom_output_dir parameter is a subdirectory for the nav file created.
     If not given, the instance default one is taken
     """
-    instance = models.Instance.query.filter_by(name=instance_name).first()
+    instance = models.Instance.query_existing().filter_by(name=instance_name).first()
 
     if not instance:
         raise Exception("cannot find instance {}".format(instance_name))

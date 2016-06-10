@@ -37,6 +37,7 @@ from validate_email import validate_email
 from datetime import datetime
 from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
+from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 import logging
 
 from navitiacommon import models, parser_args_type
@@ -74,6 +75,7 @@ key_fields = {
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
+    'discarded': fields.Raw,
     'is_free': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
@@ -224,12 +226,12 @@ class Job(flask_restful.Resource):
 class PoiType(flask_restful.Resource):
     @marshal_with(poi_types_fields)
     def get(self, instance_name):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         return {'poi_types': instance.poi_types}
 
     @marshal_with(poi_types_fields)
     def post(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=unicode,  case_sensitive=False,
                 help='name displayed for this type of poi', location=('json', 'values'))
@@ -247,7 +249,7 @@ class PoiType(flask_restful.Resource):
 
     @marshal_with(poi_types_fields)
     def put(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
@@ -265,7 +267,7 @@ class PoiType(flask_restful.Resource):
 
     @marshal_with(poi_types_fields)
     def delete(self, instance_name, uri):
-        instance = models.Instance.query.filter_by(name=instance_name).first_or_404()
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
         try:
             db.session.delete(poi_type)
@@ -289,18 +291,30 @@ class Instance(flask_restful.Resource):
         args = parser.parse_args()
         args.update({'id': id, 'name': name})
         if any(v is not None for v in args.values()):
-            return models.Instance.query.filter_by(**{k: v for k, v in args.items() if v is not None}).all()
+            return models.Instance.query_existing().filter_by(**{k: v for k, v in args.items() if v is not None}).all()
         else:
-            return models.Instance.query.all()
+            return models.Instance.query_existing().all()
+
+    def delete(self, id=None, name=None):
+        try:
+            instance = models.Instance.get_from_id_or_name(id, name)
+        except Exception as e:
+            return e.args
+
+        try:
+            instance.discarded = True
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return marshal(instance, instance_fields)
 
     def put(self, id=None, name=None):
-        if id:
-            instance = models.Instance.query.get_or_404(id)
-        elif name:
-            instance = models.Instance.query.filter_by(name=name).first_or_404()
-        else:
-            return ({'error': 'instance is required'}, 400)
-
+        try:
+            instance = models.Instance.get_from_id_or_name(id, name)
+        except Exception as e:
+            return e.args
 
         parser = reqparse.RequestParser()
         parser.add_argument('scenario', type=str, case_sensitive=False,
@@ -727,6 +741,11 @@ class EndPoint(flask_restful.Resource):
 
             db.session.add(end_point)
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.CREATE, end_point)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return ({'error': str(e)}, 409)
         except Exception:
@@ -742,6 +761,7 @@ class EndPoint(flask_restful.Resource):
         args = parser.parse_args()
 
         try:
+            old_name = end_point.name
             end_point.name = args['name']
             if 'hostnames' in request.json:
                 end_point.hosts = []
@@ -749,6 +769,11 @@ class EndPoint(flask_restful.Resource):
                     end_point.hosts.append(models.Host(host))
 
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.UPDATE, end_point, old_name)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
             return ({'error': str(e)}, 409)
         except Exception:
@@ -756,12 +781,16 @@ class EndPoint(flask_restful.Resource):
             raise
         return marshal(end_point, end_point_fields)
 
-    @marshal_with(user_fields_full)
     def delete(self, id):
         end_point = models.EndPoint.query.get_or_404(id)
         try:
             db.session.delete(end_point)
             db.session.commit()
+
+            tyr_end_point_event = EndPointEventMessage(EndPointEventMessage.DELETE, end_point)
+            tyr_events_rabbit_mq = TyrEventsRabbitMq()
+            tyr_events_rabbit_mq.request(tyr_end_point_event)
+
         except Exception:
             logging.exception("fail")
             raise

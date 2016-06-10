@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,21 +27,24 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.script import Command, Option
-from navitiacommon import models
-from tyr.tasks import reload_kraken
-import logging
+""" Add field 'discarded' (boolean) to table 'instance',
+    to manage instance deletion.
+Revision ID: d1d12707b76
+Revises: 520d48947e65
+Create Date: 2016-06-10 12:11:00.704902
+"""
 
-class ReloadKrakenCommand(Command):
-    """A command used for run trigger a reload of  an instance
-    """
+# revision identifiers, used by Alembic.
+revision = 'd1d12707b76'
+down_revision = '520d48947e65'
 
-    def get_options(self):
-        return [
-            Option(dest='instance_name', help="name of the instance to reload")
-        ]
+from alembic import op
+import sqlalchemy as sa
 
-    def run(self, instance_name):
-        logging.info("Run command reload kraken")
-        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
-        reload_kraken.delay(instance.id)
+
+def upgrade():
+    op.add_column('instance', sa.Column('discarded', sa.Boolean(), nullable=False, server_default=sa.false()))
+
+
+def downgrade():
+    op.drop_column('instance', 'discarded')

@@ -86,8 +86,6 @@ class GraphicalIsochrone(ResourceUri, ResourceUtc):
         parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("max_duration", type=unsigned_integer)
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
-        parser_get.add_argument("datetime_represents", dest="clockwise",
-                                type=dt_represents, default=True)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
         parser_get.add_argument("max_transfers", type=int, default=42)
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),

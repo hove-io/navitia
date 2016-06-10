@@ -1508,7 +1508,9 @@ void AdminStopAreaFusioHandler::init(Data& data){
             if (object_code_map.first.type == nt::Type_e::StopArea && object_code.first == "external_code") {
                 const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first.pt_object->uri);
                 if (stop_area != gtfs_data.stop_area_map.end()){
-                    tmp_stop_area_map[object_code.second] = stop_area->second;
+                    for (const auto& external_code: object_code.second) {
+                        tmp_stop_area_map[external_code] = stop_area->second;
+                    }
                 }
             }
         }

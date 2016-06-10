@@ -140,8 +140,9 @@ BOOST_AUTO_TEST_CASE(build_single_ischron_test) {
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:12"_t));
     double speed = 0.8;
     navitia::type::MultiPolygon isochrone = build_single_isochrone(raptor, b.data->pt_data->stop_points, true,
-                                                           navitia::DateTimeUtils::set(0, "09:12"_t),
-                                                           d, speed, 3600 + 60*12);
+                                                                   coord_Paris,
+                                                                   navitia::DateTimeUtils::set(0, "09:12"_t),
+                                                                   d, speed, 3600 + 60*12);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochrone));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochrone));
@@ -185,15 +186,15 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:00"_t));
     double speed = 0.8;
 
-    navitia::type::MultiPolygon isochrone_9h = build_isochrones(raptor, true,
+    navitia::type::MultiPolygon isochrone_9h = build_isochrones(raptor, true, coord_Paris,
                                                                     navitia::DateTimeUtils::set(0, "09:00"_t),
                                                                     navitia::DateTimeUtils::set(0, "08:00"_t),
                                                                     d, speed, 3600, 0);
-    navitia::type::MultiPolygon isochrone_8h30 = build_isochrones(raptor, true,
+    navitia::type::MultiPolygon isochrone_8h30 = build_isochrones(raptor, true, coord_Paris,
                                                                     navitia::DateTimeUtils::set(0, "08:30"_t),
                                                                     navitia::DateTimeUtils::set(0, "08:00"_t),
                                                                     d, speed, 60 * 30, 0);
-    navitia::type::MultiPolygon isochrone_8h30_9h = build_isochrones(raptor, true,
+    navitia::type::MultiPolygon isochrone_8h30_9h = build_isochrones(raptor, true, coord_Paris,
                                                            navitia::DateTimeUtils::set(0, "09:00"_t),
                                                            navitia::DateTimeUtils::set(0, "08:30"_t),
                                                            d, speed, 3600, 60 * 30);

@@ -1,5 +1,6 @@
 object_type,object_id,object_system,object_code
-network,FilvertTAD,navitia1,FilvertTAD
+network,ligneflexible,navitia1,FilvertTAD
+network,ligneflexible,navitia1,FilbleuTAD
 trip,route_1,navitia1,route_1
 trip,route_2,navitia1,route_2
 trip,route_3,navitia1,route_3
@@ -11,6 +12,9 @@ stop_area,SA:E,navitia1,E
 stop_area,SA:F,navitia1,F
 stop_area,SA:J,navitia1,J
 stop_point,SP:A,navitia1,A
+stop_point,SP:A,source,A
+stop_point,SP:A,source,Ahah
+stop_point,SP:A,source,Aïe
 stop_point,SP:B,navitia1,B
 stop_point,SP:C,navitia1,C
 stop_point,SP:D,navitia1,D

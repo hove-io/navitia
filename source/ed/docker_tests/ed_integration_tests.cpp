@@ -123,9 +123,11 @@ void check_ntfs(const nt::Data& data) {
     // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
     check_headsigns(data, "N1", 0, 1, 0, 2);
     check_headsigns(data, "N2", 0, 1, 3, 4);
-    // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4-7 are named vehiclejourney3
+    // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4-5 are named vehiclejourney3
     check_headsigns(data, "vehiclejourney2", 2, 3);
-    check_headsigns(data, "vehiclejourney3", 4, 7);
+    check_headsigns(data, "vehiclejourney3", 4, 5);
+    check_headsigns(data, "HS", 6, 7, 0, 3);
+    check_headsigns(data, "NULL", 6, 7, 4, 5);
     // check vj from headsign
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
@@ -139,11 +141,11 @@ void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 4);
+    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[6]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[7]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[6]));
+    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[7]));
 
     BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 4);
     for (auto& mvj : data.pt_data->meta_vjs) {
@@ -366,6 +368,13 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
     BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->dataset->uri, "d1");
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->networks[0]),
+                      (nt::CodeContainer::Codes{{"external_code", {"FilvertTAD", "FilbleuTAD"}}}));
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points.size(), 8);
+    BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->stop_points_map["stop_point:SP:A"]),
+                      (nt::CodeContainer::Codes{{"external_code", {"A"}}, {"source", {"A", "Ahah", "Aïe"}}}));
 
     check_ntfs(data);
 }

@@ -325,6 +325,7 @@ struct RaptorSolutionReader {
     typedef std::pair<const type::StopTime*, DateTime> StDt;
     struct Transfer {
         DateTime end_vj;
+        unsigned nb_stay_in;
         unsigned waiting_dur;
         unsigned transfer_dur;
         StDt end_st_dt;
@@ -340,6 +341,7 @@ struct RaptorSolutionReader {
             const Visitor v;
             if (v.comp(lhs.end_vj, rhs.end_vj)) { return true; }
             if (v.comp(rhs.end_vj, lhs.end_vj)) { return false; }
+            if (lhs.nb_stay_in != rhs.nb_stay_in) { return lhs.nb_stay_in <= rhs.nb_stay_in; }
             return lhs.waiting_dur >= rhs.waiting_dur
                 && lhs.transfer_dur <= rhs.transfer_dur;
         }
@@ -414,20 +416,21 @@ struct RaptorSolutionReader {
                      const StDt& begin_st_dt) {
         Transfers& transfers = transfers_cache.get(count);
         auto cur_dt = begin_st_dt.second;
+        unsigned nb_stay_in = 0;
         if (begin_st_dt.first->is_frequency()) {
             //for frequency, we need cur_dt to be the begin in the stoptime
             cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
         }
         const auto begin_zone = begin_st_dt.first->local_traffic_zone;
         cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
-                            v.st_range(*begin_st_dt.first).advance_begin(1), transfers);
+                            v.st_range(*begin_st_dt.first).advance_begin(1), nb_stay_in, transfers);
 
         // continuing in the stay in
         for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
              stay_in_vj != nullptr;
              stay_in_vj = v.get_extension_vj(stay_in_vj)) {
             cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
-                                v.stop_time_list(stay_in_vj), transfers);
+                                v.stop_time_list(stay_in_vj), ++nb_stay_in, transfers);
         }
         return transfers;
     }
@@ -438,6 +441,7 @@ struct RaptorSolutionReader {
                         const uint16_t begin_zone,
                         DateTime cur_dt,
                         const typename Visitor::stop_time_range& st_range,
+                        const unsigned nb_stay_in,
                         Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
 
@@ -458,7 +462,7 @@ struct RaptorSolutionReader {
                 const PathElt new_path(*begin_st_dt.first, begin_st_dt.second, end_st, cur_dt, path);
                 handle_solution(new_path);
             } else {
-                try_transfer(count - 1, end_sp_idx, StDt(&end_st, cur_dt), transfers);
+                try_transfer(count - 1, end_sp_idx, StDt(&end_st, cur_dt), nb_stay_in, transfers);
             }
         }
         return cur_dt;
@@ -467,6 +471,7 @@ struct RaptorSolutionReader {
     void try_transfer(const unsigned count,
                       const SpIdx sp_idx,
                       const StDt& end_st_dt,
+                      const unsigned nb_stay_in,
                       Transfers& transfers) {
         const auto& cnx_list = v.clockwise() ?
             raptor.data.dataRaptor->connections.forward_connections :
@@ -477,7 +482,7 @@ struct RaptorSolutionReader {
             if (v.comp(transfer_limit, transfer_end)) { continue; }
 
             // transfer is OK
-            try_begin_pt(count, conn.sp_idx, transfer_end, end_st_dt, transfers);
+            try_begin_pt(count, conn.sp_idx, transfer_end, end_st_dt, nb_stay_in, transfers);
         }
     }
 
@@ -501,6 +506,7 @@ struct RaptorSolutionReader {
                       const SpIdx begin_sp_idx,
                       const DateTime begin_dt,
                       const StDt& end_st_dt,
+                      const unsigned nb_stay_in,
                       Transfers& transfers) {
         const unsigned transfer_t =
             v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
@@ -515,6 +521,7 @@ struct RaptorSolutionReader {
             // great, we can begin
             const Transfer tr = {
                 get_vj_end(begin_st_dt),
+                nb_stay_in,
                 v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second,
                 transfer_t,
                 end_st_dt,
@@ -608,15 +615,19 @@ bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     // FIXME: I don't like this objective, for me, this is a
     // transfer objective, but then you can return some solutions
     // that we didn't return before.
-    if (sections.size() != that.sections.size()) { return true; }
-    if (min_waiting_dur != that.min_waiting_dur) {
-        return min_waiting_dur >= that.min_waiting_dur;
+    if (! (better_on_transfer(that, request_clockwise) &&
+           that.better_on_transfer(*this, request_clockwise))) {
+        // if they are not equal on transfer, we don't check min_waiting_dur
+        return true;
     }
-    return nb_vj_extentions <= that.nb_vj_extentions;
+    return min_waiting_dur >= that.min_waiting_dur;
 }
 
 bool Journey::better_on_transfer(const Journey& that, bool) const {
-    return sections.size() <= that.sections.size();
+    if (sections.size() != that.sections.size()) {
+        return sections.size() <= that.sections.size();
+    }
+    return nb_vj_extentions <= that.nb_vj_extentions;
 }
 
 bool Journey::better_on_sn(const Journey& that, bool) const {

@@ -73,31 +73,6 @@ static pbnavitia::Request create_request(bool wheelchair, const std::string& des
     return req;
 }
 
-static pbnavitia::Request create_isochrone_request(int max_duration, int min_duration, const std::string& origin) {
-    pbnavitia::Request req;
-    req.set_requested_api(pbnavitia::graphical_isochrone);
-    pbnavitia::GraphicalIsochroneRequest* g = req.mutable_isochrone();
-    g->set_min_duration(min_duration);
-    pbnavitia::JourneysRequest* j = g->mutable_journeys_request();
-    j->set_clockwise(true);
-    j->set_wheelchair(true);
-    j->set_realtime_level(pbnavitia::ADAPTED_SCHEDULE);
-    j->set_max_duration(max_duration);
-    j->set_max_transfers(42);
-    j->add_datetimes(navitia::test::to_posix_timestamp("20150314T080000"));
-    auto sn_params = j->mutable_streetnetwork_params();
-    sn_params->set_origin_mode("walking");
-    sn_params->set_destination_mode("walking");
-    sn_params->set_walking_speed(1);
-    sn_params->set_bike_speed(1);
-    sn_params->set_car_speed(1);
-    sn_params->set_bss_speed(1);
-    pbnavitia::LocationContext* from = j->add_origin();
-    from->set_place(origin);
-    from->set_access_duration(0);
-
-    return req;
-}
 /**
   * Accessibility tests
   *
@@ -194,40 +169,4 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
     pbnavitia::Response resp = w.dispatch(no_wheelchair_request);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
-}
-
-BOOST_FIXTURE_TEST_CASE(graphical_isochrone_test, fixture) {
-    const auto isochrone_request = create_isochrone_request(7200, 0, "A");
-    pbnavitia::Response resp = w.dispatch(isochrone_request);
-
-    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.graphical_isochrones_size(), 1);
-    const auto& isochrone = resp.graphical_isochrones(0).geojson();
-    BOOST_REQUIRE_EQUAL(isochrone.polygons_size(), 1);
-    const auto& poly = isochrone.polygons(0).outer();
-    BOOST_CHECK(poly.coordinates().size() > 1);
-}
-
-BOOST_FIXTURE_TEST_CASE(graphical_isochrone_test_with_min, fixture) {
-    const auto isochrone_request = create_isochrone_request(7200, 200, "A");
-    pbnavitia::Response resp = w.dispatch(isochrone_request);
-
-    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.graphical_isochrones_size(), 1);
-    const auto& isochrone = resp.graphical_isochrones(0).geojson();
-    BOOST_CHECK(isochrone.polygons_size() > 0);
-    int i = 0;
-    for (int j = 0; j < isochrone.polygons_size(); j++) {
-        const auto& outer = isochrone.polygons(j).outer();
-        // We check the outer is a round thus it has at least 3 points
-        BOOST_CHECK(outer.coordinates().size() > 3);
-        if (isochrone.polygons(j).inners_size() > 0)  {
-            i = i + 1;
-            for (int k = 0; k < isochrone.polygons(j).inners_size(); k++) {
-                const auto& inner = isochrone.polygons(j).inners(k);
-                BOOST_CHECK(inner.coordinates().size() > 3);
-            }
-        }
-    }
-    BOOST_CHECK(i > 0);
 }

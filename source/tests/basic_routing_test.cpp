@@ -74,6 +74,8 @@ int main(int argc, const char* const argv[]) {
     b.connection("F", "G", 2*60);
 
     b.data->pt_data->codes.add(b.sps.at("A"), "external_code", "stop_point:A");
+    b.data->pt_data->codes.add(b.sps.at("A"), "source", "Ain");
+    b.data->pt_data->codes.add(b.sps.at("A"), "source", "Aisne");
 
     navitia::type::Dataset* ds = new navitia::type::Dataset();
     ds->idx = b.data->pt_data->datasets.size();

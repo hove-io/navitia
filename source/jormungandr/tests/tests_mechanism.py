@@ -34,6 +34,8 @@ from datetime import timedelta
 from operator import itemgetter
 from flask import logging
 import mock
+import retrying
+from retrying import RetryError
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
@@ -44,21 +46,16 @@ from .check_utils import *
 from jormungandr import app, i_manager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
-import jormungandr.scenarios.default
 from jormungandr.instance import Instance
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
+
 
 class FakeModel(object):
     def __init__(self, priority, is_free):
         self.priority = priority
         self.is_free = is_free
         self.scenario = 'default'
-
-def check_loaded(kraken):
-    #TODO!
-    #ping for 5s the kraken until data loaded
-    return True
 
 
 class AbstractTestFixture:
@@ -74,8 +71,6 @@ class AbstractTestFixture:
     @classmethod
     def launch_all_krakens(cls):
         for (kraken_name, conf) in cls.data_sets.items():
-            priority = conf.get('priority', 0)
-            is_free = conf.get('is_free', True)
             additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
@@ -90,25 +85,15 @@ class AbstractTestFixture:
 
         logging.debug("{} kraken spawned".format(len(cls.krakens_pool)))
 
-        # we want to wait for all data to be loaded
-        all_good = True
-        for name, kraken_process in cls.krakens_pool.items():
-            if not check_loaded(name):
-                all_good = False
-                logging.error("error while loading the kraken {}, stoping".format(name))
-                break
-
-        # a bit of cleaning
-        if not all_good:
-            cls.kill_all_krakens()
-
-            cls.krakens_pool.clear()
-            assert False, "problem while loading the kraken, no need to continue"
-
     @classmethod
     def kill_all_krakens(cls):
         for name, kraken_process in cls.krakens_pool.items():
             logging.debug("killing " + name)
+            if cls.data_sets[name].get('check_killed', True):
+                kraken_process.poll()
+                if kraken_process.returncode is not None:
+                    logging.error('kraken is dead, check errors, return code = %s', kraken_process.returncode)
+                    assert False, 'kraken is dead, check errors, return code'
             kraken_process.kill()
 
     @classmethod
@@ -148,8 +133,20 @@ class AbstractTestFixture:
                                                'get_models',
                                                return_value=FakeModel(priority, is_free)))
 
-            for m in cls.mocks:
-                m.start()
+        for m in cls.mocks:
+            m.start()
+
+        # we check that all instances are up
+        for name in cls.krakens_pool:
+            instance = i_manager.instances[name]
+            try:
+                retrying.Retrying(stop_max_delay=5000,
+                                  wait_fixed=10,
+                                  retry_on_result=lambda x: not instance.is_up).call(instance.init)
+            except RetryError:
+                logging.exception('impossible to start kraken {}'.format(name))
+                assert False, 'impossible to start a kraken'
+
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
             pass

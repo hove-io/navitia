@@ -153,7 +153,7 @@ public:
 
     std::map<ed::types::pt_object_header, std::map<std::string, std::string>> object_properties;
 
-    std::map<ed::types::pt_object_header, std::map<std::string, std::string>> object_codes;
+    std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>> object_codes;
 
     // list of comment ids for pt_objects
     std::map<ed::types::pt_object_header, std::vector<std::string>> comments;
@@ -303,11 +303,7 @@ template <typename T>
 void Data::add_object_code(const T& obj, const std::string& value, const std::string& key) {
     const auto pt_object = ed::types::make_pt_object(obj);
     auto& codes = object_codes[pt_object];
-    if (codes.find(key) != codes.end()) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "code " << key << " already exists for object "
-                                                               << pt_object << " replacing the old one");
-    }
-    codes[key] = value;
+    codes[key].push_back(value);
 }
 
 template <typename T>
