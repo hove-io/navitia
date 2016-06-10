@@ -1,3 +1,26 @@
+navitia2 (2.10.0) unstable; urgency=low
+
+  * jormungandr: delete autocomplete from bragi json  <https://github.com/CanalTP/navitia/pull/1635>
+  * Isochrone: remove clockwise  <https://github.com/CanalTP/navitia/pull/1633>
+  * Isochrone : Improve processing time  <https://github.com/CanalTP/navitia/pull/1632>
+  * Doc: presentation of /isochrones service  <https://github.com/CanalTP/navitia/pull/1631>
+  * Kraken: Fix a bug with vj extention  <https://github.com/CanalTP/navitia/pull/1630>
+  * ed: adding multi object_code support  <https://github.com/CanalTP/navitia/pull/1629>
+  * Jormungandr: fix a stat bug on isochrones  <https://github.com/CanalTP/navitia/pull/1627>
+  * Jormungandr: check if the test instances are up at the beginning  <https://github.com/CanalTP/navitia/pull/1626>
+  * ed: Tests modified to valid docker_test on optional NULL  value  <https://github.com/CanalTP/navitia/pull/1625>
+  * Jormungandr: for integration tests check if a kraken is dead  <https://github.com/CanalTP/navitia/pull/1624>
+  * Isochrone: fix a bug  <https://github.com/CanalTP/navitia/pull/1623>
+  * Jormungandr: make it possible to override instance timeout  <https://github.com/CanalTP/navitia/pull/1622>
+  * Tyr: delete instance API  <https://github.com/CanalTP/navitia/pull/1620>
+  * Jormungandr: fix tests that fail randomly  <https://github.com/CanalTP/navitia/pull/1615>
+  * Remove dead code from adjustit connector  <https://github.com/CanalTP/navitia/pull/1613>
+  * All: add import for gcc 5.3  <https://github.com/CanalTP/navitia/pull/1608>
+  * Update readme.rst  <https://github.com/CanalTP/navitia/pull/1607>
+  * Add Tyr Endpoint events  <https://github.com/CanalTP/navitia/pull/1603>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 10 Jun 2016 18:06:16 +0100
+
 navitia2 (2.9.3) unstable; urgency=low
 
   * ed: "NULL" value of optional attribut in ntfs files managed  <https://github.com/CanalTP/navitia/pull/1602>
