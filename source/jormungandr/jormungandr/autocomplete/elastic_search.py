@@ -38,6 +38,7 @@ from flask.ext.restful import fields, marshal_with
 from flask_restful import marshal
 import requests
 from jormungandr.exceptions import TechnicalError
+from functools import wraps
 
 
 class Lit(fields.Raw):
@@ -275,10 +276,21 @@ geocode_admin = {
     "administrative_region": AdminField()
 }
 
+
+class AddressId(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        id = geocoding.get('id')
+        if id.startswith("addr:"):
+            return id[5:]
+        return id
+
 geocode_addr = {
     "embedded_type": Lit("address"),
     "quality": Lit("0"),
-    "id": fields.String(attribute='properties.geocoding.id'),
+    "id": AddressId,
     "name": fields.String(attribute='properties.geocoding.name'),
     "address": AddressField()
 }
@@ -296,9 +308,19 @@ class GeocodejsonFeature(fields.Raw):
         return place
 
 geocodejson = {
-    "places": fields.List(GeocodejsonFeature, attribute='Autocomplete.features')
+    "places": fields.List(GeocodejsonFeature, attribute='features')
 }
 
+
+class delete_attribute_autocomplete():
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if 'Autocomplete' in objects:
+                return objects["Autocomplete"]
+            return objects
+        return wrapper
 
 class GeocodeJson(AbstractAutocomplete):
     """
@@ -311,6 +333,8 @@ class GeocodeJson(AbstractAutocomplete):
         self.timeout = kwargs.get('timeout', 10)
 
     @marshal_with(geocodejson)
+    # TODO: To be deleted when bragi is modified
+    @delete_attribute_autocomplete()
     def get(self, request, instance):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')

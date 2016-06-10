@@ -32,6 +32,7 @@ from flask.ext.restful import marshal
 import mock
 from jormungandr.autocomplete import elastic_search
 from jormungandr.tests.utils_test import MockRequests
+from flask.ext.restful import marshal_with
 
 
 def bragi_house_jaures_feature():
@@ -66,9 +67,15 @@ def bragi_house_jaures_feature():
                 }
     return house_feature
 
+@marshal_with(elastic_search.geocodejson)
+@elastic_search.delete_attribute_autocomplete()
+def get_response(bragi_response):
+    return bragi_response
+
+
 def bragi_house_jaures_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "addr:49.847586;3.282103"
+    assert feature_response.get('id') == "49.847586;3.282103"
     assert feature_response.get('name') == "Rue Jean Jaures"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
@@ -91,8 +98,7 @@ def bragi_house_reading_test():
             ]
         }
     }
-
-    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
+    navitia_response = get_response(bragi_response).get('places', {})
     bragi_house_jaures_response_check(navitia_response[0])
 
 
@@ -108,7 +114,7 @@ def bragi_street_feature():
                     "properties": {
                         "geocoding": {
                             "city": "Saint-Quentin",
-                            "id": "addr:49.847586;3.282103",
+                            "id": "49.847586;3.282103",
                             "label": "Rue Jean Jaures, 02100 Saint-Quentin",
                             "name": "Rue Jean Jaures",
                             "postcode": "02100",
@@ -130,7 +136,7 @@ def bragi_street_feature():
 def bragi_street_response_check(feature_response):
 
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "addr:49.847586;3.282103"
+    assert feature_response.get('id') == "49.847586;3.282103"
     assert feature_response.get('name') == "Rue Jean Jaures"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
@@ -151,7 +157,17 @@ def bragi_street_reading_test():
         }
     }
 
-    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
+    navitia_response = get_response(bragi_response).get('places', {})
+    bragi_street_response_check(navitia_response[0])
+
+def bragi_street_reading_without_autocomplete_attribute_test():
+    bragi_response = {
+        "features": [
+            bragi_street_feature()
+        ]
+    }
+
+    navitia_response = get_response(bragi_response).get('places', {})
     bragi_street_response_check(navitia_response[0])
 
 
@@ -194,7 +210,7 @@ def bragi_admin_reading_test():
         }
     }
 
-    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
+    navitia_response = get_response(bragi_response).get('places', {})
     bragi_admin_response_check(navitia_response[0])
 
 
@@ -211,7 +227,7 @@ def bragi_house_lefebvre_feature():
                         "geocoding": {
                             "city": "Saint-Quentin",
                             "housenumber": "42",
-                            "id": "addr:49.847586;3.282103",
+                            "id": "49.847586;3.282103",
                             "label": "42 Rue Jean Lefebvre, 01100 Oyonnax",
                             "name": "Rue Jean Lefebvre",
                             "postcode": "02100",
@@ -232,7 +248,7 @@ def bragi_house_lefebvre_feature():
 
 def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "addr:49.847586;3.282103"
+    assert feature_response.get('id') == "49.847586;3.282103"
     assert feature_response.get('name') == "Rue Jean Lefebvre"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Lefebvre"
@@ -259,13 +275,29 @@ def bragi_good_geocodejson_response_test():
         }
     }
 
-    navitia_response = marshal(bragi_response, elastic_search.geocodejson).get('places', {})
+    navitia_response = get_response(bragi_response).get('places', {})
     assert len(navitia_response) == 4
     bragi_house_jaures_response_check(navitia_response[0])
     bragi_house_lefebvre_response_check(navitia_response[1])
     bragi_street_response_check(navitia_response[2])
     bragi_admin_response_check(navitia_response[3])
 
+def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
+    bragi_response = {
+        "features": [
+            bragi_house_jaures_feature(),
+            bragi_house_lefebvre_feature(),
+            bragi_street_feature(),
+            bragi_admin_feature()
+        ]
+    }
+
+    navitia_response = get_response(bragi_response).get('places', {})
+    assert len(navitia_response) == 4
+    bragi_house_jaures_response_check(navitia_response[0])
+    bragi_house_lefebvre_response_check(navitia_response[1])
+    bragi_street_response_check(navitia_response[2])
+    bragi_admin_response_check(navitia_response[3])
 
 def bragi_call_test():
     """
