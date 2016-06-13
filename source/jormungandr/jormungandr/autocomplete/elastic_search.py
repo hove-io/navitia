@@ -217,20 +217,21 @@ class Elasticsearch(AbstractAutocomplete):
 def create_admin_field(geocoding):
         if not geocoding:
             return None
-        admin_list = geocoding.get('admin', {})
+
+        administrative_regions = geocoding.get('administrative_regions', {})
         response = []
-        for level, name in admin_list.iteritems():
+        for admin in administrative_regions:
             response.append({
-                "insee": geocoding.get('TODO'),
-                "name": name,
-                "level": int(level.replace('level', '')),
+                "insee": admin.get('insee'),
+                "name": admin.get('name'),
+                "level": int(admin.get('level')),
                 "coord": {
-                    "lat": geocoding.get('TODO'),
-                    "lon": geocoding.get('TODO')
+                    "lat": admin.get('coord', {}).get('lat'),
+                    "lon": admin.get('coord', {}).get('lon')
                 },
-                "label": name,
-                "id": geocoding.get('TODO'),
-                "zip_code": geocoding.get('TODO')
+                "label": admin.get('name'),
+                "id": admin.get('id'),
+                "zip_code": admin.get('zip_code')
             })
         return response
 
