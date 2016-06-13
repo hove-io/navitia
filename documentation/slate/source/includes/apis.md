@@ -575,6 +575,102 @@ Filters can be added:
 <a name="journeys"></a>Journeys
 -------------------------------
 
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/journeys?from=2.3749036;48.8467927&to=2.2922926;48.8583736' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
+{
+    "tickets": [],
+    "links": [...],
+    "journeys": [
+    {
+        "fare": {...},
+        "status": "",
+        "tags": [],
+        "type": "comfort",
+        "nb_transfers": 0,
+        "duration": 2671,
+        "requested_date_time": "20160613T133748",
+        "departure_date_time": "20160613T133830",
+        "arrival_date_time": "20160613T142301",
+        "calendars": [...],
+        "co2_emission": {"unit": "gEC", "value": 24.642},
+        "sections": [
+        {
+            "from": {... , "name": "Rue Abel"},
+            "to": {... , "name": "Bercy (Paris)"},
+            "arrival_date_time": "20160613T135400",
+            "departure_date_time": "20160613T133830",
+            "duration": 930,
+            "type": "street_network",
+            "mode": "walking",
+            "geojson": {...},
+            "path": [...],
+            "links": []
+        },{
+            "from": {... , "name": "Bercy (Paris)"},
+            "to": {... , "name": "Bir-Hakeim Tour Eiffel (Paris)"},
+            "type": "public_transport",
+            "display_informations": {
+                "direction": "Charles de Gaulle — Étoile (Paris)",
+                "code": "6",
+                "color": "79BB92",
+                "physical_mode": "M?tro",
+                "headsign": "Charles de Gaulle Etoile",
+                "commercial_mode": "Metro",
+                "label": "6",
+                "text_color": "000000",
+                "network": "RATP"},
+            "departure_date_time": "20160613T135400",
+            "arrival_date_time": "20160613T141500",
+            "base_arrival_date_time": "20160613T141500",
+            "base_departure_date_time": "20160613T135400",
+            "duration": 1260,
+            "additional_informations": ["regular"],
+            "co2_emission": {"unit": "gEC", "value": 24.642},
+            "geojson": {...},
+            "stop_date_times": [
+            {
+                "stop_point": {... , "label": "Bercy (Paris)"},
+                "arrival_date_time": "20160613T135400",
+                "departure_date_time": "20160613T135400",
+                "base_arrival_date_time": "20160613T135400",
+                "base_departure_date_time": "20160613T135400"
+            },
+            {...}
+            ]
+        },
+        {
+            "from": {... , "name": "Bir-Hakeim Tour Eiffel (Paris)" },
+            "to": {... , "name": "Allée des Refuzniks"},
+            "arrival_date_time": "20160613T142301",
+            "departure_date_time": "20160613T141500",
+            "duration": 481,
+            "type": "street_network",
+            "mode": "walking",
+            "geojson": {...},
+            "path": [...],
+        }]
+    },
+    {...},
+    {...}],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [
+    {
+        "url": "",
+        "id": "sandbox",
+        "license": "",
+        "name": ""
+    }],
+    "exceptions": []
+}
+```
+
+
 Also known as `/journeys` service. This api computes journeys or isochrone tables.
 
 There are two ways to access to this service.
@@ -796,10 +892,10 @@ of the geocoded object is inside the multi-polygon.
 
 | url | Result |
 |------------------------------------------|-------------------------------------|
-| `/journeys`                          | List of journeys from wherever land |
-| `/coverage/{region_id}/journeys` | List of journeys on a specific coverage |
+| `/isochrones`                          | List of multi-polygons representing one isochrone step. Access from wherever land |
+| `/coverage/{region_id}/isochrones` | List of multi-polygons representing one isochrone step. Access from on a specific coverage |
 
-### <a name="journeys-parameters"></a>Main parameters
+### <a name="isochrones-parameters"></a>Main parameters
 
 <aside class="success">
     'from' and 'to' parameters works as exclusive parameters:
@@ -815,6 +911,8 @@ of the geocoded object is inside the multi-polygon.
 | nop       | to                      | id            | The id of the arrival of your journey. Required to compute isochrones "arrival before"    |               |
 | yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                                          |               |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`)                                                 |               |
+| nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: `walking`, `car`, `bike`, `bss`.<br>`bss` stands for bike sharing system.<br>It's an array, you can give multiple modes.<br><br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
+| nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
 
 Other parameters to come...
 
