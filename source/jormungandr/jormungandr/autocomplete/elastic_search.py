@@ -49,7 +49,7 @@ class Lit(fields.Raw):
         return self.val
 
 
-def delete_prefix(value, prefix="addr:"):
+def delete_prefix(value, prefix):
     if value and value.startswith(prefix):
         return value[len(prefix):]
     return value
@@ -60,7 +60,7 @@ class AddressId(fields.Raw):
         if not obj:
             return None
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        return delete_prefix(geocoding.get('id'))
+        return delete_prefix(geocoding.get('id'), "addr:")
 
 ww_admin = {
     "id": fields.String,
@@ -270,7 +270,7 @@ class AddressField(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         return {
-            "id": delete_prefix(geocoding.get('id')),
+            "id": delete_prefix(geocoding.get('id'), "addr:"),
             "coord": {
                 "lon": lon,
                 "lat": lat,
