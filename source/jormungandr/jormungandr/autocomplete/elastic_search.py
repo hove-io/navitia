@@ -269,7 +269,6 @@ class AddressField(fields.Raw):
 
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        housenumber = geocoding.get('housenumber')
         return {
             "id": delete_prefix(geocoding.get('id')),
             "coord": {
