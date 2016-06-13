@@ -346,11 +346,14 @@ class Instance(db.Model):
     @classmethod
     def get_from_id_or_name(cls, id=None, name=None):
         if id:
-            return cls.query.get_or_404(id)
+            value = cls.query.get(id)
         elif name:
-            return cls.query_existing().filter_by(name=name).first_or_404()
+            value = cls.query_existing().filter_by(name=name).first()
         else:
             raise Exception({'error': 'instance is required'}, 400)
+        if value is None:
+            raise Exception({'error': 'instance {} not found'.format(name or id)}, 404)
+        return value
 
     def __repr__(self):
         return '<Instance %r>' % self.name
