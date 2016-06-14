@@ -30,7 +30,7 @@
 # www.navitia.io
 from flask.ext.restful import marshal
 import mock
-from jormungandr.autocomplete import elastic_search
+from jormungandr.autocomplete import geocodejson
 from jormungandr.tests.utils_test import MockRequests
 from flask.ext.restful import marshal_with
 
@@ -54,13 +54,6 @@ def bragi_house_jaures_feature():
                             "postcode": "02100",
                             "street": "Rue Jean Jaures, 02100 Saint-Quentin",
                             "type": "house",
-                            "admin": {
-                                "level2": "France",
-                                "level4": "Nord-Pas-de-Calais-Picardie",
-                                "level6": "Aisne",
-                                "level7": "Saint-Quentin",
-                                "level8": "Saint-Quentin"
-                            },
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -93,8 +86,8 @@ def bragi_house_jaures_feature():
                 }
     return house_feature
 
-@marshal_with(elastic_search.geocodejson)
-@elastic_search.delete_attribute_autocomplete()
+@marshal_with(geocodejson.geocodejson)
+@geocodejson.delete_attribute_autocomplete()
 def get_response(bragi_response):
     return bragi_response
 
@@ -108,13 +101,6 @@ def bragi_house_jaures_response_check(feature_response):
     assert address.get('house_number') == "20"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
-    assert len(address.get('admin')) == 5
-    region_list = {region['level']: region['name'] for region in address.get('admin')}
-    assert region_list.get(2) == "France"
-    assert region_list.get(4) == "Nord-Pas-de-Calais-Picardie"
-    assert region_list.get(6) == "Aisne"
-    assert region_list.get(7) == "Saint-Quentin"
-    assert region_list.get(8) == "Saint-Quentin"
     assert len(address.get('administrative_regions')) == 2
     region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
     assert region_list.get(7) == "Haute Picardie"
@@ -150,13 +136,6 @@ def bragi_street_feature():
                             "postcode": "02100",
                             "street": "Rue Jean Jaures, 02100 Saint-Quentin",
                             "type": "street",
-                            "admin": {
-                                "level2": "France",
-                                "level4": "Nord-Pas-de-Calais-Picardie",
-                                "level6": "Aisne",
-                                "level7": "Saint-Quentin",
-                                "level8": "Saint-Quentin"
-                            },
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -199,10 +178,6 @@ def bragi_street_response_check(feature_response):
     assert address.get('house_number') == "0"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
-    assert len(address.get('admin')) == 5
-    response = next(region for region in address.get('administrative_regions'))
-    assert response.get('level') == 8
-    assert response.get('name') == "Saint-Quentin"
     assert len(address.get('administrative_regions')) == 2
     response = next(region for region in address.get('administrative_regions'))
     assert response.get('level') == 8
@@ -244,9 +219,6 @@ def bragi_admin_feature():
                             "postcode": "02260",
                             "street": "",
                             "type": "city",
-                            "admin": {
-                                "level8": "Sommeron"
-                            },
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -283,13 +255,9 @@ def bragi_admin_response_check(feature_response):
     assert feature_response.get('embedded_type') == "administrative_region"
     assert feature_response.get('id') == "admin:fr:2725"
     assert feature_response.get('name') == "Sommeron"
-    assert len(feature_response.get('admin')) == 1
-    assert feature_response.get('administrative_region')[0].get('level') == 8
-    assert feature_response.get('administrative_region')[0].get('name') == "Sommeron"
-
-    assert len(feature_response.get('administrative_region')) == 2
-    assert feature_response.get('administrative_region')[0].get('level') == 8
-    assert feature_response.get('administrative_region')[0].get('name') == "Sommeron"
+    assert len(feature_response.get('administrative_regions')) == 2
+    assert feature_response.get('administrative_regions')[0].get('level') == 8
+    assert feature_response.get('administrative_regions')[0].get('name') == "Sommeron"
 
 def bragi_admin_reading_test():
     bragi_response = {
@@ -323,13 +291,6 @@ def bragi_house_lefebvre_feature():
                             "postcode": "02100",
                             "street": "Rue Jean Lefebvre, 01100 Oyonnax",
                             "type": "house",
-                            "admin": {
-                                "level2": "France",
-                                "level4": "Auvergne-Rhône-Alpes",
-                                "level6": "Ain",
-                                "level7": "Oyonnax",
-                                "level8": "Oyonnax"
-                            },
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -372,13 +333,6 @@ def bragi_house_lefebvre_response_check(feature_response):
     assert address.get('house_number') == "42"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
-    assert len(address.get('admin')) == 5
-    region_list = {region['level']: region['name'] for region in address.get('admin')}
-    assert region_list.get(2) == "France"
-    assert region_list.get(4) == "Auvergne-Rhône-Alpes"
-    assert region_list.get(6) == "Ain"
-    assert region_list.get(7) == "Oyonnax"
-    assert region_list.get(8) == "Oyonnax"
     assert len(address.get('administrative_regions')) == 2
     region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
     assert region_list.get(7) == "Haute Picardie"
@@ -420,11 +374,63 @@ def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
     bragi_street_response_check(navitia_response[2])
     bragi_admin_response_check(navitia_response[3])
 
+
+def bragi_geocodejson_spec_feature():
+    return {
+        "geometry": {
+            "coordinates": [
+                3.282103,
+                49.847586
+            ],
+            "type": "Point"
+        },
+        "properties": {
+            "geocoding": {
+                "city": "Saint-Quentin",
+                "housenumber": "20",
+                "id": "addr:49.847586;3.282103",
+                "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                "name": "Rue Jean Jaures",
+                "postcode": "02100",
+                "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                "type": "house",
+                "admin": {
+                    "level2": "France",
+                    "level4": "Nord-Pas-de-Calais-Picardie",
+                    "level6": "Aisne",
+                    "level7": "Saint-Quentin",
+                    "level8": "Saint-Quentin"
+                },
+            }
+        },
+        "type": "Feature"
+    }
+
+
+def bragi_geocodejson_compatibility_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                bragi_geocodejson_spec_feature(),
+            ]
+        }
+    }
+    navitia_response = get_response(bragi_response).get('places', {})[0]
+    assert navitia_response.get('embedded_type') == "address"
+    assert navitia_response.get('id') == '49.847586;3.282103'
+    assert navitia_response.get('name') == 'Rue Jean Jaures'
+    address = navitia_response.get('address', {})
+    assert len(address.get('administrative_regions')) == 5
+    region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
+    assert region_list.get(2) == 'France'
+    assert region_list.get(4) == 'Nord-Pas-de-Calais-Picardie'
+    assert region_list.get(7) == 'Saint-Quentin'
+
 def bragi_call_test():
     """
     test the whole autocomplete with a geocodejson service
     """
-    bragi = elastic_search.GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
 
     bragi_response = {
         "Autocomplete": {
