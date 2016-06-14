@@ -218,6 +218,19 @@ def create_admin_field(geocoding):
         if not geocoding:
             return None
 
+        admin_list = geocoding.get('admin', {})
+        response = []
+        for level, name in admin_list.iteritems():
+            response.append({
+                "name": name,
+                "level": int(level.replace('level', '')),
+            })
+        return response
+
+
+def create_administrative_regions_field(geocoding):
+        if not geocoding:
+            return None
         administrative_regions = geocoding.get('administrative_regions', {})
         response = []
         for admin in administrative_regions:
@@ -242,6 +255,13 @@ class AdminField(fields.Raw):
             return None
         geocoding = obj.get('properties', {}).get('geocoding', {})
         return create_admin_field(geocoding)
+
+class AdministrativeRegionField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        return create_administrative_regions_field(geocoding)
 
 
 class AddressField(fields.Raw):
@@ -269,7 +289,8 @@ class AddressField(fields.Raw):
             "house_number": geocoding.get('housenumber') or '0',
             "label": geocoding.get('name'),
             "name": geocoding.get('name'),
-            "administrative_regions": create_admin_field(geocoding),
+            "admin": create_admin_field(geocoding),
+            "administrative_regions": create_administrative_regions_field(geocoding),
         }
 
 geocode_admin = {
@@ -277,7 +298,8 @@ geocode_admin = {
     "quality": Lit("0"),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
-    "administrative_region": AdminField()
+    "admin": AdminField(),
+    "administrative_region": AdministrativeRegionField()
 }
 
 
