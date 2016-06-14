@@ -42,6 +42,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
 import numpy as np
 import collections
 from jormungandr.utils import date_to_timestamp
+from jormungandr.scenarios.simple import get_pb_data_freshness
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -133,12 +134,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["max_extra_second_pass"]:
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
     req.journeys.wheelchair = request["wheelchair"] or False  # default value is no wheelchair
-    if request['data_freshness'] == 'realtime':
-        req.journeys.realtime_level = type_pb2.REALTIME
-    elif request['data_freshness'] == 'adapted_schedule':
-        req.journeys.realtime_level = type_pb2.ADAPTED_SCHEDULE
-    else:
-        req.journeys.realtime_level = type_pb2.BASE_SCHEDULE
+    req.journeys.realtime_level = get_pb_data_freshness(request)
 
     if "details" in request and request["details"]:
         req.journeys.details = request["details"]

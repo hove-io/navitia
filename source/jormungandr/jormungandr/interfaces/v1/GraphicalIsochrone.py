@@ -48,6 +48,7 @@ from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
+from jormungandr.interfaces.v1.JourneyCommon import JourneyCommon, dt_represents
 
 
 graphical_isochrone = {
@@ -63,78 +64,27 @@ graphical_isochrones = {
 }
 
 
-class GraphicalIsochrone(ResourceUri, ResourceUtc):
+class GraphicalIsochrone(JourneyCommon):
 
     def __init__(self):
-        ResourceUri.__init__(self, authentication=False)
-        ResourceUtc.__init__(self)
-
-        modes = ["walking", "car", "bike", "bss"]
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        JourneyCommon.__init__(self)
         parser_get = self.parsers["get"]
-
-        parser_get.add_argument("from", type=unicode, dest="origin")
-        parser_get.add_argument("first_section_mode[]",
-                                type=option_value(modes),
-                                dest="origin_mode", action="append")
-        parser_get.add_argument("last_section_mode[]",
-                                type=option_value(modes),
-                                dest="destination_mode", action="append")
-        parser_get.add_argument("to", type=unicode, dest="destination")
-        parser_get.add_argument("datetime", type=date_time_format)
-        parser_get.add_argument("max_duration", type=unsigned_integer)
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
-        parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
-        parser_get.add_argument("max_transfers", type=int, default=42)
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
-                                description="The datetime used to consider the state of the pt object"
-                                            " Default is the current date and it is used for debug."
-                                            " Note: it will mainly change the disruptions that concern "
-                                            "the object The timezone should be specified in the format,"
-                                            " else we consider it as UTC")
-        parser_get.add_argument("max_walking_duration_to_pt", type=int,
-                                description="maximal duration of walking on public transport in second")
-        parser_get.add_argument("max_bike_duration_to_pt", type=int,
-                                description="maximal duration of bike on public transport in second")
-        parser_get.add_argument("max_bss_duration_to_pt", type=int,
-                                description="maximal duration of bss on public transport in second")
-        parser_get.add_argument("max_car_duration_to_pt", type=int,
-                                description="maximal duration of car on public transport in second")
-        parser_get.add_argument("walking_speed", type=float_gt_0)
-        parser_get.add_argument("bike_speed", type=float_gt_0)
-        parser_get.add_argument("bss_speed", type=float_gt_0)
-        parser_get.add_argument("car_speed", type=float_gt_0)
 
     @marshal_with(graphical_isochrones)
     @ManageError()
-    def get(self, region=None):
+    def get(self, region=None, uri=None):
+
         args = self.parsers['get'].parse_args()
+        resp = JourneyCommon.get(self, region, uri)
+        args_common = resp['args']
+        args.update(args_common)
 
-        if args.get('origin_mode') is None:
-            args['origin_mode'] = ['walking']
-        if args.get('destination_mode') is None:
-            args['destination_mode'] = ['walking']
-
-        self.region = i_manager.get_region(region)
-        if args['origin']:
-            args['origin'] = transform_id(args['origin'])
-        if args['destination']:
-            args['destination'] = transform_id(args['destination'])
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration']:
             abort(400, message="you should provide a 'max_duration' argument")
-        if not args['datetime']:
-            args['datetime'] = args['_current_datetime']
 
-        set_request_timezone(self.region)
-        args['original_datetime'] = args['datetime']
-        original_datetime = args['original_datetime']
-        new_datetime = self.convert_to_utc(original_datetime)
-        args['datetime'] = date_to_timestamp(new_datetime)
-
-        response = i_manager.dispatch(args, "graphical_isochrones", instance_name=region)
+        response = i_manager.dispatch(args, "graphical_isochrones", instance_name=resp['region'])
 
         return response

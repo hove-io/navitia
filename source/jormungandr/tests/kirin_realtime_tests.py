@@ -36,10 +36,11 @@ from tests.tests_mechanism import dataset
 
 from jormungandr.utils import str_to_time_stamp
 from tests import gtfs_realtime_pb2, kirin_pb2
-from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, get_used_vj, \
-    get_arrivals, get_valid_time, is_valid_disruption, check_journey, Journey, Section, \
-    SectionStopDT
+from tests.check_utils import is_valid_vehicle_journey, get_not_null, journey_basic_query, isochrone_basic_query, \
+    get_used_vj, get_arrivals, get_valid_time, is_valid_disruption, check_journey, Journey, Section, \
+    SectionStopDT, is_valid_graphical_isochrone
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
+from shapely.geometry import asShape
 
 
 class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
@@ -69,6 +70,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         send a mock kirin vj cancellation and test that the vj is not taken
         """
         response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        isochrone = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
         eq_(get_arrivals(response), ['20120614T080222', '20120614T080435'])
@@ -77,6 +79,10 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 0)
+
+        is_valid_graphical_isochrone(isochrone, self.tester, isochrone_basic_query + "&data_freshness=realtime")
+        geojson = isochrone['isochrones'][0]['geojson']
+        multi_poly = asShape(geojson)
 
         self.send_mock("vjA", "20120614", 'canceled', disruption_id='disruption_bob')
 
@@ -112,6 +118,18 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         eq_(get_arrivals(new_response), ['20120614T080435', '20120614T180222'])
         eq_(get_used_vj(new_response), [[], ['vjB']])
+
+        isochrone_realtime = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
+        is_valid_graphical_isochrone(isochrone_realtime, self.tester, isochrone_basic_query + "&data_freshness=realtime")
+        geojson_realtime = isochrone_realtime['isochrones'][0]['geojson']
+        multi_poly_realtime = asShape(geojson_realtime)
+        isochrone_base_schedule = self.query_region(isochrone_basic_query + "&data_freshness=base_schedule")
+        is_valid_graphical_isochrone(isochrone_base_schedule, self.tester,
+                                     isochrone_basic_query + "&data_freshness=base_schedule")
+        geojson_base_schedule = isochrone_base_schedule['isochrones'][0]['geojson']
+        multi_poly_base_schedule = asShape(geojson_base_schedule)
+        assert (not multi_poly.difference(multi_poly_realtime).is_empty)
+        assert (multi_poly.equals(multi_poly_base_schedule))
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
