@@ -578,7 +578,9 @@ Filters can be added:
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/journeys?from=2.3749036;48.8467927&to=2.2922926;48.8583736' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
 
+``` shell
 #response
 HTTP/1.1 200 OK
 
@@ -673,24 +675,23 @@ HTTP/1.1 200 OK
 
 Also known as `/journeys` service. This api computes journeys or isochrone tables.
 
-There are two ways to access to this service.
+There are two ways to access to this service : journeys from point to point, or isochrones from a single point to every point.
 
-The first one is: <https://api.navitia.io/v1/{a_path_to_resource}/journeys> it will
-retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
+<aside class="success">
+    Neither the 'from' nor the 'to' parameter of the journey are required,
+    but obviously one of them has to be provided.
+    <br>
+    If only one is defined an isochrone is computed with every possible
+    journeys from or to the point.
+</aside>
 
-<a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
-    target="_blank"
-    class="button button-blue">
-    Code it yourself on JSFiddle
-</a>
+### Accesses
 
-The [isochrones](#isochrones) service exposes another response structure, which is simplier, for the same data.
-
-But obviously, the most used way to access to this service is to get the `/journeys` api endpoint.
-Here is the structure of a standard journey request:
-
-<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
+| url | Result |
+|--------------------------------------|-----------------------------------------|
+| `/journeys`                          | List of journeys from wherever land     |
+| `/coverage/{region_id}/journeys`     | List of journeys on a specific coverage |
+| `/coverage/{a_path_to_resource}/journeys`     | Isochrone from a specific coverage |
 
 <aside class="notice">
     Navitia.io handle lot's of different data sets (regions). Some of them
@@ -706,25 +707,12 @@ Here is the structure of a standard journey request:
     system).
 </aside>
 
-In the [examples](#examples), positions are given by coordinates and no network is specified.
-However when no coordinates are provided, you need to provide on what region you want to request as
-<https://api.navitia.io/v1/coverage/us-ca/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>
+####Requesting a single journey
 
-The list of regions covered by navitia is available through [coverage](#coverage).
+The most used way to access to this service is to get the `/journeys` api endpoint.
+Here is the structure of a standard journey request:
 
-
-<aside class="notice">
-    If you want to use a specific data set, use the journey api within the
-    data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
-</aside>
-
-<aside class="success">
-    Neither the 'from' nor the 'to' parameter of the journey are required,
-    but obviously one of them has to be provided.
-    <br>
-    If only one is defined an isochrone is computed with every possible
-    journeys from or to the point.
-</aside>
+<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <a
     href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/journeys/"
@@ -733,12 +721,33 @@ The list of regions covered by navitia is available through [coverage](#coverage
     Code it yourself on JSFiddle
 </a>
 
-### Accesses
+In the [examples](#examples), positions are given by coordinates and no network is specified.
+However when no coordinates are provided, you need to provide on what region you want to request as
+<https://api.navitia.io/v1/coverage/us-ca/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>
 
-| url | Result |
-|--------------------------------------|-----------------------------------------|
-| `/journeys`                          | List of journeys from wherever land     |
-| `/coverage/{region_id}/journeys`     | List of journeys on a specific coverage |
+The list of regions covered by navitia is available through [coverage](#coverage).
+
+<aside class="notice">
+    If you want to use a specific data set, use the journey api within the
+    data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
+</aside>
+
+####Requesting an isochrone
+
+If you want to retrive every possible journeys form a single point at a time, you can request as:
+
+<https://api.navitia.io/v1/{a_path_to_resource}/journeys> 
+
+It will retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
+
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
+
+The [isochrones](#isochrones) service exposes another response structure, which is simplier, for the same data.
 
 ### <a name="journeys-parameters"></a>Main parameters
 

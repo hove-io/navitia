@@ -15,6 +15,8 @@ with their respective arrival times, travel times and number of matches
 -   in the form of a multi-polygon in order to plate colors directly on a map, 
 or to filter geocoded objects inside the polygon
 
+Using the raw list, here is a fiddle example:
+
 <a
     href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
     target="_blank"
