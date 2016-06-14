@@ -264,13 +264,21 @@ def create_administrative_regions_field(geocoding):
 
 
 class AdminField(fields.Raw):
+    """
+    This field is needed to respect the geocodejson-spec
+    https://github.com/geocoders/geocodejson-spec/tree/master/draft#feature-object
+    """
     def output(self, key, obj):
         if not obj:
             return None
         geocoding = obj.get('properties', {}).get('geocoding', {})
         return create_admin_field(geocoding)
 
+
 class AdministrativeRegionField(fields.Raw):
+    """
+    This field is needed to respect Navitia's spec for the sake of compatibility
+    """
     def output(self, key, obj):
         if not obj:
             return None
