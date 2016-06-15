@@ -76,15 +76,18 @@ class GraphicalIsochrone(JourneyCommon):
     def get(self, region=None, uri=None):
 
         args = self.parsers['get'].parse_args()
-        resp = JourneyCommon.get(self, region, uri)
-        args_common = resp['args']
-        args.update(args_common)
+        args.update(self.parse_args(region, uri))
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration']:
             abort(400, message="you should provide a 'max_duration' argument")
 
-        response = i_manager.dispatch(args, "graphical_isochrones", instance_name=resp['region'])
+        set_request_timezone(self.region)
+        original_datetime = args['original_datetime']
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['datetime'] = date_to_timestamp(new_datetime)
+
+        response = i_manager.dispatch(args, "graphical_isochrones", self.region)
 
         return response

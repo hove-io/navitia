@@ -128,8 +128,8 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
                                      isochrone_basic_query + "&data_freshness=base_schedule")
         geojson_base_schedule = isochrone_base_schedule['isochrones'][0]['geojson']
         multi_poly_base_schedule = asShape(geojson_base_schedule)
-        assert (not multi_poly.difference(multi_poly_realtime).is_empty)
-        assert (multi_poly.equals(multi_poly_base_schedule))
+        assert not multi_poly.difference(multi_poly_realtime).is_empty
+        assert multi_poly.equals(multi_poly_base_schedule)
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")

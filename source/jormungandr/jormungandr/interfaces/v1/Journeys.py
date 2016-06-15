@@ -391,14 +391,11 @@ class Journeys(JourneyCommon):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
-        resp = JourneyCommon.get(self, region, uri)
-        self.region = resp['region']
-        args_common = resp['args']
-        args.update(args_common)
 
         if args.get('traveler_type') is not None:
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
+        args.update(self.parse_args(region, uri))
 
         if args['max_duration_to_pt'] is not None:
             #retrocompatibility: max_duration_to_pt override all individual value by mode
@@ -436,6 +433,12 @@ class Journeys(JourneyCommon):
         if args['debug']:
             g.debug = True
 
+        if not region:
+            # TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            self.possible_regions = compute_regions(args)
+        else:
+            self.possible_regions = [region]
+
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
@@ -445,6 +448,7 @@ class Journeys(JourneyCommon):
         for r in self.possible_regions:
             self.region = r
 
+            set_request_timezone(self.region)
             #we store the region in the 'g' object, which is local to a request
 
             if args['debug']:
@@ -452,6 +456,11 @@ class Journeys(JourneyCommon):
                 if not hasattr(g, 'regions_called'):
                     g.regions_called = []
                 g.regions_called.append(r)
+
+            # we save the original datetime for debuging purpose
+            original_datetime = args['original_datetime']
+            new_datetime = self.convert_to_utc(original_datetime)
+            args['datetime'] = date_to_timestamp(new_datetime)
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 

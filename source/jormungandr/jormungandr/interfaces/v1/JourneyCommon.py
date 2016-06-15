@@ -164,7 +164,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
 
-    def get(self, region=None, uri=None):
+    def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
 
         # We set default modes for fallback modes.
@@ -182,6 +182,8 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             args['destination'] = transform_id(args['destination'])
         if not args['datetime']:
             args['datetime'] = args['_current_datetime']
+
+        args['original_datetime'] = args['datetime']
 
         if args['data_freshness'] is None:
             # retrocompatibilty handling
@@ -225,20 +227,4 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         else:
             _set_specific_params(default_values)
 
-        if not region:
-            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            self.possible_regions = compute_regions(args)
-        else:
-            self.possible_regions = [region]
-
-        for r in self.possible_regions:
-            self.region = r
-
-            set_request_timezone(self.region)
-        # we save the original datetime for debuging purpose
-        args['original_datetime'] = args['datetime']
-        original_datetime = args['original_datetime']
-        new_datetime = self.convert_to_utc(original_datetime)
-        args['datetime'] = date_to_timestamp(new_datetime)
-
-        return {'args': args, 'region': region}
+        return args
