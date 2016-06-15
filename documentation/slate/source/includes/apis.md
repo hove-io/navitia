@@ -734,7 +734,7 @@ The list of regions covered by navitia is available through [coverage](#coverage
 
 ####Requesting an isochrone
 
-If you want to retrive every possible journeys form a single point at a time, you can request as:
+If you want to retreive every possible journey from a single point at a time, you can request as follow:
 
 <https://api.navitia.io/v1/{a_path_to_resource}/journeys> 
 
@@ -747,7 +747,7 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
     Code it yourself on JSFiddle
 </a>
 
-The [isochrones](#isochrones) service exposes another response structure, which is simplier, for the same data.
+The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
 ### <a name="journeys-parameters"></a>Main parameters
 
@@ -893,9 +893,8 @@ represent a same time travel zone: https://en.wikipedia.org/wiki/Isochrone_map
 As you can find isochrone tables using `/journeys`, this service is only another representation 
 of the same data, map oriented.
 
-It is also really usefull to make filters on geocoded objects to find which of 
-them are reachable beneath a specific time. You just have to verify that coordinates 
-of the geocoded object is inside the multi-polygon.
+It is also really usefull to make filters on geocoded objects in order to find which ones are reachable within specific times. 
+You just have to verify that the coordinates of the geocoded object are inside the multi-polygon.
 
 ### Accesses
 

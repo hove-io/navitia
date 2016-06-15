@@ -8,11 +8,11 @@ the quickest way to reach your destination.
 
 ![image](isochrones_example.png)
 
-The Isochrone function provides information either:
+Isochrone computing exposes information under two formats:
 
--   in the form of a list with all the reachable stops from a potential destination 
+-   either [Journeys](#journeys) service which provides a list with all the reachable stops from a potential destination 
 with their respective arrival times, travel times and number of matches
--   in the form of a multi-polygon in order to plate colors directly on a map, 
+-   or [isochrones](#isochrones_api) service which provides a multi-polygon stream in order to plate colors directly on a map, 
 or to filter geocoded objects inside the polygon
 
 Using the raw list, here is a fiddle example:
@@ -24,7 +24,7 @@ Using the raw list, here is a fiddle example:
     Code it yourself on JSFiddle
 </a>
 
-You could use these APIs (click on them for details):
+You can use these APIs (click on them for details):
 
 -   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.
 -   **[Journeys](#journeys)** : Compute all journeys from a departure point to every reachable point, 
