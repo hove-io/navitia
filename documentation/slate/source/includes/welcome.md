@@ -83,6 +83,16 @@ For example, you can easy request for a journey there:
 
 [http://canaltp.github.io/navitia-playground/](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
+Plugins
+--------------
+
+To help you in the building of your project, we have implemented tools to query the API Navitia:
+
+|Language / Framework |Plugin                                        |
+|---------------------|----------------------------------------------|
+|PHP5                 |<https://github.com/CanalTP/NavitiaComponent> |
+|Symfony 2 or 3       |<https://github.com/CanalTP/NavitiaBundle>    |
+
 About the data
 --------------
 
