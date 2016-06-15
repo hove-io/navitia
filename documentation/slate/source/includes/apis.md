@@ -893,7 +893,7 @@ represent a same time travel zone: https://en.wikipedia.org/wiki/Isochrone_map
 As you can find isochrone tables using `/journeys`, this service is only another representation 
 of the same data, map oriented.
 
-It is also really usefull to make filters on geocoded objects in order to find which ones are reachable within specific times. 
+It is also really usefull to make filters on geocoded objects in order to find which ones are reachable within a specific time.
 You just have to verify that the coordinates of the geocoded object are inside the multi-polygon.
 
 ### Accesses
