@@ -6,6 +6,9 @@ using all available means of travel, including: bus, train, subway, bike, public
 This function returns a roadmap with specific instructions for a route based on available information, 
 such as: time of departure and arrival, journey time, possible modes of transport, and walking distance.
 
+![image](playground_journey.png)
+
+
 In order to compute a journey, you may have to use these APIs (click on them for details):
 
 -   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.

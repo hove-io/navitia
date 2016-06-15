@@ -70,6 +70,19 @@ At some point you will want to read:
 - [transport public lexicon](#lexicon)
 - [Ressources overview](#ressources)
 
+I'm only a human
+----------------
+
+<aside class="success">
+if you only want to challenge Navitia functionality, take your token and go to the <a href="http://canaltp.github.io/navitia-playground">navitia playground website </a>.
+</aside>
+
+![Try Navitia playgroung](/images/navitia_playground.png)
+
+For example, you can easy request for a journey there:
+
+[http://canaltp.github.io/navitia-playground/](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+
 About the data
 --------------
 
