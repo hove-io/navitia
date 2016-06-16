@@ -385,6 +385,8 @@ chapter
 -----------------------------------------------------------------
 
 ``` shell
+# Search objects of type 'line' or 'route' containing 'metro 4'
+
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%204&type\[\]=line&type\[\]=route' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
@@ -392,15 +394,15 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%204&type\[
 HTTP/1.1 200 OK
 
 {
-"pt_objects": [
+    "pt_objects": [
         {
             "embedded_type": "line",
             "line": {...},
             "id": "line:RAT:M4",
             "name": "RATP Metro 4 (Porte de Clignancourt - Mairie de Montrouge)"
         },
-     ],
-"links" : [...],
+    ],
+    "links" : [...],
 }
 ```
 
@@ -461,6 +463,27 @@ For example, he could key without any filters:
 </div>
 
 ### Access
+
+``` shell
+# Search objects of type 'network' containing 'RAT'
+curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=RAT&type\[\]=network' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+HTTP/1.1 200 OK
+
+{
+    "pt_objects":[
+        {
+            "id":"network:RAT:1",
+            "name":"RATP",
+            "embedded_type":"network",
+            "network":{
+                "id":"network:RAT:1",
+                "name":"RATP"
+            }
+        }
+    ]
+}
+```
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|

@@ -30,6 +30,13 @@ Public transport objects
 
 ### Network
 
+``` json
+{
+    "id":"network:RAT:1",
+    "name":"RATP"
+}
+```
+
 Networks are fed by agencies in GTFS format.
 
 |Field|Type|Description|
@@ -39,16 +46,61 @@ Networks are fed by agencies in GTFS format.
 
 ### Line
 
+``` json
+{
+    "id":"line:RAT:M6",
+    "name":"Nation - Charles de Gaule Etoile",
+    "code":"6",
+    "color":"79BB92",
+    "opening_time":"053000",
+    "closing_time":"013600",
+    "routes":[
+        {"...": "..."}
+    ],
+    "commercial_mode":{
+        "id":"commercial_mode:Metro",
+        "name":"Metro"
+    },
+    "physical_modes":[
+        {
+            "name":"Métro",
+            "id":"physical_mode:Metro"
+        }
+    ]
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the line|
 |name|string|Name of the line|
 |code|string|Code name of the line|
 |color|string|Color of the line|
+|opening_time|string|Opening hour at format HHMMSS|
+|closing_time|string|Closing hour at format HHMMSS|
 |routes|array of [route](#route)|Routes of the line|
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
+|physical_mode|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
 ### Route
+
+``` json
+{
+    "id":"route:RAT:M6",
+    "name":"Nation - Charles de Gaule Etoile",
+    "is_frequence":"False",
+    "line":{
+        "id":"line:RAT:M6",
+        "name":"Nation - Charles de Gaule Etoile",
+        "...": "..."
+    },
+    "direction":{
+        "id":"stop_area:RAT:SA:GAUET",
+        "name":"Charles de Gaulle - Etoile (Paris)",
+        "...": "..."
+    }
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -62,6 +114,21 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="stop-point"></a>Stop Point
 
+``` json
+{
+    "id":"stop_point:RAT:SP:GARIB2",
+    "name":"Garibaldi",
+    "label":"Garibaldi (Saint-Ouen)",
+    "coord":{
+        "lat":"48.906032",
+        "lon":"2.331733"
+    },
+    "administrative_regions":[{"...": "..."}],
+    "equipments":[{"...": "..."}],
+    "stop_area":{"...": "..."}
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the stop point|
@@ -73,6 +140,21 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="stop-area"></a>Stop Area
 
+``` json
+{
+    "id":"stop_area:RAT:SA:GAUET",
+    "name":"Charles de Gaulle - Etoile",
+    "label":"Charles de Gaulle - Etoile (Paris)",
+    "coord":{
+        "lat":"48.874408",
+        "lon":"2.295763"
+    },
+    "administrative_regions":[
+        {"...": "..."}
+    ]
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the stop area|
@@ -83,6 +165,13 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="commercial-mode"></a>Commercial Mode
 
+``` json
+{
+    "id":"commercial_mode:Metro",
+    "name":"Metro"
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the commercial mode|
@@ -90,6 +179,13 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of this commercial mode|
 
 ### <a name="physical-mode"></a>Physical Mode
+
+``` json
+{
+    "id":"physical_mode:Tramway",
+    "name":"Tramway"
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
