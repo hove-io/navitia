@@ -493,7 +493,7 @@ Differents kind of objects can be returned (sorted as):
 
 <aside class="warning">
     Until now, you have to specify the right coverage to get `/places`.<br>
-    If you like to play, you can test the "beta" `/places`, without any coverage: 
+    If you like to play, you can test the "beta" `/places`, without any coverage:
     it will soon be able to request entire Earth on adresses, POIs, stop areas... with geographical sort.
 </aside>
 
@@ -736,7 +736,7 @@ The list of regions covered by navitia is available through [coverage](#coverage
 
 If you want to retreive every possible journey from a single point at a time, you can request as follow:
 
-<https://api.navitia.io/v1/{a_path_to_resource}/journeys> 
+<https://api.navitia.io/v1/{a_path_to_resource}/journeys>
 
 It will retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
 
@@ -881,16 +881,16 @@ direction       | int                    | Angle (in degree) between the previou
 Also known as `/isochrones` service.
 
 <aside class="warning">
-    This service is under development. So it is accessible as a <b>"Beta" service</b>. 
+    This service is under development. So it is accessible as a <b>"Beta" service</b>.
     <br>
     Every feed back is welcome on <a href="https://groups.google.com/forum/#!forum/navitia">https://groups.google.com/forum/#!forum/navitia</a> !
 </aside>
 
 
-This service gives you a multi-polygon response which 
+This service gives you a multi-polygon response which
 represent a same time travel zone: https://en.wikipedia.org/wiki/Isochrone_map
 
-As you can find isochrone tables using `/journeys`, this service is only another representation 
+As you can find isochrone tables using `/journeys`, this service is only another representation
 of the same data, map oriented.
 
 It is also really usefull to make filters on geocoded objects in order to find which ones are reachable within a specific time.
@@ -1107,6 +1107,83 @@ stop_point | [stop_point](#stop-point)              | The stop point of the row
 
 <a name="stop-schedules"></a>Stop Schedules and other kind of time tables
 -------------------------------------------------------------------------
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+{
+    stop_schedules: [
+        {
+            stop_point: {...},
+            links: [
+                {
+                    type: "line",
+                    id: "line:RAT:M1"
+                }, {
+                    type: "route",
+                    id: "route:RAT:M1_R"
+                }, {
+                    type: "commercial_mode",
+                    id: "commercial_mode:Metro"
+                }, {
+                    type: "network",
+                    id: "network:RAT:1"
+                }
+            ],
+            date_times: [
+                {
+                    date_time: "20160615T115300",
+                    additional_informations: [],
+                    links: [
+                        {
+                            type: "vehicle_journey",
+                            value: "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2",
+                            rel: "vehicle_journeys",
+                            id: "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2"
+                        }
+                    ],
+                    data_freshness: "base_schedule"
+                },
+                {
+                    date_time: "20160616T115000",
+                    additional_informations: [],
+                    links: [
+                        {
+                            type: "vehicle_journey",
+                            value: "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2",
+                            rel: "vehicle_journeys",
+                            id: "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2"
+                        }
+                    ],
+                    data_freshness: "base_schedule"
+                },
+                ...
+            ],
+            route: {...},
+            additional_informations: null,
+            display_informations: {
+                direction: "Château de Vincennes (Saint-Mandé)",
+                code: "1",
+                network: "RATP",
+                links: [],
+                color: "F2C931",
+                commercial_mode: "Metro",
+                text_color: "000000",
+                label: "1"
+            }
+        }
+    ],
+    pagination: {...},
+    links: [...],
+    disruptions: [],
+    notes: [],
+    feed_publishers: [...],
+    exceptions: []
+}
+```
 
 Also known as `/stop_schedules` service.
 
