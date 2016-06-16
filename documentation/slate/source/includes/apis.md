@@ -1030,11 +1030,11 @@ nop      | data_freshness   | enum                           | Define the freshn
 
 ``` shell
 
-#using "headers"
+#Request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/departures?from_datetime=20160615T1337' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
+#Response
 HTTP/1.1 200 OK
-
 {
    "departures":[
         {
