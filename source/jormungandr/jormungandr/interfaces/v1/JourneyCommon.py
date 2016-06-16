@@ -56,6 +56,8 @@ from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
 from navitiacommon import default_values
+from jormungandr.travelers_profile import TravelerProfile
+from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 
 
 def dt_represents(value):
@@ -117,6 +119,21 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         ResourceUtc.__init__(self)
 
         modes = ["walking", "car", "bike", "bss"]
+        types = {
+            "all": "All types",
+            "best": "The best journey",
+            "rapid": "A good trade off between duration, changes and constraint respect",
+            'no_train': "Journey without train",
+            'comfort': "A journey with less changes and walking",
+            'car': "A journey with car to get to the public transport",
+            'less_fallback_walk': "A journey with less walking",
+            'less_fallback_bike': "A journey with less biking",
+            'less_fallback_bss': "A journey with less bss",
+            'fastest': "A journey with minimum duration",
+            'non_pt_walk': "A journey without public transport, only walking",
+            'non_pt_bike': "A journey without public transport, only biking",
+            'non_pt_bss': "A journey without public transport, only bike sharing",
+        }
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -134,6 +151,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 type=option_value(modes), action="append")
         parser_get.add_argument("last_section_mode",
                                 type=option_value(modes), action="append")
+        parser_get.add_argument("type", type=option_value(types),
+                                default="all")
+        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
@@ -141,10 +161,13 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("to", type=unicode, dest="destination")
         parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("max_duration", type=unsigned_integer)
+        parser_get.add_argument("max_duration_to_pt", type=int,
+                                description="maximal duration of non public transport in second")
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
         parser_get.add_argument("max_transfers", type=int, default=42)
+        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
                                 description="The datetime used to consider the state of the pt object"
                                             " Default is the current date and it is used for debug."
@@ -190,11 +213,22 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             args['data_freshness'] = \
                 'adapted_schedule' if args['disruption_active'] is True else 'base_schedule'
 
+        if args.get('traveler_type'):
+            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
+
         # for last and first section mode retrocompatibility
         if 'first_section_mode' in args and args['first_section_mode']:
             args['origin_mode'] = args['first_section_mode']
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
+
+        if args.get('max_duration_to_pt'):
+            # retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
