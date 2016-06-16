@@ -48,7 +48,7 @@ def bragi_house_jaures_feature():
                         "geocoding": {
                             "city": "Saint-Quentin",
                             "housenumber": "20",
-                            "id": "addr:49.847586;3.282103",
+                            "id": "49.847586;3.282103",
                             "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
                             "name": "Rue Jean Jaures",
                             "postcode": "02100",
@@ -251,6 +251,7 @@ def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('id') == "49.847586;3.282103"
     assert feature_response.get('name') == "Rue Jean Lefebvre"
     address = feature_response.get('address', {})
+    assert address.get('id') == "49.847586;3.282103"
     assert address.get('name') == "Rue Jean Lefebvre"
     assert address.get('house_number') == "42"
     assert address.get('coord', {}).get('lat') == 49.847586

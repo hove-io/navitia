@@ -48,6 +48,20 @@ class Lit(fields.Raw):
     def output(self, key, obj):
         return self.val
 
+
+def delete_prefix(value, prefix):
+    if value and value.startswith(prefix):
+        return value[len(prefix):]
+    return value
+
+
+class AddressId(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        return delete_prefix(geocoding.get('id'), "addr:")
+
 ww_admin = {
     "id": fields.String,
     # "insee": dict["id"][6:],
@@ -255,9 +269,8 @@ class AddressField(fields.Raw):
 
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        housenumber = geocoding.get('housenumber')
         return {
-            "id": geocoding.get('id'),
+            "id": delete_prefix(geocoding.get('id'), "addr:"),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -276,17 +289,6 @@ geocode_admin = {
     "administrative_region": AdminField()
 }
 
-
-class AddressId(fields.Raw):
-    def output(self, key, obj):
-        if not obj:
-            return None
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        id = geocoding.get('id')
-        prefix = "addr:"
-        if id.startswith(prefix):
-            return id[len(prefix):]
-        return id
 
 geocode_addr = {
     "embedded_type": Lit("address"),
