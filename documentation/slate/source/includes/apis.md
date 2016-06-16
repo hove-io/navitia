@@ -986,11 +986,11 @@ stop_point | [stop_point](#stop-point)              | The stop point of the row
 -------------------------------------------------------------------------
 
 ``` shell
+#request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
-
+#response
 HTTP/1.1 200 OK
-
 {
     stop_schedules: [
         {
