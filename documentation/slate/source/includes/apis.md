@@ -782,10 +782,11 @@ nop      | data_freshness     | enum      | Define the freshness of data to use<
 #### <a name="route-schedule">route_schedule object
 
 ``` shell
+#request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/route_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
+#response
 HTTP/1.1 200 OK
-
 {
     pagination: {},
     links: [],
