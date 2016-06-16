@@ -170,6 +170,8 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                           const int& duration) {
     std::vector<InfoCircle> circles_classed;
     type::MultiPolygon circles;
+    InfoCircle to_add = InfoCircle(coord_origin, 0, duration);
+    circles_classed.push_back(to_add);
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
         if (it->second.total_seconds() < duration) {
@@ -184,10 +186,6 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
         if (in_bound(best_lbl, bound, clockwise)) {
-            int round = raptor.best_round(sp_idx);
-            if (round == -1 || ! raptor.labels[round].pt_is_initialized(sp_idx)) {
-                continue;
-            }
             uint duration_left = abs(int(best_lbl) - int(bound));
             if (duration_left * speed < MIN_RADIUS) {continue;}
             const auto& center = sp->coord;
