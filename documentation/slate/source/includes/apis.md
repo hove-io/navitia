@@ -878,6 +878,43 @@ direction       | int                    | Angle (in degree) between the previou
 <a name="isochrones_api"></a>Isochrones (currently in Beta)
 ---------------------------------------
 
+``` shell
+curl 'https://api.navitia.io/v1/coverage/sandbox/isochrones?from=stop_area:RAT:SA:GDLYO&max_duration=3600' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+HTTP/1.1 200 OK
+
+{
+    "isochrones":[
+        {
+            "geojson":{
+                "type":"MultiPolygon",
+                "coordinates":[
+                    [
+                        [
+                            [
+                                2.3186837324,
+                                48.9324437042
+                            ],
+                            [
+                                2.3187241561,
+                                48.9324771012
+                            ],
+                            [
+                                2.3190737256,
+                                48.9327557777
+                            ],
+                            ["..."],
+                            ["..."],
+                            ["..."]
+                        ]
+                    ]
+                ]
+            }
+        }
+    ]
+}
+```
+
 Also known as `/isochrones` service.
 
 <aside class="warning">
