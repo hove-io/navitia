@@ -49,6 +49,11 @@ class Lit(fields.Raw):
         return self.val
 
 
+def delete_prefix(value, prefix):
+    if value and value.startswith(prefix):
+        return value[len(prefix):]
+    return value
+
 def create_admin_field(geocoding):
     """
     This field is needed to respect the geocodejson-spec
@@ -70,6 +75,12 @@ def create_admin_field(geocoding):
         })
     return response
 
+class AddressId(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        return delete_prefix(geocoding.get('id'), "addr:")
 
 def create_administrative_regions_field(geocoding):
     if not geocoding:
@@ -118,9 +129,8 @@ class AddressField(fields.Raw):
 
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        housenumber = geocoding.get('housenumber')
         return {
-            "id": geocoding.get('id'),
+            "id": delete_prefix(geocoding.get('id'), "addr:"),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -140,17 +150,6 @@ geocode_admin = {
     "administrative_regions": AdministrativeRegionField()
 }
 
-
-class AddressId(fields.Raw):
-    def output(self, key, obj):
-        if not obj:
-            return None
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        id = geocoding.get('id')
-        prefix = "addr:"
-        if id.startswith(prefix):
-            return id[len(prefix):]
-        return id
 
 geocode_addr = {
     "embedded_type": Lit("address"),
