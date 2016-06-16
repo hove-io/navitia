@@ -1228,6 +1228,60 @@ nop      | data_freshness   | enum                           | Define the freshn
 <a name="departures"></a>Departures
 -----------------------------------
 
+``` shell
+
+#Request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/departures?from_datetime=20160615T1337' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#Response
+HTTP/1.1 200 OK
+{
+   "departures":[
+        {
+            "display_informations":{
+                "direction":"Ch\u00e2teau de Vincennes (Saint-Mand\u00e9)",
+                "color":"F2C931",
+                "physical_mode":"M?tro",
+                "headsign":"Ch\u00e2teau de Vincennes",
+                "commercial_mode":"Metro",
+                "network":"RATP",
+                "..."
+            },
+            "stop_point":{
+                "name":"Esplanade de la D\u00e9fense",
+                "physical_modes":[
+                   {
+                      "name":"M?tro",
+                      "id":"physical_mode:Metro"
+                   }
+                ],
+                "coord":{
+                   "lat":"48.887843",
+                   "lon":"2.250442"
+                },
+                "label":"Esplanade de la D\u00e9fense (Puteaux)",
+                "id":"stop_point:RAT:SP:ESDEN2",
+                "..."
+            },
+            "route":{
+                "id":"route:RAT:M1_R",
+                "name":"Ch\u00e2teau de Vincennes - La D\u00e9fense",
+                "..."
+            },
+            "stop_date_time":{
+                "arrival_date_time":"20160615T133700",
+                "departure_date_time":"20160615T133700",
+                "base_arrival_date_time":"20160615T133700",
+                "base_departure_date_time":"20160615T133700"
+            }
+        },
+        {"...":"..."},
+        {"...":"..."},
+        {"...":"..."}
+   ]
+}
+```
+
 Also known as `/departures` service.
 
 This endpoint retrieves a list of departures from a specific datetime of a selected
