@@ -23,7 +23,7 @@ The only arguments are the ones of [paging](#paging).
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
 ``` shell
-#request 
+#request
 $ curl 'https://api.navitia.io/v1/coords/2.37705;48.84675' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #response where you can find the right Navitia coverage, and a useful label
@@ -41,7 +41,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-> in this example, the coverage id is "regions": ["sandbox"] 
+> in this example, the coverage id is "regions": ["sandbox"]
 so you can ask Navitia on accessible local mobility services:
 
 ``` shell
@@ -91,7 +91,7 @@ Very simple service: you give Navitia some coordinates, it answers you
 -   the right Navitia "coverage" which allows you to access to all known
     local mobility services
 
-You can also combine `/coords` with other filter as : 
+You can also combine `/coords` with other filter as :
 
 -   get [POIs](#poi) near a coordinate
 	- <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/pois?distance=1000>
@@ -261,14 +261,14 @@ HTTP/1.1 200 OK
         {...}
 ]
 
-#you can request for objects with a specific code 
+#you can request for objects with a specific code
 #for example, you can get this stoparea, having a "source" code "CAMPO"
 #by using parameter "filter=stop_area.has_code(source,CAMPO)" like:
 
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas?filter=stop_area.has_code(source,CAMPO)' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 ```
 
-Every object managed by Navitia comes with its own list of ids. 
+Every object managed by Navitia comes with its own list of ids.
 You will find some source ids, merge ids, etc. in "codes" list in json responses.
 Be careful, these codes may not be unique. The navitia id is the only unique id.
 
@@ -341,7 +341,7 @@ Other examples
 But you will find lots of more advanced example in [a quick exploration](#a-quick-exploration)
 chapter
 
-<a name="pt-objects"></a>Autocomplete on Public Transport objects 
+<a name="pt-objects"></a>Autocomplete on Public Transport objects
 -----------------------------------------------------------------
 
 ``` shell
@@ -368,7 +368,7 @@ HTTP/1.1 200 OK
 Also known as `/pt_objects` service.
 
 This endpoint allows you to search in public transport objects using their names. It's a kind
-of magical [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) on public transport data. 
+of magical [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) on public transport data.
 It returns a collection of [pt_object](#pt-object).
 
 ### How does it works
@@ -382,7 +382,7 @@ Differents kind of objects can be returned (sorted as):
 -   stop_area
 
 Here is a typical use case. A traveler has to find a line between the
-1500 lines around Paris. 
+1500 lines around Paris.
 For example, he could key without any filters:
 
 <div data-collapse>
@@ -468,7 +468,7 @@ Also known as `/places` service.
 This endpoint allows you to search in all geographical objects using their names, returning
 a [place](#place) collection.
 
-It is very useful to make some [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) stuff ie 
+It is very useful to make some [autocomplete](https://en.wikipedia.org/wiki/Autocomplete) stuff ie
 to understand the user input even if he has mittens.
 
 Differents kind of objects can be returned (sorted as):
@@ -947,13 +947,136 @@ Required | Name               | Type      | Description                         
 yep      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
 nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
 nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
-nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        | 
+nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        |
 nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
-
 
 ### Objects
 
 #### <a name="route-schedule">route_schedule object
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/route_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+{
+    pagination: {},
+    links: [],
+    disruptions: [],
+    notes: [],
+    feed_publishers: [],
+    exceptions: [],
+    route_schedules: [{
+        display_informations: {
+            direction: "Château de Vincennes (Saint-Mandé)",
+            code: "1",
+            network: "RATP",
+            links: [],
+            color: "F2C931",
+            commercial_mode: "Metro",
+            text_color: "000000",
+            label: "1"
+        },
+        table: {
+            headers: [
+            {
+                    display_informations: {
+                        direction: "Château de Vincennes (Saint-Mandé)",
+                        code: "",
+                        description: "",
+                        links: [],
+                        color: "",
+                        physical_mode: "M?tro",
+                        headsign: "Château de Vincennes",
+                        commercial_mode: "",
+                        equipments: [],
+                        text_color: "",
+                        network: ""
+                    },
+                    additional_informations: [
+                        "regular"
+                    ],
+                    links: [{
+                        type: "vehicle_journey",
+                        id: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
+                    }, {
+                        type: "physical_mode",
+                        id: "physical_mode:Metro"
+                    }]
+                },
+                { ... },
+                { ... }
+            ],
+            rows: [{
+                stop_point: {
+                    codes: [{
+                        type: "external_code",
+                        value: "RATDENFE2"
+                    }, {
+                        type: "source",
+                        value: "DENFE2"
+                    }],
+                    name: "La Défense Grande Arche",
+                    links: [],
+                    physical_modes: [{
+                        name: "Métro",
+                        id: "physical_mode:Metro"
+                    }],
+                    coord: {
+                        lat: "48.891935",
+                        lon: "2.237883"
+                    },
+                    label: "La Défense Grande Arche (Puteaux)",
+                    equipments: [],
+                    commercial_modes: [{
+                        name: "Metro",
+                        id: "commercial_mode:Metro"
+                    }],
+                    administrative_regions: [{
+                        insee: "92062",
+                        name: "Puteaux",
+                        level: 8,
+                        coord: {
+                            lat: "48.884151",
+                            lon: "2.236886"
+                        },
+                        label: "Puteaux (92800)",
+                        id: "admin:91776extern",
+                        zip_code: "92800"
+                    }],
+                    id: "stop_point:RAT:SP:DENFE2",
+                    stop_area: { ... }
+                },
+                date_times: [{
+                    date_time: "20160616T093300",
+                    additional_informations: [],
+                    links: [{
+                        type: "vehicle_journey",
+                        value: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2",
+                        rel: "vehicle_journeys",
+                        id: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
+                    }],
+                    data_freshness: "base_schedule"
+                }, {
+                    date_time: "20160617T094400",
+                    additional_informations: [],
+                    links: [{
+                        type: "vehicle_journey",
+                        value: "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2",
+                        rel: "vehicle_journeys",
+                        id: "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2"
+                    }],
+                    data_freshness: "base_schedule"
+                }]
+            }]
+        },
+        additional_informations: null,
+        links: [],
+        geojson: {}
+    }]
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -992,7 +1115,7 @@ point as:
 ![stop_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
 
 The response is made of an array of [stop_schedule](#stop-schedule), and another
-one of [note](#note). 
+one of [note](#note).
 You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 ### Accesses
@@ -1009,7 +1132,7 @@ Required | Name           | Type                    | Description        | Defau
 ---------|----------------|-------------------------|--------------------|--------------
 yep      | from_datetime  | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
 nop      | duration         | int                            | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    | 
+nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    |
 nop      | items_per_schedule | int       | Maximum number of datetimes per schedule.                                                  |
 nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
 
@@ -1031,7 +1154,7 @@ nop      | data_freshness   | enum                           | Define the freshn
 Also known as `/departures` service.
 
 This endpoint retrieves a list of departures from a specific datetime of a selected
-object. 
+object.
 Departures are ordered chronologically in ascending order as:
 ![departures](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG)
 
@@ -1049,7 +1172,7 @@ Required | Name           | Type                    | Description        | Defau
 ---------|----------------|-------------------------|--------------------|--------------
 yep      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
 nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    | 
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    |
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 
 
@@ -1168,10 +1291,10 @@ For example:
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports>
 
 
-The response is made of an array of [traffic_reports](#traffic-reports), 
-and another one of [disruptions](#disruption). 
+The response is made of an array of [traffic_reports](#traffic-reports),
+and another one of [disruptions](#disruption).
 
-There are inner links between this 2 arrays: 
+There are inner links between this 2 arrays:
 see the [inner-reference](#inner-references) section to use them.
 
 
@@ -1305,7 +1428,7 @@ see the [inner-reference](#inner-references) section to use them.
 Traffic_reports is an array of some traffic_report object.
 
 One traffic_report object is a complex object, made of a network, an array
-of lines and an array of stop_areas. 
+of lines and an array of stop_areas.
 
 A typical traffic_report object will contain:
 
