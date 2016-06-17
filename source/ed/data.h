@@ -164,6 +164,8 @@ public:
 
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
+
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
