@@ -184,7 +184,7 @@ Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
 	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>
-	- The id is "line:OIF:100110001:1OIF439"
+	- The id is "line:RAT:M1"
 - Get routes for this line
 	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>
 - Want to get a tiny response? Just add "depth=0"
