@@ -280,6 +280,10 @@ An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is t
 |id|string|The id of the trip|
 |name|string|The name of the trip|
 
+It also encapsulates many instances of vehicle_journey, accessible with the url:
+
+`https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys`.
+
 
 ### <a name="pt-object"></a>Pt_object
 
