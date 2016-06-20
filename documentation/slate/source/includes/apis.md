@@ -192,7 +192,7 @@ Here is some examples around "metro line 1" from the Parisian network:
 	- The response is lighter (parent lines disappear for example)
 - Want more informations, just add "depth=2"
 	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>
-	- The response is a little more verbose (with some geojson appear in response)
+	- The response is a little more verbose (with some geojson could appear in response using your open data token)
 - Wanna fat more informations, let's try "depth=3"
 	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>
 	- Big response: all stop_points are shown
