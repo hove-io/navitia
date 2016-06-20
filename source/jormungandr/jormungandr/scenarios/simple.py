@@ -206,14 +206,16 @@ class Scenario(object):
             origin = journey_req.origin.add()
             origin.place = request["origin"]
             origin.access_duration = 0
+            journey_req.clockwise = True
         if "destination" in request and request["destination"]:
             destination = journey_req.destination.add()
             destination.place = request["destination"]
             destination.access_duration = 0
+            journey_req.clockwise = False
         request["datetime"] = [request["datetime"]]
         for dte in request["datetime"]:
             journey_req.datetimes.append(dte)
-        journey_req.clockwise = request["clockwise"]
+        journey_req.wheelchair = request["wheelchair"] or False
         journey_req.realtime_level = get_pb_data_freshness(request)
         updated_common_journey_request_with_default(request, instance)
         sn_params = journey_req.streetnetwork_params

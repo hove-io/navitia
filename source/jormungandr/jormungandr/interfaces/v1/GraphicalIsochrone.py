@@ -31,10 +31,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import Links, MultiPolyGeoJson
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
-    feed_publisher
+    feed_publisher, Links, MultiPolyGeoJson, place, NonNullString
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
@@ -48,7 +47,7 @@ from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
-from jormungandr.interfaces.v1.JourneyCommon import JourneyCommon, dt_represents
+from jormungandr.interfaces.v1.journey_common import journey_common, dt_represents, compute_possible_region
 
 
 graphical_isochrone = {
@@ -64,10 +63,10 @@ graphical_isochrones = {
 }
 
 
-class GraphicalIsochrone(JourneyCommon):
+class GraphicalIsochrone(journey_common):
 
     def __init__(self):
-        JourneyCommon.__init__(self)
+        journey_common.__init__(self)
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
 
@@ -76,6 +75,7 @@ class GraphicalIsochrone(JourneyCommon):
     def get(self, region=None, uri=None):
 
         args = self.parsers['get'].parse_args()
+        self.region = i_manager.get_region(region)
         args.update(self.parse_args(region, uri))
 
         if not (args['destination'] or args['origin']):

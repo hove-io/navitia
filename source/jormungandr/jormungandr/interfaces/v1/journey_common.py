@@ -74,7 +74,7 @@ def compute_regions(args):
     method computing the region the journey has to be computed on
     The complexity comes from the fact that the regions in jormungandr can overlap.
 
-    return the kraken instance key
+    return the kraken instance keys
 
     rules are easy:
     we fetch the different regions the user can use for 'origin' and 'destination'
@@ -113,7 +113,22 @@ def compute_regions(args):
 
     return [r.name for r in regions]
 
-class JourneyCommon(ResourceUri, ResourceUtc) :
+
+def compute_possible_region(region, args):
+
+    if region:
+        region_obj = i_manager.get_region(region)
+
+    if not region:
+        # TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+        possible_regions = compute_regions(args)
+    else:
+        possible_regions = [region_obj]
+
+    return possible_regions
+
+
+class journey_common(ResourceUri, ResourceUtc) :
     def __init__(self):
         ResourceUri.__init__(self, authentication=False)
         ResourceUtc.__init__(self)
@@ -153,6 +168,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 type=option_value(modes), action="append")
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
+        parser_get.add_argument("wheelchair", type=boolean, default=None)
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
@@ -237,7 +253,6 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             args['origin_mode'] = 'bss'
 
         if region:
-            self.region = i_manager.get_region(region)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -245,6 +260,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                 else:
                     abort(503, message="Unable to compute journeys "
                                    "from this object")
+
 
         def _set_specific_params(mod):
             if args.get('_walking_transfer_penalty') is None:

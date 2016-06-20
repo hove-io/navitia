@@ -186,8 +186,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
 
     def test_graphical_isochrone_section_mode(self):
         q_section_mode = "v1/coverage/main_routing_test/" + isochrone_basic_query + \
-                         "&first_section_mode=bike" \
-                         "&last_section_mode=bss"
+                         "&first_section_mode[]=bike" \
+                         "&last_section_mode[]=bss"
         q_basic = "v1/coverage/main_routing_test/" + isochrone_basic_query
         response_section_mode = self.query(q_section_mode)
         response_basic = self.query(q_basic)

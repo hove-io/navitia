@@ -55,10 +55,12 @@ from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from copy import deepcopy
+from jormungandr.travelers_profile import TravelerProfile
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
+from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
-from jormungandr.interfaces.v1.JourneyCommon import JourneyCommon, dt_represents, compute_regions
+from jormungandr.interfaces.v1.journey_common import journey_common, dt_represents, compute_possible_region
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -329,24 +331,46 @@ class add_fare_links(object):
             return objects
         return wrapper
 
-class Journeys(JourneyCommon):
+class Journeys(journey_common):
 
     def __init__(self):
         # journeys must have a custom authentication process
-        JourneyCommon.__init__(self)
+        journey_common.__init__(self)
+        types = {
+            "all": "All types",
+            "best": "The best journey",
+            "rapid": "A good trade off between duration, changes and constraint respect",
+            'no_train': "Journey without train",
+            'comfort': "A journey with less changes and walking",
+            'car': "A journey with car to get to the public transport",
+            'less_fallback_walk': "A journey with less walking",
+            'less_fallback_bike': "A journey with less biking",
+            'less_fallback_bss': "A journey with less bss",
+            'fastest': "A journey with minimum duration",
+            'non_pt_walk': "A journey without public transport, only walking",
+            'non_pt_bike': "A journey without public transport, only biking",
+            'non_pt_bss': "A journey without public transport, only bike sharing",
+        }
 
         parser_get = self.parsers["get"]
+        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
+        parser_get.add_argument("max_duration_to_pt", type=int,
+                                description="maximal duration of non public transport in second")
+
         parser_get.add_argument("count", type=default_count_arg_type)
         parser_get.add_argument("_min_journeys_calls", type=int)
         parser_get.add_argument("_final_line_filter", type=boolean)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
-        parser_get.add_argument("wheelchair", type=boolean, default=None)
+        parser_get.add_argument("type", type=option_value(types),
+                                default="all")
+
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
@@ -366,7 +390,18 @@ class Journeys(JourneyCommon):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
+        possible_regions = compute_possible_region(region, args)
+        if args.get('traveler_type') is not None:
+            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+            traveler_profile.override_params(args)
         args.update(self.parse_args(region, uri))
+
+        if args['max_duration_to_pt'] is not None:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         #count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
@@ -397,15 +432,8 @@ class Journeys(JourneyCommon):
         if args['debug']:
             g.debug = True
 
-        if not region:
-            # TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            possible_regions = compute_regions(args)
-        else:
-            possible_regions = [region]
-
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
-
         logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}".format(possible_regions))
         #we want to store the different errors
         responses = {}
@@ -413,8 +441,8 @@ class Journeys(JourneyCommon):
             self.region = r
 
             set_request_timezone(self.region)
-            #we store the region in the 'g' object, which is local to a request
 
+            #we store the region in the 'g' object, which is local to a request
             if args['debug']:
                 # In debug we store all queried region
                 if not hasattr(g, 'regions_called'):
