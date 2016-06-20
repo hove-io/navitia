@@ -331,6 +331,11 @@ def test_deletion_keys_and_auth(create_instance, mock_rabbit):
     """
     We start by creating the user, it's easier than using a fixture, then we delete the auth and the key
     """
+
+    # first, test that with an unknown user, we get a 404
+    _, status = api_delete('/v0/users/75/keys/1', check=False, no_json=True)
+    assert status == 404
+
     user = {'login': 'user1', 'email': 'user1@example.com'}
     resp_user = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
     api_post('/v0/users/{}/keys'.format(resp_user['id']), data=json.dumps({'app_name': 'myApp'}),
