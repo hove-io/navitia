@@ -296,10 +296,7 @@ class Instance(flask_restful.Resource):
             return models.Instance.query_existing().all()
 
     def delete(self, id=None, name=None):
-        try:
-            instance = models.Instance.get_from_id_or_name(id, name)
-        except Exception as e:
-            return e.args
+        instance = models.Instance.get_from_id_or_name(id, name)
 
         try:
             instance.discarded = True
@@ -311,10 +308,7 @@ class Instance(flask_restful.Resource):
         return marshal(instance, instance_fields)
 
     def put(self, id=None, name=None):
-        try:
-            instance = models.Instance.get_from_id_or_name(id, name)
-        except Exception as e:
-            return e.args
+        instance = models.Instance.get_from_id_or_name(id, name)
 
         parser = reqparse.RequestParser()
         parser.add_argument('scenario', type=str, case_sensitive=False,
