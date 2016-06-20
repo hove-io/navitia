@@ -137,24 +137,64 @@ paginate results.
 
 ### Parameters
 
+``` shell
+curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+HTTP/1.1 200 OK
+
+{
+    "pt_objects":[
+        {
+            "id":"line:RAT:M1",
+            "name":"RATP Metro 1 (Château de Vincennes - La Défense)",
+            "embedded_type":"line",
+            "line":{
+                "id":"line:RAT:M1",
+                "name":"Château de Vincennes - La Défense",
+                "code":"1",
+                "...": "..."
+            }
+        },
+        {
+            "id":"line:RAT:M11",
+            "name":"RATP Metro 11 (Mairie des Lilas - Châtelet)"
+            "embedded_type":"line",
+            "line":{
+                "...": "..."
+            },
+        },
+        {
+            "id":"line:RAT:M12",
+            "name":"RATP Metro 12 (Mairie d'Issy - Front Populaire)",
+            "embedded_type":"line",
+            "line":{
+                "...": "..."
+            }
+        },
+        {"...": "..."},
+        {"...": "..."}
+    ]
+}
+```
+
 #### <a name="depth"></a>depth
 
 This tiny parameter can expand Navitia power by making it more wordy.
 Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
-	- <https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro%201>
-	- The id is "line:OIF:100110001:1OIF439"
+	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>
+	- The id is "line:RAT:M1"
 - Get routes for this line
-	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes>
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>
 - Want to get a tiny response? Just add "depth=0"
-	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=0>
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>
 	- The response is lighter (parent lines disappear for example)
 - Want more informations, just add "depth=2"
-	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=2>
-	- The response is a little more verbose (with some geojson appear in response)
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>
+	- The response is a little more verbose (some geojson can appear in response when using your open data token)
 - Wanna fat more informations, let's try "depth=3"
-	- <https://api.navitia.io/v1/coverage/fr-idf/lines/line:OIF:100110001:1OIF439/routes?depth=3>
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>
 	- Big response: all stop_points are shown
 - Wanna spam the internet bandwidth? Try "depth=42"
 	- No. There is a technical limit with "depth=3"
@@ -345,6 +385,8 @@ chapter
 -----------------------------------------------------------------
 
 ``` shell
+# Search objects of type 'line' or 'route' containing 'metro 4'
+
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%204&type\[\]=line&type\[\]=route' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
@@ -352,15 +394,15 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%204&type\[
 HTTP/1.1 200 OK
 
 {
-"pt_objects": [
+    "pt_objects": [
         {
             "embedded_type": "line",
             "line": {...},
             "id": "line:RAT:M4",
             "name": "RATP Metro 4 (Porte de Clignancourt - Mairie de Montrouge)"
         },
-     ],
-"links" : [...],
+    ],
+    "links" : [...],
 }
 ```
 
@@ -421,6 +463,27 @@ For example, he could key without any filters:
 </div>
 
 ### Access
+
+``` shell
+# Search objects of type 'network' containing 'RAT'
+curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=RAT&type\[\]=network' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+HTTP/1.1 200 OK
+
+{
+    "pt_objects":[
+        {
+            "id":"network:RAT:1",
+            "name":"RATP",
+            "embedded_type":"network",
+            "network":{
+                "id":"network:RAT:1",
+                "name":"RATP"
+            }
+        }
+    ]
+}
+```
 
 | url | Result |
 |------------------------------------------------|-------------------------------------|
