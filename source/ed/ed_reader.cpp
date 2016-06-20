@@ -78,6 +78,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_comments(data, work);
     // the stop times are loaded before the vj as create_vj need the
     // list of stop times
+    this->fill_shapes(data, work);
     this->fill_stop_times(data, work);
     this->fill_vehicle_journeys(data, work);
     this->finish_stop_times(data);
@@ -997,6 +998,17 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     }
 }
 
+void EdReader::fill_shapes(nt::Data& data, pqxx::work& work) {
+    std::string request = "SELECT id as id, ST_AsText(geom) as geom FROM navitia.shape";
+    const pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+            nt::LineString* shape = new nt::LineString();
+            boost::geometry::read_wkt(const_it["geom"].as<std::string>("LINESTRING()"), *shape);
+            data.pt_data->shapes.push_back(shape);
+            this->shapes_map[const_it["id"].as<idx_t>()] = shape;
+    }
+}
+
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
     std::string request = "SELECT "
         "st.vehicle_journey_id as vehicle_journey_id,"
@@ -1012,8 +1024,8 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "st.headsign as headsign,"
         "st.stop_point_id as stop_point_id,"
         "st.\"order\" as st_order,"
-        "ST_AsText(sh.geom) as shape_from_prev "
-        "FROM navitia.stop_time as st left join navitia.shape as sh on sh.id=st.shape_from_prev_id";
+        "st.shape_from_prev_id as shape_from_prev_id "
+        "FROM navitia.stop_time as st";
 
     pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
         cursor( work, request, "stcursor", false );
@@ -1045,10 +1057,9 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 
             stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
-            nt::LineString shape_from_prev;
-            boost::geometry::read_wkt(const_it["shape_from_prev"].as<std::string>("LINESTRING()"),
-                                      shape_from_prev);
-            stop.shape_from_prev = data.pt_data->shape_manager.get(shape_from_prev);
+            if(!const_it["shape_from_prev_id"].is_null()){
+                stop.shape_from_prev = this->shapes_map[const_it["shape_from_prev_id"].as<idx_t>()];
+            }
 
             const auto st_id = const_it["id"].as<nt::idx_t>();
             const StKey st_key = {vj_id, sts.size() - 1};

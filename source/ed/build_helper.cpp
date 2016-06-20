@@ -214,7 +214,9 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(stop_times.size() >= 2);
     assert(stop_times.back().stop_point->coord == shape.back());
     assert(stop_times.at(stop_times.size() - 2).stop_point->coord == shape.front());
-    stop_times.back().shape_from_prev = b.data->pt_data->shape_manager.get(shape);
+    auto s = new navitia::type::LineString(shape);
+    b.data->pt_data->shapes.push_back(s);
+    stop_times.back().shape_from_prev = s;
     return *this;
 }
 
