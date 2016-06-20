@@ -264,6 +264,10 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 
 ### Trip
 
+A trip corresponds to a scheduled train circulation (and all its linked real-time informations).
+
+An example : the train doing Paris-Marseille every day at 19h30 is the Trip named 456789.
+
 ``` json
 {
     "id": "OIF:67308746-10-1",
