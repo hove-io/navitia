@@ -50,6 +50,7 @@ void Data::sort(){
     std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
+    std::for_each(shapes_from_prev.begin(), shapes_from_prev.end(), Indexer<nt::idx_t>());
     std::sort(stops.begin(), stops.end(), Less());
 }
 
@@ -509,7 +510,7 @@ create_shape(const nt::GeographicalCoord& from,
 }
 
 void Data::build_shape_from_prev() {
-    std::map<std::string, nt::LineString> shape_cache;
+    std::map<std::string, types::Shape*> shape_cache;
     for (types::VehicleJourney* vj: vehicle_journeys) {
         const types::StopPoint* prev_stop_point = nullptr;
         for (types::StopTime* stop_time: vj->stop_time_list) {
@@ -519,7 +520,9 @@ void Data::build_shape_from_prev() {
                     std::string key = (boost::format("%s|%s|%s") % vj->shape_id % prev_stop_point->uri % stop_time->stop_point->uri).str();
                     // we keep in cache the resulting geometry, so we don't have to re compute it later
                     if(shape_cache.find(key) == shape_cache.end()){
-                        shape_cache[key] = create_shape(prev_stop_point->coord, stop_time->stop_point->coord, shape.front());
+                        auto s = new types::Shape(create_shape(prev_stop_point->coord, stop_time->stop_point->coord, shape.front()));
+                        this->shapes_from_prev.push_back(s);
+                        shape_cache[key] = s;
                     }
                     stop_time->shape_from_prev = shape_cache[key];
                 }

@@ -302,13 +302,19 @@ struct StopPoint : public Header, Nameable, hasProperties{
     bool operator<(const StopPoint& other) const;
 };
 
+struct Shape {
+    size_t idx = 0;
+    nt::LineString geom;
+    Shape(const nt::LineString& ls) : geom(ls) {}
+};
+
 struct StopTime {
     size_t idx = 0;
     int arrival_time = 0; /// Number of seconds from midnight can be negative when
     int departure_time = 0; /// we shift in UTC conversion
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
-    nt::LineString shape_from_prev;
+    Shape* shape_from_prev = nullptr;
     unsigned int order = 0;
     bool ODT = false;
     bool pick_up_allowed = false;

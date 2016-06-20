@@ -1012,8 +1012,8 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "st.headsign as headsign,"
         "st.stop_point_id as stop_point_id,"
         "st.\"order\" as st_order,"
-        "ST_AsText(st.shape_from_prev) as shape_from_prev "
-        "FROM navitia.stop_time as st ";
+        "ST_AsText(sh.geom) as shape_from_prev "
+        "FROM navitia.stop_time as st left join navitia.shape as sh on sh.id=st.shape_from_prev_id";
 
     pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned>
         cursor( work, request, "stcursor", false );
