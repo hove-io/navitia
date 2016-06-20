@@ -264,9 +264,9 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 
 ### Trip
 
-A trip corresponds to a scheduled train circulation (and all its linked real-time informations).
+A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).
 
-An example : the train doing Paris-Marseille every day at 19h30 is the Trip named 456789.
+An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
 
 ``` json
 {
