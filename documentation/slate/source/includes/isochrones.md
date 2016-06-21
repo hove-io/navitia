@@ -11,11 +11,7 @@ the quickest way to reach your destination.
 Isochrone computing exposes information under two formats:
 
 -   either [Journeys](#journeys) service which provides a list with all the reachable stops from a potential destination 
-with their respective arrival times, travel times and number of matches
--   or [isochrones](#isochrones_api) service which provides a multi-polygon stream in order to plate colors directly on a map, 
-or to filter geocoded objects inside the polygon
-
-Using the raw list, here is a fiddle example:
+with their respective arrival times, travel times and number of matches, here is a fiddle example:
 
 <a
     href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
@@ -23,6 +19,18 @@ Using the raw list, here is a fiddle example:
     class="button button-blue">
     Code it yourself on JSFiddle
 </a>
+
+-   or [isochrones](#isochrones_api) service which provides a multi-polygon stream in order to plate colors directly on a map, 
+or to filter geocoded objects inside the polygon
+here is a fiddle example:
+
+<a
+    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/graphical_isochrone/"
+    target="_blank"
+    class="button button-blue">
+    Code it yourself on JSFiddle
+</a>
+
 
 You can use these APIs (click on them for details):
 
