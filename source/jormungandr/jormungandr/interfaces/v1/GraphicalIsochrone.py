@@ -66,7 +66,7 @@ graphical_isochrones = {
 class GraphicalIsochrone(JourneyCommon):
 
     def __init__(self):
-        JourneyCommon.__init__(self)
+        super(GraphicalIsochrone, self).__init__()
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
 

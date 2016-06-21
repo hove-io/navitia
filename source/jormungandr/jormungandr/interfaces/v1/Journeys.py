@@ -335,7 +335,7 @@ class Journeys(JourneyCommon):
 
     def __init__(self):
         # journeys must have a custom authentication process
-        JourneyCommon.__init__(self)
+        super(Journeys, self).__init__()
         types = {
             "all": "All types",
             "best": "The best journey",

@@ -80,8 +80,6 @@ def compute_regions(args):
     we fetch the different regions the user can use for 'origin' and 'destination'
     we do the intersection and sort the list
     """
-    _region = None
-    possible_regions = set()
     from_regions = set()
     to_regions = set()
     if args['origin']:
