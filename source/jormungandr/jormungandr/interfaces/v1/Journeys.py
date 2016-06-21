@@ -29,11 +29,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from functools import cmp_to_key
 import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager, app
+from jormungandr.exceptions import RegionNotFound
+from jormungandr.instance_manager import instances_comparator
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\

@@ -1178,7 +1178,7 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
                                     const int& min_duration,
                                     const int& max_duration,
                                     PbCreator& pb_creator,
-                                    type::EntryPoint origin,
+                                    type::EntryPoint center,
                                     bool clockwise) {
     std::stringstream geojson;
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
@@ -1190,15 +1190,15 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
     pb_isochrone->set_min_duration(min_duration);
     pb_isochrone->set_max_duration(max_duration);
     if (clockwise) {
-        pb_creator.fill(&origin, pb_isochrone->mutable_origin(), 2);
+        pb_creator.fill(&center, pb_isochrone->mutable_origin(), 2);
     } else {
-        pb_creator.fill(&origin, pb_isochrone->mutable_destination(), 2);
+        pb_creator.fill(&center, pb_isochrone->mutable_destination(), 2);
     }
 }
 
 pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                             const boost::posix_time::ptime& current_datetime,
-                                            type::EntryPoint origin,
+                                            type::EntryPoint center,
                                             const uint64_t departure_datetime,
                                             const int& max_duration,
                                             const int& min_duration,
@@ -1218,8 +1218,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
         return pb_creator.get_response();
     }
     datetime = tmp_datetime.front();
-    worker.init(origin);
-    auto departures = get_stop_points(origin, raptor.data, worker);
+    worker.init(center);
+    auto departures = get_stop_points(center, raptor.data, worker);
 
     if (departures.empty()) {
         pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
@@ -1232,10 +1232,10 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     DateTime bound_min = clockwise ? init_dt + min_duration : init_dt - min_duration;
     raptor.isochrone(departures, init_dt, bound_max, max_transfers,
                      accessibilite_params, forbidden, clockwise, rt_level);
-    type::GeographicalCoord coord_origin = origin.coordinates;
+    type::GeographicalCoord coord_origin = center.coordinates;
     type::MultiPolygon isochrone = build_isochrones(raptor, clockwise, coord_origin, bound_max, bound_min, departures,
                                                     speed, max_duration, min_duration);
-    add_graphical_isochrone(isochrone, min_duration, max_duration, pb_creator, origin, clockwise);
+    add_graphical_isochrone(isochrone, min_duration, max_duration, pb_creator, center, clockwise);
     return pb_creator.get_response();
 }
 

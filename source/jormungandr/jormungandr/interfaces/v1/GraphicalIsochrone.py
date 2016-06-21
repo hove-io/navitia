@@ -91,9 +91,10 @@ class GraphicalIsochrone(JourneyCommon):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration']:
             abort(400, message="you should provide a 'max_duration' argument")
+        if args['destination'] and args['origin']:
+            abort(400, message="you cannot provide a 'from' and a 'to' argument")
 
         set_request_timezone(self.region)
-        args['original_datetime'] = args['datetime']
         original_datetime = args['original_datetime']
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
