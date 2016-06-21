@@ -417,7 +417,7 @@ void EdReader::fill_datasets(nt::Data& data, pqxx::work& work){
         dataset->contributor = contributor_it->second;
         dataset->idx = data.pt_data->datasets.size();
 
-        dataset->contributor->dataset_list.push_back(dataset);
+        dataset->contributor->dataset_list.insert(dataset);
         data.pt_data->datasets.push_back(dataset);
         this->dataset_map[const_it["id"].as<idx_t>()] = dataset;
     }
@@ -895,7 +895,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             auto dataset_it = this->dataset_map.find(const_it["dataset_id"].as<idx_t>());
             if(dataset_it != this->dataset_map.end()) {
                 vj->dataset = dataset_it->second;
-                vj->dataset->vehiclejourney_list.push_back(vj);
+                vj->dataset->vehiclejourney_list.insert(vj);
             }
         }
     }

@@ -434,15 +434,11 @@ void Data::build_associated_calendar() {
 */
 static void build_datasets(navitia::type::VehicleJourney* vj){
     if(!vj->dataset) { return; }
-    if (vj->route && (!navitia::contains(vj->route->dataset_list, vj->dataset))){
-        vj->route->dataset_list.push_back(vj->dataset);
-    }
-    if (!navitia::contains(vj->dataset->vehiclejourney_list, vj)){
-        vj->dataset->vehiclejourney_list.push_back(vj);
-    }
+    vj->route->dataset_list.insert(vj->dataset);
+    vj->dataset->vehiclejourney_list.insert(vj);
     for(navitia::type::StopTime& st : vj->stop_time_list){
-        if(st.stop_point && (!navitia::contains(st.stop_point->dataset_list, vj->dataset))){
-            st.stop_point->dataset_list.push_back(vj->dataset);
+        if(st.stop_point){
+            st.stop_point->dataset_list.insert(vj->dataset);
         }
     }
 }

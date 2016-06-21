@@ -168,16 +168,16 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     auto* c1 = b.add<nt::Contributor>("c1", "name-c1");
     auto* d1 = b.add<nt::Dataset>("d1", "name-d1");
     d1->contributor = c1;
-    c1->dataset_list.push_back(d1);
+    c1->dataset_list.insert(d1);
 
     auto* d2 = b.add<nt::Dataset>("d2", "name-d2");
     d2->contributor = c1;
-    c1->dataset_list.push_back(d2);
+    c1->dataset_list.insert(d2);
 
     auto* c2 = b.add<nt::Contributor>("c2", "name-c2");
     auto* d3 = b.add<nt::Dataset>("d3", "name-d3");
     d3->contributor = c2;
-    c2->dataset_list.push_back(d3);
+    c2->dataset_list.insert(d3);
 
     auto* vj_a = b.vj("A")("stop1", 8000, 8050).make();
     vj_a->dataset = d1;
