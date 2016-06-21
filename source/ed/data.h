@@ -118,6 +118,7 @@ public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
     std::vector<types::StopTime*> stops;
+    std::vector<std::shared_ptr<types::Shape>> shapes_from_prev;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
     //fare:
@@ -255,6 +256,7 @@ public:
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }
+
         for (ed::types::AssociatedCalendar* cal: associated_calendars) {
             delete cal;
         }

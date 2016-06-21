@@ -324,7 +324,7 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "End: insert companies");
     LOG4CPLUS_INFO(logger, "Begin: insert contributors");
     this->insert_contributors(data.contributors);
-    LOG4CPLUS_INFO(logger, "End: insert contributors");    
+    LOG4CPLUS_INFO(logger, "End: insert contributors");
     LOG4CPLUS_INFO(logger, "Begin: insert datasets");
     this->insert_datasets(data.datasets);
     LOG4CPLUS_INFO(logger, "End: insert datasets");
@@ -355,6 +355,10 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert vehicle journeys");
     this->insert_vehicle_journeys(data.vehicle_journeys);
     LOG4CPLUS_INFO(logger, "End: insert vehicle journeys");
+
+    LOG4CPLUS_INFO(logger, "Begin: insert shapes");
+    this->insert_shapes(data.shapes_from_prev);
+    LOG4CPLUS_INFO(logger, "End: insert shapes");
 
     LOG4CPLUS_INFO(logger, "Begin: insert stop times");
     this->insert_stop_times(data.stops);
@@ -476,7 +480,7 @@ void EdPersistor::clean_db(){
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.object_properties, navitia.object_code, "
         "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
-		"navitia.line_group, navitia.line_group_link"
+		"navitia.line_group, navitia.line_group_link, navitia.shape"
         " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec("update navitia.parameters set"
@@ -752,7 +756,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(navitia::encode_uri(line->uri));
         values.push_back(line->name);
         values.push_back(line->color);
-        values.push_back(line->code);        
+        values.push_back(line->code);
         if(line->commercial_mode != NULL){
             values.push_back(std::to_string(line->commercial_mode->idx));
         }else{
@@ -887,17 +891,37 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
     this->lotus.finish_bulk_insert();
 }
 
+void EdPersistor::insert_shapes(const std::vector<std::shared_ptr<types::Shape>>& shapes){
+    std::vector<std::string> columns = {"id", "geom"};
+
+    this->lotus.prepare_bulk_insert("navitia.shape", columns);
+    size_t inserted_count = 0;
+    std::vector<std::string> values;
+    for(auto shape: shapes){
+        values.clear();
+        values.push_back(std::to_string(shape->idx));
+        std::stringstream ss;
+        ss << std::setprecision(16) << boost::geometry::wkt(shape->geom);
+        values.push_back(ss.str());
+        this->lotus.insert(values);
+        ++inserted_count;
+    }
+    this->lotus.finish_bulk_insert();
+    LOG4CPLUS_INFO(logger, "inserted " << inserted_count << "shapes");
+}
+
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     std::vector<std::string> columns = {
         "id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
         "pick_up_allowed", "drop_off_allowed", "is_frequency", "\"order\"", "stop_point_id",
-        "shape_from_prev", "vehicle_journey_id", "date_time_estimated", "headsign"};
+        "shape_from_prev_id", "vehicle_journey_id", "date_time_estimated", "headsign"};
 
     this->lotus.prepare_bulk_insert("navitia.stop_time", columns);
     size_t inserted_count = 0;
     size_t size_st = stop_times.size();
+    std::vector<std::string> values;
     for(types::StopTime* stop : stop_times){
-        std::vector<std::string> values;
+        values.clear();
         values.push_back(std::to_string(stop->idx));
         values.push_back(std::to_string(stop->arrival_time));
         values.push_back(std::to_string(stop->departure_time));
@@ -913,14 +937,11 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 
         values.push_back(std::to_string(stop->order));
         values.push_back(std::to_string(stop->stop_point->idx));
-        std::stringstream shape;
-        if (stop->shape_from_prev.empty()) {
-            shape << lotus.null_value;
+        if (!stop->shape_from_prev) {
+            values.push_back(lotus.null_value);
         } else {
-            shape << std::setprecision(16)
-                  << boost::geometry::wkt(stop->shape_from_prev);
+            values.push_back(std::to_string(stop->shape_from_prev->idx));
         }
-        values.push_back(shape.str());
 
         if(stop->vehicle_journey != NULL){
             values.push_back(std::to_string(stop->vehicle_journey->idx));
