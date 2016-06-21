@@ -891,13 +891,13 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_shapes(const std::vector<types::Shape*>& shapes){
+void EdPersistor::insert_shapes(const std::vector<std::shared_ptr<types::Shape>>& shapes){
     std::vector<std::string> columns = {"id", "geom"};
 
     this->lotus.prepare_bulk_insert("navitia.shape", columns);
     size_t inserted_count = 0;
     std::vector<std::string> values;
-    for(types::Shape* shape: shapes){
+    for(auto shape: shapes){
         values.clear();
         values.push_back(std::to_string(shape->idx));
         std::stringstream ss;

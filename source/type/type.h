@@ -705,7 +705,7 @@ struct StopTime {
 
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
-    const LineString* shape_from_prev = nullptr;
+    boost::shared_ptr<LineString> shape_from_prev;
 
     StopTime() = default;
     StopTime(uint32_t arr_time, uint32_t dep_time, StopPoint* stop_point):

@@ -247,9 +247,5 @@ PT_Data::~PT_Data() {
     for (auto cal: associated_calendars) {
         delete cal;
     }
-
-    for (auto s: shapes) {
-        delete s;
-    }
 }
 }}

@@ -314,7 +314,7 @@ struct StopTime {
     int departure_time = 0; /// we shift in UTC conversion
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
-    Shape* shape_from_prev = nullptr;
+    std::shared_ptr<Shape> shape_from_prev;
     unsigned int order = 0;
     bool ODT = false;
     bool pick_up_allowed = false;

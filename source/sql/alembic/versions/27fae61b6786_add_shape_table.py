@@ -17,10 +17,10 @@ import geoalchemy2 as ga
 
 def upgrade():
     op.create_table('shape',
-    sa.Column('id', sa.BIGINT(), nullable=False),
-    sa.Column('geom', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    schema='navitia'
+        sa.Column('id', sa.BIGINT(), nullable=False),
+        sa.Column('geom', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
+        schema='navitia'
     )
     op.drop_column('stop_time', 'shape_from_prev', schema='navitia')
     op.add_column('stop_time', sa.Column('shape_from_prev_id', sa.BIGINT(), nullable=True), schema='navitia')

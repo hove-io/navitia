@@ -510,17 +510,25 @@ create_shape(const nt::GeographicalCoord& from,
 }
 
 void Data::build_shape_from_prev() {
-    std::map<std::string, types::Shape*> shape_cache;
+    std::map<std::string, std::shared_ptr<types::Shape>> shape_cache;
     for (types::VehicleJourney* vj: vehicle_journeys) {
         const types::StopPoint* prev_stop_point = nullptr;
         for (types::StopTime* stop_time: vj->stop_time_list) {
             if (prev_stop_point) {
                 const auto& shape = find_or_default(vj->shape_id, shapes);
                 if (! shape.empty()) {
-                    std::string key = (boost::format("%s|%s|%s") % vj->shape_id % prev_stop_point->uri % stop_time->stop_point->uri).str();
+                    std::string key = (boost::format("%s|%s|%s")
+                            % vj->shape_id
+                            % prev_stop_point->uri
+                            % stop_time->stop_point->uri)
+                        .str();
                     // we keep in cache the resulting geometry, so we don't have to re compute it later
                     if(shape_cache.find(key) == shape_cache.end()){
-                        auto s = new types::Shape(create_shape(prev_stop_point->coord, stop_time->stop_point->coord, shape.front()));
+                        auto s = std::make_shared<types::Shape>(
+                                create_shape(
+                                             prev_stop_point->coord,
+                                             stop_time->stop_point->coord,
+                                             shape.front()));
                         this->shapes_from_prev.push_back(s);
                         shape_cache[key] = s;
                     }
