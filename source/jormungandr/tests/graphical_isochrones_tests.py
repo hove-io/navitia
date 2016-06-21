@@ -146,7 +146,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
 
         is_valid_graphical_isochrone(response_min_1200, self.tester, q_min_1200)
 
-        for isochrone_min_1200, isochrone_max_1200 in zip(response_min_1200['isochrones'], response_max_1200['isochrones']):
+        for isochrone_min_1200, isochrone_max_1200 in zip(response_min_1200['isochrones'],
+                                                          response_max_1200['isochrones']):
             multi_poly_min_1200 = asShape(isochrone_min_1200['geojson'])
             multi_poly_max_1200 = asShape(isochrone_max_1200['geojson'])
 
@@ -156,12 +157,54 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         q_max_3600 = "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}"
         q_max_3600 = q_max_3600.format(s_coord, '3600', '20120614T0800')
         response_max_3600 = self.query(q_max_3600)
-        for isochrone_min_1200, isochrone_max_3600 in zip(response_min_1200['isochrones'], response_max_3600['isochrones']):
+        for isochrone_min_1200, isochrone_max_3600 in zip(response_min_1200['isochrones'],
+                                                          response_max_3600['isochrones']):
             multi_poly_min_1200 = asShape(isochrone_min_1200['geojson'])
             multi_poly_max_3600 = asShape(isochrone_max_3600['geojson'])
 
             assert not multi_poly_min_1200.contains(multi_poly_max_3600)
             assert multi_poly_max_3600.contains(multi_poly_min_1200)
+
+    def test_graphical_isochrone_traveler_type(self):
+        q_slow_walker = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&traveler_type=slow_walker"
+        q_standard_walker = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&traveler_type=standard"
+        q_fast_walker = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&traveler_type=fast_walker"
+        response_slow_walker = self.query(q_slow_walker)
+        response_standard_walker = self.query(q_standard_walker)
+        response_fast_walker = self.query(q_fast_walker)
+
+        is_valid_graphical_isochrone(response_slow_walker, self.tester, q_slow_walker)
+        is_valid_graphical_isochrone(response_standard_walker, self.tester, q_standard_walker)
+        is_valid_graphical_isochrone(response_fast_walker, self.tester, q_fast_walker)
+
+        for isochrone_slow_walker, isochrone_standard_walker, isochrone_fast_walker \
+                in zip(response_slow_walker['isochrones'], response_standard_walker['isochrones'],
+                       response_fast_walker['isochrones']):
+            multi_poly_slow_walker = asShape(isochrone_slow_walker['geojson'])
+            multi_poly_standard_walker = asShape(isochrone_standard_walker['geojson'])
+            multi_poly_fast_walker = asShape(isochrone_fast_walker['geojson'])
+
+            assert multi_poly_standard_walker.contains(multi_poly_slow_walker)
+            assert multi_poly_fast_walker.contains(multi_poly_standard_walker)
+
+    def test_graphical_isochrone_section_mode(self):
+        q_section_mode = "v1/coverage/main_routing_test/" + isochrone_basic_query + \
+                         "&first_section_mode[]=bike" \
+                         "&last_section_mode[]=bss"
+        q_basic = "v1/coverage/main_routing_test/" + isochrone_basic_query
+        response_section_mode = self.query(q_section_mode)
+        response_basic = self.query(q_basic)
+
+        is_valid_graphical_isochrone(response_section_mode, self.tester, q_section_mode)
+        is_valid_graphical_isochrone(response_basic, self.tester, q_basic)
+
+        for isochrone_basic, isochrone_section_mode in zip(response_basic['isochrones'],
+                                                           response_section_mode['isochrones']):
+            multi_poly_basic = asShape(isochrone_basic['geojson'])
+            multi_poly_section_mode = asShape(isochrone_section_mode['geojson'])
+
+            assert not multi_poly_basic.contains(multi_poly_section_mode)
+
 
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"

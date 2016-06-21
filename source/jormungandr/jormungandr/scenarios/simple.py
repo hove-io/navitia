@@ -39,6 +39,14 @@ from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios.utils import updated_common_journey_request_with_default
 
 
+def get_pb_data_freshness(request):
+    if request['data_freshness'] == 'realtime':
+        return type_pb2.REALTIME
+    elif request['data_freshness'] == 'adapted_schedule':
+        return type_pb2.ADAPTED_SCHEDULE
+    else:
+        return type_pb2.BASE_SCHEDULE
+
 class Scenario(object):
     """
     the most basic scenario, it's so simple it don't implements journeys!
@@ -207,6 +215,8 @@ class Scenario(object):
         request["datetime"] = [request["datetime"]]
         for dte in request["datetime"]:
             journey_req.datetimes.append(dte)
+        journey_req.wheelchair = request["wheelchair"] or False
+        journey_req.realtime_level = get_pb_data_freshness(request)
         updated_common_journey_request_with_default(request, instance)
         sn_params = journey_req.streetnetwork_params
         sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
