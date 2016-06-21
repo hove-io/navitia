@@ -49,9 +49,18 @@ from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
+class section_place(PbField):
+
+    def output(self, key, obj):
+
+        return super(PbField, self).output(key, obj)
 
 graphical_isochrone = {
     "geojson": MultiPolyGeoJson(),
+    "max_duration": fields.Integer(),
+    "min_duration": fields.Integer(),
+    'from': PbField(place, attribute='origin'),
+    "to": PbField(place, attribute="destination"),
 }
 
 
@@ -84,6 +93,7 @@ class GraphicalIsochrone(JourneyCommon):
             abort(400, message="you should provide a 'max_duration' argument")
 
         set_request_timezone(self.region)
+        args['original_datetime'] = args['datetime']
         original_datetime = args['original_datetime']
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)

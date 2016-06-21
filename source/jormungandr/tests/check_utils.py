@@ -40,6 +40,7 @@ import logging
 import re
 from shapely.geometry import shape
 import sys
+from jormungandr.interfaces.parsers import unsigned_integer
 
 
 """
@@ -228,6 +229,16 @@ def get_valid_int(str):
 
     try:
         return int(str)
+    except ValueError:
+        assert False
+
+def get_valid_unsigned_int(str):
+    assert str != ""
+    if type(str) is unsigned_integer:
+        return str
+
+    try:
+        return unsigned_integer(str)
     except ValueError:
         assert False
 
@@ -517,6 +528,8 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
+        get_valid_unsigned_int(g['max_duration'])
+        get_valid_unsigned_int(g['min_duration'])
 
     for feed_publisher in get_not_null(isochrone, 'feed_publishers'):
         is_valid_feed_publisher(feed_publisher)
