@@ -1002,9 +1002,9 @@ void EdReader::fill_shapes(nt::Data& data, pqxx::work& work) {
     std::string request = "SELECT id as id, ST_AsText(geom) as geom FROM navitia.shape";
     const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-            auto shape = boost::make_shared<nt::LineString>();
-            boost::geometry::read_wkt(const_it["geom"].as<std::string>("LINESTRING()"), *shape);
-            this->shapes_map[const_it["id"].as<idx_t>()] = shape;
+        auto shape = boost::make_shared<nt::LineString>();
+        boost::geometry::read_wkt(const_it["geom"].as<std::string>("LINESTRING()"), *shape);
+        this->shapes_map[const_it["id"].as<idx_t>()] = shape;
     }
 }
 
