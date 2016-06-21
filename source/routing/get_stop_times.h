@@ -65,14 +65,14 @@ get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
                const uint32_t begining_time,
                const uint32_t max_time,
                const type::Data& data,
-               const std::string calendar_id,
+               const std::string& calendar_id,
                const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams());
 
 /// Return a list of all {time in the day, stoptime} leaving the jpp for the given calendar
 std::vector<std::pair<uint32_t, const type::StopTime*>>
 get_all_stop_times(const routing::JourneyPattern& jp,
                    const routing::JourneyPatternPoint& jpp,
-                   const std::string calendar_id,
+                   const std::string& calendar_id,
                    const type::VehicleProperties& vehicle_properties = type::VehicleProperties());
 
 
