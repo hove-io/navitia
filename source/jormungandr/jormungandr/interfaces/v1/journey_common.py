@@ -128,7 +128,7 @@ def compute_possible_region(region, args):
     return possible_regions
 
 
-class journey_common(ResourceUri, ResourceUtc) :
+class JourneyCommon(ResourceUri, ResourceUtc) :
     def __init__(self):
         ResourceUri.__init__(self, authentication=False)
         ResourceUtc.__init__(self)

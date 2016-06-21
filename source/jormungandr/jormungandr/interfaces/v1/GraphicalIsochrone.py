@@ -47,7 +47,7 @@ from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
-from jormungandr.interfaces.v1.journey_common import journey_common, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
 
 graphical_isochrone = {
@@ -63,10 +63,10 @@ graphical_isochrones = {
 }
 
 
-class GraphicalIsochrone(journey_common):
+class GraphicalIsochrone(JourneyCommon):
 
     def __init__(self):
-        journey_common.__init__(self)
+        JourneyCommon.__init__(self)
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
 

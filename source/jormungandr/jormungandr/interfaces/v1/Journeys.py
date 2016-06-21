@@ -60,7 +60,7 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
-from jormungandr.interfaces.v1.journey_common import journey_common, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -331,11 +331,11 @@ class add_fare_links(object):
             return objects
         return wrapper
 
-class Journeys(journey_common):
+class Journeys(JourneyCommon):
 
     def __init__(self):
         # journeys must have a custom authentication process
-        journey_common.__init__(self)
+        JourneyCommon.__init__(self)
         types = {
             "all": "All types",
             "best": "The best journey",
