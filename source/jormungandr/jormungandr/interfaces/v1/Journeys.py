@@ -337,26 +337,8 @@ class Journeys(JourneyCommon):
     def __init__(self):
         # journeys must have a custom authentication process
         super(Journeys, self).__init__()
-        types = {
-            "all": "All types",
-            "best": "The best journey",
-            "rapid": "A good trade off between duration, changes and constraint respect",
-            'no_train': "Journey without train",
-            'comfort': "A journey with less changes and walking",
-            'car': "A journey with car to get to the public transport",
-            'less_fallback_walk': "A journey with less walking",
-            'less_fallback_bike': "A journey with less biking",
-            'less_fallback_bss': "A journey with less bss",
-            'fastest': "A journey with minimum duration",
-            'non_pt_walk': "A journey without public transport, only walking",
-            'non_pt_bike': "A journey without public transport, only biking",
-            'non_pt_bss': "A journey without public transport, only bike sharing",
-        }
 
         parser_get = self.parsers["get"]
-        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
-        parser_get.add_argument("max_duration_to_pt", type=int,
-                                description="maximal duration of non public transport in second")
 
         parser_get.add_argument("count", type=default_count_arg_type)
         parser_get.add_argument("_min_journeys_calls", type=int)
@@ -364,14 +346,11 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
-        parser_get.add_argument("type", type=option_value(types),
-                                default="all")
 
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
@@ -397,12 +376,6 @@ class Journeys(JourneyCommon):
             traveler_profile.override_params(args)
         args.update(self.parse_args(region, uri))
 
-        if args['max_duration_to_pt'] is not None:
-            #retrocompatibility: max_duration_to_pt override all individual value by mode
-            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         #count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
