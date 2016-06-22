@@ -75,7 +75,7 @@ get_all_route_stop_times(const nt::Route* route,
     } else {
         // Otherwise we only take stop_times in a vehicle_journey associated to
         // the desired calendar and in the timeframe
-        first_dt_st = get_stop_times(first_journey_pattern_points, DateTimeUtils::hour(date_time),
+        first_dt_st = get_calendar_stop_times(first_journey_pattern_points, DateTimeUtils::hour(date_time),
                                      DateTimeUtils::hour(max_datetime), d, *calendar_id);
     }
 

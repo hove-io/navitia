@@ -199,7 +199,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, pb_creator.data, rt_level);
         } else {
-            stop_times = routing::get_stop_times(routepoint_jpps, DateTimeUtils::hour(handler.date_time),
+            stop_times = routing::get_calendar_stop_times(routepoint_jpps, DateTimeUtils::hour(handler.date_time),
                     DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
         }
         if ( ! calendar_id) {

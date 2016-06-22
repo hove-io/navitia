@@ -512,6 +512,50 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Remove);
 }
 
+/*
+ * For this test we want to get the schedule for the week
+ * We'll apply an impact on stop1 of metaVj "week"
+ * thus we should find only one stop_schedule on stop2 of Vj
+ */
+BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
+    boost::optional<const std::string> calendar_id{"week_cal"};
+
+    using btp = boost::posix_time::time_period;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption stop1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stop1")
+                              .application_periods(btp("20120612T010000"_dt, "20120625T235900"_dt))
+                              .publish(btp("20120612T010000"_dt, "20120625T235900"_dt))
+                              .msg("Disruption on stop_point stop1")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->complete();
+    b.data->build_raptor();
+
+    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop2", calendar_id, {}, d("20120614T080000"), 86400, 0,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE(! resp.has_error());
+    BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
+    pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
+    auto stop_date_time = stop_schedule.date_times(0);
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(12, 10, 0));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
+    stop_date_time = stop_schedule.date_times(1);
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(14, 10, 0));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
+    stop_date_time = stop_schedule.date_times(2);
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(16, 10, 0));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
+
+}
+
 struct small_cal_fixture {
     ed::builder b;
     small_cal_fixture(): b("20120614") {
