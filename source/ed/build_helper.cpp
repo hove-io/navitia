@@ -638,7 +638,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     dataset->uri = "default:dataset";
     dataset->name = "default dataset";
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
     this->data->pt_data->datasets.push_back(dataset);
     this->data->pt_data->datasets_map[dataset->uri] = dataset;
  }

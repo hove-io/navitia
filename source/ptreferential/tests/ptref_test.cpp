@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     dataset->uri = "f1";
     dataset->name = "name-f1";
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
     b.data->pt_data->datasets.push_back(dataset);
     vj_c->dataset = dataset;
 
@@ -824,14 +824,14 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     auto* dataset = b.add<nt::Dataset>("d1", "name-d1");
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
 
     //dataset "d1" is assigned to vehicle_journey "vj:A:0"
     vj_a->dataset = dataset;
 
     dataset = b.add<nt::Dataset>("d2", "name-d2");
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
 
     //dataset "d2" is assigned to vehicle_journey "vj:C:1"
     vj_c->dataset = dataset;
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     dataset = b.add<nt::Dataset>("d3", "name-d3");
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
 
     b.data->build_relations();
     b.finish();

@@ -189,13 +189,13 @@ struct data_set {
         dataset->validation_period = period("20160101", "20161230");
 
         dataset->contributor = contributor;
-        contributor->dataset_list.push_back(dataset);
+        contributor->dataset_list.insert(dataset);
         b.data->pt_data->datasets.push_back(dataset);
 
         //Link between dataset and vehicle_journey
         vj = b.data->pt_data->vehicle_journeys.back();
         vj->dataset = dataset;
-        dataset->vehiclejourney_list.push_back(vj);
+        dataset->vehiclejourney_list.insert(vj);
 
         b.data->complete();
         b.data->build_raptor();
