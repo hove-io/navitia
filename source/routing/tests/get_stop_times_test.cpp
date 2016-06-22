@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
-    auto res = get_all_stop_times(jpp1.first, jpp1.second, cal->uri);
+    auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
 
     const std::string calendar = "calendar_bob";
     //calendar is not associated to stop time => no answer
-    auto res = get_all_stop_times(jpp1.first, jpp1.second, calendar);
+    auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, calendar);
     BOOST_CHECK(res.empty());
 }
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
-    auto res = get_all_stop_times(jpp1.first, jpp1.second, cal->uri);
+    auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     BOOST_REQUIRE_EQUAL(res.size(), 11);
 
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
-    auto res = get_all_stop_times(jpp1.first, jpp1.second, cal->uri);
+    auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     //end of day is 86400, so we have (86400 - 70000) / 1000 + the stop on the morning (2001 / 1000)
     BOOST_REQUIRE_EQUAL(res.size(),
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
-    auto res = get_all_stop_times(jpp1.first, jpp1.second, cal->uri);
+    auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     //end of day is 86400, so we have (90001 - 70000) / 1000 + 1 (for the last second)
     BOOST_REQUIRE_EQUAL(res.size(), (90001 - 70000) / headway_sec + 1 );

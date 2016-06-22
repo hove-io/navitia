@@ -510,7 +510,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     int16_t utc_to_local_offset() const; //in seconds
 
     RTLevel realtime_level = RTLevel::Base;
-    bool isBaseScheduled() const{
+    bool is_base_schedule() const{
         return realtime_level == RTLevel::Base;
     }
     // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted)
