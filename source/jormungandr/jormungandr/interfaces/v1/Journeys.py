@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from functools import cmp_to_key
 import logging
 from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort

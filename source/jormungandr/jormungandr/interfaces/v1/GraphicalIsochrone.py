@@ -52,6 +52,10 @@ from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represent
 
 graphical_isochrone = {
     "geojson": MultiPolyGeoJson(),
+    "max_duration": fields.Integer(),
+    "min_duration": fields.Integer(),
+    'from': PbField(place, attribute='origin'),
+    "to": PbField(place, attribute="destination"),
 }
 
 
@@ -82,6 +86,8 @@ class GraphicalIsochrone(JourneyCommon):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration']:
             abort(400, message="you should provide a 'max_duration' argument")
+        if args['destination'] and args['origin']:
+            abort(400, message="you cannot provide a 'from' and a 'to' argument")
 
         set_request_timezone(self.region)
         original_datetime = args['original_datetime']

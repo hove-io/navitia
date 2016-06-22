@@ -46,14 +46,16 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
         origin = Point(0.0000898312, 0.0000898312)
+        max_duration = response['isochrones'][0]['max_duration']
         d = response['isochrones'][0]['geojson']
         multi_poly = asShape(d)
 
-        assert (multi_poly.contains(origin))
+        assert max_duration == 3600
+        assert multi_poly.contains(origin)
         is_valid_graphical_isochrone(response, self.tester, query)
 
     def test_to_graphical_isochrone_coord(self):
-        query = "v1/coverage/main_routing_test/isochrones?to={}&datetime={}&max_duration={}&datetime_represents=arrival"
+        query = "v1/coverage/main_routing_test/isochrones?to={}&datetime={}&max_duration={}"
         query = query.format(s_coord, "20120614T080000", "3600")
         response = self.query(query)
         destination = Point(0.0000898312, 0.0000898312)
@@ -75,7 +77,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(response, self.tester, q)
 
     def test_graphical_isochrones_to_stop_point(self):
-        q = "v1/coverage/main_routing_test/isochrones?datetime={}&to={}&max_duration={}&datetime_represents=arrival"
+        q = "v1/coverage/main_routing_test/isochrones?datetime={}&to={}&max_duration={}"
         q = q.format('20120614T080000', 'stopA', '3600')
         response = self.query(q)
         stopA = Point(0.000718649585564, 0.00107797437835)
@@ -281,3 +283,11 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         response = self.query(q)
 
         assert 'isochrones' not in response
+
+    def test_grapical_isochrone_with_from_and_to(self):
+        q = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&to={}"
+        q = q.format(r_coord)
+        normal_response, error_code = self.query_no_assert(q)
+
+        assert error_code == 400
+        assert normal_response['message'] == 'you cannot provide a \'from\' and a \'to\' argument'
