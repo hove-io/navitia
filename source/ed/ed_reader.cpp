@@ -998,7 +998,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     }
 }
 
-void EdReader::fill_shapes(nt::Data& data, pqxx::work& work) {
+void EdReader::fill_shapes(nt::Data&, pqxx::work& work) {
     std::string request = "SELECT id as id, ST_AsText(geom) as geom FROM navitia.shape";
     const pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
@@ -1008,7 +1008,7 @@ void EdReader::fill_shapes(nt::Data& data, pqxx::work& work) {
     }
 }
 
-void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
+void EdReader::fill_stop_times(nt::Data&, pqxx::work& work) {
     std::string request = "SELECT "
         "st.vehicle_journey_id as vehicle_journey_id,"
         "st.arrival_time as arrival_time,"
@@ -1033,38 +1033,52 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
     size_t nb_rows = cursor.size();
     for (size_t current_idx = 0; current_idx < nb_rows; current_idx += chunk_limit) {
         pqxx::result result = cursor.retrieve(current_idx, std::min(current_idx + chunk_limit, nb_rows));
+        const int vehicle_journey_id_c = result.column_number("vehicle_journey_id");
+        const int st_order_c = result.column_number("st_order");
+        const int arrival_time_c = result.column_number("arrival_time");
+        const int departure_time_c = result.column_number("departure_time");
+        const int local_traffic_zone_c = result.column_number("local_traffic_zone");
+        const int date_time_estimated_c = result.column_number("date_time_estimated");
+        const int odt_c = result.column_number("odt");
+        const int pick_up_allowed_c = result.column_number("pick_up_allowed");
+        const int drop_off_allowed_c = result.column_number("drop_off_allowed");
+        const int is_frequency_c = result.column_number("is_frequency");
+        const int stop_point_id_c = result.column_number("stop_point_id");
+        const int shape_from_prev_id_c = result.column_number("shape_from_prev_id");
+        const int id_c = result.column_number("id");
+        const int headsign_c = result.column_number("headsign");
 
         for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-            const auto vj_id = const_it["vehicle_journey_id"].as<idx_t>();
+            const auto vj_id = const_it[vehicle_journey_id_c].as<idx_t>();
             auto& sts = sts_from_vj[vj_id];
-            size_t order = const_it["st_order"].as<idx_t>();
+            size_t order = const_it[st_order_c].as<idx_t>();
             if (order + 1 > sts.size()) {
                 sts.resize(order + 1);
             }
             nt::StopTime& stop = sts[order];
 
-            const_it["arrival_time"].to(stop.arrival_time);
-            const_it["departure_time"].to(stop.departure_time);
-            if (!const_it["local_traffic_zone"].is_null()){
-                const_it["local_traffic_zone"].to(stop.local_traffic_zone);
+            const_it[arrival_time_c].to(stop.arrival_time);
+            const_it[departure_time_c].to(stop.departure_time);
+            if (!const_it[local_traffic_zone_c].is_null()){
+                const_it[local_traffic_zone_c].to(stop.local_traffic_zone);
             }
-            stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
-            stop.set_odt(const_it["odt"].as<bool>());
-            stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
-            stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
-            stop.set_is_frequency(const_it["is_frequency"].as<bool>());
+            stop.set_date_time_estimated(const_it[date_time_estimated_c].as<bool>());
+            stop.set_odt(const_it[odt_c].as<bool>());
+            stop.set_pick_up_allowed(const_it[pick_up_allowed_c].as<bool>());
+            stop.set_drop_off_allowed(const_it[drop_off_allowed_c].as<bool>());
+            stop.set_is_frequency(const_it[is_frequency_c].as<bool>());
 
-            stop.stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
+            stop.stop_point = stop_point_map[const_it[stop_point_id_c].as<idx_t>()];
 
-            if(!const_it["shape_from_prev_id"].is_null()){
-                stop.shape_from_prev = this->shapes_map[const_it["shape_from_prev_id"].as<idx_t>()];
+            if(!const_it[shape_from_prev_id_c].is_null()){
+                stop.shape_from_prev = this->shapes_map[const_it[shape_from_prev_id_c].as<idx_t>()];
             }
 
-            const auto st_id = const_it["id"].as<nt::idx_t>();
+            const auto st_id = const_it[id_c].as<nt::idx_t>();
             const StKey st_key = {vj_id, sts.size() - 1};
 
-            if (!const_it["headsign"].is_null()){
-                std::string headsign = const_it["headsign"].as<std::string>();
+            if (!const_it[headsign_c].is_null()){
+                std::string headsign = const_it[headsign_c].as<std::string>();
                 if (!headsign.empty()) {
                     stop_time_headsigns[st_id] = headsign;
                     id_to_stop_time_key[st_id] = st_key;
