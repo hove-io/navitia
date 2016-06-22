@@ -88,13 +88,16 @@ def create_administrative_regions_field(geocoding):
     administrative_regions = geocoding.get('administrative_regions', {})
     response = []
     for admin in administrative_regions:
+        coord = admin.get('coord', {})
+        lat = coord.get('lat') if coord else None
+        lon = coord.get('lon') if coord else None
         response.append({
             "insee": admin.get('insee'),
             "name": admin.get('name'),
             "level": int(admin.get('level')),
             "coord": {
-                "lat": admin.get('coord', {}).get('lat'),
-                "lon": admin.get('coord', {}).get('lon')
+                "lat": lat,
+                "lon": lon
             },
             "label": admin.get('name'),
             "id": admin.get('id'),
