@@ -49,11 +49,6 @@ from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
-class section_place(PbField):
-
-    def output(self, key, obj):
-
-        return super(PbField, self).output(key, obj)
 
 graphical_isochrone = {
     "geojson": MultiPolyGeoJson(),
