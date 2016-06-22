@@ -530,6 +530,10 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
         is_valid_multipolygon_geojson(geojson)
         get_valid_unsigned_int(g['max_duration'])
         get_valid_unsigned_int(g['min_duration'])
+        if 'from' in g:
+            is_valid_place(g['from'])
+        if 'to' in g:
+            is_valid_place(g['to'])
         assert ('from' in g) ^ ('to' in g)
 
     for feed_publisher in get_not_null(isochrone, 'feed_publishers'):
