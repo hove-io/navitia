@@ -90,6 +90,7 @@ BOOST_AUTO_TEST_CASE(circle_test) {
         return boost::geometry::within<coord, poly>(c, p);
     };
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_42));
+    std::cout << c_Paris_42;
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_30));
     BOOST_CHECK(within_coord_poly(coord_North, c_almost_North_to_North));
     BOOST_CHECK(within_coord_poly(coord_Equator, c_change_day_to_Equator));
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(circle_test) {
 #endif
     double r_42 = c_Paris_42.outer()[53].distance_to(coord_Paris);
     double r_30 = c_Paris_30.outer()[12].distance_to(coord_Paris);
-    double r_459 = c_Pekin_459.outer()[324].distance_to(coord_Pekin);
+    double r_459 = c_Pekin_459.outer()[162].distance_to(coord_Pekin);
     BOOST_CHECK_CLOSE(r_42, 42, 0.5);
     BOOST_CHECK_CLOSE(r_30, 30, 0.5);
     BOOST_CHECK_CLOSE(r_459, 459, 0.5);
