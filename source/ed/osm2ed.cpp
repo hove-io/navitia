@@ -642,7 +642,9 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
             tmp_polygon.outer().push_back(tmp_polygon.outer().front());
         }
 #pragma GCC diagnostic pop
-        polygon.push_back(tmp_polygon);
+        polygon_type simplified;
+        boost::geometry::simplify(tmp_polygon, simplified, 0.00003);
+        polygon.push_back(simplified);
     }
     if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {
         bg::centroid(polygon, centre);
