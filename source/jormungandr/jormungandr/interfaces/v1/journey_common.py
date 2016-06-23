@@ -237,7 +237,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
 
-        if args.get('max_duration_to_pt'):
+        if args.get('max_duration_to_pt') is not None:
             # retrocompatibility: max_duration_to_pt override all individual value by mode
             args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
             args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
