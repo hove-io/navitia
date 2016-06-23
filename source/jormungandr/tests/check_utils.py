@@ -755,8 +755,10 @@ def is_valid_place(place, depth_check=1):
         assert stop_point['label'] == n
     elif type == "poi":
         is_valid_poi(get_not_null(place, "poi"), depth_check)
+    elif type == "administrative_region":
+        is_valid_admin(get_not_null(place, "administrative_region"), depth_check)
     else:
-        assert(False, "invalid type")
+        assert False, "invalid type {}".format(type)
 
 
 def is_valid_pt_objects_response(response, depth_check=1):
