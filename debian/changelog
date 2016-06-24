@@ -1,3 +1,22 @@
+navitia2 (2.11.0) unstable; urgency=low
+
+  * Isochrone : improve processing time  <https://github.com/CanalTP/navitia/pull/1667>
+  * osm2ed: remove a lot of useless node  <https://github.com/CanalTP/navitia/pull/1668>
+  * Kraken: Fix redundant stop schedules when stop points impacted  <https://github.com/CanalTP/navitia/pull/1658>
+  * Isochrone : add fields in the response  <https://github.com/CanalTP/navitia/pull/1656>
+  * ed: optimisation of ed_reader  <https://github.com/CanalTP/navitia/pull/1659>
+  * kraken: use a set in place of a vector of dataset  <https://github.com/CanalTP/navitia/pull/1657>
+  * ed: Faster faster shape  <https://github.com/CanalTP/navitia/pull/1652>
+  * ed: Use cache for building shape  <https://github.com/CanalTP/navitia/pull/1649>
+  * Tyr: Fix 404 not being raised  <https://github.com/CanalTP/navitia/pull/1653>
+  * Autocomplete & Jormun: Display more information for admin autocomplete  <https://github.com/CanalTP/navitia/pull/1639>
+  * Doc: Plugins section added in navitia.io documentation  <https://github.com/CanalTP/navitia/pull/1642>
+  * Doc: Add examples
+  * Fix remove "addr:" from address id in places api  <https://github.com/CanalTP/navitia/pull/1637>
+  * Doc: graphical isochrones and global places  <https://github.com/CanalTP/navitia/pull/1636>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 24 Jun 2016 17:06:37 +0100
+
 navitia2 (2.10.0) unstable; urgency=low
 
   * jormungandr: delete autocomplete from bragi json  <https://github.com/CanalTP/navitia/pull/1635>
