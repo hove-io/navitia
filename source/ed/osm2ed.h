@@ -97,7 +97,7 @@ struct OSMNode {
     }
 
     bool is_used() const {
-        return is_used_more_than_once() || is_first_or_last() || admin != nullptr;
+        return is_used_more_than_once() || is_first_or_last();
     }
 
     bool is_first_or_last() const {
