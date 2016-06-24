@@ -108,39 +108,46 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     return type::GeographicalCoord(lon_deg, lat_deg);
 }
 
+static type::GeographicalCoord build_sym (const type::GeographicalCoord& point,
+                                          const type::GeographicalCoord& center,
+                                          const unsigned int& i) {
+    if (i % 180 == 0) {
+        return type::GeographicalCoord(2*center.lon() - point.lon(), point.lat());
+    } else {
+        return type::GeographicalCoord(point.lon(), 2*center.lat() - point.lat());
+    }
+}
 
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius) {
     type::Polygon points;
     auto& points_out = points.outer();
-    points_out.reserve(360);
-    for (double i = 0; i < 360; i++) {
+    points_out.reserve(180);
+    for (unsigned int i = 0; i <= 90; i += 2) {
         points_out.push_back(project_in_direction(center, i, radius));
+    }
+    for (unsigned int j = 90; j <= 270; j += 90) {
+        for (unsigned int k = 1; k <= 45; k++) {
+            type::GeographicalCoord point;
+            point = points_out[j / 2 - k];
+            points_out.push_back(build_sym(point, center, j));
+        }
     }
     points_out.push_back(project_in_direction(center, 0, radius));
     return points;
 }
 
-static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, type::Polygon poly) {
-    type::MultiPolygon multi_polys_merged;
-    for(const type::Polygon& p: multi_poly) {
-        if (boost::geometry::intersects(p, poly)) {
-           type::MultiPolygon poly_union;
-           try {
-               boost::geometry::union_(poly, p, poly_union);
-               poly = std::move(poly_union[0]);
-           } catch (const boost::geometry::exception& e) {
-               //We don't merge the polygons
-               multi_polys_merged.push_back(p);
-               log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
-               LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
-           }
-        } else {
-            multi_polys_merged.push_back(p);
-        }
+static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly,
+                                     const type::Polygon& poly) {
+    type::MultiPolygon poly_union;
+    try {
+        boost::geometry::union_(poly, multi_poly, poly_union);
+    } catch (const boost::geometry::exception& e) {
+        //We don't merge the polygons
+        log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
+        LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
     }
-    multi_polys_merged.push_back(poly);
-    return multi_polys_merged;
+    return poly_union;
 }
 
 struct InfoCircle {
