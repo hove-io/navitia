@@ -108,8 +108,8 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     return type::GeographicalCoord(lon_deg, lat_deg);
 }
 
-static type::GeographicalCoord build_sym (type::GeographicalCoord point,
-                                          type::GeographicalCoord center,
+static type::GeographicalCoord build_sym (const type::GeographicalCoord& point,
+                                          const type::GeographicalCoord& center,
                                           const unsigned int& i) {
     if (i % 180 == 0) {
         return type::GeographicalCoord(2*center.lon() - point.lon(), point.lat());
@@ -130,9 +130,7 @@ type::Polygon circle(const type::GeographicalCoord& center,
         for (unsigned int k = 1; k <= 45; k++) {
             type::GeographicalCoord point;
             point = points_out[j / 2 - k];
-            type::GeographicalCoord point_sym;
-            point_sym = build_sym(point, center, j);
-            points_out.push_back(point_sym);
+            points_out.push_back(build_sym(point, center, j));
         }
     }
     points_out.push_back(project_in_direction(center, 0, radius));
@@ -141,14 +139,14 @@ type::Polygon circle(const type::GeographicalCoord& center,
 
 static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly,
                                      const type::Polygon& poly) {
-        type::MultiPolygon poly_union;
-        try {
-            boost::geometry::union_(poly, multi_poly, poly_union);
-        } catch (const boost::geometry::exception& e) {
-            //We don't merge the polygons
-            log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
-            LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
-        }
+    type::MultiPolygon poly_union;
+    try {
+        boost::geometry::union_(poly, multi_poly, poly_union);
+    } catch (const boost::geometry::exception& e) {
+        //We don't merge the polygons
+        log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
+        LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
+    }
     return poly_union;
 }
 
