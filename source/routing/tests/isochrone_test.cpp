@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE(circle_test) {
         return boost::geometry::within<coord, poly>(c, p);
     };
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_42));
-    std::cout << c_Paris_42;
     BOOST_CHECK(within_coord_poly(coord_Paris, c_Paris_30));
     BOOST_CHECK(within_coord_poly(coord_North, c_almost_North_to_North));
     BOOST_CHECK(within_coord_poly(coord_Equator, c_change_day_to_Equator));
