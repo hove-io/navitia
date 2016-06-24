@@ -118,6 +118,7 @@ public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
     std::vector<types::StopTime*> stops;
+    std::vector<std::shared_ptr<types::Shape>> shapes_from_prev;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
     //fare:
@@ -164,6 +165,8 @@ public:
 
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
+
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
@@ -253,6 +256,7 @@ public:
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }
+
         for (ed::types::AssociatedCalendar* cal: associated_calendars) {
             delete cal;
         }

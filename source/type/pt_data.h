@@ -100,18 +100,8 @@ struct PT_Data : boost::noncopyable{
     // timezone manager
     TimeZoneManager tz_manager;
 
-    // shape manager
-    struct ShapeManager {
-        const LineString* get(const LineString& l) { return &*set.insert(l).first; }
-        template<class Archive> void serialize(Archive & ar, const unsigned int) { ar & set; }
-    private:
-        std::set<LineString> set;
-    };
-    ShapeManager shape_manager;
-
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
-                & shape_manager // before anything
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete

@@ -91,11 +91,11 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
 
 
 std::vector<datetime_stop_time>
-get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
+get_calendar_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
                const uint32_t begining_time,
                const uint32_t max_time,
                const type::Data& data,
-               const std::string calendar_id,
+               const std::string& calendar_id,
                const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
 
@@ -104,7 +104,7 @@ get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
         if (!data.pt_data->stop_points[jpp.sp_idx.val]->accessible(accessibilite_params.properties)) {
             continue;
         }
-        auto st = get_all_stop_times(data.dataRaptor->jp_container.get(jpp.jp_idx),
+        auto st = get_all_calendar_stop_times(data.dataRaptor->jp_container.get(jpp.jp_idx),
                                      jpp,
                                      calendar_id,
                                      accessibilite_params.vehicle_properties);
@@ -139,9 +139,9 @@ get_stop_times(const std::vector<routing::JppIdx>& journey_pattern_points,
  * and we loop through all stop times for the jpp
 */
 std::vector<std::pair<uint32_t, const type::StopTime*>>
-get_all_stop_times(const routing::JourneyPattern& jp,
+get_all_calendar_stop_times(const routing::JourneyPattern& jp,
                    const routing::JourneyPatternPoint& jpp,
-                   const std::string calendar_id,
+                   const std::string& calendar_id,
                    const type::VehicleProperties& vehicle_properties) {
 
     std::set<const type::MetaVehicleJourney*> meta_vjs;
@@ -149,7 +149,11 @@ get_all_stop_times(const routing::JourneyPattern& jp,
         assert(vj.meta_vj);
         meta_vjs.insert(vj.meta_vj);
     };
-    for (const auto* vj: jp.discrete_vjs) { insert_meta_vj(*vj); }
+    for (const auto* vj: jp.discrete_vjs) {
+        if(vj->is_base_schedule()) {
+            insert_meta_vj(*vj);
+        }
+    }
     for (const auto* vj: jp.freq_vjs) { insert_meta_vj(*vj); }
     std::vector<const type::VehicleJourney*> vjs;
     for (const auto* meta_vj: meta_vjs) {

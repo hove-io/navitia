@@ -64,7 +64,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 58; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 59; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -434,15 +434,11 @@ void Data::build_associated_calendar() {
 */
 static void build_datasets(navitia::type::VehicleJourney* vj){
     if(!vj->dataset) { return; }
-    if (vj->route && (!navitia::contains(vj->route->dataset_list, vj->dataset))){
-        vj->route->dataset_list.push_back(vj->dataset);
-    }
-    if (!navitia::contains(vj->dataset->vehiclejourney_list, vj)){
-        vj->dataset->vehiclejourney_list.push_back(vj);
-    }
+    vj->route->dataset_list.insert(vj->dataset);
+    vj->dataset->vehiclejourney_list.insert(vj);
     for(navitia::type::StopTime& st : vj->stop_time_list){
-        if(st.stop_point && (!navitia::contains(st.stop_point->dataset_list, vj->dataset))){
-            st.stop_point->dataset_list.push_back(vj->dataset);
+        if(st.stop_point){
+            st.stop_point->dataset_list.insert(vj->dataset);
         }
     }
 }

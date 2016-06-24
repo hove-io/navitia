@@ -40,6 +40,7 @@ import logging
 import re
 from shapely.geometry import shape
 import sys
+from jormungandr.interfaces.parsers import unsigned_integer
 
 
 """
@@ -228,6 +229,16 @@ def get_valid_int(str):
 
     try:
         return int(str)
+    except ValueError:
+        assert False
+
+def get_valid_unsigned_int(str):
+    assert str != ""
+    if type(str) is unsigned_integer:
+        return str
+
+    try:
+        return unsigned_integer(str)
     except ValueError:
         assert False
 
@@ -517,6 +528,13 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
+        get_valid_unsigned_int(g['max_duration'])
+        get_valid_unsigned_int(g['min_duration'])
+        if 'from' in g:
+            is_valid_place(g['from'])
+        if 'to' in g:
+            is_valid_place(g['to'])
+        assert ('from' in g) ^ ('to' in g)
 
     for feed_publisher in get_not_null(isochrone, 'feed_publishers'):
         is_valid_feed_publisher(feed_publisher)
@@ -737,8 +755,10 @@ def is_valid_place(place, depth_check=1):
         assert stop_point['label'] == n
     elif type == "poi":
         is_valid_poi(get_not_null(place, "poi"), depth_check)
+    elif type == "administrative_region":
+        is_valid_admin(get_not_null(place, "administrative_region"), depth_check)
     else:
-        assert(False, "invalid type")
+        assert False, "invalid type {}".format(type)
 
 
 def is_valid_pt_objects_response(response, depth_check=1):
@@ -990,6 +1010,8 @@ r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
 #default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
     .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
+isochrone_basic_query = "isochrones?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
+    .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
 
 def get_all_disruptions(elem, response):
     """

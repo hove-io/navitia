@@ -153,7 +153,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
-    std::vector<Dataset*> dataset_list;
+    std::set<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         // The *_list are not serialized here to avoid stack abuse
@@ -300,7 +300,7 @@ struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
     std::string website;
     std::string license;
-    std::vector<Dataset*> dataset_list;
+    std::set<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & website & license & dataset_list;
@@ -316,7 +316,7 @@ struct Dataset : public Header, Nameable{
     boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
     std::string desc;
     std::string system;
-    std::vector<VehicleJourney*> vehiclejourney_list;
+    std::set<VehicleJourney*> vehiclejourney_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
@@ -510,7 +510,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     int16_t utc_to_local_offset() const; //in seconds
 
     RTLevel realtime_level = RTLevel::Base;
-
+    bool is_base_schedule() const{
+        return realtime_level == RTLevel::Base;
+    }
     // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted)
     size_t shift = 0;
     // validity pattern for all RTLevel
@@ -596,7 +598,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
         // due to circular references we can't load the vjs in the dataset using only boost::serialize
         // so we need to save the vj in it's dataset
         if (dataset) {
-            dataset->vehiclejourney_list.push_back(this);
+            dataset->vehiclejourney_list.insert(this);
         }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -648,7 +650,7 @@ struct Route : public Header, Nameable, HasMessages {
 
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
-    std::vector<Dataset*> dataset_list;
+    std::set<Dataset*> dataset_list;
 
     type::hasOdtProperties get_odt_properties() const;
 
@@ -705,7 +707,7 @@ struct StopTime {
 
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
-    const LineString* shape_from_prev = nullptr;
+    boost::shared_ptr<LineString> shape_from_prev;
 
     StopTime() = default;
     StopTime(uint32_t arr_time, uint32_t dep_time, StopPoint* stop_point):

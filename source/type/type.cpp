@@ -654,6 +654,14 @@ template<typename T> Indexes indexes(const std::vector<T*>& elements){
     return result;
 }
 
+template<typename T> Indexes indexes(const std::set<T*>& elements){
+    Indexes result;
+    for(T* element : elements){
+        result.insert(element->idx);
+    }
+    return result;
+}
+
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
 
 void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
@@ -920,7 +928,7 @@ Indexes Dataset::get(Type_e type, const PT_Data&) const {
 Indexes Contributor::get(Type_e type, const PT_Data&) const {
     Indexes result;
     switch(type) {
-    case Type_e::Dataset: return indexes(dataset_list);
+        case Type_e::Dataset: return indexes(dataset_list);
     default: break;
     }
     return result;

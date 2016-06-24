@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from jormungandr.interfaces.v1.Journeys import compute_regions
+from jormungandr.interfaces.v1.journey_common import compute_regions
 from navitiacommon import models
 
 

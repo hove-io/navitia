@@ -30,6 +30,13 @@ Public transport objects
 
 ### Network
 
+``` json
+{
+    "id":"network:RAT:1",
+    "name":"RATP"
+}
+```
+
 Networks are fed by agencies in GTFS format.
 
 |Field|Type|Description|
@@ -39,16 +46,61 @@ Networks are fed by agencies in GTFS format.
 
 ### Line
 
+``` json
+{
+    "id":"line:RAT:M6",
+    "name":"Nation - Charles de Gaule Etoile",
+    "code":"6",
+    "color":"79BB92",
+    "opening_time":"053000",
+    "closing_time":"013600",
+    "routes":[
+        {"...": "..."}
+    ],
+    "commercial_mode":{
+        "id":"commercial_mode:Metro",
+        "name":"Metro"
+    },
+    "physical_modes":[
+        {
+            "name":"Métro",
+            "id":"physical_mode:Metro"
+        }
+    ]
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the line|
 |name|string|Name of the line|
 |code|string|Code name of the line|
 |color|string|Color of the line|
+|opening_time|string|Opening hour at format HHMMSS|
+|closing_time|string|Closing hour at format HHMMSS|
 |routes|array of [route](#route)|Routes of the line|
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
+|physical_mode|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
 ### Route
+
+``` json
+{
+    "id":"route:RAT:M6",
+    "name":"Nation - Charles de Gaule Etoile",
+    "is_frequence":"False",
+    "line":{
+        "id":"line:RAT:M6",
+        "name":"Nation - Charles de Gaule Etoile",
+        "...": "..."
+    },
+    "direction":{
+        "id":"stop_area:RAT:SA:GAUET",
+        "name":"Charles de Gaulle - Etoile (Paris)",
+        "...": "..."
+    }
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -62,6 +114,21 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="stop-point"></a>Stop Point
 
+``` json
+{
+    "id":"stop_point:RAT:SP:GARIB2",
+    "name":"Garibaldi",
+    "label":"Garibaldi (Saint-Ouen)",
+    "coord":{
+        "lat":"48.906032",
+        "lon":"2.331733"
+    },
+    "administrative_regions":[{"...": "..."}],
+    "equipments":[{"...": "..."}],
+    "stop_area":{"...": "..."}
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the stop point|
@@ -73,6 +140,21 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="stop-area"></a>Stop Area
 
+``` json
+{
+    "id":"stop_area:RAT:SA:GAUET",
+    "name":"Charles de Gaulle - Etoile",
+    "label":"Charles de Gaulle - Etoile (Paris)",
+    "coord":{
+        "lat":"48.874408",
+        "lon":"2.295763"
+    },
+    "administrative_regions":[
+        {"...": "..."}
+    ]
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the stop area|
@@ -83,6 +165,13 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 
 ### <a name="commercial-mode"></a>Commercial Mode
 
+``` json
+{
+    "id":"commercial_mode:Metro",
+    "name":"Metro"
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the commercial mode|
@@ -90,6 +179,13 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of this commercial mode|
 
 ### <a name="physical-mode"></a>Physical Mode
+
+``` json
+{
+    "id":"physical_mode:Tramway",
+    "name":"Tramway"
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -124,6 +220,13 @@ You can use these ids in the forbidden_uris[] parameter from
 
 ### <a name="company"></a>Company
 
+``` json
+{
+    "id": "company:RAT:1",
+    "name": "RATP"
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the company|
@@ -134,10 +237,23 @@ You can use these ids in the forbidden_uris[] parameter from
 A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
 [stop_point](#stop-point)
 
+``` json
+{
+    "id": "admin:2191338",
+    "name": "Quartier des Épinettes (75017)",
+    "quality": 70,
+    "embedded_type": "administrative_region",
+    "administrative_region": {
+        "...": "..."
+    }
+}
+```
+
 |Field|Type|Description|
 |-----|----|-----------|
-|name|string|The name of the embedded object|
 |id|string|The id of the embedded object|
+|name|string|The name of the embedded object|
+|quality|*optional* integer|The quality of the place|
 |embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
 |administrative_region|*optional* [admin](#admin)|Embedded administrative region|
 |stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
@@ -146,15 +262,52 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
 
 
-### <a name="pt-object"></a>Pt_object
+### Trip
 
-A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
-[stop_area](#stop_point), [stop_area](#stop_point)
+A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).
+
+An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
+
+``` json
+{
+    "id": "OIF:67308746-10-1",
+    "name": "67308746"
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
-|name|string|The name of the embedded object|
+|id|string|The id of the trip|
+|name|string|The name of the trip|
+
+It also encapsulates many instances of vehicle_journey, accessible with the url:
+
+`https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys`.
+
+
+### <a name="pt-object"></a>Pt_object
+
+A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
+[stop_area](#stop_point), [stop_area](#stop_point), [trip](#trip)
+
+``` json
+{
+    "id": "OCE:SN009862F01013",
+    "name": "OCE:SN009862F01013",
+    "quality": 0,
+    "embedded_type": "trip",
+    "trip": {
+        "id": "OCE:SN009862F01013",
+        "name": "9862"
+    }
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
 |id|string|The id of the embedded object|
+|name|string|The name of the embedded object|
+|quality|*optional* integer|The quality of the object|
 |embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
 |stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
 |stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
@@ -163,25 +316,63 @@ A container containing either a [network](#network), [commercial_mode](#commerci
 |stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
 |line|*optional* [line](#line)|Embedded line|
 |route|*optional* [route](#route)|Embedded route|
+|trip|*optional* [trip](#trip)|Embedded trip|
 
 Real time and disruption objects
 --------------------------------
 
 ### Disruption
 
+``` json
+{
+    "id": "ce7e265d-5762-45b6-ab4d-a1df643dd48d",
+    "status": "active",
+    "disruption_id": "ce7e265d-5762-45b6-ab4d-a1df643dd48d",
+    "impact_id": "ce7e265d-5762-45b6-ab4d-a1df643dd48d",
+    "severity": {
+        "name": "trip delayed",
+        "effect": "SIGNIFICANT_DELAYS"
+    },
+    "application_periods": [
+        {
+            "begin": "20160608T215400",
+            "end": "20160608T230959"
+        }
+    ],
+    "messages": [
+        {"text": "Strike"}
+    ],
+    "updated_at": "20160617T132624",
+    "impacted_objects": [
+        {"...": "..."}
+    ],
+    "cause": "Cause..."
+}
+```
+
 |Field | Type | Description |
 |------|------|-------------|
-|status | between: "past", "active" or "future" |state of the disruption
 |id     | string                                |Id of the disruption
+|status | between: "past", "active" or "future" |state of the disruption
 |disruption_id | string                         |for traceability: Id of original input disruption
+|impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
 |application_periods |array of [period](#period)       |dates where the current disruption is active
 |messages            |[message](#message)     |text to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [pt_object](#pt_object) |The list of public transport objects which are affected by the disruption
-cause                |string                   |why is there such a disruption?
+|cause               |string                   |why is there such a disruption?
 
 ### Message
+
+``` json
+{
+    "text": "Strike",
+    "channel": {
+        "...": "..."
+    }
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -192,6 +383,15 @@ cause                |string                   |why is there such a disruption?
 
 Severity object can be used to make visual grouping.
 
+``` json
+{
+    "color": "#FF0000",
+    "priority": 42,
+    "name": "trip delayed",
+    "effect": "SIGNIFICANT_DELAYS"
+}
+```
+
 | Field         | Type         | Description                                    |
 |---------------|--------------|------------------------------------------------|
 | color         | string     | HTML color for classification                  |
@@ -201,6 +401,18 @@ Severity object can be used to make visual grouping.
 
 ### Channel
 
+``` json
+{
+    "id": "rt",
+    "content_type": "text/html",
+    "name": "rt",
+    "types": [
+        "web",
+        "mobile"
+    ]
+}
+```
+
 | Field         | Type       | Description
 |---------------|------------|---------------------------------------------
 | id            |string      |Identifier of the address
@@ -208,6 +420,13 @@ Severity object can be used to make visual grouping.
 | name          |string      |name of the Channel
 
 ### Period
+
+``` json
+{
+    "begin": "20160608T215400",
+    "end": "20160608T230959"
+}
+```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -311,17 +530,18 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* services are managing.
 
 
-|Value|Description|
-|-----|-----------|
-|administrative_region|a city, a district, a neighborhood|
-|network|a public transport network|
-|commercial_mode|a public transport branded mode|
-|line|a public transport line|
-|route|a public transport route|
-|stop_area|a nameable zone, where there are some stop points|
-|stop_point|a location where vehicles can pickup or drop off passengers|
-|address|a point located in a street|
-|poi|a point of interest|
+| Value                                             | Description                                                   |
+|---------------------------------------------------|---------------------------------------------------------------|
+| [administrative_region](#administrative-region)   | a city, a district, a neighborhood                            |
+| [network](#network)                               | a public transport network                                    |
+| [commercial_mode](#commercial-mode)               | a public transport branded mode                               |
+| [line](#line)                                     | a public transport line                                       |
+| [route](#route)                                   | a public transport route                                      |
+| [stop_area](#stop-area)                           | a nameable zone, where there are some stop points             |
+| [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
+| [address](#address)                               | a point located in a street                                   |
+| [poi](#poi)                                       | a point of interest                                           |
+| [trip](#trip)                                     | a trip                                                        |
 
 <aside class="notice">
     This enum is used by 3 services :<br>

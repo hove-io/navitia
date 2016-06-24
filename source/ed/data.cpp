@@ -50,6 +50,7 @@ void Data::sort(){
     std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
+    std::for_each(shapes_from_prev.begin(), shapes_from_prev.end(), Indexer<nt::idx_t>());
     std::sort(stops.begin(), stops.end(), Less());
 }
 
@@ -263,7 +264,10 @@ void Data::build_route_destination(){
 
 void Data::complete(){
     build_block_id();
+    auto start = boost::posix_time::microsec_clock::local_time();
     build_shape_from_prev();
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                   "build_shape_from_prev took " << (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds() << " ms");
     pick_up_drop_of_on_borders();
 
     build_grid_validity_pattern();
@@ -506,17 +510,32 @@ create_shape(const nt::GeographicalCoord& from,
 }
 
 void Data::build_shape_from_prev() {
+    std::map<std::string, std::shared_ptr<types::Shape>> shape_cache;
     for (types::VehicleJourney* vj: vehicle_journeys) {
-        const nt::GeographicalCoord* prev_coord = nullptr;
+        const types::StopPoint* prev_stop_point = nullptr;
         for (types::StopTime* stop_time: vj->stop_time_list) {
-            if (prev_coord) {
+            if (prev_stop_point) {
                 const auto& shape = find_or_default(vj->shape_id, shapes);
                 if (! shape.empty()) {
-                    stop_time->shape_from_prev =
-                        create_shape(*prev_coord, stop_time->stop_point->coord, shape.front());
+                    std::string key = (boost::format("%s|%s|%s")
+                            % vj->shape_id
+                            % prev_stop_point->uri
+                            % stop_time->stop_point->uri)
+                        .str();
+                    // we keep in cache the resulting geometry, so we don't have to re compute it later
+                    if(shape_cache.find(key) == shape_cache.end()){
+                        auto s = std::make_shared<types::Shape>(
+                                create_shape(
+                                             prev_stop_point->coord,
+                                             stop_time->stop_point->coord,
+                                             shape.front()));
+                        this->shapes_from_prev.push_back(s);
+                        shape_cache[key] = s;
+                    }
+                    stop_time->shape_from_prev = shape_cache[key];
                 }
             }
-            prev_coord = &stop_time->stop_point->coord;
+            prev_stop_point = stop_time->stop_point;
         }
     }
 }

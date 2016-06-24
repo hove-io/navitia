@@ -214,7 +214,8 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(stop_times.size() >= 2);
     assert(stop_times.back().stop_point->coord == shape.back());
     assert(stop_times.at(stop_times.size() - 2).stop_point->coord == shape.front());
-    stop_times.back().shape_from_prev = b.data->pt_data->shape_manager.get(shape);
+    auto s = boost::make_shared<navitia::type::LineString>(shape);
+    stop_times.back().shape_from_prev = s;
     return *this;
 }
 
@@ -637,7 +638,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     dataset->uri = "default:dataset";
     dataset->name = "default dataset";
     dataset->contributor = contributor;
-    contributor->dataset_list.push_back(dataset);
+    contributor->dataset_list.insert(dataset);
     this->data->pt_data->datasets.push_back(dataset);
     this->data->pt_data->datasets_map[dataset->uri] = dataset;
  }

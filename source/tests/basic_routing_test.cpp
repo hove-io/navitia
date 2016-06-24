@@ -82,7 +82,7 @@ int main(int argc, const char* const argv[]) {
     ds->uri = "base_dataset";
     ds->name = "base dataset";
     ds->validation_period = period("20160101", "20161230");
-    ds->vehiclejourney_list.push_back(vj);
+    ds->vehiclejourney_list.insert(vj);
     vj->dataset = ds;
 
     navitia::type::Contributor* cr = new navitia::type::Contributor();
@@ -91,7 +91,7 @@ int main(int argc, const char* const argv[]) {
     cr->name = "base contributor";
     cr->license = "L-contributor";
     cr->website = "www.canaltp.fr";
-    cr->dataset_list.push_back(ds);
+    cr->dataset_list.insert(ds);
     ds->contributor = cr;
 
     b.data->pt_data->datasets.push_back(ds);

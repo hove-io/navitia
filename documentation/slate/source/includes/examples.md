@@ -42,6 +42,59 @@ This request will give you:
 * in the ``links`` section the list of possible interactions with them
 
 
+``` shell
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+
+HTTP/1.1 200 OK
+
+{
+    "lines":[
+        {
+            "id":"line:RAT:M1",
+            "code":"1",
+            "name":"Château de Vincennes - La Défense",
+            "opening_time":"053000",
+            "closing_time":"013600",
+            "color":"F2C931",
+            "commercial_mode":{
+                "id":"commercial_mode:Metro",
+                "name":"Metro"
+            },
+            "physical_modes":[
+                {
+                    "id":"physical_mode:Metro",
+                    "name":"Métro"
+                }
+            ],
+            "network":{
+                "id":"network:RAT:1",
+                "name":"RATP"
+            },
+            "routes":[
+                {
+                    "id":"route:RAT:M1",
+                    "name":"Château de Vincennes - La Défense",
+                    "direction":{
+                        "id":"stop_area:RAT:SA:DENFE",
+                        "name":"La Défense Grande Arche (Puteaux)"
+                    }
+                },
+                {
+                    "id":"route:RAT:M12_R",
+                    "name":"Mairie d'Issy - Front Populaire",
+                    "direction":{
+                        "id":"stop_area:RAT:SA:MISSY",
+                        "name":"Mairie d'Issy (Vanves)"
+                    }
+                }
+            ]
+        }
+    ]
+}
+```
+
+
 In the ``links`` section there is for example this link: ``"href": "https://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 

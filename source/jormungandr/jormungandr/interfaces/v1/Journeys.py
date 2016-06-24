@@ -35,8 +35,6 @@ from flask import request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager, app
-from jormungandr.exceptions import RegionNotFound
-from jormungandr.instance_manager import instances_comparator
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
@@ -63,6 +61,7 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
+from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -247,16 +246,6 @@ journeys = {
 }
 
 
-def dt_represents(value):
-    if value == "arrival":
-        return False
-    elif value == "departure":
-        return True
-    else:
-        raise ValueError("Unable to parse datetime_represents")
-
-
-
 class add_debug_info(object):
     """
     display info stored in g for the debug
@@ -343,132 +332,25 @@ class add_fare_links(object):
             return objects
         return wrapper
 
-
-def compute_regions(args):
-    """
-    method computing the region the journey has to be computed on
-    The complexity comes from the fact that the regions in jormungandr can overlap.
-
-    return the kraken instance key
-
-    rules are easy:
-    we fetch the different regions the user can use for 'origin' and 'destination'
-    we do the intersection and sort the list
-    """
-    _region = None
-    possible_regions = set()
-    from_regions = set()
-    to_regions = set()
-    if args['origin']:
-        from_regions = set(i_manager.get_instances(object_id=args['origin']))
-        #Note: if get_regions does not find any region, it raises a RegionNotFoundException
-
-    if args['destination']:
-        to_regions = set(i_manager.get_instances(object_id=args['destination']))
-
-    if not from_regions:
-        #we didn't get any origin, the region is in the destination's list
-        possible_regions = to_regions
-    elif not to_regions:
-        #we didn't get any origin, the region is in the destination's list
-        possible_regions = from_regions
-    else:
-        #we need the intersection set
-        possible_regions = from_regions.intersection(to_regions)
-        logging.getLogger(__name__).debug("orig region = {o}, dest region = {d} => set = {p}".
-                 format(o=from_regions, d=to_regions, p=possible_regions))
-
-    if not possible_regions:
-        raise RegionNotFound(custom_msg="cannot find a region with {o} and {d} in the same time"
-                             .format(o=args['origin'], d=args['destination']))
-
-    sorted_regions = list(possible_regions)
-
-    regions = sorted(sorted_regions, key=cmp_to_key(instances_comparator))
-
-    return [r.name for r in regions]
-
-class Journeys(ResourceUri, ResourceUtc):
+class Journeys(JourneyCommon):
 
     def __init__(self):
         # journeys must have a custom authentication process
-        ResourceUri.__init__(self, authentication=False)
-        ResourceUtc.__init__(self)
-        modes = ["walking", "car", "bike", "bss"]
-        types = {
-            "all": "All types",
-            "best": "The best journey",
-            "rapid": "A good trade off between duration, changes and constraint respect",
-            'no_train': "Journey without train",
-            'comfort': "A journey with less changes and walking",
-            'car': "A journey with car to get to the public transport",
-            'less_fallback_walk': "A journey with less walking",
-            'less_fallback_bike': "A journey with less biking",
-            'less_fallback_bss': "A journey with less bss",
-            'fastest': "A journey with minimum duration",
-            'non_pt_walk': "A journey without public transport, only walking",
-            'non_pt_bike': "A journey without public transport, only biking",
-            'non_pt_bss': "A journey without public transport, only bike sharing",
-        }
+        super(Journeys, self).__init__()
 
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("from", type=unicode, dest="origin")
-        parser_get.add_argument("to", type=unicode, dest="destination")
-        parser_get.add_argument("datetime", type=date_time_format)
-        parser_get.add_argument("datetime_represents", dest="clockwise",
-                                type=dt_represents, default=True)
-        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
-        parser_get.add_argument("first_section_mode[]",
-                                type=option_value(modes),
-                                dest="origin_mode", action="append")
-        parser_get.add_argument("last_section_mode[]",
-                                type=option_value(modes),
-                                dest="destination_mode", action="append")
-        parser_get.add_argument("max_duration_to_pt", type=int,
-                                description="maximal duration of non public transport in second")
 
-        parser_get.add_argument("max_walking_duration_to_pt", type=int,
-                                description="maximal duration of walking on public transport in second")
-        parser_get.add_argument("max_bike_duration_to_pt", type=int,
-                                description="maximal duration of bike on public transport in second")
-        parser_get.add_argument("max_bss_duration_to_pt", type=int,
-                                description="maximal duration of bss on public transport in second")
-        parser_get.add_argument("max_car_duration_to_pt", type=int,
-                                description="maximal duration of car on public transport in second")
-
-        parser_get.add_argument("walking_speed", type=float_gt_0)
-        parser_get.add_argument("bike_speed", type=float_gt_0)
-        parser_get.add_argument("bss_speed", type=float_gt_0)
-        parser_get.add_argument("car_speed", type=float_gt_0)
-        parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
         parser_get.add_argument("count", type=default_count_arg_type)
         parser_get.add_argument("_min_journeys_calls", type=int)
         parser_get.add_argument("_final_line_filter", type=boolean)
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
-        parser_get.add_argument("type", type=option_value(types),
-                                default="all")
-        parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp
-        # no default value for data_freshness because we need to maintain retrocomp with disruption_active
-        parser_get.add_argument("data_freshness",
-                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
 
-        parser_get.add_argument("max_duration", type=int)
-        parser_get.add_argument("wheelchair", type=boolean, default=None)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
-        # for retrocompatibility purpose, we duplicate (without []):
-        parser_get.add_argument("first_section_mode",
-                                type=option_value(modes), action="append")
-        parser_get.add_argument("last_section_mode",
-                                type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
         parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
@@ -478,16 +360,8 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
-                                description="The datetime used to consider the state of the pt object"
-                                            " Default is the current date and it is used for debug."
-                                            " Note: it will mainly change the disruptions that concern "
-                                            "the object The timezone should be specified in the format,"
-                                            " else we consider it as UTC")
-
 
         self.method_decorators.append(complete_links(self))
-
 
     @add_debug_info()
     @add_fare_links()
@@ -496,57 +370,17 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
-
+        possible_regions = compute_possible_region(region, args)
         if args.get('traveler_type') is not None:
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
             traveler_profile.override_params(args)
+        args.update(self.parse_args(region, uri))
 
-        # We set default modes for fallback modes.
-        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
-        # fallback modes will always have a value, and traveler_type will never override fallback modes.
-        if args.get('origin_mode') is None:
-            args['origin_mode'] = ['walking']
-        if args.get('destination_mode') is None:
-            args['destination_mode'] = ['walking']
-
-        if args['max_duration_to_pt'] is not None:
-            #retrocompatibility: max_duration_to_pt override all individual value by mode
-            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
-            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
-
-        if args['data_freshness'] is None:
-            # retrocompatibilty handling
-            args['data_freshness'] = \
-                'adapted_schedule' if args['disruption_active'] is True else 'base_schedule'
-
-        # TODO : Changer le protobuff pour que ce soit propre
-        if args['destination_mode'] == 'vls':
-            args['destination_mode'] = 'bss'
-        if args['origin_mode'] == 'vls':
-            args['origin_mode'] = 'bss'
 
         #count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
             args['min_nb_journeys'] = args['count']
             args['max_nb_journeys'] = args['count']
-
-        # for last and first section mode retrocompatibility
-        if 'first_section_mode' in args and args['first_section_mode']:
-            args['origin_mode'] = args['first_section_mode']
-        if 'last_section_mode' in args and args['last_section_mode']:
-            args['destination_mode'] = args['last_section_mode']
-
-        if region:
-            self.region = i_manager.get_region(region)
-            if uri:
-                objects = uri.split('/')
-                if objects and len(objects) % 2 == 0:
-                    args['origin'] = objects[-1]
-                else:
-                    abort(503, message="Unable to compute journeys "
-                                       "from this object")
 
         if args['destination'] and args['origin']:
             api = 'journeys'
@@ -558,22 +392,13 @@ class Journeys(ResourceUri, ResourceUtc):
             if args.get('max_duration') is None:
                 args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
 
-        def _set_specific_params(mod):
-            if args.get('max_duration') is None:
-                args['max_duration'] = mod.max_duration
-            if args.get('_walking_transfer_penalty') is None:
-                args['_walking_transfer_penalty'] = mod.walking_transfer_penalty
-            if args.get('_night_bus_filter_base_factor') is None:
-                args['_night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
-            if args.get('_night_bus_filter_max_factor') is None:
-                args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
-            if args.get('_max_additional_connections') is None:
-                args['_max_additional_connections'] = mod.max_additional_connections
-
         if region:
-            _set_specific_params(i_manager.instances[region])
+            if args.get('max_duration') is None:
+                args['max_duration'] = i_manager.instances[region].max_duration
         else:
-            _set_specific_params(default_values)
+            if args.get('max_duration') is None:
+                args['max_duration'] = default_values.max_duration
+
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should at least provide either a 'from' or a 'to' argument")
@@ -581,42 +406,24 @@ class Journeys(ResourceUri, ResourceUtc):
         if args['debug']:
             g.debug = True
 
-        #we transform the origin/destination url to add information
-        if args['origin']:
-            args['origin'] = transform_id(args['origin'])
-        if args['destination']:
-            args['destination'] = transform_id(args['destination'])
-
-        if not args['datetime']:
-            args['datetime'] = datetime.now()
-            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
-
-        if not region:
-            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            possible_regions = compute_regions(args)
-        else:
-            possible_regions = [region]
-
-        # we save the original datetime for debuging purpose
-        args['original_datetime'] = args['datetime']
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
-
-        logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}" .format(possible_regions))
+        logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}".format(possible_regions))
         #we want to store the different errors
         responses = {}
         for r in possible_regions:
             self.region = r
 
-            #we store the region in the 'g' object, which is local to a request
             set_request_timezone(self.region)
 
+            #we store the region in the 'g' object, which is local to a request
             if args['debug']:
                 # In debug we store all queried region
                 if not hasattr(g, 'regions_called'):
                     g.regions_called = []
                 g.regions_called.append(r)
 
+            # we save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
             new_datetime = self.convert_to_utc(original_datetime)
             args['datetime'] = date_to_timestamp(new_datetime)
