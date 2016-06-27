@@ -40,3 +40,4 @@
     * Attribut frame_id supprimé dans le fichier stops.txt
 * Version 0.6.2 du 20/06/2016
     * ajout de l'exention fares pour la gestion des tarifs
+    * ajout des temps d'embarquement et de débarquement dans le fichier stop_times.txt.

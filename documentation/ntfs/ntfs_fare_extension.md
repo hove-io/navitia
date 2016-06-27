@@ -9,36 +9,37 @@ Attention, le formatage de ces fichiers est différent.
 # Format des données
 
 Les données tarifaires sont ajoutées directement dans l'archive ZIP contenant les données NTFS.
-Les fichiers sont formatées de la manière suivante :
+Les fichiers sont formatés de la manière suivante :
 
-* Fichier csv (.csv)
-* Séparateur point-virgule ";"
-* Les colonnes sont toutes obligatoire et leur ordre doivent etre respectée.
-* Avec ou Sans entete
+* Chaque fichier est un fichier **CSV**
+* Encodage des fichiers : tous les fichiers sont encodés en **UTF-8**
+* Le séparateur de champ est le **";"**
+* Les colonnes sont toutes obligatoires et leur ordre doit etre respecté
+* Attention, 2 fichiers sont **sans** entête et un autre **avec** entête
 
 ## Liste des fichiers de tarification
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-fare.csv | Optionnel | Tarification : Ce fichier contient les configuration des transitions
+fare.csv | Optionnel | Tarification : Ce fichier contient les configurations des transitions
 prices.csv | Optionnel | Prix des tickets : Ce fichier contient les prix appliqués (plein tarif)
 od_fares.csv | Optionnel | Liste des billets Origine-Destination
 
 
-
 ### fare.csv (optionnel)
-Tarification : Ce fichier contient les configuration des transitions
---> fichier CSV, séparé par des points-virgules, encodé en UTF-8, SANS ligne d'entête.
+Tarification : Ce fichier contient les configurations des transitions.
+Ce fichier ne contient **pas de ligne d'entête**.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-"avant changement" | chaine | Requis | état avant changement (mode ou network)
-" après changement" | chaine | Requis | état aprés changement (mode ou network)
-" début trajet" | chaine | Requis | condition du début de trajet. (zone, duration, nb_change)
-" fin trajet" | chaine | Requis | condition de fin de trajet. (zone, duration, nb_change)
-" condition globale" | chaine | Requis | condition globale du trajet (exclusive, with_changes ou symetric)
+"avant changement" | chaine | Requis | état avant changement (voir ci-dessous)
+"après changement" | chaine | Requis | état aprés changement (voir ci-dessous)
+"début trajet" | chaine | Requis | condition du début de trajet (voir ci-dessous)
+"fin trajet" | chaine | Requis | condition de fin de trajet (voir ci-dessous)
+"condition globale" | chaine | Requis | condition globale du trajet (exclusive, with_changes ou symetric)
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
 #### état avant et aprés changement.
+Un état avant ou après un changement est décrit soit par un mode, soit par un réseau :
 * "mode": l'état avant changement correspond à un physical_mode. Par exemple, indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
 * "network": l'état avant changement correspond à un réseau. Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
 
