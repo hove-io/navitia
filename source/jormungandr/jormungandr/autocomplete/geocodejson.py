@@ -139,7 +139,7 @@ class AddressField(fields.Raw):
                 "lat": lat,
             },
             "house_number": geocoding.get('housenumber') or '0',
-            "label": geocoding.get('name'),
+            "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
@@ -158,7 +158,7 @@ geocode_addr = {
     "embedded_type": Lit("address"),
     "quality": Lit("0"),
     "id": AddressId,
-    "name": fields.String(attribute='properties.geocoding.name'),
+    "name": fields.String(attribute='properties.geocoding.label'),
     "address": AddressField()
 }
 
