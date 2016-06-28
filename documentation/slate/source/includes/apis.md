@@ -103,39 +103,7 @@ You can also combine `/coords` with other filter as :
 <a name="pt-ref"></a>Public Transportation Objects exploration
 --------------------------------------------------------------
 
-Also known as `/networks`, `/lines`, `/stop_areas`... services.
-
-
-Once you have selected a region, you can explore the public
-transportation objects easily with these APIs. You just need to add at
-the end of your URL a collection name to see every objects within a
-particular collection. To see an object detail, add the id of this object at the
-end of the collection's URL. The [paging](#paging) arguments may be used to
-paginate results.
-
-### Accesses
-
-| url | Result |
-|---------------------------------------------------------|-------------------------------------|
-| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
-| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
-| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
-| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
-
-### Collections
-
--   [networks](#network)
--   [lines](#line)
--   [routes](#route)
--   [stop_points](#stop-point)
--   [stop_areas](#stop-area)
--   [commercial_modes](#commercial-mode)
--   [physical_modes](#physical-mode)
--   [companies](#company)
--   [vehicle_journeys](#vehicle-journey)
--   [disruptions](#disruption)
-
-### Parameters
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fpt_objects%3Fq%3Dmetro%25201)
 
 ``` shell
 curl 'https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -176,6 +144,41 @@ HTTP/1.1 200 OK
     ]
 }
 ```
+
+
+Also known as `/networks`, `/lines`, `/stop_areas`... services.
+
+
+Once you have selected a region, you can explore the public
+transportation objects easily with these APIs. You just need to add at
+the end of your URL a collection name to see every objects within a
+particular collection. To see an object detail, add the id of this object at the
+end of the collection's URL. The [paging](#paging) arguments may be used to
+paginate results.
+
+### Accesses
+
+| url | Result |
+|---------------------------------------------------------|-------------------------------------|
+| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
+| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
+| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
+| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
+
+### Collections
+
+-   [networks](#network)
+-   [lines](#line)
+-   [routes](#route)
+-   [stop_points](#stop-point)
+-   [stop_areas](#stop-area)
+-   [commercial_modes](#commercial-mode)
+-   [physical_modes](#physical-mode)
+-   [companies](#company)
+-   [vehicle_journeys](#vehicle-journey)
+-   [disruptions](#disruption)
+
+### Parameters
 
 #### <a name="depth"></a>depth
 
@@ -276,6 +279,9 @@ is sent. If object or attribute provided is not handled, the filter is
 ignored.
 
 #### {collection}.has_code
+
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%3Ffilter%3Dstop_area.has_code%28source%2CCAMPO%29)
+
 ``` shell
 #for any pt_object request, as this one:
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -378,11 +384,14 @@ Other examples
 -   Line list for one mode
     -   <https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines>
 
-But you will find lots of more advanced example in [a quick exploration](#a-quick-exploration)
+You will find lots of more advanced example in [a quick exploration](#a-quick-exploration)
 chapter
 
 <a name="pt-objects"></a>Autocomplete on Public Transport objects
 -----------------------------------------------------------------
+
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fpt_objects%3Fq%3Dmetro%25204%26type%5B%5D%3Dline%26type%5B%5D%3Droute)
+
 
 ``` shell
 # Search objects of type 'line' or 'route' containing 'metro 4'
@@ -574,6 +583,9 @@ Differents kind of objects can be returned (sorted as):
 <a name="places-nearby-api"></a>Places Nearby
 -----------------------------------------
 
+>[Try it on Navitia playground (click on "MAP" buttons to see places)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%3ARAT%3ASA%3ACAMPO%2Fplaces_nearby)
+
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:CAMPO/places_nearby' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -637,6 +649,8 @@ Filters can be added:
 
 <a name="journeys"></a>Journeys
 -------------------------------
+
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%3B48.8467927%26to%3D2.2922926%3B48.8583736)
 
 ``` shell
 #request
@@ -941,6 +955,8 @@ direction       | int                    | Angle (in degree) between the previou
 <a name="isochrones_api"></a>Isochrones (currently in Beta)
 ---------------------------------------
 
+>[Try it on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26datetime%3D20160505T080000%26max_duration%3D2000%26min_duration%3D1000)
+
 ``` shell
 # Request
 curl 'https://api.navitia.io/v1/coverage/sandbox/isochrones?from=stop_area:RAT:SA:GDLYO&max_duration=3600' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -1029,6 +1045,107 @@ Other parameters to come...
 <a name="route-schedules"></a>Route Schedules and time tables
 -------------------------------------------------------------
 
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/route_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+HTTP/1.1 200 OK
+
+{
+    "pagination": {},
+    "links": [],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [],
+    "exceptions": [],
+    "route_schedules": [
+    {
+        "display_informations": {
+            "direction": "Château de Vincennes (Saint-Mandé)",
+            "code": "1",
+            "network": "RATP",
+            "links": [],
+            "color": "F2C931",
+            "commercial_mode": "Metro",
+            "text_color": "000000",
+            "label": "1"
+        },
+        "table": {
+            "headers": [{
+                    "display_informations": {
+                        "direction": "Château de Vincennes (Saint-Mandé)",
+                        "code": "",
+                        "description": "",
+                        "links": [],
+                        "color": "",
+                        "physical_mode": "Métro",
+                        "headsign": "Château de Vincennes",
+                        "commercial_mode": "",
+                        "equipments": [],
+                        "text_color": "",
+                        "network": ""
+                    },
+                    "additional_informations": ["regular"],
+                    "links": [{
+                        "type": "vehicle_journey",
+                        "id": "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
+                    }, {
+                        "type": "physical_mode",
+                        "id": "physical_mode:Metro"
+                    }]
+                },
+                { ... },
+                { ... }
+            ],
+            "rows": [{
+                "stop_point": {
+                    "codes": [ ... ],
+                    "name": "La Défense Grande Arche",
+                    "links": [],
+                    "physical_modes": [{
+                        "name": "Métro",
+                        "id": "physical_mode:Metro"
+                    }],
+                    "coord": {"lat": "48.891935","lon": "2.237883"},
+                    "label": "La Défense Grande Arche (Puteaux)",
+                    "equipments": [],
+                    "commercial_modes": [...],
+                    "administrative_regions": [ ... ],
+                    "id": "stop_point:RAT:SP:DENFE2",
+                    "stop_area": { ... }
+                },
+                "date_times": [{
+                    "date_time": "20160616T093300",
+                    "additional_informations": [],
+                    "links": [{
+                        "type": "vehicle_journey",
+                        "value": "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2",
+                        "rel": "vehicle_journeys",
+                        "id": "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
+                    }],
+                    "data_freshness": "base_schedule"
+                }, {
+                    "date_time": "20160617T094400",
+                    "additional_informations": [],
+                    "links": [{
+                        "type": "vehicle_journey",
+                        "value": "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2",
+                        "rel": "vehicle_journeys",
+                        "id": "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2"
+                    }],
+                    "data_freshness": "base_schedule"
+                }]
+            }]
+        },
+        "additional_informations": null,
+        "links": [],
+        "geojson": {}
+    }]
+}
+```
+
+
 Also known as `/route_schedules` service.
 
 This endpoint gives you access to schedules of routes, with a response made
@@ -1055,130 +1172,6 @@ nop      | data_freshness     | enum      | Define the freshness of data to use<
 ### Objects
 
 #### <a name="route-schedule">route_schedule object
-
-``` shell
-#request
-$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/route_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
-
-#response
-HTTP/1.1 200 OK
-{
-    pagination: {},
-    links: [],
-    disruptions: [],
-    notes: [],
-    feed_publishers: [],
-    exceptions: [],
-    route_schedules: [{
-        display_informations: {
-            direction: "Château de Vincennes (Saint-Mandé)",
-            code: "1",
-            network: "RATP",
-            links: [],
-            color: "F2C931",
-            commercial_mode: "Metro",
-            text_color: "000000",
-            label: "1"
-        },
-        table: {
-            headers: [
-            {
-                    display_informations: {
-                        direction: "Château de Vincennes (Saint-Mandé)",
-                        code: "",
-                        description: "",
-                        links: [],
-                        color: "",
-                        physical_mode: "M?tro",
-                        headsign: "Château de Vincennes",
-                        commercial_mode: "",
-                        equipments: [],
-                        text_color: "",
-                        network: ""
-                    },
-                    additional_informations: [
-                        "regular"
-                    ],
-                    links: [{
-                        type: "vehicle_journey",
-                        id: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
-                    }, {
-                        type: "physical_mode",
-                        id: "physical_mode:Metro"
-                    }]
-                },
-                { ... },
-                { ... }
-            ],
-            rows: [{
-                stop_point: {
-                    codes: [{
-                        type: "external_code",
-                        value: "RATDENFE2"
-                    }, {
-                        type: "source",
-                        value: "DENFE2"
-                    }],
-                    name: "La Défense Grande Arche",
-                    links: [],
-                    physical_modes: [{
-                        name: "Métro",
-                        id: "physical_mode:Metro"
-                    }],
-                    coord: {
-                        lat: "48.891935",
-                        lon: "2.237883"
-                    },
-                    label: "La Défense Grande Arche (Puteaux)",
-                    equipments: [],
-                    commercial_modes: [{
-                        name: "Metro",
-                        id: "commercial_mode:Metro"
-                    }],
-                    administrative_regions: [{
-                        insee: "92062",
-                        name: "Puteaux",
-                        level: 8,
-                        coord: {
-                            lat: "48.884151",
-                            lon: "2.236886"
-                        },
-                        label: "Puteaux (92800)",
-                        id: "admin:91776extern",
-                        zip_code: "92800"
-                    }],
-                    id: "stop_point:RAT:SP:DENFE2",
-                    stop_area: { ... }
-                },
-                date_times: [{
-                    date_time: "20160616T093300",
-                    additional_informations: [],
-                    links: [{
-                        type: "vehicle_journey",
-                        value: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2",
-                        rel: "vehicle_journeys",
-                        id: "vehicle_journey:RAT:RATRM1REGA9828-1_dst_2"
-                    }],
-                    data_freshness: "base_schedule"
-                }, {
-                    date_time: "20160617T094400",
-                    additional_informations: [],
-                    links: [{
-                        type: "vehicle_journey",
-                        value: "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2",
-                        rel: "vehicle_journeys",
-                        id: "vehicle_journey:RAT:RATRM1REGA9827-1_dst_2"
-                    }],
-                    data_freshness: "base_schedule"
-                }]
-            }]
-        },
-        additional_informations: null,
-        links: [],
-        geojson: {}
-    }]
-}
-```
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1207,8 +1200,12 @@ Field      | Type                             | Description
 date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport formated date time
 stop_point | [stop_point](#stop-point)              | The stop point of the row
 
+
 <a name="stop-schedules"></a>Stop Schedules and other kind of time tables
 -------------------------------------------------------------------------
+
+>[Try it on Navitia playground (click on "EXT" buttons to see times)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+
 
 ``` shell
 #request
@@ -1217,73 +1214,59 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedu
 #response
 HTTP/1.1 200 OK
 {
-    stop_schedules: [
+    "stop_schedules": [
         {
-            stop_point: {...},
-            links: [
+            "stop_point": {...},
+            "links": [...],
+            "date_times": [
                 {
-                    type: "line",
-                    id: "line:RAT:M1"
-                }, {
-                    type: "route",
-                    id: "route:RAT:M1_R"
-                }, {
-                    type: "commercial_mode",
-                    id: "commercial_mode:Metro"
-                }, {
-                    type: "network",
-                    id: "network:RAT:1"
-                }
-            ],
-            date_times: [
-                {
-                    date_time: "20160615T115300",
-                    additional_informations: [],
-                    links: [
+                    "date_time": "20160615T115300",
+                    "additional_informations": [],
+                    "links": [
                         {
-                            type: "vehicle_journey",
-                            value: "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2",
-                            rel: "vehicle_journeys",
-                            id: "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2"
+                            "type": "vehicle_journey",
+                            "value": "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2",
+                            "rel": "vehicle_journeys",
+                            "id": "vehicle_journey:RAT:RATRM1REGA9869-1_dst_2"
                         }
                     ],
-                    data_freshness: "base_schedule"
+                    "data_freshness": "base_schedule"
                 },
                 {
-                    date_time: "20160616T115000",
-                    additional_informations: [],
-                    links: [
+                    "date_time": "20160616T115000",
+                    "additional_informations": [],
+                    "links": [
                         {
-                            type: "vehicle_journey",
-                            value: "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2",
-                            rel: "vehicle_journeys",
-                            id: "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2"
+                            "type": "vehicle_journey",
+                            "value": "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2",
+                            "rel": "vehicle_journeys",
+                            "id": "vehicle_journey:RAT:RATRM1REGA9868-1_dst_2"
                         }
                     ],
-                    data_freshness: "base_schedule"
+                    "data_freshness": "base_schedule"
                 },
-                ...
+                "..."
             ],
-            route: {...},
-            additional_informations: null,
-            display_informations: {
-                direction: "Château de Vincennes (Saint-Mandé)",
-                code: "1",
-                network: "RATP",
-                links: [],
-                color: "F2C931",
-                commercial_mode: "Metro",
-                text_color: "000000",
-                label: "1"
+            "route": {...},
+            "additional_informations": null,
+            "display_informations": {
+                "direction": "Château de Vincennes (Saint-Mandé)",
+                "code": "1",
+                "network": "RATP",
+                "links": [],
+                "color": "F2C931",
+                "commercial_mode": "Metro",
+                "text_color": "000000",
+                "label": "1"
             }
         }
     ],
-    pagination: {...},
-    links: [...],
-    disruptions: [],
-    notes: [],
-    feed_publishers: [...],
-    exceptions: []
+    "pagination": {...},
+    "links": [...],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [...],
+    "exceptions": []
 }
 ```
 
@@ -1329,6 +1312,8 @@ nop      | data_freshness   | enum                           | Define the freshn
 
 <a name="departures"></a>Departures
 -----------------------------------
+
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fdepartures%3F&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 ``` shell
 
@@ -1420,6 +1405,9 @@ nop      | data_freshness   | enum                            | Define the fresh
 <a name="arrivals"></a>Arrivals
 -------------------------------
 
+>[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Farrivals%3F&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+
+
 ``` shell
 curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:GDLYO/arrivals' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
@@ -1499,7 +1487,9 @@ HTTP/1.1 200 OK
     ],[
         #another network with its lines and stop areas
     ],
-"disruptions": [...]
+"disruptions": [
+        #list of linked disruptions
+    ]
 }
 ```
 
