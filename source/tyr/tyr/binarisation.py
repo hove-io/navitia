@@ -104,9 +104,11 @@ class Lock(object):
             logger = get_instance_logger(job.instance)
             lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
             if not lock.acquire(blocking=False):
-                logger.info('lock on %s retry %s in 300sec', job.instance.name, func.__name__)
+                countdown = 300
+                logger.info('lock on %s retry %s in %s sec',
+                            job.instance.name, func.__name__, countdown)
                 task = args[func.func_code.co_varnames.index('self')]
-                task.retry(countdown=60, max_retries=10)
+                task.retry(countdown=countdown, max_retries=10)
             else:
                 try:
                     logger.debug('lock acquired on %s for %s', job.instance.name, func.__name__)
