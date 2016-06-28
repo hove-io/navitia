@@ -163,35 +163,32 @@ struct InfoCircle {
 
 static bool within_info_circle(const InfoCircle& circle,
                               const std::vector<InfoCircle>& multi_poly,
-                              const double& speed) {
-    if (multi_poly.empty()) {return false;}
+                              const double speed) {
     auto begin = multi_poly.begin();
     const auto end = multi_poly.end();
     double circle_radius = circle.duration_left * speed;
     double coslat = cos(circle.center.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    return any_of(begin, end, [speed, circle, circle_radius, coslat](const InfoCircle& it) {
+    return any_of(begin, end, [=](const InfoCircle& it) {
         double it_radius = it.duration_left * speed;
         return sqrt(circle.center.approx_sqr_distance(it.center, coslat)) + circle_radius < it_radius;
     });
 }
 
 static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> circles,
-                                                     const double& speed) {
-    std::vector<InfoCircle> circles_utils;
-    if (!circles.empty()) {
-        boost::sort(circles,
-                    [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
-        auto it = circles.begin();
-        circles_utils.push_back(*it);
-        const auto end = circles.end();
-        ++it;
-        for (; it != end; ++it) {
-            if (!within_info_circle(*it, circles_utils, speed)) {
-                circles_utils.push_back(*it);
-            }
+                                                     const double speed) {
+    std::vector<InfoCircle> useful_circles;
+    boost::sort(circles,
+                [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
+    auto it = circles.begin();
+    useful_circles.push_back(*it);
+    const auto end = circles.end();
+    ++it;
+    for (; it != end; ++it) {
+        if (!within_info_circle(*it, useful_circles, speed)) {
+            useful_circles.push_back(std::move(*it));
         }
     }
-    return circles_utils;
+    return useful_circles;
 }
 
 template<typename T>
@@ -233,9 +230,7 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
             circles_classed.push_back(to_add);
         }
     }
-    std::vector<InfoCircle> circles_check = delete_useless_circle(circles_classed, speed);
-    boost::sort(circles_check,
-                [](const InfoCircle& a, const InfoCircle& b) {return a.distance < b.distance;});
+    std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);
 
     for (const auto& c: circles_check) {
         type::Polygon circle_to_add = circle(c.center, c.duration_left * speed);
