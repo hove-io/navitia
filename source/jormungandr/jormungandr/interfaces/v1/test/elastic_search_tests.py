@@ -28,9 +28,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from flask.ext.restful import marshal
 import mock
 from jormungandr.autocomplete import geocodejson
+from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
 from flask.ext.restful import marshal_with
 
@@ -86,7 +86,7 @@ def bragi_house_jaures_feature():
                 }
     return house_feature
 
-@marshal_with(geocodejson.geocodejson)
+@marshal_with(Places.geocodejson)
 @geocodejson.delete_attribute_autocomplete()
 def get_response(bragi_response):
     return bragi_response
@@ -452,8 +452,8 @@ def bragi_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        response = bragi.get({'q': 'rue bobette'}, instance=None)
-        places = response.get('places')
+        raw_response = bragi.get({'q': 'rue bobette'}, instance=None)
+        places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
         bragi_house_lefebvre_response_check(places[1])

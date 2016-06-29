@@ -48,6 +48,7 @@ from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import ListLit, beta_warning
 
 
 graphical_isochrone = {
@@ -64,6 +65,7 @@ graphical_isochrones = {
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
+    "warnings": ListLit([fields.Nested(beta_warning)]),
 }
 
 

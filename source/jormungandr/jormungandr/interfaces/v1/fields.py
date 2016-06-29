@@ -43,6 +43,22 @@ from navitiacommon import response_pb2, type_pb2
 import ujson
 
 
+class Lit(fields.Raw):
+    def __init__(self, val):
+        self.val = val
+
+    def output(self, key, obj):
+        return self.val
+
+
+class ListLit(fields.Raw):
+    def __init__(self, l):
+        self.l = l
+
+    def output(self, key, obj):
+        return [e.output(key, obj) for e in self.l]
+
+
 class PbField(fields.Nested):
 
     def __init__(self, nested, allow_null=True, **kwargs):
@@ -727,6 +743,11 @@ pagination = {
 error = {
     'id': enum_type(),
     'message': fields.String()
+}
+
+beta_warning = {
+    'id': Lit("beta_api"),
+    'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
 }
 
 
