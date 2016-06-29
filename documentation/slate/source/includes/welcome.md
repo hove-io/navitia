@@ -24,7 +24,8 @@ A fake token is used in examples below: be aware that this token is really limit
 
 First step
 ---------------
-> Your token is in your confirmation mail.
+> Your token is available on your [navitia.io account page](http://www.navitia.io/profile).
+
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
 Get a token here <http://navitia.io/register/>. We need your mail to stay in touch when Navitia changes.
