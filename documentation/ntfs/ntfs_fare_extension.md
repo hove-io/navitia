@@ -75,7 +75,7 @@ Colonne | Type | Contrainte | Commentaire
 "condition globale" | chaine | Requis | Condition globale d'utilisation du ticket ("exclusive", "with_changes" ou "symetric")
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
-**État avant et aprés changement :**
+**État avant et aprés changement :**  
 Un état avant un changement (ou après un changement) est décrit soit par un mode physique, soit par un réseau :
 * Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
@@ -83,7 +83,7 @@ Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur 
 Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
 * Indiquer **"\*"** pour ne pas fournir de contrainte particulière
 
-**Conditions de début et fin de trajet :**
+**Conditions de début et fin de trajet :**  
 Ces deux champs permettent d'ajouter des conditions au départ (ou à l'arrivée) du trajet :
 * Restriction à une zone tarifaire : préciser dans le champ la valeur _"zone=[fare_zone_id]"_  
 Par exemple : si le voyageur est sur la commune de Paris, on peut indiquer _"zone=1"_ afin de créer une règle applicable uniquement depuis Paris.
