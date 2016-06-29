@@ -168,7 +168,7 @@ static bool within_info_circle(const InfoCircle& circle,
     const auto end = multi_poly.end();
     double circle_radius = circle.duration_left * speed;
     double coslat = cos(circle.center.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    return any_of(begin, end, [=](const InfoCircle& it) {
+    return any_of(begin, end, [&](const InfoCircle& it) {
         double it_radius = it.duration_left * speed;
         return sqrt(circle.center.approx_sqr_distance(it.center, coslat)) + circle_radius < it_radius;
     });
@@ -179,11 +179,9 @@ static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> cir
     std::vector<InfoCircle> useful_circles;
     boost::sort(circles,
                 [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
-    auto it = circles.begin();
-    const auto end = circles.end();
-    for (; it != end; ++it) {
-        if (!within_info_circle(*it, useful_circles, speed)) {
-            useful_circles.push_back(std::move(*it));
+    for (auto& circle: circles) {
+        if (!within_info_circle(circle, useful_circles, speed)) {
+            useful_circles.push_back(std::move(circle));
         }
     }
     return useful_circles;
