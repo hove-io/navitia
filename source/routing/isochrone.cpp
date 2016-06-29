@@ -180,9 +180,7 @@ static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> cir
     boost::sort(circles,
                 [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
     auto it = circles.begin();
-    useful_circles.push_back(*it);
     const auto end = circles.end();
-    ++it;
     for (; it != end; ++it) {
         if (!within_info_circle(*it, useful_circles, speed)) {
             useful_circles.push_back(std::move(*it));
