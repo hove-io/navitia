@@ -17,7 +17,7 @@ The only arguments are the ones of [paging](#paging).
 |----------------------------------------------|-------------------------------------|
 | `coverage`                              | List of the areas covered by navitia|
 | `coverage/{region_id}`                  | Information about a specific region |
-| `coverage/{region_id}/coords/{lon;lat}` | Information about a specific region |
+| `coverage/{lon;lat}`                    | Information about a specific region |
 
 
 <a name="coord"></a>Inverted geocoding
@@ -90,6 +90,14 @@ Very simple service: you give Navitia some coordinates, it answers you
 -   your detailed postal address
 -   the right Navitia "coverage" which allows you to access to all known
     local mobility services
+
+### Accesses
+
+| url | Result |
+|----------------------------------------------|-------------------------------------|
+| `coords/{lon;lat}`                           | Detailed address point              |
+| `coverage/{region_id}/coords/{lon;lat}`      | Detailed address point              |
+
 
 You can also combine `/coords` with other filter as :
 
@@ -495,8 +503,8 @@ HTTP/1.1 200 OK
 ```
 
 | url | Result |
-|------------------------------------------------|-------------------------------------|
-| `/coverage/{resource_path}/pt_objects`         | List of public transport objects    |
+|-------------------------------------------------------|-------------------------------------|
+| `/coverage/{region_id}/{resource_path}/pt_objects`    | List of public transport objects    |
 
 
 ### Parameters
@@ -620,10 +628,11 @@ coordinates, returning a [places](#place) collection.
 ### Accesses
 
 | url | Result |
-|------------------------------------------------|-----------------------------------------------------------|
-| `/coord/{lon;lat}/places_nearby`           | List of objects near the resource without any region id   |
-| `/coverage/{lon;lat}/places_nearby`        | List of objects near the resource without any region id   |
-| `/coverage/{resource_path}/places_nearby`  | List of objects near the resource                         |
+|--------------------------------------------------------|-----------------------------------------------------------|
+| `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/places_nearby`   | List of objects near the resource without any region id   |
+| `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                         |
+| `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                         |
 
 
 ### Parameters
@@ -1155,9 +1164,9 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 ### Accesses
 
 | url | Result |
-|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{resource_path}/route_schedules`  | List of the entire route schedules for a given resource                                                       |
-| `/coverage/{lon;lat}/route_schedules`        | List of the entire route schedules for coordinates                                                       |
+|---------------------------------------------------------|-----------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/route_schedules` | List of the entire route schedules for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/route_schedules`  | List of the entire route schedules for coordinates        |
 
 ### Parameters
 
@@ -1283,9 +1292,9 @@ You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_
 ### Accesses
 
 | url | Result |
-|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{lon;lat}/stop_schedules`        | List of the stop schedules grouped by ``stop_point/route`` for coordinates                                    |
-| `/coverage/{resource_path}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for a given resource                               |
+|--------------------------------------------------------|----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/stop_schedules` |List of the stop schedules grouped by ``stop_point/route`` for a given resource  |
+| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates       |
 
 
 ### Parameters
@@ -1380,9 +1389,9 @@ Departures are ordered chronologically in ascending order as:
 ### Accesses
 
 | url | Result |
-|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{resource_path}/departures`      | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
-| `/coverage/{lon;lat}/departures`            | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+|----------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/departures` | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
 
 ### Parameters
 
@@ -1456,9 +1465,9 @@ object. Arrivals are ordered chronologically in ascending order.
 ### Accesses
 
 | url | Result |
-|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{resource_path}/arrivals`        | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
-| `/coverage/{lon;lat}/arrivals`              | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/arrivals` | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
 
 ### Parameters
 
