@@ -109,7 +109,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             #unknown type, we skip it
-            current_app.logger.debug("unknwn file type: {} for file {}"
+            current_app.logger.debug("unknown file type: {} for file {}"
                                      .format(dataset.type, _file))
             continue
 
@@ -218,6 +218,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
         dataset.name = filename
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
+        job.autocomplete_params_id = autocomplete_instance.id
 
     if not actions:
         return
@@ -406,3 +407,19 @@ def remove_autocomplete_depot(name):
             logging.warn('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
     else:
         logging.warn('no main autocomplete directory, removing nothing')
+
+@celery.task()
+def purge_autocomplete():
+    logger = logging.getLogger(__name__)
+    autocomplete_instances = models.AutocompleteParameter.query.all()
+    for ac_instance in autocomplete_instances:
+        logger.info('purging autocomplete backup directories for %s', ac_instance.name)
+        loaded = set(os.path.realpath(os.path.dirname(dataset.name))
+                 for dataset in ac_instance.last_datasets(5))
+        for directory in loaded:
+            if os.path.exists(directory):
+                try:
+                    logger.info('removing backup directories:', loaded)
+                    shutil.rmtree(directory)
+                except Exception as e:
+                    logger.info('cannot purge directory: %s because %s', directory, str(e))

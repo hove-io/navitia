@@ -112,6 +112,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=30),
         'options': {'expires': 25}
     },
+    'purge-autocomplete-every-30-seconds': {
+        'task': 'tyr.tasks.purge_autocomplete',
+        'schedule': timedelta(seconds=600),
+        'options': {'expires': 25}
+    },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
         'schedule': timedelta(minutes=30),
