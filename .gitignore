@@ -1,6 +1,7 @@
 /source/tyr/.env
 stats
 debug
+rel_with_deb_info
 release*
 /build
 /documentation/slate/build
@@ -29,4 +30,4 @@ debian/tmp
 debian/*.substvars
 debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
-/source/jormungandr/jormungandr/.cache
+source/jormungandr/jormungandr/.cache
