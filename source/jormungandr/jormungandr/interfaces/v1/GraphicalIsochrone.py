@@ -75,6 +75,7 @@ class GraphicalIsochrone(JourneyCommon):
         super(GraphicalIsochrone, self).__init__()
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
+        parser_get.add_argument("duration[]", type=unsigned_integer, action="append")
 
     @marshal_with(graphical_isochrones)
     @ManageError()
@@ -86,8 +87,8 @@ class GraphicalIsochrone(JourneyCommon):
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
-        if not args['max_duration']:
-            abort(400, message="you should provide a 'max_duration' argument")
+        if not args['max_duration'] and not args["duration[]"]:
+            abort(400, message="you should provide a 'duration' or a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
 
