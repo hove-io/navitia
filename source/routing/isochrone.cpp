@@ -243,22 +243,23 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                            const double& speed,
                            const std::vector<int>& duration) {
     std::vector<Isochrone> isochrone;
-    type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                              clockwise, coord_origin, bound[0], origin,
-                                                              speed, duration[0]);
-    for (unsigned int i = 1; i < duration.size(); i++) {
-        type::MultiPolygon output;
-        if (duration[i] > 0) {
-            type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                                      clockwise, coord_origin, bound[i], origin,
-                                                                      speed, duration[i]);
-            boost::geometry::difference(max_isochrone, min_isochrone, output);
-            max_isochrone = std::move(min_isochrone);
-        } else {
-            output = max_isochrone;
+    if (!duration.empty() && !bound.empty()) {
+        type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
+                                                                  clockwise, coord_origin, bound[0], origin,
+                                                                  speed, duration[0]);
+        for (size_t i = 1; i < duration.size(); i++) {
+            type::MultiPolygon output;
+            if (duration[i] > 0) {
+                type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
+                                                                          clockwise, coord_origin, bound[i], origin,
+                                                                          speed, duration[i]);
+                boost::geometry::difference(max_isochrone, min_isochrone, output);
+                max_isochrone = std::move(min_isochrone);
+            } else {
+                output = max_isochrone;
+            }
+            isochrone.push_back(Isochrone(output, duration[i], duration[i-1]));
         }
-        Isochrone new_isochrone = Isochrone(output, duration[i], duration[i-1]);
-        isochrone.push_back(new_isochrone);
     }
     return isochrone;
 }

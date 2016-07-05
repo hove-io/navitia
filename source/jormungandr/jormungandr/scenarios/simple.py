@@ -234,11 +234,11 @@ class Scenario(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         req.isochrone.min_duration = request["min_duration"]
-        if "max_duration" in request and request["max_duration"]:
+        if request.get("max_duration"):
             journey_req.max_duration = request["max_duration"]
         else:
             journey_req.max_duration = max(request["duration[]"], key=int)
-        if "duration[]" in request and request["duration[]"]:
+        if request.get("duration[]"):
             for duration in sorted(request["duration[]"], key=int, reverse=True):
                 if len(request["duration[]"]) > 10:
                     abort(400, message="you cannot provide more than 10 'duration[]'")
