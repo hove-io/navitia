@@ -32,7 +32,7 @@ from copy import deepcopy
 import itertools
 import logging
 from flask.ext.restful import abort
-from jormungandr.scenarios import simple, journey_filter
+from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
     fill_uris, gen_all_combin, get_pseudo_duration
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -156,23 +156,11 @@ def sort_journeys(resp, journey_order, clockwise):
         resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
 
-def _is_car_direct_path(journey):
-    for section in journey.sections:
-        if section.type not in [response_pb2.STREET_NETWORK, response_pb2.PARK,
-                                response_pb2.LEAVE_PARKING]:
-            return False
-        if section.type != response_pb2.STREET_NETWORK:
-            continue
-        if section.street_network.mode not in [response_pb2.Walking, response_pb2.Car]:
-            return False
-    return True
-
-
 def tag_journeys(resp):
     """
     qualify the journeys
     """
-    car = next((j for j in resp.journeys if _is_car_direct_path(j)), None)
+    car = next((j for j in resp.journeys if helpers.is_car_direct_path(j)), None)
     if car is None:
         return
     for j in resp.journeys:
@@ -374,7 +362,7 @@ def culling_journeys(resp, request):
         # At this point, resp.journeys should contain only must-have journeys
         list_dict = collections.defaultdict(list)
         for jrny in resp.journeys:
-            if 'to_delete' not in jrny.tags:
+            if not journey_filter.to_be_deleted(jrny):
                 list_dict[jrny.type].append(jrny)
 
         sorted_by_type_journeys = []
@@ -437,7 +425,7 @@ def culling_journeys(resp, request):
 
 
 def nb_journeys(responses):
-    return sum(1 for r in responses for j in r.journeys if 'to_delete' not in j.tags)
+    return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
 
 def type_journeys(resp, req):
@@ -707,9 +695,9 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
         if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys])
+            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
         else:
-            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys])
+            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
 
         if request['datetime'] is None:
             return None

@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
-from jormungandr.scenarios.journey_filter import _to_be_deleted
+from jormungandr.scenarios.journey_filter import to_be_deleted
 import navitiacommon.response_pb2 as response_pb2
 from navitiacommon import default_values
 from jormungandr.scenarios.default import Scenario, are_equals
@@ -286,7 +286,7 @@ def test_journeys_equality_test_same_journeys():
 def journeys_gen(list_responses):
     for r in list_responses:
         for j in r.journeys:
-            if not _to_be_deleted(j):
+            if not to_be_deleted(j):
                 yield j
 
 

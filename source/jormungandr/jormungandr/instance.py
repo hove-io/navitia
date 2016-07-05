@@ -124,7 +124,7 @@ class Instance(object):
             return scenario
 
         instance_db = self.get_models()
-        scenario_name = instance_db.scenario if instance_db else 'default'
+        scenario_name = instance_db.scenario if instance_db else 'new_default'
         if not self._scenario or scenario_name != self._scenario_name:
             logger = logging.getLogger(__name__)
             logger.info('loading of scenario %s for instance %s', scenario_name, self.name)

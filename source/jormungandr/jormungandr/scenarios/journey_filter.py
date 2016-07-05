@@ -41,7 +41,7 @@ def delete_journeys(responses, request):
 
     nb_deleted = 0
     for r in responses:
-        nb_deleted += pb_del_if(r.journeys, lambda j: _to_be_deleted(j))
+        nb_deleted += pb_del_if(r.journeys, lambda j: to_be_deleted(j))
 
     if nb_deleted:
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
@@ -116,7 +116,7 @@ def _get_worst_similar(j1, j2, request):
 
 
 
-def _to_be_deleted(journey):
+def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
@@ -144,7 +144,7 @@ def _filter_similar_journeys(journeys, request, similar_journey_generator):
 
     logger = logging.getLogger(__name__)
     for j1, j2 in itertools.combinations(journeys, 2):
-        if _to_be_deleted(j1) or _to_be_deleted(j2):
+        if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if compare(j1, j2, similar_journey_generator):
             #chose the best
@@ -165,7 +165,7 @@ def _filter_too_short_heavy_journeys(journeys, request):
     """
     logger = logging.getLogger(__name__)
     for journey in journeys:
-        if _to_be_deleted(journey):
+        if to_be_deleted(journey):
             continue
         on_bss = False
         for s in journey.sections:
@@ -190,7 +190,7 @@ def _filter_too_long_waiting(journeys, request):
     """
     logger = logging.getLogger(__name__)
     for j in journeys:
-        if _to_be_deleted(j):
+        if to_be_deleted(j):
             continue
         for s in j.sections:
             if s.type != response_pb2.WAITING:
@@ -212,7 +212,7 @@ def _filter_max_successive_physical_mode(journeys, instance, request):
     if max_successive_physical_mode == 0:
         return
     for j in journeys:
-        if _to_be_deleted(j):
+        if to_be_deleted(j):
             continue
 
         bus_count = 0
@@ -244,7 +244,7 @@ def _filter_too_much_connections(journeys, instance, request):
     if min_connections is not None:
         max_connections_allowed = max_additional_connections + min_connections
         for j in journeys:
-            if _to_be_deleted(j):
+            if to_be_deleted(j):
                 continue
 
             if get_nb_connections(j) > max_connections_allowed:
@@ -260,7 +260,7 @@ def get_min_connections(journeys):
     if not journeys:
         return None
 
-    return min(get_nb_connections(j) for j in journeys if not _to_be_deleted(j))
+    return min(get_nb_connections(j) for j in journeys if not to_be_deleted(j))
 
 
 def get_nb_connections(journey):
@@ -316,14 +316,14 @@ def _filter_not_coherent_journeys(journeys, instance, request):
     else:
         comp_value = lambda j: j.departure_date_time
         comp_func = max
-    keeped = [j for j in journeys if not _to_be_deleted(j)]
+    keeped = [j for j in journeys if not to_be_deleted(j)]
     if not keeped:
         #min and max don't like empty list
         return
     asap_journey = comp_func(keeped, key=comp_value)
 
     for j in journeys:
-        if _to_be_deleted(j):
+        if to_be_deleted(j):
             continue
         if way_later(request, j, asap_journey):
             logger.debug("the journey {} is too long compared to {}, we delete it"
