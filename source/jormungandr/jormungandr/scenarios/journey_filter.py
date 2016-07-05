@@ -71,8 +71,6 @@ def filter_journeys(response_list, instance, request):
 
     _filter_max_successive_physical_mode(journeys, instance, request)
 
-    delete_journeys(response_list, request)
-
     return response_list
 
 
@@ -90,8 +88,6 @@ def final_filter_journeys(response_list, instance, request):
         _filter_similar_line_journeys(journeys, request)
 
     _filter_too_much_connections(journeys, instance, request)
-
-    delete_journeys(response_list, request)
 
     return response_list
 

@@ -156,11 +156,33 @@ def sort_journeys(resp, journey_order, clockwise):
         resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
 
+def _is_car_direct_path(journey):
+    for section in journey.sections:
+        if section.type not in [response_pb2.STREET_NETWORK, response_pb2.PARK,
+                                response_pb2.LEAVE_PARKING]:
+            return False
+        if section.type != response_pb2.STREET_NETWORK:
+            continue
+        if section.street_network.mode not in [response_pb2.Walking, response_pb2.Car]:
+            return False
+    return True
+
+
 def tag_journeys(resp):
     """
     qualify the journeys
     """
-    pass
+    car = next((j for j in resp.journeys if _is_car_direct_path(j)), None)
+    if car is None:
+        return
+    for j in resp.journeys:
+        if not j.HasField('co2_emission'):
+            j.tags.append('ecologic')
+            continue
+        if j.co2_emission.unit != car.co2_emission.unit:
+            continue
+        if j.co2_emission.value < car.co2_emission.value * 0.5:
+            j.tags.append('ecologic')
 
 
 def _get_section_id(section):
@@ -415,7 +437,7 @@ def culling_journeys(resp, request):
 
 
 def nb_journeys(responses):
-    return sum(len(r.journeys) for r in responses)
+    return sum(1 for r in responses for j in r.journeys if 'to_delete' not in j.tags)
 
 
 def type_journeys(resp, req):
@@ -620,6 +642,7 @@ class Scenario(simple.Scenario):
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         tag_journeys(pb_resp)
+        journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
