@@ -1,12 +1,15 @@
 <a name="isochrones"></a>![Isochrones](/images/isochrons.png)Isochrones
 ===================================
 
+>[Try it on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26datetime%3D20160505T080000%26max_duration%3D2000%26min_duration%3D1000)
+
+
 Whether using a specific set of coordinates or a general location, you can find places within 
 your reach and their corresponding travel times, using a variety of transportation options. 
 You can even specify the maximum amount of time you want to spare on travel and find 
 the quickest way to reach your destination.
 
-![image](isochrones_example.png)
+[![a simple isochrone request on Navitia playground](isochrones_example.png)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26datetime%3D20160505T080000%26max_duration%3D2000%26min_duration%3D1000)
 
 Isochrone computing exposes information under two formats:
 
