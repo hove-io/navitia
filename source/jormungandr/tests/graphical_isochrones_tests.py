@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
+from nose.tools import eq_
 from shapely.geometry import asShape, Point
 
 
@@ -275,7 +276,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert normal_response['message'] == 'Unable to parse datetime, unknown string format'
+        eq_(normal_response['message'].lower(), 'unable to parse datetime, unknown string format')
 
     def test_graphical_isochros_no_isochrones(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
