@@ -161,7 +161,7 @@ def tag_journeys(resp):
     qualify the journeys
     """
     car = next((j for j in resp.journeys if helpers.is_car_direct_path(j)), None)
-    if car is None:
+    if car is None or not car.HasField('co2_emission'):
         return
     for j in resp.journeys:
         if not j.HasField('co2_emission'):
