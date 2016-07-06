@@ -133,10 +133,10 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))
         if async:
-            chain(*actions).delay()
+            return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
-            chain(*actions).apply()
+            return chain(*actions).apply()
 
 
 @celery.task()
