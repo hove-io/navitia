@@ -134,7 +134,7 @@ class StatManager(object):
         """
         try:
             self.connection = kombu.Connection(self.broker_url)
-            exchange = kombu.Exchange(self.exchange_name, type="direct")
+            exchange = kombu.Exchange(self.exchange_name, type="topic")
             self.producer = self.connection.Producer(exchange=exchange)
         except:
             logging.getLogger(__name__).exception('Unable to activate the producer of stat')
@@ -485,7 +485,7 @@ class StatManager(object):
                 if self.producer is None:
                     #if the initialization failed we have to retry the creation of the objects
                     self._init_rabbitmq()
-                self.producer.publish(pbf)
+                self.producer.publish(pbf, routing_key=stat_request.api)
             except self.connection.connection_errors + self.connection.channel_errors:
                 logging.getLogger(__name__).exception('Server went away, will be reconnected..')
                 #Relese and close the previous connection
@@ -495,7 +495,7 @@ class StatManager(object):
                 self._init_rabbitmq()
                 #If connection is established publish the stat message.
                 if self.save_stat:
-                    self.producer.publish(pbf)
+                    self.producer.publish(pbf, routing_key=stat_request.api)
 
     def fill_admin_from(self, stat_section, admin):
         if admin[0]:
