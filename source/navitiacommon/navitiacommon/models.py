@@ -545,7 +545,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     def backup_dir(self, root_path):
         return os.path.join(self.main_dir(root_path), "backup")
 
-    def last_datasets(self, nb_dataset=1):
+    def autocomplete_lastest_datasets(self, nb_dataset=1):
         return db.session.query(DataSet)\
             .join(Job) \
             .join(AutocompleteParameter) \
