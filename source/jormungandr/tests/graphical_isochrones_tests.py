@@ -216,6 +216,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         response = self.query(q)
         is_valid_graphical_isochrone(response, self.tester, q)
 
+        assert len(response['isochrones']) == 7
+
 
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"
@@ -260,7 +262,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert normal_response['message'] == "you should provide a 'duration' or a 'max_duration' argument"
+        assert normal_response['message'] == "you should provide a 'duration[]' or a 'max_duration' argument"
 
     def test_graphical_isochrones_date_out_of_bound(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"

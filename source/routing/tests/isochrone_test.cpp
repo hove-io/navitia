@@ -195,15 +195,15 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     std::vector<navitia::DateTime> date_8h30_9h;
     date_8h30_9h.push_back(navitia::DateTimeUtils::set(0, "09:00"_t));
     date_8h30_9h.push_back(navitia::DateTimeUtils::set(0, "08:30"_t));
-    std::vector<int> duration_1h;
-    duration_1h.push_back(3600);
-    duration_1h.push_back(0);
-    std::vector<int> duration_30min;
-    duration_30min.push_back(60 * 30);
-    duration_30min.push_back(0);
-    std::vector<int> duration_1h_30min;
-    duration_1h_30min.push_back(3600);
-    duration_1h_30min.push_back(60 * 30);
+    std::vector<navitia::DateTime> duration_1h;
+    duration_1h.push_back(navitia::DateTimeUtils::set(0, "01:00"_t));
+    duration_1h.push_back(navitia::DateTimeUtils::set(0, "00:00"_t));
+    std::vector<navitia::DateTime> duration_30min;
+    duration_30min.push_back(navitia::DateTimeUtils::set(0, "00:30"_t));
+    duration_30min.push_back(navitia::DateTimeUtils::set(0, "00:00"_t));
+    std::vector<navitia::DateTime> duration_1h_30min;
+    duration_1h_30min.push_back(navitia::DateTimeUtils::set(0, "01:00"_t));
+    duration_1h_30min.push_back(navitia::DateTimeUtils::set(0, "00:30"_t));
     std::vector<navitia::routing::Isochrone> isochrone_9h = build_isochrones(raptor, true, coord_Paris,
                                                                              date_8h_9h,
                                                                              d, speed, duration_1h);

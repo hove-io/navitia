@@ -723,7 +723,7 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
     }
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
 
-    std::vector<int> duration;
+    std::vector<DateTime> duration;
     for(int i = 0; i < request_iso.duration_size(); ++i) {
         duration.push_back(request_iso.duration(i));
     }

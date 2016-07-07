@@ -233,25 +233,24 @@ class Scenario(object):
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
-        req.isochrone.min_duration = request["min_duration"]
         if request.get("max_duration"):
             journey_req.max_duration = request["max_duration"]
         else:
             journey_req.max_duration = max(request["duration[]"], key=int)
         if request.get("duration[]"):
+            if len(request["duration[]"]) > 10:
+                abort(400, message="you cannot provide more than 10 'duration[]'")
             for duration in sorted(request["duration[]"], key=int, reverse=True):
-                if len(request["duration[]"]) > 10:
-                    abort(400, message="you cannot provide more than 10 'duration[]'")
-                else:
-                    if req.isochrone.min_duration < duration < journey_req.max_duration:
-                        req.isochrone.duration.append(duration)
+                if request["min_duration"] < duration < journey_req.max_duration:
+                    req.isochrone.duration.append(duration)
         req.isochrone.duration.insert(0, journey_req.max_duration)
-        req.isochrone.duration.append(req.isochrone.min_duration)
+        req.isochrone.duration.append(request["min_duration"])
 
         journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
         journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]
         resp = instance.send_and_receive(req)
         return resp
+
 
     def stop_areas(self, request, instance):
         return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,instance)

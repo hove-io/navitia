@@ -88,7 +88,7 @@ class GraphicalIsochrone(JourneyCommon):
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration'] and not args["duration[]"]:
-            abort(400, message="you should provide a 'duration' or a 'max_duration' argument")
+            abort(400, message="you should provide a 'duration[]' or a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
 

@@ -70,14 +70,16 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                 const int& duration);
 
 struct Isochrone {
-    const type::MultiPolygon shape;
-    const int min_duration;
-    const int max_duration;
-    Isochrone(const type::MultiPolygon& shape,
-              const int& min_duration,
-              const int& max_duration): shape(shape),
-                                        min_duration(min_duration),
-                                        max_duration(max_duration){}
+    type::MultiPolygon shape;
+    DateTime min_duration;
+    DateTime max_duration;
+    Isochrone(type::MultiPolygon shape,
+              DateTime min_duration,
+              DateTime max_duration): shape(shape),
+                                      min_duration(min_duration),
+                                      max_duration(max_duration){
+
+    }
 };
 
 
@@ -88,6 +90,6 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                            const std::vector<DateTime>& bound,
                            const map_stop_point_duration& origin,
                            const double& speed,
-                           const std::vector<int>& duration);
+                           const std::vector<DateTime>& duration);
 
 }}

@@ -241,7 +241,7 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                            const std::vector<DateTime>& bound,
                            const map_stop_point_duration& origin,
                            const double& speed,
-                           const std::vector<int>& duration) {
+                           const std::vector<DateTime>& duration) {
     std::vector<Isochrone> isochrone;
     if (!duration.empty() && !bound.empty()) {
         type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
@@ -249,7 +249,7 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                                                                   speed, duration[0]);
         for (size_t i = 1; i < duration.size(); i++) {
             type::MultiPolygon output;
-            if (duration[i] > 0) {
+            if ((int)duration[i] > 0) {
                 type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
                                                                           clockwise, coord_origin, bound[i], origin,
                                                                           speed, duration[i]);
@@ -258,7 +258,7 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
             } else {
                 output = max_isochrone;
             }
-            isochrone.push_back(Isochrone(output, duration[i], duration[i-1]));
+            isochrone.insert(isochrone.begin(), Isochrone(std::move(output), duration[i], duration[i-1]));
         }
     }
     return isochrone;
