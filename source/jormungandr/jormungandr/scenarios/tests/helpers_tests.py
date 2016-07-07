@@ -122,6 +122,47 @@ def get_walking_car_journey():
 
     return journey
 
+def get_car_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section.duration = 70
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section.duration = 10
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 5
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 40
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 10
+
+    return journey
+
+def get_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section.duration = 70
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section.duration = 10
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 5
+
+    return journey
+
 def get_bike_walking_journey():
     journey = response_pb2.Journey()
 
@@ -748,3 +789,10 @@ def fallback_mode_sort_test():
     assert l[1] ==  'bss'
     assert l[2] ==  'bike'
     assert l[3] ==  'car'
+
+def is_car_direct_path_test():
+    assert not is_car_direct_path(get_walking_car_journey())
+    assert not is_car_direct_path(get_car_walking_journey())
+    assert is_car_direct_path(get_car_journey())
+    assert not is_car_direct_path(get_bike_car_journey())
+    assert not is_car_direct_path(get_bss_car_journey())

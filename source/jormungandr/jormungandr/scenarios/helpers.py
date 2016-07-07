@@ -185,6 +185,17 @@ def is_non_pt_walk(journey):
 def is_non_pt_bike(journey):
     return journey.type == 'non_pt_bike'
 
+def is_car_direct_path(journey):
+    for section in journey.sections:
+        if section.type not in [response_pb2.STREET_NETWORK, response_pb2.PARK,
+                                response_pb2.LEAVE_PARKING]:
+            return False
+        if section.type != response_pb2.STREET_NETWORK:
+            continue
+        if section.street_network.mode not in [response_pb2.Walking, response_pb2.Car]:
+            return False
+    return True
+
 max_duration_fallback_modes = {'walking': [response_pb2.Walking],
                                'bss': [response_pb2.Walking, response_pb2.Bss],
                                'bike': [response_pb2.Walking, response_pb2.Bss, response_pb2.Bike],
