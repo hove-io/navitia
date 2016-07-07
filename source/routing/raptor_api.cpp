@@ -1227,15 +1227,12 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
-    std::vector<DateTime> bound;
-    for (int dur: duration) {
-        bound.push_back(clockwise ? init_dt + dur : init_dt - dur);
-    }
-    raptor.isochrone(departures, init_dt, bound[0], max_transfers,
+    DateTime bound = build_bound(clockwise, duration[0], init_dt);
+    raptor.isochrone(departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
-    std::vector<Isochrone> isochrone = build_isochrones(raptor, clockwise, coord_origin, bound, departures,
-                                                        speed, duration);
+    std::vector<Isochrone> isochrone = build_isochrones(raptor, clockwise, coord_origin, departures,
+                                                        speed, duration, init_dt);
     for (const auto& iso: isochrone) {
         add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center, clockwise);
     }

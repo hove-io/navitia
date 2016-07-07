@@ -307,8 +307,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}"
         q = q.format('20120614T080000', r_coord)
         for i in range(20):
-            q += "&duration[]={}"
-            q = q.format(i*60)
+            q += "&duration[]={}".format(i*60)
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400

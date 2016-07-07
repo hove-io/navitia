@@ -185,16 +185,6 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
     raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:00"_t));
     double speed = 0.8;
-
-    std::vector<navitia::DateTime> date_8h_9h;
-    date_8h_9h.push_back(navitia::DateTimeUtils::set(0, "09:00"_t));
-    date_8h_9h.push_back(navitia::DateTimeUtils::set(0, "08:00"_t));
-    std::vector<navitia::DateTime> date_8h_8h30;
-    date_8h_8h30.push_back(navitia::DateTimeUtils::set(0, "08:30"_t));
-    date_8h_8h30.push_back(navitia::DateTimeUtils::set(0, "08:00"_t));
-    std::vector<navitia::DateTime> date_8h30_9h;
-    date_8h30_9h.push_back(navitia::DateTimeUtils::set(0, "09:00"_t));
-    date_8h30_9h.push_back(navitia::DateTimeUtils::set(0, "08:30"_t));
     std::vector<navitia::DateTime> duration_1h;
     duration_1h.push_back(navitia::DateTimeUtils::set(0, "01:00"_t));
     duration_1h.push_back(navitia::DateTimeUtils::set(0, "00:00"_t));
@@ -204,15 +194,23 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     std::vector<navitia::DateTime> duration_1h_30min;
     duration_1h_30min.push_back(navitia::DateTimeUtils::set(0, "01:00"_t));
     duration_1h_30min.push_back(navitia::DateTimeUtils::set(0, "00:30"_t));
+    std::vector<navitia::DateTime> duration_1h_30min_0min;
+    duration_1h_30min_0min.push_back(navitia::DateTimeUtils::set(0, "01:00"_t));
+    duration_1h_30min_0min.push_back(navitia::DateTimeUtils::set(0, "00:30"_t));
+    duration_1h_30min_0min.push_back(navitia::DateTimeUtils::set(0, "00:00"_t));
+    auto init_dt = navitia::DateTimeUtils::set(0, "08:00"_t);
     std::vector<navitia::routing::Isochrone> isochrone_9h = build_isochrones(raptor, true, coord_Paris,
-                                                                             date_8h_9h,
-                                                                             d, speed, duration_1h);
+                                                                             d, speed, duration_1h,
+                                                                             init_dt);
     std::vector<navitia::routing::Isochrone> isochrone_8h30 = build_isochrones(raptor, true, coord_Paris,
-                                                                               date_8h_8h30,
-                                                                               d, speed, duration_30min);
+                                                                               d, speed, duration_30min,
+                                                                               init_dt);
     std::vector<navitia::routing::Isochrone> isochrone_8h30_9h = build_isochrones(raptor, true, coord_Paris,
-                                                                                  date_8h30_9h,
-                                                                                  d, speed, duration_1h_30min);
+                                                                                  d, speed, duration_1h_30min,
+                                                                                  init_dt);
+    std::vector<navitia::routing::Isochrone> isochrone_8h_8h30_9h = build_isochrones(raptor, true, coord_Paris,
+                                                                                         d, speed, duration_1h_30min_0min,
+                                                                                         init_dt);
 #if BOOST_VERSION >= 105600
     BOOST_CHECK(boost::geometry::within(coord_Paris, isochrone_9h[0].shape));
     BOOST_CHECK(boost::geometry::within(coord_Notre_Dame, isochrone_9h[0].shape));
@@ -223,7 +221,9 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     BOOST_CHECK(!boost::geometry::within(isochrone_8h30_9h[0].shape, isochrone_8h30[0].shape));
     BOOST_CHECK(!boost::geometry::within(isochrone_8h30[0].shape, isochrone_8h30_9h[0].shape));
     BOOST_CHECK(!boost::geometry::within(isochrone_9h[0].shape, isochrone_8h30_9h[0].shape));
-    BOOST_CHECK(boost::geometry::within(isochrone_8h30_9h[0].shape, isochrone_9h[0].shape));;
+    BOOST_CHECK(boost::geometry::within(isochrone_8h30_9h[0].shape, isochrone_9h[0].shape));
     BOOST_CHECK(boost::geometry::within(circle(coord_Luxembourg, 8 * 60 * speed - 1), isochrone_9h[0].shape));
 #endif
+    BOOST_CHECK(boost::geometry::equals(isochrone_8h30[0].shape, isochrone_8h_8h30_9h[0].shape));
+    BOOST_CHECK(boost::geometry::equals(isochrone_8h30_9h[0].shape, isochrone_8h_8h30_9h[1].shape));
 }
