@@ -416,7 +416,7 @@ def purge_autocomplete():
         logger.info('purging autocomplete backup directories for %s', ac_instance.name)
         max_backups = current_app.config.get('AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
         dir_to_keep = set(os.path.realpath(os.path.dirname(dataset.name))
-                          for dataset in ac_instance.autocomplete_lastest_datasets(max_backups))
+                          for dataset in ac_instance.autocomplete_latest_datasets(max_backups))
         autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
         backup_dir = os.path.join(autocomplete_dir, ac_instance.name, 'backup')
         all_backups = set(os.path.join(backup_dir, backup)
