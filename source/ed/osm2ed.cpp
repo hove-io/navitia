@@ -1024,6 +1024,8 @@ int main(int argc, char** argv) {
     po::notify(vm);
 
     ed::EdPersistor persistor(connection_string);
+    persistor.street_network_source = "osm";
+    persistor.poi_source = "osm";
     persistor.clean_georef();
     persistor.clean_poi();
 
@@ -1052,5 +1054,6 @@ int main(int argc, char** argv) {
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");
     persistor.compute_bounding_shape();
+    persistor.insert_metadata_georef();
     return 0;
 }
