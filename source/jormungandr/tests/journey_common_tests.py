@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import i_manager
 import mock
+from .check_utils import *
 
 
 
@@ -50,3 +51,18 @@ class TestJourneyCommon(AbstractTestFixture):
             assert max_bike == 0
             assert max_bss == 0
             assert max_car == 0
+
+        def test_traveler_type(self):
+            q_fast_walker = journey_basic_query + "&traveler_type=fast_walker"
+            response_fast_walker = self.query_region(q_fast_walker)
+            basic_response = self.query_region(journey_basic_query)
+
+            def bike_in_section(fast_walker):
+                return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections'])
+
+            assert any(bike_in_section(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
+
+            for journey in basic_response['journeys']:
+                for section in journey['sections']:
+                    if 'mode' in section:
+                        assert not section['mode'] == 'bike'
