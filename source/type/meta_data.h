@@ -45,7 +45,6 @@ struct MetaData{
 
     boost::posix_time::ptime publication_date;
 
-    std::vector<std::string> data_sources;
 
     std::string shape;
 
@@ -54,6 +53,8 @@ struct MetaData{
     std::string license;
     std::string instance_name;
     boost::posix_time::ptime dataset_created_at;
+    std::string poi_source;
+    std::string street_network_source;
 
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
@@ -62,8 +63,9 @@ struct MetaData{
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & data_sources & shape &
-                publisher_name & publisher_url & license & instance_name & dataset_created_at;
+        ar & production_date & publication_date & shape & publisher_name
+            & publisher_url & license & instance_name & dataset_created_at
+            & poi_source & street_network_source;
     }
     boost::posix_time::time_period production_period() const {
         namespace pt = boost::posix_time;

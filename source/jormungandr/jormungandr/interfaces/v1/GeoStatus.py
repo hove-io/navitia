@@ -40,12 +40,12 @@ geo_status = {
             'nb_ways': fields.Raw,
             'nb_addresses': fields.Raw,
             'nb_poi': fields.Raw,
+            'poi_source': fields.Raw,
         })
 }
 
 class GeoStatus(Resource):
     @marshal_with(geo_status)
     def get(self, region):
-        response = protobuf_to_dict(i_manager.dispatch({}, "geo_status", instance_name=region), use_enum_labels=True)
-        response['geo_status']
+        response = i_manager.dispatch({}, "geo_status", instance_name=region)
         return response, 200

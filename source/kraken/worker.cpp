@@ -150,6 +150,8 @@ pbnavitia::Response Worker::geo_status() {
             });
     status->set_nb_admins_from_cities(nb_admins_from_cities);
     status->set_nb_poi(d->geo_ref->pois.size());
+    status->set_poi_source(d->meta->poi_source);
+    status->set_street_network_source(d->meta->street_network_source);
     return result;
 }
 
@@ -172,9 +174,6 @@ pbnavitia::Response Worker::status() {
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
         status->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
-        for(auto data_sources: d->meta->data_sources){
-            status->add_data_sources(data_sources);
-        }
     } else {
         status->set_publication_date("");
         status->set_start_production_date("");
