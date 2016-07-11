@@ -303,7 +303,12 @@ BOOST_AUTO_TEST_CASE(compute_coord){
      */
 
     b("a",0,0)("b",10,0)("c",0,10)("d",10,10);
-    b("a","b", 10_s)("b","a",10_s)("a","c",10_s)("c","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
+    b("a","b", 10_s)("b","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
+
+    // put lots of edges between a and c to check if we manage that
+    // correctly
+    b("a","c",20_s)("a","c",10_s)("a","c",30_s);
+    b("c","a",20_s)("c","a",10_s)("c","a",30_s);
 
     Way w;
     w.name = "BobAB"; b.geo_ref.add_way(w);
@@ -312,8 +317,17 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     w.name = "BobDB"; b.geo_ref.add_way(w);
     b.geo_ref.graph[b.get("a","b")].way_idx = 0;
     b.geo_ref.graph[b.get("b","a")].way_idx = 0;
-    b.geo_ref.graph[b.get("a","c")].way_idx = 1;
-    b.geo_ref.graph[b.get("c","a")].way_idx = 1;
+
+    auto vertex_a = b.get("a"), vertex_c = b.get("c");
+    for (auto range = out_edges(vertex_a, b.geo_ref.graph); range.first != range.second; ++range.first) {
+        if (target(*range.first, b.geo_ref.graph) != vertex_c) { continue; }
+        b.geo_ref.graph[*range.first].way_idx = 1;
+    }
+    for (auto range = out_edges(vertex_c, b.geo_ref.graph); range.first != range.second; ++range.first) {
+        if (target(*range.first, b.geo_ref.graph) != vertex_a) { continue; }
+        b.geo_ref.graph[*range.first].way_idx = 1;
+    }
+
     b.geo_ref.graph[b.get("c","d")].way_idx = 2;
     b.geo_ref.graph[b.get("d","c")].way_idx = 2;
     b.geo_ref.graph[b.get("d","b")].way_idx = 3;
@@ -339,6 +353,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     BOOST_CHECK_EQUAL(coords[2], expected );
     expected.set_xy(4,10);
     BOOST_CHECK_EQUAL(coords[3], expected );
+    BOOST_CHECK_EQUAL(p.path_items[1].duration, 10_s);// check that the shortest edge is used
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
