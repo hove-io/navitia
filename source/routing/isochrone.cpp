@@ -248,27 +248,27 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                            const type::GeographicalCoord& coord_origin,
                            const map_stop_point_duration& origin,
                            const double& speed,
-                           const std::vector<DateTime>& duration,
+                           const std::vector<DateTime>& boundary_duration,
                            const DateTime init_dt) {
     std::vector<Isochrone> isochrone;
-    if (!duration.empty()) {
+    if (!boundary_duration.empty()) {
         type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
                                                                   clockwise, coord_origin,
-                                                                  build_bound(clockwise, duration[0], init_dt),
-                                                                  origin, speed, duration[0]);
-        for (size_t i = 1; i < duration.size(); i++) {
+                                                                  build_bound(clockwise, boundary_duration[0], init_dt),
+                                                                  origin, speed, boundary_duration[0]);
+        for (size_t i = 1; i < boundary_duration.size(); i++) {
             type::MultiPolygon output;
-            if ((int)duration[i] > 0) {
+            if (boundary_duration[i] > 0) {
                 type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
                                                                           clockwise, coord_origin,
-                                                                          build_bound(clockwise, duration[i], init_dt),
-                                                                          origin, speed, duration[i]);
+                                                                          build_bound(clockwise, boundary_duration[i], init_dt),
+                                                                          origin, speed, boundary_duration[i]);
                 boost::geometry::difference(max_isochrone, min_isochrone, output);
                 max_isochrone = std::move(min_isochrone);
             } else {
                 output = max_isochrone;
             }
-            isochrone.push_back(Isochrone(std::move(output), duration[i], duration[i-1]));
+            isochrone.push_back(Isochrone(std::move(output), boundary_duration[i], boundary_duration[i-1]));
         }
     }
     std::reverse(isochrone.begin(), isochrone.end());
