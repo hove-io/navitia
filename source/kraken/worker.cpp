@@ -723,10 +723,13 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
     }
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
 
+    std::vector<DateTime> boundary_duration;
+    for(int i = 0; i < request_iso.boundary_duration_size(); ++i) {
+        boundary_duration.push_back(request_iso.boundary_duration(i));
+    }
 
     return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
-                                                      request.max_duration(), request_iso.min_duration(),
-                                                      request.max_transfers(),
+                                                      boundary_duration, request.max_transfers(),
                                                       arg.accessibilite_params, arg.forbidden,
                                                       request.clockwise(), arg.rt_level,
                                                       *street_network_worker,

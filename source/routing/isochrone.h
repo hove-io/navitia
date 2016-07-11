@@ -58,6 +58,9 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius);
 
+DateTime build_bound(const bool clockwise,
+                     const DateTime duration,
+                     const DateTime init_dt);
 
 //Create a multi polygon with circles around all the stop points in the isochrone
 type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
@@ -69,14 +72,25 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                 const double& speed,
                                 const int& duration);
 
-type::MultiPolygon build_isochrones(RAPTOR& raptor,
-                                    const bool clockwise,
-                                    const type::GeographicalCoord& coord_origin,
-                                    const DateTime& bound_max,
-                                    const DateTime& bound_min,
-                                    const map_stop_point_duration& origin,
-                                    const double& speed,
-                                    const int& max_duration,
-                                    const int& min_duration);
+struct Isochrone {
+    type::MultiPolygon shape;
+    DateTime min_duration;
+    DateTime max_duration;
+    Isochrone(type::MultiPolygon shape,
+              DateTime min_duration,
+              DateTime max_duration): shape(std::move(shape)),
+                                      min_duration(min_duration),
+                                      max_duration(max_duration){
+
+    }
+};
+
+std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
+                                        const bool clockwise,
+                                        const type::GeographicalCoord& coord_origin,
+                                        const map_stop_point_duration& origin,
+                                        const double& speed,
+                                        const std::vector<DateTime>& boundary_duration,
+                                        const DateTime init_dt);
 
 }}

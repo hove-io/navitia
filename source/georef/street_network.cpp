@@ -541,6 +541,20 @@ Path PathFinder::build_path(vertex_t best_destination) const {
     return create_path(geo_ref, reverse_path, true, speed_factor);
 }
 
+static edge_t get_best_edge(vertex_t u, vertex_t v, const GeoRef& georef) {
+    const auto& g = georef.graph;
+    boost::optional<edge_t> best_edge;
+    for (auto range = out_edges(u, g); range.first != range.second; ++range.first) {
+        if (target(*range.first, g) != v) { continue; }
+        if (! best_edge || g[*range.first].duration < g[*best_edge].duration) {
+            best_edge = *range.first;
+        }
+    }
+    if (! best_edge) {
+        throw navitia::exception("impossible to find an edge");
+    }
+    return *best_edge;
+}
 
 Path create_path(const GeoRef& geo_ref,
                  const std::vector<vertex_t>& reverse_path,
@@ -558,13 +572,7 @@ Path create_path(const GeoRef& geo_ref,
         bool path_item_changed = false;
         vertex_t v = reverse_path[i-2];
         vertex_t u = reverse_path[i-1];
-
-        auto edge_pair = boost::edge(u, v, geo_ref.graph);
-        //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
-        if (! edge_pair.second) {
-            throw navitia::exception("impossible to find an edge");
-        }
-        edge_t e = edge_pair.first;
+        edge_t e = get_best_edge(u, v, geo_ref);
 
         Edge edge = geo_ref.graph[e];
         PathItem::TransportCaracteristic transport_carac = geo_ref.get_caracteristic(e);

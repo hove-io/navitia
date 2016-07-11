@@ -48,6 +48,7 @@ from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import ListLit, beta_warning
 
 
 graphical_isochrone = {
@@ -64,6 +65,7 @@ graphical_isochrones = {
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
+    "warnings": ListLit([fields.Nested(beta_warning)]),
 }
 
 
@@ -73,6 +75,7 @@ class GraphicalIsochrone(JourneyCommon):
         super(GraphicalIsochrone, self).__init__()
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
+        parser_get.add_argument("boundary_duration[]", type=unsigned_integer, action="append")
 
     @marshal_with(graphical_isochrones)
     @ManageError()
@@ -84,8 +87,8 @@ class GraphicalIsochrone(JourneyCommon):
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
-        if not args['max_duration']:
-            abort(400, message="you should provide a 'max_duration' argument")
+        if not args['max_duration'] and not args["boundary_duration[]"]:
+            abort(400, message="you should provide a 'boundary_duration[]' or a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
 

@@ -28,9 +28,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from flask.ext.restful import marshal
 import mock
 from jormungandr.autocomplete import geocodejson
+from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
 from flask.ext.restful import marshal_with
 
@@ -49,10 +49,10 @@ def bragi_house_jaures_feature():
                             "city": "Saint-Quentin",
                             "housenumber": "20",
                             "id": "49.847586;3.282103",
-                            "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                            "label": "20 Rue Jean Jaures (Saint-Quentin)",
                             "name": "Rue Jean Jaures",
                             "postcode": "02100",
-                            "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                            "street": "Rue Jean Jaures",
                             "type": "house",
                             "administrative_regions": [
                                 {
@@ -86,7 +86,7 @@ def bragi_house_jaures_feature():
                 }
     return house_feature
 
-@marshal_with(geocodejson.geocodejson)
+@marshal_with(Places.geocodejson)
 @geocodejson.delete_attribute_autocomplete()
 def get_response(bragi_response):
     return bragi_response
@@ -95,9 +95,10 @@ def get_response(bragi_response):
 def bragi_house_jaures_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
     assert feature_response.get('id') == "49.847586;3.282103"
-    assert feature_response.get('name') == "Rue Jean Jaures"
+    assert feature_response.get('name') == "20 Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
+    assert address.get('label') == "20 Rue Jean Jaures (Saint-Quentin)"
     assert address.get('house_number') == "20"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
@@ -131,10 +132,10 @@ def bragi_street_feature():
                         "geocoding": {
                             "city": "Saint-Quentin",
                             "id": "49.847586;3.282103",
-                            "label": "Rue Jean Jaures, 02100 Saint-Quentin",
+                            "label": "Rue Jean Jaures (Saint-Quentin)",
                             "name": "Rue Jean Jaures",
                             "postcode": "02100",
-                            "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                            "street": "Rue Jean Jaures",
                             "type": "street",
                             "administrative_regions": [
                                 {
@@ -172,9 +173,10 @@ def bragi_street_response_check(feature_response):
 
     assert feature_response.get('embedded_type') == "address"
     assert feature_response.get('id') == "49.847586;3.282103"
-    assert feature_response.get('name') == "Rue Jean Jaures"
+    assert feature_response.get('name') == "Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
+    assert address.get('label') == "Rue Jean Jaures (Saint-Quentin)"
     assert address.get('house_number') == "0"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
@@ -286,10 +288,10 @@ def bragi_house_lefebvre_feature():
                             "city": "Saint-Quentin",
                             "housenumber": "42",
                             "id": "49.847586;3.282103",
-                            "label": "42 Rue Jean Lefebvre, 01100 Oyonnax",
+                            "label": "42 Rue Jean Lefebvre (Oyonnax)",
                             "name": "Rue Jean Lefebvre",
                             "postcode": "02100",
-                            "street": "Rue Jean Lefebvre, 01100 Oyonnax",
+                            "street": "Rue Jean Lefebvre",
                             "type": "house",
                             "administrative_regions": [
                                 {
@@ -326,10 +328,11 @@ def bragi_house_lefebvre_feature():
 def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
     assert feature_response.get('id') == "49.847586;3.282103"
-    assert feature_response.get('name') == "Rue Jean Lefebvre"
+    assert feature_response.get('name') == "42 Rue Jean Lefebvre (Oyonnax)"
     address = feature_response.get('address', {})
     assert address.get('id') == "49.847586;3.282103"
     assert address.get('name') == "Rue Jean Lefebvre"
+    assert address.get('label') == "42 Rue Jean Lefebvre (Oyonnax)"
     assert address.get('house_number') == "42"
     assert address.get('coord', {}).get('lat') == 49.847586
     assert address.get('coord', {}).get('lon') == 3.282103
@@ -389,10 +392,10 @@ def bragi_geocodejson_spec_feature():
                 "city": "Saint-Quentin",
                 "housenumber": "20",
                 "id": "addr:49.847586;3.282103",
-                "label": "20 Rue Jean Jaures, 02100 Saint-Quentin",
+                "label": "20 Rue Jean Jaures (Saint-Quentin)",
                 "name": "Rue Jean Jaures",
                 "postcode": "02100",
-                "street": "Rue Jean Jaures, 02100 Saint-Quentin",
+                "street": "Rue Jean Jaures",
                 "type": "house",
                 "admin": {
                     "level2": "France",
@@ -418,7 +421,7 @@ def bragi_geocodejson_compatibility_test():
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "address"
     assert navitia_response.get('id') == '49.847586;3.282103'
-    assert navitia_response.get('name') == 'Rue Jean Jaures'
+    assert navitia_response.get('name') == '20 Rue Jean Jaures (Saint-Quentin)'
     address = navitia_response.get('address', {})
     assert len(address.get('administrative_regions')) == 5
     region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
@@ -449,8 +452,8 @@ def bragi_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        response = bragi.get({'q': 'rue bobette'}, instance=None)
-        places = response.get('places')
+        raw_response = bragi.get({'q': 'rue bobette'}, instance=None)
+        places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
         bragi_house_lefebvre_response_check(places[1])

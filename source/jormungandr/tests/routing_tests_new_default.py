@@ -131,6 +131,36 @@ class TestJourneysNewDefault(AbstractTestFixture):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+    def test_ecologic_tag(self):
+        """test that the tag ecologic is present when the journey doesn't
+        produce too much CO2 compared to the car journey.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking&_override_scenario=new_default"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response["journeys"]) == 2
+        for j in response["journeys"]:
+            assert "ecologic" in j["tags"]
+
+    def test_ecologic_tag_with_car(self):
+        """test that the tag ecologic is present when the journey doesn't
+        produce too much CO2 compared to the car journey.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "first_section_mode[]=car&first_section_mode[]=walking&"\
+                "last_section_mode[]=walking&_min_car=0&_override_scenario=new_default"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response["journeys"]) == 3
+        for j in response["journeys"]:
+            if j["type"] == "best":
+                assert "ecologic" not in j["tags"]
+            else:
+                assert "ecologic" in j["tags"]
+
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysNewDefaultWithPtref(AbstractTestFixture):

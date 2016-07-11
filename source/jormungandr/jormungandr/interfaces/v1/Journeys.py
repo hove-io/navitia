@@ -371,9 +371,6 @@ class Journeys(JourneyCommon):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
         possible_regions = compute_possible_region(region, args)
-        if args.get('traveler_type') is not None:
-            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
-            traveler_profile.override_params(args)
         args.update(self.parse_args(region, uri))
 
 
@@ -392,13 +389,22 @@ class Journeys(JourneyCommon):
             if args.get('max_duration') is None:
                 args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
 
-        if region:
+        def _set_specific_params(mod):
             if args.get('max_duration') is None:
-                args['max_duration'] = i_manager.instances[region].max_duration
-        else:
-            if args.get('max_duration') is None:
-                args['max_duration'] = default_values.max_duration
+                args['max_duration'] = mod.max_duration
+            if args.get('_walking_transfer_penalty') is None:
+                args['_walking_transfer_penalty'] = mod.walking_transfer_penalty
+            if args.get('_night_bus_filter_base_factor') is None:
+                args['_night_bus_filter_base_factor'] = mod.night_bus_filter_base_factor
+            if args.get('_night_bus_filter_max_factor') is None:
+                args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
+            if args.get('_max_additional_connections') is None:
+                args['_max_additional_connections'] = mod.max_additional_connections
 
+        if region:
+            _set_specific_params(i_manager.instances[region])
+        else:
+            _set_specific_params(default_values)
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should at least provide either a 'from' or a 'to' argument")
@@ -409,6 +415,7 @@ class Journeys(JourneyCommon):
         #we add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
         logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}".format(possible_regions))
+
         #we want to store the different errors
         responses = {}
         for r in possible_regions:

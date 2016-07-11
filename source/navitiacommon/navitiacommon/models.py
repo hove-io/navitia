@@ -447,7 +447,8 @@ class Job(db.Model, TimestampMixin):
     task_uuid = db.Column(db.Text)
     instance_id = db.Column(db.Integer,
                             db.ForeignKey('instance.id'))
-
+    autocomplete_params_id = db.Column(db.Integer,
+                                       db.ForeignKey('autocomplete_parameter.id'))
     #name is used for the ENUM name in postgreSQL
     state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
                               name='job_state'))
@@ -543,6 +544,15 @@ class AutocompleteParameter(db.Model, TimestampMixin):
 
     def backup_dir(self, root_path):
         return os.path.join(self.main_dir(root_path), "backup")
+
+    def autocomplete_latest_datasets(self, nb_dataset=1):
+        return db.session.query(DataSet)\
+            .join(Job) \
+            .join(AutocompleteParameter) \
+            .filter(AutocompleteParameter.id == self.id, DataSet.family_type == "autocomplete", Job.state == 'done') \
+            .order_by(Job.created_at.desc()) \
+            .limit(nb_dataset) \
+            .all()
 
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name

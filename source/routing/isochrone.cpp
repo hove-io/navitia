@@ -32,6 +32,7 @@ www.navitia.io
 #include "utils/exception.h"
 #include "isochrone.h"
 #include "raptor.h"
+#include "raptor_api.h"
 
 #include <set>
 #include <assert.h>
@@ -161,10 +162,43 @@ struct InfoCircle {
         duration_left(duration_left) {}
 };
 
+static bool within_info_circle(const InfoCircle& circle,
+                              const std::vector<InfoCircle>& multi_poly,
+                              const double speed) {
+    auto begin = multi_poly.begin();
+    const auto end = multi_poly.end();
+    double circle_radius = circle.duration_left * speed;
+    double coslat = cos(circle.center.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
+    return any_of(begin, end, [&](const InfoCircle& it) {
+        double it_radius = it.duration_left * speed;
+        return sqrt(circle.center.approx_sqr_distance(it.center, coslat)) + circle_radius < it_radius;
+    });
+}
+
+static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> circles,
+                                                     const double speed) {
+    std::vector<InfoCircle> useful_circles;
+    boost::sort(circles,
+                [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
+    for (auto& circle: circles) {
+        if (!within_info_circle(circle, useful_circles, speed)) {
+            useful_circles.push_back(std::move(circle));
+        }
+    }
+    return useful_circles;
+}
+
 template<typename T>
 static bool in_bound(const T & begin, const T & end, bool clockwise) {
     return (clockwise && begin < end) ||
             (!clockwise && begin > end);
+}
+
+
+DateTime build_bound(const bool clockwise,
+                     const DateTime duration,
+                     const DateTime init_dt) {
+    return clockwise ? init_dt + duration : init_dt - duration;
 }
 
 type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
@@ -200,36 +234,44 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
             circles_classed.push_back(to_add);
         }
     }
-    boost::sort(circles_classed,
-                [](const InfoCircle& a, const InfoCircle& b) {return a.distance < b.distance;});
+    std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);
 
-    for (const auto& c: circles_classed) {
+    for (const auto& c: circles_check) {
         type::Polygon circle_to_add = circle(c.center, c.duration_left * speed);
         circles = merge_poly(circles, circle_to_add);
     }
     return circles;
 }
 
-type::MultiPolygon build_isochrones(RAPTOR& raptor,
-                                    const bool clockwise,
-                                    const type::GeographicalCoord& coord_origin,
-                                    const DateTime& bound_max,
-                                    const DateTime& bound_min,
-                                    const map_stop_point_duration& origin,
-                                    const double& speed,
-                                    const int& max_duration,
-                                    const int& min_duration) {
-    type::MultiPolygon isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                          clockwise, coord_origin, bound_max, origin,
-                                                          speed, max_duration);
-    if (min_duration > 0) {
-       type::MultiPolygon output;
-       type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                                 clockwise, coord_origin, bound_min, origin,
-                                                                 speed, min_duration);
-       boost::geometry::difference(isochrone, min_isochrone, output);
-       isochrone = output;
+std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
+                           const bool clockwise,
+                           const type::GeographicalCoord& coord_origin,
+                           const map_stop_point_duration& origin,
+                           const double& speed,
+                           const std::vector<DateTime>& boundary_duration,
+                           const DateTime init_dt) {
+    std::vector<Isochrone> isochrone;
+    if (!boundary_duration.empty()) {
+        type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
+                                                                  clockwise, coord_origin,
+                                                                  build_bound(clockwise, boundary_duration[0], init_dt),
+                                                                  origin, speed, boundary_duration[0]);
+        for (size_t i = 1; i < boundary_duration.size(); i++) {
+            type::MultiPolygon output;
+            if (boundary_duration[i] > 0) {
+                type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
+                                                                          clockwise, coord_origin,
+                                                                          build_bound(clockwise, boundary_duration[i], init_dt),
+                                                                          origin, speed, boundary_duration[i]);
+                boost::geometry::difference(max_isochrone, min_isochrone, output);
+                max_isochrone = std::move(min_isochrone);
+            } else {
+                output = max_isochrone;
+            }
+            isochrone.push_back(Isochrone(std::move(output), boundary_duration[i], boundary_duration[i-1]));
+        }
     }
+    std::reverse(isochrone.begin(), isochrone.end());
     return isochrone;
 }
 

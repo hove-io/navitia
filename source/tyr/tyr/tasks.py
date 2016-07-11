@@ -109,7 +109,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             #unknown type, we skip it
-            current_app.logger.debug("unknwn file type: {} for file {}"
+            current_app.logger.debug("unknown file type: {} for file {}"
                                      .format(dataset.type, _file))
             continue
 
@@ -133,10 +133,10 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))
         if async:
-            chain(*actions).delay()
+            return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
-            chain(*actions).apply()
+            return chain(*actions).apply()
 
 
 @celery.task()
@@ -218,6 +218,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
         dataset.name = filename
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
+        job.autocomplete_params_id = autocomplete_instance.id
 
     if not actions:
         return
@@ -406,3 +407,25 @@ def remove_autocomplete_depot(name):
             logging.warn('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
     else:
         logging.warn('no main autocomplete directory, removing nothing')
+
+@celery.task()
+def purge_autocomplete():
+    logger = logging.getLogger(__name__)
+    autocomplete_instances = models.AutocompleteParameter.query.all()
+    for ac_instance in autocomplete_instances:
+        logger.info('purging autocomplete backup directories for %s', ac_instance.name)
+        max_backups = current_app.config.get('AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
+        dir_to_keep = set(os.path.realpath(os.path.dirname(dataset.name))
+                          for dataset in ac_instance.autocomplete_latest_datasets(max_backups))
+        autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        backup_dir = os.path.join(autocomplete_dir, ac_instance.name, 'backup')
+        all_backups = set(os.path.join(backup_dir, backup)
+                          for backup in os.listdir(backup_dir))
+        to_remove = all_backups - dir_to_keep
+        for directory in to_remove:
+            if os.path.exists(directory):
+                try:
+                    logger.info('removing backup directory: %s', directory)
+                    shutil.rmtree(directory)
+                except Exception as e:
+                    logger.info('cannot purge directory: %s because: %s', directory, str(e))

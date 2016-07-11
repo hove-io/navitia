@@ -32,7 +32,7 @@ from copy import deepcopy
 import itertools
 import logging
 from flask.ext.restful import abort
-from jormungandr.scenarios import simple, journey_filter
+from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
     fill_uris, gen_all_combin, get_pseudo_duration
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -160,7 +160,17 @@ def tag_journeys(resp):
     """
     qualify the journeys
     """
-    pass
+    car = next((j for j in resp.journeys if helpers.is_car_direct_path(j)), None)
+    if car is None or not car.HasField('co2_emission'):
+        return
+    for j in resp.journeys:
+        if not j.HasField('co2_emission'):
+            j.tags.append('ecologic')
+            continue
+        if j.co2_emission.unit != car.co2_emission.unit:
+            continue
+        if j.co2_emission.value < car.co2_emission.value * 0.5:
+            j.tags.append('ecologic')
 
 
 def _get_section_id(section):
@@ -352,7 +362,7 @@ def culling_journeys(resp, request):
         # At this point, resp.journeys should contain only must-have journeys
         list_dict = collections.defaultdict(list)
         for jrny in resp.journeys:
-            if 'to_delete' not in jrny.tags:
+            if not journey_filter.to_be_deleted(jrny):
                 list_dict[jrny.type].append(jrny)
 
         sorted_by_type_journeys = []
@@ -415,7 +425,7 @@ def culling_journeys(resp, request):
 
 
 def nb_journeys(responses):
-    return sum(len(r.journeys) for r in responses)
+    return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
 
 def type_journeys(resp, req):
@@ -620,6 +630,7 @@ class Scenario(simple.Scenario):
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         tag_journeys(pb_resp)
+        journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
@@ -684,9 +695,9 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
         if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys])
+            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
         else:
-            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys])
+            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
 
         if request['datetime'] is None:
             return None

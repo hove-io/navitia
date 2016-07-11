@@ -199,7 +199,6 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.graphical_isochrone
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
-        req.isochrone.min_duration = request["min_duration"]
         journey_req = req.isochrone.journeys_request
 
         if "origin" in request and request["origin"]:
@@ -228,13 +227,25 @@ class Scenario(object):
         sn_params.car_speed = request["car_speed"]
         sn_params.bss_speed = request["bss_speed"]
 
-        journey_req.max_duration = request["max_duration"]
         journey_req.max_transfers = request["max_transfers"]
         self.origin_modes = request["origin_mode"]
         self.destination_modes = request["destination_mode"]
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.journeys.forbidden_uris.append(forbidden_uri)
+                journey_req.forbidden_uris.append(forbidden_uri)
+        if request.get("max_duration"):
+            journey_req.max_duration = request["max_duration"]
+        else:
+            journey_req.max_duration = max(request["boundary_duration[]"], key=int)
+        if request.get("boundary_duration[]"):
+            if len(request["boundary_duration[]"]) > 10:
+                abort(400, message="you cannot provide more than 10 'boundary_duration[]'")
+            for duration in sorted(request["boundary_duration[]"], key=int, reverse=True):
+                if request["min_duration"] < duration < journey_req.max_duration:
+                    req.isochrone.boundary_duration.append(duration)
+        req.isochrone.boundary_duration.insert(0, journey_req.max_duration)
+        req.isochrone.boundary_duration.append(request["min_duration"])
+
         journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
         journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]
         resp = instance.send_and_receive(req)

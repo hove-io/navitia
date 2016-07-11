@@ -29,3 +29,5 @@ debian/tmp
 debian/*.substvars
 debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
+/source/jormungandr/jormungandr/.cache
+/source/jormungandr/.cache
