@@ -1,3 +1,24 @@
+navitia2 (2.12.0) unstable; urgency=low
+
+  * Isochrone: rename duration[] to boundary_duration[] <https://github.com/CanalTP/navitia/pull/1686>
+  * Isochrones: forbidden_uris fix bug <https://github.com/CanalTP/navitia/pull/1685>
+  * georef: take best edge in path reconstruction <https://github.com/CanalTP/navitia/pull/1684>
+  * journey_common : fix bug with traveler_type <https://github.com/CanalTP/navitia/pull/1683>
+  * Isochrone: graphical_isochrones_test failing if dateutil > 2.4.0 <https://github.com/CanalTP/navitia/pull/1681>
+  * tyr: add the ability to no wait for the end of a import_last_dataset command <https://github.com/CanalTP/navitia/pull/1680>
+  * jormungandr: add ecologic tag in scenario new_default <https://github.com/CanalTP/navitia/pull/1678>
+  * Isochrone : return several isochrones in response <https://github.com/CanalTP/navitia/pull/1677>
+  * Tyr: purge autocomplete backup directory <https://github.com/CanalTP/navitia/pull/1675>
+  * Jormun: add warning beta api <https://github.com/CanalTP/navitia/pull/1674>
+  * Doc: add playground examples everywhere <https://github.com/CanalTP/navitia/pull/1673>
+  * Isochrones: delete useless circles <https://github.com/CanalTP/navitia/pull/1672>
+  * jormungandr: fix label in geocodejson <https://github.com/CanalTP/navitia/pull/1671>
+  * Tyr: fix 5min countdown <https://github.com/CanalTP/navitia/pull/1670>
+  * Jormun: Fix admin <https://github.com/CanalTP/navitia/pull/1669>
+  * osm2ed: remove a lot of useless node <https://github.com/CanalTP/navitia/pull/1668>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Mon, 11 Jul 2016 18:07:20 +0100
+
 navitia2 (2.11.0) unstable; urgency=low
 
   * Isochrone : improve processing time  <https://github.com/CanalTP/navitia/pull/1667>
