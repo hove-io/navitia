@@ -42,3 +42,18 @@ class AbstractAutocomplete(object):
     @abstractmethod
     def get(self, query, instance):
         pass
+
+    @abstractmethod
+    def geo_status(self, instance):
+        pass
+
+
+class GeoStatusResponse(object):
+    def __init__(self):
+        self.street_network_sources = []
+        self.poi_sources = []
+        self.nb_admins = None
+        self.nb_admins_from_cities = None
+        self.nb_ways = None
+        self.nb_addresses = None
+        self.nb_poi = None

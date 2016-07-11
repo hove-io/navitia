@@ -30,22 +30,21 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
-from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr import app
 
 geo_status = {
-        'geo_status': fields.Nested({'street_network_source': fields.Raw,
+        'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
             'nb_admins': fields.Raw,
             'nb_admins_from_cities': fields.Raw,
             'nb_ways': fields.Raw,
             'nb_addresses': fields.Raw,
             'nb_poi': fields.Raw,
-            'poi_source': fields.Raw,
+            'poi_sources': fields.List(fields.String),
         })
 }
 
 class GeoStatus(Resource):
     @marshal_with(geo_status)
     def get(self, region):
-        response = i_manager.dispatch({}, "geo_status", instance_name=region)
-        return response, 200
+        instance = i_manager.get_instances(region)[0]
+        return {'geo_status': instance.autocomplete.geo_status(instance)}, 200

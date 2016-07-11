@@ -74,4 +74,7 @@ class GeocodeJson(AbstractAutocomplete):
 
         return raw_response.json()
 
+    def geo_status(self, instance):
+        raise NotImplementedError
+
 
