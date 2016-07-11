@@ -234,7 +234,6 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_forbidden_uris = asShape(isochrone_forbidden_uris['geojson'])
 
-        assert not basic_multi_poly.contains(multi_poly_forbidden_uris)
         assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
         assert basic_multi_poly.area > multi_poly_forbidden_uris.area
 
