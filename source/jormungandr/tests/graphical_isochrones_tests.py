@@ -220,20 +220,24 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert len(response['isochrones']) == 7
 
     def test_graphical_isochrones_forbidden_uris(self):
-        basic_query = "v1/coverage/main_routing_test/" + isochrone_basic_query
-        q_forbidden_uris = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&forbidden_uris=A"
+        basic_query = "v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
+        basic_query = basic_query.format(s_coord, "20120614T080000", "300")
         basic_response = self.query(basic_query)
-        response_forbbiden_uris = self.query(q_forbidden_uris)
+        q_forbidden_uris = basic_query + "&forbidden_uris[]=A"
+        q_forbidden_uris = q_forbidden_uris.format(s_coord, "20120614T080000", "300")
+        response_forbidden_uris = self.query(q_forbidden_uris)
 
         is_valid_graphical_isochrone(basic_response, self.tester, basic_query)
-        is_valid_graphical_isochrone(response_forbbiden_uris, self.tester, basic_query)
+        is_valid_graphical_isochrone(response_forbidden_uris, self.tester, basic_query)
 
-        for basic_isochrone, isochrone_forbbiden_uris in zip(basic_response['isochrones'],
-                                                           response_forbbiden_uris['isochrones']):
+        for basic_isochrone, isochrone_forbidden_uris in zip(basic_response['isochrones'],
+                                                             response_forbidden_uris['isochrones']):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
-            multi_poly_forbidden_uris = asShape(isochrone_forbbiden_uris['geojson'])
+            multi_poly_forbidden_uris = asShape(isochrone_forbidden_uris['geojson'])
 
-        assert basic_multi_poly.contains(multi_poly_forbidden_uris)
+        assert not basic_multi_poly.contains(multi_poly_forbidden_uris)
+        assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
+        assert basic_multi_poly.area > multi_poly_forbidden_uris.area
 
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"
