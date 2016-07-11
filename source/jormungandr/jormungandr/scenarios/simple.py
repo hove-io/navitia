@@ -232,7 +232,7 @@ class Scenario(object):
         self.destination_modes = request["destination_mode"]
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.journeys.forbidden_uris.append(forbidden_uri)
+                journey_req.forbidden_uris.append(forbidden_uri)
         if request.get("max_duration"):
             journey_req.max_duration = request["max_duration"]
         else:
