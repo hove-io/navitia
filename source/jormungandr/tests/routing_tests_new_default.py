@@ -71,7 +71,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
             return
         """default next behaviour is 1s after the best or the soonest"""
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=True))
+                                         new_default_pagination_journey_comparator(clockwise=False))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         eq_(j_departure + timedelta(seconds=1), dt)
@@ -82,7 +82,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=False))
+                                         new_default_pagination_journey_comparator(clockwise=True))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)

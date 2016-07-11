@@ -694,10 +694,11 @@ class Scenario(simple.Scenario):
 
         to do that we find ask the next (resp previous) query datetime
         """
+        vjs = [j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)]
         if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
+            request['datetime'] = self.next_journey_datetime(vjs)
         else:
-            request['datetime'] = self.previous_journey_datetime([j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)])
+            request['datetime'] = self.previous_journey_datetime(vjs)
 
         if request['datetime'] is None:
             return None
@@ -714,7 +715,7 @@ class Scenario(simple.Scenario):
         """
         to get the next journey, we add one second to the departure of the 'best found' journey
         """
-        best = self.__get_best_for_criteria(journeys, arrival_crit)
+        best = self.__get_best_for_criteria(journeys, departure_crit)
         if best is None:
             return None
 
@@ -725,7 +726,7 @@ class Scenario(simple.Scenario):
         """
         to get the next journey, we add one second to the arrival of the 'best found' journey
         """
-        best = self.__get_best_for_criteria(journeys, departure_crit)
+        best = self.__get_best_for_criteria(journeys, arrival_crit)
         if best is None:
             return None
 
