@@ -60,9 +60,13 @@ class TestJourneyCommon(AbstractTestFixture):
             def bike_in_section(fast_walker):
                 return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections'])
 
-            assert any(bike_in_section(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
-
-            for journey in basic_response['journeys']:
+            def no_bike_in_section(journey):
+                no_bike = True
                 for section in journey['sections']:
                     if 'mode' in section:
-                        assert not section['mode'] == 'bike'
+                        no_bike = no_bike and section['mode'] != 'bike'
+                return no_bike
+
+            assert any(bike_in_section(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
+            assert all(no_bike_in_section(journey) for journey in basic_response['journeys'])
+
