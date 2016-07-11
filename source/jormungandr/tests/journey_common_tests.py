@@ -57,16 +57,12 @@ class TestJourneyCommon(AbstractTestFixture):
             response_fast_walker = self.query_region(q_fast_walker)
             basic_response = self.query_region(journey_basic_query)
 
-            def bike_in_section(fast_walker):
+            def bike_in_journey(fast_walker):
                 return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections'])
 
-            def no_bike_in_section(journey):
-                no_bike = True
-                for section in journey['sections']:
-                    if 'mode' in section:
-                        no_bike = no_bike and section['mode'] != 'bike'
-                return no_bike
+            def no_bike_in_journey(journey):
+                return all(section['mode'] != 'bike' for section in journey['sections'] if 'mode' in section)
 
-            assert any(bike_in_section(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
-            assert all(no_bike_in_section(journey) for journey in basic_response['journeys'])
+            assert any(bike_in_journey(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
+            assert all(no_bike_in_journey(journey) for journey in basic_response['journeys'])
 
