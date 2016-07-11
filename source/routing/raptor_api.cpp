@@ -1200,7 +1200,7 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                             const boost::posix_time::ptime& current_datetime,
                                             type::EntryPoint center,
                                             const uint64_t departure_datetime,
-                                            const std::vector<DateTime>& duration,
+                                            const std::vector<DateTime>& boundary_duration,
                                             uint32_t max_transfers,
                                             const type::AccessibiliteParams& accessibilite_params,
                                             const std::vector<std::string>& forbidden,
@@ -1227,12 +1227,12 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
-    DateTime bound = build_bound(clockwise, duration[0], init_dt);
+    DateTime bound = build_bound(clockwise, boundary_duration[0], init_dt);
     raptor.isochrone(departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
     std::vector<Isochrone> isochrone = build_isochrones(raptor, clockwise, coord_origin, departures,
-                                                        speed, duration, init_dt);
+                                                        speed, boundary_duration, init_dt);
     for (const auto& iso: isochrone) {
         add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center, clockwise);
     }

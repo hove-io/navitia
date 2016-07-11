@@ -236,15 +236,15 @@ class Scenario(object):
         if request.get("max_duration"):
             journey_req.max_duration = request["max_duration"]
         else:
-            journey_req.max_duration = max(request["duration[]"], key=int)
-        if request.get("duration[]"):
-            if len(request["duration[]"]) > 10:
-                abort(400, message="you cannot provide more than 10 'duration[]'")
-            for duration in sorted(request["duration[]"], key=int, reverse=True):
+            journey_req.max_duration = max(request["boundary_duration[]"], key=int)
+        if request.get("boundary_duration[]"):
+            if len(request["boundary_duration[]"]) > 10:
+                abort(400, message="you cannot provide more than 10 'boundary_duration[]'")
+            for duration in sorted(request["boundary_duration[]"], key=int, reverse=True):
                 if request["min_duration"] < duration < journey_req.max_duration:
-                    req.isochrone.duration.append(duration)
-        req.isochrone.duration.insert(0, journey_req.max_duration)
-        req.isochrone.duration.append(request["min_duration"])
+                    req.isochrone.boundary_duration.append(duration)
+        req.isochrone.boundary_duration.insert(0, journey_req.max_duration)
+        req.isochrone.boundary_duration.append(request["min_duration"])
 
         journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
         journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]

@@ -90,7 +90,7 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                                         const type::GeographicalCoord& coord_origin,
                                         const map_stop_point_duration& origin,
                                         const double& speed,
-                                        const std::vector<DateTime>& duration,
+                                        const std::vector<DateTime>& boundary_duration,
                                         const DateTime init_dt);
 
 }}
