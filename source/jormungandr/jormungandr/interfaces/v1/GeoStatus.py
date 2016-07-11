@@ -38,7 +38,7 @@ geo_status = {
             'nb_admins_from_cities': fields.Raw,
             'nb_ways': fields.Raw,
             'nb_addresses': fields.Raw,
-            'nb_poi': fields.Raw,
+            'nb_pois': fields.Raw,
             'poi_sources': fields.List(fields.String),
         })
 }

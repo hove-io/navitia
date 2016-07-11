@@ -154,3 +154,14 @@ class TestEndPoint(AbstractTestFixture):
 
         is_valid_region_status(get_not_null(json_response, "status"))
         assert json_response["status"]["is_open_data"] == False
+
+    def test_geo_status(self):
+        response = self.query('/v1/coverage/main_routing_test/geo_status', display=True)
+        assert response['geo_status']
+        assert response['geo_status']['nb_ways'] > 0
+        assert response['geo_status']['nb_pois'] > 0
+        assert response['geo_status']['nb_admins'] > 0
+        assert response['geo_status']['nb_addresses'] > 0
+        assert response['geo_status']['nb_admins_from_cities'] == 0
+        assert response['geo_status']['street_network_sources'] == []
+        assert response['geo_status']['poi_sources'] == []

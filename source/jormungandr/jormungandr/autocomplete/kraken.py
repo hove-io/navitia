@@ -83,7 +83,7 @@ class Kraken(AbstractAutocomplete):
         req.requested_api = type_pb2.geo_status
         resp = instance.send_and_receive(req)
         status = GeoStatusResponse()
-        status.nb_poi = resp.geo_status.nb_poi
+        status.nb_pois = resp.geo_status.nb_poi
         status.nb_ways = resp.geo_status.nb_ways
         status.nb_admins = resp.geo_status.nb_admins
         status.nb_addresses = resp.geo_status.nb_addresses

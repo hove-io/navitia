@@ -56,4 +56,4 @@ class GeoStatusResponse(object):
         self.nb_admins_from_cities = None
         self.nb_ways = None
         self.nb_addresses = None
-        self.nb_poi = None
+        self.nb_pois = None
