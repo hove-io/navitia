@@ -224,7 +224,6 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         basic_query = basic_query.format(s_coord, "20120614T080000", "300")
         basic_response = self.query(basic_query)
         q_forbidden_uris = basic_query + "&forbidden_uris[]=A"
-        q_forbidden_uris = q_forbidden_uris.format(s_coord, "20120614T080000", "300")
         response_forbidden_uris = self.query(q_forbidden_uris)
 
         is_valid_graphical_isochrone(basic_response, self.tester, basic_query)
