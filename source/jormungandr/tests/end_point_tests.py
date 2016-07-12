@@ -156,7 +156,7 @@ class TestEndPoint(AbstractTestFixture):
         assert json_response["status"]["is_open_data"] == False
 
     def test_geo_status(self):
-        response = self.query('/v1/coverage/main_routing_test/geo_status', display=True)
+        response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)
         assert response['geo_status']
         assert response['geo_status']['nb_ways'] > 0
         assert response['geo_status']['nb_pois'] > 0

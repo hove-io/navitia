@@ -227,7 +227,7 @@ class V1Routing(AModule):
                           region + 'status',
                           endpoint='status')
         self.add_resource(GeoStatus.GeoStatus,
-                          region + 'geo_status',
+                          region + '_geo_status',
                           endpoint='geo_status')
 
         self.add_resource(Calendars.Calendars,
