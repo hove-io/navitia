@@ -58,6 +58,12 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def geo_status(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.geo_status
+        resp = instance.send_and_receive(req)
+        return resp
+
     def metadatas(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS

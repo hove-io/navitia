@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
+from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete, GeoStatusResponse
 from jormungandr.scenarios.utils import build_pagination, pb_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
@@ -77,3 +77,19 @@ class Kraken(AbstractAutocomplete):
             resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp
+
+    def geo_status(self, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.geo_status
+        resp = instance.send_and_receive(req)
+        status = GeoStatusResponse()
+        status.nb_pois = resp.geo_status.nb_poi
+        status.nb_ways = resp.geo_status.nb_ways
+        status.nb_admins = resp.geo_status.nb_admins
+        status.nb_addresses = resp.geo_status.nb_addresses
+        status.nb_admins_from_cities = resp.geo_status.nb_admins_from_cities
+        if resp.geo_status.street_network_source:
+            status.street_network_sources.append(resp.geo_status.street_network_source)
+        if resp.geo_status.poi_source:
+            status.poi_sources.append(resp.geo_status.poi_source)
+        return status

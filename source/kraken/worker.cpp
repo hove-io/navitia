@@ -133,6 +133,28 @@ static std::string get_string_status(const boost::shared_ptr<const nt::Data>& da
     return "no_data";
 }
 
+pbnavitia::Response Worker::geo_status() {
+    pbnavitia::Response result;
+    auto status = result.mutable_geo_status();
+    const auto d = data_manager.get_data();
+    status->set_nb_admins(d->geo_ref->admins.size());
+    status->set_nb_ways(d->geo_ref->ways.size());
+    int nb_addr = std::accumulate(begin(d->geo_ref->ways), end(d->geo_ref->ways), 0,
+            [](int sum, const georef::Way* w) {
+                return sum + w->house_number_left.size() + w->house_number_right.size();
+            });
+    status->set_nb_addresses(nb_addr);
+    int nb_admins_from_cities = std::accumulate(begin(d->geo_ref->admins), end(d->geo_ref->admins), 0,
+            [](int sum, const georef::Admin* a) {
+                return (a->from_original_dataset ? sum : sum + 1);
+            });
+    status->set_nb_admins_from_cities(nb_admins_from_cities);
+    status->set_nb_poi(d->geo_ref->pois.size());
+    status->set_poi_source(d->meta->poi_source);
+    status->set_street_network_source(d->meta->street_network_source);
+    return result;
+}
+
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
     auto status = result.mutable_status();
@@ -152,9 +174,6 @@ pbnavitia::Response Worker::status() {
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
         status->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
-        for(auto data_sources: d->meta->data_sources){
-            status->add_data_sources(data_sources);
-        }
     } else {
         status->set_publication_date("");
         status->set_start_production_date("");
@@ -777,6 +796,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::place_code : response = place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
     case pbnavitia::graphical_isochrone : response = graphical_isochrone(request.isochrone(), current_datetime); break;
+    case pbnavitia::geo_status: response = geo_status(); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());

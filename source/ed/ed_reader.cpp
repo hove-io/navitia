@@ -248,7 +248,8 @@ void EdReader::fill_object_codes(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT beginning_date, end_date, st_astext(shape) as bounding_shape FROM navitia.parameters";
+    std::string request = "SELECT beginning_date, end_date, st_astext(shape) as bounding_shape,"
+        "street_network_source, poi_source  FROM navitia.parameters";
     pqxx::result result = work.exec(request);
 
     if (result.empty()) {
@@ -266,6 +267,12 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
 
     nav_data.meta->production_date = bg::date_period(begin, end);
+    if (!const_it["poi_source"].is_null()){
+        const_it["poi_source"].to(nav_data.meta->poi_source);
+    }
+    if (!const_it["street_network_source"].is_null()){
+        const_it["street_network_source"].to(nav_data.meta->street_network_source);
+    }
 
     const_it["bounding_shape"].to(nav_data.meta->shape);
 }

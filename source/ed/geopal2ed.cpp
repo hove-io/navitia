@@ -99,6 +99,7 @@ int main(int argc, char * argv[])
     }
 
     ed::EdPersistor p(connection_string);
+    p.street_network_source = "geopal";
     p.persist(geopal_parser.data);
 
     LOG4CPLUS_INFO(logger, "time to load geopal: " << to_simple_string(pt::microsec_clock::local_time() - start));
