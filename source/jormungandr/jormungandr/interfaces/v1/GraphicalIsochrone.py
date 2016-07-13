@@ -91,6 +91,9 @@ class GraphicalIsochrone(JourneyCommon):
             abort(400, message="you should provide a 'boundary_duration[]' or a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
+        if args["traveler_type"] is not None:
+            args['origin_mode'] = ['walking']
+            args['destination_mode'] = ['walking']
 
         set_request_timezone(self.region)
         original_datetime = args['original_datetime']
