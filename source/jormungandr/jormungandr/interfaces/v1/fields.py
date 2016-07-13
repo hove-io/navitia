@@ -429,11 +429,12 @@ class MultiPolyGeoJson(fields.Raw):
 
 class Co2Emission(fields.Raw):
     def output(self, key, obj):
-        if not obj.HasField(b"co2_emission"):
+        if not obj.HasField(key):
             return
+        co2_emission = getattr(obj, key)
         return {
-            'value': obj.co2_emission.value,
-            'unit': obj.co2_emission.unit
+            'value': co2_emission.value,
+            'unit': co2_emission.unit
         }
 
 

@@ -759,6 +759,38 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
 
 }
 
+pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
+    const auto data = data_manager.get_data();
+    init_worker_data(data);
+
+    auto get_geographical_coord = [&](const pbnavitia::LocationContext& location){
+        std::cout << location.place() << std::endl;
+        auto origin_type = data->get_type_of_id(location.place());
+        auto origin = type::EntryPoint(origin_type, location.place(), location.access_duration());
+
+        if (origin_type == type::Type_e::Address || origin_type == type::Type_e::Admin
+                || origin_type == type::Type_e::StopArea || origin_type == type::Type_e::StopPoint
+                || origin_type == type::Type_e::POI) {
+            auto coordinates = coord_of_entry_point(origin, data);
+            return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
+        }
+        return navitia::type::GeographicalCoord{};
+    };
+    auto origin = get_geographical_coord(request.origin());
+    auto destin = get_geographical_coord(request.destination());
+    auto distance = origin.distance_to(destin);
+    pbnavitia::Response r;
+    auto co2_emission = r.mutable_car_co2_emission();
+
+    if (data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission) {
+        const double estimation_coeff = 1.3;
+        co2_emission->set_unit("gEC");
+        co2_emission->set_value(estimation_coeff * distance / 1000.0 * data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission.get());
+    }
+    return r;
+
+}
+
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
     // These api can respond even if the data isn't loaded
@@ -800,6 +832,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
     case pbnavitia::graphical_isochrone : response = graphical_isochrone(request.isochrone(), current_datetime); break;
     case pbnavitia::geo_status: response = geo_status(); break;
+    case pbnavitia::car_co2_emission: response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());

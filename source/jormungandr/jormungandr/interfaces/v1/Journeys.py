@@ -236,6 +236,9 @@ ticket = {
     "links": TicketLinks(attribute="section_id")
 }
 
+context = {
+    "car_co2_emission": Co2Emission()
+}
 
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
@@ -244,6 +247,7 @@ journeys = {
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
+    "context": context,
 }
 
 

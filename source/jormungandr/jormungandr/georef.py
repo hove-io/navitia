@@ -61,4 +61,14 @@ class Kraken(object):
         response = self.instance.send_and_receive(req)
         return response.places[0]
 
+    def get_car_co2_emission_on_crow_fly(self, origin, destination):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.car_co2_emission
+        req.car_co2_emission.origin.place = origin
+        req.car_co2_emission.origin.access_duration = 0
+        req.car_co2_emission.destination.place = destination
+        req.car_co2_emission.destination.access_duration = 0
+
+        response = self.instance.send_and_receive(req)
+        return response.car_co2_emission
 

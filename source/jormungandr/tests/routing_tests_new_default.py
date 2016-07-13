@@ -162,6 +162,43 @@ class TestJourneysNewDefault(AbstractTestFixture):
             else:
                 assert "ecologic" in j["tags"]
 
+    def test_context_car_co2_emission_with_car(self):
+        """
+        Test if car_co2_emission in context is the value in car journey
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "first_section_mode[]=car&first_section_mode[]=walking&"\
+                "last_section_mode[]=walking&_min_car=0&_override_scenario=new_default"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        assert 'context' in response
+        assert 'car_co2_emission' in response['context']
+        assert len(response["journeys"]) == 3
+
+        assert response['context']['car_co2_emission']['value'] == \
+               response['journeys'][0]['co2_emission']['value'] # car co2 emission
+
+        assert response['context']['car_co2_emission']['unit'] == \
+               response['journeys'][0]['co2_emission']['unit']
+
+    def test_context_car_co2_emission_without_car(self):
+        """
+        Test if car_co2_emission in context is the value in car journey
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking&_override_scenario=new_default"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response["journeys"]) == 2
+
+        assert 'context' in response
+        assert 'car_co2_emission' in response['context']
+
+        assert response['context']['car_co2_emission']['value'] == 34.224
+        assert response['context']['car_co2_emission']['unit'] == 'gEC'
+
     def test_mode_tag(self):
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
                 "first_section_mode[]=car&first_section_mode[]=walking&"\
@@ -178,7 +215,6 @@ class TestJourneysNewDefault(AbstractTestFixture):
         assert not 'bike' in response["journeys"][1]["tags"]
         assert 'walking' in response["journeys"][2]["tags"]
         assert 'walking' in response["journeys"][3]["tags"]
-
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysNewDefaultWithPtref(AbstractTestFixture):
