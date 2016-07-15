@@ -161,6 +161,23 @@ class TestJourneysNewDefault(AbstractTestFixture):
             else:
                 assert "ecologic" in j["tags"]
 
+    def test_mode_tag(self):
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "first_section_mode[]=car&first_section_mode[]=walking&"\
+                "first_section_mode[]=bike&first_section_mode[]=bss&"\
+                "last_section_mode[]=walking&last_section_mode[]=bss&"\
+                "&_min_car=0&_override_scenario=new_default"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response["journeys"]) == 4
+        assert 'car' in response["journeys"][0]["tags"]
+        assert 'bss' in response["journeys"][1]["tags"]
+        assert not 'walking' in response["journeys"][1]["tags"]
+        assert not 'bike' in response["journeys"][1]["tags"]
+        assert 'walking' in response["journeys"][2]["tags"]
+        assert 'walking' in response["journeys"][3]["tags"]
+
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysNewDefaultWithPtref(AbstractTestFixture):

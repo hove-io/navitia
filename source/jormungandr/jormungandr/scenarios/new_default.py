@@ -424,6 +424,39 @@ def culling_journeys(resp, request):
     journey_filter.delete_journeys((resp,), request)
 
 
+def _tag_journey_by_mode(journey):
+    mode_weight = {
+        'walking': 1,
+        'bss': 2,
+        'bike': 3,
+        'car': 4,
+    }
+
+    mode = 'walking'
+    for i, section in enumerate(journey.sections):
+        cur_mode = 'walking'
+        if section.type == response_pb2.BSS_RENT:
+            cur_mode = 'bss'
+        elif section.type == response_pb2.STREET_NETWORK \
+             and section.street_network.mode == response_pb2.Bike \
+             and journey.sections[i - 1].type != response_pb2.BSS_RENT:
+            cur_mode = 'bike'
+        elif section.type == response_pb2.STREET_NETWORK \
+             and section.street_network.mode == response_pb2.Car:
+            cur_mode = 'car'
+
+        if mode_weight[mode] < mode_weight[cur_mode]:
+            mode = cur_mode
+
+    journey.tags.append(mode)
+
+
+def _tag_by_mode(responses):
+    for r in responses:
+        for j in r.journeys:
+            _tag_journey_by_mode(j)
+
+
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
@@ -615,6 +648,7 @@ class Scenario(simple.Scenario):
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            _tag_by_mode(tmp_resp)
             responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
