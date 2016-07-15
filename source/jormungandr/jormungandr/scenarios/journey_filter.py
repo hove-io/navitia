@@ -260,7 +260,7 @@ def get_min_connections(journeys):
     if not journeys:
         return None
 
-    return min(get_nb_connections(j) for j in journeys if not to_be_deleted(j))
+    return min([get_nb_connections(j) for j in journeys if not to_be_deleted(j)] or [0])
 
 
 def get_nb_connections(journey):
