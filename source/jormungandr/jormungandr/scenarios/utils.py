@@ -54,6 +54,7 @@ pt_object_type = {
 
 PSEUDO_DURATION_FACTORS = ((1, -1, 'departure_date_time'), (-1, 1, 'arrival_date_time'))
 
+mode_weight = {'car': 4, 'bike': 3, 'bss': 2, 'walking': 1}
 
 def compare(obj1, obj2, compare_generator):
     """

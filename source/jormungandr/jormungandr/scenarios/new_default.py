@@ -33,8 +33,8 @@ import itertools
 import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import simple, journey_filter, helpers
-from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
-    fill_uris, gen_all_combin, get_pseudo_duration
+from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
+    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
@@ -425,13 +425,6 @@ def culling_journeys(resp, request):
 
 
 def _tag_journey_by_mode(journey):
-    mode_weight = {
-        'walking': 1,
-        'bss': 2,
-        'bike': 3,
-        'car': 4,
-    }
-
     mode = 'walking'
     for i, section in enumerate(journey.sections):
         cur_mode = 'walking'
