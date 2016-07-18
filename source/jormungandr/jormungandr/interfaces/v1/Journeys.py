@@ -38,7 +38,7 @@ from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    SectionGeoJson, Co2Emission, PbEnum, feed_publisher
+    SectionGeoJson, Co2Emission, PbEnum, feed_publisher, Durations
 
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
@@ -223,6 +223,7 @@ journey = {
     "status": fields.String(attribute="most_serious_disruption_effect"),
     "calendars": NonNullList(NonNullNested(calendar)),
     "co2_emission": Co2Emission(),
+    "durations": Durations(),
     "debug": JourneyDebugInfo()
 }
 
