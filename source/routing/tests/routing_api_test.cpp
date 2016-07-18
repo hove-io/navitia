@@ -913,6 +913,8 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.most_serious_disruption_effect(), ""); //no disruption should be found
     BOOST_CHECK_EQUAL(journey.duration(), 112);
+    BOOST_CHECK_EQUAL(journey.durations().total(), 112);
+    BOOST_CHECK_EQUAL(journey.durations().walking(), 110);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
