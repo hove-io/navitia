@@ -206,7 +206,7 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
     }
 }
 
-static void calculate_total_walking_duration(pbnavitia::Journey* pb_journey) {
+static void compute_durations(pbnavitia::Journey* pb_journey) {
     uint32_t total_walking_duration = 0;
     for (const auto& section: pb_journey->sections()) {
         if ((section.type() == pbnavitia::STREET_NETWORK && section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking) ||
@@ -272,7 +272,7 @@ static void add_direct_path(PbCreator& pb_creator,
             destination_pb->Clear();
             pb_creator.fill(&destination, destination_pb, 2);
             co2_emission_aggregator(pb_journey);
-            calculate_total_walking_duration(pb_journey);
+            compute_durations(pb_journey);
         }
     }
 }
@@ -666,7 +666,7 @@ static void add_pathes(PbCreator& pb_creator,
         pb_journey->set_arrival_date_time(arrival);
         pb_journey->set_duration(arrival - departure);
         co2_emission_aggregator(pb_journey);
-        calculate_total_walking_duration(pb_journey);
+        compute_durations(pb_journey);
     }
 
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
@@ -713,7 +713,7 @@ static void add_pt_pathes(PbCreator& pb_creator,
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
 
         co2_emission_aggregator(pb_journey);
-        calculate_total_walking_duration(pb_journey);
+        compute_durations(pb_journey);
     }
 }
 
