@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, response_pb2, type_pb2
 
 class Kraken(object):
 
@@ -70,5 +70,8 @@ class Kraken(object):
         req.car_co2_emission.destination.access_duration = 0
 
         response = self.instance.send_and_receive(req)
+        if response.error and response.error.id == \
+                response_pb2.Error.error_id.Value('no_solution'):
+            return None
         return response.car_co2_emission
 

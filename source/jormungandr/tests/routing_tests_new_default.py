@@ -187,7 +187,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
         Test if car_co2_emission in context is the value in car journey
         """
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking&_override_scenario=new_default"\
+                "&first_section_mode[]=walking&last_section_mode[]=walking&_override_scenario=new_default"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
         check_journeys(response)
@@ -196,8 +196,10 @@ class TestJourneysNewDefault(AbstractTestFixture):
         assert 'context' in response
         assert 'car_co2_emission' in response['context']
 
-        assert response['context']['car_co2_emission']['value'] == 34.224
+        assert response['context']['car_co2_emission']['value'] == 52.5908892104
         assert response['context']['car_co2_emission']['unit'] == 'gEC'
+        for j in response["journeys"]:
+            assert "ecologic" in j["tags"]
 
     def test_mode_tag(self):
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\

@@ -86,8 +86,6 @@ class Worker {
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
-        type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point,
-                const boost::shared_ptr<const navitia::type::Data> data);
         type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const boost::shared_ptr<const navitia::type::Data> data, const bool use_second = true);
 
         void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);

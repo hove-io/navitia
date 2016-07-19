@@ -47,7 +47,46 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
+static const double CO2_ESTIMATION_COEFF = 1.35;
+
 namespace navitia {
+
+static type::GeographicalCoord coord_of_entry_point(
+        const type::EntryPoint & entry_point,
+        const boost::shared_ptr<const navitia::type::Data> data) {
+    if(entry_point.type == Type_e::Address){
+        auto way = data->geo_ref->way_map.find(entry_point.uri);
+        if (way != data->geo_ref->way_map.end()){
+            const auto geo_way = data->geo_ref->ways[way->second];
+            return geo_way->nearest_coord(entry_point.house_number, data->geo_ref->graph);
+        }
+    } else if (entry_point.type == Type_e::StopPoint) {
+        auto sp_it = data->pt_data->stop_points_map.find(entry_point.uri);
+        if(sp_it != data->pt_data->stop_points_map.end()) {
+            return sp_it->second->coord;
+        }
+    } else if (entry_point.type == Type_e::StopArea) {
+           auto sa_it = data->pt_data->stop_areas_map.find(entry_point.uri);
+           if(sa_it != data->pt_data->stop_areas_map.end()) {
+               return sa_it->second->coord;
+           }
+    } else if (entry_point.type == Type_e::Coord) {
+        return entry_point.coordinates;
+    } else if (entry_point.type == Type_e::Admin) {
+        auto it_admin = data->geo_ref->admin_map.find(entry_point.uri);
+        if (it_admin != data->geo_ref->admin_map.end()) {
+            const auto admin = data->geo_ref->admins[it_admin->second];
+            return admin->coord;
+        }
+
+    } else if(entry_point.type == Type_e::POI){
+        auto poi = data->geo_ref->poi_map.find(entry_point.uri);
+        if (poi != data->geo_ref->poi_map.end()){
+            return poi->second->coord;
+        }
+    }
+    throw navitia::recoverable_exception{"The entry point: " + entry_point.uri + " is not valid"};
+}
 
 static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     switch(pb_type){
@@ -376,50 +415,10 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
                                            const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
-    auto coord = this->coord_of_entry_point(ep, data);
+    auto coord = coord_of_entry_point(ep, data);
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
                                request.depth(), request.count(),request.start_page(), *data, current_datetime);
 }
-
-
-type::GeographicalCoord Worker::coord_of_entry_point(
-        const type::EntryPoint & entry_point,
-        const boost::shared_ptr<const navitia::type::Data> data) {
-    type::GeographicalCoord result;
-    if(entry_point.type == Type_e::Address){
-        auto way = data->geo_ref->way_map.find(entry_point.uri);
-        if (way != data->geo_ref->way_map.end()){
-            const auto geo_way = data->geo_ref->ways[way->second];
-            result = geo_way->nearest_coord(entry_point.house_number, data->geo_ref->graph);
-        }
-    } else if (entry_point.type == Type_e::StopPoint) {
-        auto sp_it = data->pt_data->stop_points_map.find(entry_point.uri);
-        if(sp_it != data->pt_data->stop_points_map.end()) {
-            result = sp_it->second->coord;
-        }
-    } else if (entry_point.type == Type_e::StopArea) {
-           auto sa_it = data->pt_data->stop_areas_map.find(entry_point.uri);
-           if(sa_it != data->pt_data->stop_areas_map.end()) {
-               result = sa_it->second->coord;
-           }
-    } else if (entry_point.type == Type_e::Coord) {
-        result = entry_point.coordinates;
-    } else if (entry_point.type == Type_e::Admin) {
-        auto it_admin = data->geo_ref->admin_map.find(entry_point.uri);
-        if (it_admin != data->geo_ref->admin_map.end()) {
-            const auto admin = data->geo_ref->admins[it_admin->second];
-            result = admin->coord;
-        }
-
-    } else if(entry_point.type == Type_e::POI){
-        auto poi = data->geo_ref->poi_map.find(entry_point.uri);
-        if (poi != data->geo_ref->poi_map.end()){
-            result = poi->second->coord;
-        }
-    }
-    return result;
-}
-
 
 type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request,
         const boost::shared_ptr<const navitia::type::Data> data,
@@ -473,7 +472,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
-        auto coord = this->coord_of_entry_point(ep, data);
+        auto coord = coord_of_entry_point(ep, data);
         auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data, pb_creator.now);
         pbnavitia::Response pb_response;
         if(tmp.places_nearby().size() == 1){
@@ -573,7 +572,7 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
         if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
                 || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
                 || origin.type == type::Type_e::POI) {
-            origin.coordinates = this->coord_of_entry_point(origin, data);
+            origin.coordinates = coord_of_entry_point(origin, data);
         }
         origins.push_back(origin);
     }
@@ -586,7 +585,7 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
         if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
                 || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
                 || destination.type == type::Type_e::POI) {
-            destination.coordinates = this->coord_of_entry_point(destination, data);
+            destination.coordinates = coord_of_entry_point(destination, data);
         }
         destinations.push_back(destination);
     }
@@ -762,33 +761,26 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
 pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
     const auto data = data_manager.get_data();
     init_worker_data(data);
-
     auto get_geographical_coord = [&](const pbnavitia::LocationContext& location){
-        std::cout << location.place() << std::endl;
         auto origin_type = data->get_type_of_id(location.place());
-        auto origin = type::EntryPoint(origin_type, location.place(), location.access_duration());
-
-        if (origin_type == type::Type_e::Address || origin_type == type::Type_e::Admin
-                || origin_type == type::Type_e::StopArea || origin_type == type::Type_e::StopPoint
-                || origin_type == type::Type_e::POI) {
-            auto coordinates = coord_of_entry_point(origin, data);
-            return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
-        }
-        return navitia::type::GeographicalCoord{};
+        auto origin = type::EntryPoint{origin_type, location.place(), location.access_duration()};
+        auto coordinates = coord_of_entry_point(origin, data);
+        return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
     };
     auto origin = get_geographical_coord(request.origin());
     auto destin = get_geographical_coord(request.destination());
     auto distance = origin.distance_to(destin);
     pbnavitia::Response r;
-    auto co2_emission = r.mutable_car_co2_emission();
-
     if (data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission) {
-        const double estimation_coeff = 1.3;
+        auto co2_emission = r.mutable_car_co2_emission();
         co2_emission->set_unit("gEC");
-        co2_emission->set_value(estimation_coeff * distance / 1000.0 * data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission.get());
+        co2_emission->set_value(CO2_ESTIMATION_COEFF * distance / 1000.0 *
+                data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission.get());
+        return r;
     }
+    fill_pb_error(pbnavitia::Error::no_solution,
+                "physical_mode:Car doesn't contain any information about co2 emission", r.mutable_error());
     return r;
-
 }
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
@@ -832,7 +824,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
     case pbnavitia::graphical_isochrone : response = graphical_isochrone(request.isochrone(), current_datetime); break;
     case pbnavitia::geo_status: response = geo_status(); break;
-    case pbnavitia::car_co2_emission: response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
+    case pbnavitia::car_co2_emission:
+        response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
@@ -856,7 +849,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     if (entry_point.type == type::Type_e::Address || entry_point.type == type::Type_e::Admin
             || entry_point.type == type::Type_e::StopArea || entry_point.type == type::Type_e::StopPoint
             || entry_point.type == type::Type_e::POI) {
-        entry_point.coordinates = this->coord_of_entry_point(entry_point, data);
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
     }
     if ((entry_point.type == type::Type_e::Address)
             || (entry_point.type == type::Type_e::Coord) || (entry_point.type == type::Type_e::Admin)

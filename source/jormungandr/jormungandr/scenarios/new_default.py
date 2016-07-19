@@ -156,36 +156,38 @@ def sort_journeys(resp, journey_order, clockwise):
         resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
 
-def tag_journeys(resp, request, instance):
-    """
-    qualify the journeys
-    """
-    car = next((j for j in resp.journeys if helpers.is_car_direct_path(j)), None)
-    co2_emission_value = 0
-    co2_emission_unit = 0
+def compute_car_co2_emission(pb_resp, api_request, instance):
+    car = next((j for j in pb_resp.journeys if helpers.is_car_direct_path(j)), None)
     if car is None or not car.HasField('co2_emission'):
         # if there is no car journey found, we request kraken to give us an estimation of
         # co2 emission
-        from jormungandr.georef import Kraken
-        co2_estimation = Kraken(instance).get_car_co2_emission_on_crow_fly(request['origin'], request['destination'])
-        co2_emission_value = co2_estimation.value
-        co2_emission_unit = co2_estimation.unit
+        co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(api_request['origin'], api_request['destination'])
+        if co2_estimation:
+            # Assign car_co2_emission into the resp, these value will be exposed in the final result
+            pb_resp.car_co2_emission.value = co2_estimation.value
+            pb_resp.car_co2_emission.unit = co2_estimation.unit
     else:
-        co2_emission_value = car.co2_emission.value
-        co2_emission_unit = car.co2_emission.unit
+        # Assign car_co2_emission into the resp, these value will be exposed in the final result
+        pb_resp.car_co2_emission.value = car.co2_emission.value
+        pb_resp.car_co2_emission.unit = car.co2_emission.unit
+
+
+def tag_journeys(resp):
+    """
+    tag the journeys
+    """
+    # if there is no available car_co2_emission in resp, no tag will be assigned
+    if not resp.car_co2_emission.value and \
+            not resp.car_co2_emission.unit:
+        return
 
     for j in resp.journeys:
         if not j.HasField('co2_emission'):
             j.tags.append('ecologic')
             continue
-        if j.co2_emission.unit != co2_emission_unit:
+        if j.co2_emission.unit != resp.car_co2_emission.unit:
             continue
-
-        # Assign car_co2_emission into the resp, these value will be exposed in the final result
-        resp.car_co2_emission.value = co2_emission_value
-        resp.car_co2_emission.unit = co2_emission_unit
-
-        if j.co2_emission.value < co2_emission_value * 0.5:
+        if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
             j.tags.append('ecologic')
 
 
@@ -672,7 +674,8 @@ class Scenario(simple.Scenario):
         pb_resp = merge_responses(responses)
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
-        tag_journeys(pb_resp, api_request, instance)
+        compute_car_co2_emission(pb_resp, api_request, instance)
+        tag_journeys(pb_resp)
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
