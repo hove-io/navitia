@@ -33,8 +33,8 @@ import itertools
 import logging
 from flask.ext.restful import abort
 from jormungandr.scenarios import simple, journey_filter, helpers
-from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, get_or_default, \
-    fill_uris, gen_all_combin, get_pseudo_duration
+from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
+    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
@@ -424,6 +424,32 @@ def culling_journeys(resp, request):
     journey_filter.delete_journeys((resp,), request)
 
 
+def _tag_journey_by_mode(journey):
+    mode = 'walking'
+    for i, section in enumerate(journey.sections):
+        cur_mode = 'walking'
+        if section.type == response_pb2.BSS_RENT:
+            cur_mode = 'bss'
+        elif section.type == response_pb2.STREET_NETWORK \
+             and section.street_network.mode == response_pb2.Bike \
+             and journey.sections[i - 1].type != response_pb2.BSS_RENT:
+            cur_mode = 'bike'
+        elif section.type == response_pb2.STREET_NETWORK \
+             and section.street_network.mode == response_pb2.Car:
+            cur_mode = 'car'
+
+        if mode_weight[mode] < mode_weight[cur_mode]:
+            mode = cur_mode
+
+    journey.tags.append(mode)
+
+
+def _tag_by_mode(responses):
+    for r in responses:
+        for j in r.journeys:
+            _tag_journey_by_mode(j)
+
+
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
@@ -615,6 +641,7 @@ class Scenario(simple.Scenario):
             nb_try = nb_try + 1
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            _tag_by_mode(tmp_resp)
             responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop

@@ -496,7 +496,7 @@ def test_too_late_journeys():
     journey3.departure_date_time = 10000
     journey3.arrival_date_time = 13000
 
-    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+    journey_filter._filter_too_long_journeys(list(journeys_gen(responses)),
                                                  MockInstance(), request)
 
     assert 'to_delete' not in journey1.tags
@@ -519,11 +519,83 @@ def test_not_too_late_journeys():
     journey2.departure_date_time = 3100
     journey2.arrival_date_time = 3200
 
-    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+    journey_filter._filter_too_long_journeys(list(journeys_gen(responses)),
                                                  MockInstance(), request)
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
+
+
+def test_too_late_journeys_but_better_mode():
+    request = {'datetime': 1000000,
+               'clockwise': True,
+               '_night_bus_filter_max_factor': 2,
+               '_night_bus_filter_base_factor': 9,
+               }
+    responses = [response_pb2.Response()]
+    car = responses[0].journeys.add()
+    car.departure_date_time = 1001042
+    car.arrival_date_time = 1002000
+    car.tags.append('car')
+
+    responses.append(response_pb2.Response())
+    bike = responses[-1].journeys.add()
+    bike.departure_date_time = 1001042
+    bike.arrival_date_time = 1004010 # car * 2 + 10
+    bike.tags.append('bike')
+
+    responses.append(response_pb2.Response())
+    bss = responses[-1].journeys.add()
+    bss.departure_date_time = 1001042
+    bss.arrival_date_time = 1008030 # bike * 2 + 10
+    bss.tags.append('bss')
+
+    responses.append(response_pb2.Response())
+    walking = responses[-1].journeys.add()
+    walking.departure_date_time = 1001042
+    walking.arrival_date_time = 1016070 # bss * 2 + 10
+    walking.tags.append('walking')
+
+    journey_filter._filter_too_long_journeys(list(journeys_gen(responses)),
+                                             MockInstance(), request)
+
+    assert all('to_delete' not in j.tags for r in responses for j in r.journeys)
+
+
+def test_too_late_journeys_and_worst_mode():
+    request = {'datetime': 1000000,
+               'clockwise': True,
+               '_night_bus_filter_max_factor': 2,
+               '_night_bus_filter_base_factor': 9,
+               }
+    responses = [response_pb2.Response()]
+    walking = responses[0].journeys.add()
+    walking.departure_date_time = 1001042
+    walking.arrival_date_time = 1002000
+    walking.tags.append('walking')
+
+    responses.append(response_pb2.Response())
+    bss = responses[-1].journeys.add()
+    bss.departure_date_time = 1001042
+    bss.arrival_date_time = 1004010 # walking * 2 + 10
+    bss.tags.append('bss')
+
+    responses.append(response_pb2.Response())
+    bike = responses[-1].journeys.add()
+    bike.departure_date_time = 1001042
+    bike.arrival_date_time = 1008030 # bss * 2 + 10
+    bike.tags.append('bike')
+
+    responses.append(response_pb2.Response())
+    car = responses[-1].journeys.add()
+    car.departure_date_time = 1001042
+    car.arrival_date_time = 1016070 # bike * 2 + 10
+    car.tags.append('car')
+
+    journey_filter._filter_too_long_journeys(list(journeys_gen(responses)),
+                                             MockInstance(), request)
+
+    assert ['to_delete' not in j.tags for r in responses for j in r.journeys].count(True) == 1
 
 
 def test_not_too_late_journeys_non_clockwise():
@@ -547,7 +619,7 @@ def test_not_too_late_journeys_non_clockwise():
     journey3.departure_date_time = 8000
     journey3.arrival_date_time = 9000
 
-    journey_filter._filter_not_coherent_journeys(list(journeys_gen(responses)),
+    journey_filter._filter_too_long_journeys(list(journeys_gen(responses)),
                                                  MockInstance(), request)
 
     assert 'to_delete' in journey1.tags

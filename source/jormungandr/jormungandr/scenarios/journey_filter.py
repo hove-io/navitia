@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import itertools
 import datetime
-from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default
+from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if
 
@@ -65,7 +65,7 @@ def filter_journeys(response_list, instance, request):
 
     _filter_similar_vj_journeys(journeys, request)
 
-    _filter_not_coherent_journeys(journeys, instance, request)
+    _filter_too_long_journeys(journeys, instance, request)
 
     _filter_too_long_waiting(journeys, request)
 
@@ -260,7 +260,7 @@ def get_min_connections(journeys):
     if not journeys:
         return None
 
-    return min(get_nb_connections(j) for j in journeys if not to_be_deleted(j))
+    return min([get_nb_connections(j) for j in journeys if not to_be_deleted(j)] or [0])
 
 
 def get_nb_connections(journey):
@@ -270,38 +270,51 @@ def get_nb_connections(journey):
     return journey.nb_transfers
 
 
-def way_later(request, journey, asap_journey):
-    """
-    to check if a journey is way later than the asap journey
-    we check for each journey the difference between the requested datetime and the arrival datetime
-    (the other way around for non clockwise)
+def _get_mode_weight(journey):
+    if not journey.tags:
+        return 1
+    return max(mode_weight.get(mode, 1) for mode in journey.tags)
+
+
+def way_later(request, journey1, journey2):
+    """to check if a journey is way later than another journey
+
+    First, this rule doesn't apply if journey1 has a strictly better
+    mode than journey2.
+
+    Then, we check for each journey the difference between the
+    requested datetime and the arrival datetime (the other way around
+    for non clockwise)
 
     requested dt
     *
                    |=============>
-                          asap
+                          journey2
 
                                            |=============>
-                                                 journey
+                                                 journey1
 
     -------------------------------
-             asap pseudo duration
+             journey2 pseudo duration
 
     ------------------------------------------------------
-                       journey pseudo duration
+                       journey1 pseudo duration
 
     """
+    if _get_mode_weight(journey1) < _get_mode_weight(journey2):
+        return False
+
     requested_dt = request['datetime']
     is_clockwise = request.get('clockwise', True)
 
-    pseudo_asap_duration = get_pseudo_duration(asap_journey, requested_dt, is_clockwise)
-    pseudo_journey_duration = get_pseudo_duration(journey, requested_dt, is_clockwise)
+    pseudo_j2_duration = get_pseudo_duration(journey2, requested_dt, is_clockwise)
+    pseudo_j1_duration = get_pseudo_duration(journey1, requested_dt, is_clockwise)
 
-    max_value = pseudo_asap_duration * request['_night_bus_filter_max_factor'] + request['_night_bus_filter_base_factor']
-    return pseudo_journey_duration > max_value
+    max_value = pseudo_j2_duration * request['_night_bus_filter_max_factor'] + request['_night_bus_filter_base_factor']
+    return pseudo_j1_duration > max_value
 
 
-def _filter_not_coherent_journeys(journeys, instance, request):
+def _filter_too_long_journeys(journeys, instance, request):
     """
     Filter not coherent journeys
 
@@ -309,27 +322,14 @@ def _filter_not_coherent_journeys(journeys, instance, request):
     """
 
     logger = logging.getLogger(__name__)
-    # we filter journeys that arrive way later than other ones
-    if request.get('clockwise', True):
-        comp_value = lambda j: j.arrival_date_time
-        comp_func = min
-    else:
-        comp_value = lambda j: j.departure_date_time
-        comp_func = max
-    keeped = [j for j in journeys if not to_be_deleted(j)]
-    if not keeped:
-        #min and max don't like empty list
-        return
-    asap_journey = comp_func(keeped, key=comp_value)
-
-    for j in journeys:
-        if to_be_deleted(j):
+    for (j1, j2) in itertools.permutations(journeys, 2):
+        if to_be_deleted(j1) or to_be_deleted(j2):
             continue
-        if way_later(request, j, asap_journey):
-            logger.debug("the journey {} is too long compared to {}, we delete it"
-                         .format(j.internal_id, asap_journey.internal_id))
 
-            mark_as_dead(j, 'too_long', 'too_long_compared_to_{}'.format(asap_journey.internal_id))
+        if way_later(request, j1, j2):
+            logger.debug("the journey {} is too long compared to {}, we delete it"
+                         .format(j1.internal_id, j2.internal_id))
+            mark_as_dead(j1, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
 
 
 def is_walk_after_parking(journey, idx_section):
