@@ -241,9 +241,9 @@ class Scenario(simple.Scenario):
             at_least_one_journey_found = True
 
             if request['clockwise']:
-                new_datetime = self.next_journey_datetime(tmp_resp.journeys)
+                new_datetime = self.next_journey_datetime(tmp_resp.journeys, request['clockwise'])
             else:
-                new_datetime = self.previous_journey_datetime(tmp_resp.journeys)
+                new_datetime = self.previous_journey_datetime(tmp_resp.journeys, request['clockwise'])
 
             if new_datetime is None:
                 break
@@ -296,7 +296,7 @@ class Scenario(simple.Scenario):
         self.erase_journeys(resp, to_delete)
 
     @staticmethod
-    def next_journey_datetime(journeys):
+    def next_journey_datetime(journeys, clockwise):
         """
         by default to get the next journey, we add one minute to:
         the best if we have one, else to the journey that has the earliest departure
@@ -314,7 +314,7 @@ class Scenario(simple.Scenario):
         return last_best.departure_date_time + one_minute
 
     @staticmethod
-    def previous_journey_datetime(journeys):
+    def previous_journey_datetime(journeys, clockwise):
         """
         by default to get the previous journey, we substract one minute to:
         the best if we have one, else to the journey that has the tardiest arrival

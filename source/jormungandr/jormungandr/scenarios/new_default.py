@@ -598,7 +598,6 @@ class Scenario(simple.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
         self.nb_kraken_calls = 0
-        self.clockwise = True
 
     def fill_journeys(self, request_type, api_request, instance):
 
@@ -647,7 +646,6 @@ class Scenario(simple.Scenario):
         """
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
-        self.clockwise = request.get("clockwise", True)
         resp = []
         logger = logging.getLogger(__name__)
         for dep_mode, arr_mode in krakens_call:
@@ -697,9 +695,9 @@ class Scenario(simple.Scenario):
         """
         vjs = [j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)]
         if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime(vjs)
+            request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
         else:
-            request['datetime'] = self.previous_journey_datetime(vjs)
+            request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
 
         if request['datetime'] is None:
             return None
@@ -712,17 +710,17 @@ class Scenario(simple.Scenario):
         return min_from_criteria(filter(has_pt, journeys),
                                  [criteria, duration_crit, transfers_crit, nonTC_crit])
 
-    def get_best(self, journeys):
-        if self.clockwise:
+    def get_best(self, journeys, clockwise):
+        if clockwise:
             return self.__get_best_for_criteria(journeys, arrival_crit)
         else:
             return self.__get_best_for_criteria(journeys, departure_crit)
 
-    def next_journey_datetime(self, journeys):
+    def next_journey_datetime(self, journeys, clockwise):
         """
         to get the next journey, we add one second to the departure of the 'best found' journey
         """
-        best = self.get_best(journeys)
+        best = self.get_best(journeys, clockwise)
 
         if best is None:
             return None
@@ -730,11 +728,11 @@ class Scenario(simple.Scenario):
         one_second = 1
         return best.departure_date_time + one_second
 
-    def previous_journey_datetime(self, journeys):
+    def previous_journey_datetime(self, journeys, clockwise):
         """
         to get the next journey, we add one second to the arrival of the 'best found' journey
         """
-        best = self.get_best(journeys)
+        best = self.get_best(journeys, clockwise)
 
         if best is None:
             return None

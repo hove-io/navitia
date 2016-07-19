@@ -321,16 +321,18 @@ class Scenario(object):
 
     def isochrone(self, request, instance):
         raise NotImplementedError()
-    
+
     def _add_prev_link(self, resp, params):
-        prev_dt = self.previous_journey_datetime(resp.journeys)
+        clockwise = params.get('datetime_represents', 'departure') == 'departure'
+        prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
             params['datetime'] = timestamp_to_str(prev_dt)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='prev', **params)
 
     def _add_next_link(self, resp, params):
-        next_dt = self.next_journey_datetime(resp.journeys)
+        clockwise = params.get('datetime_represents', 'departure') == 'departure'
+        next_dt = self.next_journey_datetime(resp.journeys, clockwise)
         if next_dt is not None:
             params['datetime'] = timestamp_to_str(next_dt)
             params['datetime_represents'] = 'departure'
