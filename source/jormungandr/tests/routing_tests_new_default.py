@@ -78,11 +78,12 @@ class TestJourneysNewDefault(AbstractTestFixture):
 
     @staticmethod
     def check_previous_datetime_link(dt, response):
+        # All journeys in file with clockwise=true
         if not response.get('journeys'):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=False))
+                                         new_default_pagination_journey_comparator(clockwise=True))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)

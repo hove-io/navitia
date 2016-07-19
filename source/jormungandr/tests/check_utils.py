@@ -1117,7 +1117,7 @@ def new_default_pagination_journey_comparator(clockwise):
         return partial(reverse_compare_field, func=func)
 
     main_criteria = make_crit(lambda j: get_valid_datetime(j['departure_date_time'])) if clockwise \
-        else make_crit(lambda j: get_valid_datetime(j['arrival_date_time']))
+        else make_crit(lambda j: get_valid_datetime(j['arrival_date_time']), reverse=True)
 
     return [main_criteria,
             make_crit(lambda j: get_valid_int(j['duration'])),
