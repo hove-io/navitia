@@ -78,11 +78,12 @@ class TestJourneysNewDefault(AbstractTestFixture):
 
     @staticmethod
     def check_previous_datetime_link(dt, response):
+        # All journeys in file with clockwise=true
         if not response.get('journeys'):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=False))
+                                         new_default_pagination_journey_comparator(clockwise=True))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
@@ -124,7 +125,7 @@ class TestJourneysNewDefault(AbstractTestFixture):
         datetime.
         """
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=86400"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=86400&_override_scenario=new_default"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
         check_journeys(response)

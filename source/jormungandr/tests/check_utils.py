@@ -1123,3 +1123,4 @@ def new_default_pagination_journey_comparator(clockwise):
             make_crit(lambda j: get_valid_int(j['duration'])),
             make_crit(lambda j: len(j.get('sections', []))),
     ]
+
