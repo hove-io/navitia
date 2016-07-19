@@ -120,7 +120,6 @@ class Worker {
         pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request,
                                                const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
-
 };
 
 }
