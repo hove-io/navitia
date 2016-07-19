@@ -72,7 +72,8 @@ int main(int argc, const char* const argv[]) {
     b.vj("l9")("I1", 8*3600)("I3", 9*3600);
     b.connection("B", "C", 2*60);
     b.connection("F", "G", 2*60);
-
+    // Empty license for global feed publisher
+    b.data->meta->license = "";
     b.data->pt_data->codes.add(b.sps.at("A"), "external_code", "stop_point:A");
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Ain");
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Aisne");
@@ -97,6 +98,7 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->datasets.push_back(ds);
     b.data->pt_data->contributors.push_back(cr);
 
+    b.data->complete();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
