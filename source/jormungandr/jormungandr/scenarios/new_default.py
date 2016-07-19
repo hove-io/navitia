@@ -177,18 +177,15 @@ def tag_journeys(resp):
     tag the journeys
     """
     # if there is no available car_co2_emission in resp, no tag will be assigned
-    if not resp.car_co2_emission.value and \
-            not resp.car_co2_emission.unit:
-        return
-
-    for j in resp.journeys:
-        if not j.HasField('co2_emission'):
-            j.tags.append('ecologic')
-            continue
-        if j.co2_emission.unit != resp.car_co2_emission.unit:
-            continue
-        if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
-            j.tags.append('ecologic')
+    if resp.car_co2_emission.value and resp.car_co2_emission.unit:
+        for j in resp.journeys:
+            if not j.HasField('co2_emission'):
+                j.tags.append('ecologic')
+                continue
+            if j.co2_emission.unit != resp.car_co2_emission.unit:
+                continue
+            if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
+                j.tags.append('ecologic')
 
 
 def _get_section_id(section):

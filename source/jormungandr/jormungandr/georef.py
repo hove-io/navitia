@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, response_pb2, type_pb2
+import logging
 
 class Kraken(object):
 
@@ -62,6 +63,7 @@ class Kraken(object):
         return response.places[0]
 
     def get_car_co2_emission_on_crow_fly(self, origin, destination):
+        logger = logging.getLogger(__name__)
         req = request_pb2.Request()
         req.requested_api = type_pb2.car_co2_emission
         req.car_co2_emission.origin.place = origin
@@ -72,6 +74,8 @@ class Kraken(object):
         response = self.instance.send_and_receive(req)
         if response.error and response.error.id == \
                 response_pb2.Error.error_id.Value('no_solution'):
+            logger.error("Cannot compute car co2 emission from {} to {}"
+                         .format(origin, destination))
             return None
         return response.car_co2_emission
 

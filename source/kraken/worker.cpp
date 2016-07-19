@@ -771,11 +771,14 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     auto destin = get_geographical_coord(request.destination());
     auto distance = origin.distance_to(destin);
     pbnavitia::Response r;
-    if (data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission) {
+    auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
+
+    if (car_mode != data->pt_data->physical_modes_map.end() &&
+            car_mode->second->co2_emission) {
         auto co2_emission = r.mutable_car_co2_emission();
         co2_emission->set_unit("gEC");
         co2_emission->set_value(CO2_ESTIMATION_COEFF * distance / 1000.0 *
-                data->pt_data->physical_modes_map["physical_mode:Car"]->co2_emission.get());
+                car_mode->second->co2_emission.get());
         return r;
     }
     fill_pb_error(pbnavitia::Error::no_solution,
