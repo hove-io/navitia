@@ -377,6 +377,12 @@ def get_kraken_calls_invalid_2_test():
     with pytest.raises(HTTPException):
         get_kraken_calls({"origin_mode": ["bss", "walking"], "destination_mode": ["bike"]})
 
+
+def get_kraken_calls_invalid_3_test():
+    with pytest.raises(HTTPException):
+        get_kraken_calls({"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]})
+
+
 def tag_by_mode_test():
     ww = helpers_tests.get_walking_walking_journey()
     _tag_journey_by_mode(ww)
