@@ -426,18 +426,6 @@ class MultiPolyGeoJson(fields.Raw):
 
         return response
 
-
-class Co2Emission(fields.Raw):
-    def output(self, key, obj):
-        if not obj.HasField(key):
-            return
-        co2_emission = getattr(obj, key)
-        return {
-            'value': co2_emission.value,
-            'unit': co2_emission.unit
-        }
-
-
 class Durations(fields.Raw):
     def output(self, key, obj):
         if not obj.HasField(b"durations"):

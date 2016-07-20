@@ -38,7 +38,7 @@ from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    SectionGeoJson, Co2Emission, PbEnum, feed_publisher, Durations
+    SectionGeoJson, PbEnum, feed_publisher, Durations
 
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
@@ -194,7 +194,10 @@ section = {
     "base_departure_date_time": DateTime(attribute="base_begin_date_time"),
     "arrival_date_time": DateTime(attribute="end_date_time"),
     "base_arrival_date_time": DateTime(attribute="base_end_date_time"),
-    "co2_emission": Co2Emission(),
+    "co2_emission": NonNullNested({
+        'value': fields.Raw,
+        'unit': fields.String
+        }),
 }
 
 cost = {
@@ -222,7 +225,10 @@ journey = {
     'tags': fields.List(fields.String),
     "status": fields.String(attribute="most_serious_disruption_effect"),
     "calendars": NonNullList(NonNullNested(calendar)),
-    "co2_emission": Co2Emission(),
+    "co2_emission": NonNullNested({
+        'value': fields.Raw,
+        'unit': fields.String
+        }),
     "durations": Durations(),
     "debug": JourneyDebugInfo()
 }
