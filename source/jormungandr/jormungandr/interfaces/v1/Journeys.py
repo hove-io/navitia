@@ -237,7 +237,10 @@ ticket = {
 }
 
 context = {
-    "car_co2_emission": Co2Emission()
+    'car_co2_emission': NonNullNested({
+        'value': fields.Raw,
+        'unit': fields.String
+    })
 }
 
 journeys = {
