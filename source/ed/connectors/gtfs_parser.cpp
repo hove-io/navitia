@@ -861,7 +861,12 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     nm::Line* line = it->second;
 
-    nm::Route* route = get_or_create_route(data, {line, row[direction_id_c]});
+    // direction_id is optional (and possible values "0" or "1"), so defaulting to "0"
+    std::string direction_id = "0";
+    if (direction_id_c != -1) {
+        direction_id = row[direction_id_c];
+    }
+    nm::Route* route = get_or_create_route(data, {line, direction_id});
 
     auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
     if(empty(vp_range)) {
