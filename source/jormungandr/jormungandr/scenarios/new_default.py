@@ -70,7 +70,9 @@ def get_kraken_calls(request):
     allowed_combination = [('bss', 'bss'),
                            ('walking', 'walking'),
                            ('bike', 'walking'),
-                           ('car', 'walking')]
+                           ('car', 'walking'),
+                           ('bike', 'bss'),
+                           ('car', 'bss')]
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 

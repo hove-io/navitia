@@ -132,6 +132,66 @@ class TestJourneysNewDefault(AbstractTestFixture):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+    def test_first_bss_last_bss_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}"
+        response = self.query_region(query.format(first='bss', last='bss'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 2
+        assert response["journeys"][0]["type"] == "best"
+        assert "bss" in response["journeys"][0]["tags"]
+
+    def test_first_walking_last_walking_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}"
+        response = self.query_region(query.format(first='walking', last='walking'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 2
+        assert response["journeys"][0]["type"] == "best"
+        assert "walking" in response["journeys"][0]["tags"]
+
+    def test_first_bike_last_walking_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}&_min_bike=50"
+        response = self.query_region(query.format(first='bike', last='walking'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        assert "bike" in response["journeys"][0]["tags"]
+
+    def test_first_car_last_walking_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}&_min_car=10"
+        response = self.query_region(query.format(first='car', last='walking'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        assert "car" in response["journeys"][0]["tags"]
+
+    def test_first_bike_last_bss_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}&_min_bike=50"
+        response = self.query_region(query.format(first='bike', last='bss'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        assert "bike" in response["journeys"][0]["tags"]
+
+    def test_first_car_last_bss_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+                "_override_scenario=new_default&first_section_mode[]={first}&" \
+                "last_section_mode[]={last}&_min_car=10"
+        response = self.query_region(query.format(first='car', last='bss'))
+        check_journeys(response)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        assert "car" in response["journeys"][0]["tags"]
+
     def test_ecologic_tag(self):
         """test that the tag ecologic is present when the journey doesn't
         produce too much CO2 compared to the car journey.

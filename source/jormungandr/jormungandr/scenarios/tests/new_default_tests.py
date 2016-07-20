@@ -31,7 +31,9 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default
-from jormungandr.scenarios.new_default import _tag_journey_by_mode
+from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
+from werkzeug.exceptions import HTTPException
+import pytest
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
  -------------------------------------------------------------
@@ -346,6 +348,39 @@ def create_next_kraken_request_test():
     # anticlockwise: we should have the next request one second after departure of pt journey 1015->1020
     next_request = new_def.create_next_kraken_request(request_anticlock, [response])
     assert next_request == {'datetime': 101999, 'clockwise': False}
+
+
+def get_kraken_calls_test():
+    for md in ["bike", "walking", "bss", "car"]:
+        req = {"origin_mode": [md], "destination_mode": [md]}
+        assert get_kraken_calls(req) == [(md, md)]
+
+    req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"]}
+    assert get_kraken_calls(req) == [("walking", "walking")]
+
+    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"]}
+    assert get_kraken_calls(req) == [("walking", "walking"), ("bike", "walking")]
+
+    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["bss"]}
+    assert get_kraken_calls(req) == [("bike", "bss")]
+
+    req = {"origin_mode": ["bike", "car"], "destination_mode": ["bss"]}
+    assert get_kraken_calls(req) == [("bike", "bss"), ("car", "bss")]
+
+
+def get_kraken_calls_invalid_1_test():
+    with pytest.raises(HTTPException):
+        get_kraken_calls({"origin_mode": ["bss", "walking"], "destination_mode": ["car"]})
+
+
+def get_kraken_calls_invalid_2_test():
+    with pytest.raises(HTTPException):
+        get_kraken_calls({"origin_mode": ["bss", "walking"], "destination_mode": ["bike"]})
+
+
+def get_kraken_calls_invalid_3_test():
+    with pytest.raises(HTTPException):
+        get_kraken_calls({"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]})
 
 
 def tag_by_mode_test():
