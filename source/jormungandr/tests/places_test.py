@@ -157,3 +157,10 @@ class TestPlaces(AbstractTestFixture):
 
         eq_(status, 404)
         assert(get_not_null(response, 'message'))
+
+    def test_non_existent_places_nearby(self):
+        """test that a non existing place URI"""
+        place_id = "I_am_not_existent"
+        response, status = self.query_region("places/{}/places_nearby".format(place_id), check=False)
+
+        eq_(response["error"]["message"], "The entry point: {} is not valid".format(place_id))

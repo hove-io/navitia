@@ -86,8 +86,6 @@ class Worker {
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
-        type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point,
-                const boost::shared_ptr<const navitia::type::Data> data);
         type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const boost::shared_ptr<const navitia::type::Data> data, const bool use_second = true);
 
         void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);
@@ -121,6 +119,7 @@ class Worker {
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
         pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request,
                                                const boost::posix_time::ptime& current_datetime);
+        pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
 };
 
 }
