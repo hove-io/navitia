@@ -173,13 +173,14 @@ class TestJourneysNewDefault(AbstractTestFixture):
         response = self.query_region(query)
         check_journeys(response)
         assert 'context' in response
-        assert 'car_co2_emission' in response['context']
+        assert 'car_direct_path' in response['context']
+        assert 'co2_emission' in response['context']['car_direct_path']
         assert len(response["journeys"]) == 3
 
-        assert response['context']['car_co2_emission']['value'] == \
+        assert response['context']['car_direct_path']['co2_emission']['value'] == \
                response['journeys'][0]['co2_emission']['value'] # car co2 emission
 
-        assert response['context']['car_co2_emission']['unit'] == \
+        assert response['context']['car_direct_path']['co2_emission']['unit'] == \
                response['journeys'][0]['co2_emission']['unit']
 
     def test_context_car_co2_emission_without_car(self):
@@ -194,10 +195,11 @@ class TestJourneysNewDefault(AbstractTestFixture):
         assert len(response["journeys"]) == 2
 
         assert 'context' in response
-        assert 'car_co2_emission' in response['context']
+        assert 'car_direct_path' in response['context']
+        assert 'co2_emission' in response['context']['car_direct_path']
 
-        assert response['context']['car_co2_emission']['value'] == 52.5908892104
-        assert response['context']['car_co2_emission']['unit'] == 'gEC'
+        assert response['context']['car_direct_path']['co2_emission']['value'] == 52.5908892104
+        assert response['context']['car_direct_path']['co2_emission']['unit'] == 'gEC'
         for j in response["journeys"]:
             assert "ecologic" in j["tags"]
 
