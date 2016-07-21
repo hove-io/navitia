@@ -136,17 +136,76 @@ Returns the list of instances
 response:
 ```json
 [
-    {
-        "id": 1,
-        "is_free": false,
-        "name": "picardie"
-    },
-    {
-        "id": 2,
-        "is_free": false,
-        "name": "PaysDeLaLoire"
-    }
+        {
+            "min_tc_with_bss" : 300,
+            "journey_order" : "arrival_time",
+            "max_duration" : 86400,
+            "max_bss_duration_to_pt" : 1800,
+            "max_nb_transfers" : 10,
+            "bike_speed" : 4.1,
+            "walking_transfer_penalty" : 120,
+            "night_bus_filter_base_factor" : 3600,
+            "walking_speed" : 1.12,
+            "id" : 1,
+            "max_duration_fallback_mode" : "walking",
+            "priority" : 0,
+            "car_speed" : 11.11,
+            "min_tc_with_car" : 300,
+            "min_tc_with_bike" : 300,
+            "min_bike" : 240,
+            "max_walking_duration_to_pt" : 1800,
+            "is_free" : false,
+            "min_car" : 300,
+            "max_bike_duration_to_pt" : 1800,
+            "max_duration_criteria" : "time",
+            "bss_provider" : true,
+            "name" : "jdr",
+            "scenario" : "new_default",
+            "bss_speed" : 4.1,
+            "discarded" : false,
+            "min_bss" : 420,
+            "night_bus_filter_max_factor" : 3,
+            "max_car_duration_to_pt" : 1800
+        },
+        {
+            "min_tc_with_bss" : 300,
+            "journey_order" : "arrival_time",
+            "max_duration" : 86400,
+            "max_bss_duration_to_pt" : 1800,
+            "max_nb_transfers" : 10,
+            "bike_speed" : 4.1,
+            "walking_transfer_penalty" : 120,
+            "night_bus_filter_base_factor" : 900,
+            "walking_speed" : 1.12,
+            "id" : 3,
+            "max_duration_fallback_mode" : "walking",
+            "priority" : 0,
+            "car_speed" : 11.11,
+            "min_tc_with_car" : 300,
+            "min_tc_with_bike" : 300,
+            "min_bike" : 240,
+            "max_walking_duration_to_pt" : 1800,
+            "is_free" : true,
+            "min_car" : 300,
+            "max_bike_duration_to_pt" : 1800,
+            "max_duration_criteria" : "time",
+            "bss_provider" : true,
+            "name" : "fr-idf",
+            "scenario" : "new_default",
+            "bss_speed" : 3.5,
+            "discarded" : false,
+            "min_bss" : 240,
+            "night_bus_filter_max_factor" : 1.5,
+            "max_car_duration_to_pt" : 1800
+        }
 ]
+```
+
+You can also update the config of the instance with a PUT request.
+
+For instance, if you have many instances on the same geographical area, you may want to set the priority property to define which one should be used first when requesting navitia APIs without coverage ($navitia_uri/v1/journeys, $navitia_uri/v1/coord/, etc)
+```bash
+    curl 'http://localhost:5000/v0/instances/<INSTANCE>?priority=1' -X PUT
 ```
 
 #### Api
