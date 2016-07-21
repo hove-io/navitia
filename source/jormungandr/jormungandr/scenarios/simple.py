@@ -322,16 +322,14 @@ class Scenario(object):
     def isochrone(self, request, instance):
         raise NotImplementedError()
 
-    def _add_prev_link(self, resp, params):
-        clockwise = params.get('datetime_represents', 'departure') == 'departure'
+    def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
             params['datetime'] = timestamp_to_str(prev_dt)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='prev', **params)
 
-    def _add_next_link(self, resp, params):
-        clockwise = params.get('datetime_represents', 'departure') == 'departure'
+    def _add_next_link(self, resp, params, clockwise):
         next_dt = self.next_journey_datetime(resp.journeys, clockwise)
         if next_dt is not None:
             params['datetime'] = timestamp_to_str(next_dt)
@@ -355,7 +353,7 @@ class Scenario(object):
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='last', **params)
 
-    def _compute_pagination_links(self, resp, instance):
+    def _compute_pagination_links(self, resp, instance, clockwise):
         if not resp.journeys:
             return
 
@@ -363,8 +361,8 @@ class Scenario(object):
         cloned_params = dict(request.args)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
-        self._add_next_link(resp, cloned_params)
-        self._add_prev_link(resp, cloned_params)
+        self._add_next_link(resp, cloned_params, clockwise)
+        self._add_prev_link(resp, cloned_params, clockwise)
         # we also compute first/last journey link
         self._add_first_last_links(resp, cloned_params)
 

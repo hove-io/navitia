@@ -679,7 +679,7 @@ class Scenario(simple.Scenario):
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
-        self._compute_pagination_links(pb_resp, instance)
+        self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
 
         return pb_resp
 

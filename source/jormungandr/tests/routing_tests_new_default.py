@@ -132,6 +132,16 @@ class TestJourneysNewDefault(AbstractTestFixture):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+        links = get_links_dict(response)
+        prev = query_from_str(links.get("prev").get("href"))
+
+        assert prev.get("datetime") == "20120614T080221"
+        assert prev.get("datetime_represents") == "arrival"
+
+        next = query_from_str(links.get("next").get("href"))
+        assert next.get("datetime") == "20120614T080044"
+        assert next.get("datetime_represents") == "departure"
+
     def test_first_bss_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
                 "_override_scenario=new_default&first_section_mode[]={first}&" \
