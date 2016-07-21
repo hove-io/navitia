@@ -276,7 +276,7 @@ class Scenario(simple.Scenario):
             error.id = response_pb2.Error.no_solution
             error.message = "No journey found, all were filtered"
 
-        self._compute_pagination_links(resp, instance)
+        self._compute_pagination_links(resp, instance, request['clockwise'])
 
         return resp
 
