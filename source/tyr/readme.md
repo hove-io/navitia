@@ -137,7 +137,6 @@ response:
 ```json
 [
         {
-
             "min_tc_with_bss" : 300,
             "journey_order" : "arrival_time",
             "max_duration" : 86400,
@@ -167,10 +166,8 @@ response:
             "min_bss" : 420,
             "night_bus_filter_max_factor" : 3,
             "max_car_duration_to_pt" : 1800
-
         },
         {
-
             "min_tc_with_bss" : 300,
             "journey_order" : "arrival_time",
             "max_duration" : 86400,
@@ -200,7 +197,6 @@ response:
             "min_bss" : 240,
             "night_bus_filter_max_factor" : 1.5,
             "max_car_duration_to_pt" : 1800
-
         }
 ]
 ```
@@ -208,8 +204,9 @@ response:
 You can also update the config of the instance with a PUT request.
 
 For instance, if you have many instances on the same geographical area, you may want to set the priority property to define which one should be used first when requesting navitia APIs without coverage ($navitia_uri/v1/journeys, $navitia_uri/v1/coord/, etc)
-
+```bash
     curl 'http://localhost:5000/v0/instances/<INSTANCE>?priority=1' -X PUT
+```
 
 #### Api
 
