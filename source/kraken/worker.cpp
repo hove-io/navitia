@@ -85,6 +85,8 @@ static type::GeographicalCoord coord_of_entry_point(
             return poi->second->coord;
         }
     }
+    LOG4CPLUS_ERROR(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
+            "The entry point: " + entry_point.uri + " is not valid");
     throw navitia::recoverable_exception{"The entry point: " + entry_point.uri + " is not valid"};
 }
 
@@ -415,7 +417,14 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
                                            const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
-    auto coord = coord_of_entry_point(ep, data);
+    type::GeographicalCoord  coord;
+    try{
+        coord = coord_of_entry_point(ep, data);
+    }catch(const std::exception& e) {
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+        return r;
+    }
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
                                request.depth(), request.count(),request.start_page(), *data, current_datetime);
 }
@@ -472,7 +481,14 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
 
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
-        auto coord = coord_of_entry_point(ep, data);
+        type::GeographicalCoord  coord;
+        try{
+            coord = coord_of_entry_point(ep, data);
+        }catch(const std::exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+            return r;
+        }
         auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data, pb_creator.now);
         pbnavitia::Response pb_response;
         if(tmp.places_nearby().size() == 1){
@@ -641,50 +657,55 @@ pbnavitia::Response Worker::err_msg_isochron(const std::string& err_msg, navitia
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
                                      const boost::posix_time::ptime& current_datetime) {
-    const auto data = data_manager.get_data();
-    this->init_worker_data(data);
+    try{
+        const auto data = data_manager.get_data();
+        this->init_worker_data(data);
+        navitia::JourneysArg arg = fill_journeys(request);
 
-    navitia::JourneysArg arg = fill_journeys(request);
-
-    if (arg.origins.empty() && arg.destinations.empty()) {
-        //should never happen, jormungandr filters that, but it never hurts to double check
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                                 "no origin point nor destination point given");
-        return pb_creator.get_response();
-    }
-
-    switch(api) {
-    case pbnavitia::ISOCHRONE: {
-
-        if (! arg.origins.empty() && ! request.clockwise()) {
+        if (arg.origins.empty() && arg.destinations.empty()) {
+            //should never happen, jormungandr filters that, but it never hurts to double check
             navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-            return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
-        } else if(arg.origins.empty() && request.clockwise()){
-            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-            return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+            pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                    pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                    "no origin point nor destination point given");
+            return pb_creator.get_response();
         }
-        type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-        return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
-                                                request.clockwise(), arg.accessibilite_params,
-                                                arg.forbidden, *street_network_worker,
-                                                arg.rt_level, current_datetime, request.max_duration(),
-                                                request.max_transfers());
-    }
 
-    case pbnavitia::pt_planner:
-        return routing::make_pt_response(*planner, arg.origins, arg.destinations, arg.datetimes[0],
-                request.clockwise(), arg.accessibilite_params,
-                arg.forbidden, arg.rt_level, current_datetime,
-                seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.max_extra_second_pass());
-    default:
-        return routing::make_response(*planner, arg.origins[0], arg.destinations[0], arg.datetimes,
-                request.clockwise(), arg.accessibilite_params,
-                arg.forbidden, *street_network_worker,
-                arg.rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.max_extra_second_pass());
+        switch(api) {
+        case pbnavitia::ISOCHRONE: {
+
+            if (! arg.origins.empty() && ! request.clockwise()) {
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+                return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
+            } else if(arg.origins.empty() && request.clockwise()){
+                navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+                return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+            }
+            type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+            return navitia::routing::make_isochrone(*planner, ep, request.datetimes(0),
+                    request.clockwise(), arg.accessibilite_params,
+                    arg.forbidden, *street_network_worker,
+                    arg.rt_level, current_datetime, request.max_duration(),
+                    request.max_transfers());
+        }
+
+        case pbnavitia::pt_planner:
+            return routing::make_pt_response(*planner, arg.origins, arg.destinations, arg.datetimes[0],
+                    request.clockwise(), arg.accessibilite_params,
+                    arg.forbidden, arg.rt_level, current_datetime,
+                    seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                    request.max_transfers(), request.max_extra_second_pass());
+        default:
+            return routing::make_response(*planner, arg.origins[0], arg.destinations[0], arg.datetimes,
+                    request.clockwise(), arg.accessibilite_params,
+                    arg.forbidden, *street_network_worker,
+                    arg.rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                    request.max_transfers(), request.max_extra_second_pass());
+        }
+    }catch(const std::exception& e) {
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+        return r;
     }
 }
 
@@ -724,37 +745,44 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
 
     const auto& request = request_iso.journeys_request();
 
-    navitia::JourneysArg arg = fill_journeys(request);
 
-    if (arg.origins.empty() && arg.destinations.empty()) {
-        //should never happen, jormungandr filters that, but it never hurts to double check
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                                 "no origin point nor destination point given");
-        return pb_creator.get_response();
+    try{
+        navitia::JourneysArg arg = fill_journeys(request);
+
+        if (arg.origins.empty() && arg.destinations.empty()) {
+            //should never happen, jormungandr filters that, but it never hurts to double check
+            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+            pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                    pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                    "no origin point nor destination point given");
+            return pb_creator.get_response();
+        }
+
+        if (! arg.origins.empty() && ! request.clockwise()) {
+            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+            return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
+        } else if(arg.origins.empty() && request.clockwise()){
+            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+            return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+        }
+        type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+
+        std::vector<DateTime> boundary_duration;
+        for(int i = 0; i < request_iso.boundary_duration_size(); ++i) {
+            boundary_duration.push_back(request_iso.boundary_duration(i));
+        }
+
+        return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
+                boundary_duration, request.max_transfers(),
+                arg.accessibilite_params, arg.forbidden,
+                request.clockwise(), arg.rt_level,
+                *street_network_worker,
+                request.streetnetwork_params().walking_speed());
+    }catch(const std::exception& e) {
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+        return r;
     }
-
-    if (! arg.origins.empty() && ! request.clockwise()) {
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
-    } else if(arg.origins.empty() && request.clockwise()){
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
-    }
-    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-
-    std::vector<DateTime> boundary_duration;
-    for(int i = 0; i < request_iso.boundary_duration_size(); ++i) {
-        boundary_duration.push_back(request_iso.boundary_duration(i));
-    }
-
-    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
-                                                      boundary_duration, request.max_transfers(),
-                                                      arg.accessibilite_params, arg.forbidden,
-                                                      request.clockwise(), arg.rt_level,
-                                                      *street_network_worker,
-                                                      request.streetnetwork_params().walking_speed());
 
 }
 
@@ -767,8 +795,17 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
         auto coordinates = coord_of_entry_point(origin, data);
         return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
     };
-    auto origin = get_geographical_coord(request.origin());
-    auto destin = get_geographical_coord(request.destination());
+    navitia::type::GeographicalCoord origin;
+    navitia::type::GeographicalCoord destin;
+    try{
+        origin = get_geographical_coord(request.origin());
+        destin = get_geographical_coord(request.destination());
+    }catch(const std::exception& e) {
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+        return r;
+    }
+
     auto distance = origin.distance_to(destin);
     pbnavitia::Response r;
     auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
@@ -852,7 +889,13 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     if (entry_point.type == type::Type_e::Address || entry_point.type == type::Type_e::Admin
             || entry_point.type == type::Type_e::StopArea || entry_point.type == type::Type_e::StopPoint
             || entry_point.type == type::Type_e::POI) {
-        entry_point.coordinates = coord_of_entry_point(entry_point, data);
+        try{
+            entry_point.coordinates = coord_of_entry_point(entry_point, data);
+        }catch(const std::exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
+            return r;
+        }
     }
     if ((entry_point.type == type::Type_e::Address)
             || (entry_point.type == type::Type_e::Coord) || (entry_point.type == type::Type_e::Admin)

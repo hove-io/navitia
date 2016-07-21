@@ -159,6 +159,8 @@ def sort_journeys(resp, journey_order, clockwise):
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance):
+    if not pb_resp.journeys:
+        return
     car = next((j for j in pb_resp.journeys if helpers.is_car_direct_path(j)), None)
     if car is None or not car.HasField('co2_emission'):
         # if there is no car journey found, we request kraken to give us an estimation of
