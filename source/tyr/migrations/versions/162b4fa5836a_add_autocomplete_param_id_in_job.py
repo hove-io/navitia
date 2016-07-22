@@ -24,7 +24,5 @@ def upgrade():
 
 
 def downgrade():
+    op.drop_constraint("fk_job_autocomplete_parameter", "job")
     op.drop_column('job', 'autocomplete_params_id')
-    op.drop_constraint('fk_job_autocomplete_parameter',
-                       'job',
-                       'foreignkey')
