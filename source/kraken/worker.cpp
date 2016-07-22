@@ -51,6 +51,16 @@ static const double CO2_ESTIMATION_COEFF = 1.35;
 
 namespace navitia {
 
+// local exception, only used in this file
+struct coord_conversion_exception : public recoverable_exception
+{
+    coord_conversion_exception(const std::string& msg): recoverable_exception(msg) {}
+    coord_conversion_exception() = default;
+    coord_conversion_exception(const coord_conversion_exception&) = default;
+    coord_conversion_exception& operator=(const coord_conversion_exception&) = default;
+    virtual ~coord_conversion_exception() noexcept{};
+};
+
 static type::GeographicalCoord coord_of_entry_point(
         const type::EntryPoint & entry_point,
         const boost::shared_ptr<const navitia::type::Data> data) {
