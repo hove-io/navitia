@@ -318,7 +318,7 @@ void EdReader::fill_timezones(navitia::type::Data& data, pqxx::work& work) {
         //we add a day because 'end' is not in the period (and we want it to be)
         bg::date end = bg::from_string(const_it["end"].as<std::string>()) + bg::days(1);
         auto name = const_it["name"].as<std::string>();
-        int16_t utc_offset = const_it["offset"].as<int16_t>();
+        int32_t utc_offset = const_it["offset"].as<int32_t>();
         timezones[name][utc_offset].push_back(bg::date_period(begin, end));
 
         auto id = const_it["id"].as<idx_t>();

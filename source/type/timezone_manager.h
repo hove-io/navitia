@@ -49,17 +49,17 @@ class TimeZoneHandler {
      *
      * offsets are in seconds
      */
-    std::vector<std::pair<const ValidityPattern, int16_t>> time_changes;
+    std::vector<std::pair<const ValidityPattern, int32_t>> time_changes;
 public:
     std::string tz_name;
-    using dst_periods = std::map<int16_t, std::vector<boost::gregorian::date_period>>;
+    using dst_periods = std::map<int32_t, std::vector<boost::gregorian::date_period>>;
     TimeZoneHandler(const std::string& name,
                     const boost::gregorian::date& production_period_beg,
                     const dst_periods&);
     TimeZoneHandler() {}
-    int16_t get_utc_offset(boost::gregorian::date day) const;
-    int16_t get_utc_offset(int day) const;
-    int16_t get_first_utc_offset(const ValidityPattern& vp) const;
+    int32_t get_utc_offset(boost::gregorian::date day) const;
+    int32_t get_utc_offset(int day) const;
+    int32_t get_first_utc_offset(const ValidityPattern& vp) const;
     dst_periods get_periods_and_shift() const;
 
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
@@ -72,7 +72,7 @@ class TimeZoneManager {
 
 public:
     const TimeZoneHandler* get_or_create(const std::string&, const boost::gregorian::date& production_period_beg,
-                                         const std::map<int16_t, std::vector<boost::gregorian::date_period>>&);
+                                         const std::map<int32_t, std::vector<boost::gregorian::date_period>>&);
 
     const TimeZoneHandler* get(const std::string& name) const;
     const TimeZoneHandler* get_first_timezone() const;
