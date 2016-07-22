@@ -85,8 +85,8 @@ static type::GeographicalCoord coord_of_entry_point(
             return poi->second->coord;
         }
     }
-    LOG4CPLUS_ERROR(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
-            "The entry point: " + entry_point.uri + " is not valid");
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
+            "The entry point: " << entry_point.uri << " is not valid");
     throw navitia::recoverable_exception{"The entry point: " + entry_point.uri + " is not valid"};
 }
 
@@ -484,7 +484,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
         type::GeographicalCoord  coord;
         try{
             coord = coord_of_entry_point(ep, data);
-        }catch(const std::exception& e) {
+        }catch(const navitia::recoverable_exception& e) {
             pbnavitia::Response r;
             fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
             return r;
