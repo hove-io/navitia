@@ -748,13 +748,26 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
     for(int i = 0; i < request_iso.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request_iso.boundary_duration(i));
     }
+    auto streetnetwork = request.streetnetwork_params();
+    auto mode_iso = request.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
+    auto mode = type::static_data::get()->modeByCaption(mode_iso);
+    double speed;
+    switch(mode) {
+        case nt::Mode_e::Walking: speed = streetnetwork.walking_speed();
+        break;
+        case nt::Mode_e::Bike: speed = streetnetwork.bike_speed();
+        break;
+        case nt::Mode_e::Car: speed = streetnetwork.car_speed();
+        break;
+        case nt::Mode_e::Bss: speed = streetnetwork.bss_speed();
+        break;
+    }
 
     return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
                                                       boundary_duration, request.max_transfers(),
                                                       arg.accessibilite_params, arg.forbidden,
                                                       request.clockwise(), arg.rt_level,
-                                                      *street_network_worker,
-                                                      request.streetnetwork_params().walking_speed());
+                                                      *street_network_worker, speed);
 
 }
 

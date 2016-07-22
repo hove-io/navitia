@@ -234,6 +234,10 @@ class Scenario(object):
         sn_params.bss_speed = request["bss_speed"]
 
         journey_req.max_transfers = request["max_transfers"]
+        if len(request["origin_mode"]) > 1:
+            abort(400, message="you cannot provide several 'first_section_mode[]'")
+        if len(request["destination_mode"]) > 1:
+            abort(400, message="you cannot provide several 'last_section_mode[]'")
         self.origin_modes = request["origin_mode"]
         self.destination_modes = request["destination_mode"]
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:

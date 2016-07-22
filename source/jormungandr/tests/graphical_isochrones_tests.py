@@ -207,6 +207,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             multi_poly_section_mode = asShape(isochrone_section_mode['geojson'])
 
             assert not multi_poly_basic.contains(multi_poly_section_mode)
+            assert multi_poly_section_mode.contains(multi_poly_basic)
 
     def test_graphical_isochrone_multi_isochrone(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}"
@@ -330,3 +331,4 @@ class TestGraphicalIsochrone(AbstractTestFixture):
 
         assert error_code == 400
         assert normal_response['message'] == 'you cannot provide more than 10 \'boundary_duration[]\''
+
