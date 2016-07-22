@@ -436,7 +436,7 @@ def is_valid_isochrone_response(response, tester, query_str):
     # to have forwarded all params, (and the time must be right)
 
 
-    feed_publishers = get_not_null(response, "feed_publishers")
+    feed_publishers = response.get("feed_publishers", [])
     for feed_publisher in feed_publishers:
         is_valid_feed_publisher(feed_publisher)
 
@@ -1123,3 +1123,4 @@ def new_default_pagination_journey_comparator(clockwise):
             make_crit(lambda j: get_valid_int(j['duration'])),
             make_crit(lambda j: len(j.get('sections', []))),
     ]
+

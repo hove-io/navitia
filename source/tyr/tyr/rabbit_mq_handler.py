@@ -26,5 +26,3 @@ class RabbitMqHandler(object):
                 exchange=self._task_exchange,
                 declare=[self._task_exchange],
                 routing_key=routing_key)
-
-        self._connection.release()

@@ -449,8 +449,15 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
 
 void EdPersistor::insert_metadata_georef() {
     // If we do one poi2ed, we don't want to read pois from OSM anymore
-    this->lotus.exec(Lotus::make_upsert_string("navitia.parameters",
-                {{"parse_pois_from_osm", is_osm_reader ? "t" : "f"}}));
+    std::vector<std::pair<std::string, std::string>> values = {{"parse_pois_from_osm", (is_osm_reader && parse_pois) ? "t" : "f"}};
+
+    if(!street_network_source.empty()){
+        values.push_back({"street_network_source", street_network_source});
+    }
+    if(parse_pois && !poi_source.empty()){
+        values.push_back({"poi_source", poi_source});
+    }
+    this->lotus.exec(Lotus::make_upsert_string("navitia.parameters", values));
 }
 
 void EdPersistor::clean_georef(){

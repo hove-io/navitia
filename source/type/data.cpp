@@ -64,7 +64,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 59; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 60; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),

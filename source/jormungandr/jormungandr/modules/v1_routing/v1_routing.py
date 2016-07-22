@@ -41,6 +41,7 @@ from jormungandr.interfaces.v1 import Disruptions
 from jormungandr.interfaces.v1 import Calendars
 from jormungandr.interfaces.v1 import converters_collection_type
 from jormungandr.interfaces.v1 import Status
+from jormungandr.interfaces.v1 import GeoStatus
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app
@@ -225,6 +226,9 @@ class V1Routing(AModule):
         self.add_resource(Status.Status,
                           region + 'status',
                           endpoint='status')
+        self.add_resource(GeoStatus.GeoStatus,
+                          region + '_geo_status',
+                          endpoint='geo_status')
 
         self.add_resource(Calendars.Calendars,
                           region + 'calendars',

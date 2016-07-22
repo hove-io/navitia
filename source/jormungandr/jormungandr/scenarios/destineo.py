@@ -263,7 +263,7 @@ class Scenario(default.Scenario):
 
         # for destineo, we use a custom pagination
         response_tc.ClearField(b'links')
-        self._compute_pagination_links(response_tc, instance)
+        self._compute_pagination_links(response_tc, instance, request['clockwise'])
 
         return response_tc
 
@@ -408,7 +408,7 @@ class Scenario(default.Scenario):
             list_journeys = filter(filter_journey, journeys)
         return list_journeys
 
-    def _add_next_link(self, resp, params):
+    def _add_next_link(self, resp, params, clockwise):
         journeys = self.filter_journeys(resp.journeys)
         if not journeys:
             return None
@@ -417,7 +417,7 @@ class Scenario(default.Scenario):
         params['datetime_represents'] = 'departure'
         add_link(resp, rel='next', **params)
 
-    def _add_prev_link(self, resp, params):
+    def _add_prev_link(self, resp, params, clockwise):
         journeys = self.filter_journeys(resp.journeys)
         if not journeys:
             return None

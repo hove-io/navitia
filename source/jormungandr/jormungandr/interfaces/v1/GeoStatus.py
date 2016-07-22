@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,30 +28,23 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from abc import abstractmethod, ABCMeta
+from flask.ext.restful import Resource, fields, marshal_with
+from jormungandr import i_manager
+from jormungandr import app
 
+geo_status = {
+        'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
+            'nb_admins': fields.Raw,
+            'nb_admins_from_cities': fields.Raw,
+            'nb_ways': fields.Raw,
+            'nb_addresses': fields.Raw,
+            'nb_pois': fields.Raw,
+            'poi_sources': fields.List(fields.String),
+        })
+}
 
-class AbstractAutocomplete(object):
-    """
-    abstract class managing calls autocomplete
-    """
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def get(self, query, instance):
-        pass
-
-    @abstractmethod
-    def geo_status(self, instance):
-        pass
-
-
-class GeoStatusResponse(object):
-    def __init__(self):
-        self.street_network_sources = []
-        self.poi_sources = []
-        self.nb_admins = None
-        self.nb_admins_from_cities = None
-        self.nb_ways = None
-        self.nb_addresses = None
-        self.nb_pois = None
+class GeoStatus(Resource):
+    @marshal_with(geo_status)
+    def get(self, region):
+        instance = i_manager.get_instances(region)[0]
+        return {'geo_status': instance.autocomplete.geo_status(instance)}, 200

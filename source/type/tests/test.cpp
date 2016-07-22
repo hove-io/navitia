@@ -200,3 +200,19 @@ BOOST_AUTO_TEST_CASE(tz_handler_test) {
 
     BOOST_CHECK_EQUAL_RANGE(periods, build_dst_periods);
 }
+
+/*
+ * Test that the tz handler doesn't overflow
+ */
+BOOST_AUTO_TEST_CASE(tz_handler_overflow_test) {
+    namespace nt = navitia::type;
+    const nt::TimeZoneHandler::dst_periods periods {
+        {"12:00"_t, {{"20160101"_d, "20160601"_d}, {"20160901"_d, "20170101"_d}}}
+    };
+    nt::TimeZoneHandler tz_handler{"paris", "20160101"_d, periods};
+
+    auto build_dst_periods = tz_handler.get_periods_and_shift();
+
+    BOOST_CHECK_EQUAL_RANGE(periods, build_dst_periods);
+    BOOST_CHECK_EQUAL(build_dst_periods.begin()->first, 60*60*12);
+}

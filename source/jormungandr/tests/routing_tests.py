@@ -90,6 +90,8 @@ class TestJourneys(AbstractTestFixture):
         assert len(response['journeys']) == 1
 
         assert response['journeys'][0]["type"] == "best"
+        assert response['journeys'][0]['durations']['total'] == 99
+        assert response['journeys'][0]['durations']['walking'] == 97
 
     def test_other_filtering(self):
         """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
@@ -111,6 +113,9 @@ class TestJourneys(AbstractTestFixture):
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['duration'] == response['journeys'][0]['sections'][0]['duration']
         assert response['journeys'][0]['duration'] == 205
+        assert response['journeys'][0]['durations']['total'] == 205
+        assert response['journeys'][0]['durations']['walking'] == 205
+
         assert response['journeys'][0]['departure_date_time'] == response['journeys'][0]['sections'][0]['departure_date_time']
         assert response['journeys'][0]['departure_date_time'] == '20120614T080000'
         assert response['journeys'][0]['arrival_date_time'] == response['journeys'][0]['sections'][0]['arrival_date_time']
@@ -389,16 +394,11 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
 
         assert len(response["disruptions"]) == 0
         feed_publishers = response["feed_publishers"]
+        assert len(feed_publishers) == 1
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)
 
         feed_publisher = feed_publishers[0]
-        assert (feed_publisher["id"] == "builder")
-        assert (feed_publisher["name"] == "canal tp")
-        assert (feed_publisher["license"] == "ODBL")
-        assert (feed_publisher["url"] == "www.canaltp.fr")
-
-        feed_publisher = feed_publishers[1]
         assert (feed_publisher["id"] == "base_contributor")
         assert (feed_publisher["name"] == "base contributor")
         assert (feed_publisher["license"] == "L-contributor")
@@ -543,6 +543,9 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
+        eq_(response['journeys'][1]['duration'], 275)
+        eq_(response['journeys'][1]['durations']['total'], 275)
+        eq_(response['journeys'][1]['durations']['walking'], 275)
 
 
 @dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})

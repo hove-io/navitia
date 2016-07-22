@@ -265,7 +265,7 @@ class TestBssProvider(AbstractTestFixture):
 
     def pois_without_stands_on_places_nearby_test(self):
         with mock_bss_providers(pois_supported=['station_unknown']):
-            r = self.query_region("places/stop_area:stop1/places_nearby", display=False)
+            r = self.query_region("places/admin:74435/places_nearby", display=False)
 
             places_nearby = get_not_null(r, 'places_nearby')
             assert {p[p['embedded_type']]['id'] for p in places_nearby} == {'parking_1', 'station_1',
@@ -281,7 +281,7 @@ class TestBssProvider(AbstractTestFixture):
 
     def pois_with_stands_on_second_places_nearby_test(self):
         with mock_bss_providers(pois_supported=['station_1']):
-            r = self.query_region('places/stop_area:stop1/places_nearby', display=False)
+            r = self.query_region('places/admin:74435/places_nearby', display=False)
 
             places_nearby = get_not_null(r, 'places_nearby')
             assert {p[p['embedded_type']]['id'] for p in places_nearby} == {'parking_1', 'station_1',
@@ -306,7 +306,7 @@ class TestBssProvider(AbstractTestFixture):
 
     def pois_with_stands_on_all_places_nearby_test(self):
         with mock_bss_providers(pois_supported=[]):
-            r = self.query_region('places/stop_area:stop1/places_nearby', display=False)
+            r = self.query_region('places/admin:74435/places_nearby', display=False)
 
             places_nearby = get_not_null(r, 'places_nearby')
             assert {p[p['embedded_type']]['id'] for p in places_nearby} == {'parking_1', 'station_1',

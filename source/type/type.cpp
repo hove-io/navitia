@@ -544,7 +544,7 @@ MetaVehicleJourney::get_base_vj_circulating_at_date(const boost::gregorian::date
     return nullptr;
 }
 
-int16_t VehicleJourney::utc_to_local_offset() const {
+int32_t VehicleJourney::utc_to_local_offset() const {
     const auto* vp = validity_patterns[realtime_level];
     if (! vp) {
         throw navitia::recoverable_exception("vehicle journey " + uri +

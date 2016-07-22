@@ -45,9 +45,11 @@ struct EdPersistor{
     log4cplus::Logger logger;
     bool parse_pois = true, is_osm_reader;
 
+    std::string poi_source = "";
+    std::string street_network_source = "";
 
-    EdPersistor(const std::string& connection_string,
-            const bool is_osm_reader = true);
+
+    EdPersistor(const std::string& connection_string, const bool is_osm_reader = true);
 
     std::set<std::string> ignored_uris;
 
@@ -78,11 +80,11 @@ struct EdPersistor{
     void insert_poi_properties(const ed::Georef& data);
 
     void compute_bounding_shape();
+    void insert_metadata_georef();
 
 private:
     void insert_feed_info(const std::map<std::string, std::string>& feed_infos);
     void insert_metadata(const navitia::type::MetaData& meta);
-    void insert_metadata_georef();
     void insert_sa_sp_properties(const ed::Data& data);
     void insert_stop_areas(const std::vector<types::StopArea*>& stop_areas);
 
