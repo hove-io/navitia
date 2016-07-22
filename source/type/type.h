@@ -507,7 +507,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
     // For example for departure board over a period (calendar)
     // thus we might need the shift to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset() const; //in seconds
+    int32_t utc_to_local_offset() const; //in seconds
 
     RTLevel realtime_level = RTLevel::Base;
     bool is_base_schedule() const{

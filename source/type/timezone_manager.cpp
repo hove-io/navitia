@@ -51,7 +51,7 @@ tz_name(name) {
     }
 }
 
-int16_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
+int32_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
     for (const auto& vp_shift: time_changes) {
         if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
@@ -59,7 +59,7 @@ int16_t TimeZoneHandler::get_utc_offset(boost::gregorian::date day) const {
     throw navitia::recoverable_exception("day " + boost::gregorian::to_iso_string(day) + " not in production period");
 }
 
-int16_t TimeZoneHandler::get_utc_offset(int day) const {
+int32_t TimeZoneHandler::get_utc_offset(int day) const {
     for (const auto& vp_shift: time_changes) {
         if (vp_shift.first.check(day)) { return vp_shift.second; }
     }
@@ -67,7 +67,7 @@ int16_t TimeZoneHandler::get_utc_offset(int day) const {
     throw navitia::recoverable_exception("day " + std::to_string(day) + " not in production period");
 }
 
-int16_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
+int32_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
     // by construction a validity pattern should never span accros DST, else all resulting local time
     // would be meaning less.
     // so in this method we return the first dst found
@@ -124,7 +124,7 @@ TimeZoneHandler::dst_periods TimeZoneHandler::get_periods_and_shift() const {
 
 const TimeZoneHandler*
 TimeZoneManager::get_or_create(const std::string& name, const boost::gregorian::date& production_period_beg,
-                               const std::map<int16_t, std::vector<boost::gregorian::date_period>>& offsets) {
+                               const std::map<int32_t, std::vector<boost::gregorian::date_period>>& offsets) {
     auto it = tz_handlers.find(name);
 
     if (it == std::end(tz_handlers)) {
