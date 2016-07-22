@@ -420,7 +420,7 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
     type::GeographicalCoord  coord;
     try{
         coord = coord_of_entry_point(ep, data);
-    }catch(const std::exception& e) {
+    }catch(const navitia::recoverable_exception& e) {
         pbnavitia::Response r;
         fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
         return r;
@@ -702,7 +702,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                     arg.rt_level, current_datetime, seconds{request.walking_transfer_penalty()}, request.max_duration(),
                     request.max_transfers(), request.max_extra_second_pass());
         }
-    }catch(const std::exception& e) {
+    }catch(const navitia::recoverable_exception& e) {
         pbnavitia::Response r;
         fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
         return r;
@@ -778,7 +778,7 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
                 request.clockwise(), arg.rt_level,
                 *street_network_worker,
                 request.streetnetwork_params().walking_speed());
-    }catch(const std::exception& e) {
+    }catch(const navitia::recoverable_exception& e) {
         pbnavitia::Response r;
         fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
         return r;
@@ -800,7 +800,7 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     try{
         origin = get_geographical_coord(request.origin());
         destin = get_geographical_coord(request.destination());
-    }catch(const std::exception& e) {
+    }catch(const navitia::recoverable_exception& e) {
         pbnavitia::Response r;
         fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
         return r;
@@ -891,7 +891,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
             || entry_point.type == type::Type_e::POI) {
         try{
             entry_point.coordinates = coord_of_entry_point(entry_point, data);
-        }catch(const std::exception& e) {
+        }catch(const navitia::recoverable_exception& e) {
             pbnavitia::Response r;
             fill_pb_error(pbnavitia::Error::no_solution, e.what(), r.mutable_error());
             return r;
