@@ -975,11 +975,19 @@ void StopTimeGtfsHandler::finish(Data& data) {
         for (auto it_next = it_st + 1; it_next != vj->stop_time_list.end(); it_next++, it_st ++) {
             const auto* st1 = *it_st;
             const auto* st2 = *it_next;
+            bool is_valid_vj = true;
             if (! (st1->arrival_time <= st1->departure_time &&
                   st1->departure_time <= st2->arrival_time &&
                   st2->arrival_time <= st2->departure_time)) {
-                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", the stop times "
-                                        "are not correcly ordered "
+                is_valid_vj = false;
+                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", stop times are not correctly ordered");
+            }
+            if (st1->arrival_time < 0 || st1->departure_time < 0
+                    || st2->arrival_time < 0 || st2->departure_time < 0) {
+                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", stop times are not correct");
+            }
+            if (! is_valid_vj) {
+                LOG4CPLUS_INFO(logger, "concerned stop times : "
                                << "stop time " << st1->order << " [" << st1->arrival_time
                                << ", " << st1->departure_time <<"]"
                                << " stop time " << st2->order << " [" << st2->arrival_time
@@ -994,7 +1002,11 @@ void StopTimeGtfsHandler::finish(Data& data) {
 }
 
 static int to_utc(const std::string& local_time, int utc_offset) {
-    return time_to_int(local_time) - utc_offset;
+    int local = time_to_int(local_time);
+    if (local == -1) {
+        return -1;
+    }
+    return local - utc_offset;
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
