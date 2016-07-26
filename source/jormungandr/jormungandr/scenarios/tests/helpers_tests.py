@@ -47,6 +47,16 @@ def get_walking_walking_journey():
 
     return journey
 
+def get_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    return journey
+
 def get_walking_bike_journey():
     journey = response_pb2.Journey()
 
@@ -791,6 +801,7 @@ def fallback_mode_sort_test():
     assert l[3] ==  'car'
 
 def is_car_direct_path_test():
+    assert not is_car_direct_path(get_walking_journey())
     assert not is_car_direct_path(get_walking_car_journey())
     assert not is_car_direct_path(get_car_walking_journey())
     assert is_car_direct_path(get_car_journey())
