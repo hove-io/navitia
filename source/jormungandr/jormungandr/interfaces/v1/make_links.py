@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask import url_for
+from flask import url_for, request
 from collections import OrderedDict
 from functools import wraps
 from sqlalchemy.sql.elements import _type_from_args
@@ -120,25 +120,13 @@ class add_pagination_links(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            endpoint = None
-            pagination = None
             if isinstance(objects, tuple):
                 data, code, header = unpack(objects)
             else:
                 data = objects
-            for key, value in data.items():
-                if endpoint is None and key == "regions":
-                    endpoint = "v1.coverage"
-                elif pagination is None and key == "pagination":
-                    pagination = value
-                elif endpoint is None and key in collections_to_resource_type.keys():
-                    endpoint = "v1." + key + "."
-                    endpoint += "id" if "id" in kwargs else "collection"
-                elif endpoint is None and key in ["journeys", "stop_schedules", "route_schedules",
-                                                  "departures", "arrivals", "places_nearby", "calendars"]:
-                    endpoint = "v1." + key
+            pagination = data.get('pagination', None)
+            endpoint = request.endpoint
             if pagination and endpoint and "region" in kwargs:
-                pagination = data["pagination"]
                 if "start_page" in pagination and \
                         "items_on_page" in pagination and \
                         "items_per_page" in pagination and \
@@ -206,7 +194,7 @@ class add_coverage_link(generate_links):
                 data, code, header = unpack(objects)
             else:
                 data = objects
-            if isinstance(data, OrderedDict):
+            if isinstance(data, dict) or isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for link in self.links:
@@ -233,7 +221,7 @@ class add_collection_links(generate_links):
                 data, code, header = unpack(objects)
             else:
                 data = objects
-            if isinstance(data, OrderedDict):
+            if isinstance(data, dict) or isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(objects, True)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for collection in self.collections:
@@ -316,7 +304,7 @@ class clean_links(object):
                     return data, code, header
             else:
                 data = response
-            if isinstance(data, OrderedDict) and "links" in data:
+            if (isinstance(data, dict) or isinstance(data, OrderedDict)) and "links" in data:
                 for link in data['links']:
                     link['href'] = link['href'].replace("%7B", "{")\
                                                .replace("%7D", "}")\
