@@ -140,12 +140,14 @@ class add_computed_resources(object):
                     data['links'].append({
                         "href": url_for("v1." + api, **kwargs),
                         "rel": api,
+                        "type": api,
                         "templated": templated
                     })
             if collection in ['stop_areas', 'stop_points', 'addresses']:
                 data['links'].append({
                     "href": url_for("v1.journeys", **kwargs),
                     "rel": "journeys",
+                    "type": "journey",
                     "templated": templated
                 })
             #for lines we add the link to the calendars
@@ -154,12 +156,14 @@ class add_computed_resources(object):
                     data['links'].append({
                         "href": url_for("v1.calendars", **kwargs),
                         "rel": "calendars",
+                        "type": "calendar",
                         "templated": templated
                     })
                 if collection in ['stop_areas', 'lines', 'networks']:
                     data['links'].append({
                         "href": url_for("v1.traffic_reports", **kwargs),
                         "rel": "disruptions",
+                        "type": "disruption",
                         "templated": templated
                     })
             if isinstance(response, tuple):
