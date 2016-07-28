@@ -182,7 +182,7 @@ int time_to_int(const std::string & time) {
         result += boost::lexical_cast<int>(elts[2]);
     }
     catch(boost::bad_lexical_cast){
-        return -1;
+        return std::numeric_limits<int>::min();
     }
     return result;
 }
@@ -390,7 +390,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 
 StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     // In GTFS the file contains the stop_area and the stop_point
-    // We test if it's a dupplicate
+    // We test if it's a duplicate
     if (gtfs_data.stop_map.find(row[id_c]) != gtfs_data.stop_map.end() ||
             gtfs_data.stop_area_map.find(row[id_c]) != gtfs_data.stop_area_map.end()) {
         LOG4CPLUS_WARN(logger, "The stop " + row[id_c] +" has been ignored");
@@ -861,7 +861,12 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     nm::Line* line = it->second;
 
-    nm::Route* route = get_or_create_route(data, {line, row[direction_id_c]});
+    // direction_id is optional (and possible values "0" or "1"), so defaulting to "0"
+    std::string direction_id = "";
+    if (direction_id_c != -1) {
+        direction_id = row[direction_id_c];
+    }
+    nm::Route* route = get_or_create_route(data, {line, direction_id});
 
     auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
     if(empty(vp_range)) {
@@ -970,11 +975,21 @@ void StopTimeGtfsHandler::finish(Data& data) {
         for (auto it_next = it_st + 1; it_next != vj->stop_time_list.end(); it_next++, it_st ++) {
             const auto* st1 = *it_st;
             const auto* st2 = *it_next;
+            bool is_valid_vj = true;
             if (! (st1->arrival_time <= st1->departure_time &&
                   st1->departure_time <= st2->arrival_time &&
                   st2->arrival_time <= st2->departure_time)) {
-                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", the stop times "
-                                        "are not correcly ordered "
+                is_valid_vj = false;
+                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", stop times are not correctly ordered");
+            }
+            int neg_inf = std::numeric_limits<int>::min();
+            if (st1->arrival_time == neg_inf || st1->departure_time == neg_inf
+                    || st2->arrival_time == neg_inf || st2->departure_time == neg_inf) {
+                is_valid_vj = false;
+                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", stop times are not correct");
+            }
+            if (! is_valid_vj) {
+                LOG4CPLUS_INFO(logger, "concerned stop times : "
                                << "stop time " << st1->order << " [" << st1->arrival_time
                                << ", " << st1->departure_time <<"]"
                                << " stop time " << st2->order << " [" << st2->arrival_time
@@ -989,7 +1004,11 @@ void StopTimeGtfsHandler::finish(Data& data) {
 }
 
 static int to_utc(const std::string& local_time, int utc_offset) {
-    return time_to_int(local_time) - utc_offset;
+    int local = time_to_int(local_time);
+    if (local != std::numeric_limits<int>::min()) {
+        local -= utc_offset;
+    }
+    return local;
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
