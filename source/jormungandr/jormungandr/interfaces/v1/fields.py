@@ -839,6 +839,7 @@ instance_parameters = {
 
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
+instance_status_with_parameters['realtime_contributors'] = fields.List(fields.String(), attribute='rt_contributors')
 
 instance_traveler_types = {
     'traveler_type': fields.String,

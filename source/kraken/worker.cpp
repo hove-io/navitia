@@ -220,6 +220,9 @@ pbnavitia::Response Worker::status() {
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
     status->set_status(get_string_status(d));
     status->set_is_realtime_loaded(d->is_realtime_loaded);
+    for(const auto& contrib: this->conf.rt_topics()){
+        status->add_rt_contributors(contrib);
+    }
     if (d->loaded) {
         status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
