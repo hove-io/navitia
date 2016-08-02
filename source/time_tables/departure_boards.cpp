@@ -196,13 +196,10 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if (! calendar_id) {
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, pb_creator.data, rt_level);
+            std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         } else {
             stop_times = routing::get_calendar_stop_times(routepoint_jpps, DateTimeUtils::hour(handler.date_time),
                     DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
-        }
-        if ( ! calendar_id) {
-            std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
-        } else {
             // for calendar we want the first stop time to start from handler.date_time
             std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(handler.date_time));
             if (stop_times.size() > items_per_route_point) {
