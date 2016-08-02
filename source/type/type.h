@@ -167,7 +167,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
 
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const StopPoint & other) const { return this < &other; }
+    bool operator<(const StopPoint & other) const;
 
 };
 
@@ -668,7 +668,7 @@ struct Route : public Header, Nameable, HasMessages {
     }
 
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Route & other) const { return this < &other; }
+    bool operator<(const Route & other) const;
 
     std::string get_label() const;
 };
