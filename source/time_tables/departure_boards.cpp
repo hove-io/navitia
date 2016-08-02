@@ -171,14 +171,12 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     }
     size_t total_result = sps_routes.size();
     sps_routes = paginate(sps_routes, count, start_page);
-    //Trie des vecteurs de date_times stop_times
     auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
                     return dt1.first < dt2.first;
                 };
-    // On regroupe entre eux les stop_times appartenant
-    // au meme couple (stop_point, route)
-    // On veut en effet afficher les départs regroupés par route
-    // (une route étant une vague direction commerciale
+    // we group the stoptime belonging to the same pair (stop_point, route)
+    // since we want to display the departures grouped by route
+    // the route being a loose commercial direction
     for (const auto& sp_route: sps_routes) {
         std::vector<routing::datetime_stop_time> stop_times;
         const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first.val];
