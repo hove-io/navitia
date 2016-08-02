@@ -3004,6 +3004,5 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_1) {
     BOOST_CHECK_EQUAL(res2.at(0).items.at(1).stop_points.front()->uri, chateletLesHalles);
     BOOST_CHECK_EQUAL(res2.at(0).items.at(1).stop_points.back()->uri, chatelet);
     BOOST_CHECK_EQUAL(res2.at(0).items.at(3).stop_points.front()->uri, chatelet);
-
 }
 
