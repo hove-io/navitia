@@ -628,7 +628,6 @@ void RAPTOR::set_valid_jp_and_jpp(
     // feasible ones.
     jpps_from_sp = data.dataRaptor->jpps_from_sp;
     jpps_from_sp.filter_jpps(valid_journey_pattern_points);
-
 }
 
 template<typename Visitor>
