@@ -208,8 +208,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         }
 
         //we compute the route status
-        for (const auto& jpp_from_sp: jpps) {
-            const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
+        for (const auto& jpp_idx: routepoint_jpps) {
             const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
             const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
             const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
