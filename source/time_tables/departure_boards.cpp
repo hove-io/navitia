@@ -192,7 +192,6 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
             routepoint_jpps.push_back(jpp_idx);
         }
 
-        std::vector<routing::datetime_stop_time> tmp;
         if (! calendar_id) {
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, pb_creator.data, rt_level);
