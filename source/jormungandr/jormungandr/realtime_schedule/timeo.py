@@ -201,7 +201,7 @@ class Timeo(RealtimeProxy):
             return None
 
         # timeo can only handle items_per_schedule if it's < 5
-        count = min(count, 5) or 5  # if no value defined we ask for 5 passages
+        count = min(count or 5, 5) or 5  # if no value defined we ask for 5 passages
 
         # if a custom datetime is provided we give it to timeo
         dt_param = '&NextStopReferenceTime={dt}'\

@@ -63,4 +63,4 @@ class NavitiaRequest(Request):
     """
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
-        self.id = unicode(uuid.uuid4())
+        self.id = str(uuid.uuid4())
