@@ -14,7 +14,9 @@ SET_PROPERTY(TEST jormungandr PROPERTY
 #we do it the weak way.
 set(JORMUN_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 add_test(jormungandr_integration_tests nosetests --with-doctest -v
-        --with-xunit --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr_integration_tests.xml --doctest-tests "--where=${JORMUN_TEST_PATH}")
+        --with-xunit --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr_integration_tests.xml --doctest-tests "--where=${JORMUN_TEST_PATH}"
+        --with-coverage --cover-inclusive --cover-xml --cover-package=jormungandr
+        --cover-xml-file=${CMAKE_BINARY_DIR}/jormungandr_integration_coverage.xml)
 SET_PROPERTY(TEST jormungandr_integration_tests PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 SET_PROPERTY(TEST jormungandr_integration_tests APPEND PROPERTY
