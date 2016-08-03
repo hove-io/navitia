@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager, bss_provider_manager
 from functools import wraps
-
+import logging
 
 class ManageStands(object):
 
@@ -48,6 +48,10 @@ class ManageStands(object):
             if status == 200 and self.attribute in response:
                 instance = i_manager.instances.get(self.resource.region)
                 if instance and instance.bss_provider:
-                    response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
+                    try:
+                        response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
+                    except:
+                        logger = logging.getLogger(__name__)
+                        logger.exception('Error while handlong BSS realtime availability')
             return response, status, e
         return wrapper

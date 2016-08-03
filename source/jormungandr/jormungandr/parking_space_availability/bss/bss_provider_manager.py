@@ -50,7 +50,7 @@ class BssProviderManager(object):
         return places
 
     def handle_poi(self, item):
-        if item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
+        if 'poi_type' in item and item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
             provider = self.find_provider(item)
             if provider:
                 item['stands'] = provider.get_informations(item)
