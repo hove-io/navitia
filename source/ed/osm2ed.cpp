@@ -338,6 +338,7 @@ void OSMCache::insert_edges() {
             "cycles_allowed", "cars_allowed"});
     std::stringstream geog;
     geog << std::cout.precision(10);
+    std::vector<std::string> coords;
     size_t n_inserted = 0;
     const size_t max_n_inserted = 20000;
     for (const auto& way : ways) {
@@ -354,7 +355,13 @@ void OSMCache::insert_edges() {
                 // If a node is only used by one way we can simplify the and reduce the number of edges, we don't need
                 // to have the perfect representation of the way on the graph, but we have the correct representation
                 // in the linestring
-                geog << node->coord_to_string() << ")";
+                coords.push_back(node->coord_to_string());
+                geog.str("");
+                geog << "LINESTRING(" << *(coords.begin());
+                for(auto c = coords.begin() + 1 ; c < coords.end() ; c++) {
+                    geog << ", " << *c;
+                }
+                geog << ")";
                 lotus.insert({std::to_string(prev_node->osm_id),
                         std::to_string(node->osm_id), std::to_string(ref_way_id),
                         geog.str(), std::to_string(way.properties[OSMWay::FOOT_FWD]),
@@ -363,6 +370,12 @@ void OSMCache::insert_edges() {
                 // In most of the case we need the reversal,
                 // that'll be wrong for some in case in car
                 // We need to work on it
+                geog.str("");
+                geog << "LINESTRING(" << *(coords.rbegin());
+                for(auto c = coords.rbegin() + 1; c < coords.rend() ; c++) {
+                    geog << ", " << *c;
+                }
+                geog << ")";
                 lotus.insert({std::to_string(node->osm_id),
                         std::to_string(prev_node->osm_id), std::to_string(ref_way_id),
                         geog.str(), std::to_string(way.properties[OSMWay::FOOT_BWD]),
@@ -372,11 +385,10 @@ void OSMCache::insert_edges() {
                 n_inserted = n_inserted + 2;
             }
             if (prev_node == nodes.end()) {
-                geog.str("");
-                geog << "LINESTRING(";
+                coords.clear();
                 prev_node = node;
             }
-            geog << node->coord_to_string() << ", ";
+            coords.push_back(node->coord_to_string());
         }
         if ((n_inserted % max_n_inserted) == 0) {
             lotus.finish_bulk_insert();
