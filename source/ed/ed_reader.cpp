@@ -1428,7 +1428,8 @@ EdReader::get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t ta
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
     std::string request = "select e.source_node_id, target_node_id, e.way_id, "
                           "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
-                          "e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
+                          "e.cycles_allowed as bike,e.cars_allowed as car, "
+                          "ST_ASTEXT(the_geog) AS geometry from georef.edge e;";
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0;
     int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
@@ -1457,6 +1458,12 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         navitia::georef::Edge e;
         float len = const_it["leng"].as<float>();
         e.way_idx = way->idx;
+        nt::LineString geometry;
+        boost::geometry::read_wkt(const_it["geometry"].as<std::string>(), geometry);
+        if(!geometry.empty()) {
+            e.geom_idx = way->geoms.size();
+            way->geoms.push_back(geometry);
+        }
 
         if (const_it["pede"].as<bool>()) {
             if (auto dur = get_duration(nt::Mode_e::Walking, len, source, target)) {

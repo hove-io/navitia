@@ -82,10 +82,11 @@ struct Vertex {
 
 struct Edge {
     nt::idx_t way_idx = nt::invalid_idx; //< indexe vers le nom de rue
+    nt::idx_t geom_idx = nt::invalid_idx; // geometry index
     navitia::time_duration duration = {}; // duration of the edge
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & duration;
+        ar & way_idx & geom_idx & duration;
     }
     Edge(nt::idx_t wid, navitia::time_duration dur) : way_idx(wid), duration(dur) {}
     Edge() {}
@@ -144,6 +145,7 @@ public:
     std::vector< HouseNumber > house_number_left;
     std::vector< HouseNumber > house_number_right;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
+    std::vector<nt::LineString> geoms;
 
     void add_house_number(const HouseNumber&);
     nt::GeographicalCoord nearest_coord(const int, const Graph&) const;
@@ -152,7 +154,7 @@ public:
     nt::GeographicalCoord projected_centroid(const Graph&) const;
     nt::MultiLineString make_multiline(const Graph&) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges & geoms;
     }
     std::string get_label() const;
 
