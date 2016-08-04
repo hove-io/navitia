@@ -180,6 +180,219 @@ static Path compute_path(PathFinder& finder, const navitia::type::GeographicalCo
     return finder.get_path(dest, best_pair);
 }
 
+/*
+ * We have this graph
+ *
+ * Without geometries :
+ *                                     x5
+ *  * 30           e ---------- d
+ *  |             /             |
+ *  |            /              |
+ *  |           /               |
+ *  |          /    x1          |
+ *  |         b                 |
+ *  |        /                  | x2
+ *  |       /                   |
+ *  |      /                    |
+ *  |     /                     |
+ *  |    /                      |
+ *  |   a ----x4----------------c
+ *  |                x3
+ * 0,0 ------------------------------------------ 50
+ *
+ *  *
+ * With geometries :
+ *                                     x5
+ *  * 30      .--- e ---------- d -----------.
+ *  |        /                                \
+ *  |       /                                  \
+ *  |      /                                    \
+ *  |     /         x1   .-----.                 \
+ *  |    '---- b         |     |                  )
+ *  |          |         |     | x2              /
+ *  |          |         |     |                /
+ *  |          |         |     |               /
+ *  |          |         |     |              /
+ *  |   .------'         |     |             /
+ *  |   a --.  x4        |     c -----------'
+ *  |       '--------x3--'
+ * 0,0 ------------------------------------------ 50
+ */
+BOOST_AUTO_TEST_CASE(nearest_edge_with_geometries) {
+    GraphBuilder b;
+    b("a", 5, 5)("b", 15, 20)("c", 30, 5)("d", 30, 30)("e", 20, 30);
+    b("a", "b")("a", "c")("b", "e")("c", "d")("d", "e");
+
+    nt::GeographicalCoord x1(23, 23, false);
+    nt::GeographicalCoord x2(37, 17, false);
+    nt::GeographicalCoord x3(23, 2, false);
+    nt::GeographicalCoord x4(15, 5, false);
+    nt::GeographicalCoord x5(40, 32, false);
+
+    BOOST_CHECK(b.geo_ref.nearest_edge(x1) == b.get("b", "e"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x2) == b.get("c", "d"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x3) == b.get("a", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x4) == b.get("a", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x5) == b.get("d", "e"));
+
+
+    nt::LineString geom;
+    geom.push_back(nt::GeographicalCoord(5, 5, false));
+    geom.push_back(nt::GeographicalCoord(5, 7, false));
+    geom.push_back(nt::GeographicalCoord(15, 7, false));
+    geom.push_back(nt::GeographicalCoord(15, 20, false));
+    b.add_geom(b.get("a", "b"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(5, 5, false));
+    geom.push_back(nt::GeographicalCoord(8, 5, false));
+    geom.push_back(nt::GeographicalCoord(8, 2, false));
+    geom.push_back(nt::GeographicalCoord(27, 2, false));
+    geom.push_back(nt::GeographicalCoord(27, 23, false));
+    geom.push_back(nt::GeographicalCoord(30, 23, false));
+    geom.push_back(nt::GeographicalCoord(30, 5, false));
+    b.add_geom(b.get("a", "c"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(15, 20, false));
+    geom.push_back(nt::GeographicalCoord(8, 20, false));
+    geom.push_back(nt::GeographicalCoord(15, 30, false));
+    geom.push_back(nt::GeographicalCoord(20, 30, false));
+    b.add_geom(b.get("b", "e"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(30, 5, false));
+    geom.push_back(nt::GeographicalCoord(42, 5, false));
+    geom.push_back(nt::GeographicalCoord(50, 20, false));
+    geom.push_back(nt::GeographicalCoord(45, 30, false));
+    geom.push_back(nt::GeographicalCoord(30, 30, false));
+    b.add_geom(b.get("c", "d"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(30, 30, false));
+    geom.push_back(nt::GeographicalCoord(20, 30, false));
+    b.add_geom(b.get("d", "e"), geom);
+
+    BOOST_CHECK(b.geo_ref.nearest_edge(x1) == b.get("a", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x2) == b.get("a", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x3) == b.get("a", "c"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x4) == b.get("a", "b"));
+    BOOST_CHECK(b.geo_ref.nearest_edge(x5) == b.get("c", "d"));
+}
+
+// We are using the same graph that above, with bidirectionnal edges
+BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
+    GraphBuilder b;
+    b("a", 5, 5)("b", 15, 20)("c", 30, 5)("d", 30, 30)("e", 20, 30);
+    b("a", "b", 200_s, true)("a", "c", 200_s, true)("b", "e", 160_s, true)("c", "d", 100_s, true)("d", "e", 400_s, true);
+
+    nt::GeographicalCoord x1(23, 23, false);
+    nt::GeographicalCoord x2(37, 17, false);
+    nt::GeographicalCoord x3(23, 2, false);
+    nt::GeographicalCoord x4(15, 5, false);
+    nt::GeographicalCoord x5(40, 32, false);
+
+    nt::LineString geom;
+    geom.push_back(nt::GeographicalCoord(5, 5, false));
+    geom.push_back(nt::GeographicalCoord(5, 7, false));
+    geom.push_back(nt::GeographicalCoord(15, 7, false));
+    geom.push_back(nt::GeographicalCoord(15, 20, false));
+    b.add_geom(b.get("a", "b"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("b", "a"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(5, 5, false));
+    geom.push_back(nt::GeographicalCoord(8, 5, false));
+    geom.push_back(nt::GeographicalCoord(8, 2, false));
+    geom.push_back(nt::GeographicalCoord(27, 2, false));
+    geom.push_back(nt::GeographicalCoord(27, 23, false));
+    geom.push_back(nt::GeographicalCoord(30, 23, false));
+    geom.push_back(nt::GeographicalCoord(30, 5, false));
+    b.add_geom(b.get("a", "c"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("c", "a"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(15, 20, false));
+    geom.push_back(nt::GeographicalCoord(8, 20, false));
+    geom.push_back(nt::GeographicalCoord(15, 30, false));
+    geom.push_back(nt::GeographicalCoord(20, 30, false));
+    b.add_geom(b.get("b", "e"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("e", "b"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(30, 5, false));
+    geom.push_back(nt::GeographicalCoord(42, 5, false));
+    geom.push_back(nt::GeographicalCoord(50, 20, false));
+    geom.push_back(nt::GeographicalCoord(45, 30, false));
+    geom.push_back(nt::GeographicalCoord(30, 30, false));
+    b.add_geom(b.get("c", "d"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("d", "c"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(30, 30, false));
+    geom.push_back(nt::GeographicalCoord(20, 30, false));
+    b.add_geom(b.get("d", "e"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("e", "d"), geom);
+
+    b.geo_ref.init();
+    PathFinder path_finder(b.geo_ref);
+
+    nt::LineString expectedGeom;
+    expectedGeom.push_back(nt::GeographicalCoord(30, 17, false));
+    expectedGeom.push_back(nt::GeographicalCoord(30, 23, false));
+    expectedGeom.push_back(nt::GeographicalCoord(27, 23, false));
+    expectedGeom.push_back(nt::GeographicalCoord(27, 2, false));
+    expectedGeom.push_back(nt::GeographicalCoord(23, 2, false));
+    // Computing path from x2 to x3. Both of them should be projected on the edge (a,c)
+    path_finder.init(x2, nt::Mode_e::Walking, 1); //starting from x2
+    Path p = compute_path(path_finder, x3); //going to x3
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+
+    // Same thing with a reverse geometry
+    std::reverse(expectedGeom.begin(), expectedGeom.end());
+    path_finder.init(x3, nt::Mode_e::Walking, 1); //starting from x3
+    p = compute_path(path_finder, x2); //going to x2
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+
+    path_finder.init(x4, nt::Mode_e::Walking, 1); //starting from x4
+    p = compute_path(path_finder, x5); //going to x5
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
+
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(15, 7, false));
+    expectedGeom.push_back(nt::GeographicalCoord(5, 7, false));
+    expectedGeom.push_back(nt::GeographicalCoord(5, 5, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+
+    expectedGeom.clear();
+    // First coordinate is present twice since in create_path we add the first coordinate of the first edge
+    // to the start of the coordinates. (Previous and following geometries are just the projections).
+    expectedGeom.push_back(nt::GeographicalCoord(5, 5, false));
+    expectedGeom.push_back(nt::GeographicalCoord(5, 5, false));
+    expectedGeom.push_back(nt::GeographicalCoord(8, 5, false));
+    expectedGeom.push_back(nt::GeographicalCoord(8, 2, false));
+    expectedGeom.push_back(nt::GeographicalCoord(27, 2, false));
+    expectedGeom.push_back(nt::GeographicalCoord(27, 23, false));
+    expectedGeom.push_back(nt::GeographicalCoord(30, 23, false));
+    expectedGeom.push_back(nt::GeographicalCoord(30, 5, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(), p.path_items[1].coordinates.end());
+
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(30, 5, false));
+    expectedGeom.push_back(nt::GeographicalCoord(42, 5, false));
+    expectedGeom.push_back(nt::GeographicalCoord(50, 20, false));
+    expectedGeom.push_back(nt::GeographicalCoord(45, 30, false));
+    expectedGeom.push_back(nt::GeographicalCoord(40, 30, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(), p.path_items[2].coordinates.end());
+}
+
 //not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
 //BOOST_AUTO_TEST_CASE(compute_route_n_n){

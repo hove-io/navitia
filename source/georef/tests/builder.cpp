@@ -72,6 +72,22 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     return *this;
 }
 
+GraphBuilder& GraphBuilder::add_geom(edge_t edge_ref, const nt::LineString& geom) {
+    auto& edge = this->geo_ref.graph[edge_ref];
+    if(edge.way_idx == nt::invalid_idx) {
+        Way* way = new Way();
+        way->idx = this->geo_ref.ways.size();
+        this->geo_ref.ways.push_back(way);
+        edge.way_idx = way->idx;
+    }
+
+    Way* way = this->geo_ref.ways.at(edge.way_idx);
+    edge.geom_idx = way->geoms.size();
+    way->geoms.push_back(geom);
+
+    return *this;
+}
+
 vertex_t GraphBuilder::get(const std::string &node_name){
     return this->vertex_map[node_name];
 }
