@@ -169,7 +169,16 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
 nt::MultiLineString Way::make_multiline(const Graph& graph) const {
     nt::MultiLineString multiline;
     for (auto edge: this->edges) {
-        multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
+        Edge e = graph[boost::edge(edge.first, edge.second, graph).first];
+        /*
+            Check if the edge way is the same that the current way.
+            Since boost::edge return only one edge between two vertices, if there is parallel edges, we aren't
+            sure it's the right one, and the geom_idx could be out of bounds.
+        */
+        if(e.geom_idx != nt::invalid_idx && e.way_idx == this->idx)
+            multiline.push_back(this->geoms[e.geom_idx]);
+        else
+            multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
         boost::range::sort(multiline.back());
     }
     auto cmp = [](const nt::LineString& a, const nt::LineString& b) -> bool {
@@ -324,10 +333,18 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     const type::GeographicalCoord& vertex1_coord = sn.graph[vertices[Direction::Source]].coord;
     const type::GeographicalCoord& vertex2_coord = sn.graph[vertices[Direction::Target]].coord;
     // On projette le nœud sur le segment
-    this->projected = coord.project(vertex1_coord, vertex2_coord).first;
-    // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-    distances[Direction::Source] = projected.distance_to(vertex1_coord);
-    distances[Direction::Target] = projected.distance_to(vertex2_coord);
+    Edge e = sn.graph[nearest_edge];
+    if(e.geom_idx != nt::invalid_idx) {
+        auto& geom = sn.ways[e.way_idx]->geoms[e.geom_idx];
+        this->projected = type::project(geom, coord);
+        distances[Direction::Source] = type::real_distance_from_extremity(geom, projected, false);
+        distances[Direction::Target] = type::real_distance_from_extremity(geom, projected, true);
+    } else {
+        this->projected = coord.project(vertex1_coord, vertex2_coord).first;
+        // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
+        distances[Direction::Source] = projected.distance_to(vertex1_coord);
+        distances[Direction::Target] = projected.distance_to(vertex2_coord);
+    }
     this->real_coord = coord;
 }
 
@@ -614,14 +631,22 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
 /// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset, double horizon) const {
     boost::optional<edge_t> res;
-    float min_dist = 0.;
+    float min_dist = 0., cur_dist = 0.;
     for (const auto pair_coord : prox.find_within(coordinates, horizon)) {
         //we increment the index to get the vertex in the other graph
         const auto u = pair_coord.first + offset;
 
         BOOST_FOREACH (edge_t e, boost::out_edges(u, graph)) {
             const auto v = target(e, graph);
-            float cur_dist = coordinates.project(graph[u].coord, graph[v].coord).second;
+            const auto edge = graph[e];
+            // If there is a geometry for this edge get the projected point to get the distance
+            if(edge.geom_idx != nt::invalid_idx) {
+                auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
+                cur_dist = coordinates.distance_to(projected);
+            }
+            else {
+                cur_dist = coordinates.project(graph[u].coord, graph[v].coord).second;
+            }
             if (!res || cur_dist < min_dist) {
                 min_dist = cur_dist;
                 res = e;
