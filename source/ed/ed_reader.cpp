@@ -49,7 +49,7 @@ namespace nf = navitia::fare;
 // collections don't have these methods.
 template<typename T> static void release(T& a) { T b; a.swap(b); }
 
-void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio){
+void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio, const bool export_georef_edges_geometries){
 
     pqxx::work work(*conn, "loading ED");
 
@@ -106,7 +106,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_ways(data, work);
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
-    this->fill_graph(data, work);
+    this->fill_graph(data, work, export_georef_edges_geometries);
 
     // we need the proximity_list to build bss and parking edges
     data.geo_ref->build_proximity_list();
@@ -1425,7 +1425,7 @@ EdReader::get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t ta
     }
 }
 
-void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
+void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries) {
     std::string request = "select e.source_node_id, target_node_id, e.way_id, "
                           "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
                           "e.cycles_allowed as bike,e.cars_allowed as car, "
@@ -1458,11 +1458,13 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         navitia::georef::Edge e;
         float len = const_it["leng"].as<float>();
         e.way_idx = way->idx;
-        nt::LineString geometry;
-        boost::geometry::read_wkt(const_it["geometry"].as<std::string>(), geometry);
-        if(!geometry.empty()) {
-            e.geom_idx = way->geoms.size();
-            way->geoms.push_back(geometry);
+        if(export_georef_edges_geometries) {
+            nt::LineString geometry;
+            boost::geometry::read_wkt(const_it["geometry"].as<std::string>(), geometry);
+            if(!geometry.empty()) {
+                e.geom_idx = way->geoms.size();
+                way->geoms.push_back(geometry);
+            }
         }
 
         if (const_it["pede"].as<bool>()) {

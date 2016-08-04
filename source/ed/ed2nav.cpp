@@ -156,6 +156,7 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
+    bool export_georef_edges_geometries;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Show this message")
@@ -168,6 +169,10 @@ int main(int argc, char * argv[])
         ("min_non_connected_ratio,m",
          po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1),
          "min ratio for the size of non connected graph")
+        ("full_street_network_geometries", po::value<bool>(&export_georef_edges_geometries)->default_value(false),
+         "If true export street network geometries allowing kraken to return accurate geojson for street network sections. "
+         "Also improve projections accuracy. "
+         "WARNING : memory intensive. The lz4 can more than double in size and kraken will consume significantly more memory.")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
          "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia")
         ("cities-connection-string", po::value<std::string>(&cities_connection_string)->default_value(""),
@@ -216,7 +221,7 @@ int main(int argc, char * argv[])
     }
 
     try {
-        reader.fill(data, min_non_connected_graph_ratio);
+        reader.fill(data, min_non_connected_graph_ratio, export_georef_edges_geometries);
     }
     catch (const navitia::exception& e) {
         LOG4CPLUS_ERROR(logger, "error while reading the database "  << e.what());
