@@ -262,7 +262,7 @@ class Scenario(default.Scenario):
                 journey.tags.append('is_pure_tc')
 
         # for destineo, we use a custom pagination
-        response_tc.ClearField(b'links')
+        response_tc.ClearField(str('links'))
         self._compute_pagination_links(response_tc, instance, request['clockwise'])
 
         return response_tc
