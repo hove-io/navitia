@@ -836,6 +836,86 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     return r;
 }
 
+type::EntryPoint make_entry_point(const pbnavitia::LocationContext& location,
+        const std::string& mode,
+        const int speed,
+        const int max_duration,
+        const boost::shared_ptr<const navitia::type::Data> data) {
+    type::EntryPoint entry_point;
+    Type_e origin_type = data->get_type_of_id(location.place());
+    entry_point = type::EntryPoint(origin_type, location.place(), 0);
+
+    if (entry_point.type == type::Type_e::Address || entry_point.type == type::Type_e::Admin
+            || entry_point.type == type::Type_e::StopArea || entry_point.type == type::Type_e::StopPoint
+            || entry_point.type == type::Type_e::POI) {
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
+    }
+    if ((entry_point.type == type::Type_e::Address)
+            || (entry_point.type == type::Type_e::Coord) || (entry_point.type == type::Type_e::Admin)
+            || (entry_point.type == type::Type_e::POI) || (entry_point.type == type::Type_e::StopArea)) {
+
+        entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
+    }
+    auto mode_enum = entry_point.streetnetwork_params.mode;
+    switch(mode_enum){
+        case type::Mode_e::Bike:
+        case type::Mode_e::Car:
+        case type::Mode_e::Bss:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[mode_enum];
+            entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[mode_enum];
+            break;
+        default:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
+            entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[type::Mode_e::Walking];
+            break;
+    }
+    if (entry_point.streetnetwork_params.speed_factor <= 0) {
+        throw navitia::recoverable_exception("invalid speed factor");
+    }
+    entry_point.streetnetwork_params.max_duration = navitia::seconds(max_duration);
+
+    return entry_point;
+}
+
+pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request) {
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+    std::vector<std::string> destination_uris{static_cast<size_t>(request.destinations().size())};
+    size_t idx = 0;
+    for (const auto& dest: request.destinations()) {
+        destination_uris[idx++] = dest.place();
+    }
+    pbnavitia::Response r;
+    for (const auto& origin: request.origins()) {
+        type::EntryPoint entry_point;
+        try{
+            entry_point = make_entry_point(origin, request.mode(), request.speed(), request.max_duration(), data);
+        }catch(const navitia::coord_conversion_exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+            return r;
+        }
+        street_network_worker->init(entry_point, {});
+        auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
+        std::map<std::string, navitia::time_duration> uri_duration;
+        for(const auto& item: result){
+            auto uri = planner->get_sp(item.first)->uri;
+            auto duration = item.second;
+            uri_duration[uri] = duration;
+        }
+        auto* row = r.mutable_sn_routing_matrix()->add_rows();
+        for (const auto& uri: destination_uris) {
+            auto it = uri_duration.find(uri);
+            if (it != uri_duration.cend()) {
+                row->add_duration(it->second.total_seconds());
+            }else {
+                row->add_duration(-1);
+            }
+        }
+    }
+    return r;
+}
+
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
     // These api can respond even if the data isn't loaded
@@ -879,6 +959,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::geo_status: response = geo_status(); break;
     case pbnavitia::car_co2_emission:
         response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
+    case pbnavitia::street_network_routing_matrix:
+        response = street_network_routing_matrix(request.sn_routing_matrix()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
