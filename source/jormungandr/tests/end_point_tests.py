@@ -154,6 +154,8 @@ class TestEndPoint(AbstractTestFixture):
 
         is_valid_region_status(get_not_null(json_response, "status"))
         assert json_response["status"]["is_open_data"] == False
+        assert 'realtime_contributors' in json_response['status']
+        assert 'realtime_proxies' in json_response['status']
 
     def test_geo_status(self):
         response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)

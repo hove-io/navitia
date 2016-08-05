@@ -240,7 +240,7 @@ struct StopsGtfsHandler : public GenericHandler {
     template <typename T>
     bool parse_common_data(const csv_row& row, T* stop);
 
-    void handle_stop_point_without_area(Data& data); //might be different between stopss parser
+    void handle_stop_point_without_area(Data& data); //might be different between stops parser
 };
 
 struct RouteGtfsHandler : public GenericHandler {

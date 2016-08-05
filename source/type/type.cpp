@@ -804,6 +804,13 @@ std::string Line::get_label() const {
     return s.str();
 }
 
+bool Route::operator<(const Route & other) const{
+    if(this->uri != other.uri){
+        return this->uri < other.uri;
+    }
+    return this < &other;
+}
+
 std::string Route::get_label() const {
     //RouteName = NetworkName + ModeName + LineCode + (RouteName)
     std::stringstream s;
@@ -885,6 +892,13 @@ Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
 VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
+
+bool StopPoint::operator<(const StopPoint & other) const{
+    if(this->uri != other.uri){
+        return this->uri < other.uri;
+    }
+    return this < &other;
+}
 
 Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
     Indexes result;

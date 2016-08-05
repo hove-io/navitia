@@ -476,6 +476,7 @@ struct RaptorSolutionReader {
         const auto& cnx_list = v.clockwise() ?
             raptor.data.dataRaptor->connections.forward_connections :
             raptor.data.dataRaptor->connections.backward_connections;
+
         for (const auto& conn: cnx_list[sp_idx]) {
             const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
             const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
@@ -517,6 +518,7 @@ struct RaptorSolutionReader {
                         v.stop_event(), jpp.idx, begin_dt, v.clockwise());
             if (begin_st_dt.first == nullptr) { continue; }
             if (v.comp(begin_limit, begin_st_dt.second)) { continue; }
+            if (! raptor.valid_stop_points[begin_sp_idx.val]) { continue; }
 
             // great, we can begin
             const Transfer tr = {

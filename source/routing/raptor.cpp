@@ -691,7 +691,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
-                    if (prec_labels.transfer_is_initialized(jpp.sp_idx) &&
+                    if (prec_labels.transfer_is_initialized(jpp.sp_idx) && valid_stop_points[jpp.sp_idx.val] &&
                         (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = next_st->next_stop_time(
                             visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());

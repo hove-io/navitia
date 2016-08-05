@@ -90,6 +90,7 @@ def make_connection_string(instance_config):
     connection_string += ' user=' + instance_config.pg_username
     connection_string += ' dbname=' + instance_config.pg_dbname
     connection_string += ' password=' + instance_config.pg_password
+    connection_string += ' port=' + instance_config.pg_port
     return connection_string
 
 class Lock(object):
@@ -385,9 +386,9 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
         logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
         return
 
-    connection_string = "postgres://{u}:{pw}@{h}/{db}"\
+    connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}"\
         .format(u=instance_conf.pg_username, pw=instance_conf.pg_password,
-                h=instance_conf.pg_host, db=instance_conf.pg_dbname)
+                h=instance_conf.pg_host, db=instance_conf.pg_dbname, port=instance_conf.pg_port)
     engine = sqlalchemy.create_engine(connection_string)
     # create the line if it does not exists
     engine.execute("""

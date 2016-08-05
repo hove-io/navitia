@@ -2932,3 +2932,77 @@ BOOST_AUTO_TEST_CASE(optimize_extention_before_min_wait) {
     BOOST_CHECK_EQUAL(res[0].items[1].stop_points.front()->uri, "2");
     BOOST_CHECK_EQUAL(res[0].items[1].stop_points.back()->uri, "5");
 }
+
+/**
+ * This test case is created from a real production bug case.
+ *
+ * We have asked for a journey from "Cergy" to "P. et M.C." with arrival before 9:31.
+ * Raptor returned a journey that did a transfer at "Auber" normally.
+ * The bug is that when we disallow getting off at "Abuer",  raptor didn't find any journey, while it should have found
+ * a journey that does a transfer at "Chatelet Les Halles" instead.
+ *
+ * */
+BOOST_AUTO_TEST_CASE(forbidden_uri_1) {
+    using namespace navitia;
+    ed::builder b("20160722");
+    auto cergy = "Cergy", auber = "Auber", chateletLesHalles="Chatelet Les Halles",
+            opera = "Opera", chatelet = "Chatelet", PetMC="P. et M.C.";
+
+    b.vj("A")(cergy, "8:11"_t)(auber, "8:47"_t)(chateletLesHalles, "8:49"_t);
+    b.vj("A")(cergy, "8:23"_t)(auber, "8:58"_t)(chateletLesHalles, "9:01"_t);
+
+    b.vj("7")(opera, "9:03"_t)(chatelet, "9:09"_t)(PetMC, "9:27"_t);
+    b.vj("7")(opera, "9:08"_t)(chatelet, "9:14"_t)(PetMC, "9:31"_t);
+    b.vj("7")(opera, "9:12"_t)(chatelet, "9:18"_t)(PetMC, "9:36"_t);
+
+    b.connection(auber, opera, "0:9:14"_t);
+    b.connection(chateletLesHalles, chatelet, "0:17:12"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*b.data);
+    using boost::posix_time::time_from_string;
+    auto res1 = raptor.compute(b.data->pt_data->stop_areas_map[cergy],
+                              b.data->pt_data->stop_areas_map[PetMC],
+                              "9:31"_t,
+                              0,
+                              0,
+                              type::RTLevel::Base,
+                              2_min,
+                              false);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1[0].items.size(), 4);
+
+    BOOST_CHECK_EQUAL(res1.at(0).items.front().departure, time_from_string("2016-Jul-22 08:23:00"));
+    BOOST_CHECK_EQUAL(res1.at(0).items.back().arrival, time_from_string("2016-Jul-22 09:31:00"));
+
+    BOOST_CHECK_EQUAL(res1.at(0).items.at(1).stop_points.front()->uri, auber);
+    BOOST_CHECK_EQUAL(res1.at(0).items.at(1).stop_points.back()->uri, opera);
+    BOOST_CHECK_EQUAL(res1.at(0).items.at(3).stop_points.front()->uri, opera);
+
+    auto res2 = raptor.compute(b.data->pt_data->stop_areas_map[cergy],
+                              b.data->pt_data->stop_areas_map[PetMC],
+                              "9:31"_t,
+                              0,
+                              0,
+                              type::RTLevel::Base,
+                              2_min,
+                              false,
+                              type::AccessibiliteParams{},
+                              std::numeric_limits<uint32_t>::max(),
+                              {auber}); // <== We cannot get off at Auber but we can get off at chatelet
+
+    BOOST_REQUIRE_EQUAL(res2.size(), 1);
+    BOOST_REQUIRE_EQUAL(res2[0].items.size(), 4);
+
+    BOOST_CHECK_EQUAL(res2.at(0).items.front().departure, time_from_string("2016-Jul-22 08:11:00"));
+    BOOST_CHECK_EQUAL(res2.at(0).items.back().arrival, time_from_string("2016-Jul-22 09:27:00"));
+
+    BOOST_CHECK_EQUAL(res2.at(0).items.at(1).stop_points.front()->uri, chateletLesHalles);
+    BOOST_CHECK_EQUAL(res2.at(0).items.at(1).stop_points.back()->uri, chatelet);
+    BOOST_CHECK_EQUAL(res2.at(0).items.at(3).stop_points.front()->uri, chatelet);
+}
+

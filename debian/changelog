@@ -1,3 +1,18 @@
+navitia2 (2.14.0) unstable; urgency=low
+
+  * Jormun: Fix 500 error when token contains unicode character  <https://github.com/CanalTP/navitia/pull/1715>
+  * Jormun: remove a crash with bss availability when depth=0 on place_nearby  <https://github.com/CanalTP/navitia/pull/1713>
+  * Kraken: fix partial terminus  <https://github.com/CanalTP/navitia/pull/1710>
+  * type: fix order of stoptime and route  <https://github.com/CanalTP/navitia/pull/1711>
+  * Kraken: fix forbidden uri  <https://github.com/CanalTP/navitia/pull/1709>
+  * jormun: add rt_contributors in status response  <https://github.com/CanalTP/navitia/pull/1708>
+  * tyr: port of the postgresql for ed instances is now configurable  <https://github.com/CanalTP/navitia/pull/1707>
+  * Ed: Gtfs fix  <https://github.com/CanalTP/navitia/pull/1701>
+  * jormun: use dict in place of orderedDict in marshal for improving memory consumption  <https://github.com/CanalTP/navitia/pull/1702>
+  * jormungandr: fix is_car_direct_path  <https://github.com/CanalTP/navitia/pull/1700>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 05 Aug 2016 14:08:07 +0100
+
 navitia2 (2.13.0) unstable; urgency=low
 
   * Tyr Fix error message 'ChannelError: channel disconnected'  <https://github.com/CanalTP/navitia/pull/1698>

@@ -97,7 +97,7 @@ def get_token():
         try:
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
-        except binascii.Error:
+        except (binascii.Error, UnicodeDecodeError):
             logging.getLogger(__name__).info('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
             return None

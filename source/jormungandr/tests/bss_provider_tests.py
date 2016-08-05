@@ -333,6 +333,21 @@ class TestBssProvider(AbstractTestFixture):
                 else:
                     assert not 'stands' in p[embedded_type]
 
+    def pois_places_nearby_test_depth_zero(self):
+        """
+        with depth=0 we don't have to poi_type, so it's not possible to use bss availability
+        we don't want jormungandr to crash in this case
+        """
+        with mock_bss_providers(pois_supported=['station_1']):
+            r = self.query_region('places/admin:74435/places_nearby?depth=0', display=False)
+
+            places_nearby = get_not_null(r, 'places_nearby')
+            assert {p[p['embedded_type']]['id'] for p in places_nearby} == {'parking_1', 'station_1',
+                                                                            'stop_point:stopB', 'stopB', 'station_2',
+                                                                            'parking_2', 'stopC', 'stop_point:stopC',
+                                                                            'stopA', 'stop_point:stopA'}
+
+
 
     ############################
     #####
