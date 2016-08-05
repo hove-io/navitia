@@ -231,12 +231,12 @@ static georef::Path get_direct_path(georef::StreetNetwork& worker,
     return worker.get_direct_path(origin, destination);
 }
 
-static void add_direct_path(PbCreator& pb_creator,
-                       const georef::Path& path,
-                       const type::EntryPoint& origin,
-                       const type::EntryPoint& destination,
-                       const std::vector<bt::ptime>& datetimes,
-                       const bool clockwise) {
+void add_direct_path(PbCreator& pb_creator,
+                     const georef::Path& path,
+                     const type::EntryPoint& origin,
+                     const type::EntryPoint& destination,
+                     const std::vector<bt::ptime>& datetimes,
+                     const bool clockwise) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (! path.path_items.empty()) {
