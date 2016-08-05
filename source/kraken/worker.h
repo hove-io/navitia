@@ -115,8 +115,9 @@ class Worker {
                                       const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
-        pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request,
-                                               const boost::posix_time::ptime& current_datetime);
+        template<typename T>
+        pbnavitia::Response isochrone_common(const T &request, pbnavitia::API api,
+                                             const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
         pbnavitia::Response direct_path(const pbnavitia::Request& request);
 };

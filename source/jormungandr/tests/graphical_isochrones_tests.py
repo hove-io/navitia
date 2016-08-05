@@ -306,12 +306,13 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert error_code == 400
         eq_(normal_response['message'].lower(), 'unable to parse datetime, unknown string format')
 
-    def test_graphical_isochros_no_isochrones(self):
+    def test_graphical_isochrones_no_isochrones(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         q = q.format('20120614T080000', '90;0', '3600')
-        response = self.query(q)
+        normal_response, error_code = self.query_no_assert(q)
 
-        assert 'isochrones' not in response
+        assert error_code == 404
+        assert normal_response['error']['message'] == 'no origin point nor destination point valid'
 
     def test_grapical_isochrone_with_from_and_to(self):
         q = "v1/coverage/main_routing_test/" + isochrone_basic_query + "&to={}"

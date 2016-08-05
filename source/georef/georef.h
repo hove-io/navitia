@@ -321,7 +321,7 @@ struct GeoRef {
 
     vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
-    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset = 0) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset = 0, double distance = 500) const;
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode) const {
         return nearest_edge(coordinates, pl, offsets[mode]);
@@ -383,7 +383,7 @@ struct ProjectionData {
     /// Project the coordinate on the graph
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
     /// Project the coordinate on the graph corresponding to the transportation mode of the offset
-    ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
+    ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox, double distance = 500);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & vertices & projected & distances & found & real_coord;

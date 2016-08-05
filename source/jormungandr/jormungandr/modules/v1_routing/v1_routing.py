@@ -33,6 +33,7 @@ from jormungandr.interfaces.v1 import Uri
 from jormungandr.interfaces.v1 import Coverage
 from jormungandr.interfaces.v1 import Journeys
 from jormungandr.interfaces.v1 import GraphicalIsochrone
+from jormungandr.interfaces.v1 import HeatMap
 from jormungandr.interfaces.v1 import Schedules
 from jormungandr.interfaces.v1 import Places
 from jormungandr.interfaces.v1 import Ptobjects
@@ -191,6 +192,11 @@ class V1Routing(AModule):
             self.add_resource(GraphicalIsochrone.GraphicalIsochrone,
                             region + 'isochrones',
                             endpoint='isochrones')
+
+        if app.config['HEAT_MAP']:
+            self.add_resource(HeatMap.HeatMap,
+                              region + 'heat_maps',
+                              endpoint='heat_maps')
 
         self.add_resource(Schedules.RouteSchedules,
                           region + '<uri:uri>/route_schedules',

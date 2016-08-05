@@ -742,53 +742,76 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                     current_datetime);
 }
 
-pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request_iso,
-                                                const boost::posix_time::ptime& current_datetime) {
 
+template<typename T>
+std::vector<DateTime> get_boundary_duration(const T&){ return {}; }
+
+template<>
+std::vector<DateTime> get_boundary_duration<pbnavitia::GraphicalIsochroneRequest>(const pbnavitia::GraphicalIsochroneRequest& r) {
+    std::vector<DateTime> boundary_duration;
+    for(int i = 0; i < r.boundary_duration_size(); ++i) {
+        boundary_duration.push_back(r.boundary_duration(i));
+    }
+    return boundary_duration;
+}
+
+template<typename T>
+pbnavitia::Response Worker::isochrone_common(const T &request, pbnavitia::API api,
+                                             const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
-    const auto& request = request_iso.journeys_request();
+    const auto& request_journey = request.journeys_request();
+    navitia::JourneysArg arg = fill_journeys(request_journey);
 
-
-    try{
-        navitia::JourneysArg arg = fill_journeys(request);
-
-        if (arg.origins.empty() && arg.destinations.empty()) {
-            //should never happen, jormungandr filters that, but it never hurts to double check
-            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-            pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                    pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                    "no origin point nor destination point given");
-            return pb_creator.get_response();
-        }
-
-        if (! arg.origins.empty() && ! request.clockwise()) {
-            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-            return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
-        } else if(arg.origins.empty() && request.clockwise()){
-            navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-            return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
-        }
-        type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-
-        std::vector<DateTime> boundary_duration;
-        for(int i = 0; i < request_iso.boundary_duration_size(); ++i) {
-            boundary_duration.push_back(request_iso.boundary_duration(i));
-        }
-
-        return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request.datetimes(0),
-                boundary_duration, request.max_transfers(),
-                arg.accessibilite_params, arg.forbidden,
-                request.clockwise(), arg.rt_level,
-                *street_network_worker,
-                request.streetnetwork_params().walking_speed());
-    }catch(const navitia::recoverable_exception& e) {
-        pbnavitia::Response r;
-        fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
-        return r;
+    if (arg.origins.empty() && arg.destinations.empty()) {
+        //should never happen, jormungandr filters that, but it never hurts to double check
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
+                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point given");
+        return pb_creator.get_response();
     }
 
+    if (! arg.origins.empty() && ! request_journey.clockwise()) {
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
+    } else if(arg.origins.empty() && request_journey.clockwise()){
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+    }
+    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+
+    auto streetnetwork = request_journey.streetnetwork_params();
+
+    switch(api) {
+    case pbnavitia::heat_map: {
+        auto mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
+        auto mode = type::static_data::get()->modeByCaption(mode_iso);
+        return navitia::routing::make_heat_map(*planner, current_datetime, ep, request_journey.datetimes(0),
+                                               request_journey.max_duration(), request_journey.max_transfers(),
+                                               arg.accessibilite_params, arg.forbidden,
+                                               request_journey.clockwise(), arg.rt_level,
+                                               *street_network_worker,
+                                               request_journey.streetnetwork_params().walking_speed(), mode);
+    }
+    case pbnavitia::graphical_isochrone: {
+        auto boundary_duration = get_boundary_duration(request);
+        return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request_journey.datetimes(0),
+                                                          boundary_duration, request_journey.max_transfers(),
+                                                          arg.accessibilite_params, arg.forbidden,
+                                                          request_journey.clockwise(), arg.rt_level,
+                                                          *street_network_worker,
+                                                          request_journey.streetnetwork_params().walking_speed());
+    }
+    default : {
+        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_api,
+                                 pbnavitia::NO_SOLUTION,
+                                 "Unknown API");
+        return pb_creator.get_response();
+    }
+    }
 }
 
 pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
@@ -814,17 +837,16 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     auto distance = origin.distance_to(destin);
     pbnavitia::Response r;
     auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
-
     if (car_mode != data->pt_data->physical_modes_map.end() &&
             car_mode->second->co2_emission) {
         auto co2_emission = r.mutable_car_co2_emission();
         co2_emission->set_unit("gEC");
         co2_emission->set_value(CO2_ESTIMATION_COEFF * distance / 1000.0 *
-                car_mode->second->co2_emission.get());
+                                car_mode->second->co2_emission.get());
         return r;
     }
     fill_pb_error(pbnavitia::Error::no_solution,
-                "physical_mode:Car doesn't contain any information about co2 emission", r.mutable_error());
+                  "physical_mode:Car doesn't contain any information about co2 emission", r.mutable_error());
     return r;
 }
 
@@ -894,12 +916,16 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
     case pbnavitia::place_code : response = place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-    case pbnavitia::graphical_isochrone : response = graphical_isochrone(request.isochrone(), current_datetime); break;
+
     case pbnavitia::geo_status: response = geo_status(); break;
     case pbnavitia::car_co2_emission:
         response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
     case pbnavitia::direct_path:
         response = direct_path(request); break;
+    case pbnavitia::graphical_isochrone :response = isochrone_common(request.isochrone(),
+                                                                     request.requested_api(), current_datetime); break;
+    case pbnavitia::heat_map : response = isochrone_common(request.heat_map(),
+                                                           request.requested_api(), current_datetime); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());

@@ -540,6 +540,57 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
         is_valid_feed_publisher(feed_publisher)
 
 
+def is_valid_single_coord(coord, f, name):
+    min_type = get_not_null(coord, 'min_' + name)
+    middle_type = get_not_null(coord, 'middle_' + name)
+    max_type = get_not_null(coord, 'max_' + name)
+    f(min_type)
+    f(middle_type)
+    f(max_type)
+
+
+def is_valid_header(header):
+    for lat in header:
+        is_valid_single_coord(lat['lat'], is_valid_lat, 'lat')
+
+
+def is_valid_duration(duration):
+    if duration is not None:
+        get_valid_unsigned_int(duration)
+
+
+def is_valid_body(body):
+    for pair in body:
+        is_valid_single_coord(pair['lon'], is_valid_lon, 'lon')
+        for duration in pair['row']:
+            is_valid_duration(duration['duration'])
+
+
+def is_valid_matrix(matrix):
+    header = matrix['header']
+    assert header
+    is_valid_header(header)
+    body = matrix['body']
+    assert body
+    is_valid_body(body)
+
+
+def is_valid_heat_maps(heat_map, tester, query):
+
+    for g in get_not_null(heat_map, 'heat_maps'):
+        matrix = g['matrix']
+        assert matrix
+        is_valid_matrix(matrix)
+        if 'from' in g:
+            is_valid_place(g['from'])
+        if 'to' in g:
+            is_valid_place(g['to'])
+        assert ('from' in g) ^ ('to' in g)
+
+    for feed_publisher in get_not_null(heat_map, 'feed_publishers'):
+        is_valid_feed_publisher(feed_publisher)
+
+
 def is_valid_section(section, query):
     arrival = get_valid_datetime(section['arrival_date_time'])
     departure = get_valid_datetime(section['departure_date_time'])
@@ -1012,6 +1063,9 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
 isochrone_basic_query = "isochrones?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
     .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
+heat_map_basic_query = "heat_maps?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
+    .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
+
 
 def get_all_disruptions(elem, response):
     """
