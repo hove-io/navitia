@@ -47,6 +47,7 @@ const std::string gtfs_path = "/ed/gtfs";
 
 BOOST_AUTO_TEST_CASE(required_files) {
     std::vector<std::string> files = {"agency", "routes", "stop_times", "trips"};
+    BOOST_REQUIRE_EQUAL(0, 1);
     for(auto file : files)
     {
         ed::Data data;
