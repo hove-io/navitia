@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -37,7 +38,7 @@ import logging
 
 class AtosProvider(BssProvider):
 
-    OPERATOR = 'Keolis'
+    OPERATORS = ('keolis', 'effia', 'effia transport', u'kéolis')
 
     def __init__(self, id_ao, network, url, timeout=5):
         self.id_ao = id_ao
@@ -51,7 +52,7 @@ class AtosProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator') == self.OPERATOR and \
+        return properties.get('operator').lower() in self.OPERATORS and \
                properties.get('network') == self.network
 
     def get_informations(self, poi):

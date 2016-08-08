@@ -53,9 +53,17 @@ def parking_space_availability_atos_support_poi_test():
     """
     provider = AtosProvider(u'10', u'Vélitul', u'https://webservice.atos.com?wsdl')
     assert provider.support_poi(poi)
+    poi['properties']['operator'] = 'EFFIA'
+    assert provider.support_poi(poi)
+    poi['properties']['operator'] = 'Keolis'
+    assert provider.support_poi(poi)
+    poi['properties']['operator'] = 'EFFIA Transport'
+    assert provider.support_poi(poi)
+    poi['properties']['operator'] = u'Kéolis'
+    assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
-    poi['properties']['operator'] = 'Keolis'
+    poi['properties']['operator'] = 'Bad_operator'
     poi['properties']['network'] = 'Bad_network'
     assert not provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
