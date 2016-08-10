@@ -48,6 +48,8 @@ class Kraken(object):
                                                                   destinations,
                                                                   mode,
                                                                   max_duration)
+        if not sn_routing_matrix.rows[0].duration:
+            return {}
         import numpy as np
         durations = np.array(sn_routing_matrix.rows[0].duration)
         valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
@@ -98,7 +100,6 @@ class Kraken(object):
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
         # we are only interested in public transports
-        req.places_nearby.types.append(type_pb2.STOP_AREA)
         req.places_nearby.types.append(type_pb2.STOP_POINT)
         return self.instance.send_and_receive(req).places_nearby
 

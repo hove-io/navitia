@@ -880,11 +880,24 @@ type::EntryPoint make_entry_point(const pbnavitia::LocationContext& location,
 pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-    std::vector<std::string> destination_uris{static_cast<size_t>(request.destinations().size())};
-    size_t idx = 0;
+
+    auto pl = proximitylist::ProximityList<unsigned int >{};
+    unsigned int dest_idx = 0;
     for (const auto& dest: request.destinations()) {
-        destination_uris[idx++] = dest.place();
+        Type_e origin_type = data->get_type_of_id(dest.place());
+        auto entry_point = type::EntryPoint{origin_type, dest.place(), 0};
+        type::GeographicalCoord coord{};
+        try{
+            coord = coord_of_entry_point(entry_point, data);
+        }catch(const navitia::coord_conversion_exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+            return r;
+        }
+        pl.add(coord, dest_idx++);
     }
+    pl.build();
+
     pbnavitia::Response r;
     for (const auto& origin: request.origins()) {
         type::EntryPoint entry_point;
@@ -896,17 +909,14 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
             return r;
         }
         street_network_worker->init(entry_point, {});
-        auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-        std::map<std::string, navitia::time_duration> uri_duration;
-        for(const auto& item: result){
-            auto uri = planner->get_sp(item.first)->uri;
-            auto duration = item.second;
-            uri_duration[uri] = duration;
-        }
+        auto nearest = street_network_worker->find_nearest_stop_points(
+                entry_point.streetnetwork_params.max_duration,
+                pl,
+                true);
         auto* row = r.mutable_sn_routing_matrix()->add_rows();
-        for (const auto& uri: destination_uris) {
-            auto it = uri_duration.find(uri);
-            if (it != uri_duration.cend()) {
+        for(unsigned int i = 0; static_cast<int>(i) < request.destinations_size(); ++i) {
+            auto it = nearest.find(routing::SpIdx{i});
+            if (it != nearest.end()) {
                 row->add_duration(it->second.total_seconds());
             }else {
                 row->add_duration(-1);
