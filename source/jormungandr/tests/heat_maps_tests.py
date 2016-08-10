@@ -160,11 +160,12 @@ class TestHeatMap(AbstractTestFixture):
 
     def test_graphical_heat_maps_no_heat_maps(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
-        q = q.format('20120614T080000', '90;0', '3600')
+        q = q.format('20120614T080000', 'stop_area:OIF:SA:toto', '3600')
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
-        assert normal_response['error']['message'] == 'no origin point nor destination point valid'
+        assert normal_response['error']['id'] == "unknown_object"
+        assert normal_response['error']['message'] == 'The entry point: stop_area:OIF:SA:toto is not valid'
 
 
     def test_heat_maps_with_from_and_to(self):

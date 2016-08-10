@@ -43,7 +43,7 @@ struct BoundBox {
     type::GeographicalCoord max;
     type::GeographicalCoord min;
     BoundBox(){
-        max = type::GeographicalCoord(0, 0);
+        max = type::GeographicalCoord(-180, -90);
         min = type::GeographicalCoord(180, 90);
     }
 
@@ -88,22 +88,17 @@ static navitia::time_duration set_duration(const georef::ProjectionData& project
 static std::string print_single_coord(const SingleCoord& coord,
                                       const std::string& type) {
     std::stringstream ss;
-    ss << R"({"type":{)";
-    ss << R"("min_type":)" << coord.min_coord;
-    ss << R"(,"middle_type":)" << coord.min_coord + coord.step / 2;
-    ss << R"(,"max_type":)" << coord.min_coord + coord.step;
+    ss << R"(")" << type << R"(":{)";
+    ss << R"("min_)" << type << R"(":)" << coord.min_coord;
+    ss << R"(,"middle_)" << type << R"(":)" << coord.min_coord + coord.step / 2;
+    ss << R"(,"max_)" << type << R"(":)" << coord.min_coord + coord.step;
     ss << "}";
-    auto str = ss.str();
-    auto found = str.find("type");
-    while (found != std::string::npos) {
-        str.replace(found, 4, type);
-        found = str.find("type", found + 1);
-    }
-    return str;
+    return ss.str();
 }
 
 static void print_lat(std::stringstream& ss,
                       const SingleCoord lat) {
+    ss << "{";
     ss << print_single_coord(lat, "lat");
     ss << "}";
 }
@@ -121,6 +116,7 @@ static void print_datetime(std::stringstream& ss,
 
 static void print_body(std::stringstream& ss,
                        std::pair <SingleCoord, std::vector<navitia::time_duration>> pair) {
+    ss <<"{";
     ss << print_single_coord(pair.first, "lon");
     ss << R"(,"row":[)";
     separated_by_coma(ss, print_datetime, pair.second);
@@ -263,6 +259,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
     auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;
+#if BOOST_VERSION >= 105800
     try {
         boost::dijkstra_shortest_paths_no_init(filtered_graph(worker.graph, {},
                                                               georef::TransportationModeFilter(mode, worker)),
@@ -274,6 +271,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                                navitia::seconds(0),
                                                visitor);
     } catch (georef::DestinationFound){};
+#endif
     return build_grid(worker, box, mode, distances, speed, duration);
 }
 

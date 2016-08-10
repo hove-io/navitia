@@ -611,14 +611,16 @@ create_entry_point(const ::pbnavitia::LocationContext& location,
     return entry_point;
 }
 
-JourneysArg::JourneysArg(const std::vector<type::EntryPoint>& origins,
-             const type::AccessibiliteParams& accessibilite_params,
-             const std::vector<std::string>& forbidden,
-             const type::RTLevel& rt_level,
-             const std::vector<type::EntryPoint>& destinations,
-             const std::vector<uint64_t>& datetimes): origins(origins), accessibilite_params(accessibilite_params),
+JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
+                         type::AccessibiliteParams accessibilite_params,
+                         std::vector<std::string> forbidden,
+                         type::RTLevel rt_level,
+                         std::vector<type::EntryPoint> destinations,
+                         std::vector<uint64_t> datetimes): origins(origins), accessibilite_params(accessibilite_params),
     forbidden(forbidden), rt_level(rt_level),destinations(destinations),
     datetimes(datetimes){}
+
+JourneysArg::JourneysArg(){}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
     const auto data = data_manager.get_data();
@@ -650,7 +652,8 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
-    return JourneysArg(origins, accessibilite_params, forbidden, rt_level, destinations, datetimes);
+    return JourneysArg(std::move(origins), std::move(accessibilite_params),
+                       std::move(forbidden), rt_level, std::move(destinations), std::move(datetimes));
 }
 
 pbnavitia::Response Worker::err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator){
@@ -743,27 +746,21 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
 }
 
 
-template<typename T>
-std::vector<DateTime> get_boundary_duration(const T&){ return {}; }
-
-template<>
-std::vector<DateTime> get_boundary_duration<pbnavitia::GraphicalIsochroneRequest>(const pbnavitia::GraphicalIsochroneRequest& r) {
-    std::vector<DateTime> boundary_duration;
-    for(int i = 0; i < r.boundary_duration_size(); ++i) {
-        boundary_duration.push_back(r.boundary_duration(i));
-    }
-    return boundary_duration;
-}
-
-template<typename T>
-pbnavitia::Response Worker::isochrone_common(const T &request, pbnavitia::API api,
-                                             const boost::posix_time::ptime& current_datetime) {
+boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::JourneysRequest request,
+                                                               const boost::posix_time::ptime& current_datetime,
+                                                               JourneysArg& arg,
+                                                               const std::string name) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
-    const auto& request_journey = request.journeys_request();
-    navitia::JourneysArg arg = fill_journeys(request_journey);
-
+    try{
+        arg = fill_journeys(request);
+    }catch(const navitia::coord_conversion_exception& e) {
+        std::cout << "je suis dans l'exception" << std::endl;
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+        return r;
+    }
     if (arg.origins.empty() && arg.destinations.empty()) {
         //should never happen, jormungandr filters that, but it never hurts to double check
         navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
@@ -773,45 +770,56 @@ pbnavitia::Response Worker::isochrone_common(const T &request, pbnavitia::API ap
         return pb_creator.get_response();
     }
 
-    if (! arg.origins.empty() && ! request_journey.clockwise()) {
+    if (! arg.origins.empty() && ! request.clockwise()) {
         navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        return err_msg_isochron("isochrone works only for clockwise request", pb_creator);
-    } else if(arg.origins.empty() && request_journey.clockwise()){
+        return err_msg_isochron(name + " works only for clockwise request", pb_creator);
+    } else if(arg.origins.empty() && request.clockwise()){
         navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        return err_msg_isochron("reverse isochrone works only for anti-clockwise request", pb_creator);
+        return err_msg_isochron("reverse " + name + " works only for anti-clockwise request", pb_creator);
+    }
+    return boost::none;
+}
+
+
+pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest request,
+                                                const boost::posix_time::ptime& current_datetime) {
+    auto request_journey = request.journeys_request();
+    navitia::JourneysArg arg =  JourneysArg();
+    auto err_message = set_journeys_args(request_journey,current_datetime, arg, "isochrone");
+    if (err_message) {
+        return *err_message;
     }
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+    std::vector<DateTime> boundary_duration;
+    for(int i = 0; i < request.boundary_duration_size(); ++i) {
+        boundary_duration.push_back(request.boundary_duration(i));
+    }
+    return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request_journey.datetimes(0),
+                                                      boundary_duration, request_journey.max_transfers(),
+                                                      arg.accessibilite_params, arg.forbidden,
+                                                      request_journey.clockwise(), arg.rt_level,
+                                                      *street_network_worker,
+                                                      request_journey.streetnetwork_params().walking_speed());
+}
 
+pbnavitia::Response Worker::heat_map(const pbnavitia::HeatMapRequest request,
+                                     const boost::posix_time::ptime& current_datetime) {
+    auto request_journey = request.journeys_request();
+    navitia::JourneysArg arg;
+    auto err_message = set_journeys_args(request_journey,current_datetime, arg, "heat_map");
+    if (err_message) {
+        return *err_message;
+    }
+    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
     auto streetnetwork = request_journey.streetnetwork_params();
-
-    switch(api) {
-    case pbnavitia::heat_map: {
-        auto mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
-        auto mode = type::static_data::get()->modeByCaption(mode_iso);
-        return navitia::routing::make_heat_map(*planner, current_datetime, ep, request_journey.datetimes(0),
-                                               request_journey.max_duration(), request_journey.max_transfers(),
-                                               arg.accessibilite_params, arg.forbidden,
-                                               request_journey.clockwise(), arg.rt_level,
-                                               *street_network_worker,
-                                               request_journey.streetnetwork_params().walking_speed(), mode);
-    }
-    case pbnavitia::graphical_isochrone: {
-        auto boundary_duration = get_boundary_duration(request);
-        return navitia::routing::make_graphical_isochrone(*planner, current_datetime, ep, request_journey.datetimes(0),
-                                                          boundary_duration, request_journey.max_transfers(),
-                                                          arg.accessibilite_params, arg.forbidden,
-                                                          request_journey.clockwise(), arg.rt_level,
-                                                          *street_network_worker,
-                                                          request_journey.streetnetwork_params().walking_speed());
-    }
-    default : {
-        navitia::PbCreator pb_creator(*data, current_datetime, null_time_period);
-        pb_creator.fill_pb_error(pbnavitia::Error::unknown_api,
-                                 pbnavitia::NO_SOLUTION,
-                                 "Unknown API");
-        return pb_creator.get_response();
-    }
-    }
+    auto mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
+    auto mode = type::static_data::get()->modeByCaption(mode_iso);
+    return navitia::routing::make_heat_map(*planner, current_datetime, ep, request_journey.datetimes(0),
+                                           request_journey.max_duration(), request_journey.max_transfers(),
+                                           arg.accessibilite_params, arg.forbidden,
+                                           request_journey.clockwise(), arg.rt_level,
+                                           *street_network_worker,
+                                           request_journey.streetnetwork_params().walking_speed(), mode);
 }
 
 pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
@@ -922,10 +930,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
     case pbnavitia::direct_path:
         response = direct_path(request); break;
-    case pbnavitia::graphical_isochrone :response = isochrone_common(request.isochrone(),
-                                                                     request.requested_api(), current_datetime); break;
-    case pbnavitia::heat_map : response = isochrone_common(request.heat_map(),
-                                                           request.requested_api(), current_datetime); break;
+case pbnavitia::graphical_isochrone: response = graphical_isochrone(request.isochrone(), current_datetime); break;
+    case pbnavitia::heat_map: response = heat_map(request.heat_map(), current_datetime); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());

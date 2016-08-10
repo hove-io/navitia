@@ -52,18 +52,19 @@ namespace routing{
 namespace navitia {
 
 struct JourneysArg {
-    const std::vector<type::EntryPoint> origins;
-    const type::AccessibiliteParams accessibilite_params;
-    const std::vector<std::string> forbidden;
-    const type::RTLevel rt_level;
-    const std::vector<type::EntryPoint> destinations;
-    const std::vector<uint64_t> datetimes;
-    JourneysArg(const std::vector<type::EntryPoint>& origins,
-                 const type::AccessibiliteParams& accessibilite_params,
-                 const std::vector<std::string>& forbidden,
-                 const type::RTLevel& rt_level,
-                 const std::vector<type::EntryPoint>& destinations,
-                 const std::vector<uint64_t>& datetimes);
+    std::vector<type::EntryPoint> origins;
+    type::AccessibiliteParams accessibilite_params;
+    std::vector<std::string> forbidden;
+    type::RTLevel rt_level;
+    std::vector<type::EntryPoint> destinations;
+    std::vector<uint64_t> datetimes;
+    JourneysArg(std::vector<type::EntryPoint> origins,
+                type::AccessibiliteParams accessibilite_params,
+                std::vector<std::string> forbidden,
+                type::RTLevel rt_level,
+                std::vector<type::EntryPoint> destinations,
+                std::vector<uint64_t> datetimes);
+    JourneysArg();
 };
 
 class Worker {
@@ -115,9 +116,13 @@ class Worker {
                                       const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
         pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
-        template<typename T>
-        pbnavitia::Response isochrone_common(const T &request, pbnavitia::API api,
-                                             const boost::posix_time::ptime& current_datetime);
+        boost::optional<pbnavitia::Response> set_journeys_args(const pbnavitia::JourneysRequest request,
+                                                               const boost::posix_time::ptime& current_datetime,
+                                                               JourneysArg& arg, const std::string name);
+        pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest request,
+                                                const boost::posix_time::ptime& current_datetime);
+        pbnavitia::Response heat_map(const pbnavitia::HeatMapRequest request,
+                                     const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
         pbnavitia::Response direct_path(const pbnavitia::Request& request);
 };

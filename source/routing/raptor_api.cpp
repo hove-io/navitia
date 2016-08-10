@@ -1263,9 +1263,7 @@ static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommo
     auto departures = get_stop_points(center, raptor.data, worker);
 
     if (departures.empty()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                                 "no origin point nor destination point valid");
+        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return pb_creator.get_response();
     }
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
@@ -1295,8 +1293,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     IsochroneCommon isochrone_common;
     auto resp = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime,
-                                 boundary_duration[0], max_transfers, accessibilite_params, forbidden, clockwise,
-                                 rt_level, worker, speed, pb_creator);
+                                      boundary_duration[0], max_transfers, accessibilite_params, forbidden, clockwise,
+                                      rt_level, worker, speed, pb_creator);
     if (resp) {
         return *resp;
     }

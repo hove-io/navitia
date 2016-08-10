@@ -547,6 +547,7 @@ def is_valid_single_coord(coord, f, name):
     f(min_type)
     f(middle_type)
     f(max_type)
+    assert min_type <= middle_type <= max_type
 
 
 def is_valid_header(header):
@@ -586,9 +587,6 @@ def is_valid_heat_maps(heat_map, tester, query):
         if 'to' in g:
             is_valid_place(g['to'])
         assert ('from' in g) ^ ('to' in g)
-
-    for feed_publisher in get_not_null(heat_map, 'feed_publishers'):
-        is_valid_feed_publisher(feed_publisher)
 
 
 def is_valid_section(section, query):

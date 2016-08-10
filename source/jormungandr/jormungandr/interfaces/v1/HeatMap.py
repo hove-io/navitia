@@ -59,9 +59,8 @@ heat_map = {
 
 
 heat_maps = {
-    "heat_maps": NonNullList(NonNullNested(heat_map), attribute="heat_maps"),
+    "heat_maps": NonNullList(NonNullNested(heat_map)),
     "error": PbField(error, attribute='error'),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_warning)]),
 }
