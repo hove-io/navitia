@@ -37,8 +37,8 @@ namespace navitia { namespace routing {
 
 template<typename F, typename R>
 void separated_by_coma(std::stringstream& os, F f, const R& range) {
-    auto it = range.begin();
-    const auto end = range.end();
+    auto it = std::begin(range);
+    const auto end = std::end(range);
     if (it != end) { f(os, *it); ++it; }
     for (; it != end; ++it) {
         os << ",";

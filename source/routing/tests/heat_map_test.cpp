@@ -88,7 +88,6 @@ BOOST_AUTO_TEST_CASE(print_map_test) {
                                  R"("row":[{"duration":180},{"duration":240},{"duration":300}]},)"
                                  R"({"lon":{"min_lon":2,"middle_lon":2.5,"max_lon":3},)"
                                  R"("row":[{"duration":360},{"duration":420},{"duration":null}]}]})";
-    std:: cout << print_grid(heat_map) << std::endl;
     BOOST_CHECK(heat_map_string == print_grid(heat_map));
 }
 

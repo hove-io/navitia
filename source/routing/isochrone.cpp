@@ -201,16 +201,14 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                           const int& duration) {
     std::vector<InfoCircle> circles_classed;
     type::MultiPolygon circles;
-    InfoCircle to_add = InfoCircle(coord_origin, duration);
-    circles_classed.push_back(to_add);
+    circles_classed.push_back(InfoCircle(coord_origin, duration));
     const auto& data_departure = raptor.data.pt_data->stop_points;
     for (auto it = origin.begin(); it != origin.end(); ++it){
         if (it->second.total_seconds() < duration) {
             int duration_left = duration - int(it->second.total_seconds());
             if (duration_left * speed < MIN_RADIUS) {continue;}
             const auto& center = data_departure[it->first.val]->coord;
-            InfoCircle to_add = InfoCircle(center, duration_left);
-            circles_classed.push_back(to_add);
+            circles_classed.push_back(InfoCircle(center, duration_left));
         }
     }
     for(const type::StopPoint* sp: stop_points) {
@@ -220,8 +218,7 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
             uint duration_left = abs(int(best_lbl) - int(bound));
             if (duration_left * speed < MIN_RADIUS) {continue;}
             const auto& center = sp->coord;
-            InfoCircle to_add = InfoCircle(center, duration_left);
-            circles_classed.push_back(to_add);
+            circles_classed.push_back(InfoCircle(center, duration_left));
         }
     }
     std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);

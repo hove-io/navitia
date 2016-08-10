@@ -540,13 +540,13 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
         is_valid_feed_publisher(feed_publisher)
 
 
-def is_valid_single_coord(coord, f, name):
+def is_valid_single_coord(coord, is_valid_type, name):
     min_type = get_not_null(coord, 'min_' + name)
     middle_type = get_not_null(coord, 'middle_' + name)
     max_type = get_not_null(coord, 'max_' + name)
-    f(min_type)
-    f(middle_type)
-    f(max_type)
+    is_valid_type(min_type)
+    is_valid_type(middle_type)
+    is_valid_type(max_type)
     assert min_type <= middle_type <= max_type
 
 

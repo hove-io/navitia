@@ -39,6 +39,7 @@ from nose.tools import eq_
 class TestHeatMap(AbstractTestFixture):
     """
     Test the structure of the heat_maps response
+    Only the format of the heat_map is check not the value.
     """
 
     def test_from_heat_map_coord(self):

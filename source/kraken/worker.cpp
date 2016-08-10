@@ -746,10 +746,10 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
 }
 
 
-boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::JourneysRequest request,
+boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::JourneysRequest& request,
                                                                const boost::posix_time::ptime& current_datetime,
                                                                JourneysArg& arg,
-                                                               const std::string name) {
+                                                               const std::string& name) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
@@ -781,7 +781,7 @@ boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::
 }
 
 
-pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest request,
+pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request,
                                                 const boost::posix_time::ptime& current_datetime) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg =  JourneysArg();
@@ -802,7 +802,7 @@ pbnavitia::Response Worker::graphical_isochrone(const pbnavitia::GraphicalIsochr
                                                       request_journey.streetnetwork_params().walking_speed());
 }
 
-pbnavitia::Response Worker::heat_map(const pbnavitia::HeatMapRequest request,
+pbnavitia::Response Worker::heat_map(const pbnavitia::HeatMapRequest& request,
                                      const boost::posix_time::ptime& current_datetime) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg;

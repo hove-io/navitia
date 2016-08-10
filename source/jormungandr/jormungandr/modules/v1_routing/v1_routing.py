@@ -193,7 +193,7 @@ class V1Routing(AModule):
                             region + 'isochrones',
                             endpoint='isochrones')
 
-        if app.config['HEAT_MAP']:
+        if app.config.get('HEAT_MAP'):
             self.add_resource(HeatMap.HeatMap,
                               region + 'heat_maps',
                               endpoint='heat_maps')

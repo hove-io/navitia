@@ -40,12 +40,8 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 struct BoundBox {
-    type::GeographicalCoord max;
-    type::GeographicalCoord min;
-    BoundBox(){
-        max = type::GeographicalCoord(-180, -90);
-        min = type::GeographicalCoord(180, 90);
-    }
+    type::GeographicalCoord max = type::GeographicalCoord(-180, -90);
+    type::GeographicalCoord min = type::GeographicalCoord(180, 90);
 
     void set_box(const type::GeographicalCoord& coord,
                  const double offset) {
@@ -107,7 +103,7 @@ static void print_datetime(std::stringstream& ss,
                            navitia::time_duration duration) {
     ss << R"({"duration":)";
     if (duration.is_pos_infinity()) {
-        ss <<R"(null)";
+        ss << R"(null)";
     } else {
         ss << duration.total_seconds();
     }
@@ -221,7 +217,7 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
     }
     for(const type::StopPoint* sp: stop_points) {
         SpIdx sp_idx(*sp);
-        const auto best_lbl = raptor.best_labels_pts[sp_idx];
+        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
         if (in_bound(best_lbl, bound, clockwise)) {
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];
@@ -244,7 +240,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    const DateTime duration,
                                    const bool clockwise,
                                    const DateTime bound) {
-    const auto stop_points = raptor.data.pt_data->stop_points;
+    const auto& stop_points = raptor.data.pt_data->stop_points;
     std::vector<navitia::time_duration> distances;
     size_t n = boost::num_vertices(worker.graph);
     distances.assign(n, bt::pos_infin);
@@ -259,7 +255,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
     auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;
-#if BOOST_VERSION >= 105800
+#if BOOST_VERSION >= 105500
     try {
         boost::dijkstra_shortest_paths_no_init(filtered_graph(worker.graph, {},
                                                               georef::TransportationModeFilter(mode, worker)),
