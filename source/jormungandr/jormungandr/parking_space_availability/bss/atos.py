@@ -38,12 +38,11 @@ import logging
 
 class AtosProvider(BssProvider):
 
-    OPERATORS = ('keolis', 'effia', 'effia transport', u'kéolis')
-
-    def __init__(self, id_ao, network, url, timeout=5):
+    def __init__(self, id_ao, network, url, operators, timeout=5):
         self.id_ao = id_ao
         self.network = network
         self.WS_URL = url
+        self.operators = map(unicode.lower, operators)
         self.timeout = timeout
         self._client = None
 
@@ -52,8 +51,8 @@ class AtosProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator').lower() in self.OPERATORS and \
-               properties.get('network') == self.network
+        return properties.get('operator').lower() in self.operators and \
+               properties.get('network').lower() == self.network.lower()
 
     def get_informations(self, poi):
         logging.debug('building stands')

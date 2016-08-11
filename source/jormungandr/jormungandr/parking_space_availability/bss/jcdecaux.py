@@ -38,20 +38,20 @@ import logging
 class JcdecauxProvider(BssProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
-    OPERATOR = 'JCDecaux'
 
-    def __init__(self, network, contract, api_key, timeout=10):
+    def __init__(self, network, contract, api_key, operators, timeout=10):
         self.network = network
         self.contract = contract
         self.api_key = api_key
+        self.operators = map(unicode.lower, operators)
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator') == self.OPERATOR and \
-               properties.get('network') == self.network
+        return properties.get('operator').lower() in self.operators and \
+               properties.get('network').lower() == self.network.lower()
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
     def _call_webservice(self, station_id):
