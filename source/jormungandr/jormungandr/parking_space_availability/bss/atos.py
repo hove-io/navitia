@@ -42,7 +42,7 @@ class AtosProvider(BssProvider):
         self.id_ao = id_ao
         self.network = network
         self.WS_URL = url
-        self.operators = map(unicode.lower, operators)
+        self.operators = operators
         self.timeout = timeout
         self._client = None
 
@@ -52,7 +52,7 @@ class AtosProvider(BssProvider):
     def support_poi(self, poi):
         properties = poi.get('properties', {})
         return properties.get('operator').lower() in self.operators and \
-               properties.get('network').lower() == self.network.lower()
+               properties.get('network').lower() == self.network
 
     def get_informations(self, poi):
         logging.debug('building stands')

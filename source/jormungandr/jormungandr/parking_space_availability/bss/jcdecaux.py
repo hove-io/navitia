@@ -43,7 +43,7 @@ class JcdecauxProvider(BssProvider):
         self.network = network
         self.contract = contract
         self.api_key = api_key
-        self.operators = map(unicode.lower, operators)
+        self.operators = operators
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])
@@ -51,7 +51,7 @@ class JcdecauxProvider(BssProvider):
     def support_poi(self, poi):
         properties = poi.get('properties', {})
         return properties.get('operator').lower() in self.operators and \
-               properties.get('network').lower() == self.network.lower()
+               properties.get('network').lower() == self.network
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
     def _call_webservice(self, station_id):
