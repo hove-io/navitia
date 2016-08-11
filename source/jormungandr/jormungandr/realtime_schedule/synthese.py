@@ -108,7 +108,7 @@ class Synthese(RealtimeProxy):
         """
         try:
             if not self.rate_limiter.acquire(self.rt_system_id, block=False):
-                return None#this should not be cached :(
+                return None  #this should not be cached :(
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Synthese RT service dead, using base '
@@ -138,11 +138,9 @@ class Synthese(RealtimeProxy):
             return None
 
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
-        stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
-        route_id = str(route_point.fetch_route_id(self.object_id_tag))
-        route_point = SyntheseRoutePoint(route_id, stop_point_id)
-        m = self._get_synthese_passages(r.content)
-        return m.get(route_point)# if there is nothing from synthese, we keep the base
+        passages = self._get_synthese_passages(r.content)
+
+        return self._find_route_point(route_point, passages)
 
     def _make_url(self, route_point, count=None, from_dt=None):
         """
@@ -164,9 +162,9 @@ class Synthese(RealtimeProxy):
             dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
 
         url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(base_url=self.service_url,
-                                                                    stop_id=stop_id,
-                                                                    count=count_param,
-                                                                    date=dt_param)
+                                                                          stop_id=stop_id,
+                                                                          count=count_param,
+                                                                          date=dt_param)
 
         return url
 
@@ -178,12 +176,12 @@ class Synthese(RealtimeProxy):
         return value.get(val)
 
     def _get_real_time_passage(self, xml_journey):
-        '''
+        """
         :return RealTimePassage: object real time passage
         :param xml_journey: journey information
         exceptions :
             ValueError: Unable to parse datetime, day is out of range for month (for example)
-        '''
+        """
         dt = date_time_format(xml_journey.get('dateTime'))
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
         passage = RealTimePassage(utc_dt)
@@ -222,3 +220,28 @@ class Synthese(RealtimeProxy):
         dt = datetime.utcfromtimestamp(timestamp)
         dt = pytz.utc.localize(dt)
         return dt.astimezone(self.timezone)
+
+    def _find_route_point(self, route_point, passages):
+        """
+        To find the right passage in synthese:
+
+        As a reminder we query synthese only for a stoppoint and we get, for all the routes that pass by
+        this stop, the next passages.
+        The tricky part is to find the which route concerns our routepoint
+
+         * we first look if by miracle we can find a route with the synthese code of our route in it's
+         external codes (it can have several if the route is a fusion of many routes)
+         * if look for all routes of the line ou
+        """
+        stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
+        is_same_route = lambda syn_rp: syn_rp.syn_route_id in route_point.fetch_all_route_id(self.object_id_tag)
+        p = next((p for syn_rp, p in passages.items()
+                  if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id), None)
+
+        if p:
+            return p
+
+        # TODO lookup by line
+        return None
+
+
