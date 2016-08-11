@@ -48,7 +48,7 @@ def parking_space_availability_jcdecaux_support_poi_test():
     """
     Jcdecaux bss provider support
     """
-    provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
+    provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'JCDecaux'})
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)

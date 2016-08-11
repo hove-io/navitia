@@ -39,11 +39,11 @@ class JcdecauxProvider(BssProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
 
-    def __init__(self, network, contract, api_key, operators, timeout=10):
-        self.network = network
+    def __init__(self, network, contract, api_key, operators={'jcdecaux'}, timeout=10):
+        self.network = network.lower()
         self.contract = contract
         self.api_key = api_key
-        self.operators = operators
+        self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])

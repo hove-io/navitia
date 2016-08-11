@@ -51,7 +51,7 @@ def parking_space_availability_atos_support_poi_test():
     """
     Atos bss provider support
     """
-    provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis', 'effia', 'effia transport', u'kéolis'})
+    provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'KEOLIS', 'effia', 'effia transport', u'kéolis'})
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'EFFIA'
     assert provider.support_poi(poi)
