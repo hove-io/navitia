@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,19 +31,17 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr import cache, app
-from urllib2 import URLError
 import suds
 import logging
 
 
 class AtosProvider(BssProvider):
 
-    OPERATOR = 'Keolis'
-
-    def __init__(self, id_ao, network, url, timeout=5):
+    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5):
         self.id_ao = id_ao
-        self.network = network
+        self.network = network.lower()
         self.WS_URL = url
+        self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self._client = None
 
@@ -51,8 +50,8 @@ class AtosProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator') == self.OPERATOR and \
-               properties.get('network') == self.network
+        return properties.get('operator').lower() in self.operators and \
+               properties.get('network').lower() == self.network
 
     def get_informations(self, poi):
         logging.debug('building stands')
