@@ -70,7 +70,6 @@ StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
 
 void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const type::EntryPoint&> end) {
     departure_path_finder.init(start.coordinates, start.streetnetwork_params.mode, start.streetnetwork_params.speed_factor);
-
     if (end) {
         arrival_path_finder.init((*end).coordinates, (*end).streetnetwork_params.mode, (*end).streetnetwork_params.speed_factor);
     }
@@ -242,7 +241,6 @@ PathFinder::crow_fly_find_nearest_stop_points(navitia::time_duration radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
     float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
-
     return pl.find_within(start_coord, crow_fly_dist);
 }
 
@@ -250,8 +248,10 @@ routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
+
     routing::map_stop_point_duration result;
     if (! starting_edge.found){
+
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
@@ -277,7 +277,6 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
     if (elements.empty()) {
         return result;
     }
-
     start_distance_dijkstra(radius);
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     dump_dijkstra_for_quantum(starting_edge);
@@ -285,8 +284,9 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
 
     const auto max = bt::pos_infin;
     for (auto element: elements) {
-        ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
+        const ProjectionData& projection = this->geo_ref.projected_stop_points[element.first][mode];
         // the stop point has been projected on the graph?
+
         if(projection.found){
             //if our two points are projected on the same edge the Dijkstra won't give us the correct value
             // we need to handle this case separately
@@ -305,6 +305,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
                 if (distances[projection[target_e]] < max) {
                     best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
                 }
+
                 if (best_dist <= radius) {
                     result[routing::SpIdx(element.first)] = best_dist;
                 }

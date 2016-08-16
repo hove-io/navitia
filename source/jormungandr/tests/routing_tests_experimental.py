@@ -42,7 +42,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
 
-@dataset({"main_routing_test": {}})
+@dataset({"main_routing_test": {'scenario': 'experimental'}})
 class TestJourneysExperimental(AbstractTestFixture):
     """
     Test the experiental scenario
@@ -51,17 +51,6 @@ class TestJourneysExperimental(AbstractTestFixture):
 
     NOTE: for the moment we cannot import all routing tests, so we only get 2, but we need to add some more
     """
-
-    def setup(self):
-        logging.debug('setup for experimental')
-        from jormungandr import i_manager
-        dest_instance = i_manager.instances['main_routing_test']
-        self.old_scenario = dest_instance._scenario
-        dest_instance._scenario = jormungandr.scenarios.experimental.Scenario()
-
-    def teardown(self):
-        from jormungandr import i_manager
-        i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
     @staticmethod
     def check_next_datetime_link(dt, response):
