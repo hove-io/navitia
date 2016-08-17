@@ -236,10 +236,12 @@ class Synthese(RealtimeProxy):
 
          * we first look if by miracle we can find a route with the synthese code of our route in it's
          external codes (it can have several if the route is a fusion of many routes)
-         * if query navitia to get all routes that pass by the stoppoint for the line of the route point
+            -> if we found the route, we return it's passages
+         * else we query navitia to get all routes that pass by the stoppoint for the line of the route point
             * if we get only one route, we search for this route's line in the synthese response
                 (because lines synthese code are move coherent)
                 -> if we have only one line with this code, we return it's passages
+         -> else we return the base schedule
         """
         log = logging.getLogger(__name__)
         stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
@@ -266,11 +268,14 @@ class Synthese(RealtimeProxy):
             if len(line_passages) == 1:
                 return line_passages[0]
 
-            log.debug('stoppoint {} has {} routes for line {} in navitia and {} in synthese'
-                      .format(route_point.pb_stop_point.uri,
-                              len(first_routes),
-                              route_point.fetch_line_uri(),
-                              len(passages)))
+            log.debug('stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
+                      'in synthese (lines: {syn_lines})'
+                      .format(sp=route_point.pb_stop_point.uri,
+                              nb_r=len(first_routes),
+                              l=route_point.fetch_line_uri(),
+                              l_codes=route_point.fetch_line_id(self.object_id_tag),
+                              nb_syn_r=len(passages),
+                              syn_lines=[l.syn_line_id for l in passages.keys()]))
 
         if passages:
             log.info('impossible to find a valid passage for {} (passage = {})'
