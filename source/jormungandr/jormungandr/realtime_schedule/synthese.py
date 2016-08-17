@@ -240,7 +240,7 @@ class Synthese(RealtimeProxy):
          * else we query navitia to get all routes that pass by the stoppoint for the line of the route point
             * if we get only one route, we search for this route's line in the synthese response
                 (because lines synthese code are move coherent)
-                -> if we have only one line with this code, we return it's passages
+                -> we concatenate all synthese passages on this line
          -> else we return the base schedule
         """
         log = logging.getLogger(__name__)
@@ -261,12 +261,12 @@ class Synthese(RealtimeProxy):
 
         if len(first_routes) == 1:
             # there is only one route that pass through our stoppoint for the line of the routepoint
-            # we check if we can find the line of this route in synthese
+            # we can concatenate all synthese's route of this line
             line_passages = [p for syn_rp, p in passages.items() if syn_rp.syn_line_id ==
                              route_point.fetch_line_id(self.object_id_tag)]
 
-            if len(line_passages) == 1:
-                return line_passages[0]
+            if line_passages:
+                return itertools.chain(*line_passages)
 
             log.debug('stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
                       'in synthese (lines: {syn_lines})'

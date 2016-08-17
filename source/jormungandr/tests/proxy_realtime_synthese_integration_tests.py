@@ -161,8 +161,8 @@ class TestSyntheseSchedules(AbstractTestFixture):
     def test_stop_schedule_bad_id_multiple_response(self):
         """
         test for a route point when the route code is not in synthese
-        since there is only one route in navitia but multiple routes in synthese, we don't get some
-        realtime
+        since there is only one route in navitia but multiple routes in synthese, we get all the synthese
+        passage on this route
         """
         mock_requests = MockRequests({
             'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00':
@@ -176,10 +176,18 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
 
-                  <journey routeId="unknown_route_code2" dateTime="2016-Jan-02 09:17:17" realTime="yes"
+                  <journey routeId="unknown_route_code2" dateTime="2016-Jan-02 10:17:17" realTime="yes"
                   waiting_time="00:07:10">
                     <stop id="syn_stoppoint11"/>
                     <line id="syn_lineB">
+                      <network id="syn_network" name="nice_network" image=""/>
+                    </line>
+                  </journey>
+
+                  <journey routeId="unknown_route_code3" dateTime="2016-Jan-02 11:17:17" realTime="yes"
+                  waiting_time="00:07:10">
+                    <stop id="syn_stoppoint11"/>
+                    <line id="another_line_this_will_not_be_taken">
                       <network id="syn_network" name="nice_network" image=""/>
                     </line>
                   </journey>
@@ -191,9 +199,11 @@ class TestSyntheseSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            assert _get_schedule(response, 'SP_11', 'B1') == [{
-                'rt': False, 'dt': '20160102T090000'
-            }]
+            print(_get_schedule(response, 'SP_11', 'B1'))
+            assert _get_schedule(response, 'SP_11', 'B1') == [
+                {'rt': True, 'dt': '20160102T091717'},
+                {'rt': True, 'dt': '20160102T101717'},
+            ]
 
     def test_stop_schedule_bad_id_multiple_routes(self):
         """
@@ -219,14 +229,12 @@ class TestSyntheseSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 2
-            print(_get_schedule(response, 'SP_21', 'C1'))
             assert _get_schedule(response, 'SP_21', 'C1') == [{
                 'rt': False, 'dt': '20160102T090000'
             }]
             assert _get_schedule(response, 'SP_21', 'C2') == [{
                 'rt': False, 'dt': '20160102T100000'
             }]
-
 
     def test_pt_ref(self):
         """there are 50 stopareas in the dataset to test the pagination handling"""
