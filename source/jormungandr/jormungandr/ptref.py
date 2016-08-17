@@ -31,6 +31,19 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from navitiacommon import request_pb2, type_pb2
 from flask import logging
 
+# Mapping to know with response field to consider for a given pb_type
+PT_TYPE_RESPONSE_MAPPING = {
+    type_pb2.STOP_AREA: 'stop_areas',
+    type_pb2.STOP_POINT: 'stop_points',
+    type_pb2.POI: 'pois',
+    type_pb2.ADMINISTRATIVE_REGION: 'administrative_regions',
+    type_pb2.LINE: 'lines',
+    type_pb2.NETWORK: 'networks',
+    type_pb2.COMMERCIAL_MODE: 'commercial_modes',
+    type_pb2.ROUTE: 'routes',
+    type_pb2.LINE_GROUP: 'line_groups',
+}
+
 
 class PtRef(object):
     def __init__(self, instance):
@@ -58,3 +71,28 @@ class PtRef(object):
 
         logging.getLogger(__name__).info('PtRef, Multiple stop_points found with filter {}'.format(req.ptref.filter))
         return None
+
+    def get_objs(self, pb_type, filter=''):
+        """
+        iterator on all navitia objects that match a filter
+        """
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.PTREFERENTIAL
+        req.ptref.requested_type = pb_type
+        req.ptref.count = 20
+        req.ptref.start_page = 0
+        req.ptref.depth = 1
+        req.ptref.filter = filter
+
+        while True:
+            result = self.instance.send_and_receive(req)
+
+            objects = getattr(result, PT_TYPE_RESPONSE_MAPPING[pb_type])
+            if not objects:
+                # when no more objects are yielded we stop
+                return
+
+            for o in objects:
+                yield o
+
+            req.ptref.start_page += 1

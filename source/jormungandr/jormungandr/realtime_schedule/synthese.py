@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import itertools
 
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
@@ -42,6 +43,7 @@ from jormungandr import cache, app
 from datetime import datetime, time
 from jormungandr.utils import timestamp_to_datetime
 from navitiacommon.ratelimit import RateLimiter
+from navitiacommon import type_pb2
 import redis
 
 class FakeRateLimiter(object):
@@ -53,9 +55,10 @@ class FakeRateLimiter(object):
 
 class SyntheseRoutePoint(object):
 
-    def __init__(self, rt_id=None, sp_id=None):
+    def __init__(self, rt_id=None, sp_id=None, line_id=None):
         self.syn_route_id = rt_id
         self.syn_stop_point_id = sp_id
+        self.syn_line_id = line_id
 
     def __key(self):
         return (self.syn_route_id, self.syn_stop_point_id)
@@ -170,7 +173,7 @@ class Synthese(RealtimeProxy):
 
     def _get_value(self, item, xpath, val):
         value = item.find(xpath)
-        if value == None:
+        if value is None:
             logging.getLogger(__name__).debug("Path not found: {path}".format(path=xpath))
             return None
         return value.get(val)
@@ -201,7 +204,9 @@ class Synthese(RealtimeProxy):
     def _get_synthese_passages(self, xml):
         result = {}
         for xml_journey in self._build(xml):
-            route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self._get_value(xml_journey, 'stop', 'id'))
+            route_point = SyntheseRoutePoint(xml_journey.get('routeId'),
+                                             self._get_value(xml_journey, 'stop', 'id'),
+                                             self._get_value(xml_journey, 'line', 'id'))
             if route_point not in result:
                 result[route_point] = []
             passage = self._get_real_time_passage(xml_journey)
@@ -231,8 +236,12 @@ class Synthese(RealtimeProxy):
 
          * we first look if by miracle we can find a route with the synthese code of our route in it's
          external codes (it can have several if the route is a fusion of many routes)
-         * if look for all routes of the line ou
+         * if query navitia to get all routes that pass by the stoppoint for the line of the route point
+            * if we get only one route, we search for this route's line in the synthese response
+                (because lines synthese code are move coherent)
+                -> if we have only one line with this code, we return it's passages
         """
+        log = logging.getLogger(__name__)
         stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
         is_same_route = lambda syn_rp: syn_rp.syn_route_id in route_point.fetch_all_route_id(self.object_id_tag)
         p = next((p for syn_rp, p in passages.items()
@@ -241,7 +250,32 @@ class Synthese(RealtimeProxy):
         if p:
             return p
 
-        # TODO lookup by line
+        routes_gen = self.instance.ptref.get_objs(type_pb2.ROUTE,
+                                                  'stop_point.uri = {stop} and line.uri = {line}'.format(
+                                                      stop=route_point.pb_stop_point.uri,
+                                                      line=route_point.fetch_line_uri()))
+
+        first_routes = list(itertools.islice(routes_gen, 2))
+
+        if len(first_routes) == 1:
+            # there is only one route that pass through our stoppoint for the line of the routepoint
+            # we check if we can find the line of this route in synthese
+            line_passages = [p for syn_rp, p in passages.items() if syn_rp.syn_line_id ==
+                             route_point.fetch_line_id(self.object_id_tag)]
+
+            if len(line_passages) == 1:
+                return line_passages[0]
+
+            log.debug('stoppoint {} has {} routes for line {} in navitia and {} in synthese'
+                      .format(route_point.pb_stop_point.uri,
+                              len(first_routes),
+                              route_point.fetch_line_uri(),
+                              len(passages)))
+
+        if passages:
+            log.info('impossible to find a valid passage for {} (passage = {})'
+                     .format(route_point, passages))
+
         return None
 
 
