@@ -127,7 +127,7 @@ class MockTimeo(Timeo):
 
 MOCKED_PROXY_CONF = ('[{ "object_id_tag": "KisioDigital",'
                      '"id": "KisioDigital",'
-                     '"class": "tests.proxy_realtime_integration_tests.MockTimeo",'
+                     '"class": "tests.proxy_realtime_timeo_integration_tests.MockTimeo",'
                      '"args": {'
                      '"destination_id_tag": "KisioDigital",'
                      '"timezone": "Europe/Paris",'

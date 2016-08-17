@@ -41,6 +41,14 @@ class MockResponse(object):
     def json(self):
         return self.data
 
+    @property
+    def text(self):
+        return self.data
+
+    @property
+    def content(self):
+        return self.data
+
 
 class MockRequests(object):
     """
