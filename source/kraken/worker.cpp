@@ -879,10 +879,9 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
-    auto pl = proximitylist::ProximityList<unsigned int >{};
-    std::vector<unsigned int> dest_index;
+    std::vector<type::GeographicalCoord> dest_coords;
 
-    unsigned int dest_idx = 0;
+    // In this loop, we try to get the coordinates of all destinations
     for (const auto& dest: request.destinations()) {
         Type_e origin_type = data->get_type_of_id(dest.place());
         auto entry_point = type::EntryPoint{origin_type, dest.place(), 0};
@@ -894,11 +893,8 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
             return r;
         }
-        auto sp_it = data->pt_data->stop_points_map.find(entry_point.uri);
-        dest_index.push_back(sp_it->second->idx);
-        pl.add(std::move(coord), sp_it->second->idx);
+        dest_coords.push_back(coord);
     }
-    pl.build();
 
     pbnavitia::Response r;
     for (const auto& origin: request.origins()) {
@@ -910,15 +906,15 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
             return r;
         }
+
         street_network_worker->init(entry_point, {});
-        auto nearest = street_network_worker->find_nearest_stop_points(
-                entry_point.streetnetwork_params.max_duration,
-                pl,
-                false);
+        auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
+                navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
+                dest_coords);
 
         auto* row = r.mutable_sn_routing_matrix()->add_rows();
-        for(auto i : dest_index) {
-            auto it = nearest.find(routing::SpIdx{i});
+        for(auto coord : dest_coords) {
+            auto it = nearest.find(coord.uri());
             if (it != nearest.end()) {
                 row->add_duration(it->second.total_seconds());
             }else {

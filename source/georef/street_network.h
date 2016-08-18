@@ -133,6 +133,12 @@ struct PathFinder {
     find_nearest_stop_points(navitia::time_duration radius,
                              const proximitylist::ProximityList<type::idx_t>& pl);
 
+    using coord_uri = std::string;
+    boost::container::flat_map<coord_uri, navitia::time_duration>
+    get_duration_with_dijkstra(const navitia::time_duration& radius,
+                               const std::vector<type::GeographicalCoord>& entry_points);
+
+
     /// compute the distance from the starting point to the target stop point
     navitia::time_duration get_distance(type::idx_t target_idx);
 
@@ -193,6 +199,12 @@ private:
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
     crow_fly_find_nearest_stop_points(navitia::time_duration radius,
                                       const proximitylist::ProximityList<type::idx_t>& pl);
+
+    template<typename K, typename U, typename G>
+    boost::container::flat_map<K, navitia::time_duration>
+    start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
+            const std::vector<U>& destinations,
+            const G& projection_getter);
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     void dump_dijkstra_for_quantum(const ProjectionData& target);

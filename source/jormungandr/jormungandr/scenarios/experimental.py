@@ -166,8 +166,6 @@ class Scenario(new_default.Scenario):
             fill_uris(r)
         return resp
 
-
-
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
 

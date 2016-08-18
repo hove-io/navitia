@@ -44,6 +44,7 @@ class Kraken(object):
         destinations = []
         for p in places_crowfly:
             destinations.append(p.uri)
+
         sn_routing_matrix = self.get_streetnetwork_routing_matrix([place],
                                                                   destinations,
                                                                   mode,
