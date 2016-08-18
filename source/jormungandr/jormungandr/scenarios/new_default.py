@@ -175,11 +175,7 @@ def compute_car_co2_emission(pb_resp, api_request, instance):
         pb_resp.car_co2_emission.value = car.co2_emission.value
         pb_resp.car_co2_emission.unit = car.co2_emission.unit
 
-
-def tag_journeys(resp):
-    """
-    tag the journeys
-    """
+def tag_ecologic(resp):
     # if there is no available car_co2_emission in resp, no tag will be assigned
     if resp.car_co2_emission.value and resp.car_co2_emission.unit:
         for j in resp.journeys:
@@ -191,6 +187,24 @@ def tag_journeys(resp):
             if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
                 j.tags.append('ecologic')
 
+def tag_direct_path(resp):
+    for j in resp.journeys:
+        # if there is only one section
+        if len(j.sections) == 1:
+            if j.sections[0].street_network.mode == response_pb2.Walking:
+                j.tags.append('is_walking_direct_path')
+            elif j.sections[0].street_network.mode == response_pb2.Bike:
+                j.tags.append('is_bike_direct_path')
+
+
+def tag_journeys(resp):
+    """
+    tag the journeys
+    """
+    tag_ecologic(resp)
+
+    # tag the direct path
+    tag_direct_path(resp)
 
 def _get_section_id(section):
     street_network_mode = None
