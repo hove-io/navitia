@@ -59,7 +59,7 @@ class Timeo(RealtimeProxy):
     """
 
     def __init__(self, id, service_url, service_args, timezone,
-                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10):
+                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, **kwargs):
         self.service_url = service_url
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
